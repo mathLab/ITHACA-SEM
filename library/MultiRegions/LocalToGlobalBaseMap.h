@@ -127,6 +127,8 @@ namespace Nektar
             inline int GetNumGlobalCoeffs() const;
             /// Sets the total number of global coefficients.
             inline void SetNumGlobalCoeffs(const int n);
+            /// Retrieves if the system is singular (true) or not (false)
+            inline bool GetSingularSystem() const;
 
             ///
             inline void GlobalToLocalBnd(
@@ -209,6 +211,8 @@ namespace Nektar
             int m_numLocalDirBndCoeffs;
             /// Number of Global Dirichlet Boundary Coefficients
             int m_numGlobalDirBndCoeffs;
+            /// Flag indicating if the system is singular or not
+            bool m_systemSingular;
 
             /// Total number of local coefficients
             /** This corresponds to the number of total number of coefficients
@@ -446,6 +450,10 @@ namespace Nektar
             m_numGlobalCoeffs = n;
         }
 
+        inline bool LocalToGlobalBaseMap::GetSingularSystem() const
+        {
+            return m_systemSingular;
+        }
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
                     const NekVector<const NekDouble>& global,

@@ -66,8 +66,11 @@ namespace Nektar
      * @param   fileNameString                  Session file name.
      * @param   UseInputFileForProjectionType   Default: false.
      * @param   UseContinuousField              Default: false.
+     *
+     * @todo    Move solver-specific singularity check down inheritence tree.
      */
-    ADRBase::ADRBase(const string &fileNameString, bool UseInputFileForProjectionType,
+    ADRBase::ADRBase(const string &fileNameString,
+                     bool UseInputFileForProjectionType,
                      bool UseContinuousField)
     {
         SpatialDomains::MeshGraph graph;
@@ -190,6 +193,23 @@ namespace Nektar
             }
         }
 
+        // Enforce singularity check for some problems
+        std::string solverName = m_boundaryConditions->GetSolverInfo("EQTYPE");
+        NekDouble lambda;
+        if (solverName == "Helmholtz")
+        {
+            lambda = m_boundaryConditions->GetParameter("Lambda");
+        }
+        if (solverName == "Laplace" || solverName == "Poisson" ||
+                (solverName == "Helmholtz" && lambda == 0))
+        {
+            checkIfSystemSingular[0] = true;
+        }
+        if (solverName == "UnsteadyNavierStokes")
+        {
+            // check pressure field only
+            checkIfSystemSingular[2] = true;
+        }
         SetADRBase(m_graph,m_boundaryConditions->GetNumVariables());
     }
 
@@ -203,11 +223,15 @@ namespace Nektar
      * @param   mesh            Session
      * @param   nvariables      Number of dependent variables.
      * @param   globoptfile     Global optimisations.
+     *
+     * @todo    Apply singularity checks to 1D and 3D
      */
     void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
                              int nvariables)
     {
         int i;
+        bool DeclareCoeffPhysArrays = true;
+        MultiRegions::GlobalSysSolnType solnType = MultiRegions::eDirectMultiLevelStaticCond;
 
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         m_spacedim = mesh->GetSpaceDimension();
@@ -281,7 +305,9 @@ namespace Nektar
 						MultiRegions::ContField2DSharedPtr firstfield =
 						MemoryManager<MultiRegions::ContField2D>
 						::AllocateSharedPtr(*mesh2D,
-											*m_boundaryConditions,i);
+											*m_boundaryConditions,i,solnType,
+											DeclareCoeffPhysArrays,
+											checkIfSystemSingular[0]);
 						
 						firstfield->ReadGlobalOptimizationParameters(m_filename);
 						
@@ -290,7 +316,9 @@ namespace Nektar
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField2D>
 							::AllocateSharedPtr(*firstfield,
-												*mesh2D,*m_boundaryConditions,i);
+												*mesh2D,*m_boundaryConditions,i,
+												DeclareCoeffPhysArrays,
+												checkIfSystemSingular[i]);
 						}
 					}
 					

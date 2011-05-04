@@ -77,14 +77,15 @@ int main(int argc, char* argv[])
     //Test Channel Flow
     Execute("IncNavierStokesSolver","Test_ChanFlow_m3.xml","Channel Flow P=3");
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8.xml","Channel Flow P=8");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_m8_singular.xml","Channel Flow P=8 Singularity Check");
     
     //Test Kovasznay Flow
     Execute("IncNavierStokesSolver","Test_KovaFlow_m3.xml","Kovasznay Flow P=3");
     Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Kovasznay Flow P=8");
     
     //Test Decaying Vortex
-    Execute("IncNavierStokesSolver","Test_TaylorVor_dt1.xml","Time-Convergence: Taylor Vortex P=11 IMEXOrder2 dt=0.01");
-    Execute("IncNavierStokesSolver","Test_TaylorVor_dt2.xml","Time-Convergence: Taylor Vortex P=11 IMEXOrder2 dt=0.001");
+    Execute("IncNavierStokesSolver","Test_TaylorVor_dt1.xml","Convergence: Taylor Vortex IMEXOrder2 dt=0.01");
+    Execute("IncNavierStokesSolver","Test_TaylorVor_dt2.xml","Convergence: Taylor Vortex IMEXOrder2 dt=0.001");
 
 
     //Test Coupled LinearnS Kovasznay Flow

@@ -75,9 +75,9 @@ namespace Nektar
         /// Initialise the data in the dependent fields.
         void SetInitialConditions(NekDouble initialtime = 0.0,
                                   bool dumpInitialConditions = true)
-	{
-	  v_SetInitialConditions(initialtime,dumpInitialConditions);
-	}
+        {
+            v_SetInitialConditions(initialtime,dumpInitialConditions);
+        }
 
         /// Populate given fields with the forcing function from session.
         void SetPhysForcingFunctions(
@@ -425,6 +425,9 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
         /// 2 x m_spacedim x nq
         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
+
+        /// Flag to indicate if the fields should be checked for singularity.
+        Array<OneD, bool> checkIfSystemSingular;
 
         /// Perform a case-insensitive string comparison.
         int NoCaseStringCompare(const string & s1, const string& s2) ;

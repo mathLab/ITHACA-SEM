@@ -139,7 +139,8 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
-                const map<int,int>& periodicEdgesId)
+                const map<int,int>& periodicEdgesId,
+                const bool checkIfSystemSingular)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -147,7 +148,8 @@ namespace Nektar
                                       bndCondExp,
                                       bndConditions,
                                       periodicVerticesId,
-                                      periodicEdgesId);
+                                      periodicEdgesId,
+                                      checkIfSystemSingular);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -372,7 +374,8 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
-                const map<int,int>& periodicEdgesId)
+                const map<int,int>& periodicEdgesId,
+                const bool checkIfSystemSingular)
         {
             int i,j,k;
             int cnt = 0,offset=0;
@@ -395,6 +398,7 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
             m_signChange = false;
+            m_systemSingular = false;
 
             map<int,int> vertReorderedGraphVertId;
             map<int,int> edgeReorderedGraphVertId;
@@ -428,9 +432,11 @@ namespace Nektar
                                   edgeReorderedGraphVertId,
                                   edgeDofs,
                                   firstNonDirGraphVertId,
-                                  bottomUpGraph);
+                                  bottomUpGraph,
+                                  NullIntIntMap,
+                                  NullIntIntMap,
+                                  checkIfSystemSingular);
 
-            
             /**
              * STEP 2: Count out the number of Dirichlet vertices and
              * edges first
@@ -444,6 +450,14 @@ namespace Nektar
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {
                         nLocDirBndCondDofs += bndSegExp->GetNcoeffs();
+                    }
+                    if( bndCondExp[i]->GetExp(j)==bndCondExp[(bndCondExp.num_elements()-1)]->GetExp(bndCondExp[i]->GetExpSize()-1)
+                            && i==(bndCondExp.num_elements()-1)
+                            && nLocDirBndCondDofs ==0
+                            && checkIfSystemSingular==true)
+                    {
+                        nLocDirBndCondDofs =1;
+                        m_systemSingular=true;
                     }
 
                     nLocBndCondDofs += bndSegExp->GetNcoeffs();
@@ -689,7 +703,8 @@ namespace Nektar
                 int          &firstNonDirGraphVertId,
                 BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
                 map<int,int> &interiorReorderedGraphVertId,
-                map<int,int> &interiorDofs)
+                map<int,int> &interiorDofs,
+                const bool checkIfSystemSingular)
         {
             int i,j,k;
             int cnt = 0;
@@ -705,6 +720,7 @@ namespace Nektar
             map<int,int>::const_iterator mapConstIt;
 
             bool doInteriorMap = (interiorDofs == NullIntIntMap)? false:true;
+            bool systemSingular = true;
             
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -718,6 +734,10 @@ namespace Nektar
                     if(bndConditions[k][i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {
                         cnt++;
+                    }
+                    if(bndConditions[k][i]->GetBoundaryConditionType()!=SpatialDomains::eNeumann)
+                    {
+                        systemSingular = false;
                     }
                 }
                 
@@ -739,6 +759,19 @@ namespace Nektar
                             }
                         }
                     }
+                }
+            }
+
+            if(systemSingular == true && checkIfSystemSingular)
+            {
+                //last region i and j=0 edge
+                bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
+
+                //first vertex 0 of the edge
+                meshVertId = (bndSegExp->GetGeom1D())->GetVid(0);
+                if(vertReorderedGraphVertId.count(meshVertId) == 0)
+                {
+                    vertReorderedGraphVertId[meshVertId] = graphVertId++;
                 }
             }
 

@@ -83,7 +83,8 @@ namespace Nektar
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const vector<map<int,int> >& periodicVerticesId,
-                                   const map<int,int>& periodicEdgesId);
+                                   const map<int,int>& periodicEdgesId,
+                                   const bool checkIfSystemSingular);
 
 
 
@@ -120,7 +121,8 @@ namespace Nektar
                                        int          &firstNonDirGraphVertID,
                                        BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
                                        map<int,int> &interiorReorderedGraphVertId = NullIntIntMap,
-                                       map<int,int> &interiorDofs = NullIntIntMap);
+                                       map<int,int> &interiorDofs = NullIntIntMap,
+                                       bool checkIfSystemSingular = false);
 
 
             inline int GetLocalToGlobalMap(const int i) const;
@@ -189,7 +191,8 @@ namespace Nektar
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
-                                           const map<int,int>& periodicEdgesId = NullIntIntMap);
+                                           const map<int,int>& periodicEdgesId = NullIntIntMap,
+                                           const bool checkIfSystemSingular = false);
 
             /// Construct mappings for a three-dimensional scalar expansion.
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,

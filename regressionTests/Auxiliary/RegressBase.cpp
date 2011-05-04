@@ -191,6 +191,9 @@ int RegressBase::Test(std::string errStr)
     // COMPARE ERRORS FROM .ERR AND .OK		
     if(CompareError(outErr,regErr))
     {
+        std::cout << std::endl;
+        std::cout << "Test result:     " << outErr << std::endl;
+        std::cout << "Expected result: " << regErr << std::endl;
         fail=7;
     }
     

@@ -80,7 +80,6 @@ namespace Nektar
             ASSERTL0(false,"Exp dimension not recognised");
         }
     }
-
     /**
      * Set up a coupled linearised Naviers-Stokes solve in the
      * following manner: 
@@ -282,11 +281,11 @@ namespace Nektar
             ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
 
 
-        for(n = 0; n  < n_exp; ++n)
+        for(n = 0; n < n_exp; ++n)
         {
             eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
-            nbndry = nsize_bndry[eid];
-            nint   = nsize_int[eid];
+            nbndry = nsize_bndry[n];
+            nint   = nsize_int[n];
             k = nbndry+1;
             DNekMatSharedPtr Ah = MemoryManager<DNekMat>::AllocateSharedPtr(k,k,zero);
             DNekMatSharedPtr B  = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,nint,zero);
@@ -546,11 +545,11 @@ namespace Nektar
                             Ah->GetRawPtr(), Ah->GetRows());
             }
             
-            m_BCinv->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
-            m_Btilde->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,C));
-            m_Cinv->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,D));
-            m_D_bnd->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dbnd));
-            m_D_int->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dint));
+            m_BCinv->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
+            m_Btilde->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,C));
+            m_Cinv->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,D));
+            m_D_bnd->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dbnd));
+            m_D_int->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dint));
             
             // Do matrix manipulations and get final set of block matries    
             // reset boundary to put mean mode into boundary system. 
@@ -570,38 +569,38 @@ namespace Nektar
             DintCinvBTtilde_m_Dbnd =(*Dint)*(*Cinv)*Transpose(*Btilde) -  (*Dbnd); 
             
             // Set up final set of matrices. 
-            DNekMatSharedPtr Bh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_bndry_p1[eid],nsize_p_m1[eid]);
-            DNekMatSharedPtr Ch = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[eid],nsize_bndry_p1[eid]);
-            DNekMatSharedPtr Dh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[eid], nsize_p_m1[eid]);
+            DNekMatSharedPtr Bh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_bndry_p1[n],nsize_p_m1[n]);
+            DNekMatSharedPtr Ch = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n],nsize_bndry_p1[n]);
+            DNekMatSharedPtr Dh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n], nsize_p_m1[n]);
             
 
             // Copy matrices into final structures. 
-            for(i = 0; i < nsize_p_m1[eid]; ++i)
+            for(i = 0; i < nsize_p_m1[n]; ++i)
             {
-                for(j = 0; j < nsize_p_m1[eid]; ++j)
+                for(j = 0; j < nsize_p_m1[n]; ++j)
                 {
                     (*Dh)(i,j) = -DintCinvDTint(i+1,j+1);
                 }
             }
             
-            for(i = 0; i < nsize_bndry_p1[eid]-1; ++i)
+            for(i = 0; i < nsize_bndry_p1[n]-1; ++i)
             {
-                (*Ah)(i,nsize_bndry_p1[eid]-1) = BCinvDTint_m_DTbnd(i,0);
-                (*Ah)(nsize_bndry_p1[eid]-1,i) = DintCinvBTtilde_m_Dbnd(0,i);
+                (*Ah)(i,nsize_bndry_p1[n]-1) = BCinvDTint_m_DTbnd(i,0);
+                (*Ah)(nsize_bndry_p1[n]-1,i) = DintCinvBTtilde_m_Dbnd(0,i);
             }
             
-            (*Ah)(nsize_bndry_p1[eid]-1,nsize_bndry_p1[eid]-1) = -DintCinvDTint(0,0);
+            (*Ah)(nsize_bndry_p1[n]-1,nsize_bndry_p1[n]-1) = -DintCinvDTint(0,0);
 
             
-            for(j = 0; j < nsize_p_m1[eid]; ++j)
+            for(j = 0; j < nsize_p_m1[n]; ++j)
             {
-                for(i = 0; i < nsize_bndry_p1[eid]-1; ++i)
+                for(i = 0; i < nsize_bndry_p1[n]-1; ++i)
                 {
                     (*Bh)(i,j) = BCinvDTint_m_DTbnd(i,j+1);
                     (*Ch)(j,i) = DintCinvBTtilde_m_Dbnd(j+1,i);
                 }
-                (*Bh)(nsize_bndry_p1[eid]-1,j) = -DintCinvDTint(0,j+1);
-                (*Ch)(j,nsize_bndry_p1[eid]-1) = -DintCinvDTint(j+1,0);
+                (*Bh)(nsize_bndry_p1[n]-1,j) = -DintCinvDTint(0,j+1);
+                (*Ch)(j,nsize_bndry_p1[n]-1) = -DintCinvDTint(j+1,0);
             }
 
             // Do static condensation
@@ -611,15 +610,19 @@ namespace Nektar
 
             // Set matrices for later inversion. Probably do not need to be 
             // attached to class
-            pAh->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ah));
-            pBh->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Bh));
-            pCh->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ch));
-            pDh->SetBlock(eid,eid,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
+            pAh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ah));
+            pBh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Bh));
+            pCh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ch));
+            pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
         
         }
 
         // Set up global coupled boundary sovler. 
-        m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(pAh,pBh,pCh,pDh,m_locToGloMap);
+        // This is a key to define the solution matrix type
+        // currently we are giving it a argument of eLInearAdvectionReaction 
+        // since this then makes the matrix storage of type eFull
+        MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap);
+        m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,pAh,pBh,pCh,pDh,m_locToGloMap);
     }
 
     void CoupledLinearNS::v_PrintSummary(std::ostream &out)
@@ -631,6 +634,55 @@ namespace Nektar
     {
         switch(m_equationType)
         {
+        case eUnsteadyStokes:
+        case eUnsteadyNavierStokes:
+            {
+
+                LibUtilities::TimeIntegrationMethod intMethod;
+                std::string TimeIntStr = m_boundaryConditions->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+                int i;
+                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+                {
+                    if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
+                    {
+                        intMethod = (LibUtilities::TimeIntegrationMethod)i; 
+                            break;
+                    }
+                }
+                
+                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+                
+                switch(intMethod)
+                {
+                case LibUtilities::eIMEXOrder1: 
+                    {
+                        m_intSteps = 1;
+                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
+                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                    }
+                    break;
+                case LibUtilities::eIMEXOrder2: 
+                    {
+                        m_intSteps = 2;
+                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
+                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                        LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
+                        m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+                    }
+                    break;
+                default:
+                    ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
+                    break;
+                }
+                
+                // Could defind this from IncNavierStokes class? 
+                m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
+
+                m_integrationOps.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
+
+            }
         case eSteadyStokes:
             SetUpCoupledMatrix();
             break;
@@ -652,13 +704,66 @@ namespace Nektar
         default:
             ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
-
     }
 
+    void CoupledLinearNS::EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                                            Array<OneD, Array<OneD, NekDouble> > &outarray,
+                                            const NekDouble time)
+    {
+        // evaluate convection terms
+        EvaluateAdvectionTerms(inarray,outarray);
+    }
+
+    void CoupledLinearNS::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                                                    Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                                                    const NekDouble time, 
+                                                    const NekDouble aii_Dt)
+    {
+
+        int i,n;
+        Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
+        NekDouble  lambda = 1.0/aii_Dt; 
+        static NekDouble lambda_store; 
+        Array <OneD, Array<OneD, NekDouble> > forcing(m_velocity.num_elements());
+        // Matrix solution
+        if(fabs(lambda_store - lambda) > 1e-10)
+        {
+            cout << "Setting up Stokes matrix problem [.";
+            fflush(stdout);
+            SetUpCoupledMatrix(lambda);
+            cout << "]" << endl;
+            lambda_store = lambda;
+        }
+        
+        SetBoundaryConditions(time);		
+
+        // Forcing for advection solve 
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_fields[m_velocity[i]]->IProductWRTBase(inarray[i],m_fields[m_velocity[i]]->UpdateCoeffs());
+            Vmath::Smul(m_fields[m_velocity[i]]->GetNcoeffs(),lambda,m_fields[m_velocity[i]]->GetCoeffs(), 1,m_fields[m_velocity[i]]->UpdateCoeffs(),1);
+            forcing[i] = m_fields[m_velocity[i]]->GetCoeffs();
+        }
+
+        SolveLinearNS(forcing);
+
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_fields[m_velocity[i]]->BwdTrans(m_fields[m_velocity[i]]->GetCoeffs(),outarray[i]);
+        }
+    }
+    
     void CoupledLinearNS::v_DoSolve(void)
     {
         switch(m_equationType)
         {
+        case eUnsteadyStokes:
+        case eUnsteadyNavierStokes:
+            // Set initial condition using time t=0
+            SetInitialConditions(0.0);
+
+            AdvanceInTime(m_steps);
+            break;
         case eSteadyStokes:
         case eSteadyOseen:
             Solve();
@@ -700,7 +805,7 @@ namespace Nektar
             {
                 LibUtilities::BasisKey B = (*expVecIter)->m_basisKeyVector[i];
                 nummodes = B.GetNumModes();
-                ASSERTL0(nummodes > 2,"Velocity polynomial space not sufficiently high (> 2)");
+                ASSERTL0(nummodes > 3,"Velocity polynomial space not sufficiently high (>= 4)");
                 // Should probably set to be an orthogonal basis. 
                 LibUtilities::BasisKey newB(B.GetBasisType(),nummodes-2,B.GetPointsKey());
                 BasisVec.push_back(newB);
@@ -860,7 +965,7 @@ namespace Nektar
                 }
                 cnt += nbnd;
             }
-            fh_bnd[offset + nvel*nbnd] = f_p[cnt1];
+            fh_bnd[loctoglomap[offset + nvel*nbnd]] = f_p[cnt1];
             nint    = m_pressure->GetExp(eid)->GetNcoeffs();
             cnt1   += nint;
             offset += nvel*nbnd + nint; 
@@ -1028,12 +1133,10 @@ namespace Nektar
         
         map<int,int> periodicEdges;
         vector<map<int,int> > periodicVertices;
-        map<int,int> vertReorderedGraphVertId;
-        map<int,int> edgeReorderedGraphVertId;
-        map<int,int> interiorReorderedGraphVertId;
+        Array<OneD, map<int,int> > ReorderedGraphVertId(2);
         MultiRegions::BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
-
         int staticCondLevel = 0;
+        bool IsSingular = true; 
 
         /**
          * STEP 1: Wrap boundary conditions vector in an array
@@ -1053,42 +1156,322 @@ namespace Nektar
 
         const Array<OneD, const MultiRegions::ExpList1DSharedPtr> bndCondExp = m_fields[m_velocity[0]]->GetBndCondExpansions();
         Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(nvel);
-        
+
+        map<int,int> IsDirVertDof;
+        map<int,int> IsDirEdgeDof;
+        map<int,int>::iterator mapIt;
+
         for(i = 0; i < nvel; ++i)
         {
-            bndConditionsVec[i] = m_fields[m_velocity[i]]->GetBndConditions();
+            bndConditionsVec[i] = m_fields[m_velocity[i]]->GetBndConditions(); 
         }
         
-        map<int,int> vertDofs;
-        map<int,int> edgeDofs;
-        map<int,int> interiorDofs;
-
-        for(i = 0; i < locExpVector.size(); ++i)
+        for(j = 0; j < bndCondExp.num_elements(); ++j)
         {
-            for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+            map<int,int> BndExpVids;
+            // collect unique list of vertex ids for this expansion
+            for(k = 0; k < bndCondExp[j]->GetExpSize(); ++k)
             {
-                vertDofs[(locExpVector[i]->GetGeom2D())->GetVid(j)] = nvel;
-                edgeDofs[(locExpVector[i]->GetGeom2D())->GetEid(j)] = 
-                    nvel*(locExpVector[i]->GetEdgeNcoeffs(j)-2);
-                interiorDofs[i] = 1;
+                BndExpVids[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(0)] = bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(0);
+                BndExpVids[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(1)] = bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(1);
+            }
+            
+
+            for(i = 0; i < nvel; ++i)
+            {
+                if(bndConditionsVec[i][j]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
+                {
+                    // set number of Dirichlet conditions along edge
+                    for(k = 0; k < bndCondExp[j]->GetExpSize(); ++k)
+                    {
+                        IsDirEdgeDof[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetEid()] += 1;
+                    }
+
+                    //  set number of Dirichlet conditions at vertices
+                    // with a clamp on its maximum value being nvel to
+                    // handle corners between expansions
+                    for(mapIt = BndExpVids.begin(); mapIt !=  BndExpVids.end(); mapIt++)
+                    {
+                        id = IsDirVertDof[mapIt->second]+1; 
+                        IsDirVertDof[mapIt->second] = (id > nvel)?nvel:id;
+                    }
+                }
+                else
+                { // if not all dirichlet then not singular
+                    IsSingular = false;
+                }
             }
         }
 
+        Array<OneD, map<int,int> >Dofs(2);
+
+        Array<OneD, int> AddMeanPressureToEdgeId(locExpVector.size(),-1);
+        int edgeId,vertId;
+
+
+        // special case of singular problem - need to fix one
+        // pressure dof to and dirichlet edge 
+        if(IsSingular)
+        {
+            id = bndCondExp[0]->GetExp(0)->GetGeom1D()->GetEid(); 
+
+            // determine element with this edge id. There may be a
+            // more direct way of getting element from spatialDomains
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+                {
+                    edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
+                    
+                    if(edgeId == id)
+                    {
+                        AddMeanPressureToEdgeId[i] = id;
+                        break;
+                    }
+                }
+                
+                if(AddMeanPressureToEdgeId[i] != -1)
+                {
+                    break;
+                }
+            }
+        }
+
+
+        for(i = 0; i < locExpVector.size(); ++i)
+        {
+            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+            for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
+            {
+                vertId = (locExpVector[eid]->GetGeom2D())->GetVid(j);
+                if(Dofs[0].count(vertId) == 0)
+                {
+                    Dofs[0][vertId] = nvel;
+                    
+                    // Adjust for a mixed boundary condition
+                    if(IsDirVertDof.count(vertId) != 0)
+                    {
+                        int diff = nvel-IsDirVertDof[vertId];
+                        Dofs[0][vertId] -= diff; 
+                    }
+                }
+
+                edgeId = (locExpVector[eid]->GetGeom2D())->GetEid(j);
+                if(Dofs[1].count(edgeId) == 0)
+                {
+                    Dofs[1][edgeId] = nvel*(locExpVector[eid]->GetEdgeNcoeffs(j)-2);
+                }
+                
+                // count how many vertices 
+                if(IsDirEdgeDof.count(edgeId) != 0)
+                {
+                    int diff = nvel-IsDirEdgeDof[edgeId];
+                    Dofs[1][edgeId] -= diff*(locExpVector[i]->GetEdgeNcoeffs(j)-2);
+                }
+            }
+        }
+        
         locToGloMap->SetUp2DGraphC0ContMap(*m_fields[m_velocity[0]],
                                            solnType,
                                            bndCondExp,
                                            bndConditionsVec,
                                            periodicVertices,
                                            periodicEdges,
-                                           vertReorderedGraphVertId,
-                                           vertDofs,
-                                           edgeReorderedGraphVertId,
-                                           edgeDofs,
+                                           Dofs,
+                                           ReorderedGraphVertId,
                                            firstNonDirGraphVertId,
                                            bottomUpGraph,
-                                           interiorReorderedGraphVertId,
-                                           interiorDofs);
+                                           false,
+                                           4);
 
+        /**
+         * STEP 2a: Set the mean pressure modes to edges depending on
+         * type of direct solver technique;
+         */
+
+        // determine which edge to add mean pressure dof based on
+        // ensuring that at least one pressure dof from an internal
+        // patch is associated with its boundary system
+        if((solnType == MultiRegions::eDirectMultiLevelStaticCond))
+        {
+            // Should put this in a separate function!!
+
+            // Make list of homogeneous graph edges to elmt mappings
+            Array<TwoD, int> EdgeIdToElmts(ReorderedGraphVertId[1].size(),2,-1);
+            map<int,int> HomGraphEdgeIdToEdgeId;
+            
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+                {
+                    edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
+                  
+                    if(ReorderedGraphVertId[1][edgeId] >= firstNonDirGraphVertId)
+                    {
+                        HomGraphEdgeIdToEdgeId[ReorderedGraphVertId[1][edgeId]-firstNonDirGraphVertId] = edgeId;
+                        if(EdgeIdToElmts[edgeId][0] == -1)
+                        {
+                            EdgeIdToElmts[edgeId][0] = i;
+                        }
+                        else
+                        {
+                            EdgeIdToElmts[edgeId][1] = i;
+                        }
+                    }
+                }
+            }
+        
+            map<int,int>::iterator mapIt;
+            
+            // Start at second to last level and find edge on boundary
+            // to attach element
+            int nlevels = bottomUpGraph->GetNlevels();
+
+            // determine a default edge to attache pressure modes to
+            // which is part of the inner solve;
+            int defedge = -1;
+            vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(nlevels);
+            for(i = 0; i < bndgraphs.size(); ++i)
+            {
+                int GlobIdOffset = bndgraphs[i]->GetIdOffset();
+                
+                for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
+                {
+                    // find edge in graph vert list
+                    if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+                    {
+                        edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+                        if(defedge == -1)
+                        {
+                            defedge = edgeId;
+                            break;
+                        }
+                    }
+                }
+                if(defedge != -1)
+                {
+                    break;
+                }
+            }
+
+            for(int n = 1; n < nlevels; ++n)
+            {
+                // produce a map with a key that is the element id
+                // that contains which next level patch it belongs to
+                vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(n+1);
+
+                // Fill next level graph  of adjacent elements and their level
+                map<int,int> ElmtInBndry;
+
+                for(i = 0; i < bndgraphs.size(); ++i)
+                {
+                    int GlobIdOffset = bndgraphs[i]->GetIdOffset();
+                    
+                    for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
+                    {
+                        // find edge in graph vert list
+                        if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+                        {
+                            edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+                        
+
+                            if(EdgeIdToElmts[edgeId][0] != -1)
+                            {
+                                ElmtInBndry[EdgeIdToElmts[edgeId][0]] = i;
+                            }
+                            if(EdgeIdToElmts[edgeId][1] != -1)
+                            {
+                                ElmtInBndry[EdgeIdToElmts[edgeId][1]] = i;
+                            }
+                        }
+                    }
+                }
+
+                // Now search interior patches in this level for edges
+                // that share the same element as a boundary edge and
+                // assign this elmt that boundary edge
+                vector<MultiRegions::SubGraphSharedPtr> intgraphs = bottomUpGraph->GetInteriorBlocks(n);
+                for(i = 0; i < intgraphs.size(); ++i)
+                {
+                    int GlobIdOffset = intgraphs[i]->GetIdOffset();
+                    bool SetEdge = false; 
+                    int elmtid;
+                    for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
+                    {
+                        // Check to see if graph vert is an edge 
+                        if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+                        {
+                            edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+
+                            for(k = 0; k < 2; ++k)
+                            {
+                                // relevant edge id
+                                elmtid = EdgeIdToElmts[edgeId][k];
+
+                                if(elmtid != -1)
+                                {
+                                    mapIt = ElmtInBndry.find(elmtid);
+                                    
+                                    if(mapIt != ElmtInBndry.end())
+                                    {
+                                        // now find a edge in the next level boundary graph 
+                                        int GlobIdOffset1 = bndgraphs[mapIt->second]->GetIdOffset();
+                                        for(int l = 0; l < bndgraphs[mapIt->second]->GetNverts(); ++l)
+                                        {
+                                            // find edge in graph vert list
+                                            if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset1+l) != 0)
+                                            {
+                                                AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
+                        
+                                                SetEdge = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // if we have failed to find matching edge in next
+                    // level patch boundary then set last found elmt
+                    // associated to this interior patch to the
+                    // default edget value
+                    if(SetEdge == false)
+                    {
+                        AddMeanPressureToEdgeId[elmtid] = defedge;
+                    }
+                }
+            }
+        }
+
+        // Set unset elmts to non-Dirichlet edges. 
+        // special case of singular problem - need to fix one
+        // pressure dof to and dirichlet edge 
+        for(i = 0; i < locExpVector.size(); ++i)
+        {
+            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
+            for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
+            {
+                edgeId = (locExpVector[eid]->GetGeom2D())->GetEid(j);
+
+                if(IsDirEdgeDof.count(edgeId) == 0) // interior edge
+                {
+                    // setup AddMeanPressureToEdgeId to decide where to
+                    // put pressure
+                    if(AddMeanPressureToEdgeId[eid] == -1)
+                    {
+                        AddMeanPressureToEdgeId[eid] = edgeId;
+                    }
+                }
+            }
+            ASSERTL0((AddMeanPressureToEdgeId[eid] != -1),"Did not determine "
+                     "a  edge to attach mean pressure dof");
+            // Add the mean pressure degree of freedom to this edge
+            Dofs[1][AddMeanPressureToEdgeId[eid]] += 1;
+        }
+        
+        map<int,int> pressureEdgeOffset;
+                
         /**
          * STEP 2: Count out the number of Dirichlet vertices and edges first
          */
@@ -1107,7 +1490,15 @@ namespace Nektar
                 }
             }
         }
-        locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs);
+
+        if(IsSingular)
+        {
+            locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs+1);
+        }
+        else
+        {
+            locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs);
+        }
 
         /**
          * STEP 3: Set up an array which contains the offset information of
@@ -1120,26 +1511,27 @@ namespace Nektar
          * corresponding to the element edges correspond to 2*(N-2) global DOF
          * where N is equal to the number of boundary modes on this edge.
          */
-        Array<OneD, int> graphVertOffset(nvel*(vertReorderedGraphVertId.size()+
-                                               edgeReorderedGraphVertId.size()+
-                                               interiorReorderedGraphVertId.size()),0);
+        Array<OneD, int> graphVertOffset(nvel*(ReorderedGraphVertId[0].size()+
+                                               ReorderedGraphVertId[1].size()),0);
         graphVertOffset[0] = 0;
         
         for(i = 0; i < nel; ++i)
         {
             eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
             locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[eid]);
+
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
                 nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
                 meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
                 meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+
                 for(k = 0; k < nvel; ++k)
                 {
-                    graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]*nvel+k] = (nEdgeCoeffs-2);
-                    graphVertOffset[vertReorderedGraphVertId[meshVertId]*nvel+k] = 1;
+                    graphVertOffset[ReorderedGraphVertId[1][meshEdgeId]*nvel+k] = (nEdgeCoeffs-2);
+                    graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel+k] = 1;
                 }
-                graphVertOffset[interiorReorderedGraphVertId[eid]*nvel] = 1;
+
                 bType = locExpansion->GetEdgeBasisType(j);
                 // need a sign vector for modal expansions if nEdgeCoeffs >=4
                 if( (nEdgeCoeffs >= 4)&&
@@ -1149,6 +1541,12 @@ namespace Nektar
                     signChange = true;
                 }
             }
+        }
+
+        // Add mean pressure modes; 
+        for(i = 0; i < nel; ++i)
+        {
+            graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel-1] += 1;
         }
         
         locToGloMap->SetSignChange(signChange);
@@ -1179,7 +1577,8 @@ namespace Nektar
                     if(bndConditionsVec[j][i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
 
-                        //negate graph offsets which should be Dirichlet conditions
+                        //negate graph offsets which should be
+                        //Dirichlet conditions
                         for(k = 0; k < bndCondExp[i]->GetExpSize(); ++k)
                         {
                             // vertices with mix condition;
@@ -1187,19 +1586,19 @@ namespace Nektar
                             if(DirVertChk.count(id) == 0)
                             {
                                 DirVertChk[id] = 1;
-                                graphVertOffset[vertReorderedGraphVertId[id]*nvel+j] *= -1; 
+                                graphVertOffset[ReorderedGraphVertId[0][id]*nvel+j] *= -1; 
                             }
                             
                             id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetVid(1);
                             if(DirVertChk.count(id) == 0)
                             {
                                 DirVertChk[id] = 1;
-                                graphVertOffset[vertReorderedGraphVertId[id]*nvel+j] *= -1; 
+                                graphVertOffset[ReorderedGraphVertId[0][id]*nvel+j] *= -1; 
                             }
                             
                             // edges with mixed id; 
                             id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetEid();
-                            graphVertOffset[edgeReorderedGraphVertId[id]*nvel+j] *= -1; 
+                            graphVertOffset[ReorderedGraphVertId[1][id]*nvel+j] *= -1; 
                         }
                     }
                 }
@@ -1229,7 +1628,8 @@ namespace Nektar
         // cnt currently contains the number of global degress of freedom. 
         locToGloMap->SetNumGlobalDirBndCoeffs(cnt);
 
-        // Accumulate all interior degrees of freedom with positive offset values
+        // Accumulate all interior degrees of freedom with positive
+        // offset values
         for(i = firstNonDirGraphVertId*nvel; i < graphVertOffset.num_elements(); ++i)
         {
             if(graphVertOffset[i] >= 0)
@@ -1309,7 +1709,7 @@ namespace Nektar
         cnt = 0;
         int nv,velnbndry;
         Array<OneD, unsigned int> bmap;
-
+        
         // Loop over all the elements in the domain in shuffled
         // ordering (element type consistency)
         for(i = 0; i < nel; ++i)
@@ -1342,18 +1742,14 @@ namespace Nektar
                 // Set the global DOF for vertex j of element i
                 for(nv = 0; nv < nvel; ++nv)
                 {
-                    localToGlobalMap[cnt+nv*velnbndry+inv_bmap[locExpansion->GetVertexMap(j)]] =  graphVertOffset[vertReorderedGraphVertId[meshVertId]*nvel+ nv];
-                    
+                    localToGlobalMap[cnt+nv*velnbndry+inv_bmap[locExpansion->GetVertexMap(j)]] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel+ nv];
                     
                     // Set the global DOF's for the interior modes of edge j
                     for(k = 0; k < nEdgeInteriorCoeffs; ++k)
                     {
-                        localToGlobalMap[cnt+nv*velnbndry+inv_bmap[edgeInteriorMap[k]]] =
-                            graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]*nvel+nv]+k;
+                        localToGlobalMap[cnt+nv*velnbndry+inv_bmap[edgeInteriorMap[k]]] =  graphVertOffset[ReorderedGraphVertId[1][meshEdgeId]*nvel+nv]+k;
                     }
                 }
-                
-                localToGlobalMap[cnt + nvel*velnbndry] = graphVertOffset[interiorReorderedGraphVertId[eid]*nvel];
                 
                 // Fill the sign vector if required
                 if(signChange)
@@ -1367,10 +1763,16 @@ namespace Nektar
                     }
                 }
             }
+
+            // sort out mean pressure dof. 
+            nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(AddMeanPressureToEdgeId[eid])-2;
+            localToGlobalMap[cnt + nvel*velnbndry] = graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[eid]]+1)*nvel-1]+nEdgeInteriorCoeffs + pressureEdgeOffset[AddMeanPressureToEdgeId[eid]];
+            
+            pressureEdgeOffset[AddMeanPressureToEdgeId[eid]] += 1;
+            
             cnt += velnbndry*nvel+ m_pressure->GetExp(eid)->GetNcoeffs();
         }
-        
-
+       
         // Set up the mapping for the boundary conditions
         offset = cnt = 0;
         for(nv = 0; nv < nvel; ++nv)
@@ -1385,7 +1787,7 @@ namespace Nektar
                     for(k = 0; k < 2; k++)
                     {
                         meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
-                        bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[vertReorderedGraphVertId[meshVertId]*nvel+nv];
+                        bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]*nvel+nv];
                     }
                     
                     meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
@@ -1396,7 +1798,7 @@ namespace Nektar
                         if(bndCondCoeffsToGlobalCoeffsMap[cnt+k] == -1)
                         {
                             bndCondCoeffsToGlobalCoeffsMap[cnt+k] =
-                                graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]*nvel+nv]+bndEdgeCnt;
+                                graphVertOffset[ReorderedGraphVertId[1][meshEdgeId]*nvel+nv]+bndEdgeCnt;
                             bndEdgeCnt++;
                         }
                     }
@@ -1437,6 +1839,27 @@ namespace Nektar
             if(staticCondLevel < (bottomUpGraph->GetNlevels()-1))
             {
                 MultiRegions::LocalToGlobalBaseMap *locToGloPointer = m_locToGloMap.get();
+
+                Array<OneD, int> vwgts_perm(Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
+
+                for(i = 0; i < ReorderedGraphVertId[0].size(); ++i)
+                {
+                    if(ReorderedGraphVertId[0][i] >= firstNonDirGraphVertId)
+                    {
+                        vwgts_perm[ReorderedGraphVertId[0][i]-firstNonDirGraphVertId] = Dofs[0][i];
+                    }
+                }
+
+                for(i = 0; i < ReorderedGraphVertId[1].size(); ++i)
+                {
+                    if(ReorderedGraphVertId[1][i] >= firstNonDirGraphVertId)
+                    {
+                        vwgts_perm[ReorderedGraphVertId[1][i]-firstNonDirGraphVertId] = Dofs[1][i];
+                    }
+                }
+                
+                bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+
                 locToGloMap->SetNextLevelLocalToGlobalMap(MemoryManager<MultiRegions::LocalToGlobalBaseMap>::AllocateSharedPtr(locToGloPointer,bottomUpGraph));
             }
         }
@@ -1452,7 +1875,7 @@ namespace Nektar
         for(i = 0; i < m_fields.num_elements(); ++i)
         {
             fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
-            variables[i] = m_boundaryConditions->GetVariable(i);
+            variables[i]   = m_boundaryConditions->GetVariable(i);
         }
         
         fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());

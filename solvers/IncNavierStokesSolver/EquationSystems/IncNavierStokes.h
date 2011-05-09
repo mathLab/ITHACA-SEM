@@ -106,6 +106,12 @@ namespace Nektar
         EquationType  m_equationType;  ///< equation type;
         AdvectionForm m_advectionForm; ///< Form of advection terms. 
 
+        // Time integration classes
+        LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
+        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
+        int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
+
+
         /**
          * Constructor.
          */
@@ -116,10 +122,7 @@ namespace Nektar
             return m_equationType;
         }
 
-        void AdvanceInTime(int nsteps)
-        {
-            v_AdvanceInTime(nsteps);
-        }
+        void AdvanceInTime(int nsteps);
 
         void EvaluateAdvectionTerms(const Array<OneD, 
                                     const Array<OneD, NekDouble> > &inarray, 
@@ -146,13 +149,7 @@ namespace Nektar
             ASSERTL0(false,"This method is not defined in this class");
         }
 
-        virtual void v_AdvanceInTime(int nsteps)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
     private: 
-
     };
     
     typedef boost::shared_ptr<IncNavierStokes> IncNavierStokesSharedPtr;

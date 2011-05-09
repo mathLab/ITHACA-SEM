@@ -76,6 +76,14 @@ namespace Nektar
          */
         void SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing);
 
+        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                                       Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                                       const NekDouble time,
+                                       const NekDouble a_iixDt);
+
+        void EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                               const NekDouble time);
     protected:
         
     private:
@@ -116,7 +124,7 @@ namespace Nektar
         
         MultiRegions::LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
         
-        void SetUp2DExpansionC0ContMap(const MultiRegions::GlobalSysSolnType solnType = MultiRegions::eDirectStaticCond);
+        void SetUp2DExpansionC0ContMap(const MultiRegions::GlobalSysSolnType solnType = MultiRegions::eDirectMultiLevelStaticCond);
 
         virtual void v_PrintSummary(std::ostream &out);
 

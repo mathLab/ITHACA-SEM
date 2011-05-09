@@ -217,7 +217,7 @@ namespace Nektar
             F[n] = F[n-1] + phystot;
         }
 		
-		SetBoundaryConditions(time);
+        SetBoundaryConditions(time);
 		
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
@@ -244,80 +244,8 @@ namespace Nektar
 #endif
         }
 		
-        //Updating time dipendent boundary conditions
-        //SetBoundaryConditions(time);
     }
 
-    void VelocityCorrectionScheme::AdvanceInTime(int nsteps)
-    {
-        int i,n;
-        int phystot = m_fields[0]->GetTotPoints();
-        static int nchk = 0;
-
-        // Set up wrapper to fields data storage. 
-        Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            fields[i]  = m_fields[i]->UpdatePhys();
-            //fields[i]  = Array<OneD, NekDouble>(phystot,0.0);
-        }
-        
-        // Initialise NS solver which is set up to use a GLM method
-        // with calls to EvaluateAdvection_SetPressureBCs and
-        // SolveUnsteadyStokesSystem
-        LibUtilities::TimeIntegrationSolutionSharedPtr 
-            IntegrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep,
-                                                                                  fields,
-                                                                                  m_time,
-                                                                                  m_integrationOps);
-
-        //Time advance
-        for(n = 0; n < nsteps; ++n)
-        {
-            // Advance velocity fields
-            fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, IntegrationSoln, m_integrationOps);
-            
-            m_time += m_timestep;
-			
-            if(!((n+1)%m_infosteps))
-            {
-                cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-            }
-            
-            // dump data in m_fields->m_coeffs to file. 
-            if(n&&(!((n+1)%m_checksteps)))
-            {
-                for(i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_fields[i]->GlobalToLocal();
-                }
-
-                //updating physical space
-                for(i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_fields[i]->SetPhys(fields[i]);
-                }
-
-                for(int j = 0; j < m_fields.num_elements(); ++j){
-        				m_fields[j]->SetPhysState(true);
-            	}
-
-                Checkpoint_Output(nchk++);
-            }
-        }
-
-        //updating physical space
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            m_fields[i]->SetPhys(fields[i]);
-        }
-	
-        //updating coefficients
-        for(int j = 0; j < m_fields.num_elements(); ++j){
-				m_fields[j]->SetPhysState(true);
-    	}
-
-    }
     
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
@@ -526,7 +454,7 @@ namespace Nektar
             m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[m_velocity[0]], Forcing[m_velocity[1]],Forcing[m_velocity[2]]);
         }
         
-        // Subtract inarray/(aii.dt) and divide by kinvis. Kinvis will
+        // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will
         // need to be updated for the convected fields.
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {

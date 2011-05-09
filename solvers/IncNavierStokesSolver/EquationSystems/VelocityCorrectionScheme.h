@@ -72,9 +72,6 @@ namespace Nektar
         
         virtual ~VelocityCorrectionScheme();
         
-        void AdvanceInTime(int nsteps);
-        void AdvanceInTimeNew(int nsteps);
-
         void EvaluatePressureBCs(const Array<OneD, const Array< OneD,  NekDouble> > &fields, const Array<OneD, const Array< OneD,  NekDouble> > &N);
         
         
@@ -94,10 +91,6 @@ namespace Nektar
     protected:
 
     private: 
-        // Time integration classes
-        LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
-        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
-        int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
 
         Array<OneD, int> m_pressureBCtoElmtID;  // Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoTraceID; // Id of edge (2D) or face (3D) to which pressure boundary condition belongs
@@ -127,11 +120,6 @@ namespace Nektar
         virtual void v_DoSolve(void);
 
         virtual void v_DoInitialise(void);
-
-        virtual void v_AdvanceInTime(int nsteps)
-        {
-            AdvanceInTime(nsteps);
-        }
 
         virtual void v_Output(void)
         {

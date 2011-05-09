@@ -158,6 +158,63 @@ namespace Nektar
     {
 
     }
+    
+    void IncNavierStokes::AdvanceInTime(int nsteps)
+    {
+        int i,n;
+        int phystot = m_fields[0]->GetTotPoints();
+        static int nchk = 0;
+
+        // Set up wrapper to fields data storage. 
+        Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
+        for(i = 0; i < m_nConvectiveFields; ++i)
+        {
+            fields[i]  = m_fields[i]->UpdatePhys();
+        }
+        
+        // Initialise NS solver which is set up to use a GLM method
+        // with calls to EvaluateAdvection_SetPressureBCs and
+        // SolveUnsteadyStokesSystem
+        LibUtilities::TimeIntegrationSolutionSharedPtr 
+            IntegrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep,
+                                                                                  fields,
+                                                                                  m_time,
+                                                                                  m_integrationOps);
+        
+        //Time advance
+        for(n = 0; n < nsteps; ++n)
+        {
+            // Advance velocity fields
+            fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, IntegrationSoln, m_integrationOps);
+            
+            m_time += m_timestep;
+       		
+            if(!((n+1)%m_infosteps))
+            {
+                cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+            }
+            
+            // dump data in m_fields->m_coeffs to file. 
+            if(n&&(!((n+1)%m_checksteps)))
+            {
+                //updating physical space
+                for(i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[i]->SetPhys(fields[i]);
+                    m_fields[i]->SetPhysState(true);
+                }
+                
+                Checkpoint_Output(nchk++);
+            }
+        }
+
+        //updating physical space
+        for(i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_fields[i]->SetPhys(fields[i]);
+            m_fields[i]->SetPhysState(true);
+        }
+    }
 
     // Evaluation -N(V) for all fields except pressure using m_velocity
     void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 

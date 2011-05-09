@@ -1,20 +1,20 @@
 IncNavierStokesSolver
 ==========================================
 Test_ChanFlow_m3.xml
-L 2 error (variable u): 1.68718e-16
-L inf error (variable u): 5.55112e-16
+L 2 error (variable u): 4.10109e-16
+L inf error (variable u): 3.9968e-15
 L 2 error (variable v): 0
-L inf error (variable v): 2.2029e-16
-L 2 error (variable p): 3.82868e-15
-L inf error (variable p): 2.84217e-14
+L inf error (variable v): 2.77645e-16
+L 2 error (variable p): 7.08552e-15
+L inf error (variable p): 5.81757e-14
 ----------------------------------------
 Test_ChanFlow_m8.xml
-L 2 error (variable u): 1.02212e-16
-L inf error (variable u): 2.69229e-15
-L 2 error (variable v): 0
-L inf error (variable v): 2.60038e-16
-L 2 error (variable p): 7.29035e-15
-L inf error (variable p): 2.02061e-14
+L 2 error (variable u): 5.22576e-16
+L inf error (variable u): 1.18516e-14
+L 2 error (variable v): 1.93624e-16
+L inf error (variable v): 8.1589e-16
+L 2 error (variable p): 1.64561e-14
+L inf error (variable p): 7.41629e-14
 ----------------------------------------
 Test_KovaFlow_m3.xml
 L 2 error (variable u): 0.34362
@@ -55,10 +55,16 @@ L 2 error (variable v): 0.000172531
 L inf error (variable v): 0.000353995
 ----------------------------------------
 Test_ChanFlow_m8_singular.xml
-L 2 error (variable u): 1.16188e-15
-L inf error (variable u): 6.4497e-15
-L 2 error (variable v): 1.5147e-15
-L inf error (variable v): 1.07865e-14
-L 2 error (variable p): 1.46727e-12
-L inf error (variable p): 1.63434e-12
+L 2 error (variable u): 4.85356e-15
+L inf error (variable u): 3.01807e-14
+L 2 error (variable v): 6.91852e-15
+L inf error (variable v): 5.05205e-14
+L 2 error (variable p): 8.62459e-12
+L inf error (variable p): 9.97631e-12
+----------------------------------------
+Test_ChanFlow_LinNS_m8.xml
+L 2 error (variable u): 2.15523e-14
+L inf error (variable u): 2.362e-13
+L 2 error (variable v): 1.60438e-14
+L inf error (variable v): 1.62954e-13
 ----------------------------------------

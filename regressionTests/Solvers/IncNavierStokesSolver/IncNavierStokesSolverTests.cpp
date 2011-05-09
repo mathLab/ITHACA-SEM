@@ -88,9 +88,13 @@ int main(int argc, char* argv[])
     Execute("IncNavierStokesSolver","Test_TaylorVor_dt2.xml","Convergence: Taylor Vortex IMEXOrder2 dt=0.001");
 
 
-    //Test Coupled LinearnS Kovasznay Flow
+    //Test Coupled LinearNS Kovasznay Flow
     Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Steady Oseen Kovasznay Flow P=6");
     Execute("IncNavierStokesSolver","Test_Kovas_Quad6_Tri4_mixedbcs.xml","Steady Oseen Kovasznay flow, mixed elements and bcs P=7");
+
+
+    //Test Coupled LinearNS unsteady Channel Flow
+    Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady Challen Flow with Coupled Solve , P=8");
 
     if (tests_failed && !quiet)
     {

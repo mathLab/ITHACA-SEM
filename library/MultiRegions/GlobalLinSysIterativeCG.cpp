@@ -69,7 +69,7 @@ namespace Nektar
                     const GlobalLinSysKey &pKey,
                     const boost::shared_ptr<ExpList> &pExp,
                     const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
-                : GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
+            : GlobalLinSysIterative(pKey)
         {
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eIterativeCG,
                      "This routine should only be used when using an Iterative "

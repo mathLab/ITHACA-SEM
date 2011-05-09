@@ -80,8 +80,8 @@ namespace Nektar
                      const GlobalLinSysKey &pKey,
                      const boost::shared_ptr<ExpList> &pExpList,
                      const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                            &pLocToGloMap)
-                : GlobalLinSysDirect(pKey, pExpList, pLocToGloMap)
+                     &pLocToGloMap)
+                : GlobalLinSysDirect(pKey)
         {
             ASSERTL1((pKey.GetGlobalSysSolnType()==eDirectStaticCond)||
                      (pKey.GetGlobalSysSolnType()==eDirectMultiLevelStaticCond),
@@ -125,14 +125,13 @@ namespace Nektar
          */
         GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
                      const GlobalLinSysKey &pKey,
-                     const boost::shared_ptr<ExpList> &pExpList,
                      const DNekScalBlkMatSharedPtr pSchurCompl,
                      const DNekScalBlkMatSharedPtr pBinvD,
                      const DNekScalBlkMatSharedPtr pC,
                      const DNekScalBlkMatSharedPtr pInvD,
                      const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysDirect(pKey, pExpList, pLocToGloMap),
+                : GlobalLinSysDirect(pKey),
                   m_schurCompl ( pSchurCompl ),
                   m_BinvD      ( pBinvD ),
                   m_C          ( pC ),
@@ -369,6 +368,7 @@ namespace Nektar
                 break;
             case StdRegions::eLinearAdvectionReaction:
             case StdRegions::eLinearAdvectionDiffusionReaction:
+            default:
                 {
                     // Current inversion techniques do not seem to
                     // allow banded matrices to be used as a linear
@@ -376,11 +376,6 @@ namespace Nektar
                     matStorage = eFULL;
                 }
                 break;
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Add MatrixType to switch "
-                             "statement");
-                }
             }
 
             return matStorage;
@@ -694,7 +689,7 @@ namespace Nektar
             m_schurCompl.reset();
 
             m_recursiveSchurCompl = MemoryManager<GlobalLinSysDirectStaticCond>::
-                AllocateSharedPtr(m_linSysKey,m_expList,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],pLocToGloMap);
+                AllocateSharedPtr(m_linSysKey,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],pLocToGloMap);
         }
 
     }

@@ -183,8 +183,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetTotDofs() const;
 
-            MULTI_REGIONS_EXPORT void UpdateBottomUpReordering(Array<OneD,       int>& perm, 
-                                          Array<OneD,       int>& iperm) const;
+            MULTI_REGIONS_EXPORT void UpdateBottomUpReordering(Array<OneD,       int>& perm,  Array<OneD,  int>& iperm) const;
 
             MULTI_REGIONS_EXPORT void ExpandGraphWithVertexWeights(const Array<OneD, const int>& wgts);
 
@@ -195,6 +194,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetNintDofsPerPatch(const int whichlevel, Array<OneD, unsigned int>& outarray) const;
             
             MULTI_REGIONS_EXPORT int GetInteriorOffset(const int whichlevel, const int patch = 0) const;
+
+            MULTI_REGIONS_EXPORT vector<SubGraphSharedPtr> GetInteriorBlocks(const int whichlevel) const;
 
             MULTI_REGIONS_EXPORT int GetNumGlobalDofs(const int whichlevel) const;
 

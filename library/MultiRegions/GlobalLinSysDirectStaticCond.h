@@ -80,7 +80,6 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
                         const GlobalLinSysKey &mkey,
-                        const boost::shared_ptr<ExpList> &pExpList,
                         const DNekScalBlkMatSharedPtr pSchurCompl,
                         const DNekScalBlkMatSharedPtr pBinvD,
                         const DNekScalBlkMatSharedPtr pC,

@@ -425,7 +425,7 @@ namespace Nektar
             cout << "interior blocks" << endl;
             for(int i = 0; i < m_IntBlocks.size(); i++)
             {
-                cout << "  " << i << "/"<< m_IntBlocks.size()-1<< ": " << m_IntBlocks[i]->GetNverts() << endl;
+                cout << "  " << i << "/"<< m_IntBlocks.size()-1<< ": " << m_IntBlocks[i]->GetNverts() << ", " << m_IntBlocks[i]->GetIdOffset() << endl;
             }
             cout << endl;
             
@@ -637,6 +637,29 @@ namespace Nektar
             level--;
 
             return returnval;
+        }
+
+        vector<SubGraphSharedPtr> BottomUpSubStructuredGraph::GetInteriorBlocks(const int whichlevel) const
+        {
+            vector<SubGraphSharedPtr> returnval;
+            static int level = 0;
+            level++;
+
+            if(level < whichlevel)
+            {
+                returnval = m_daughterGraph->GetInteriorBlocks(whichlevel);
+            }
+            else if(level == whichlevel)
+            {
+                returnval = m_IntBlocks;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,"If statement should not arrive here");
+            }
+ 
+            level--;
+            return returnval; 
         }
 
         int BottomUpSubStructuredGraph::GetNumGlobalDofs(const int whichlevel) const
@@ -871,14 +894,16 @@ namespace Nektar
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::AllocateSharedPtr(nGraphVerts);
             }
 
-            // Expand the BottomUpSubStructuredGraph object with the weight
-            // of the edge dofs due to the polynomial order
+#if 0 // Removed this operation to higher routine. 
             Array<OneD,int> vwgts_perm(nGraphVerts);
             for(int i = 0; i < nGraphVerts; i++)
             {
                 vwgts_perm[i] = vwgts[perm[i]];
             }
             substructgraph->ExpandGraphWithVertexWeights(vwgts_perm);
+            cout << "Expanded graph" <<endl;
+            substructgraph->Dump();
+#endif
         }
 
         void NoReordering(const BoostGraph& graph,

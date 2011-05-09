@@ -588,6 +588,16 @@ namespace Nektar
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
+
+                    Array<OneD, int> vwgts_perm(nGraphVerts);
+                    
+                    for(int i = 0; i < nGraphVerts; i++)
+                    {
+                        vwgts_perm[i] = vwgts[perm[i]];
+                    }
+
+                    bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+
                     m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
                         AllocateSharedPtr(this,bottomUpGraph);
                 }

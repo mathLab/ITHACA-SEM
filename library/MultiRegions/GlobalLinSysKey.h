@@ -63,6 +63,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor);
+
             /// Linear system with two real factors.
             MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,

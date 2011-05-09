@@ -114,15 +114,13 @@ namespace Nektar
                                        &bndConditions,
                                        const vector<map<int,int> >& periodicVerticesId,
                                        const map<int,int>& periodicEdgesId,
-                                       map<int,int> &vertReorderedGraphVertId,
-                                       map<int,int> &vertDofs,
-                                       map<int,int> &edgeReorderedGraphVertId,
-                                       map<int,int> &edgeDofs,
+                                       Array<OneD, map<int,int> > &Dofs,
+                                       Array<OneD, map<int,int> > &ReorderedGraphVertId,
                                        int          &firstNonDirGraphVertID,
                                        BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
-                                       map<int,int> &interiorReorderedGraphVertId = NullIntIntMap,
-                                       map<int,int> &interiorDofs = NullIntIntMap,
-                                       bool checkIfSystemSingular = false);
+                                       const bool checkIfSystemSingular = false,
+                                       int mdswitch = 1,
+                                       bool doInteriorMap = false);
 
 
             inline int GetLocalToGlobalMap(const int i) const;

@@ -81,7 +81,7 @@ namespace Nektar
                     const boost::shared_ptr<ExpList> &pExp,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
+                : GlobalLinSysDirect(pLinSysKey)
         {
 
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eDirectFullMatrix,

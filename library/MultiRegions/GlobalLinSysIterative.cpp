@@ -47,11 +47,8 @@ namespace Nektar
          */
 
         /// Constructor for full direct matrix solve.
-        GlobalLinSysIterative::GlobalLinSysIterative(
-                    const GlobalLinSysKey &pKey,
-                    const boost::shared_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
-                : GlobalLinSys(pKey, pExpList, pLocToGloMap)
+        GlobalLinSysIterative::GlobalLinSysIterative(const GlobalLinSysKey &pKey)
+                : GlobalLinSys(pKey)
         {
         }
 

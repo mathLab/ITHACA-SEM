@@ -112,7 +112,8 @@ namespace Nektar
 			m_Homogeneous3D = false;
 		    m_npointsZ      = m_boundaryConditions->GetParameter("HomModesZ");
 			m_LhomZ         = m_boundaryConditions->GetParameter("LZ");
-			m_HomoDirec = 1;
+			m_HomoDirec     = 1;
+			m_spacedim      = 3;
 		}
 		
 		if(m_boundaryConditions->CheckForParameter("HomModesX"))
@@ -124,7 +125,8 @@ namespace Nektar
 				m_Homogeneous3D = false;
 				m_npointsX      = m_boundaryConditions->GetParameter("HomModesX");
 				m_LhomX         = m_boundaryConditions->GetParameter("LX");
-				m_HomoDirec = 2;
+				m_HomoDirec     = 2;
+				m_spacedim      = 3;
 			}
 		}
 		
@@ -139,7 +141,8 @@ namespace Nektar
 					m_Homogeneous3D = true;
 					m_npointsY      = m_boundaryConditions->GetParameter("HomModesY");
 					m_LhomY         = m_boundaryConditions->GetParameter("LY");
-					m_HomoDirec = 3;
+					m_HomoDirec     = 3;
+					m_spacedim      = 3;
 				}
 			}
 		}
@@ -234,7 +237,7 @@ namespace Nektar
         MultiRegions::GlobalSysSolnType solnType = MultiRegions::eDirectMultiLevelStaticCond;
 
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
-        m_spacedim = mesh->GetSpaceDimension();
+        m_spacedim = mesh->GetSpaceDimension()+m_HomoDirec;
         m_expdim   = mesh->GetMeshDimension();
 		
         // Continuous Galerkin projection

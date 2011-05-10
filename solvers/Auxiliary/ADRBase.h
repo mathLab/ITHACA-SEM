@@ -371,6 +371,8 @@ namespace Nektar
 		/// Number of Quadrature points used to work out the error
 		int  m_NumQuadPointsError;
 		
+		bool m_UseContCoeff;
+		
 		///Parameter for homogeneous expansions
 		
 		bool USE_FFT;                ///< flag to determine if use or not the FFT for transformations

@@ -78,6 +78,8 @@ namespace Nektar
 
         // Read the geometry and the expansion information
         m_graph = graph.Read(m_filename);
+		
+		m_UseContCoeff = UseContinuousField;
 
         // Also read and store the boundary conditions
         SpatialDomains::MeshGraph *meshptr = m_graph.get();
@@ -984,7 +986,7 @@ namespace Nektar
 		{
 			grad1 = grad0 + nPointsTot;
             grad2 = grad1 + nPointsTot;
-            m_fields[0]->PhysDerivHomo(u,grad0,grad1,grad2,true);
+            m_fields[0]->PhysDerivHomo(u,grad0,grad1,grad2,m_UseContCoeff);
             Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
@@ -1397,6 +1399,8 @@ namespace Nektar
         }
 
         m_graph->Write(outname,FieldDef,FieldData);
+		
+		
     }
 
 

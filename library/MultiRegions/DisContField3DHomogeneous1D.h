@@ -141,6 +141,9 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                     NekDouble tau);
+			
+			virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
+													  const NekDouble x2_in = NekConstants::kNekUnsetDouble);
         };
 
         typedef boost::shared_ptr<DisContField3DHomogeneous1D>  

@@ -225,6 +225,11 @@ namespace Nektar
                 cnt1 += m_planes[n]->GetNcoeffs();
             }
         }
+		
+		void DisContField3DHomogeneous1D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in)
+		{
+			EvaluateBoundaryConditions(time);
+		}
 
 
     } // end of namespace

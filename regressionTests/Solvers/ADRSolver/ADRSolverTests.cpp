@@ -59,6 +59,8 @@ static int tests_passed = 0;
 static int tests_failed = 0;
 static bool verbose = false;
 static bool quiet = false;
+static bool tests_fftw = false;
+
 
 int main(int argc, char* argv[])
 {
@@ -74,6 +76,10 @@ int main(int argc, char* argv[])
     if (argc == 2 && std::string(argv[1]) == "-q")
     {
         quiet = true;
+    }
+	if (argc == 2 && std::string(argv[1]) == "-fftw")
+    {
+        tests_fftw = true;
     }
     // //Test Steady Diffusion Advection
     Execute("ADRSolver","Test_Helmholtz1D_8modes.xml","1D Helmholtz/Steady Diffusion Reaction P=8");
@@ -91,7 +97,13 @@ int main(int argc, char* argv[])
     Execute("ADRSolver","Test_Helmholtz3D_modal.xml","3D Helmholtz/Steady Diffusion Reaction P=7");
 
     Execute("ADRSolver","Test_Helmholtz3D_nodal.xml","3D Helmholtz/Steady Diffusion Reaction P=7");
+	
+	Execute("ADRSolver","Test_Helmholtz_3DHomo1D_MVM.xml","3D-Homogeneous-1D Helmholtz/Steady Diffusion (MVM)");
+	
+    if(tests_fftw)
+	{Execute("ADRSolver","Test_Helmholtz_3DHomo1D_FFT.xml","3D-Homogeneous-1D Helmholtz/Steady Diffusion (FFT)");}
 
+	
     // Test Steady Advection Diffusion Reaction
     Execute("ADRSolver","Test_SteadyAdvDiffReact2D_modal.xml","2D Steady Advection Diffusion Reaction P=9");
 
@@ -128,7 +140,13 @@ int main(int argc, char* argv[])
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_001.xml","2D unsteady advection-diffusion, IMEXOrder2, P=9, dt=0.001");
 
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_0001.xml","2D unsteady advection-diffusion, IMEXOrder2, P=9, dt=0.0001");
+	
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_MVM.xml","3D-Homogeneous-1D unsteady advection-diffusion (MVM)");
+	
+    if(tests_fftw)
+	{Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml","3D-Homogeneous-1D unsteady advection-diffusion (FFT)");}
 
+	
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;

@@ -58,6 +58,7 @@ namespace Nektar
         NekDouble m_lambda;
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
+
         virtual void v_PrintSummary(std::ostream &out);
         virtual void v_DoSolve();
     };

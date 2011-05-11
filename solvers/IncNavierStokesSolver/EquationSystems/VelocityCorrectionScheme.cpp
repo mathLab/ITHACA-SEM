@@ -194,6 +194,18 @@ namespace Nektar
     {
         // evaluate convection terms
         EvaluateAdvectionTerms(inarray,outarray);
+        
+        //add the force
+	if(bforce)
+	{	
+	  int nqtot      = m_fields[0]->GetTotPoints();		
+	  for(int i = 0; i < m_nConvectiveFields; ++i)
+          {
+			 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
+          }        
+        }
+        
+        
 
         // Set pressure BCs
         EvaluatePressureBCs(inarray, outarray);

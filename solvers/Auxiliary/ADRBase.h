@@ -78,6 +78,14 @@ namespace Nektar
         {
             v_SetInitialConditions(initialtime,dumpInitialConditions);
         }
+       /// Decide the kind of forcing functions
+        void SetInitialForce(NekDouble initialtime=0.0) ;
+	/// populate m_forces
+        void CalcForce(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
+
+       ///Initialise the dimendion of forcing functions fce
+        void InitialiseForcingFunctions(
+                        Array<OneD, MultiRegions::ExpListSharedPtr> &fce);
 
         /// Populate given fields with the forcing function from session.
         void SetPhysForcingFunctions(
@@ -166,6 +174,11 @@ namespace Nektar
 
         /// Input field data from the given file.
         void ImportFld(std::string &infile);
+        
+        ///Input force data from the given file.
+        void ImportFldForce(std::string infile);
+
+        
 
         /// Output a field.
         void Array_Output(const int n, std::string name,
@@ -394,8 +407,14 @@ namespace Nektar
     protected:
         /// Array holding all dependent variables.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
+        /// Array holding force values.
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
+        /// variable that determine if the force is necessary or not.
+        bool bforce;
         /// Array holding all dependent variables.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
+        /// dimension force array
+        int FDim;
         /// Pointer to boundary conditions object.
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
         /// Pointer to history data object.

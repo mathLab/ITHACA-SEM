@@ -63,6 +63,10 @@ namespace Nektar
 
         /// Perform any initialisation necessary before solving the problem.
         void DoInitialise(void);
+        /// Perform initialisation of the force.
+        void InitialiseForce();
+        /// Perform initialisation of the base flow.
+        void InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base);        
 
         /// Solve the problem.
         void DoSolve(void);
@@ -73,9 +77,12 @@ namespace Nektar
         void Output(void);
 
     protected:
+    	    
+    	    
+    	string filename;    
         /// The session reader
         SessionReaderSharedPtr                  m_session;
-
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
         /// Initialises EquationSystem class members.
         EquationSystem(SessionReaderSharedPtr& pSession);
 
@@ -94,7 +101,13 @@ namespace Nektar
 
         /// Virtual function for printing summary information.
         virtual void v_PrintSummary(std::ostream &out);
-		
+        
+        //Initialise m_base in order to store the base flow from a file 
+        void SetUpBaseFields( SpatialDomains::MeshGraphSharedPtr &mesh);
+        
+        // Fill m_base with the values stored in a fld file
+        void ImportFldBase(std::string pInfile, SpatialDomains::MeshGraphSharedPtr 
+    	    pGraph);		
         // Ouptut field information
         virtual void v_Output(void);
 

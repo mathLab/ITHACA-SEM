@@ -81,6 +81,11 @@ int main(int argc, char *argv[])
     // the solver.
     equ->PrintSummary(cout);
     equ->DoInitialise();
+    //initialise force if it necessary
+    equ->SetInitialForce(0.0);
+    
+    
+    
 
     // Solve the problem.
     equ->DoSolve();

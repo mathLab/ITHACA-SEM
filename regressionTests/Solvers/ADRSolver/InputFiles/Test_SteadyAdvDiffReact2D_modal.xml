@@ -261,6 +261,7 @@
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="SteadyAdvectionDiffusionReaction" />
       <I PROPERTY="Projection" VALUE="Continuous"/>
+      <I PROPERTY="force" VALUE="Codsd"/>
     </SOLVERINFO>
 
     <!--One of these for each dimension. These are the vector

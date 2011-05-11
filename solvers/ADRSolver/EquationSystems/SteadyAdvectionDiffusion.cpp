@@ -50,42 +50,31 @@ namespace Nektar
           m_lambda(0.0)
     {
         // Define forcing function. 
-        SetPhysForcingFunctions(m_fields);
-
-        // Define Velocity fields
+        EquationSystem::InitialiseForce();    
+                
+        // Define Velocity fields     
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim); 
-        int nq = m_fields[0]->GetNpoints();
-        std::string velStr[3] = {"Vx","Vy","Vz"};
-
-        for(int i = 0; i < m_spacedim; ++i)
-        {
-            m_velocity[i] = Array<OneD, NekDouble> (nq,0.0);
-
-            SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-                = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
-            
-            EvaluateFunction(m_velocity[i],ifunc);
-        }
+        
+        EquationSystem::InitialiseBaseFlow(m_velocity);
 
     }
-
+       
     SteadyAdvectionDiffusion::~SteadyAdvectionDiffusion()
     {
 
     }
+    
+
 
     void SteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
     {
         out << "\tLambda          : " << m_lambda << endl;
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            out << "\tForcing func [" << i << "]: " << m_boundaryConditions->GetForcingFunction(i)->GetEquation() << endl;
-        }
     }
 
 
     void SteadyAdvectionDiffusion::v_DoSolve()
     {
+
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
             m_fields[i]->LinearAdvectionDiffusionReactionSolve(m_velocity,

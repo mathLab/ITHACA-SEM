@@ -544,6 +544,29 @@ namespace Nektar
         m_spatialParameters->EvaluateParameters(x,y,z);
 
         ScanForHistoryPoints();
+        
+        
+             
+      //define dimension of the forcing function     
+      
+       std::string sname
+                = m_boundaryConditions->GetSolverInfo("EQTYPE");
+
+        
+        
+
+          if(sname== "UnsteadyNavierStokes")
+          {
+          	  FDim=(m_fields.num_elements() -1);
+          }
+          else
+          {
+          	  FDim=m_fields.num_elements();
+          }
+  
+        
+        
+        
     }
 
 
@@ -569,7 +592,71 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
         }
     }
+    
+    
+    
 
+
+   // Perform manipulation of the force data.
+   void ADRBase::CalcForce(Array<OneD, MultiRegions::ExpListSharedPtr> &force)
+   {
+       int nq = m_fields[0]->GetNpoints();
+        for(int i = 0 ; i < (m_spacedim); i++)
+        {
+            for(int j = 0; j < nq; j++)
+            {
+            //    (force[i]->UpdatePhys())[j]=
+            //               exp(-pow((m_fields[i]->GetPhys())[j],2));
+            	   (force[i]->UpdatePhys())[j]= (m_forces[i]->GetPhys())[j];
+            }
+            force[i]->SetPhysState(true);
+//            force[m_fields[i]]->PhysDeriv(i,force[m_fields[i]], wk);
+        }
+   }
+
+
+
+    void ADRBase::SetInitialForce(NekDouble initialtime) 
+    {
+
+	if(m_boundaryConditions->SolverInfoExists("FORCE"))
+	{
+		
+		bforce=true;
+                InitialiseForcingFunctions(m_forces);
+		std::string forcefileyn= m_boundaryConditions->GetSolverInfo("FORCE");
+		//capitalise the string forcefileyn
+		std::transform(forcefileyn.begin(),forcefileyn.end(),forcefileyn.begin(), ::toupper);
+
+		if(forcefileyn=="FILE")
+		{	
+			string forcefile = m_filename.substr(0, m_filename.find_last_of("."));
+			cout<<"Force from file: "<<forcefile<<"-force.rst"<<endl;
+			ImportFldForce(forcefile + "-force.rst");
+			CalcForce(m_forces);
+		}
+		else
+		{
+			SetPhysForcingFunctions(m_forces);
+		}
+	}
+	else
+	{
+		bforce= false;
+	}
+
+      }
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
     /**
      * Set the physical fields based on a restart file, or a function
      * describing the initial condition given in the session.
@@ -648,7 +735,7 @@ namespace Nektar
         // discretisation)
         force[0]->GetCoords(x0,x1,x2);
 
-        for(int i = 0 ; i < m_fields.num_elements(); i++)
+        for(int i = 0 ; i < (FDim); i++)
         {
             SpatialDomains::ConstForcingFunctionShPtr ffunc
                     = m_boundaryConditions->GetForcingFunction(i);
@@ -661,6 +748,67 @@ namespace Nektar
             force[i]->SetPhysState(true);
         }
     }
+
+
+
+
+
+
+   void ADRBase::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &fce)
+   {
+   	   
+   	   
+        fce  = Array<OneD, MultiRegions::ExpListSharedPtr>(FDim);
+        int nq = m_fields[0]->GetNpoints();
+
+
+        switch(m_spacedim)
+    	{
+	
+    	 case 1:
+      
+                   fce[0] = MemoryManager<MultiRegions
+                            ::DisContField1D>::AllocateSharedPtr
+                            (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
+                        Vmath::Zero(nq,(fce[0]->UpdatePhys()),1);
+                            break;
+
+
+    	 case 2:
+       
+
+                   for(int i = 0 ; i < FDim; i++)
+                   {
+
+                   	   fce[i] = MemoryManager<MultiRegions
+                                ::DisContField2D>::AllocateSharedPtr
+                                (*boost::static_pointer_cast<MultiRegions::DisContField2D>(m_fields[i]));
+                        Vmath::Zero(nq,(fce[i]->UpdatePhys()),1);
+                   }
+                   break;
+
+
+/**
+         case 3:
+       
+
+                   for( int i = 0 ; i < FDim; i++)
+                   {
+                        fce[i] = MemoryManager<MultiRegions
+                                ::DisContField3D>::AllocateSharedPtr
+                                (*boost::static_pointer_cast<MultiRegions::DisContField3D>(m_fields[i]));
+//                        Vmath::Zero(nq,(fce[i]->UpdatePhys()),1);
+                   }
+                   break;
+*/
+
+	}
+
+
+
+    }
+
+
 
     /**
      * Evaluates the exact solution provided in the session for a given
@@ -1435,6 +1583,46 @@ namespace Nektar
                                   m_fields[j]->UpdatePhys());
         }
     }
+    
+    
+    
+    void ADRBase::ImportFldForce(std::string pInfile)
+    {
+    	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    	    std::vector<std::vector<NekDouble>   > FieldData;
+    	    
+    	    m_graph->Import(pInfile, FieldDef,FieldData);
+    	    
+
+    	    //int nvar= m_spacedim;
+    	      int nvar= FDim;
+    	    
+   	    
+    	    for(int j=0; j <nvar; ++j)
+    	    {
+    	       for(int i=0; i<FieldDef.size(); ++i)
+    	       {
+    	    	    
+    	    	    
+    	    	    bool flag = FieldDef[i]->m_fields[j]
+    	             ==m_boundaryConditions->GetVariable(j);
+    	             ASSERTL1(flag, (std::string("Order of ") +pInfile
+    	             	     + std::string("  data and that defined in "
+    	             	     	     "m_boundaryconditions differs")).c_str());
+    	             
+    	             
+    	            m_forces[j]->ExtractDataToCoeffs(FieldDef[i]
+    	            	    , FieldData[i], FieldDef[i]->m_fields[j]);
+          
+    	       }
+    	    	m_forces[j]->BwdTrans(m_forces[j]->GetCoeffs(), m_forces[j]
+    	    		->UpdatePhys());    
+   	    }	    
+     }	
+    
+    
+    
+    
 
 
     /**

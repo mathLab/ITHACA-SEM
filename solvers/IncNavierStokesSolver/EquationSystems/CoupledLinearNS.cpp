@@ -712,6 +712,26 @@ namespace Nektar
     {
         // evaluate convection terms
         EvaluateAdvectionTerms(inarray,outarray);
+
+
+        //NekVector< NekDouble > Outarray[0](outarray[0].num_elements(), outarray[0], eWrapper);
+
+        cout<<outarray.num_elements()<<"bool"<<bforce<<"nconvfields"<<m_nConvectiveFields<<endl;
+        int nqtot      = m_fields[0]->GetTotPoints();	        
+        //cout<<"F="<<(m_forces[0]->GetPhys())[1]<<"nq"<<nqtot<<"size"<< inarray.GetColumns()<<endl;
+        
+        
+        //add the force
+	if(bforce)
+	{	
+	
+	  for(int i = 0; i < m_nConvectiveFields; ++i)
+          {
+			 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
+          }        
+        }
+                
+
     }
 
     void CoupledLinearNS::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -1034,6 +1054,7 @@ namespace Nektar
             {
                 for(k = 0; k < nbnd; ++k)
                 {
+                     // f_bnd store v_bnd????                	
                     f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]];
                 }
                 cnt += nbnd;
@@ -1055,6 +1076,8 @@ namespace Nektar
             cnt1 = m_pressure->GetCoeff_Offset(eid);
             for(j = 0; j < nint-1; ++j)
             {
+            	//p_coeffs store p_0???    
+            	    
                 p_coeffs[cnt1+1+j] = 
                     f_p[cnt+1+j] = bnd[loctoglomap[offset + nvel*nbnd + 1 +j]];
 
@@ -1066,6 +1089,15 @@ namespace Nektar
         // Back solve first level of static condensation for interior
         // velocity space and store in F_int
         F_int = (*m_Cinv)*(F_int + Transpose(*m_D_int)*F_p - Transpose(*m_Btilde)*F_bnd);
+        
+        //NOTE WHY F_bnd and not f_bnd where the v_bnd is stored??????????????
+        
+        //so F_int store v_int??? should be:
+        //f_int = (*m_Cinv)*(F_int + Transpose(*m_D_int)*F_p - 
+        //Transpose(*m_Btilde)*f_bnd)
+        //in this case f_int store the v_int maybe eWrapper is the key of the 
+        //problem        
+        
         
         // Unpack solution from Bnd and  F_int to m_fields 
         cnt = cnt1 = 0;
@@ -1187,6 +1219,9 @@ namespace Nektar
                         IsDirEdgeDof[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetEid()] += 1;
                     }
 
+                                cout<<"bndCondExp numelements"<<bndCondExp.num_elements()<<"nvel"<<nvel<<endl;
+
+                    
                     //  set number of Dirichlet conditions at vertices
                     // with a clamp on its maximum value being nvel to
                     // handle corners between expansions
@@ -1556,6 +1591,7 @@ namespace Nektar
         // has a mixed Dirichlet with Neumann/Robin Condition and if
         // so negate the offset associated with this vertex. 
 
+        
         map<int,int> DirVertChk;
 
         for(i = 0; i < bndConditionsVec[0].num_elements(); ++i)
@@ -1625,7 +1661,7 @@ namespace Nektar
             }
         }
     
-        // cnt currently contains the number of global degress of freedom. 
+        // cnt currently contains the number of global degrees of freedom. 
         locToGloMap->SetNumGlobalDirBndCoeffs(cnt);
 
         // Accumulate all interior degrees of freedom with positive

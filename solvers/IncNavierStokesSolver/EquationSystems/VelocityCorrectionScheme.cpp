@@ -203,8 +203,7 @@ namespace Nektar
           {
 			 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
           }        
-        }
-        
+        }        
         
 
         // Set pressure BCs

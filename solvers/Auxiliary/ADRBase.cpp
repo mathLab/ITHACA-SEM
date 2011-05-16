@@ -552,10 +552,10 @@ namespace Nektar
        std::string sname
                 = m_boundaryConditions->GetSolverInfo("EQTYPE");
 
-        
+       std::string tname = m_boundaryConditions->GetSolverInfo("SOLVERTYPE"); 
         
 
-          if(sname== "UnsteadyNavierStokes")
+          if((sname== "UnsteadyNavierStokes")&&(tname=="VelocityCorrectionScheme"))
           {
           	  FDim=(m_fields.num_elements() -1);
           }
@@ -638,6 +638,7 @@ namespace Nektar
 		else
 		{
 			SetPhysForcingFunctions(m_forces);
+			cout<<"force0"<<(m_forces[0]->GetPhys())[1]<<endl;
 		}
 	}
 	else

@@ -261,6 +261,8 @@ namespace Nektar
             ASSERTL0(false,"Advection form not known");
             break;
         }        
+
+
     }
 	
 	//time dependent boundary conditions updating
@@ -280,6 +282,10 @@ namespace Nektar
 			}
 		}
 	}
+	
+
+ 	
+	
     
 
     // case insensitive string comparison from web

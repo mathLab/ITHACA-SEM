@@ -548,24 +548,22 @@ namespace Nektar
         
              
       //define dimension of the forcing function     
-      
-       std::string sname
+        FDim = m_fields.num_elements();
+        if (m_boundaryConditions->CheckForParameter("EQTYPE")
+            && m_boundaryConditions->CheckForParameter("SOLVERTYPE"))
+        {      
+            std::string sname
                 = m_boundaryConditions->GetSolverInfo("EQTYPE");
 
-       std::string tname = m_boundaryConditions->GetSolverInfo("SOLVERTYPE"); 
+            std::string tname 
+                = m_boundaryConditions->GetSolverInfo("SOLVERTYPE"); 
         
-
-          if((sname== "UnsteadyNavierStokes")&&(tname=="VelocityCorrectionScheme"))
-          {
-          	  FDim=(m_fields.num_elements() -1);
-          }
-          else
-          {
-          	  FDim=m_fields.num_elements();
-          }
-  
-        
-        
+            if((sname=="UnsteadyNavierStokes")
+                                    &&(tname=="VelocityCorrectionScheme"))
+            {
+          	    FDim=(m_fields.num_elements() -1);
+            }
+        }
         
     }
 

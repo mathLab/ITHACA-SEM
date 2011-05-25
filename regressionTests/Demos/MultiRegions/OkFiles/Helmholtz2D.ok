@@ -20,3 +20,18 @@ L infinity error: 0.0101781
 L 2 error:        0.00888037
 H 1 error:        0.0961436
 ----------------------------------------
+helmholtz2D_7modes_AllBCs_mlsc.xml
+L infinity error: 0.0101781
+L 2 error:        0.00888037
+H 1 error:        0.0961436
+----------------------------------------
+helmholtz2D_7modes_AllBCs_sc.xml
+L infinity error: 0.0101781
+L 2 error:        0.00888037
+H 1 error:        0.0961436
+----------------------------------------
+helmholtz2D_7modes_AllBCs_iter.xml
+L infinity error: 0.0101781
+L 2 error:        0.00888037
+H 1 error:        0.0961436
+----------------------------------------

@@ -88,11 +88,13 @@ int main(int argc, char* argv[])
 
     Execute("Helmholtz2D", "helmholtz2D_7nodes.xml","CG Helmholtz2D  P=7");
 
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, ML Static Condensation");
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_mlsc.xml","CG Helmholtz2D  P=7 All BCs, Direct ML Static Condensation");
 
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, Static Condensation");
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_sc.xml","CG Helmholtz2D  P=7 All BCs, Direct Static Condensation");
 
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, Full Matrix");
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, Direct Full Matrix");
+    
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_iter.xml","CG Helmholtz2D  P=7 All BCs, Iterative Full Matrix");
 
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  P=7");
 

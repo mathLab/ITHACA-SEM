@@ -51,7 +51,7 @@ namespace Nektar
                                                        const NekDouble lhom,
 													   bool useFFT,
                                                        boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
-                                                       Array<OneD, ExpList1DSharedPtr> &planes):
+                                                       Array<OneD, ExpListSharedPtr> &planes):
             ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
         {
             int n,nel;

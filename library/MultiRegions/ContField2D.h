@@ -201,7 +201,7 @@ namespace Nektar
                                                         = NullNekDouble1DArray);
 
             /// Returns the boundary conditions expansion.
-            inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&
+            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
                                                         GetBndCondExpansions();
 
             /// Returns the boundary conditions.
@@ -658,7 +658,7 @@ namespace Nektar
             }
         }
 
-        inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&
+        inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
                                             ContField2D::GetBndCondExpansions()
         {
             return m_bndCondExpansions;

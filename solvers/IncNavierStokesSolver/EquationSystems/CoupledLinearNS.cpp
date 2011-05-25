@@ -1007,7 +1007,7 @@ namespace Nektar
         
         for(k = 0; k < nvel; ++k)
         {
-            const Array<OneD, const MultiRegions::ExpList1DSharedPtr> bndCondExp = m_fields[m_velocity[k]]->GetBndCondExpansions();
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = m_fields[m_velocity[k]]->GetBndCondExpansions();
             const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConds = m_fields[m_velocity[k]]->GetBndConditions();
             
             for(i = 0; i < bndCondExp.num_elements(); ++i)
@@ -1170,7 +1170,7 @@ namespace Nektar
         MultiRegions::LocalToGlobalC0ContMapSharedPtr locToGloMap;
         m_locToGloMap = locToGloMap = MemoryManager<MultiRegions::LocalToGlobalC0ContMap>::AllocateSharedPtr(); 
 
-        const Array<OneD, const MultiRegions::ExpList1DSharedPtr> bndCondExp = m_fields[m_velocity[0]]->GetBndCondExpansions();
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = m_fields[m_velocity[0]]->GetBndCondExpansions();
         Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(nvel);
 
         map<int,int> IsDirVertDof;

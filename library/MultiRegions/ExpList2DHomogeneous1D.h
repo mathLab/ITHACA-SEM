@@ -76,7 +76,7 @@ namespace Nektar
                                    const NekDouble lhom,
 								   bool useFFT,
                                    boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
-                                   Array<OneD, ExpList1DSharedPtr> &planes);
+                                   Array<OneD, ExpListSharedPtr> &planes);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(const ExpList2DHomogeneous1D &In);

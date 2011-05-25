@@ -8,6 +8,7 @@ DisContField2D.cpp
 DisContField3D.cpp
 DisContField3DHomogeneous1D.cpp
 ExpList.cpp
+ExpList0D.cpp
 ExpList1D.cpp
 ExpList2D.cpp
 ExpList3D.cpp
@@ -40,6 +41,7 @@ DisContField2D.h
 DisContField3D.h
 DisContField3DHomogeneous1D.h
 ExpList.h
+ExpList0D.h
 ExpList1D.h
 ExpList2D.h
 ExpList3D.h

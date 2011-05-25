@@ -402,9 +402,9 @@ namespace Nektar
 			int nT_cfs = nP_cfs*nF_pts;                      //number of total coefficients (nT_cfs)
 			
 			Array<OneD, NekDouble> temparray(nT_cfs);
-			Array<OneD, NekDouble> tmp1;
-			Array<OneD, NekDouble> tmp2;
-			Array<OneD, NekDouble> tmp3;
+			Array<OneD, NekDouble> tmp1(nT_cfs);
+			Array<OneD, NekDouble> tmp2(nT_cfs);
+			Array<OneD, NekDouble> tmp3(nT_cfs);
             
 			
 			for( int i=0 ; i<nF_pts ; i++ )
@@ -447,8 +447,8 @@ namespace Nektar
 			int nT_cfs = nP_cfs*nF_pts;                      //number of total coefficients (nT_cfs)
 			
 			Array<OneD, NekDouble> temparray(nT_cfs);
-			Array<OneD, NekDouble> tmp1;
-			Array<OneD, NekDouble> tmp2;
+			Array<OneD, NekDouble> tmp1(nT_cfs);
+			Array<OneD, NekDouble> tmp2(nT_cfs);
             
 			if (dir < 2)
 			{

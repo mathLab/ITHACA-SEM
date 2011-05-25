@@ -1860,7 +1860,7 @@ namespace Nektar
             {
                 int eid     = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
-                fielddata.insert(fielddata.end(),&coeffs[m_coeff_offset[eid]],&coeffs[m_coeff_offset[eid]]+datalen);
+                fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
             }
 
         }
@@ -1921,23 +1921,23 @@ namespace Nektar
             }
         }
 
-        const Array<OneD,const boost::shared_ptr<ExpList1D> >
+        const Array<OneD,const boost::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,const boost::shared_ptr<ExpList1D> > result;
+            static Array<OneD,const boost::shared_ptr<ExpList> > result;
             return result;
         }
 
-        boost::shared_ptr<ExpList1D>  &ExpList::v_UpdateBndCondExpansion(int i)
+        boost::shared_ptr<ExpList>  &ExpList::v_UpdateBndCondExpansion(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList1D> result;
+            static boost::shared_ptr<ExpList> result;
             return result;
         }
-
+		
         boost::shared_ptr<ExpList1D> &ExpList::v_GetTrace()
         {
             ASSERTL0(false,
@@ -2228,7 +2228,57 @@ namespace Nektar
                 break;
             }
         }
-
+		
+		/**
+         */
+        void ExpList::v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
+        {
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		/**
+         */
+        void ExpList::v_GetCoord(Array<OneD, NekDouble> &coords)
+        {
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		/**
+         */
+		void ExpList::v_SetCoeff(NekDouble val)
+        {
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		/**
+         */
+		void ExpList::v_SetPhys(NekDouble val)
+        {
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		/**
+         */
+		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetGeom(void) const
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		/**
+         */
+		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetVertex(void) const
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		/**
+         */
         void ExpList::v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp)
         {
@@ -2236,6 +2286,8 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+		/**
+         */
         void ExpList::v_SetUpTangents()
         {
             for (int i = 0; i < (*m_exp).size(); ++i) {
@@ -2243,6 +2295,8 @@ namespace Nektar
             }
         }
 
+		/**
+         */
         void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                             Array<OneD,int> &EdgeID)
         {
@@ -2250,12 +2304,16 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+		/**
+         */
         void ExpList::v_ReadGlobalOptimizationParameters(const std::string &infilename)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
+		/**
+         */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                                             &ExpList::v_GetBndConditions()
         {
@@ -2266,6 +2324,8 @@ namespace Nektar
             return result;
         }
 
+		/**
+         */
         Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()
         {
             ASSERTL0(false,
@@ -2275,12 +2335,16 @@ namespace Nektar
             return result;
         }
 
+		/**
+         */
         void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
+		/**
+         */
         map<int, RobinBCInfoSharedPtr> ExpList::v_GetRobinBCInfo(void)
         {
             ASSERTL0(false,
@@ -2289,6 +2353,8 @@ namespace Nektar
             return result;
         }
 
+		/**
+         */
         void ExpList::v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
                                          SpatialDomains::BoundaryConditions &bcs,
                                          const std::string variable,

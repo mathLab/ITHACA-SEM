@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList0D.h>
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/Conditions.h>
@@ -88,8 +89,11 @@ namespace Nektar
                     const GlobalLinSysKey &mkey);
 
             /// Retrieve the boundary condition expansions.
-            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
-                                                        GetBndCondExpansions();
+            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&GetBndCondExpansions();
+			
+			inline MultiRegions::ExpListSharedPtr &UpdateBndCondExpansion(int i);
+			
+			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &UpdateBndConditions();
 
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
 
@@ -108,7 +112,7 @@ namespace Nektar
              * and consists of entries of the type LocalRegions#PointExp. Every
              * entry corresponds to a point on a single boundary region.
              */
-            Array<OneD,LocalRegions::PointExpSharedPtr> m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
@@ -149,7 +153,7 @@ namespace Nektar
                                 const SpatialDomains::MeshGraph1D &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
-                                Array<OneD, LocalRegions::PointExpSharedPtr>
+                                Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             &bndCondExpansions,
                                 Array<OneD, SpatialDomains
                                     ::BoundaryConditionShPtr> &bndConditions);
@@ -181,22 +185,42 @@ namespace Nektar
                           NekDouble tau);
 
             /// Retrieve the boundary condition descriptions.
-            virtual const Array<OneD,const SpatialDomains
-                                ::BoundaryConditionShPtr>& v_GetBndConditions();
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();
+			
+			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
+            {
+                return m_bndConditions;
+            }
+			
+			inline MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
+            {
+                return m_bndCondExpansions[i];
+            }
 
             /// Evaluate all boundary conditions at a given time..
-            virtual void v_EvaluateBoundaryConditions(
-                    const NekDouble time = 0.0,
-                    const NekDouble x2_in = NekConstants::kNekUnsetDouble);
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
+													  const NekDouble x2_in = NekConstants::kNekUnsetDouble);
+			
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
 
-        inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
-                                        DisContField1D::GetBndCondExpansions()
+        inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &DisContField1D::GetBndCondExpansions()
         {
             return m_bndCondExpansions;
         }
+		
+		inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &DisContField1D::UpdateBndConditions()
+		{
+			return m_bndConditions;
+		}
+		
+		inline MultiRegions::ExpListSharedPtr &DisContField1D::UpdateBndCondExpansion(int i)
+		{
+			return m_bndCondExpansions[i];
+		}
+		
+		
 
     } //end of namespace
 } //end of namespace

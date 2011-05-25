@@ -202,22 +202,22 @@ namespace Nektar
                 {
 					if(IsForwards)
 					{
-						blkmat = GetHomogeneous1DBlockMatrix(eForwardsPhysSpace);
+						blkmat = GetHomogeneous1DBlockMatrix(eForwardsPhysSpace1D);
 					}
 					else
 					{
-						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsPhysSpace);
+						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsPhysSpace1D);
 					}
                 }
 				else
                 {
 					if(IsForwards)
 					{
-						blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace,UseContCoeffs);
+						blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D,UseContCoeffs);
 					}
 					else
 					{
-						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace,UseContCoeffs);
+						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D,UseContCoeffs);
 					}
                 }
 				
@@ -325,8 +325,8 @@ namespace Nektar
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
 
-            if((mattype == eForwardsCoeffSpace)
-               ||(mattype == eBackwardsCoeffSpace)) // will operate on m_coeffs
+            if((mattype == eForwardsCoeffSpace1D)
+               ||(mattype == eBackwardsCoeffSpace1D)) // will operate on m_coeffs
             {
                 if(UseContCoeffs)
                 {
@@ -345,7 +345,7 @@ namespace Nektar
             Array<OneD,unsigned int> nrows(n_exp);
             Array<OneD,unsigned int> ncols(n_exp);
 
-            if((mattype == eForwardsCoeffSpace)||(mattype == eForwardsPhysSpace))
+            if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
             {
                 nrows = Array<OneD, unsigned int>(n_exp,m_homogeneousBasis->GetNumModes());
                 ncols = Array<OneD, unsigned int>(n_exp,m_planes.num_elements());
@@ -362,7 +362,7 @@ namespace Nektar
 
             StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
 
-            if((mattype == eForwardsCoeffSpace)||(mattype == eForwardsPhysSpace))
+            if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
             {
                 StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
                                                 StdSeg.DetExpansionType(),

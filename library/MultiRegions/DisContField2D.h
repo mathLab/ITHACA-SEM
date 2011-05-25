@@ -197,7 +197,7 @@ namespace Nektar
                                     const Array<OneD, const NekDouble> &Bwd,
                                     Array<OneD, NekDouble> &outarray);
 
-            inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& GetBndCondExpansions()
+            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>& GetBndCondExpansions()
             {
                 return m_bndCondExpansions;
             }
@@ -243,7 +243,7 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional
              * expansion.
              */
-            Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>       m_bndCondExpansions;
 
             /**
              * \brief An array which contains the information about
@@ -341,7 +341,7 @@ namespace Nektar
                 ExtractTracePhys(inarray,outarray);
             }
 
-	    inline virtual const Array<OneD,const MultiRegions::ExpList1DSharedPtr> & v_GetBndCondExpansions(void)
+	    inline virtual const Array<OneD,const MultiRegions::ExpListSharedPtr> & v_GetBndCondExpansions(void)
             {
 	      return GetBndCondExpansions();
             }
@@ -351,7 +351,7 @@ namespace Nektar
                 return GetBndConditions();
             }
 
-            inline MultiRegions::ExpList1DSharedPtr &v_UpdateBndCondExpansion(int i)
+            inline MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];
             }

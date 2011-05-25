@@ -146,7 +146,7 @@ namespace Nektar
             boost::shared_ptr<StdRegions::StdExpansionVector> exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             
             int nplanes = m_planes.num_elements();
-            Array<OneD, MultiRegions::ExpList1DSharedPtr> PlanesBndCondExp(nplanes);
+            Array<OneD, MultiRegions::ExpListSharedPtr> PlanesBndCondExp(nplanes);
             
             for(i = 0; i < nbnd; ++i)
             {

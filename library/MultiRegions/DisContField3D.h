@@ -96,7 +96,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ~DisContField3D();
 
             inline const
-                    Array<OneD,const MultiRegions::ExpList2DSharedPtr>&
+                    Array<OneD,const MultiRegions::ExpListSharedPtr>&
                     GetBndCondExpansions();
 
             inline const
@@ -120,7 +120,7 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional
              * expansion.
              */
-            Array<OneD,MultiRegions::ExpList2DSharedPtr>       m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>       m_bndCondExpansions;
 
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
@@ -138,7 +138,7 @@ namespace Nektar
                     SpatialDomains::MeshGraph3D &graph3D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
-                    Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                    Array<OneD, ExpListSharedPtr> &bndCondExpansions,
                     Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                     &bndConditions);
 
@@ -181,7 +181,7 @@ namespace Nektar
 
         typedef boost::shared_ptr<DisContField3D>   DisContField3DSharedPtr;
 
-        inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>&
+        inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
             DisContField3D::GetBndCondExpansions()
         {
             return m_bndCondExpansions;

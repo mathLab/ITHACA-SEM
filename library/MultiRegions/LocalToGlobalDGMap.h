@@ -39,6 +39,7 @@
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList0D.h>
 
 #include <LocalRegions/PointExp.h>
 
@@ -56,7 +57,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const LocalRegions::PointExpSharedPtr>
+                const Array<OneD, const MultiRegions::ExpListSharedPtr>
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond);
@@ -65,7 +66,7 @@ namespace Nektar
                 const ExpList1DSharedPtr &trace,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, MultiRegions::ExpList1DSharedPtr>
+                const Array<OneD, MultiRegions::ExpListSharedPtr>
                                                                 &bndContraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,

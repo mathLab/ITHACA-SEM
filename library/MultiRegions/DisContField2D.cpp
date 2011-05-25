@@ -176,7 +176,7 @@ namespace Nektar
 
                     for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                     {
-                        MultiRegions::ExpList1DSharedPtr locExpList;
+                        MultiRegions::ExpListSharedPtr locExpList;
 
                         if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                         {
@@ -320,7 +320,7 @@ namespace Nektar
 
                 for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                 {
-                    MultiRegions::ExpList1DSharedPtr locExpList;
+                    MultiRegions::ExpListSharedPtr locExpList;
 
                     if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                     {
@@ -404,7 +404,7 @@ namespace Nektar
                 }
             }
 
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt);
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
             cnt=0;
@@ -1115,7 +1115,7 @@ namespace Nektar
 
             for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                MultiRegions::ExpList1DSharedPtr locExpList;
+                MultiRegions::ExpListSharedPtr locExpList;
 
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {
@@ -1241,7 +1241,7 @@ namespace Nektar
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
 
-            MultiRegions::ExpList1DSharedPtr locExpList;
+            MultiRegions::ExpListSharedPtr locExpList;
 
             for(i = 0; i < nbnd; ++i)
             {

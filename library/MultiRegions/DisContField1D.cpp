@@ -222,7 +222,7 @@ namespace Nektar
 
 
             m_bndCondExpansions
-                    = Array<OneD,LocalRegions::PointExpSharedPtr>(cnt);
+                    = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
 
             m_bndConditions
                     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
@@ -236,7 +236,7 @@ namespace Nektar
         {
             int i,nbnd;
             int cnt=0;
-            LocalRegions::PointExpSharedPtr  p_exp;
+            MultiRegions::ExpList0DSharedPtr  p_exp;
             SpatialDomains::BoundaryConditionShPtr locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
@@ -256,7 +256,7 @@ namespace Nektar
                 }
             }
 
-            m_bndCondExpansions = Array<OneD,LocalRegions::PointExpSharedPtr>(cnt);
+            m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
             // Set up matrix map
@@ -277,7 +277,7 @@ namespace Nektar
                             {
                                 Array<OneD,NekDouble> coords(3,0.0);
 
-                                p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                                p_exp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
                                 vert->GetCoords(coords);
                                 p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)->m_DirichletCondition.Evaluate(coords[0],coords[1],coords[2]));
 
@@ -301,7 +301,7 @@ namespace Nektar
                     {
                         Array<OneD,NekDouble> coords(3,0.0);
 
-                        p_exp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                        p_exp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
                         vert->GetCoords(coords);
 
                         if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
@@ -446,7 +446,7 @@ namespace Nektar
                                 const SpatialDomains::MeshGraph1D &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
-                                Array<OneD, LocalRegions::PointExpSharedPtr>
+                                Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             &bndCondExpansions,
                                 Array<OneD, SpatialDomains
                                     ::BoundaryConditionShPtr> &bndConditions)
@@ -459,7 +459,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
 
-            LocalRegions::PointExpSharedPtr          locPointExp;
+            MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
 
@@ -482,7 +482,7 @@ namespace Nektar
                                         (*(*bregions[i])[j])[k]))
                             {
                                 locPointExp
-                                    = MemoryManager<LocalRegions::PointExp>
+                                    = MemoryManager<MultiRegions::ExpList0D>
                                                 ::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
                                 bndConditions[cnt++]    = locBCond;
@@ -516,7 +516,7 @@ namespace Nektar
                                         (*(*bregions[i])[j])[k]))
                                 {
                                     locPointExp
-                                        = MemoryManager<LocalRegions::PointExp>
+                                        = MemoryManager<MultiRegions::ExpList0D>
                                         ::AllocateSharedPtr(vert);
                                     bndCondExpansions[cnt]  = locPointExp;
                                     bndConditions[cnt++]    = locBCond;
@@ -713,13 +713,11 @@ namespace Nektar
         /**
          *
          */
-        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-                                            DisContField1D::v_GetBndConditions()
+        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &DisContField1D::v_GetBndConditions()
         {
             return m_bndConditions;
         }
-
-
+		
         /**
          * Based on the expression \f$g(x,t)\f$ for the boundary conditions,
          * this function evaluates the boundary conditions for all boundaries
@@ -856,7 +854,7 @@ namespace Nektar
 
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                LocalRegions::PointExpSharedPtr locExpList;
+                MultiRegions::ExpListSharedPtr locExpList;
 
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {

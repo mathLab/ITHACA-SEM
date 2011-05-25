@@ -49,10 +49,10 @@ namespace Nektar
 
         enum Homogeneous1DMatType
         {
-            eForwardsCoeffSpace,
-            eBackwardsCoeffSpace,
-            eForwardsPhysSpace,
-            eBackwardsPhysSpace
+            eForwardsCoeffSpace1D,
+            eBackwardsCoeffSpace1D,
+            eForwardsPhysSpace1D,
+            eBackwardsPhysSpace1D
         };
 
         /// A map between homo matrix keys and their associated block

@@ -50,6 +50,8 @@
 
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
+//#include <MultiRegions/ContField3DHomogeneous2D.h>
+//#include <MultiRegions/DisContField3DHomogeneous2D.h>
 
 namespace Nektar
 {

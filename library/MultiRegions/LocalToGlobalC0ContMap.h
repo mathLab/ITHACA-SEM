@@ -38,6 +38,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
+#include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 
@@ -71,7 +72,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType,
-                                   const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
+                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId);
 
@@ -80,7 +81,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType,
-                                   const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
+                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const vector<map<int,int> >& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId,
@@ -93,7 +94,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType,
-                                   const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
+                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId,
@@ -109,7 +110,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT int SetUp2DGraphC0ContMap(
                                        const ExpList  &locExp,
                                        const GlobalSysSolnType solnType,
-                                       const Array<OneD, const MultiRegions::ExpList1DSharedPtr>  &bndCondExp,
+                                       const Array<OneD, const MultiRegions::ExpListSharedPtr>  &bndCondExp,
                                        const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
                                        &bndConditions,
                                        const vector<map<int,int> >& periodicVerticesId,
@@ -174,8 +175,8 @@ namespace Nektar
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,
-                                           const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp =
-                                           LocalRegions::NullPointExpSharedPtrArray,
+                                           const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
+                                           NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                            SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap);
@@ -184,8 +185,8 @@ namespace Nektar
             void SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,
-                                           const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp =
-                                               NullExpList1DSharedPtrArray,
+                                           const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
+                                               NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
@@ -196,8 +197,8 @@ namespace Nektar
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,
-                                           const Array<OneD, const ExpList2DSharedPtr> &bndCondExp =
-                                               NullExpList2DSharedPtrArray,
+                                           const Array<OneD, const ExpListSharedPtr> &bndCondExp =
+                                               NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap,

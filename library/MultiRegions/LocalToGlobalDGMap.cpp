@@ -62,7 +62,7 @@ namespace Nektar
         LocalToGlobalDGMap::LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
                                                 const ExpList &locExp,
                                                 const GlobalSysSolnType solnType,
-                                                const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
+                                                const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond)
         {
             int i,j;
@@ -166,7 +166,7 @@ namespace Nektar
                                                const ExpList1DSharedPtr &trace,
                                                const ExpList &locExp,
                                                const GlobalSysSolnType solnType,
-                                               const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndCondExp,
+                                               const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
                                                const map<int,int> &periodicEdges)
         {

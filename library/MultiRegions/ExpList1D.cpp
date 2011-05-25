@@ -302,7 +302,7 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(
-                    const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint,
+                    const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
                     const StdRegions::StdExpansionVector &locexp,

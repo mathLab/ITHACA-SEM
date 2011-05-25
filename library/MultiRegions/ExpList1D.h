@@ -91,7 +91,7 @@ namespace Nektar
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
-            MULTI_REGIONS_EXPORT ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
+            MULTI_REGIONS_EXPORT ExpList1D(const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,

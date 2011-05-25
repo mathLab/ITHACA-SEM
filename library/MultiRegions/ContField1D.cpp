@@ -618,6 +618,19 @@ namespace Nektar
                 IProductWRTBase_IterPerExp(inarray,outarray);
             }
         }
+		
+		int ContField1D::v_GetContNcoeffs() const
+        {
+            return m_contNcoeffs;
+        }
+		
+		/**
+         *
+         */
+        void ContField1D::v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
+        {
+            m_contCoeffs = inarray;
+        }
 
         /**
          * This is equivalent to the operation:

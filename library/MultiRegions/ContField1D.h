@@ -41,7 +41,7 @@
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList1D.h>
-
+#include <MultiRegions/ExpList0D.h>
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/Conditions.h>
@@ -120,7 +120,7 @@ namespace Nektar
 
             /// Return the boundary conditions expansion.
             // inline
-            MULTI_REGIONS_EXPORT const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+            MULTI_REGIONS_EXPORT const Array<OneD,const MultiRegions::ExpListSharedPtr>&
                                                      GetBndCondExpansions();
 
             // inline
@@ -130,7 +130,7 @@ namespace Nektar
             /// Returns the total number of global degrees of freedom
             /// \f$N_{\mathrm{dof}}\f$.
             // inline
-            MULTI_REGIONS_EXPORT int GetContNcoeffs();
+            inline int GetContNcoeffs();
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion
@@ -216,6 +216,11 @@ namespace Nektar
             GlobalLinSysMapShPtr            m_globalLinSys;
 
         private:
+			
+			MULTI_REGIONS_EXPORT virtual int v_GetContNcoeffs() const;
+			
+			MULTI_REGIONS_EXPORT virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
+			
             /// Returns the linear system specified by \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
@@ -279,7 +284,7 @@ namespace Nektar
 
         // Inline implementations follow
 
-        inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+        inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
                                 ContField1D::GetBndCondExpansions()
         {
             return m_bndCondExpansions;

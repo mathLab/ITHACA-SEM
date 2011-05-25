@@ -212,7 +212,7 @@ namespace Nektar
                 }
             }
 
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList2DSharedPtr>(cnt1);
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt1);
             m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
 
             SetBoundaryConditionExpansion(graph3D,bcs,variable,m_bndCondExpansions,m_bndConditions);
@@ -235,7 +235,7 @@ namespace Nektar
                         SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
-                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                        Array<OneD, ExpListSharedPtr> &bndCondExpansions,
                         Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                         &bndConditions)
         {
@@ -526,7 +526,7 @@ namespace Nektar
 
             for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                MultiRegions::ExpList2DSharedPtr locExpList;
+                MultiRegions::ExpListSharedPtr locExpList;
 
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {
@@ -600,7 +600,7 @@ namespace Nektar
             int i,j;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
-            MultiRegions::ExpList2DSharedPtr locExpList;
+            MultiRegions::ExpListSharedPtr locExpList;
 
             for(i = 0; i < nbnd; ++i)
             {

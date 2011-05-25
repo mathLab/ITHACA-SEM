@@ -125,7 +125,7 @@ namespace Nektar
 
         // Count number of HBC conditions
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
-        Array<OneD, MultiRegions::ExpList1DSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
+        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
         
         int n,cnt;
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
@@ -263,7 +263,7 @@ namespace Nektar
         static int ncalls = 1; // Number of time this function has been called. 
         Array<OneD, NekDouble> tmp;
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
-        Array<OneD, MultiRegions::ExpList1DSharedPtr>  PBndExp;
+        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
         int  n,cnt;
         int  nint    = min(ncalls++,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
@@ -321,7 +321,7 @@ namespace Nektar
     {
         int  i,n;
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
-        Array<OneD, MultiRegions::ExpList1DSharedPtr>  PBndExp;
+        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
 
         PBndConds = m_pressure->GetBndConditions();
         PBndExp   = m_pressure->GetBndCondExpansions();

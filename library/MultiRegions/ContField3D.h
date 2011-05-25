@@ -91,13 +91,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT bool SameTypeOfBoundaryConditions(const ContField3D &In);
 
 
-            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>& GetBndCondExpansions()
+            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>& GetBndCondExpansions()
             {
                 return m_bndCondExpansions;
             }
 
             /// This function return the boundary conditions expansion.
-            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
+            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                     &GetBndCondExp();
 
             MULTI_REGIONS_EXPORT void GenerateDirBndCondForcing(
@@ -218,7 +218,7 @@ namespace Nektar
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
 
-        inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
+        inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                 &ContField3D::GetBndCondExp()
         {
             return m_bndCondExpansions;

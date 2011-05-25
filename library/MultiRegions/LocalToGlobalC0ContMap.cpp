@@ -110,7 +110,7 @@ namespace Nektar
                 const int numLocalCoeffs,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const LocalRegions::PointExpSharedPtr>
+                const Array<OneD, const ExpListSharedPtr>
                                                                 &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
@@ -135,7 +135,7 @@ namespace Nektar
                 const int numLocalCoeffs,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
+                const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
@@ -163,7 +163,7 @@ namespace Nektar
                 const int numLocalCoeffs,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
+                const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
                 const map<int,int>& periodicVerticesId,
@@ -213,7 +213,7 @@ namespace Nektar
                 const int numLocalCoeffs,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const LocalRegions::PointExpSharedPtr>
+                const Array<OneD, const MultiRegions::ExpListSharedPtr>
                                                                 &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
@@ -370,7 +370,7 @@ namespace Nektar
                 const int numLocalCoeffs,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
+                const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
@@ -707,7 +707,7 @@ namespace Nektar
         int LocalToGlobalC0ContMap::SetUp2DGraphC0ContMap(
                 const ExpList  &locExp,
                 const GlobalSysSolnType solnType,
-                const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
+                const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >  &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
@@ -726,7 +726,7 @@ namespace Nektar
             int graphVertId = 0;
             StdRegions::StdExpansion2DSharedPtr locExpansion;
             LocalRegions::SegExpSharedPtr       bndSegExp;
-            LocalRegions::PointExpSharedPtr     bndVertExp;
+            MultiRegions::ExpList0DSharedPtr     bndVertExp;
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
             map<int,int>::iterator mapIt;
@@ -1171,7 +1171,7 @@ namespace Nektar
         void LocalToGlobalC0ContMap::SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                                                const ExpList &locExp,
                                                                const GlobalSysSolnType solnType,
-                                                               const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
+                                                               const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                                const map<int,int>& periodicVerticesId,
                                                                const map<int,int>& periodicEdgesId,

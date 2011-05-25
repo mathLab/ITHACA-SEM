@@ -45,6 +45,7 @@
 
 #include <LocalRegions/MatrixKey.h>
 #include <SpatialDomains/SegGeom.h>
+#include <LocalRegions/PointExp.h>
 
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -60,8 +61,9 @@ namespace Nektar
         class LocalToGlobalC0ContMap;
         class LocalToGlobalBaseMap;
         class LocalToGlobalDGMap;
+        class ExpList0D;
         class ExpList1D;
-        class ExpList1D;
+		class ExpList2D;
 
         /// A map between global matrix keys and their associated block
         /// matrices.
@@ -294,6 +296,13 @@ namespace Nektar
                                   Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                                   Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 			
+			/// This function calculates the coordinates of all the elemental
+            /// quadrature points \f$\boldsymbol{x}_i\f$.
+            inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
+			
+			/// This function calculates the coordinates of all the elemental
+            /// quadrature points \f$\boldsymbol{x}_i\f$.
+            inline void GetCoord(Array<OneD, NekDouble> &coords);
 			
 			/// This function calculates the 3 gradient's components of a variable.
 			/// The variable is supplied in physical space and the routine has been implemented
@@ -368,6 +377,16 @@ namespace Nektar
 
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
+			
+			/// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
+            inline void SetCoeff(NekDouble val);
+			
+			/// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
+            inline void SetPhys(NekDouble val);
+			
+			inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
+			
+			inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
 
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
@@ -505,11 +524,11 @@ namespace Nektar
 
 
             // functions associated with DisContField
-            inline const Array<OneD, const  boost::shared_ptr<ExpList1D> >
+            inline const Array<OneD, const  boost::shared_ptr<ExpList> >
                 &GetBndCondExpansions();
 
-            inline boost::shared_ptr<ExpList1D> &UpdateBndCondExpansion(int i);
-
+            inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
+			
             inline boost::shared_ptr<ExpList1D> &GetTrace();
 
             inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
@@ -806,16 +825,13 @@ namespace Nektar
                 return (*m_exp).size();
             }
 
-            virtual const
-                Array<OneD,const boost::shared_ptr<ExpList1D> >
-                &v_GetBndCondExpansions(void);
+            virtual const Array<OneD,const boost::shared_ptr<ExpList> > &v_GetBndCondExpansions(void);
 
-            virtual boost::shared_ptr<ExpList1D> &v_UpdateBndCondExpansion(int i);
-
+            virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
+			
             virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
 
-            virtual boost::shared_ptr<LocalToGlobalDGMap>
-                &v_GetTraceMap();
+            virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap();
 
             virtual void v_AddTraceIntegral(
                                             const Array<OneD, const NekDouble> &Fx,
@@ -935,8 +951,19 @@ namespace Nektar
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
-                                     Array<OneD, NekDouble> &coord_2                                                 = NullNekDouble1DArray);
+                                     Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
+			
+			virtual void v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z);
+			
+			virtual void v_GetCoord(Array<OneD, NekDouble> &coords);
 
+			virtual void v_SetCoeff(NekDouble val);
+			
+			virtual void v_SetPhys(NekDouble val);
+			
+			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
+			
+			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
 			
 			virtual void v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
 										 Array<OneD, NekDouble> &out_d0,
@@ -1300,6 +1327,54 @@ namespace Nektar
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
+		
+		/**
+         *
+         */
+        inline void ExpList::SetCoeff(NekDouble val)
+		
+        {
+            v_SetCoeff(val);
+        }
+		
+		/**
+         *
+         */
+		inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetGeom(void) const
+		{
+			return v_GetGeom();
+		}
+		
+		/**
+         *
+         */
+		inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetVertex(void) const
+		{
+			return v_GetVertex();
+		}
+		
+		
+		/**
+         *
+         */
+        inline void ExpList::SetPhys(NekDouble val)
+		
+        {
+            v_SetPhys(val);
+        }
+		
+		/**
+         *
+         */
+        inline void ExpList::GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
+        {
+            v_GetCoords(x,y,z);
+        }
+		
+		inline void ExpList::GetCoord(Array<OneD, NekDouble> &coords)
+        {
+            v_GetCoord(coords);
+        }
 
 		/**
 		 *
@@ -1504,18 +1579,17 @@ namespace Nektar
 
 
         // functions associated with DisContField
-        inline const Array<OneD, const  boost::shared_ptr<ExpList1D> >
+        inline const Array<OneD, const  boost::shared_ptr<ExpList> >
                                             &ExpList::GetBndCondExpansions()
         {
             return v_GetBndCondExpansions();
         }
 
-        inline boost::shared_ptr<ExpList1D>  &ExpList::UpdateBndCondExpansion(int i)
+        inline boost::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)
         {
             return v_UpdateBndCondExpansion(i);
         }
-
-
+		
         inline boost::shared_ptr<ExpList1D> &ExpList::GetTrace()
         {
             return v_GetTrace();

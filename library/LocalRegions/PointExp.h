@@ -39,13 +39,14 @@
 #include <LocalRegions/LocalRegions.hpp>
 #include <SpatialDomains/MeshComponents.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+#include <StdRegions/StdExpansion.h>
 
 namespace Nektar
 {
     namespace LocalRegions
     {
 
-    class PointExp
+	class PointExp
     {
         
     public:
@@ -63,6 +64,13 @@ namespace Nektar
 
                 return m_coeffs[i];
             }
+		
+			inline NekDouble  GetPhys(int i) const
+			{
+				ASSERTL1(i == 0,"index out of range");
+			
+				return m_phys[i];
+			}
 
 
             inline NekDouble  GetCoeff(int i) const

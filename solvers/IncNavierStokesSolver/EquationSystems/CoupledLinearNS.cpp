@@ -852,8 +852,8 @@ namespace Nektar
      * This vector is further manipulated into 
      *
      * \f[ Fh\_{bnd} = \left [ \begin{array}{c} f\_{bnd} -m\_B \,
-     * m\_Cinv\, {\bf f}_{int}\\ [m\_D\_{int} \, m\_Cinv \,{\bf
-     * f}_{int}]_0 \end{array}\right ] \hspace{1cm} [Fh\_p]_{i} =
+     * m\_Cinv\, {\bf f}_{int}\\ \left [m\_D\_{int} \, m\_Cinv \,{\bf
+     * f}_{int} \right]_0 \end{array}\right ] \hspace{1cm} [Fh\_p]_{i} =
      * \begin{array}{c} [m\_D\_{int} \, m\_Cinv \, {\bf
      * f}_{int}]_{i+1} \end{array} \f]
      *

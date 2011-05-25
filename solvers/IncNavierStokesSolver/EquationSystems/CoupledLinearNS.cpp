@@ -69,6 +69,7 @@ namespace Nektar
         {
             m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(pressure_exp);
             SetUp2DExpansionC0ContMap();
+            //SetUp2DExpansionC0ContMap(MultiRegions::eDirectStaticCond);
         }
         else if (expdim == 3)
         {
@@ -423,11 +424,29 @@ namespace Nektar
                 DNekScalMat &HelmMat = *locExp->GetLocMatrix(helmkey);
                 
                 Array<OneD, NekDouble> Advtmp;
+                Array<OneD, Array<OneD, NekDouble> > AdvDeriv(nvel);
                 // Use ExpList phys array for temporaary storage
                 Array<OneD, NekDouble> tmpphys = m_fields[0]->UpdatePhys();
                 int phys_offset = m_fields[m_velocity[0]]->GetPhys_Offset(eid);
                 int nv;
                 int npoints = locExp->GetTotPoints();
+
+                // Calculate derivative of base flow 
+                if(IsLinearNSEquation)
+                {
+                    for(nv = 0; nv < nvel; ++nv)
+                    {
+                        if(nv == 0)
+                        {
+                            AdvDeriv[nv] = Array<OneD, NekDouble>(npoints);
+                        }
+                        else
+                        {
+                            AdvDeriv[nv] = m_fields[nv]->UpdatePhys(); 
+                        }
+                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(nv,Advfield[nv] + phys_offset, AdvDeriv[nv]);
+                    }
+                }
 
                 for(i = 0; i < nbmap; ++i)
                 {
@@ -439,6 +458,7 @@ namespace Nektar
                     
                     for(k = 0; k < nvel; ++k)
                     {
+                        
                         // Differentiation & Inner product wrt base. 
                         m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(k,phys,
                                                                         deriv);
@@ -474,6 +494,30 @@ namespace Nektar
                                     coeffs[imap[j]];
                             }
                         }
+  
+                        if(IsLinearNSEquation)
+                        {
+                            for(nv = 0; nv < nvel; ++nv)
+                            {
+                                // u' . Grad U terms 
+                                Vmath::Vmul(npoints,phys,1, AdvDeriv[nv],1,
+                                            tmpphys,1);
+                                locExp->IProductWRTBase(tmpphys,coeffs);
+                                
+                                for(j = 0; j < nbmap; ++j)
+                                {
+                                    (*Ah)(j+k*nbmap,i+nv*nbmap) +=
+                                        coeffs[bmap[j]];
+                                }
+                                
+                                for(j = 0; j < nimap; ++j)
+                                {
+                                    (*C)(i+nv*nbmap,j+k*nimap) += 
+                                        coeffs[imap[j]];
+                                }
+                            }                            
+                        }
+  
                         // copy into column major storage. 
                         m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                         Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -525,6 +569,29 @@ namespace Nektar
                                     coeffs[imap[j]];
                             }
                         }
+
+                        if(IsLinearNSEquation)
+                        {
+                            for(nv = 0; nv < nvel; ++nv)
+                            {
+                                // u' . Grad U terms 
+                                Vmath::Vmul(npoints,phys,1, AdvDeriv[nv],1,tmpphys,1);
+                                locExp->IProductWRTBase(tmpphys,coeffs);
+
+                                for(j = 0; j < nbmap; ++j)
+                                {
+                                    (*B)(j+k*nbmap,i+nv*nimap) += 
+                                        coeffs[bmap[j]];
+                                }
+
+                                for(j = 0; j < nimap; ++j)
+                                {
+                                    (*D)(j+k*nimap,i+nv*nimap) += 
+                                        coeffs[imap[j]];
+                                }
+                            }
+                        }
+
                         // copy into column major storage. 
                         m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                         Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -1189,7 +1256,6 @@ namespace Nektar
                 BndExpVids[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(1)] = bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(1);
             }
             
-
             for(i = 0; i < nvel; ++i)
             {
                 if(bndConditionsVec[i][j]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
@@ -1201,7 +1267,7 @@ namespace Nektar
                     }
 
                             
-                    //  set number of Dirichlet conditions at vertices
+                    // Set number of Dirichlet conditions at vertices
                     // with a clamp on its maximum value being nvel to
                     // handle corners between expansions
                     for(mapIt = BndExpVids.begin(); mapIt !=  BndExpVids.end(); mapIt++)
@@ -1298,6 +1364,7 @@ namespace Nektar
                                            false,
                                            4);
 
+
         /**
          * STEP 2a: Set the mean pressure modes to edges depending on
          * type of direct solver technique;
@@ -1341,7 +1408,7 @@ namespace Nektar
             // to attach element
             int nlevels = bottomUpGraph->GetNlevels();
 
-            // determine a default edge to attache pressure modes to
+            // determine a default edge to attach pressure modes to
             // which is part of the inner solve;
             int defedge = -1;
             vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(nlevels);
@@ -1452,6 +1519,30 @@ namespace Nektar
                     // default edget value
                     if(SetEdge == false)
                     {
+                        if(elmtid == -1) // find a elmtid in patch 
+                        {
+                            for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
+                            {
+                                if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+                                {
+                                    edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+                                    for(k = 0; k < 2; ++k)
+                                    {
+                                        // relevant edge id
+                                        elmtid = EdgeIdToElmts[edgeId][k];
+                                        if(elmtid != -1)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                                if(elmtid != -1)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
                         AddMeanPressureToEdgeId[elmtid] = defedge;
                     }
                 }
@@ -1640,7 +1731,7 @@ namespace Nektar
             }
         }
     
-        // cnt currently contains the number of global degrees of freedom. 
+        // cnt currently contains the number of global dir degrees of freedom. 
         locToGloMap->SetNumGlobalDirBndCoeffs(cnt);
 
         // Accumulate all interior degrees of freedom with positive
@@ -1749,9 +1840,9 @@ namespace Nektar
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
                 nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
-                edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);
-                meshEdgeId          = (locExpansion->GetGeom2D())->GetEid(j);
-                meshVertId          = (locExpansion->GetGeom2D())->GetVid(j);
+                edgeOrient       = (locExpansion->GetGeom2D())->GetEorient(j);
+                meshEdgeId       = (locExpansion->GetGeom2D())->GetEid(j);
+                meshVertId       = (locExpansion->GetGeom2D())->GetVid(j);
                 
                 locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
                 // Set the global DOF for vertex j of element i
@@ -1872,8 +1963,9 @@ namespace Nektar
                         vwgts_perm[ReorderedGraphVertId[1][i]-firstNonDirGraphVertId] = Dofs[1][i];
                     }
                 }
-                
+        
                 bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+                bottomUpGraph->Dump();
 
                 locToGloMap->SetNextLevelLocalToGlobalMap(MemoryManager<MultiRegions::LocalToGlobalBaseMap>::AllocateSharedPtr(locToGloPointer,bottomUpGraph));
             }

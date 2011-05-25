@@ -10,3 +10,4 @@ SET(IncNavierStokesSolverSource
 
 ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver 
 			${IncNavierStokesSolverSource})
+                        

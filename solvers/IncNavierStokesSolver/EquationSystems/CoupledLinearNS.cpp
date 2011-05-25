@@ -1965,7 +1965,7 @@ namespace Nektar
                 }
         
                 bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                bottomUpGraph->Dump();
+                //bottomUpGraph->Dump();
 
                 locToGloMap->SetNextLevelLocalToGlobalMap(MemoryManager<MultiRegions::LocalToGlobalBaseMap>::AllocateSharedPtr(locToGloPointer,bottomUpGraph));
             }

@@ -394,12 +394,9 @@ namespace Nektar
             StdRegions::EdgeOrientation         edgeOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
-
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
-
             m_signChange = false;
             m_systemSingular = false;
-
             Array<OneD, map<int,int> > ReorderedGraphVertId(2);
             Array<OneD, map<int,int> > Dofs(2);
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
@@ -476,7 +473,6 @@ namespace Nektar
                                              ReorderedGraphVertId[1].size()+1);
             graphVertOffset[0] = 0;
             m_numLocalBndCoeffs = 0;
-            
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
@@ -728,10 +724,8 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr       bndSegExp;
             MultiRegions::ExpList0DSharedPtr     bndVertExp;
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
-
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
-
             bool systemSingular = true;
             
             /**

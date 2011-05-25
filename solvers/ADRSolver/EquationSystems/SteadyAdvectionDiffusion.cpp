@@ -51,20 +51,15 @@ namespace Nektar
     {
         // Define forcing function. 
         EquationSystem::InitialiseForce();    
-                
         // Define Velocity fields     
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim); 
-        
         EquationSystem::InitialiseBaseFlow(m_velocity);
-
     }
        
     SteadyAdvectionDiffusion::~SteadyAdvectionDiffusion()
     {
 
     }
-    
-
 
     void SteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
     {
@@ -74,7 +69,6 @@ namespace Nektar
 
     void SteadyAdvectionDiffusion::v_DoSolve()
     {
-
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
             m_fields[i]->LinearAdvectionDiffusionReactionSolve(m_velocity,

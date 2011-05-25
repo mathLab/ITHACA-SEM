@@ -85,9 +85,9 @@ namespace Nektar
 	/// populate m_forces
         void CalcForce(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
 
-       ///Initialise the dimendion of forcing functions fce
+       ///Initialise the dimendion of forcing functions
         void InitialiseForcingFunctions(
-                        Array<OneD, MultiRegions::ExpListSharedPtr> &fce);
+                        Array<OneD, MultiRegions::ExpListSharedPtr> &force);
 
         /// Populate given fields with the forcing function from session.
         void SetPhysForcingFunctions(
@@ -412,11 +412,11 @@ namespace Nektar
         /// Array holding force values.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
         /// variable that determine if the force is necessary or not.
-        bool bforce;
+        bool m_bforce;
         /// Array holding all dependent variables.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
         /// dimension force array
-        int FDim;
+        int m_FDim;
         /// Pointer to boundary conditions object.
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
         /// Pointer to history data object.

@@ -591,7 +591,7 @@ namespace Nektar
         
              
       //define dimension of the forcing function     
-        FDim = m_fields.num_elements();
+        m_FDim = m_fields.num_elements();
         if (m_boundaryConditions->CheckForParameter("EQTYPE")
             && m_boundaryConditions->CheckForParameter("SOLVERTYPE"))
         {      
@@ -604,7 +604,7 @@ namespace Nektar
             if((sname=="UnsteadyNavierStokes")
                                     &&(tname=="VelocityCorrectionScheme"))
             {
-          	    FDim=(m_fields.num_elements() -1);
+          	    m_FDim=(m_fields.num_elements() -1);
             }
         }
         
@@ -633,17 +633,13 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
         }
     }
-    
-    
-    
-
 
    // Perform manipulation of the force data.
    void ADRBase::CalcForce(Array<OneD, MultiRegions::ExpListSharedPtr> &force)
    {
        int nq = m_fields[0]->GetNpoints();
-        for(int i = 0 ; i < (m_spacedim); i++)
-        {
+       for(int i = 0 ; i < (m_spacedim); i++)
+       {
             for(int j = 0; j < nq; j++)
             {
             //    (force[i]->UpdatePhys())[j]=
@@ -652,18 +648,14 @@ namespace Nektar
             }
             force[i]->SetPhysState(true);
 //            force[m_fields[i]]->PhysDeriv(i,force[m_fields[i]], wk);
-        }
+       }
    }
 
-
-
-    void ADRBase::SetInitialForce(NekDouble initialtime) 
-    {
-
+   void ADRBase::SetInitialForce(NekDouble initialtime) 
+   {
 	if(m_boundaryConditions->SolverInfoExists("FORCE"))
 	{
-		
-		bforce=true;
+		m_bforce=true;
                 InitialiseForcingFunctions(m_forces);
 		std::string forcefileyn= m_boundaryConditions->GetSolverInfo("FORCE");
 		//capitalise the string forcefileyn
@@ -679,27 +671,16 @@ namespace Nektar
 		else
 		{
 			SetPhysForcingFunctions(m_forces);
-			cout<<"force0"<<(m_forces[0]->GetPhys())[1]<<endl;
 		}
 	}
 	else
 	{
-		bforce= false;
+		m_bforce= false;
 	}
+   }
 
-      }
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    /**
+      
+     /**
      * Set the physical fields based on a restart file, or a function
      * describing the initial condition given in the session.
      * @param   initialtime             Time at which to evaluate the function.
@@ -709,9 +690,7 @@ namespace Nektar
                                           bool dumpInitialConditions)
     {
         std::string restartstr = "RESTART";
-
         cout << "Initial Conditions:" << endl;
-
         // Check for restart file.
         if(m_boundaryConditions->FoundInitialCondition(restartstr))
         {
@@ -764,24 +743,20 @@ namespace Nektar
      * the expression provided by the BoundaryConditions object.
      * @param   force           Array of fields to assign forcing.
      */
-    void ADRBase::SetPhysForcingFunctions(
+     void ADRBase::SetPhysForcingFunctions(
                         Array<OneD, MultiRegions::ExpListSharedPtr> &force)
     {
         int nq = m_fields[0]->GetNpoints();
-
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
-
         // get the coordinates (assuming all fields have the same
         // discretisation)
         force[0]->GetCoords(x0,x1,x2);
-
-        for(int i = 0 ; i < (FDim); i++)
+        for(int i = 0 ; i < (m_FDim); i++)
         {
             SpatialDomains::ConstForcingFunctionShPtr ffunc
                     = m_boundaryConditions->GetForcingFunction(i);
-
             for(int j = 0; j < nq; j++)
             {
                 (force[i]->UpdatePhys())[j]
@@ -791,63 +766,39 @@ namespace Nektar
         }
     }
 
-
-
-
-
-
-   void ADRBase::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &fce)
-   {
-   	   
-   	   
-        fce  = Array<OneD, MultiRegions::ExpListSharedPtr>(FDim);
+    void ADRBase::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &force)
+   {  
+        force  = Array<OneD, MultiRegions::ExpListSharedPtr>(m_FDim);
         int nq = m_fields[0]->GetNpoints();
-
-
         switch(m_spacedim)
     	{
-	
     	 case 1:
-      
-                   fce[0] = MemoryManager<MultiRegions
+                   force[0] = MemoryManager<MultiRegions
                             ::DisContField1D>::AllocateSharedPtr
                             (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
-                        Vmath::Zero(nq,(fce[0]->UpdatePhys()),1);
+                        Vmath::Zero(nq,(force[0]->UpdatePhys()),1);
                             break;
-
-
     	 case 2:
-       
-
-                   for(int i = 0 ; i < FDim; i++)
+                   for(int i = 0 ; i < m_FDim; i++)
                    {
-
-                   	   fce[i] = MemoryManager<MultiRegions
+                   	force[i] = MemoryManager<MultiRegions
                                 ::DisContField2D>::AllocateSharedPtr
                                 (*boost::static_pointer_cast<MultiRegions::DisContField2D>(m_fields[i]));
-                        Vmath::Zero(nq,(fce[i]->UpdatePhys()),1);
+                        Vmath::Zero(nq,(force[i]->UpdatePhys()),1);
                    }
                    break;
-
-
 /**
          case 3:
-       
-
-                   for( int i = 0 ; i < FDim; i++)
+                   for( int i = 0 ; i < m_FDim; i++)
                    {
-                        fce[i] = MemoryManager<MultiRegions
+                        force[i] = MemoryManager<MultiRegions
                                 ::DisContField3D>::AllocateSharedPtr
                                 (*boost::static_pointer_cast<MultiRegions::DisContField3D>(m_fields[i]));
-//                        Vmath::Zero(nq,(fce[i]->UpdatePhys()),1);
+//                        Vmath::Zero(nq,(force[i]->UpdatePhys()),1);
                    }
                    break;
 */
-
 	}
-
-
-
     }
 
 
@@ -943,8 +894,6 @@ namespace Nektar
 			L2error = L2INF[0];
 			
 		}
-
-
         return L2error;
     }
 
@@ -1036,7 +985,6 @@ namespace Nektar
 				ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
 				break;
 		}
-		
 		SpatialDomains::ConstExactSolutionShPtr exSol = m_boundaryConditions->GetExactSolution(field);
 		// evaluate exact solution 
 		Array<OneD,NekDouble> ErrorSol(ErrorNq);
@@ -1630,41 +1578,26 @@ namespace Nektar
     
     void ADRBase::ImportFldForce(std::string pInfile)
     {
-    	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
-    	    std::vector<std::vector<NekDouble>   > FieldData;
-    	    
-    	    m_graph->Import(pInfile, FieldDef,FieldData);
-    	    
-
-    	    //int nvar= m_spacedim;
-    	      int nvar= FDim;
-    	    
-   	    
-    	    for(int j=0; j <nvar; ++j)
-    	    {
-    	       for(int i=0; i<FieldDef.size(); ++i)
-    	       {
-    	    	    
-    	    	    
-    	    	    bool flag = FieldDef[i]->m_fields[j]
-    	             ==m_boundaryConditions->GetVariable(j);
-    	             ASSERTL1(flag, (std::string("Order of ") +pInfile
+    	 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    	 std::vector<std::vector<NekDouble>   > FieldData;
+    	 m_graph->Import(pInfile, FieldDef,FieldData);
+    	 int nvar= m_FDim;   	    
+	 for(int j=0; j <nvar; ++j)
+    	 {
+    	     for(int i=0; i<FieldDef.size(); ++i)
+    	     {
+        	  bool flag = FieldDef[i]->m_fields[j]
+    	          ==m_boundaryConditions->GetVariable(j);
+    	          ASSERTL1(flag, (std::string("Order of ") +pInfile
     	             	     + std::string("  data and that defined in "
     	             	     	     "m_boundaryconditions differs")).c_str());
-    	             
-    	             
-    	            m_forces[j]->ExtractDataToCoeffs(FieldDef[i]
+    	          m_forces[j]->ExtractDataToCoeffs(FieldDef[i]
     	            	    , FieldData[i], FieldDef[i]->m_fields[j]);
-          
-    	       }
-    	    	m_forces[j]->BwdTrans(m_forces[j]->GetCoeffs(), m_forces[j]
+    	      }
+    	      m_forces[j]->BwdTrans(m_forces[j]->GetCoeffs(), m_forces[j]
     	    		->UpdatePhys());    
-   	    }	    
+   	  }	    
      }	
-    
-    
-    
-    
 
 
     /**

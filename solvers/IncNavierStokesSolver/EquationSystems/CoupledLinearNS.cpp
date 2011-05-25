@@ -627,7 +627,7 @@ namespace Nektar
 
     void CoupledLinearNS::v_PrintSummary(std::ostream &out)
     {
-        cout <<  "\tSovler Type     : Coupled Linearised NS" <<endl;
+        cout <<  "\tSolver Type     : Coupled Linearised NS" <<endl;
     }
 
     void CoupledLinearNS::v_DoInitialise(void)
@@ -714,16 +714,13 @@ namespace Nektar
         EvaluateAdvectionTerms(inarray,outarray);
         int nqtot  =m_fields[0]->GetTotPoints(); 
         //add the force
-	if(bforce)
+	if(m_bforce)
 	{	
-	
 	  for(int i = 0; i < m_nConvectiveFields; ++i)
           {
 			 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
           }        
         }
-                
-
     }
 
     void CoupledLinearNS::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 

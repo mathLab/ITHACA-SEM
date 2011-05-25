@@ -83,10 +83,6 @@ int main(int argc, char *argv[])
     equ->DoInitialise();
     //initialise force if it necessary
     equ->SetInitialForce(0.0);
-    
-    
-    
-
     // Solve the problem.
     equ->DoSolve();
 

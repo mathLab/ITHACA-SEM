@@ -73,10 +73,7 @@ namespace Nektar
         // Zero all physical fields initially.
         ZeroPhysFields();
         filename = pSession->GetFilename();
-        
-        
     }
-
 
     /**
      *
@@ -85,7 +82,6 @@ namespace Nektar
     {
 
     }
-
 
     /**
      * This allows initialisation of the solver which cannot be completed
@@ -192,110 +188,82 @@ namespace Nektar
     
     void EquationSystem::InitialiseForce()
     {
-            int nq = m_fields[0]->GetNpoints();
-
-    	     ADRBase::SetInitialForce(0.0);
-    	     //copy force in m_fields if it exists otherwise set m_fields to zero 
-    	     if(bforce)
-    	     {	     
-    	       for(int i=0; i<FDim; ++i)
-    	       {
+       int nq = m_fields[0]->GetNpoints();
+       ADRBase::SetInitialForce(0.0);
+       //copy force in m_fields if it exists otherwise set m_fields to zero 
+       if(m_bforce)
+       {	     
+    	  for(int i=0; i<m_FDim; ++i)
+    	  {
     	       Vmath::Vcopy(nq,(m_forces[i]->GetPhys()),1,(m_fields[i]
         	->UpdatePhys()),1);
-               }
-             }
-             else
-             {     
-               for(int i=0; i<FDim; ++i)
-    	       {
+          }
+       }
+       else
+       {     
+          for(int i=0; i<m_FDim; ++i)
+    	  {
     	       Vmath::Zero(nq,(m_fields[i]
         	->UpdatePhys()),1);
-               }    
-             }		
+          }    
+       }		
     }
     
     void EquationSystem::InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base)
     {
-    
     	base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-
     	int nq = m_fields[0]->GetNpoints();
         std::string velStr[3] = {"Vx","Vy","Vz"};        
-
         if(m_boundaryConditions->SolverInfoExists("BASEFLOWFILE"))
         {
         	std::string baseyn= m_boundaryConditions->GetSolverInfo("BASEFLOWFILE");
-
         	//capitalise the string baseyn
         	std::transform(baseyn.begin(), baseyn.end(), baseyn.begin()
         		, ::toupper);
-        	
-        	
-        	
         	if(baseyn=="YES")
         	{
-
         		SetUpBaseFields(m_graph);
         		string basename = filename;
         		basename= (filename).substr(0
         		, basename.find_last_of("."));
         		ImportFldBase(basename + "-Base.fld",m_graph);
         		cout<<"Base flow from file:  "<<basename<<"-Base.fld"<<endl;
-
         		for(int i=0; i<m_spacedim; ++i)
         		{
-
         			base[i] = Array<OneD, NekDouble> (nq,0.0);
-        			Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
- 
-
-        		
+        			Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);	
         		}
-
         	}
         	else
                 {
-                	
                 	for(int i = 0; i < m_spacedim; ++i)
                 	{	
         		   base[i] = Array<OneD, NekDouble> (nq,0.0);
-
         		   SpatialDomains::ConstUserDefinedEqnShPtr ifunc
         		   = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
-        		
         		   EvaluateFunction(base[i],ifunc);
         		}
-   		
         	}
-        	
 	  }        
 	  else
 	  {
         	for(int i = 0; i < m_spacedim; ++i)
         	{	
         		base[i] = Array<OneD, NekDouble> (nq,0.0);
-
         		SpatialDomains::ConstUserDefinedEqnShPtr ifunc
         		= m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
                		EvaluateFunction(base[i],ifunc);
               	}
            }
-
     }    	    
-    	    
- 
     
     void
     EquationSystem::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr
     	    &mesh)
     {
-    	    
-    	    int i;
-
-       	    //NUM VARIABLES CAN BE DIFFERENT FROM THE DIMENSION OF THE BASE FLOW
+    	   int i;
+       	   //NUM VARIABLES CAN BE DIFFERENT FROM THE DIMENSION OF THE BASE FLOW
     	   m_base =Array<OneD, MultiRegions::ExpListSharedPtr> (m_spacedim);
-
- 
     	   if (m_projectionType = ADRBase::eGalerkin)
 	   {
 	        switch (m_expdim)
@@ -303,13 +271,11 @@ namespace Nektar
 	           case 1:
 	           {
                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
                        if( !(mesh1D = boost::dynamic_pointer_cast<
                         SpatialDomains::MeshGraph1D>(mesh)) )
                        {
                            ASSERTL0(false,"Dynamics cast failed");
                        }
-
                        for(i = 0 ; i < m_base.num_elements(); i++)
                        {
                            m_base[i] = MemoryManager<MultiRegions::ContField1D>
@@ -318,25 +284,20 @@ namespace Nektar
                        }
 	           }
                    break;
-
                    case 2:
 	           {
                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
                        if(!(mesh2D = boost::dynamic_pointer_cast<
                          SpatialDomains::MeshGraph2D>(mesh)))
                        {
                            ASSERTL0(false,"Dynamics cast failed");
                        }
-
                        i = 0;
                        MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(*mesh2D,
                                                     *m_boundaryConditions,i);
-            
                        m_base[0]=firstbase;
-
                        for(i = 1 ; i < m_base.num_elements(); i++)
                        {
                             m_base[i] = MemoryManager<MultiRegions::ContField2D>
@@ -348,21 +309,16 @@ namespace Nektar
 	           case 3:
 	           {
 	               SpatialDomains::MeshGraph3DSharedPtr mesh3D;
-
                        if(!(mesh3D = boost::dynamic_pointer_cast<
                           SpatialDomains::MeshGraph3D>(mesh)))
                        {
                             ASSERTL0(false,"Dynamics cast failed");
                        }
-
                        MultiRegions::ContField3DSharedPtr firstbase =
                             MemoryManager<MultiRegions::ContField3D>
                                 ::AllocateSharedPtr(*mesh3D,
                                                     *m_boundaryConditions,i);
-    
-
                        m_base[0] = firstbase;
-
                        for(i = 1 ; i < m_base.num_elements(); i++)
                        {
                            m_base[i] = MemoryManager<MultiRegions::ContField3D>
@@ -374,9 +330,7 @@ namespace Nektar
                    default:
                      ASSERTL0(false,"Expansion dimension not recognised");
                    break;
-
 	       }
-
         }
         else
 	{
@@ -385,13 +339,11 @@ namespace Nektar
                    case 1:
                    {
                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
                        if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
                          ::MeshGraph1D>(mesh)))
                        {
                            ASSERTL0(false,"Dynamics cast failed");
                        }
-
                        for(i = 0 ; i < m_base.num_elements(); i++)
                        {
                            m_base[i] = MemoryManager<MultiRegions
@@ -403,19 +355,16 @@ namespace Nektar
                    case 2:
                    {
                          SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
                          if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
                          ::MeshGraph2D>(mesh)))
                          {
                                ASSERTL0(false,"Dynamics cast failed");
                          }
-
                          for(i = 0 ; i < m_base.num_elements(); i++)
                          {
                                  m_base[i] = MemoryManager<MultiRegions
                                  ::DisContField2D>::AllocateSharedPtr(*mesh2D,
                                                              *m_boundaryConditions,i);
-
                          }
                          break;
                     }
@@ -425,56 +374,34 @@ namespace Nektar
                           ASSERTL0(false,"Expansion dimension not recognised");
                     break;
                     }
-
 	  }
        }    	    
-   
-    	
-    	
-    	
-//Import base flow from file and load in m_base    	
- 
-    
+ 	
+    //Import base flow from file and load in m_base    	
     void EquationSystem::ImportFldBase(std::string pInfile, 
     	    SpatialDomains::MeshGraphSharedPtr pGraph)
     {
     	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
     	    std::vector<std::vector<NekDouble>   > FieldData;
-    	    
     	    pGraph->Import(pInfile, FieldDef,FieldData);
        	    int nvar= m_spacedim;
-
       	    //copy data to m_velocity
-    	    
     	    for(int j=0; j <nvar; ++j)
     	    {
     	       for(int i=0; i<FieldDef.size(); ++i)
     	       {
-    	    	    
-    	    	    
-    	    	    bool flag = FieldDef[i]->m_fields[j]
+    	    	  bool flag = FieldDef[i]->m_fields[j]
     	             ==m_boundaryConditions->GetVariable(j);
     	             ASSERTL1(flag, (std::string("Order of ") +pInfile
     	             	     + std::string("  data and that defined in "
-    	             	     	     "m_boundaryconditions differs")).c_str());
-    	             
-    	             
-    	            m_base[j]->ExtractDataToCoeffs(FieldDef[i]
+    	             	     	     "m_boundaryconditions differs")).c_str());   
+    	          m_base[j]->ExtractDataToCoeffs(FieldDef[i]
     	            	    , FieldData[i], FieldDef[i]->m_fields[j]);
-          
     	       }
     	    	m_base[j]->BwdTrans(m_base[j]->GetCoeffs(), m_base[j]
     	    		->UpdatePhys());    
    	    }	    
      }	      	    
-    
-    
-    
-    
-    
-    
-    
-    
 
     /**
      *

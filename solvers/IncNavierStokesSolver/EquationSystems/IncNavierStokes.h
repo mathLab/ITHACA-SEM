@@ -37,7 +37,9 @@
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
 #include <ADRSolver/EquationSystem.h>
-
+#include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
+#include <IncNavierStokesSolver/EquationSystems/LinearisedAdvection.h>
+#include <IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.h>
 namespace Nektar
 {     
 
@@ -67,6 +69,7 @@ namespace Nektar
         eNoAdvectionForm,
         eConvective,
         eNonConservative,
+        eLinearised,
         eAdvectionFormSize
     };
     
@@ -75,7 +78,8 @@ namespace Nektar
     {
         "NoType",
         "Convective",
-        "NonConservative"
+        "NonConservative",
+        "Linearised",
     };
 	
     /**
@@ -91,7 +95,10 @@ namespace Nektar
         virtual ~IncNavierStokes();
 
     protected: 
-        
+
+        /// Advection term
+        AdvectionTermSharedPtr m_advObject;
+
         /// Number of fields to be convected; 
         int   m_nConvectiveFields;  
 

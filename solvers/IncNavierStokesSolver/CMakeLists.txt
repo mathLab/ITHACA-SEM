@@ -5,6 +5,9 @@ SET(IncNavierStokesSolverSource
        ./EquationSystems/CoupledLinearNS.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
+       ./EquationSystems/AdvectionTerm.cpp
+       ./EquationSystems/NavierStokesAdvection.cpp
+       ./EquationSystems/LinearisedAdvection.cpp
        ./IncNavierStokesSolver.cpp 
        )
 

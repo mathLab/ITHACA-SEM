@@ -164,7 +164,8 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
-
+        // Set initial condition using time t=0
+        SetInitialConditions(0.0);
     }
 
     void VelocityCorrectionScheme::v_DoSolve(void)
@@ -175,9 +176,6 @@ namespace Nektar
         case eUnsteadyStokes: 
         case eUnsteadyNavierStokes:
             {   
-                // Set initial condition using time t=0
-                SetInitialConditions(0.0);
-                
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
                 break;
@@ -193,7 +191,8 @@ namespace Nektar
                                                                     const NekDouble time)
     {
         // evaluate convection terms
-        EvaluateAdvectionTerms(inarray,outarray);
+        m_advObject->DoAdvection(m_fields, inarray, outarray);
+
         //add the force
 	if(m_bforce)
 	{	

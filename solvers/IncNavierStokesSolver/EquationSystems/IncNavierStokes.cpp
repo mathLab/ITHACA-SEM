@@ -152,6 +152,30 @@ namespace Nektar
         {
             ASSERTL0(false,"Kinvis is not specified");
         }
+
+        if (m_equationType == eUnsteadyNavierStokes)
+        {
+            switch(m_advectionForm)
+            {
+                //Classic advective term
+                case eConvective: case eNonConservative:
+                {
+                    m_advObject = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(m_sessionName, m_graph, m_boundaryConditions);
+                }
+                break;
+
+                //Linearised term
+                case eLinearised:
+                {
+                    m_advObject = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(m_sessionName, m_graph, m_boundaryConditions);
+                }
+                break;
+
+                default:
+                    ASSERTL0(false,"Advection form not known");
+                    break;
+            }
+        }
     }
 
     IncNavierStokes::~IncNavierStokes(void)

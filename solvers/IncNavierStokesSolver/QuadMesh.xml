@@ -11,6 +11,8 @@
       <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
       <I PROPERTY="AdvectionForm" VALUE="Convective"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+     <I PROPERTY="SOLVERTYPE" VALUE="VelocityCorrectionScheme"/>
+
     </SOLVERINFO>
 
     <PARAMETERS>

@@ -1,0 +1,15 @@
+SET(IncNavierStokesStabilitySource 
+       ../ADRSolver/EquationSystem.cpp
+       ../ADRSolver/SessionReader.cpp
+       ../Auxiliary/ADRBase.cpp
+       ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
+       ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
+       ../IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.cpp
+       ../IncNavierStokesSolver//EquationSystems/AdvectionTerm.cpp
+       ../IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.cpp
+       ../IncNavierStokesSolver/EquationSystems/LinearisedAdvection.cpp
+       ./IncNavierStokesStability.cpp 
+       )
+
+ADD_SOLVER_EXECUTABLE(IncNavierStokesStability
+			${IncNavierStokesStabilitySource})

@@ -45,6 +45,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 
+#include <LibUtilities/LinearAlgebra/Arpack.hpp>
 #include <LibUtilities/LinearAlgebra/BandedMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/SparseBlas.hpp>

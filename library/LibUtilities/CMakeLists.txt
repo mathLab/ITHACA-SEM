@@ -5,6 +5,7 @@ SET(BasicConstHeaders
 )
 
 SET(LinearAlgebraHeaders
+    ./LinearAlgebra/Arpack.hpp
     ./LinearAlgebra/Blas.hpp
     ./LinearAlgebra/SparseBlas.hpp
     ./LinearAlgebra/BlasArray.hpp

@@ -502,7 +502,7 @@ namespace Nektar
             //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
             //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
             //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
-            STD_REGIONS_EXPORT inline void IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0,
                                                       const Array<OneD, const NekDouble>& base1,
                                                       const Array<OneD, const NekDouble>& inarray,
                                                       Array<OneD, NekDouble> &outarray,

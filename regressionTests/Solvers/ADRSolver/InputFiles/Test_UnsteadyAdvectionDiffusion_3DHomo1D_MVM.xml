@@ -62,6 +62,7 @@
       <SOLVERINFO>
         <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
         <I PROPERTY="Projection" VALUE="Continuous"/>
+        <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
         <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
         <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
         <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>

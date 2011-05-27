@@ -45,6 +45,7 @@
       <SOLVERINFO>
         <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
         <I PROPERTY="Projection" VALUE="Continuous"/>
+        <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
         <I PROPERTY="USEFFT" VALUE="FFTW"/>
       </SOLVERINFO>
 

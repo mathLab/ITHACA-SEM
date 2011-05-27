@@ -50,8 +50,8 @@
 
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
-//#include <MultiRegions/ContField3DHomogeneous2D.h>
-//#include <MultiRegions/DisContField3DHomogeneous2D.h>
+#include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/DisContField3DHomogeneous2D.h>
 
 namespace Nektar
 {
@@ -390,11 +390,17 @@ namespace Nektar
 		
 		///Parameter for homogeneous expansions
 		
-		bool USE_FFT;                ///< flag to determine if use or not the FFT for transformations
+		enum HomogeneousType
+		{
+			eHomogeneous1D,
+			eHomogeneous2D,
+			eHomogeneous3D,
+			eNotHomogeneous
+		};
 		
-		bool m_Homogeneous1D;        ///< flag to determine if there is  1 homegeneous direction
-		bool m_Homogeneous2D;        ///< flag to determine if there are 2 homegeneous directions
-		bool m_Homogeneous3D;        ///< flag to determine if there are 3 homedeneous directions
+		bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
+		
+		enum HomogeneousType m_HomogeneousType;
 		
 		NekDouble m_LhomX;           ///< physical length in X direction (if homogeneous) 
 		NekDouble m_LhomY;           ///< physical length in Y direction (if homogeneous)

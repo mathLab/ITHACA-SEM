@@ -101,61 +101,55 @@ namespace Nektar
                                 m_sessionName.find_last_of("."));
 		
 		// Setting parameteres for homogenous problems
-		m_Homogeneous1D = false;
-		m_Homogeneous2D = false;
-		m_Homogeneous3D = false;
 		
-		m_HomoDirec = 0;
+		m_HomoDirec       = 0;
+		m_useFFT          = false;
+		m_HomogeneousType = eNotHomogeneous;
 		
-		if(m_boundaryConditions->CheckForParameter("HomModesZ"))
+		if(m_boundaryConditions->SolverInfoExists("HOMOGENEOUS"))
 		{
-			m_Homogeneous1D = true;
-			m_Homogeneous2D = false;
-			m_Homogeneous3D = false;
-		    m_npointsZ      = m_boundaryConditions->GetParameter("HomModesZ");
-			m_LhomZ         = m_boundaryConditions->GetParameter("LZ");
-			m_HomoDirec     = 1;
-			m_spacedim      = 3;
-		}
-		
-		if(m_boundaryConditions->CheckForParameter("HomModesY"))
-		{
-			if(m_boundaryConditions->CheckForParameter("HomModesZ"))
+			std::string HomoStr = m_boundaryConditions->GetSolverInfo("HOMOGENEOUS");
+			m_spacedim          = 3;
+			
+			if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
+			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
-				m_Homogeneous1D = false;
-				m_Homogeneous2D = true;
-				m_Homogeneous3D = false;
-				m_npointsY      = m_boundaryConditions->GetParameter("HomModesY");
-				m_LhomY         = m_boundaryConditions->GetParameter("LY");
-				m_HomoDirec     = 2;
-				m_spacedim      = 3;
+				m_HomogeneousType = eHomogeneous1D;
+				m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
+				m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+				m_HomoDirec       = 1;
+			}
+			
+			if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
+			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
+			{
+				m_HomogeneousType = eHomogeneous2D;
+				m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
+				m_LhomY           = m_boundaryConditions->GetParameter("LY");
+				m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
+				m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+				m_HomoDirec       = 2;
+			}
+			
+			if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
+			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
+			{
+				m_HomogeneousType = eHomogeneous3D;
+				m_npointsX        = m_boundaryConditions->GetParameter("HomModesX");
+				m_LhomX           = m_boundaryConditions->GetParameter("LX");
+				m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
+				m_LhomY           = m_boundaryConditions->GetParameter("LY");
+				m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
+				m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+				m_HomoDirec       = 3;
+			}
+			
+			if(m_boundaryConditions->SolverInfoExists("USEFFT"))
+			{
+				m_useFFT = true;
 			}
 		}
 		
-		if(m_boundaryConditions->CheckForParameter("HomModesX"))
-		{
-			if(m_boundaryConditions->CheckForParameter("HomModesY")) 
-			{
-				if(m_boundaryConditions->CheckForParameter("HomModesZ"))
-				{
-					m_Homogeneous1D = false;
-					m_Homogeneous2D = false;
-					m_Homogeneous3D = true;
-					m_npointsX      = m_boundaryConditions->GetParameter("HomModesX");
-					m_LhomX         = m_boundaryConditions->GetParameter("LX");
-					m_HomoDirec     = 3;
-					m_spacedim      = 3;
-				}
-			}
-		}
-		
-		USE_FFT = false;
-		if(m_boundaryConditions->SolverInfoExists("USEFFT"))
-		{
-			USE_FFT = true;
-		}
-		
-
         // Options to determine type of projection from file or
         // directly from constructor
         if(UseInputFileForProjectionType == true)
@@ -249,9 +243,9 @@ namespace Nektar
             {
                 case 1:
                 {
-					if(m_Homogeneous2D)
+					if(m_HomogeneousType == eHomogeneous2D)
 					{
-						/*SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
 						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 						
 						if(!(mesh1D = boost::dynamic_pointer_cast<
@@ -268,8 +262,8 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(BkeyY,BkeyZ,m_LhomY,m_LhomZ,USE_FFT,*mesh1D,*m_boundaryConditions,i,SolnType);
-						}*/
+							::AllocateSharedPtr(BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
+						}
 					}
 					else 
 					{
@@ -294,7 +288,7 @@ namespace Nektar
                 }
                 case 2:
                 {
-					if(m_Homogeneous1D)
+					if(m_HomogeneousType == eHomogeneous1D)
 					{
 						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
 						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
@@ -311,7 +305,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-							::AllocateSharedPtr(BkeyZ,m_LhomZ,USE_FFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
 						}
 				    }
 				    else
@@ -349,7 +343,7 @@ namespace Nektar
                 }
                 case 3:
                 {
-					if(m_Homogeneous3D)
+					if(m_HomogeneousType == eHomogeneous3D)
 					{
 					    ASSERTL0(false,"3D fully periodic problems not implemented yet");	
 					}
@@ -392,9 +386,9 @@ namespace Nektar
             {
                 case 1:
                 {
-					if(m_Homogeneous2D)
+					if(m_HomogeneousType == eHomogeneous2D)
 					{
-						/*SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
 						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 						
 						if(!(mesh1D = boost::dynamic_pointer_cast<
@@ -411,8 +405,8 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(BkeyY,BkeyZ,m_LhomY,m_LhomZ,USE_FFT,*mesh1D,*m_boundaryConditions,i,SolnType);
-						}*/
+							::AllocateSharedPtr(BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
+						}
 					}
 					else 
 					{
@@ -437,7 +431,7 @@ namespace Nektar
                 }
                 case 2:
                 {
-					if(m_Homogeneous1D)
+					if(m_HomogeneousType == eHomogeneous1D)
 					{
 						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
 						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
@@ -454,7 +448,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(BkeyZ,m_LhomZ,USE_FFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
 						}
 				    }
 				    else
@@ -479,7 +473,7 @@ namespace Nektar
                 }
                 case 3:
 				{
-					if(m_Homogeneous3D)
+					if(m_HomogeneousType == eHomogeneous3D)
 					{
 					    ASSERTL0(false,"3D fully periodic problems not implemented yet");	
 					}
@@ -1120,7 +1114,7 @@ namespace Nektar
         }
 
         // Evaluate V\cdot Grad(u)
-		if(m_Homogeneous1D + m_Homogeneous2D + m_Homogeneous3D)
+		if(m_HomoDirec > 0)
 		{
 			grad1 = grad0 + nPointsTot;
             grad2 = grad1 + nPointsTot;
@@ -1767,7 +1761,7 @@ namespace Nektar
     void ADRBase::SessionSummary(std::ostream &out)
     {
 
-        if(m_Homogeneous1D)
+        if(m_HomogeneousType == eHomogeneous1D)
 		{
 			out << "\tQuasi-3D        : " << "Homogeneous in z-direction" << endl;
 			out << "\tSession Name    : " << m_sessionName << endl;
@@ -1776,7 +1770,7 @@ namespace Nektar
 			out << "\t2D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
 			out << "\tN.Hom. Modes    : " << m_npointsZ << endl;
 			out << "\tHom. length (LZ): " << m_LhomZ << endl;
-			if(USE_FFT)
+			if(m_useFFT)
 			{
 			  out << "\tUsing FFTW " << endl;
 			}
@@ -1785,6 +1779,27 @@ namespace Nektar
 			  out << "\tUsing MVM "  << endl;
 			}
 
+		}
+		else if(m_HomogeneousType == eHomogeneous2D)
+		{
+			out << "\tQuasi-3D        : " << "Homogeneous in yz-plane" << endl;
+			out << "\tSession Name    : " << m_sessionName << endl;
+			out << "\tExpansion Dim.  : " << m_expdim+2 << endl;
+			out << "\tSpatial   Dim.  : " << m_spacedim << endl;
+			out << "\t1D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
+			out << "\tN.Hom. Modes (y): " << m_npointsY << endl;
+			out << "\tN.Hom. Modes (z): " << m_npointsZ << endl;
+			out << "\tHom. length (LY): " << m_LhomY << endl;
+			out << "\tHom. length (LZ): " << m_LhomZ << endl;
+			if(m_useFFT)
+			{
+				out << "\tUsing FFTW " << endl;
+			}
+			else 
+			{
+				out << "\tUsing MVM "  << endl;
+			}
+			
 		}
 		else 
 		{

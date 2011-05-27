@@ -1,3 +1,4 @@
+IF(NEKTAR_USE_ARPACK)
 SET(IncNavierStokesStabilitySource 
        ../ADRSolver/EquationSystem.cpp
        ../ADRSolver/SessionReader.cpp
@@ -13,3 +14,5 @@ SET(IncNavierStokesStabilitySource
 
 ADD_SOLVER_EXECUTABLE(IncNavierStokesStability
 			${IncNavierStokesStabilitySource})
+
+ENDIF(NEKTAR_USE_ARPACK)

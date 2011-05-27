@@ -325,6 +325,7 @@ wish</li>
 		      <li>Generate the makefiles using the command <div class="code"><pre>./configure --prefix=$PWD</pre></div></li>
                       
 		      <li>Build and install the library by typing <div class="code"><pre>make install</pre></div> </li>
+			  
                       
                       
                     </ol>
@@ -332,10 +333,32 @@ wish</li>
                     
                     
                   </ol>
-            
-            
-                
-                
+				  
+				    <li>
+                In case you need to evaluate the eigenvalues and eigenvectors, it is possile to complile 
+				the ARPACK library. ARPACK uses Implicit Restarted Arnoldi Algorithm and it is able to solve the large-scale eigenvalues problems in a wide
+				range of cases(for more information about the ARPACK, see <a href="http://www.caam.rice.edu/software/ARPACK/" target="_blank">http://www.caam.rice.edu/software/ARPACK/</a>).
+                By default the ARPACK routines are not in use, you need to compile the ARPACK library and switch it
+                on before to build up the Nektar++ library.
+                                                                                                           
+                <ol>
+                    
+                    <li>
+					  The easiest and fastest way to compile ARPACK in OSX Systems is using Macports,a free/open source software that simplifies the installation of packages 
+                      on the Mac OS X and Darwin operating systems. It is possible to install easily Macports following the instructions on <a href="http://www.macports.org/install.php" target="_blank">http://www.macports.org/install.php</a>)
+                    </li>
+                    
+                    <li>
+                    At the terminal, downaload and install ARPACK typing:
+                    
+                    <div class="code"><pre>sudo port install arpack</pre></div></li>
+
+                    </li>
+                    
+                    <li>ARPACK libraries are now installed in your machines in the folder <em>/opt/local/lib </em> <li>
+        
+                    <ol>
+                      
     </ol>
     
     

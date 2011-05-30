@@ -434,20 +434,11 @@ namespace Nektar
 
             if((mattype == eForwardsCoeffSpace2D)||(mattype == eForwardsPhysSpace2D))
             {
-				StdRegions::StdMatrixKey matkey1(StdRegions::eInvMass,
-												 StdQuad.DetExpansionType(),
-												 StdQuad);
-				
-				
-				StdRegions::StdMatrixKey matkey2(StdRegions::eIProductWRTBase,
+				StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
                                                 StdQuad.DetExpansionType(),
                                                 StdQuad);
 				
-				loc_mat  = StdQuad.GetStdMatrix(matkey2);
-				loc_mat1 = StdQuad.GetStdMatrix(matkey1);
-				loc_mat2 = StdQuad.GetStdMatrix(matkey2);
-				int dim = m_ny*m_nz;
-				Blas::Dgemm('N','N',dim,dim,dim,1.0,loc_mat1->GetPtr().get(),dim,loc_mat2->GetPtr().get(),dim,0.0,loc_mat->GetPtr().get(),dim);
+                loc_mat = StdQuad.GetStdMatrix(matkey);				
             }
             else
             {

@@ -161,15 +161,15 @@ namespace Nektar
 			m_lines[0]->GetCoords(x);
 			
 			
-            for(n = 0; n < npoints; ++n)
+            for(m = 0; m < nzlines; ++m)
             {
 				for(j = 0; j < nylines; ++j)
 				{
-					for(m = 0; m < nzlines; ++m)
+					for(n = 0; n < npoints; ++n)
 					{
-						Vmath::Fill(1,x[n],tmp_xc = xc0 +(n*j*m),1);
-						Vmath::Fill(1,y[j],tmp_xc = xc1 +(n*j*m),1);
-						Vmath::Fill(1,z[m],tmp_xc = xc2 +(n*j*m),1);
+						Vmath::Fill(1,x[n],tmp_xc = xc0 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,y[j],tmp_xc = xc1 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,z[m],tmp_xc = xc2 + n +(j*npoints) + (m*npoints*nylines), 1);
 					}
 				}
             }
@@ -221,15 +221,15 @@ namespace Nektar
 			Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
 			
-            for(n = 0; n < npoints; ++n)
+            for(m = 0; m < nzlines; ++m)
             {
 				for(j = 0; j < nylines; ++j)
 				{
-					for(m = 0; m < nzlines; ++m)
+					for(n = 0; n < npoints; ++n)
 					{
-						Vmath::Fill(1,x[n],tmp_xc = xc0 +(n*j*m),1);
-						Vmath::Fill(1,y[j],tmp_xc = xc1 +(n*j*m),1);
-						Vmath::Fill(1,z[m],tmp_xc = xc2 +(n*j*m),1);
+						Vmath::Fill(1,x[n],tmp_xc = xc0 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,y[j],tmp_xc = xc1 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,z[m],tmp_xc = xc2 + n +(j*npoints) + (m*npoints*nylines), 1);
 					}
 				}
             }

@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 	
 	Execute("ADRSolver","Test_Helmholtz_3DHomo1D_MVM.xml","3D-Homogeneous-1D Helmholtz/Steady Diffusion (MVM)");
 	
-#if 0
+#ifdef NEKTAR_USE_FFTW
 	Execute("ADRSolver","Test_Helmholtz_3DHomo1D_FFT.xml","3D-Homogeneous-1D Helmholtz/Steady Diffusion (FFT)");
 #endif
 	
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 	
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_MVM.xml","3D-Homogeneous-1D unsteady advection-diffusion (MVM)");
 	
-#if 0
+#ifdef NEKTAR_USE_FFTW
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml","3D-Homogeneous-1D unsteady advection-diffusion (FFT)");
 #endif
 	

@@ -193,15 +193,15 @@ namespace Nektar
 			(*m_exp)[eid]->GetCoords(x);
 			
 
-            for(n = 0; n < npoints; ++n)
+            for(m = 0; m < nzlines; ++m)
             {
 				for(j = 0; j < nylines; ++j)
 				{
-					for(m = 0; m < nzlines; ++m)
+					for(n = 0; n < npoints; ++n)
 					{
-						Vmath::Fill(1,x[n],tmp_xc = xc0 +(n*j*m),1);
-						Vmath::Fill(1,y[j],tmp_xc = xc1 +(n*j*m),1);
-						Vmath::Fill(1,z[m],tmp_xc = xc2 +(n*j*m),1);
+						Vmath::Fill(1,x[n],tmp_xc = xc0 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,y[j],tmp_xc = xc1 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,z[m],tmp_xc = xc2 + n +(j*npoints) + (m*npoints*nylines), 1);
 					}
 				}
             }
@@ -251,15 +251,15 @@ namespace Nektar
 			Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
 
-            for(n = 0; n < npoints; ++n)
+            for(m = 0; m < nzlines; ++m)
             {
 				for(j = 0; j < nylines; ++j)
 				{
-					for(m = 0; m < nzlines; ++m)
+					for(n = 0; n < npoints; ++n)
 					{
-						Vmath::Fill(1,x[n],tmp_xc = xc0 +(n*j*m),1);
-						Vmath::Fill(1,y[j],tmp_xc = xc1 +(n*j*m),1);
-						Vmath::Fill(1,z[m],tmp_xc = xc2 +(n*j*m),1);
+						Vmath::Fill(1,x[n],tmp_xc = xc0 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,y[j],tmp_xc = xc1 + n +(j*npoints) + (m*npoints*nylines), 1);
+						Vmath::Fill(1,z[m],tmp_xc = xc2 + n +(j*npoints) + (m*npoints*nylines), 1);
 					}
 				}
             }
@@ -388,13 +388,13 @@ namespace Nektar
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
 			int nzlines = m_homogeneousBasis_z->GetNumPoints();
 
-            for(int n = 0; n < nylines; ++n)
+            for(int m = 0; m < nzlines; ++m)
             {
-				for(int m = 0; m < nzlines; ++m)
+				for(int n = 0; n < nylines; ++n)
 				{
-					errL2 = m_lines[n*m]->L2(soln + cnt);
-					cnt += m_lines[n*m]->GetTotPoints();
-					err += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
+					errL2 = m_lines[n+(m*nylines)]->L2(soln + cnt);
+					cnt  += m_lines[n+(m*nylines)]->GetTotPoints();
+					err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
 				}
             }
 
@@ -411,11 +411,11 @@ namespace Nektar
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
 			int nzlines = m_homogeneousBasis_z->GetNumPoints();
 
-            for(int n = 0; n < nylines; ++n)
+            for(int m = 0; m < nzlines; ++m)
             {
-				for(int m = 0; m < nzlines; ++m)
+				for(int n = 0; n < nylines; ++n)
 				{
-					errL2 = m_lines[n*m]->L2();
+					errL2 = m_lines[n+(m*nylines)]->L2();
 					err += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
 				}
 			}

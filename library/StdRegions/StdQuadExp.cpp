@@ -195,30 +195,50 @@ namespace Nektar
             int      order1    = GetBasisNumModes(1);
             MatrixType mtype   = mkey.GetMatrixType();
             
-            DNekMatSharedPtr   Mat = StdExpansion::CreateGeneralMatrix(mkey);
+            DNekMatSharedPtr Mat; 
 
             switch(mtype)
             {
             case eMass:
-                // For Fourier basis set the imaginary component of mean mode
-                // to have a unit diagonal component in mass matrix 
-                if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-                {
-                    for(i = 0; i < order1; ++i)
-                    {
-                        (*Mat)(order0*i+1,i*order0+1) = 1.0;
-                    }
-                }
+				{
+					Mat = StdExpansion::CreateGeneralMatrix(mkey);
+					// For Fourier basis set the imaginary component of mean mode
+					// to have a unit diagonal component in mass matrix 
+					if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+					{
+						for(i = 0; i < order1; ++i)
+						{
+							(*Mat)(order0*i+1,i*order0+1) = 1.0;
+						}
+					}
                 
-                if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
-                {
-                    for(i = 0; i < order0; ++i)
-                    {
-                        (*Mat)(order0+i ,order0+i) = 1.0;
-                    }
-                }
+					if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
+					{
+						for(i = 0; i < order0; ++i)
+						{
+							(*Mat)(order0+i ,order0+i) = 1.0;
+						}
+					}
+				}
+				break;
+			case eFwdTrans:
+				{
+					Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    StdMatrixKey iprodkey(eIProductWRTBase,DetExpansionType(),*this);
+                    DNekMat &Iprod = *GetStdMatrix(iprodkey);
+                    StdMatrixKey imasskey(eInvMass,DetExpansionType(),*this);
+                    DNekMat &Imass = *GetStdMatrix(imasskey);
+                    
+                    (*Mat) = Imass*Iprod;
+				}
+				break;
+			default:
+                {                
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+				}
+				break;
             }
-
+	
             return Mat;
         }
         

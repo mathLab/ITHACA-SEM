@@ -152,8 +152,7 @@ namespace Nektar
 
             virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs);
 
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
-                v_GetFieldDefinitions(void);
+            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
 
             virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
 
@@ -163,14 +162,11 @@ namespace Nektar
 
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
 
-            virtual void v_WriteTecplotHeader(std::ofstream &outfile,
-                                            std::string var = "v");
+            virtual void v_WriteTecplotHeader(std::ofstream &outfile,std::string var = "v");
 
-            virtual void v_WriteTecplotField(std::ofstream &outfile,
-                                             int expansion);
+            virtual void v_WriteTecplotField(std::ofstream &outfile,int expansion);
 
-            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
-                                        std::string var);
+            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion, std::string var);
 
         private:
         };

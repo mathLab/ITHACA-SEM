@@ -12,7 +12,6 @@ SET(ADRSolverSource
        ./EquationSystems/UnsteadyDiffusion.cpp
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp
-       ./EquationSystems/Monodomain.cpp
        ./EquationSystems/CFLtester.cpp
        ../Auxiliary/ADRBase.cpp)
 

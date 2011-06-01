@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeCG.h
+// File GlobalLinSysIterativeFull.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: GlobalLinSysIterativeCG header
+// Description: GlobalLinSysIterativeFull header
 //
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSIterativeCG_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSIterativeCG_H
-#include <MultiRegions/MultiRegionsDeclspec.h>
+
 #include <MultiRegions/GlobalLinSysIterative.h>
 
 namespace Nektar
@@ -43,10 +43,11 @@ namespace Nektar
     {
         // Forward declarations
         class LocalToGlobalC0ContMap;
+        class LocalToGlobalDGMap;
         class ExpList;
 
         /// A global linear system.
-        class GlobalLinSysIterativeCG : public GlobalLinSysIterative
+        class GlobalLinSysIterativeFull : public GlobalLinSysIterative
         {
         public:
             /// Creates an instance of this class
@@ -56,24 +57,24 @@ namespace Nektar
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysIterativeCG>
+                return MemoryManager<GlobalLinSysIterativeFull>
                     ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
             }
 
             /// Name of class
-            MULTI_REGIONS_EXPORT static std::string className;
+            static std::string className;
 
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT GlobalLinSysIterativeCG(
+            MULTI_REGIONS_EXPORT GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pLinSysKey,
                     const boost::shared_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap);
 
-            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeCG();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeFull();
 
             /// Solve the linear system for given input and output vectors.
-            MULTI_REGIONS_EXPORT virtual void Solve(
+            MULTI_REGIONS_EXPORT virtual void Solve( 
                     const Array<OneD,const NekDouble> &in,
                           Array<OneD,      NekDouble> &out);
 
@@ -87,15 +88,24 @@ namespace Nektar
                                                         = NullNekDouble1DArray);
 
         private:
-            boost::shared_ptr<LocalToGlobalC0ContMap> m_locToGloMap;
-            DNekMat m_preconditioner;
+            // Local to global map.
+            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
+            // Operator preconditioner matrix.
+            DNekMat                                     m_preconditioner;
 
+            // Populates the preconditioner with the identity matrix.
             void ComputeNullPreconditioner(
-                const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap);
+                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+
+            // Populates the preconditioner with the diagonal of the operator
+            // matrix by applying the operator to the standard basis.
             void ComputeDiagonalPreconditioner(
-                const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap);
+                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+
+            // Populates the preconditioner with the diagonal of the operator
+            // matrix using a more efficient summation of local matrix entries.
             void ComputeDiagonalPreconditionerSum(
-                const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap);
+                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
         };
     }
 }

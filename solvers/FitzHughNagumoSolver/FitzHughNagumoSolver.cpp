@@ -37,6 +37,8 @@
 #include <cstdlib>
 #include <cmath> 
 
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <FitzHughNagumoSolver/FitzHughNagumo.h>
 
 using namespace Nektar;
@@ -52,9 +54,12 @@ int main(int argc, char *argv[])
     
     time(&starttime);    
 
+    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(fileNameString);
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
+
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    FitzHughNagumo EAD(fileNameString);
+    FitzHughNagumo EAD(vComm, vSession);
     
     // Time integration function object for unsteady equations
     LibUtilities::TimeIntegrationSchemeOperators ode;

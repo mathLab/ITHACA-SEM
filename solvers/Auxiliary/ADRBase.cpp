@@ -36,6 +36,8 @@
 
 #include <Auxiliary/ADRBase.h>
 
+#include <SpatialDomains/MeshPartition.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -69,12 +71,55 @@ namespace Nektar
      *
      * @todo    Move solver-specific singularity check down inheritence tree.
      */
-    ADRBase::ADRBase(const string &fileNameString,
+    ADRBase::ADRBase(LibUtilities::CommSharedPtr &pComm,
+                     LibUtilities::SessionReaderSharedPtr& pSession,
                      bool UseInputFileForProjectionType,
                      bool UseContinuousField)
     {
+        m_comm = pComm;
+        m_session = pSession;
+        m_filename = pSession->GetFilename();
+        m_solnType = MultiRegions::eDirectMultiLevelStaticCond;
+        // Save the basename of input file name for output details.
+        m_sessionName = m_filename;
+        m_sessionName = m_sessionName.substr(0,
+                                m_sessionName.find_last_of("."));
+
+        // Create communicator
+        if (pSession->DefinesSolverInfo("GlobalSysSolve"))
+        {
+            for (unsigned int i = 0; i < MultiRegions::eSIZE_GlobalSysSolnType; ++i)
+            {
+                if (pSession->GetSolverInfo("GlobalSysSolve") == MultiRegions::GlobalSysSolnTypeMap[i])
+                {
+                    m_solnType = (MultiRegions::GlobalSysSolnType)i;
+                    break;
+                }
+                if (i == MultiRegions::eSIZE_GlobalSysSolnType - 1)
+                {
+                    ASSERTL0(false, "Unknown GlobalSysSolve type in session file.");
+                }
+            }
+        }
+
+        if (m_comm->GetSize() > 1)
+        {
+            if (m_comm->GetRank() == 0)
+            {
+                SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(pSession);
+                vPartitioner->PartitionMesh(m_comm->GetSize());
+                vPartitioner->WritePartitions(pSession, m_filename);
+            }
+
+            m_comm->Block();
+
+            m_filename = m_filename + "." + boost::lexical_cast<std::string>(m_comm->GetRank());
+            m_solnType = MultiRegions::eIterativeFull;
+            m_sessionName = m_sessionName.substr(0,
+                                            m_sessionName.find_last_of("."));
+        }
+
         SpatialDomains::MeshGraph graph;
-        m_filename = fileNameString;
 
         // Read the geometry and the expansion information
         m_graph = graph.Read(m_filename);
@@ -95,11 +140,6 @@ namespace Nektar
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
 
-        // Save the basename of input file name for output details.
-        m_sessionName = fileNameString;
-        m_sessionName = m_sessionName.substr(0,
-                                m_sessionName.find_last_of("."));
-		
 		// Setting parameteres for homogenous problems
 		
 		m_HomoDirec       = 0;
@@ -193,21 +233,30 @@ namespace Nektar
         }
 
         // Enforce singularity check for some problems
-        std::string solverName = m_boundaryConditions->GetSolverInfo("EQTYPE");
-        NekDouble lambda;
-        if (solverName == "Helmholtz")
+        m_checkIfSystemSingular
+                = Array<OneD, bool>(m_boundaryConditions->GetNumVariables());
+        if (pSession->DefinesSolverInfo("EQTYPE")
+                && pSession->DefinesSolverInfo("SOLVERTYPE"))
         {
-            lambda = m_boundaryConditions->GetParameter("Lambda");
-        }
-        if (solverName == "Laplace" || solverName == "Poisson" ||
-                (solverName == "Helmholtz" && lambda == 0))
-        {
-            checkIfSystemSingular[0] = true;
-        }
-        if (solverName == "UnsteadyNavierStokes")
-        {
-            // check pressure field only
-            checkIfSystemSingular[2] = true;
+            std::string solverName = pSession->GetSolverInfo("EQTYPE");
+            std::string solverType = pSession->GetSolverInfo("SOLVERTYPE");
+            NekDouble lambda;
+
+            if (solverName == "Helmholtz")
+            {
+                lambda = pSession->GetParameter("Lambda");
+            }
+            if (solverName == "Laplace" || solverName == "Poisson" ||
+                    (solverName == "Helmholtz" && lambda == 0))
+            {
+                m_checkIfSystemSingular[0] = true;
+            }
+            if (solverName == "UnsteadyNavierStokes"
+                    && solverType == "VelocityCorrectionScheme")
+            {
+                // check pressure field only
+                m_checkIfSystemSingular[2] = true;
+            }
         }
         SetADRBase(m_graph,m_boundaryConditions->GetNumVariables());
     }
@@ -262,7 +311,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
 						}
 					}
 					else 
@@ -278,7 +327,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField1D>
-							::AllocateSharedPtr(*mesh1D,
+							::AllocateSharedPtr(m_comm,*mesh1D,
                                                 *m_boundaryConditions,i);
 						}
 						
@@ -305,7 +354,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-							::AllocateSharedPtr(BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
 						}
 				    }
 				    else
@@ -321,10 +370,10 @@ namespace Nektar
 						i = 0;
 						MultiRegions::ContField2DSharedPtr firstfield =
 						MemoryManager<MultiRegions::ContField2D>
-						::AllocateSharedPtr(*mesh2D,
+						::AllocateSharedPtr(m_comm,*mesh2D,
 											*m_boundaryConditions,i,solnType,
 											DeclareCoeffPhysArrays,
-											checkIfSystemSingular[0]);
+											m_checkIfSystemSingular[0]);
 						
 						firstfield->ReadGlobalOptimizationParameters(m_filename);
 						
@@ -335,7 +384,7 @@ namespace Nektar
 							::AllocateSharedPtr(*firstfield,
 												*mesh2D,*m_boundaryConditions,i,
 												DeclareCoeffPhysArrays,
-												checkIfSystemSingular[i]);
+												m_checkIfSystemSingular[i]);
 						}
 					}
 					
@@ -360,7 +409,7 @@ namespace Nektar
 						i = 0;
 						MultiRegions::ContField3DSharedPtr firstfield =
 								MemoryManager<MultiRegions::ContField3D>
-										::AllocateSharedPtr(*mesh3D,
+										::AllocateSharedPtr(m_comm,*mesh3D,
 															*m_boundaryConditions,i);
 
 						firstfield->ReadGlobalOptimizationParameters(m_filename);
@@ -405,7 +454,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
 						}
 					}
 					else 
@@ -421,12 +470,11 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions
-							::DisContField1D>::AllocateSharedPtr(*mesh1D,
+							::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
 																 *m_boundaryConditions,i);
 						}
 					}
 					
-                    
                     break;
                 }
                 case 2:
@@ -448,7 +496,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
 						}
 				    }
 				    else
@@ -464,7 +512,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions
-							::DisContField2D>::AllocateSharedPtr(*mesh2D,
+							::DisContField2D>::AllocateSharedPtr(m_comm,*mesh2D,
 																 *m_boundaryConditions,i);
 						}
 					}
@@ -725,8 +773,15 @@ namespace Nektar
         }
         if(dumpInitialConditions)
         {
+            std::string outname = m_sessionName +"_initial.chk";
+            if (m_comm->GetSize() > 1)
+            {
+                char procout[16] = "";
+                sprintf(procout, "%d", m_comm->GetRank());
+                outname = outname + "." + procout;
+            }
+
             // dump initial conditions to file
-            std::string outname = m_sessionName + "_initial.chk";
             WriteFld(outname);
         }
     }
@@ -877,6 +932,7 @@ namespace Nektar
 				Array<OneD, NekDouble> one(m_fields[field]->GetNpoints(),1.0);
 
 				NekDouble Vol = m_fields[field]->PhysIntegral(one);
+            m_comm->AllReduce(Vol, LibUtilities::ReduceSum);
 
 				L2error = sqrt(L2error*L2error/Vol);
 			}
@@ -958,7 +1014,7 @@ namespace Nektar
 		const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
         
 		MultiRegions::ExpList2DSharedPtr ErrorExp = 
-        MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyQ1,BkeyQ2,*mesh2D);
+        MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_comm,BkeyT1,BkeyT2,BkeyQ1,BkeyQ2,*mesh2D);
 		
 		int ErrorCoordim = ErrorExp->GetCoordim(0);
 		int ErrorNq      = ErrorExp->GetTotPoints();
@@ -1464,8 +1520,16 @@ namespace Nektar
     void ADRBase::Checkpoint_Output(const int n)
     {
         char chkout[16] = "";
+        char procout[16] = "";
+
         sprintf(chkout, "%d", n);
         std::string outname = m_sessionName +"_" + chkout + ".chk";
+
+        if (m_comm->GetSize() > 1)
+        {
+            sprintf(procout, "%d", m_comm->GetRank());
+            outname = outname + "." + procout;
+        }
         WriteFld(outname);
     }
 

@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 
@@ -10,7 +14,27 @@ using namespace Nektar;
 // the expansions and report an error.
 
 int main(int argc, char *argv[])
-{ 
+{
+    LibUtilities::CommSharedPtr vComm
+        = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ExpList2DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
@@ -25,7 +49,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
+//    string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D; 
     graph2D.ReadGeometry(meshfile);
     graph2D.ReadExpansions(meshfile);
@@ -33,19 +57,22 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
-    LibUtilities::BasisKey bkey1 = expansions[0]->m_basisKeyVector[1];
-    int nmodes = bkey0.GetNumModes(); 
-    cout << "Solving 2D Projection"  << endl; 
-    cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;
-    cout << "    No. modes  : " << nmodes << endl;
-    cout << endl;
+    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey1 = expansions.begin()->second->m_basisKeyVector[1];
+    int nmodes = bkey0.GetNumModes();
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Solving 2D Projection"  << endl;
+        cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;
+        cout << "    No. modes  : " << nmodes << endl;
+        cout << endl;
+    }
     //----------------------------------------------
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(graph2D);
+    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vComm,graph2D);
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -104,19 +131,50 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Write solution 
-    ofstream outfile("ProjectLocFile2D.pos");
-    Exp->WriteToFile(outfile,eGmsh);
-    outfile.close();
+//    ofstream outfile("ProjectLocFile2D.pos");
+//    Exp->WriteToFile(outfile,eGmsh);
+//    outfile.close();
+//
+//    ofstream outfile2("ProjectLocFile2D.dat");
+//    Exp->WriteToFile(outfile2,eTecplot);
+//    outfile2.close();
+    string   out = meshfile + ".fld";
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+                                                = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-    ofstream outfile2("ProjectLocFile2D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
-    outfile2.close();
+    for(i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_fields.push_back("u");
+        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+    graph2D.Write(out, FieldDef, FieldData);
+
     //----------------------------------------------
     
     //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-    cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Rank 0:" << endl;
+        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        for (unsigned int i = 1; i < vComm->GetSize(); ++i)
+        {
+            Array<OneD, NekDouble> data(2);
+            vComm->Recv(i, data);
+            cout << "Rank " << i << ":" << endl;
+            cout << "L infinity error: " << data[0] << endl;
+            cout << "L 2 error:        " << data[1] << endl;
+        }
+    }
+    else
+    {
+        Array<OneD, NekDouble> data(2);
+        data[0] = Exp->Linf(Fce->GetPhys());
+        data[1] = Exp->L2  (Fce->GetPhys());
+        vComm->Send(0,data);
+    }
     //--------------------------------------------
 
     return 0;

@@ -36,11 +36,13 @@
 
 namespace Nektar
 {
-    string Poisson::className1 = EquationSystemFactory::RegisterCreatorFunction("Poisson", Poisson::create);
-    string Poisson::className2 = EquationSystemFactory::RegisterCreatorFunction("SteadyDiffusion", Poisson::create);
+    string Poisson::className1 = GetEquationSystemFactory().RegisterCreatorFunction("Poisson", Poisson::create);
+    string Poisson::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusion", Poisson::create);
 
-    Poisson::Poisson(SessionReaderSharedPtr& pSession)
-        : Laplace(pSession)
+    Poisson::Poisson(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : Laplace(pComm, pSession)
     {
         SetPhysForcingFunctions(m_fields);
     }

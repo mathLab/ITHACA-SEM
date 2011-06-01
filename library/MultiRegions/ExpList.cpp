@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
@@ -66,6 +67,30 @@ namespace Nektar
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
         ExpList::ExpList():
+            m_comm(),
+            m_ncoeffs(0),
+            m_npoints(0),
+            m_coeffs(),
+            m_phys(),
+            m_coeff_offset(),
+            m_phys_offset(),
+            m_offset_elmt_id(),
+            m_transState(eNotSet),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                                                        ::AllocateSharedPtr()),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+        {
+        }
+
+
+        /**
+         * Creates an empty expansion list. The expansion list will typically be
+         * populated by a derived class (namely one of MultiRegions#ExpList1D,
+         * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
+         */
+        ExpList::ExpList(LibUtilities::CommSharedPtr &pComm):
+            m_comm(pComm),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
@@ -87,6 +112,7 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, bool DeclareCoeffPhysArrays):
+            m_comm(in.m_comm),
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
             m_transState(eNotSet),
@@ -647,12 +673,24 @@ namespace Nektar
                     }
                 }
                 break;
+
             case StdRegions::eHybridDGLamToU:
                 {
                     // set up an array of integers for block matrix construction
                     for(i = 0; i < n_exp; ++i)
                     {
                         nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[elmt_id.find(i)->second]->NumDGBndryCoeffs();
+                    }
+                }
+                break;
+
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    // set up an array of integers for block matrix construction
+                    for(i = 0; i < n_exp; ++i)
+                    {
+                        nrows[i] = (*m_exp)[elmt_id.find(i)->second]->NumDGBndryCoeffs();
                         ncols[i] = (*m_exp)[elmt_id.find(i)->second]->NumDGBndryCoeffs();
                     }
                 }
@@ -700,7 +738,6 @@ namespace Nektar
                                                *(*m_exp)[elmt_id.find(i)->second],
                                                gkey.GetConstants(),
                                                varcoeffs );
-
                 loc_mat = (*m_exp)[elmt_id.find(i)->second]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
@@ -831,6 +868,7 @@ namespace Nektar
             case StdRegions::eMass:
             case StdRegions::eHelmholtz:
             case StdRegions::eLaplacian:
+            case StdRegions::eHybridDGHelmBndLam:
                 {
                     glob_rows = locToGloMap->GetNumGlobalCoeffs();
                     glob_cols = locToGloMap->GetNumGlobalCoeffs();
@@ -1097,7 +1135,16 @@ namespace Nektar
         {
             boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
             const map<int,RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-            return GetGlobalLinSysFactory().CreateInstance("DirectStaticCond",mkey,
+
+            MultiRegions::GlobalSysSolnType vType = mkey.GetGlobalSysSolnType();
+
+            if (vType >= eSIZE_GlobalSysSolnType)
+            {
+                ASSERTL0(false,"Matrix solution type not defined");
+            }
+            std::string vSolnType = MultiRegions::GlobalSysSolnTypeMap[vType];
+
+            return GetGlobalLinSysFactory().CreateInstance(vSolnType,mkey,
                                                         vExpList,locToGloMap);
         }
 
@@ -1611,7 +1658,7 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 err  = std::max(err,(*m_exp)[i]->Linf(soln + m_phys_offset[i]));
             }
-
+            m_comm->AllReduce(err, LibUtilities::ReduceMax);
             return err;
         }
 
@@ -1644,7 +1691,7 @@ namespace Nektar
                 errl2 = (*m_exp)[i]->L2(soln+m_phys_offset[i]);
                 err += errl2*errl2;
             }
-
+            m_comm->AllReduce(err, LibUtilities::ReduceSum);
             return sqrt(err);
         }
 
@@ -1679,7 +1726,7 @@ namespace Nektar
                 errl2 = (*m_exp)[i]->L2();
                 err += errl2*errl2;
             }
-
+            m_comm->AllReduce(err, LibUtilities::ReduceSum);
             return sqrt(err);
         }
 
@@ -1713,7 +1760,7 @@ namespace Nektar
                 errh1 =  (*m_exp)[i]->H1(soln+m_phys_offset[i]);
                 err  += errh1*errh1;
             }
-
+            m_comm->AllReduce(err, LibUtilities::ReduceSum);
             return sqrt(err);
         }
 

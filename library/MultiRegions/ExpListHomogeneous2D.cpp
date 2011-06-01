@@ -50,12 +50,13 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous2D::ExpListHomogeneous2D(const LibUtilities::BasisKey &HomoBasis_y, 
+        ExpListHomogeneous2D::ExpListHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+                                                   const LibUtilities::BasisKey &HomoBasis_y,
 												   const LibUtilities::BasisKey &HomoBasis_z, 
 												   const NekDouble lhom_y,
 												   const NekDouble lhom_z,
 												   bool useFFT):
-            ExpList(),
+            ExpList(pComm),
             m_lhom_y(lhom_y),
 		    m_lhom_z(lhom_z),
 		    m_useFFT(useFFT),
@@ -76,8 +77,8 @@ namespace Nektar
 
 			if(m_useFFT)
 			{
-				m_FFT_y = LibUtilities::NektarFFTFactory::CreateInstance("NekFFTW", m_ny);
-				m_FFT_z = LibUtilities::NektarFFTFactory::CreateInstance("NekFFTW", m_nz);
+				m_FFT_y = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_ny);
+				m_FFT_z = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_nz);
 			}
         }
 

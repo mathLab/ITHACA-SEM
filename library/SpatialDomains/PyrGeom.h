@@ -53,6 +53,8 @@ namespace Nektar
         typedef boost::shared_ptr<PyrGeom> PyrGeomSharedPtr;
         typedef std::vector< PyrGeomSharedPtr > PyrGeomVector;
         typedef std::vector< PyrGeomSharedPtr >::iterator PyrGeomVectorIter;
+        typedef std::map<int, PyrGeomSharedPtr> PyrGeomMap;
+        typedef std::map<int, PyrGeomSharedPtr>::iterator PyrGeomMapIter;
 
         class PyrGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {

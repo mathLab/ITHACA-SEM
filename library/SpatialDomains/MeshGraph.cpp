@@ -124,7 +124,7 @@ namespace Nektar
             int i,j,k,g,h,cnt,id;
             GeometrySharedPtr geom;
             
-            ExpansionVectorShPtr expansionVector;
+            ExpansionMapShPtr expansionMap;
 
             // Loop over fields and determine unique fields string and
             // declare whole expansion list
@@ -133,15 +133,15 @@ namespace Nektar
                 for(j = 0; j < fielddef[i]->m_fields.size(); ++j)
                 {
                     std::string field = fielddef[i]->m_fields[j];
-                    if(m_expansionVectorShPtrMap.count(field) == 0)
+                    if(m_expansionMapShPtrMap.count(field) == 0)
                     {
-                        expansionVector = MemoryManager<ExpansionVector>::AllocateSharedPtr();
-                        m_expansionVectorShPtrMap[field] = expansionVector;
+                        expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+                        m_expansionMapShPtrMap[field] = expansionMap;
                         
                         // check to see if DefaultVar also not set and if so assign it to this expansion
-                        if(m_expansionVectorShPtrMap.count("DefaultVar") == 0)
+                        if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
-                            m_expansionVectorShPtrMap["DefaultVar"] = expansionVector;
+                            m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
 
                         // loop over all elements and set expansion
@@ -151,14 +151,14 @@ namespace Nektar
                             {
                                 if(fielddef[k]->m_fields[h] == field)
                                 {
-                                    expansionVector = m_expansionVectorShPtrMap.find(field)->second;
+                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
                                     LibUtilities::BasisKeyVector def;
                                     
                                     for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
                                     {
                                         ExpansionShPtr tmpexp =
                                             MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        expansionVector->push_back(tmpexp);
+                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
                                     }
                                 }
                             }
@@ -345,9 +345,9 @@ namespace Nektar
 
                         for(k = 0; k < fields.size(); ++k)
                         {
-                            expansionVector = m_expansionVectorShPtrMap.find(fields[k])->second;
-                            (*expansionVector)[id]->m_geomShPtr = geom;
-                            (*expansionVector)[id]->m_basisKeyVector = bkeyvec;
+                            expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
+                            (*expansionMap)[id]->m_geomShPtr = geom;
+                            (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
                         }
                     }
                 }
@@ -365,7 +365,7 @@ namespace Nektar
             int i,j,k,g,h,cnt,id;
             GeometrySharedPtr geom;
 
-            ExpansionVectorShPtr expansionVector;
+            ExpansionMapShPtr expansionMap;
 
             // Loop over fields and determine unique fields string and
             // declare whole expansion list
@@ -374,15 +374,15 @@ namespace Nektar
                 for(j = 0; j < fielddef[i]->m_fields.size(); ++j)
                 {
                     std::string field = fielddef[i]->m_fields[j];
-                    if(m_expansionVectorShPtrMap.count(field) == 0)
+                    if(m_expansionMapShPtrMap.count(field) == 0)
                     {
-                        expansionVector = MemoryManager<ExpansionVector>::AllocateSharedPtr();
-                        m_expansionVectorShPtrMap[field] = expansionVector;
+                        expansionMap = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+                        m_expansionMapShPtrMap[field] = expansionMap;
                         
                         // check to see if DefaultVar also not set and if so assign it to this expansion
-                        if(m_expansionVectorShPtrMap.count("DefaultVar") == 0)
+                        if(m_expansionMapShPtrMap.count("DefaultVar") == 0)
                         {
-                            m_expansionVectorShPtrMap["DefaultVar"] = expansionVector;
+                            m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
 
                         // loop over all elements and set expansion
@@ -392,14 +392,14 @@ namespace Nektar
                             {
                                 if(fielddef[k]->m_fields[h] == field)
                                 {
-                                    expansionVector = m_expansionVectorShPtrMap.find(field)->second;
+                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
                                     LibUtilities::BasisKeyVector def;
                                     
                                     for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
                                     {
                                         ExpansionShPtr tmpexp =
                                             MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        expansionVector->push_back(tmpexp);
+                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
                                     }
                                 }
                             }
@@ -429,15 +429,19 @@ namespace Nektar
                     {
                     case eSegment:
                         {
-                            for(k = 0; k < m_segGeoms.size();++k)
-                            {
-                                if(m_segGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                {
-                                    geom = m_segGeoms[k];
-                                    break;
-                                }
-                            }
-                            ASSERTL0(k != m_segGeoms.size(),"Failed to find geometry with same global id");
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_segGeoms.find(k) != m_segGeoms.end(),
+                                     "Failed to find geometry with same global id.");
+                            geom = m_segGeoms[k];
+//                            for(k = 0; k < m_segGeoms.size();++k)
+//                            {
+//                                if(m_segGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
+//                                {
+//                                    geom = m_segGeoms[k];
+//                                    break;
+//                                }
+//                            }
+//                            ASSERTL0(k != m_segGeoms.size(),"Failed to find geometry with same global id");
                             const LibUtilities::PointsKey pkey(nmodes[cnt],pointstype[i][0]);
                             LibUtilities::BasisKey bkey(basis[0],nmodes[cnt],pkey);
                             if(!UniOrder)
@@ -449,15 +453,19 @@ namespace Nektar
                         break;
                     case eTriangle:
                         {
-                            for(k = 0; k < m_triGeoms.size();++k)
-                            {
-                                if(m_triGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                {
-                                    geom = m_triGeoms[k];
-                                    break;
-                                }
-                            }
-                            ASSERTL0(k != m_triGeoms.size(),"Failed to find geometry with same global id");
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_triGeoms.find(k) != m_triGeoms.end(),
+                                     "Failed to find geometry with same global id.");
+                            geom = m_triGeoms[k];
+//                            for(k = 0; k < m_triGeoms.size();++k)
+//                            {
+//                                if(m_triGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
+//                                {
+//                                    geom = m_triGeoms[k];
+//                                    break;
+//                                }
+//                            }
+//                            ASSERTL0(k != m_triGeoms.size(),"Failed to find geometry with same global id");
                             for(int b = 0; b < 2; ++b)
                             {
                                 const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
@@ -473,15 +481,19 @@ namespace Nektar
                         break;
                     case eQuadrilateral:
                         {
-                            for(k = 0; k < m_quadGeoms.size();++k)
-                            {
-                                if(m_quadGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                {
-                                    geom = m_quadGeoms[k];
-                                    break;
-                                }
-                            }
-                            ASSERTL0(k != m_quadGeoms.size(),"Failed to find geometry with same global id");
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_quadGeoms.find(k) != m_quadGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_quadGeoms[k];
+//                            for(k = 0; k < m_quadGeoms.size();++k)
+//                            {
+//                                if(m_quadGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
+//                                {
+//                                    geom = m_quadGeoms[k];
+//                                    break;
+//                                }
+//                            }
+//                            ASSERTL0(k != m_quadGeoms.size(),"Failed to find geometry with same global id");
 
                             for(int b = 0; b < 2; ++b)
                             {
@@ -498,15 +510,20 @@ namespace Nektar
                         break;
                     case eTetrahedron:
                         {
-                            for(k = 0; k < m_tetGeoms.size();++k)
-                            {
-                                if(m_tetGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                {
-                                    geom = m_tetGeoms[k];
-                                    break;
-                                }
-                            }
-                            ASSERTL0(k != m_tetGeoms.size(),"Failed to find geometry with same global id");
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_tetGeoms.find(k) != m_tetGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_tetGeoms[k];
+
+//                            for(k = 0; k < m_tetGeoms.size();++k)
+//                            {
+//                                if(m_tetGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
+//                                {
+//                                    geom = m_tetGeoms[k];
+//                                    break;
+//                                }
+//                            }
+//                            ASSERTL0(k != m_tetGeoms.size(),"Failed to find geometry with same global id");
                             for(int b = 0; b < 3; ++b)
                             {
                                 const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
@@ -522,15 +539,19 @@ namespace Nektar
                         break;
                     case eHexahedron:
                         {
-                            for(k = 0; k < m_quadGeoms.size();++k)
-                            {
-                                if(m_hexGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                {
-                                    geom = m_hexGeoms[k];
-                                    break;
-                                }
-                            }
-                            ASSERTL0(k != m_hexGeoms.size(),"Failed to find geometry with same global id");
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_hexGeoms.find(k) != m_hexGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_hexGeoms[k];
+//                            for(k = 0; k < m_quadGeoms.size();++k)
+//                            {
+//                                if(m_hexGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
+//                                {
+//                                    geom = m_hexGeoms[k];
+//                                    break;
+//                                }
+//                            }
+//                            ASSERTL0(k != m_hexGeoms.size(),"Failed to find geometry with same global id");
 
                             for(int b = 0; b < 3; ++b)
                             {
@@ -552,9 +573,9 @@ namespace Nektar
 
                         for(k = 0; k < fields.size(); ++k)
                         {
-                            expansionVector = m_expansionVectorShPtrMap.find(fields[k])->second;
-                            (*expansionVector)[id]->m_geomShPtr = geom;
-                            (*expansionVector)[id]->m_basisKeyVector = bkeyvec;
+                            expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
+                            (*expansionMap)[id]->m_geomShPtr = geom;
+                            (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
                         }
                 }
             }
@@ -599,6 +620,7 @@ namespace Nektar
             // Initialize the mesh and space dimensions to 3 dimensions.
             // We want to do this each time we read a file, so it should
             // be done here and not just during class initialization.
+            m_meshPartitioned = false;
             m_meshDimension = 3;
             m_spaceDimension = 3;
 
@@ -614,6 +636,12 @@ namespace Nektar
                 {
                     err = attr->QueryIntValue(&m_spaceDimension);
                     ASSERTL1(err==TIXML_SUCCESS, "Unable to read space dimension.");
+                }
+                else if (attrName == "PARTITION")
+                {
+                    err = attr->QueryIntValue(&m_partition);
+                    ASSERTL1(err==TIXML_SUCCESS, "Unable to read partition.");
+                    m_meshPartitioned = true;
                 }
                 else
                 {
@@ -648,7 +676,7 @@ namespace Nektar
 
                 err = vertexAttr->QueryIntValue(&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextVertexNumber, "Vertex IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextVertexNumber, "Vertex IDs must begin with zero and be sequential.");
 
                 // Now read body of vertex
                 std::string vertexBodyStr;
@@ -684,7 +712,7 @@ namespace Nektar
                         if (!vertexDataStrm.fail())
                         {
                             VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
-                            m_vertSet.push_back(vert);
+                            m_vertSet[indx] = vert;
                         }
                     }
                 }
@@ -711,9 +739,9 @@ namespace Nektar
 
         VertexComponentSharedPtr MeshGraph::AddVertex(NekDouble x, NekDouble y, NekDouble z)
         {
-            unsigned int nextId = m_vertSet.size();
+            unsigned int nextId = m_vertSet.rbegin()->first + 1;
             VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_spaceDimension, nextId, x, y, z));
-            m_vertSet.push_back(vert);
+            m_vertSet[nextId] = vert;
             return vert;
         }
 
@@ -722,7 +750,7 @@ namespace Nektar
         {
             VertexComponentSharedPtr vertices[] = {v0, v1};
             SegGeomSharedPtr edge;
-            int edgeId = m_segGeoms.size();
+            int edgeId = m_segGeoms.rbegin()->first + 1;
 
             if( curveDefinition )
             {
@@ -732,28 +760,28 @@ namespace Nektar
             {
                 edge = MemoryManager<SegGeom>::AllocateSharedPtr(edgeId, m_spaceDimension, vertices);
             }
-            m_segGeoms.push_back(edge);
+            m_segGeoms[edgeId] = edge;
             return edge;
         }
 
         TriGeomSharedPtr MeshGraph::AddTriangle(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[])
         {
-            int indx = m_triGeoms.size();
+            int indx = m_triGeoms.rbegin()->first + 1;
             TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, orient));
             trigeom->SetGlobalID(indx);
 
-            m_triGeoms.push_back(trigeom);
+            m_triGeoms[indx] = trigeom;
 
             return trigeom;
         }
 
         QuadGeomSharedPtr MeshGraph::AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[])
         {
-            int indx = m_quadGeoms.size();
+            int indx = m_quadGeoms.rbegin()->first + 1;
             QuadGeomSharedPtr quadgeom(MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, orient));
             quadgeom->SetGlobalID(indx);
 
-            m_quadGeoms.push_back(quadgeom);
+            m_quadGeoms[indx] = quadgeom;
             return quadgeom;
         }
 
@@ -763,43 +791,43 @@ namespace Nektar
             // Setting the orientation is disabled in the reader.  Why?
             StdRegions::FaceOrientation faceorient[PrismGeom::kNtfaces + PrismGeom::kNqfaces];
 
-            unsigned int index = m_prismGeoms.size();
+            unsigned int index = m_prismGeoms.rbegin()->first + 1;
             PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
             prismgeom->SetGlobalID(index);
 
-            m_prismGeoms.push_back(prismgeom);
+            m_prismGeoms[index] = prismgeom;
             return prismgeom;
         }
 
         TetGeomSharedPtr MeshGraph::AddTetrahedron(TriGeomSharedPtr tfaces[TetGeom::kNtfaces])
         {
-            unsigned int index = m_tetGeoms.size();
+            unsigned int index = m_tetGeoms.rbegin()->first + 1;
             TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
             tetgeom->SetGlobalID(index);
 
-            m_tetGeoms.push_back(tetgeom);
+            m_tetGeoms[index] = tetgeom;
             return tetgeom;
         }
 
         PyrGeomSharedPtr MeshGraph::AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
             QuadGeomSharedPtr qfaces[PyrGeom::kNqfaces])
         {
-            unsigned int index = m_pyrGeoms.size();
+            unsigned int index = m_pyrGeoms.rbegin()->first + 1;
 
             StdRegions::FaceOrientation faceorient[PyrGeom::kNtfaces + PyrGeom::kNqfaces];
             PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
             pyrgeom->SetGlobalID(index);
 
-            m_pyrGeoms.push_back(pyrgeom);
+            m_pyrGeoms[index] = pyrgeom;
             return pyrgeom;
         }
 
         HexGeomSharedPtr MeshGraph::AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces])
         {
-            unsigned int index = m_hexGeoms.size();
+            unsigned int index = m_hexGeoms.rbegin()->first + 1;
             HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
             hexgeom->SetGlobalID(index);
-            m_hexGeoms.push_back(hexgeom);
+            m_hexGeoms[index] = hexgeom;
             return hexgeom;
         }
 
@@ -1028,28 +1056,28 @@ namespace Nektar
             return returnval;
         }
 
-        ExpansionVectorShPtr MeshGraph::SetUpExpansionVector(void)
+        ExpansionMapShPtr MeshGraph::SetUpExpansionMap(void)
         {
-            ExpansionVectorShPtr returnval; 
-            returnval = MemoryManager<ExpansionVector>::AllocateSharedPtr();
+            ExpansionMapShPtr returnval; 
+            returnval = MemoryManager<ExpansionMap>::AllocateSharedPtr();
             
             // Need a vector of all elements and their associated
             // expansion information.
-            const CompositeVector &domain = this->GetDomain();
-            CompositeVector::const_iterator compIter;
+            const CompositeMap &domain = this->GetDomain();
+            CompositeMap::const_iterator compIter;
             
             for (compIter = domain.begin(); compIter != domain.end(); ++compIter)
             {
-                boost::shared_ptr<GeometryVector> geomVectorShPtr = *compIter;
+                boost::shared_ptr<GeometryVector> geomVectorShPtr = compIter->second;
                 GeometryVectorIter geomIter;
                 for (geomIter = geomVectorShPtr->begin(); geomIter != geomVectorShPtr->end(); ++geomIter)
                 {
                     // Make sure we only have one instance of the
                     // GeometrySharedPtr stored in the list.
-                    ExpansionVector::iterator elemIter;
+                    ExpansionMap::iterator elemIter;
                     for (elemIter = returnval->begin(); elemIter != returnval->end(); ++elemIter)
                     {
-                        if ((*elemIter)->m_geomShPtr == *geomIter)
+                        if (elemIter->second->m_geomShPtr == *geomIter)
                         {
                             break;
                         }
@@ -1061,7 +1089,8 @@ namespace Nektar
                         LibUtilities::BasisKeyVector def;
                         ExpansionShPtr expansionElementShPtr =
                             MemoryManager<Expansion>::AllocateSharedPtr(*geomIter, def);
-                        returnval->push_back(expansionElementShPtr);
+                        int id = (*geomIter)->GetGlobalID();
+                        (*returnval)[id] = expansionElementShPtr;
                     }
                 }
             }
@@ -1088,7 +1117,7 @@ namespace Nektar
                 if(expType == "E")
                 {
                     int i;
-                    ExpansionVectorShPtr expansionVector;
+                    ExpansionMapShPtr expansionMap;
                         
                     /// Expansiontypes will contain composite,
                     /// nummodes, and expansiontype (eModified, or
@@ -1116,17 +1145,17 @@ namespace Nektar
                         // check to see if m_expasionVectorShPtrMap has
                         // already been intiailised and if not intiailse
                         // vector.
-                        if(m_expansionVectorShPtrMap.count("DefaultVar") == 0) // no previous definitions
+                        if(m_expansionMapShPtrMap.count("DefaultVar") == 0) // no previous definitions
                         {
-                            expansionVector = SetUpExpansionVector();
+                            expansionMap = SetUpExpansionMap();
                             
-                            m_expansionVectorShPtrMap["DefaultVar"] = expansionVector;
+                            m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                             
                             // make sure all fields in this search point
                             // to same expansion vector;
                             for(i = 0; i < fieldStrings.size(); ++i)
                             {
-                                m_expansionVectorShPtrMap[fieldStrings[i]] = expansionVector;
+                                m_expansionMapShPtrMap[fieldStrings[i]] = expansionMap;
                             }
                         }
                         else // default variable is defined
@@ -1135,20 +1164,20 @@ namespace Nektar
                             if(fieldStrings.size()) // fields are defined
                             {
                                 //see if field exists
-                                if(m_expansionVectorShPtrMap.count(fieldStrings[0]))
+                                if(m_expansionMapShPtrMap.count(fieldStrings[0]))
                                 {
-                                    expansionVector = m_expansionVectorShPtrMap.find(fieldStrings[0])->second;
+                                    expansionMap = m_expansionMapShPtrMap.find(fieldStrings[0])->second;
                                 }
                                 else
                                 {
-                                    expansionVector = SetUpExpansionVector(); 
+                                    expansionMap = SetUpExpansionMap();
                                     // make sure all fields in this search point
                                     // to same expansion vector;
                                     for(i = 0; i < fieldStrings.size(); ++i)
                                     {
-                                        if(m_expansionVectorShPtrMap.count(fieldStrings[i]) == 0)
+                                        if(m_expansionMapShPtrMap.count(fieldStrings[i]) == 0)
                                         {
-                                            m_expansionVectorShPtrMap[fieldStrings[i]] = expansionVector;
+                                            m_expansionMapShPtrMap[fieldStrings[i]] = expansionMap;
                                         }
                                         else
                                         {
@@ -1159,7 +1188,7 @@ namespace Nektar
                             }
                             else // use default variable list 
                             {
-                                expansionVector = m_expansionVectorShPtrMap.find("DefaultVar")->second;
+                                expansionMap = m_expansionMapShPtrMap.find("DefaultVar")->second;
                             }
                             
                         }
@@ -1171,7 +1200,7 @@ namespace Nektar
                         int end = compositeStr.find_first_of("]");
                         std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
                         
-                        CompositeVector compositeVector;
+                        CompositeMap compositeVector;
                         GetCompositeList(compositeListStr, compositeVector);
 
                         bool          useExpansionType = false;
@@ -1279,25 +1308,25 @@ namespace Nektar
                         // all composites for the geomShPtrs and set the modes
                         // and types for the elements contained in the element
                         // list.
-                        CompositeVectorIter compVecIter;
+                        CompositeMapIter compVecIter;
                         for (compVecIter = compositeVector.begin(); compVecIter != compositeVector.end(); ++compVecIter)
                         {
                             GeometryVectorIter geomVecIter;
-                            for (geomVecIter = (*compVecIter)->begin(); geomVecIter != (*compVecIter)->end(); ++geomVecIter)
+                            for (geomVecIter = (compVecIter->second)->begin(); geomVecIter != (compVecIter->second)->end(); ++geomVecIter)
                             {
-                                ExpansionVectorIter expVecIter;
-                                for (expVecIter = expansionVector->begin(); expVecIter != expansionVector->end(); ++expVecIter)
+                                ExpansionMapIter expVecIter;
+                                for (expVecIter = expansionMap->begin(); expVecIter != expansionMap->end(); ++expVecIter)
                                 {
-                                    if (*geomVecIter == (*expVecIter)->m_geomShPtr)
+                                    if (*geomVecIter == (expVecIter->second)->m_geomShPtr)
                                     {
                                         if(useExpansionType)
                                         {
-                                            (*expVecIter)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
+                                            (expVecIter->second)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
                                         }
                                         else
                                         {
                                             ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
-                                            (*expVecIter)->m_basisKeyVector = basiskeyvec;
+                                            (expVecIter->second)->m_basisKeyVector = basiskeyvec;
                                         }
                                         break;
                                     }
@@ -1339,12 +1368,12 @@ namespace Nektar
                                     SpatialDomains::GeomShapeType shape,
                                     LibUtilities::BasisKeyVector &keys)
         {
-            ExpansionVector::iterator elemIter;
-            for (elemIter = m_expansionVector.begin(); elemIter != m_expansionVector.end(); ++elemIter)
+            ExpansionMapIter elemIter;
+            for (elemIter = m_expansions.begin(); elemIter != m_expansions.end(); ++elemIter)
             {
-                if ((*elemIter)->m_geomShPtr->GetGeomShapeType() == shape)
+                if ((elemIter->second)->m_geomShPtr->GetGeomShapeType() == shape)
                 {
-                    (*elemIter)->m_basisKeyVector = keys;
+                    (elemIter->second)->m_basisKeyVector = keys;
                 }
             }
         }
@@ -1650,11 +1679,11 @@ namespace Nektar
           GeometrySharedPtr returnval;
           bool error = false;
 
-          if (whichComposite >= 0 && whichComposite < int(m_meshCompositeVector.size()))
+          if (whichComposite >= 0 && whichComposite < int(m_meshComposites.size()))
           {
-              if (whichItem >= 0 && whichItem < int(m_meshCompositeVector[whichComposite]->size()))
+              if (whichItem >= 0 && whichItem < int(m_meshComposites[whichComposite]->size()))
               {
-                  returnval = m_meshCompositeVector[whichComposite]->at(whichItem);
+                  returnval = m_meshComposites[whichComposite]->at(whichItem);
               }
               else
               {
@@ -1717,7 +1746,7 @@ namespace Nektar
           ASSERTL0(!m_domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
         }
 
-        void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const
+        void MeshGraph::GetCompositeList(const std::string &compositeStr, CompositeMap &compositeVector) const
           {
               // Parse the composites into a list.
               typedef vector<unsigned int> SeqVector;
@@ -1734,12 +1763,19 @@ namespace Nektar
                   // being added in the first place.
                   if (std::find(addedVector.begin(), addedVector.end(), *iter) == addedVector.end())
                   {
+                      // If the composite listed is not found and we are working
+                      // on a partitioned mesh, silently ignore it.
+                      if (m_meshComposites.find(*iter) == m_meshComposites.end()
+                              && m_meshPartitioned)
+                      {
+                          continue;
+                      }
                       addedVector.push_back(*iter);
                       Composite composite = GetComposite(*iter);
-                      CompositeVector::iterator compIter;
+                      CompositeMap::iterator compIter;
                       if (composite)
                       {
-                          compositeVector.push_back(composite);
+                          compositeVector[*iter] = composite;
                       }
                       else
                       {

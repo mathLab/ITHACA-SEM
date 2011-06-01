@@ -1,12 +1,35 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/DisContField1D.h>
 
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::DisContField1DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
@@ -21,7 +44,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
     SpatialDomains::MeshGraph1D graph1D;
     graph1D.ReadGeometry(meshfile);
     graph1D.ReadExpansions(meshfile);
@@ -36,7 +58,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
-    const SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
+    const SpatialDomains::CompositeMap domain = (graph1D.GetDomain());
     cout << "Solving 1D Helmholtz:"  << endl;
     cout << "         Lambda     : " << lambda << endl;
     //----------------------------------------------
@@ -44,7 +66,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::DisContField1D>::
-        AllocateSharedPtr(graph1D,bcs);
+        AllocateSharedPtr(vComm,graph1D,bcs);
     //----------------------------------------------
 
     //----------------------------------------------

@@ -40,6 +40,8 @@
 #include <MultiRegions/DisContField2D.h>
 #include <Auxiliary/ADRBase.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 
 namespace Nektar
 {
@@ -96,7 +98,9 @@ namespace Nektar
          *
          *
          */
-        ADR2DManifold(string &fileStringName);
+        ADR2DManifold(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

@@ -66,7 +66,8 @@ namespace Nektar
                                    const NekMatrix<LhsDataType, MatrixType>& lhs,
                                    const DataType* rhs)
     {
-        for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+        int n = lhs.GetRows();
+        for(unsigned int i = 0; i < n; ++i)
         {
             result[i] = lhs(i,i)*rhs[i];
         }

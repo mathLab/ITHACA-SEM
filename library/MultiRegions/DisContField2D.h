@@ -37,6 +37,7 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -56,7 +57,9 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT DisContField2D();
 
-            MULTI_REGIONS_EXPORT DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT DisContField2D(
+                           LibUtilities::CommSharedPtr &pComm,
+                           SpatialDomains::MeshGraph2D &graph2D,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
 
@@ -67,14 +70,18 @@ namespace Nektar
                            bool SetUpJustDG = false,
                            bool DeclareCoeffPhysArrays = true);
 
-            MULTI_REGIONS_EXPORT DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT DisContField2D(
+                           LibUtilities::CommSharedPtr &pComm,
+                           SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true,
                            bool DeclareCoeffPhysArrays = true);
 
-            MULTI_REGIONS_EXPORT DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT DisContField2D(
+                           LibUtilities::CommSharedPtr &pComm,
+                           SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
@@ -394,6 +401,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           NekDouble tau);
+
+            /// Calculates the result of the multiplication of a global
+            /// matrix of type specified by \a mkey with a vector given by \a
+            /// inarray.
+            virtual void v_GeneralMatrixOp(
+                   const GlobalMatrixKey             &gkey,
+                   const Array<OneD,const NekDouble> &inarray,
+                   Array<OneD,      NekDouble> &outarray,
+                   bool UseContCoeffs = false);
 
         };
 

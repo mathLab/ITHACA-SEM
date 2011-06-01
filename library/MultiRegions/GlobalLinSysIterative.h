@@ -51,23 +51,17 @@ namespace Nektar
         {
         public:
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT GlobalLinSysIterative(const GlobalLinSysKey &pKey);
+            MULTI_REGIONS_EXPORT GlobalLinSysIterative(
+                    const GlobalLinSysKey &pKey,
+                    const boost::shared_ptr<ExpList> &pExpList,
+                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                                                           &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterative();
 
-            /// Solve the linear system for given input and output vectors.
-            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD,const NekDouble> &in,
-                              Array<OneD,      NekDouble> &out);
-
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
-                        const Array<OneD, const NekDouble> &pDirForcing
-                                                        = NullNekDouble1DArray);
-
         protected:
+
+        private:
 
         };
     }

@@ -112,7 +112,7 @@ namespace Nektar
                 int indx;
                 int err = segment->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 TiXmlNode* elementChild = segment->FirstChild();
                 while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
@@ -139,7 +139,7 @@ namespace Nektar
                     VertexComponentSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
                     seg->SetGlobalID(indx);
-                    m_segGeoms.push_back(seg);
+                    m_segGeoms[indx] = seg;
                 }
                 catch(...)
                 {
@@ -184,7 +184,7 @@ namespace Nektar
                 int indx;
                 int err = node->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+                //ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
                 TiXmlNode* compositeChild = node->FirstChild();
                 // This is primarily to skip comments that may be present.
@@ -220,12 +220,12 @@ namespace Nektar
                                 first = false;
 
                                 Composite curVector = MemoryManager<std::vector<GeometrySharedPtr> >::AllocateSharedPtr();
-                                m_meshCompositeVector.push_back(curVector);
+                                m_meshComposites[indx] = curVector;
                             }
 
                             if (compositeElementStr.length() > 0)
                             {
-                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr, m_meshComposites[indx]);
                             }
                             prevCompositeElementStr = compositeElementStr;
                         }
@@ -249,7 +249,8 @@ namespace Nektar
         // pointer to the Geometry object corresponding to it.
 
         // Only allow segments to be grouped for 1D mesh.
-        void MeshGraph1D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
+        void MeshGraph1D::ResolveGeomRef(const std::string &prevToken, const std::string &token,
+                Composite& composite)
         {
             try
             {
@@ -291,7 +292,7 @@ namespace Nektar
                 case 'V':   // Vertex
                     for (SeqVectorType::iterator iter=seqVector.begin(); iter!=seqVector.end(); ++iter)
                     {
-                        if (*iter >= m_vertSet.size())
+                        if (m_vertSet.find(*iter) == m_vertSet.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *iter);
@@ -299,7 +300,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_vertSet[*iter]);
+                            composite->push_back(m_vertSet[*iter]);
                         }
                     }
                     break;
@@ -307,7 +308,7 @@ namespace Nektar
                 case 'S':   // Segment
                     for (SeqVectorType::iterator iter=seqVector.begin(); iter!=seqVector.end(); ++iter)
                     {
-                        if (*iter >= m_segGeoms.size())
+                        if (m_segGeoms.find(*iter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *iter);
@@ -315,7 +316,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_segGeoms[*iter]);
+                            composite->push_back(m_segGeoms[*iter]);
                         }
                     }
                     break;

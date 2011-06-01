@@ -59,11 +59,13 @@ namespace Nektar
         /**
          *
          */
-        LocalToGlobalDGMap::LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
+        LocalToGlobalDGMap::LocalToGlobalDGMap( const LibUtilities::CommSharedPtr &pComm,
+                                                const SpatialDomains::MeshGraph1D &graph1D,
                                                 const ExpList &locExp,
                                                 const GlobalSysSolnType solnType,
                                                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
-                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond)
+                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond):
+                LocalToGlobalBaseMap(pComm)
         {
             int i,j;
             int cnt, vid, gid;
@@ -162,13 +164,15 @@ namespace Nektar
         /**
          *
          */
-        LocalToGlobalDGMap::LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D,
+        LocalToGlobalDGMap::LocalToGlobalDGMap(const LibUtilities::CommSharedPtr &pComm,
+                                               SpatialDomains::MeshGraph2D &graph2D,
                                                const ExpList1DSharedPtr &trace,
                                                const ExpList &locExp,
                                                const GlobalSysSolnType solnType,
                                                const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-                                               const map<int,int> &periodicEdges)
+                                               const map<int,int> &periodicEdges) :
+                LocalToGlobalBaseMap(pComm)
         {
 
 
@@ -334,10 +338,10 @@ namespace Nektar
                     }
 
                     if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-		      {
+                    {
                         m_numLocalDirBndCoeffs  += locSegExp->GetNcoeffs();
                         m_numDirichletBndPhys   += locSegExp->GetTotPoints();
-		      }
+                    }
 
                 }
                 cnt += j;
@@ -448,6 +452,7 @@ namespace Nektar
                 switch(solnType)
                 {
                 case eDirectFullMatrix:
+                case eIterativeFull:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
@@ -498,7 +503,7 @@ namespace Nektar
                     gid = TraceElmtGid[MeshEdgeId.find(id)->second];
 
                     //Peter order_e = locSegExp->GetNcoeffs();
-		    order_e = (*exp2D)[eid]->GetEdgeNcoeffs(j);
+                    order_e = (*exp2D)[eid]->GetEdgeNcoeffs(j);
 
                     if((*exp2D)[eid]->GetEorient(j) == StdRegions::eForwards)
                     {
@@ -553,28 +558,28 @@ namespace Nektar
 
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
 
-	    // Number of boundary expansions
-	    int nbndexp = 0;
+            // Number of boundary expansions
+            int nbndexp = 0;
             for(cnt = i = 0; i < nbnd; ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
                     {
-		      nbndexp++;
-		      SegGeom = locSegExp->GetGeom1D();
-		      id      = SegGeom->GetEid();
-		      gid     = TraceElmtGid[MeshEdgeId.find(id)->second];
+                        nbndexp++;
+                        SegGeom = locSegExp->GetGeom1D();
+                        id      = SegGeom->GetEid();
+                        gid     = TraceElmtGid[MeshEdgeId.find(id)->second];
 
-		      order_e = locSegExp->GetNcoeffs();
+                        order_e = locSegExp->GetNcoeffs();
 
-		      // Since boundary information is defined to be
-		      // aligned with the geometry just use forward
-		      // defintiion for gid's
-		      for(k = 0; k < order_e; ++k)
-                      {
-                          m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
-                      }
+                        // Since boundary information is defined to be
+                        // aligned with the geometry just use forward
+                        // defintiion for gid's
+                        for(k = 0; k < order_e; ++k)
+                        {
+                            m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
+                        }
                     }
                 }
             }
@@ -603,9 +608,9 @@ namespace Nektar
                 }
             }
 
-	    cnt = 0;
-	    m_bndCondTraceToGlobalTraceMap = Array<OneD, int >(nbndexp);
-	    for(i = 0; i < bndCondExp.num_elements(); ++i)
+            cnt = 0;
+            m_bndCondTraceToGlobalTraceMap = Array<OneD, int >(nbndexp);
+            for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
@@ -614,12 +619,191 @@ namespace Nektar
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
 
-			m_bndCondTraceToGlobalTraceMap[cnt++] = MeshEdgeId.find(id)->second;
+                        m_bndCondTraceToGlobalTraceMap[cnt++] = MeshEdgeId.find(id)->second;
                     }
+                }
+            }
+
+            // Now set up mapping from global coefficients to universal.
+            SetUpUniversalDGMap(locExp);
+
+            // Initialise GSlib and populate the unique map.
+            Nektar::Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
+            for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            {
+                tmp[i] = m_globalToUniversalBndMap[i];
+            }
+            m_gsh = Gs::Init(tmp, pComm);
+            Gs::Unique(tmp, pComm);
+            for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            {
+                m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
+            }
+
+        }
+
+
+        /**
+         * Constructs a mapping between the process-local global numbering and
+         * a universal numbering of the trace space expansion. The universal
+         * numbering is defined by the mesh edge IDs to enforce consistency
+         * across processes.
+         * @param       locExp  List of local elemental expansions.
+         * @todo        Update to support 1D and 3D DG expansions.
+         */
+        void LocalToGlobalDGMap::SetUpUniversalDGMap(const ExpList &locExp)
+        {
+            LocalRegions::SegExpSharedPtr locSegExp;
+
+            int eid = 0;
+            int cnt = 0;
+            int i,j,k;
+            int id = 0;
+            int order_e = 0;
+            int vGlobalId = 0;
+            int maxEdgeDof = 0;
+            int dof = 0;
+            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+
+            // Initialise the global to universal maps.
+            m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
+            m_globalToUniversalBndMapUnique = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
+
+            // Loop over all the elements in the domain and compute max edge
+            // DOF. Reduce across all processes to get universal maximum.
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                // Loop over all edges of element i
+                for(j = 0; j < locExpVector[i]->GetNedges(); ++j)
+                {
+                    dof = locExpVector[i]->GetEdgeNcoeffs(j);
+                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
+                }
+            }
+            m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
+
+            // Now have trace edges Gid position
+            cnt = 0;
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                // order list according to m_offset_elmt_id details in
+                // Exp2D so that triangules are listed first and then
+                // quads
+                eid = locExp.GetOffset_Elmt_Id(i);
+
+                // Populate mapping for each edge of the element.
+                for(j = 0; j < locExpVector[eid]->GetNedges(); ++j)
+                {
+                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
+
+                    id  = locSegExp->GetGeom1D()->GetEid();
+                    order_e = locExpVector[eid]->GetEdgeNcoeffs(j);
+
+                    for(k = 0; k < order_e; ++k)
+                    {
+                        vGlobalId = m_localToGlobalBndMap[k+cnt];
+                        m_globalToUniversalBndMap[vGlobalId]
+                            = id * maxEdgeDof + k + 1;
+                    }
+                    cnt += order_e;
                 }
             }
         }
 
+        int LocalToGlobalDGMap::v_GetLocalToGlobalMap(const int i) const
+        {
+            return m_localToGlobalBndMap[i];
+        }
+
+        int LocalToGlobalDGMap::v_GetGlobalToUniversalMap(const int i) const
+        {
+            return m_globalToUniversalBndMap[i];
+        }
+
+        int LocalToGlobalDGMap::v_GetGlobalToUniversalMapUnique(const int i) const
+        {
+            return m_globalToUniversalBndMapUnique[i];
+        }
+
+        const Array<OneD,const int>& LocalToGlobalDGMap::v_GetLocalToGlobalMap()
+        {
+            return m_localToGlobalBndMap;
+        }
+
+        const Array<OneD,const int>& LocalToGlobalDGMap::v_GetGlobalToUniversalMap()
+        {
+            return m_globalToUniversalBndMap;
+        }
+
+        const Array<OneD,const int>& LocalToGlobalDGMap::v_GetGlobalToUniversalMapUnique()
+        {
+            return m_globalToUniversalBndMapUnique;
+        }
+
+        NekDouble LocalToGlobalDGMap::v_GetLocalToGlobalSign(
+                    const int i) const
+        {
+            return GetLocalToGlobalBndSign(i);
+        }
+
+        const void LocalToGlobalDGMap::v_LocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                          Array<OneD,       NekDouble>& global) const
+        {
+            AssembleBnd(loc,global);
+        }
+
+        const void LocalToGlobalDGMap::v_LocalToGlobal(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const
+        {
+            AssembleBnd(loc,global);
+        }
+
+        const void LocalToGlobalDGMap::v_GlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const
+        {
+            GlobalToLocalBnd(global,loc);
+        }
+
+        const void LocalToGlobalDGMap::v_GlobalToLocal(
+                    const NekVector<const NekDouble>& global,
+                          NekVector<      NekDouble>& loc) const
+        {
+            GlobalToLocalBnd(global,loc);
+        }
+
+        const void LocalToGlobalDGMap::v_Assemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const
+        {
+            AssembleBnd(loc,global);
+        }
+
+        const void LocalToGlobalDGMap::v_Assemble(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const
+        {
+            AssembleBnd(loc,global);
+        }
+
+        const void LocalToGlobalDGMap::v_UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal) const
+        {
+            Gs::Gather(pGlobal, Gs::gs_add, m_gsh);
+        }
+
+        const void LocalToGlobalDGMap::v_UniversalAssemble(
+                      NekVector<      NekDouble>& pGlobal) const
+        {
+            UniversalAssemble(pGlobal.GetPtr());
+        }
+
+        const int LocalToGlobalDGMap::v_GetFullSystemBandWidth() const
+        {
+            return GetBndSystemBandWidth();
+        }
     }
 
 

@@ -9,15 +9,18 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) 
+        static EquationSystemSharedPtr create(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<Laplace>::AllocateSharedPtr(pSession);
+            return MemoryManager<Laplace>::AllocateSharedPtr(pComm, pSession);
         }
         
         /// Name of class
         static std::string className;
 
-        Laplace(SessionReaderSharedPtr& pSession);
+        Laplace(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
         virtual ~Laplace();
 
     protected:

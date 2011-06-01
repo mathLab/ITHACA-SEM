@@ -1083,6 +1083,11 @@ namespace Nektar
                 v_AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
             }
 
+            void AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+            {
+                v_AddRobinEdgeContribution(edgeid, primCoeffs, coeffs);
+            }
+
             void DGDeriv(const int dir,
                          const Array<OneD, const NekDouble>& inarray,
                          Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
@@ -1473,9 +1478,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
 
+            STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
+
             STD_REGIONS_EXPORT virtual void v_DGDeriv(const int dir,
                                    const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
+                                   Array<OneD, boost::shared_ptr<StdExpansion1D > > &EdgeExp,
                                    Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);

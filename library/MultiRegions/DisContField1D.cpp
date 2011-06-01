@@ -66,10 +66,11 @@ namespace Nektar
          * @param   constructMap    ?
          */
         DisContField1D::DisContField1D(
+                    LibUtilities::CommSharedPtr &pComm,
                     SpatialDomains::MeshGraph1D &graph1D,
                     const GlobalSysSolnType solnType,
                     const bool constructMap):
-            ExpList1D(graph1D),
+            ExpList1D(pComm,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -103,11 +104,12 @@ namespace Nektar
          *                      with the boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        DisContField1D::DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+        DisContField1D::DisContField1D(LibUtilities::CommSharedPtr &pComm,
+                    SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const int bc_loc,
                     const GlobalSysSolnType solnType):
-            ExpList1D(graph1D),
+            ExpList1D(pComm,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -126,7 +128,7 @@ namespace Nektar
             //GenerateFieldBnd1D(bcs,bcs.GetVariable(bc_loc));
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>
-                                        ::AllocateSharedPtr(graph1D,*this,
+                                        ::AllocateSharedPtr(pComm,graph1D,*this,
                                                             solnType,
                                                             m_bndCondExpansions,
                                                             m_bndConditions);
@@ -147,11 +149,12 @@ namespace Nektar
          *                      boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        DisContField1D::DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+        DisContField1D::DisContField1D(LibUtilities::CommSharedPtr &pComm,
+                    SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
                     const GlobalSysSolnType solnType):
-            ExpList1D(graph1D),
+            ExpList1D(pComm,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -168,7 +171,7 @@ namespace Nektar
             //GenerateFieldBnd1D(bcs,variable);
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                AllocateSharedPtr(graph1D,*this,solnType,
+                AllocateSharedPtr(pComm,graph1D,*this,solnType,
                                   m_bndCondExpansions,m_bndConditions);
 
             m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
@@ -189,7 +192,7 @@ namespace Nektar
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable)
         {
-            int i,j;
+            int i;
             int cnt  = 0;
             int cnt2 = 0;
 
@@ -205,16 +208,17 @@ namespace Nektar
                 if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType()
                                                 != SpatialDomains::ePeriodic )
                 {
-                    for(j = 0; j < bregions[i]->size(); j++)
+                    SpatialDomains::BoundaryRegion::iterator bregionIt;
+                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
                     {
-                        cnt += (*bregions[i])[j]->size();
+                        cnt += bregionIt->second->size();
                     }
 
                     if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
                     {
-                        for(j = 0; j < bregions[i]->size(); j++)
+                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
                         {
-                            cnt2 += (*bregions[i])[j]->size();
+                            cnt2 += bregionIt->second->size();
                         }
                     }
                 }
@@ -473,13 +477,14 @@ namespace Nektar
                 if(locBCond->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                 {
-                    for(j = 0; j < bregions[i]->size(); j++)
+                    SpatialDomains::BoundaryRegion::iterator bregionIt;
+                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
                     {
-                        for(k = 0; k < ((*bregions[i])[j])->size(); k++)
+                        for(k = 0; k < bregionIt->second->size(); k++)
                         {
                             if(vert = boost::dynamic_pointer_cast
                                     <SpatialDomains::VertexComponent>(
-                                        (*(*bregions[i])[j])[k]))
+                                        (*bregionIt->second)[k]))
                             {
                                 locPointExp
                                     = MemoryManager<MultiRegions::ExpList0D>
@@ -507,13 +512,14 @@ namespace Nektar
                 case SpatialDomains::eNeumann:
                 case SpatialDomains::eRobin:
                     {
-                        for(j = 0; j < bregions[i]->size(); j++)
+                        SpatialDomains::BoundaryRegion::iterator bregionIt;
+                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
                         {
-                            for(k = 0; k < ((*bregions[i])[j])->size(); k++)
+                            for(k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if(vert = boost::dynamic_pointer_cast
                                    <SpatialDomains::VertexComponent>(
-                                        (*(*bregions[i])[j])[k]))
+                                        (*bregionIt->second)[k]))
                                 {
                                     locPointExp
                                         = MemoryManager<MultiRegions::ExpList0D>

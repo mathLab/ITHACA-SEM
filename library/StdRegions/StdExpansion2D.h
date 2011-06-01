@@ -135,8 +135,6 @@ namespace Nektar
 
             virtual int v_GetNfaces() const
             {
-                ASSERTL0(false, "This function is only valid for 3D "
-                         "expansions");
                 return 0;
             }
 

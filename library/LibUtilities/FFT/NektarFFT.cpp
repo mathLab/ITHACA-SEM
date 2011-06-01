@@ -68,6 +68,14 @@ namespace Nektar
 			
 		}
 		
+		NektarFFTFactory& GetNektarFFTFactory()
+		{
+            typedef Loki::SingletonHolder<NektarFFTFactory,
+                Loki::CreateUsingNew,
+                Loki::NoDestroy > Type;
+            return Type::Instance();
+		}
+
 		/**
 		 * This allows initialisation of the class which cannot be completed
 		 * during object construction (such as setting of initial conditions).

@@ -16,6 +16,18 @@ IF( NOT(CMAKE_INSTALL_PREFIX_SET) )
 ENDIF()
 SET(CMAKE_INSTALL_PREFIX_SET ON CACHE INTERNAL "")
 
+# Set up RPATH
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
+                                "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+IF("${isSystemDir}" STREQUAL "-1")
+       SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+ENDIF("${isSystemDir}" STREQUAL "-1")
+
+
 # Look for Nektar++ in the standard location (Nektar++/builds) 
 # Users can modify this directly in CMake if they used a non-standard location.
 SET(Nektar++_DIR "${CMAKE_SOURCE_DIR}/../builds/dist" CACHE PATH "")
@@ -30,6 +42,10 @@ IF( NEKTAR++_FOUND )
     ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
 
     INCLUDE_DIRECTORIES(${SOLVERS_SOURCE_DIR})        
+        
+    IF(NEKTAR_USE_MPI)
+        INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
+    ENDIF(NEKTAR_USE_MPI)
 ENDIF( NEKTAR++_FOUND )
 
 MACRO(ADD_SOLVER_EXECUTABLE name source)
@@ -41,6 +57,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
 
     IF( NEKTAR++_FOUND )
+        SET_COMMON_PROPERTIES(${name})
         # TODO - If your executable needs to link to any other libraries,  
         # add them here.
         TARGET_LINK_LIBRARIES(${name}
@@ -53,6 +70,9 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
 
         SET_LAPACK_LINK_LIBRARIES(${name})
 
+        IF(NEKTAR_USE_MPI)
+            TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
+        ENDIF(NEKTAR_USE_MPI)
     ENDIF( NEKTAR++_FOUND )
 
     INSTALL(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

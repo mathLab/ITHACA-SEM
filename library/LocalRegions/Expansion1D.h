@@ -62,6 +62,8 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
 
+            void AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeefs, Array<OneD, NekDouble> &coeffs);
+
             protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             
@@ -81,7 +83,9 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
             
-            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+            virtual void v_AddRobinMassMatrix(const int vert, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+
+            virtual void v_AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
             virtual int v_GetVertexMap(int vert)
             {

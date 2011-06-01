@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
 using namespace Nektar;
@@ -9,6 +13,25 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ContField3DHomogeneous2DSharedPtr Exp, Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
@@ -54,7 +77,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
     SpatialDomains::MeshGraph1D graph1D;
     graph1D.ReadGeometry(meshfile);
     graph1D.ReadExpansions(meshfile);
@@ -87,16 +109,16 @@ int main(int argc, char *argv[])
 	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,nzpoints,PkeyZ);
     
-	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(BkeyY,BkeyZ,ly,lz,useFFT,graph1D,bcs,bc_val,SolnType);
+	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vComm,BkeyY,BkeyZ,ly,lz,useFFT,graph1D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
 	
-    const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph1D.GetExpansions();
 	
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     
 	cout << "Solving 3D Helmholtz (Homogeneous in yz-plane):"  << endl;
     cout << "         Lambda          : " << lambda << endl;

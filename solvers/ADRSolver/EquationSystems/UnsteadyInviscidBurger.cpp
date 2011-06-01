@@ -4,10 +4,12 @@
 
 namespace Nektar
 {
-    string UnsteadyInviscidBurger::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyInviscidBurger", UnsteadyInviscidBurger::create);
+    string UnsteadyInviscidBurger::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyInviscidBurger", UnsteadyInviscidBurger::create);
 
-    UnsteadyInviscidBurger::UnsteadyInviscidBurger(SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+    UnsteadyInviscidBurger::UnsteadyInviscidBurger(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pComm,pSession)
     {
         pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
 

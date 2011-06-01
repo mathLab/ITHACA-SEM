@@ -52,6 +52,8 @@ namespace Nektar
         typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
         typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
+        typedef std::map<int, QuadGeomSharedPtr> QuadGeomMap;
+        typedef std::map<int, QuadGeomSharedPtr>::iterator QuadGeomMapIter;
 
         class QuadGeom: public Geometry2D
         {

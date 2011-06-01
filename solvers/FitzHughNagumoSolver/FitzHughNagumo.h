@@ -39,6 +39,8 @@
 #include <MultiRegions/DisContField2D.h>
 #include <Auxiliary/ADRBase.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
 
 namespace Nektar
 {     
@@ -90,7 +92,8 @@ namespace Nektar
          * 
          *
          */
-        FitzHughNagumo(string &fileStringName);
+        FitzHughNagumo( LibUtilities::CommSharedPtr& pComm,
+                        LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

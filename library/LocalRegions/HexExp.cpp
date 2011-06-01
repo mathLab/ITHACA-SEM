@@ -324,23 +324,26 @@ namespace Nektar
                     Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
                 }
 
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
-                            w0.get(), 1, outarray.get()+i*nquad0,1);
-            }
+                // First coordinate
+                for(i = 0; i < nquad1*nquad2; ++i)
+                {
+                    Vmath::Vmul(nquad0, outarray.get()+i*nquad0, 1,
+                                w0.get(), 1, outarray.get()+i*nquad0,1);
+                }
 
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
-                            outarray.get()+i*nquad0, 1);
-            }
+                // Second coordinate
+                for(i = 0; i < nquad1*nquad2; ++i)
+                {
+                    Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
+                                outarray.get()+i*nquad0, 1);
+                }
 
-            for(i = 0; i < nquad2; ++i)
-            {
-                Vmath::Smul(nquad0*nquad1, w2[i], outarray.get()+i*nquad0*nquad1, 1,
-                            outarray.get()+i*nquad0*nquad1, 1);
-            }
+                // Third coordinate
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Vmath::Smul(nquad0*nquad1, w2[i], outarray.get()+i*nquad0*nquad1, 1,
+                                outarray.get()+i*nquad0*nquad1, 1);
+                }
 /*
                 // multiply by integration constants 
                 for(i = 0; i < nquad1; ++i)

@@ -62,8 +62,10 @@ namespace Nektar
      * timestepping-specific code.
      * @param   pSession        Session object to read parameters from.
      */
-    UnsteadySystem::UnsteadySystem(SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession)
+    UnsteadySystem::UnsteadySystem(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : EquationSystem(pComm, pSession)
     {
         // Load SolverInfo parameters
         pSession->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
@@ -406,7 +408,6 @@ namespace Nektar
 				m_fields[i]->UpdatePhys() = fields[i];
 			}
 	    }
-		
     }
 
 

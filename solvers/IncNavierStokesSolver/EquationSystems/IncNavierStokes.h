@@ -40,6 +40,9 @@
 #include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
 #include <IncNavierStokesSolver/EquationSystems/LinearisedAdvection.h>
 #include <IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+
 namespace Nektar
 {     
 
@@ -122,7 +125,8 @@ namespace Nektar
         /**
          * Constructor.
          */
-        IncNavierStokes(SessionReaderSharedPtr& pSession);
+        IncNavierStokes(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

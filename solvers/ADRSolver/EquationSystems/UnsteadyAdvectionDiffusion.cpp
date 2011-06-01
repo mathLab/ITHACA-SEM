@@ -4,10 +4,12 @@
 
 namespace Nektar
 {
-    string UnsteadyAdvectionDiffusion::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyAdvectionDiffusion", UnsteadyAdvectionDiffusion::create);
+    string UnsteadyAdvectionDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyAdvectionDiffusion", UnsteadyAdvectionDiffusion::create);
 
-    UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+    UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pComm, pSession)
     {
         pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         pSession->LoadParameter("epsilon",    m_epsilon,  0.0);
@@ -128,7 +130,7 @@ namespace Nektar
     void UnsteadyAdvectionDiffusion::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &flux)
     {
-        ASSERTL1(flux.num_elements() == mVelocity.num_elements(),"Dimension of flux array and velocity array do not match");
+        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
           {

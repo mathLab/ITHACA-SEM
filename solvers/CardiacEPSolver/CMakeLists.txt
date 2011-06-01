@@ -2,7 +2,6 @@ SET(CardiacEPSolverSource
        ./CardiacEPSolver.cpp
        ../ADRSolver/EquationSystems/UnsteadySystem.cpp
        ../ADRSolver/EquationSystem.cpp
-       ../ADRSolver/SessionReader.cpp
        ./EquationSystems/Monodomain.cpp
        ./CellModels/CellModel.cpp
        ./CellModels/FitzhughNagumo.cpp

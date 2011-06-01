@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/DisContField2D.h>
 
 //#define TIMING
@@ -18,6 +22,25 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::DisContField2DSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2;
     int     i, nq,  coordim;
@@ -34,7 +57,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D;
     graph2D.ReadGeometry(meshfile);
     graph2D.ReadExpansions(meshfile);
@@ -49,8 +71,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
-    const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
+    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
     cout << "Solving 2D Helmholtz:"  << endl;
     cout << "         Lambda     : " << lambda << endl;
     cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
@@ -60,7 +82,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::DisContField2D>::
-        AllocateSharedPtr(graph2D,bcs);
+        AllocateSharedPtr(vComm,graph2D,bcs);
     //----------------------------------------------
     Timing("Read files and define exp ..");
 

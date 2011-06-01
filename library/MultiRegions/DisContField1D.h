@@ -37,6 +37,7 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
@@ -60,20 +61,26 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField1D();
 
             /// Constructs a 1D discontinuous field based on a mesh.
-            MULTI_REGIONS_EXPORT DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT DisContField1D(
+                    LibUtilities::CommSharedPtr& pComm,
+                    SpatialDomains::MeshGraph1D &graph1D,
                     const GlobalSysSolnType solnType = eDirectStaticCond,
                     const bool constructMap = true);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
-            MULTI_REGIONS_EXPORT DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT DisContField1D(
+                    LibUtilities::CommSharedPtr& pComm,
+                    SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const int bc_loc = 0,
                     const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
-            MULTI_REGIONS_EXPORT DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT DisContField1D(
+                    LibUtilities::CommSharedPtr& pComm,
+                    SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
                     const GlobalSysSolnType solnType = eDirectStaticCond);

@@ -85,7 +85,8 @@ namespace Nektar
         bool                                            m_explicitReaction;
 
         /// Initialises UnsteadySystem class members.
-        UnsteadySystem(SessionReaderSharedPtr& pSession);
+        UnsteadySystem(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Solves an unsteady problem.
         virtual void v_DoSolve();

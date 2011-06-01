@@ -136,7 +136,7 @@ namespace Nektar
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-            int    nqtot  = nquad0*nquad1*nquad2;
+            int  nqtot  = nquad0*nquad1*nquad2;
 
             const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
@@ -158,9 +158,10 @@ namespace Nektar
             // multiply by integration constants
             for(i = 0; i < nquad1*nquad2; ++i)
             {
-                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-                            w0.get(),1, &outarray[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0, outarray.get()+i*nquad0,1,
+                            w0.get(),1, outarray.get()+i*nquad0,1);
             }
+
             switch(m_base[1]->GetPointsType())
             {
             // Legendre inner product.
@@ -180,13 +181,10 @@ namespace Nektar
 
             // (1,0) Jacobi Inner product.
             case LibUtilities::eGaussRadauMAlpha1Beta0:
-                for(j = 0; j < nquad2; ++j)
+                for(i = 0; i < nquad1*nquad2; ++i)
                 {
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*w1[i], &outarray[0]+i*nquad0 +
-                                    j*nquad0*nquad1,1);
-                    }
+                    Vmath::Smul(nquad0, 0.5*w1[i%nquad2], outarray.get()+i*nquad0, 1,
+                                outarray.get()+i*nquad0, 1);
                 }
                 break;
             }
@@ -205,8 +203,8 @@ namespace Nektar
             case LibUtilities::eGaussRadauMAlpha2Beta0:
                 for(i = 0; i < nquad2; ++i)
                 {
-                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
-                                &outarray[0]+i*nquad0*nquad1, 1);
+                    Vmath::Smul(nquad0*nquad1, 0.25*w2[i], outarray.get()+i*nquad0*nquad1, 1,
+                                outarray.get()+i*nquad0*nquad1, 1);
                 }
                 break;
             }
@@ -630,6 +628,77 @@ namespace Nektar
         }
 
 
+        /**
+         * To construct the Helmholtz operator in a physical tetrahedron
+         * requires coordinate transforms from both the collapsed coordinate
+         * system to the standard region and from the standard region to the
+         * local region. This double application of the chain rule requires the
+         * calculation of two sets of geometric factors:
+         * @f[ h_{ij} = \frac{\partial \eta_i}{\partial \xi_j} @f]
+         * and
+         * @f[ g_{ij} = \frac{\partial \xi_i}{\partial x_j} @f]
+         *
+         * From the definition of the collapsed coordinates, the @f$h_{ij}@f$
+         * terms are (Sherwin & Karniadakis, p152)
+         * @f[
+         *      \mathbf{H} = \left[\begin{array}{ccc}
+         *          \frac{4}{(1-\eta_2)(1-\eta_3)} &
+         *          \frac{2(1+\eta_1)}{(1-\eta_2)(1-\eta_3)} &
+         *          \frac{2(1+\eta_1)}{(1-\eta_2)(1-\eta_3)} \\
+         *          0 &
+         *          \frac{2}{1-eta_3} &
+         *          \frac{1+\eta_2}{1-\eta_3} \\
+         *          0 &
+         *          0 &
+         *          1
+         *      \end{array}\right]
+         * @f]
+         * This maps from the collapsed coordinate system to the standard
+         * tetrahedral region. The mapping to the local region is then given
+         * by the @f$g_{ij}@f$ computed in the GeomFactors3D class. The
+         * cumulative factors for mapping the collapsed coordinate system to
+         * the physical region are therefore given by
+         * @f$\mathbf{F} = \mathbf{GH^{\top}}@f$, i.e.
+         * @f[
+         *      f_{ij} = \frac{\partial \eta_i}{\partial x_j}
+         *              = \sum_k g_{ik} h_{kj}
+         * @f]
+         *
+         * Finally, the evaluation of the Helmholtz matrix operator requires
+         * the summation of these factors as follows. For the case of deformed
+         * elements, these coefficients are vectors, whereas for regular
+         * elements they are just scalars.
+         * @f[
+         *      \begin{array}{l}
+         *      p_0 = \sum_k f_{1k}^2 \\
+         *      p_1 = \sum_k f_{2k}^2 \\
+         *      p_2 = \sum_k f_{3k}^2 \\
+         *      p_3 = \sum_k f_{1k}f_{2k} \\
+         *      p_4 = \sum_k f_{1k}f_{3k} \\
+         *      p_5 = \sum_k f_{2k}f_{3k}
+         *      \end{array}
+         * @f]
+         * to give the Helmholtz operator:
+         * @f{align}
+         *      \mathbf{L^e\hat{u}}
+         *          = \mathbf{B^{\top}D_{\eta_1}^{\top}Wp_0D_{\eta_1}B\hat{u}}
+         *          + \mathbf{B^{\top}D_{\eta_2}^{\top}Wp_1D_{\eta_2}B\hat{u}}
+         *          + \mathbf{B^{\top}D_{\eta_3}^{\top}Wp_2D_{\eta_3}B\hat{u}}\\
+         *          + \mathbf{B^{\top}D_{\eta_1}^{\top}Wp_3D_{\eta_2}B\hat{u}}
+         *          + \mathbf{B^{\top}D_{\eta_1}^{\top}Wp_4D_{\eta_3}B\hat{u}}
+         *          + \mathbf{B^{\top}D_{\eta_2}^{\top}Wp_5D_{\eta_3}B\hat{u}}
+         * @f}
+         * Therefore, we construct the operator as follows:
+         * -# Apply the mass matrix for the @f$\lambda@f$ term
+         *    @f$ \mathbf{B^{\top}WB\hat{u}} @f$.
+         *    and compute the derivatives @f$ \mathbf{D_{\xi_i}B} @f$.
+         * -# Compute the non-trivial @f$ \mathbf{H} @f$ matrix terms.
+         * -# Compute the intermediate factors @f$ \mathbf{G} @f$ and
+         *    @f$ f_{ij} @f$ and then compute the combined terms @f$ p_i @f$.
+         * -# Apply quadrature weights and inner product with respect to the
+         *    derivative bases.
+         * -# Combine to produce the complete operator.
+         */
         void TetExp::v_HelmholtzMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
@@ -717,7 +786,7 @@ namespace Nektar
                 int       nmodes0 = m_base[0]->GetNumModes();
                 int       nmodes1 = m_base[1]->GetNumModes();
                 int       nmodes2 = m_base[2]->GetNumModes();
-
+                int       i,j;
                 int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
                                         nquad0*nquad1*(nquad2+nmodes0)
                                             + nmodes0*nmodes1*nquad2);
@@ -732,20 +801,33 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
 
                 // Allocate temporary storage
-                Array<OneD,NekDouble> alloc(10*nqtot,0.0);
+                Array<OneD,NekDouble> alloc(14*nqtot,0.0);
                 Array<OneD,NekDouble> wsp0(alloc);        // After BwdTrans
                 Array<OneD,NekDouble> wsp1(alloc+  nqtot);// TensorDeriv 1
                 Array<OneD,NekDouble> wsp2(alloc+2*nqtot);// TensorDeriv 2
                 Array<OneD,NekDouble> wsp3(alloc+3*nqtot);// TensorDeriv 3
-                Array<OneD,NekDouble> wsp4(alloc+4*nqtot);// g0
-                Array<OneD,NekDouble> wsp5(alloc+5*nqtot);// g1
-                Array<OneD,NekDouble> wsp6(alloc+6*nqtot);// g2
-                Array<OneD,NekDouble> wsp7(alloc+7*nqtot);// g3
-                Array<OneD,NekDouble> wsp8(alloc+8*nqtot);// g4
-                Array<OneD,NekDouble> wsp9(alloc+9*nqtot);// g5
+                Array<OneD,NekDouble> g0(alloc+4*nqtot);// g0
+                Array<OneD,NekDouble> g1(alloc+5*nqtot);// g1
+                Array<OneD,NekDouble> g2(alloc+6*nqtot);// g2
+                Array<OneD,NekDouble> g3(alloc+7*nqtot);// g3
+                Array<OneD,NekDouble> g4(alloc+8*nqtot);// g4
+                Array<OneD,NekDouble> g5(alloc+9*nqtot);// g5
+                Array<OneD,NekDouble> h0(alloc+10*nqtot);// h0
+                Array<OneD,NekDouble> h1(alloc+11*nqtot);// h1
+                Array<OneD,NekDouble> h2(alloc+12*nqtot);// h2
+                Array<OneD,NekDouble> h3(alloc+13*nqtot);// h3
+
+                // Reuse some of the storage as workspace
+                Array<OneD,NekDouble> wsp4(alloc+5*nqtot);// wsp4 == g1
+                Array<OneD,NekDouble> wsp5(alloc+6*nqtot);// wsp5 == g2
+                Array<OneD,NekDouble> wsp6(alloc+9*nqtot);// wsp6 == g5
+                Array<OneD,NekDouble> wsp7(alloc+10*nqtot);// wsp7 == h0
+                Array<OneD,NekDouble> wsp8(alloc+11*nqtot);// wsp8 == h1
+                Array<OneD,NekDouble> wsp9(alloc+12*nqtot);// wsp9 == h2
 
                 Array<OneD,NekDouble> wsp(wspsize,0.0);
 
+                // Step 1
                 if(!(m_base[0]->Collocation() && m_base[1]->Collocation()
                         && m_base[2]->Collocation()))
                 {
@@ -761,78 +843,149 @@ namespace Nektar
                     // LAPLACIAN MATRIX OPERATION
                     // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
                     // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                    StdTetExp::v_PhysDeriv(wsp0,wsp1,wsp2,wsp3);
+                    //StdTetExp::v_PhysDeriv(wsp0,wsp1,wsp2,wsp3);
+                    StdExpansion3D::PhysTensorDeriv(wsp0,wsp1,wsp2,wsp3);
                 }
                 else
                 {
                     // specialised implementation for the classical spectral element method
-                    StdTetExp::v_PhysDeriv(inarray,wsp1,wsp2,wsp3);
                     MultiplyByQuadratureMetric(inarray,outarray);
+
+                    //StdTetExp::v_PhysDeriv(inarray,wsp1,wsp2,wsp3);
+                    StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
                 }
 
-                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
-                // especially for this purpose
                 const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+                const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+                const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
 
+                // Step 2. Calculate the metric terms of the collapsed
+                // coordinate transformation (Spencer's book P152)
+                for(j = 0; j < nquad2; ++j)
+                {
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Vmath::Fill(nquad0, 4.0/(1.0-z1[i])/(1.0-z2[j]), &h0[0]+i*nquad0 + j*nquad0*nquad1,1);
+                        Vmath::Fill(nquad0, 2.0/(1.0-z1[i])/(1.0-z2[j]), &h1[0]+i*nquad0 + j*nquad0*nquad1,1);
+                        Vmath::Fill(nquad0, 2.0/(1.0-z2[j]),             &h2[0]+i*nquad0 + j*nquad0*nquad1,1);
+                        Vmath::Fill(nquad0, (1.0+z1[i])/(1.0-z2[j]),     &h3[0]+i*nquad0 + j*nquad0*nquad1,1);
+                    }
+                }
+                for(i = 0; i < nquad0; i++)
+                {
+                    Blas::Dscal(nquad1*nquad2, 1+z0[i], &h1[0]+i, nquad0);
+                }
+
+                // Step 3. Construct combined metric terms for physical space to
+                // collapsed coordinate system.
+                // Order of construction optimised to minimise temporary storage
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
-                    // Compute geometric factor composites
-                    // wsp3 = g0*g0 + g3*g3 + g6*g6
-                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[0][0],1,&gmat[3][0],1,&gmat[3][0],1,&wsp4[0],1);
-                    Vmath::Vvtvp  (nqtot,&gmat[6][0],1,&gmat[6][0],1,&wsp4[0],1,&wsp4[0],1);
-                    // wsp4 = g1*g1 + g4*g4 + g7*g7;
-                    Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[1][0],1,&gmat[4][0],1,&gmat[4][0],1,&wsp5[0],1);
-                    Vmath::Vvtvp  (nqtot,&gmat[7][0],1,&gmat[7][0],1,&wsp5[0],1,&wsp5[0],1);
-                    // wsp5 = g2*g2 + g5*g5 + g8*g8;
-                    Vmath::Vvtvvtp(nqtot,&gmat[2][0],1,&gmat[2][0],1,&gmat[5][0],1,&gmat[5][0],1,&wsp6[0],1);
-                    Vmath::Vvtvp  (nqtot,&gmat[8][0],1,&gmat[8][0],1,&wsp6[0],1,&wsp6[0],1);
-                    // wsp6 = g0*g1 + g3*g4 + g6*g7
-                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[1][0],1,&gmat[3][0],1,&gmat[4][0],1,&wsp7[0],1);
-                    Vmath::Vvtvp  (nqtot,&gmat[6][0],1,&gmat[7][0],1,&wsp7[0],1,&wsp7[0],1);
-                    // wsp7 = g0*g2 + g3*g5 + g6*g8
-                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[2][0],1,&gmat[3][0],1,&gmat[5][0],1,&wsp8[0],1);
-                    Vmath::Vvtvp  (nqtot,&gmat[6][0],1,&gmat[8][0],1,&wsp8[0],1,&wsp8[0],1);
-                    // wsp8 = g1*g2 + g4*g5 + g7*g8
-                    Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[2][0],1,&gmat[4][0],1,&gmat[5][0],1,&wsp9[0],1);
-                    Vmath::Vvtvp  (nqtot,&gmat[7][0],1,&gmat[8][0],1,&wsp9[0],1,&wsp9[0],1);
+                    // wsp4
+                    Vmath::Vadd(nqtot, &gmat[1][0], 1, &gmat[2][0], 1, &wsp4[0], 1);
+                    Vmath::Vvtvvtp(nqtot, &gmat[0][0], 1, &h0[0], 1, &wsp4[0], 1, &h1[0], 1, &wsp4[0], 1);
+                    // wsp5
+                    Vmath::Vadd(nqtot, &gmat[4][0], 1, &gmat[5][0], 1, &wsp5[0], 1);
+                    Vmath::Vvtvvtp(nqtot, &gmat[3][0], 1, &h0[0], 1, &wsp5[0], 1, &h1[0], 1, &wsp5[0], 1);
+                    // wsp6
+                    Vmath::Vadd(nqtot, &gmat[7][0], 1, &gmat[8][0], 1, &wsp6[0], 1);
+                    Vmath::Vvtvvtp(nqtot, &gmat[6][0], 1, &h0[0], 1, &wsp6[0], 1, &h1[0], 1, &wsp6[0], 1);
 
-                    // Multiply wsp1,2,3 by the appropriate factor composites
-                    Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp7[0],1,&wsp2[0],1,&wsp4[0],1);
-                    Vmath::Vvtvp  (nqtot,&wsp8[0],1,&wsp3[0],1,&wsp4[0],1,&wsp4[0],1);
-                    Vmath::Vvtvvtp(nqtot,&wsp5[0],1,&wsp2[0],1,&wsp7[0],1,&wsp1[0],1,&wsp5[0],1);
-                    Vmath::Vvtvp  (nqtot,&wsp9[0],1,&wsp3[0],1,&wsp5[0],1,&wsp5[0],1);
-                    Vmath::Vvtvvtp(nqtot,&wsp6[0],1,&wsp3[0],1,&wsp8[0],1,&wsp1[0],1,&wsp6[0],1);
-                    Vmath::Vvtvp  (nqtot,&wsp9[0],1,&wsp2[0],1,&wsp6[0],1,&wsp6[0],1);
+                    // g0
+                    Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
+                    Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
+
+                    // g4
+                    Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &wsp4[0], 1, &gmat[5][0], 1, &wsp5[0], 1, &g4[0], 1);
+                    Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+
+                    // overwrite h0, h1, h2
+                    // wsp7 (h2f1 + h3f2)
+                    Vmath::Vvtvvtp(nqtot, &gmat[1][0], 1, &h2[0], 1, &gmat[2][0], 1, &h3[0], 1, &wsp7[0], 1);
+                    // wsp8 (h2f4 + h3f5)
+                    Vmath::Vvtvvtp(nqtot, &gmat[4][0], 1, &h2[0], 1, &gmat[5][0], 1, &h3[0], 1, &wsp8[0], 1);
+                    // wsp9 (h2f7 + h3f8)
+                    Vmath::Vvtvvtp(nqtot, &gmat[7][0], 1, &h2[0], 1, &gmat[8][0], 1, &h3[0], 1, &wsp9[0], 1);
+
+                    // g3
+                    Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp7[0], 1, &wsp5[0], 1, &wsp8[0], 1, &g3[0], 1);
+                    Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp9[0], 1, &g3[0],   1, &g3[0],   1);
+
+                    // overwrite wsp4, wsp5, wsp6
+                    // g1
+                    Vmath::Vvtvvtp(nqtot, &wsp7[0], 1, &wsp7[0], 1, &wsp8[0], 1, &wsp8[0], 1, &g1[0], 1);
+                    Vmath::Vvtvp  (nqtot, &wsp9[0], 1, &wsp9[0], 1, &g1[0],   1, &g1[0],   1);
+
+                    // g5
+                    Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &wsp7[0], 1, &gmat[5][0], 1, &wsp8[0], 1, &g5[0], 1);
+                    Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &wsp9[0], 1, &g5[0], 1, &g5[0], 1);
+
+                    // g2
+                    Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &gmat[2][0], 1, &gmat[5][0], 1, &gmat[5][0], 1, &g2[0], 1);
+                    Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &gmat[8][0], 1, &g2[0],      1, &g2[0],      1);
                 }
                 else
                 {
-                    NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0] + gmat[6][0]*gmat[6][0];
-                    NekDouble g1 = gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0] + gmat[7][0]*gmat[7][0];
-                    NekDouble g2 = gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0] + gmat[8][0]*gmat[8][0];
-                    NekDouble g3 = gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0] + gmat[6][0]*gmat[7][0];
-                    NekDouble g4 = gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0] + gmat[6][0]*gmat[8][0];
-                    NekDouble g5 = gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0] + gmat[7][0]*gmat[8][0];
+                    // wsp4
+                    Vmath::Svtsvtp(nqtot, gmat[0][0], &h0[0], 1, gmat[1][0] + gmat[2][0], &h1[0], 1, &wsp4[0], 1);
+                    // wsp5
+                    Vmath::Svtsvtp(nqtot, gmat[3][0], &h0[0], 1, gmat[4][0] + gmat[5][0], &h1[0], 1, &wsp5[0], 1);
+                    // wsp6
+                    Vmath::Svtsvtp(nqtot, gmat[6][0], &h0[0], 1, gmat[7][0] + gmat[8][0], &h1[0], 1, &wsp6[0], 1);
 
-                    Vmath::Svtsvtp(nqtot,g0,&wsp1[0],1,g3,&wsp2[0],1,&wsp4[0],1);
-                    Vmath::Svtvp  (nqtot,g4,&wsp3[0],1,&wsp4[0],1,&wsp4[0],1);
-                    Vmath::Svtsvtp(nqtot,g1,&wsp2[0],1,g3,&wsp1[0],1,&wsp5[0],1);
-                    Vmath::Svtvp  (nqtot,g5,&wsp3[0],1,&wsp5[0],1,&wsp5[0],1);
-                    Vmath::Svtsvtp(nqtot,g2,&wsp3[0],1,g4,&wsp1[0],1,&wsp6[0],1);
-                    Vmath::Svtvp  (nqtot,g5,&wsp2[0],1,&wsp6[0],1,&wsp6[0],1);
+                    // g0
+                    Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
+                    Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
+
+                    // g4
+                    Vmath::Svtsvtp(nqtot, gmat[2][0], &wsp4[0], 1, gmat[5][0], &wsp5[0], 1, &g4[0], 1);
+                    Vmath::Svtvp  (nqtot, gmat[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+
+                    // overwrite h0, h1, h2
+                    // wsp7 (h2f1 + h3f2)
+                    Vmath::Svtsvtp(nqtot, gmat[1][0], &h2[0], 1, gmat[2][0], &h3[0], 1, &wsp7[0], 1);
+                    // wsp8 (h2f4 + h3f5)
+                    Vmath::Svtsvtp(nqtot, gmat[4][0], &h2[0], 1, gmat[5][0], &h3[0], 1, &wsp8[0], 1);
+                    // wsp9 (h2f7 + h3f8)
+                    Vmath::Svtsvtp(nqtot, gmat[7][0], &h2[0], 1, gmat[8][0], &h3[0], 1, &wsp9[0], 1);
+
+                    // g3
+                    Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp7[0], 1, &wsp5[0], 1, &wsp8[0], 1, &g3[0], 1);
+                    Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp9[0], 1, &g3[0],   1, &g3[0],   1);
+
+                    // overwrite wsp4, wsp5, wsp6
+                    // g1
+                    Vmath::Vvtvvtp(nqtot, &wsp7[0], 1, &wsp7[0], 1, &wsp8[0], 1, &wsp8[0], 1, &g1[0], 1);
+                    Vmath::Vvtvp  (nqtot, &wsp9[0], 1, &wsp9[0], 1, &g1[0],   1, &g1[0],   1);
+
+                    // g5
+                    Vmath::Svtsvtp(nqtot, gmat[2][0], &wsp7[0], 1, gmat[5][0], &wsp8[0], 1, &g5[0], 1);
+                    Vmath::Svtvp  (nqtot, gmat[8][0], &wsp9[0], 1, &g5[0], 1, &g5[0], 1);
+
+                    // g2
+                    Vmath::Fill(nqtot, gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0] + gmat[8][0]*gmat[8][0], &g2[0], 1);
                 }
 
-                MultiplyByQuadratureMetric(wsp4,wsp4);
-                MultiplyByQuadratureMetric(wsp5,wsp5);
-                MultiplyByQuadratureMetric(wsp6,wsp6);
+                // Compute component derivatives into wsp7, 8, 9
+                Vmath::Vvtvvtp(nqtot,&g0[0],1,&wsp1[0],1,&g3[0],1,&wsp2[0],1,&wsp7[0],1);
+                Vmath::Vvtvp  (nqtot,&g4[0],1,&wsp3[0],1,&wsp7[0],1,&wsp7[0],1);
+                Vmath::Vvtvvtp(nqtot,&g1[0],1,&wsp2[0],1,&g3[0],1,&wsp1[0],1,&wsp8[0],1);
+                Vmath::Vvtvp  (nqtot,&g5[0],1,&wsp3[0],1,&wsp8[0],1,&wsp8[0],1);
+                Vmath::Vvtvvtp(nqtot,&g2[0],1,&wsp3[0],1,&g4[0],1,&wsp1[0],1,&wsp9[0],1);
+                Vmath::Vvtvp  (nqtot,&g5[0],1,&wsp2[0],1,&wsp9[0],1,&wsp9[0],1);
 
-                // outarray = m = (D_xi1 * B)^T * k
-                // wsp1     = n = (D_xi2 * B)^T * l
-                IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp4,wsp1,wsp,false,true,true);
-                IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp5,wsp2,wsp,true,false,true);
-                IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp6,wsp3,wsp,true,true,false);
+                // Step 4.
+                // Multiply by quadrature metric
+                MultiplyByQuadratureMetric(wsp7,wsp7);
+                MultiplyByQuadratureMetric(wsp8,wsp8);
+                MultiplyByQuadratureMetric(wsp9,wsp9);
 
+                IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp7,wsp1,wsp,false,true,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp8,wsp2,wsp,true,false,true);
+                IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp9,wsp3,wsp,true,true,false);
+
+                // Step 5.
                 // outarray = lambda * outarray + (wsp0 + wsp1)
                 //          = (lambda * M + L ) * u_hat
                 Vmath::Vadd(m_ncoeffs,wsp1.get(),1,wsp2.get(),1,wsp0.get(),1);

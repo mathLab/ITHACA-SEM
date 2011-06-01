@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
 
@@ -13,11 +17,30 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm
+        = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[4]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ExpList1DSharedPtr Exp,Sol;
     int i,j,k;
     int     order, nq;
     int     coordim;
-    char    *infile;
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;  
     Array<OneD, NekDouble> sol; 
@@ -57,7 +80,6 @@ int main(int argc, char *argv[])
     
     order  =   atoi(argv[2]);
     nq     =   atoi(argv[3]);
-    infile =   argv[4];
     
     if(btype != LibUtilities::eFourier)
     {
@@ -69,14 +91,14 @@ int main(int argc, char *argv[])
     }
   
     // read in mesh
-    string  in(infile);
     SpatialDomains::MeshGraph1D graph1D;
-    graph1D.ReadGeometry(in);
+    graph1D.ReadGeometry(meshfile);
+    graph1D.ReadExpansions(meshfile);
     
     // Define Expansion
     const LibUtilities::PointsKey Pkey(nq,Qtype);
     const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(Bkey,graph1D);
+    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vComm,Bkey,graph1D);
     
     //----------------------------------------------
     // Define solution to be projected 
@@ -140,8 +162,29 @@ int main(int argc, char *argv[])
     //-------------------------------------------
     
     //--------------------------------------------
-    // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(Sol->GetPhys()) << endl;
-    cout << "L 2 error:        " << Exp->L2  (Sol->GetPhys()) << endl;
+    // Calculate L_inf error
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Rank 0:" << endl;
+        cout << "L infinity error: " << Exp->Linf(Sol->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Sol->GetPhys()) << endl;
+        for (unsigned int i = 1; i < vComm->GetSize(); ++i)
+        {
+            Array<OneD, NekDouble> data(2);
+            vComm->Recv(i, data);
+            cout << "Rank " << i << ":" << endl;
+            cout << "L infinity error: " << data[0] << endl;
+            cout << "L 2 error:        " << data[1] << endl;
+        }
+    }
+    else
+    {
+        Array<OneD, NekDouble> data(2);
+        data[0] = Exp->Linf(Sol->GetPhys());
+        data[1] = Exp->L2  (Sol->GetPhys());
+        vComm->Send(0,data);
+    }
     //--------------------------------------------
+
+    return 0;
 }

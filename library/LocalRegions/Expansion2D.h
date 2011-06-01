@@ -125,6 +125,8 @@ namespace Nektar
 
             void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
             
+            void AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
+
             void DGDeriv(int dir,
                          const Array<OneD, const NekDouble>&incoeffs,
                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
@@ -188,6 +190,8 @@ namespace Nektar
             }
 
             virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+
+            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {

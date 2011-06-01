@@ -67,7 +67,9 @@ namespace Nektar
             eDirectFullMatrix,
             eDirectStaticCond,
             eDirectMultiLevelStaticCond,
-            eIterativeCG,
+            eIterativeFull,
+            eIterativeStaticCond,
+            eIterativeMultiLevelStaticCond,
             eSIZE_GlobalSysSolnType
         };
 
@@ -77,8 +79,10 @@ namespace Nektar
             "No Solution Type",
             "DirectFull",
             "DirectStaticCond",
-            "DirectStaticCond",
-            "IterativeCG"
+            "DirectMultiLevelStaticCond",
+            "IterativeFull",
+            "IterativeStaticCond",
+            "IterativeMultiLevelStaticCond"
         };
 
 

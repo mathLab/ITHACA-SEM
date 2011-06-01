@@ -37,6 +37,7 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3D_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -61,13 +62,17 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField3D();
 
             /// Constructs a global discontinuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT DisContField3D(
+                           LibUtilities::CommSharedPtr &pComm,
+                           SpatialDomains::MeshGraph3D &graph3D,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
 
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
-            MULTI_REGIONS_EXPORT DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT DisContField3D(
+                           LibUtilities::CommSharedPtr &pComm,
+                           SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
@@ -75,7 +80,9 @@ namespace Nektar
 
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
-            MULTI_REGIONS_EXPORT DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT DisContField3D(
+                           LibUtilities::CommSharedPtr &pComm,
+                           SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectStaticCond,

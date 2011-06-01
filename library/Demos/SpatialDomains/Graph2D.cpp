@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
 
         Equation eqn1 = bcs.GetFunctionAsEquation("F3");
 
-        const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
+        const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
     }
     catch(std::string err)
     {

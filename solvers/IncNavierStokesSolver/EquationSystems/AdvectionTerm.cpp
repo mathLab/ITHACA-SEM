@@ -56,22 +56,22 @@ namespace Nektar
      * \param 
      * \param
      */
-    AdvectionTerm::AdvectionTerm(string &fileNameString,
+    AdvectionTerm::AdvectionTerm(
+            LibUtilities::CommSharedPtr                 pComm,
+            LibUtilities::SessionReaderSharedPtr        pSession,
             SpatialDomains::MeshGraphSharedPtr          pGraph,
             SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions)
-
+        : m_comm(pComm),
+          m_session(pSession),
+          m_graph(pGraph),
+          m_boundaryConditions(pBoundaryConditions)
 	{
-        m_boundaryConditions = pBoundaryConditions;
-        m_graph = pGraph;
-
-        m_filename = fileNameString;
-
         // Set space dimension for use in class
         m_spacedim = pGraph->GetSpaceDimension();
         m_expdim   = pGraph->GetMeshDimension();
 
         // Save the basename of input file name for output details.
-		m_sessionName = fileNameString;
+		m_sessionName = pSession->GetFilename();
 		m_sessionName = m_sessionName.substr(0,
 											 m_sessionName.find_last_of("."));
 

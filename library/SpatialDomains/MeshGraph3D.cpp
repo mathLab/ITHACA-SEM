@@ -127,7 +127,7 @@ namespace Nektar
 
                 int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
@@ -163,7 +163,7 @@ namespace Nektar
                                 edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
                             }
 
-                            m_segGeoms.push_back(edge);
+                            m_segGeoms[indx] = edge;
                         }
                     }
                 }
@@ -209,7 +209,7 @@ namespace Nektar
                 int indx;
                 int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
-                ASSERTL0(indx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
                 /// Read text element description.
                 TiXmlNode* elementChild = element->FirstChild();
@@ -258,7 +258,7 @@ namespace Nektar
                         TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient));
                         trigeom->SetGlobalID(indx);
 
-                        m_triGeoms.push_back(trigeom);
+                        m_triGeoms[indx] = trigeom;
                     }
                     catch(...)
                     {
@@ -297,7 +297,7 @@ namespace Nektar
                         QuadGeomSharedPtr quadgeom(MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient));
                         quadgeom->SetGlobalID(indx);
 
-                        m_quadGeoms.push_back(quadgeom);
+                        m_quadGeoms[indx] = quadgeom;
 
                     }
                     catch(...)
@@ -345,7 +345,7 @@ namespace Nektar
                 int indx;
                 int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 /// Read text element description.
                 TiXmlNode* elementChild = element->FirstChild();
@@ -422,7 +422,7 @@ namespace Nektar
                         TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
                         tetgeom->SetGlobalID(indx);
 
-                        m_tetGeoms.push_back(tetgeom);
+                        m_tetGeoms[indx] = tetgeom;
                     }
                     catch(...)
                     {
@@ -487,7 +487,7 @@ namespace Nektar
                         PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
                         pyrgeom->SetGlobalID(indx);
 
-                        m_pyrGeoms.push_back(pyrgeom);
+                        m_pyrGeoms[indx] = pyrgeom;
                     }
                     catch(...)
                     {
@@ -552,7 +552,7 @@ namespace Nektar
                         PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
                         prismgeom->SetGlobalID(indx);
 
-                        m_prismGeoms.push_back(prismgeom);
+                        m_prismGeoms[indx] = prismgeom;
                     }
                     catch(...)
                     {
@@ -618,7 +618,7 @@ namespace Nektar
                         HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
                         hexgeom->SetGlobalID(indx);
 
-                        m_hexGeoms.push_back(hexgeom);
+                        m_hexGeoms[indx] = hexgeom;
                     }
                     catch(...)
                     {
@@ -661,7 +661,7 @@ namespace Nektar
                 int indx;
                 int err = composite->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
@@ -697,12 +697,12 @@ namespace Nektar
                                 first = false;
 
                                 Composite curVector(MemoryManager<GeometryVector>::AllocateSharedPtr());
-                                m_meshCompositeVector.push_back(curVector);
+                                m_meshComposites[indx] = curVector;
                             }
 
                             if (compositeElementStr.length() > 0)
                             {
-                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr, m_meshComposites[indx]);
                             }
                             prevCompositeElementStr = compositeElementStr;
                         }
@@ -723,30 +723,26 @@ namespace Nektar
         SegGeomSharedPtr MeshGraph3D::GetSegGeom(int eID)
         {
             SegGeomSharedPtr returnval;
-
-            if (eID >= 0 && eID < int(m_segGeoms.size()))
-            {
-                returnval = m_segGeoms[eID];
-            }
-
-            return returnval;
+            SegGeomMap::iterator x = m_segGeoms.find(eID);
+            ASSERTL0(x != m_segGeoms.end(), "Segment not found.");
+            return x->second;
         };
 
         Geometry2DSharedPtr MeshGraph3D::GetGeometry2D(int gID)
         {
-            for (TriGeomVectorIter iter = m_triGeoms.begin(); iter != m_triGeoms.end(); iter++)
+            for (TriGeomMapIter iter = m_triGeoms.begin(); iter != m_triGeoms.end(); iter++)
             {
-                if ((*iter)->GetGlobalID() == gID)
+                if (iter->first == gID)
                 {
-                    return *iter;
+                    return iter->second;
                 }
             }
 
-            for (QuadGeomVectorIter iter = m_quadGeoms.begin(); iter != m_quadGeoms.end(); iter++)
+            for (QuadGeomMapIter iter = m_quadGeoms.begin(); iter != m_quadGeoms.end(); iter++)
             {
-                if ((*iter)->GetGlobalID() == gID)
+                if (iter->first == gID)
                 {
-                    return *iter;
+                    return iter->second;
                 }
             }
 
@@ -759,7 +755,8 @@ namespace Nektar
         // The only allowable combinations of previous and current items
         // are V (0D); E (1D); and T and Q (2D); A (Tet, 3D), P (Pyramid, 3D), R (Prism, 3D), H (Hex, 3D).
         // Only elements of the same dimension are allowed to be grouped.
-        void MeshGraph3D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
+        void MeshGraph3D::ResolveGeomRef(const std::string &prevToken, const std::string &token,
+                Composite& composite)
         {
             try
             {
@@ -809,7 +806,7 @@ namespace Nektar
                 case 'V':   // Vertex
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_vertSet.size())
+                        if (m_vertSet.find(*seqIter) == m_vertSet.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -817,7 +814,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_vertSet[*seqIter]);
+                            composite->push_back(m_vertSet[*seqIter]);
                         }
                     }
                     break;
@@ -825,7 +822,7 @@ namespace Nektar
                 case 'E':   // Edge
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_segGeoms.size())
+                        if (m_segGeoms.find(*seqIter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -833,7 +830,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_segGeoms[*seqIter]);
+                            composite->push_back(m_segGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -850,7 +847,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(face);
+                            composite->push_back(face);
                         }
                     }
                     break;
@@ -858,7 +855,7 @@ namespace Nektar
                 case 'T':   // Triangle
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_triGeoms.size())
+                        if (m_triGeoms.find(*seqIter) == m_triGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -866,7 +863,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_triGeoms[*seqIter]);
+                            composite->push_back(m_triGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -874,7 +871,7 @@ namespace Nektar
                 case 'Q':   // Quad
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_quadGeoms.size())
+                        if (m_quadGeoms.find(*seqIter) == m_quadGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -882,7 +879,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_quadGeoms[*seqIter]);
+                            composite->push_back(m_quadGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -891,7 +888,7 @@ namespace Nektar
                 case 'A':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_tetGeoms.size())
+                        if (m_tetGeoms.find(*seqIter) == m_tetGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -899,7 +896,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_tetGeoms[*seqIter]);
+                            composite->push_back(m_tetGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -908,7 +905,7 @@ namespace Nektar
                 case 'P':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_pyrGeoms.size())
+                        if (m_pyrGeoms.find(*seqIter) == m_pyrGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -916,7 +913,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_pyrGeoms[*seqIter]);
+                            composite->push_back(m_pyrGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -925,7 +922,7 @@ namespace Nektar
                 case 'R':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_prismGeoms.size())
+                        if (m_prismGeoms.find(*seqIter) == m_prismGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -933,7 +930,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_prismGeoms[*seqIter]);
+                            composite->push_back(m_prismGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -942,7 +939,7 @@ namespace Nektar
                 case 'H':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_hexGeoms.size())
+                        if (m_hexGeoms.find(*seqIter) == m_hexGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -950,7 +947,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_hexGeoms[*seqIter]);
+                            composite->push_back(m_hexGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -977,7 +974,7 @@ namespace Nektar
 
             ElementFaceVectorSharedPtr returnval = MemoryManager<ElementFaceVector>::AllocateSharedPtr();
 
-            CompositeVectorIter compIter;
+            CompositeMapIter compIter;
 
             TetGeomSharedPtr tetGeomShPtr;
             HexGeomSharedPtr hexGeomShPtr;
@@ -988,7 +985,7 @@ namespace Nektar
 
             for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
             {
-                for (geomIter = (*compIter)->begin(); geomIter != (*compIter)->end(); ++geomIter)
+                for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
                 {
                     tetGeomShPtr = boost::dynamic_pointer_cast<TetGeom>(*geomIter);
                     hexGeomShPtr = boost::dynamic_pointer_cast<HexGeom>(*geomIter);

@@ -1,7 +1,6 @@
 SET(ADRSolverSource 
        ./ADRSolver.cpp 
        ./EquationSystem.cpp
-       ./SessionReader.cpp
        ./EquationSystems/Laplace.cpp
        ./EquationSystems/Poisson.cpp       
        ./EquationSystems/Helmholtz.cpp

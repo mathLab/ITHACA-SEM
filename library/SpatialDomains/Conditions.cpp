@@ -308,7 +308,7 @@ namespace Nektar
 
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
 
-            ASSERTL0(regionElement, "One or more boundary conditions must be specified.");
+//            ASSERTL0(regionElement, "One or more boundary conditions must be specified.");
 
             // Read R (Robin), D (Dirichlet), N (Neumann), P (Periodic) [What about Cauchy?] tags
 

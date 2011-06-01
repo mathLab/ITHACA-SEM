@@ -79,7 +79,7 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D();
 
-            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lz, bool useFFT);
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(LibUtilities::CommSharedPtr &pComm,const LibUtilities::BasisKey &HomoBasis, const NekDouble lz, bool useFFT);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);

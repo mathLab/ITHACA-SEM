@@ -48,8 +48,9 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, bool useFFT):
-            ExpList(),
+        ExpListHomogeneous1D::ExpListHomogeneous1D(LibUtilities::CommSharedPtr
+                &pComm,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, bool useFFT):
+            ExpList(pComm),
             m_lhom(lhom),
 		    m_useFFT(useFFT),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
@@ -64,7 +65,7 @@ namespace Nektar
 
 			if(m_useFFT)
 			{
-				m_FFT = LibUtilities::NektarFFTFactory::CreateInstance("NekFFTW", nzplanes);
+				m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nzplanes);
 			}
         }
 

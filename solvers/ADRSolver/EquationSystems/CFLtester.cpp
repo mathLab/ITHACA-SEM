@@ -39,10 +39,12 @@
 
 namespace Nektar
 {
-    string CFLtester::className = EquationSystemFactory::RegisterCreatorFunction("CFLtester", CFLtester::create, "Testing CFL restriction");
+    string CFLtester::className = GetEquationSystemFactory().RegisterCreatorFunction("CFLtester", CFLtester::create, "Testing CFL restriction");
 
-    CFLtester::CFLtester(SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+    CFLtester::CFLtester(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pComm, pSession)
     {
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);

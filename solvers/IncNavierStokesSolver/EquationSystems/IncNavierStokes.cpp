@@ -47,9 +47,9 @@ namespace Nektar
      * \param 
      * \param
      */
-    
-    IncNavierStokes::IncNavierStokes(SessionReaderSharedPtr& pSession):
-        EquationSystem(pSession),
+    IncNavierStokes::IncNavierStokes(LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession):
+        EquationSystem(pComm, pSession),
         m_infosteps(10)
     {
         int i,j;
@@ -160,14 +160,14 @@ namespace Nektar
                 //Classic advective term
                 case eConvective: case eNonConservative:
                 {
-                    m_advObject = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(m_sessionName, m_graph, m_boundaryConditions);
+                    m_advObject = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
                 }
                 break;
 
                 //Linearised term
                 case eLinearised:
                 {
-                    m_advObject = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(m_sessionName, m_graph, m_boundaryConditions);
+                    m_advObject = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
                 }
                 break;
 

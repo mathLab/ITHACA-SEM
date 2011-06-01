@@ -54,14 +54,22 @@ namespace Nektar
      * which provides general time integration.
      */
 
+    EquationSystemFactory& GetEquationSystemFactory()
+    {
+        typedef Loki::SingletonHolder<EquationSystemFactory,
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
+        return Type::Instance();
+    }
+
     /**
      * This constructor is protected as the objects of this class are never
      * instantiated directly.
      * @param   pSession        The session reader holding problem parameters.
      */
-    EquationSystem::EquationSystem(SessionReaderSharedPtr& pSession)
-        : ADRBase(pSession->GetFilename(), true),
-          m_session(pSession)
+    EquationSystem::EquationSystem( LibUtilities::CommSharedPtr& pComm,
+                                    LibUtilities::SessionReaderSharedPtr& pSession)
+        : ADRBase(pComm, pSession, true)
     {
         // If a tangent vector policy is defined then the local tangent vectors
         // on each element need to be generated.
@@ -72,7 +80,6 @@ namespace Nektar
 
         // Zero all physical fields initially.
         ZeroPhysFields();
-        filename = pSession->GetFilename();
     }
 
     /**
@@ -223,8 +230,8 @@ namespace Nektar
         	if(baseyn=="YES")
         	{
         		SetUpBaseFields(m_graph);
-        		string basename = filename;
-        		basename= (filename).substr(0
+        		string basename = m_session->GetFilename();
+        		basename= (m_session->GetFilename()).substr(0
         		, basename.find_last_of("."));
         		ImportFldBase(basename + "-Base.fld",m_graph);
         		cout<<"Base flow from file:  "<<basename<<"-Base.fld"<<endl;
@@ -279,7 +286,7 @@ namespace Nektar
                        for(i = 0 ; i < m_base.num_elements(); i++)
                        {
                            m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(*mesh1D,
+                                ::AllocateSharedPtr(m_comm,*mesh1D,
                                                     *m_boundaryConditions,i);
                        }
 	           }
@@ -295,7 +302,7 @@ namespace Nektar
                        i = 0;
                        MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*mesh2D,
+                                ::AllocateSharedPtr(m_comm,*mesh2D,
                                                     *m_boundaryConditions,i);
                        m_base[0]=firstbase;
                        for(i = 1 ; i < m_base.num_elements(); i++)
@@ -316,7 +323,7 @@ namespace Nektar
                        }
                        MultiRegions::ContField3DSharedPtr firstbase =
                             MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(*mesh3D,
+                                ::AllocateSharedPtr(m_comm,*mesh3D,
                                                     *m_boundaryConditions,i);
                        m_base[0] = firstbase;
                        for(i = 1 ; i < m_base.num_elements(); i++)
@@ -347,7 +354,7 @@ namespace Nektar
                        for(i = 0 ; i < m_base.num_elements(); i++)
                        {
                            m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr(*mesh1D,
+                            ::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
                                                              *m_boundaryConditions,i);
                        }
                        break;
@@ -363,7 +370,7 @@ namespace Nektar
                          for(i = 0 ; i < m_base.num_elements(); i++)
                          {
                                  m_base[i] = MemoryManager<MultiRegions
-                                 ::DisContField2D>::AllocateSharedPtr(*mesh2D,
+                                 ::DisContField2D>::AllocateSharedPtr(m_comm,*mesh2D,
                                                              *m_boundaryConditions,i);
                          }
                          break;

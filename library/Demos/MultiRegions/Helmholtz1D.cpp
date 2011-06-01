@@ -1,29 +1,105 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField1D.h>
 
 using namespace Nektar;
 
+int NoCaseStringCompare(const string & s1, const string& s2);
+
+
 int main(int argc, char *argv[])
 {
+    LibUtilities::SessionReaderSharedPtr vSession;
+    LibUtilities::CommSharedPtr vComm;
     MultiRegions::ContField1DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
+    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    string meshfile(argv[1]);
+    string vCommModule("Serial");
 
-    if(argc != 2)
+    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
+    if (vSession->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = vSession->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+
+        // Force Iterative solver for parallel execution
+        SolnType = MultiRegions::eIterativeFull;
+    }
+
+
+    if( (argc != 2) && (argc != 3) && (argc != 4))
     {
         fprintf(stderr,"Usage: Helmholtz1D  meshfile \n");
         exit(1);
     }
 
+    //----------------------------------------------
+    // Load the solver type so we can test full solve, static
+    // condensation and the default multi-level statis condensation.
+    if( argc >= 3 )
+    {
+        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
+        {
+            SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+            cout << "Solution Type: MultiLevel Static Condensation" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
+        {
+            SolnType = MultiRegions::eDirectStaticCond;
+            cout << "Solution Type: Static Condensation" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
+        {
+            SolnType = MultiRegions::eDirectFullMatrix;
+            cout << "Solution Type: Full Matrix" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"IterativeCG"))
+        {
+            SolnType = MultiRegions::eIterativeFull;
+            cout << "Solution Type: Iterative Full Matrix" << endl;
+        }
+        else
+        {
+            cerr << "SolnType not recognised" <<endl;
+            exit(1);
+        }
+
+    }
+    //----------------------------------------------
+
     try
     {
         //----------------------------------------------
         // Read in mesh from input file
-        string meshfile(argv[1]);
         SpatialDomains::MeshGraph1D graph1D;
         graph1D.ReadGeometry(meshfile);
         graph1D.ReadExpansions(meshfile);
@@ -38,15 +114,18 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Print summary of solution details
         lambda = bcs.GetParameter("Lambda");
-        const SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
+        const SpatialDomains::CompositeMap domain = (graph1D.GetDomain());
         cout << "Solving 1D Helmholtz: "  << endl;
-        cout << "         Lambda     : " << lambda << endl;
+        cout << "       Communication: " << vCommModule << endl;
+        cout << "       Solver type  : " << MultiRegions::GlobalSysSolnTypeMap[SolnType] << endl;
+        cout << "       Lambda       : " << lambda << endl;
         //----------------------------------------------
 
         //----------------------------------------------
         // Define Expansion
+        int bc_loc = 0;
         Exp = MemoryManager<MultiRegions::ContField1D>::
-            AllocateSharedPtr(graph1D,bcs);
+            AllocateSharedPtr(vComm,graph1D,bcs,bc_loc,SolnType);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -132,13 +211,20 @@ int main(int argc, char *argv[])
             {
                 fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
             }
+            Fce->SetPhys(fce);
             //----------------------------------------------
 
             //--------------------------------------------
-            // Calculate L_inf error
-            Fce->SetPhys(fce);
-            cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-            cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+            // Calculate errors
+            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            if (vComm->GetRank() == 0)
+            {
+                cout << "L infinity error: " << vLinfError << endl;
+                cout << "L 2 error:        " << vL2Error << endl;
+                cout << "H 1 error:        " << vH1Error << endl;
+            }
             //--------------------------------------------
         }
         //----------------------------------------------
@@ -146,7 +232,50 @@ int main(int argc, char *argv[])
     catch (const std::runtime_error& e)
     {
         cerr << "Caught exception." << endl;
+        return 1;
     }
+
+    vComm->Finalise();
+
     return 0;
 }
+
+
+/**
+ * Performs a case-insensitive string comparison (from web).
+ * @param   s1          First string to compare.
+ * @param   s2          Second string to compare.
+ * @returns             0 if the strings match.
+ */
+int NoCaseStringCompare(const string & s1, const string& s2)
+{
+    string::const_iterator it1=s1.begin();
+    string::const_iterator it2=s2.begin();
+
+    //stop when either string's end has been reached
+    while ( (it1!=s1.end()) && (it2!=s2.end()) )
+    {
+        if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+        {
+            // return -1 to indicate smaller than, 1 otherwise
+            return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
+        }
+
+        //proceed to the next character in each string
+        ++it1;
+        ++it2;
+    }
+
+    size_t size1=s1.size();
+    size_t size2=s2.size();// cache lengths
+
+    //return -1,0 or 1 according to strings' lengths
+    if (size1==size2)
+    {
+        return 0;
+    }
+
+    return (size1 < size2) ? -1 : 1;
+}
+
 

@@ -37,6 +37,8 @@
 #ifndef NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 #define NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 
+#include <vector>
+
 #include <boost/version.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
@@ -72,7 +74,7 @@ namespace Nektar
                 space_p).full;
         }
 
-        static bool GenerateSeqVector(const char *const str, vector<unsigned int> &vec)
+        static bool GenerateSeqVector(const char *const str, std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
             fctor1 functor1(&vec);
@@ -90,7 +92,7 @@ namespace Nektar
                 space_p).full;
         }
         
-        static bool GenerateOrderedVector(const char *const str, vector<unsigned int> &vec)
+        static bool GenerateOrderedVector(const char *const str, std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
             fctor1 functor1(&vec);
@@ -106,7 +108,7 @@ namespace Nektar
                 space_p).full;
         }
 
-        static bool GenerateOrderedVector(const char *const str, vector<NekDouble> &vec)
+        static bool GenerateOrderedVector(const char *const str, std::vector<NekDouble> &vec)
         {
             // Functors used to parse the sequence.
             fctor4 functor4(&vec);
@@ -121,7 +123,7 @@ namespace Nektar
                          space_p).full;
         }
         
-        static bool GenerateOrderedStringVector(const char *const str, vector<std::string> &vec)
+        static bool GenerateOrderedStringVector(const char *const str, std::vector<std::string> &vec)
         {
             // Functors used to parse the sequence.
             fctor3 functor3(&vec);
@@ -173,7 +175,7 @@ namespace Nektar
 
         struct fctor1
         {
-            fctor1(vector<unsigned int> *vec):
+            fctor1(std::vector<unsigned int> *vec):
             m_vector(vec)
             {
             }
@@ -198,13 +200,13 @@ namespace Nektar
             }
 
         private:
-            vector<unsigned int> *m_vector;
+            std::vector<unsigned int> *m_vector;
             fctor1();
         };
 
         struct fctor2
         {
-            fctor2(vector<unsigned int> *vec):
+            fctor2(std::vector<unsigned int> *vec):
             m_vector(vec)
             {
             }
@@ -220,12 +222,12 @@ namespace Nektar
             }
 
         private:
-            vector<unsigned int> *m_vector;
+            std::vector<unsigned int> *m_vector;
         };
 
         struct fctor3
         {
-            fctor3(vector<std::string> *vec):
+            fctor3(std::vector<std::string> *vec):
             m_vector(vec)
             {
             }
@@ -236,13 +238,13 @@ namespace Nektar
             }
 
         private:
-            vector<std::string> *m_vector;
+            std::vector<std::string> *m_vector;
         };
 
         // Probably should template fctor1 if that is possible? 
         struct fctor4
         {
-            fctor4(vector<NekDouble> *vec):
+            fctor4(std::vector<NekDouble> *vec):
                 m_vector(vec)
             {
             }
@@ -265,7 +267,7 @@ namespace Nektar
             }
 
         private:
-            vector<NekDouble> *m_vector;
+            std::vector<NekDouble> *m_vector;
             fctor4();
         };
 

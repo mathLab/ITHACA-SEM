@@ -138,7 +138,10 @@ namespace Nektar
          * @param   Mat         Block matrix.
          * @param   locToGloMap Local to global mapping.
          */
-        GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey):
+        GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
+                const boost::shared_ptr<ExpList> &pExpList,
+                const boost::shared_ptr<LocalToGlobalBaseMap>
+                                                       &pLocToGloMap):
             m_linSysKey(pKey)
         {
 

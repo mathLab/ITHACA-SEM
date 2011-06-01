@@ -68,7 +68,7 @@ namespace Nektar
 
             /// Name of class
             MULTI_REGIONS_EXPORT static std::string className;
-
+            static std::string className2;
 
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
@@ -80,6 +80,7 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
                         const GlobalLinSysKey &mkey,
+                        const boost::shared_ptr<ExpList> &pExpList,
                         const DNekScalBlkMatSharedPtr pSchurCompl,
                         const DNekScalBlkMatSharedPtr pBinvD,
                         const DNekScalBlkMatSharedPtr pC,

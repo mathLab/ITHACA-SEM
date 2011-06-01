@@ -3,8 +3,10 @@ Helmholtz3D
 helmholtz3D_hex.xml
 L infinity error: 5.66374e-07
 L 2 error:        1.11818e-07
+H 1 error:        7.29569e-07
 ----------------------------------------
 helmholtz3D_tet.xml
 L infinity error: 0.000344037
 L 2 error:        5.48966e-05
+H 1 error:        0.00157672
 ----------------------------------------

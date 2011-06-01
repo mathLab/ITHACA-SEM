@@ -38,6 +38,7 @@
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3DHOMO1D_H
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/DisContField2D.h>
@@ -51,10 +52,13 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D();
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
+                                        LibUtilities::CommSharedPtr &pComm,
+                                        const LibUtilities::BasisKey &HomoBasis,
                                         const NekDouble lhom, bool useFFT);
 
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
+                           LibUtilities::CommSharedPtr &pComm,
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
 						   bool useFFT,

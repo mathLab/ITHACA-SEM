@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 
 using namespace Nektar;
@@ -9,6 +13,25 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ContField3DHomogeneous1DSharedPtr Exp, Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
@@ -54,7 +77,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D;
     graph2D.ReadGeometry(meshfile);
     graph2D.ReadExpansions(meshfile);
@@ -75,14 +97,14 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-        ::AllocateSharedPtr(Bkey,lz,useFFT,graph2D,bcs,bc_val,SolnType);
+        ::AllocateSharedPtr(vComm,Bkey,lz,useFFT,graph2D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
-    const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
+    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
     cout << "Solving 3D Helmholtz (Homogeneous in z-direction):"  << endl;
     cout << "         Lambda          : " << lambda << endl;
     cout << "         Lz              : " << lz << endl;

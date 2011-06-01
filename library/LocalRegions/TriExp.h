@@ -667,6 +667,11 @@ namespace Nektar
                 Expansion2D::AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
             }
 
+            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD,NekDouble> &coeffs)
+            {
+                Expansion2D::AddRobinEdgeContribution(edgeid,primCoeffs,coeffs);
+            }
+
             virtual void v_DGDeriv(const int dir,
                                    const Array<OneD, const NekDouble>&incoeffs,
                                    Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,

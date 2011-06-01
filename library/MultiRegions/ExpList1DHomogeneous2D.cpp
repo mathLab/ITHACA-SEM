@@ -47,13 +47,14 @@ namespace Nektar
         }
 
         // Constructor for ExpList1DHomogeneous2D to act as a Explist1D field
-        ExpList1DHomogeneous2D::ExpList1DHomogeneous2D(const LibUtilities::BasisKey &HomoBasis_y,
+        ExpList1DHomogeneous2D::ExpList1DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+                                                       const LibUtilities::BasisKey &HomoBasis_y,
 													   const LibUtilities::BasisKey &HomoBasis_z,
 													   const NekDouble lhom_y,
 													   const NekDouble lhom_z,
 													   bool useFFT,
 													   Array<OneD, ExpListSharedPtr> &points):
-            ExpListHomogeneous2D(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            ExpListHomogeneous2D(pComm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int n,nel;
 			

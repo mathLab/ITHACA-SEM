@@ -407,6 +407,7 @@ namespace Nektar
         /// Element factory definition.
         typedef Nektar::LibUtilities::NekFactory< unsigned int, Element,
                 std::vector<NodeSharedPtr>, std::vector<int> > ElementFactory;
+        ElementFactory& GetElementFactory();
 
         /// Define element ordering based on ID.
         struct element_id_less_than

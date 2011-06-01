@@ -49,10 +49,11 @@ namespace Nektar
         {
         }
 
-        DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+        DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+                                                                 const LibUtilities::BasisKey &HomoBasis,
                                                                  const NekDouble lhom,
 																 bool useFFT):
-            ExpList3DHomogeneous1D(HomoBasis,lhom,useFFT),
+            ExpList3DHomogeneous1D(pComm,HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -78,6 +79,7 @@ namespace Nektar
         }
 
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(
+                                       LibUtilities::CommSharedPtr &pComm,
                                        const LibUtilities::BasisKey &HomoBasis,
                                        const NekDouble lhom,
 									   bool useFFT,
@@ -85,7 +87,7 @@ namespace Nektar
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
                                        const GlobalSysSolnType solnType):  
-            ExpList3DHomogeneous1D(HomoBasis,lhom,useFFT),
+            ExpList3DHomogeneous1D(pComm,HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -95,7 +97,7 @@ namespace Nektar
             DisContField2DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<DisContField2D>::AllocateSharedPtr(graph2D,bcs,bc_loc,solnType,True,False); 
+            m_planes[0] = plane_zero = MemoryManager<DisContField2D>::AllocateSharedPtr(pComm,graph2D,bcs,bc_loc,solnType,True,False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
@@ -107,7 +109,7 @@ namespace Nektar
 
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
-                m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,bcs,bc_loc,True,False); 
+                m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,bcs,bc_loc,True,False);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -160,7 +162,8 @@ namespace Nektar
                     }
                 }
                 
-                m_bndCondExpansions[i] = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(HomoBasis,lhom,m_useFFT,exp,PlanesBndCondExp);
+                m_bndCondExpansions[i] =
+                MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(m_comm,HomoBasis,lhom,m_useFFT,exp,PlanesBndCondExp);
                 
             }
             

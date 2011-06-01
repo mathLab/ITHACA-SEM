@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
+
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField3D.h>
 #include <MultiRegions/ExpList2D.h>
@@ -56,11 +58,15 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3D();
 
             /// Construct a global continuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT ContField3D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph3D &graph3D,
                         const GlobalSysSolnType solnType
                                             = eDirectMultiLevelStaticCond);
 
-            MULTI_REGIONS_EXPORT ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT ContField3D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
@@ -76,7 +82,9 @@ namespace Nektar
                         const GlobalSysSolnType solnType
                                             = eDirectMultiLevelStaticCond);
 
-            MULTI_REGIONS_EXPORT ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT ContField3D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType

@@ -62,7 +62,9 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3D(const ExpList3D &In);
 
-            MULTI_REGIONS_EXPORT ExpList3D(  const LibUtilities::BasisKey &TBa,
+            MULTI_REGIONS_EXPORT ExpList3D(  
+                        LibUtilities::CommSharedPtr &pComm,
+                        const LibUtilities::BasisKey &TBa,
                         const LibUtilities::BasisKey &TBb,
                         const LibUtilities::BasisKey &TBc,
                         const LibUtilities::BasisKey &HBa,
@@ -73,10 +75,12 @@ namespace Nektar
                                             = LibUtilities::SIZE_PointsType);
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
+            MULTI_REGIONS_EXPORT ExpList3D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph3D &graph3D);
 
             /// Sets up a list of local expansions based on an expansion vector
-            ExpList3D(SpatialDomains::ExpansionVector &expansions);
+            ExpList3D(SpatialDomains::ExpansionMap &expansions);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList3D();

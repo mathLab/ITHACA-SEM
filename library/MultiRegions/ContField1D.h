@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD1D_H
 
+#include <LibUtilities/Communication/Comm.h>
+
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
@@ -61,26 +63,34 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D();
 
             /// Construct a global continuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ContField1D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph1D &graph1D,
                         const GlobalSysSolnType solnType
                                                 = eDirectMultiLevelStaticCond);
 
             /// Constructor.
-            MULTI_REGIONS_EXPORT ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ContField1D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Set up global continuous field based on an input mesh and
             /// boundary conditions.
-            MULTI_REGIONS_EXPORT ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ContField1D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Set up global continuous field based on an input mesh, basis
             /// key and boundary conditions.
-            MULTI_REGIONS_EXPORT ContField1D(const LibUtilities::BasisKey &Ba,
+            MULTI_REGIONS_EXPORT ContField1D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        const LibUtilities::BasisKey &Ba,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
@@ -88,7 +98,9 @@ namespace Nektar
 
             /// Set up global continuous field based on an input mesh, basis
             /// key and boundary conditions.
-            MULTI_REGIONS_EXPORT ContField1D(const LibUtilities::BasisKey &Ba,
+            MULTI_REGIONS_EXPORT ContField1D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        const LibUtilities::BasisKey &Ba,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
@@ -273,6 +285,8 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
+            /// Calculates the result of the multiplication of a global matrix
+            /// of type specified by \a mkey with a vector given by \a inarray.
             virtual void v_GeneralMatrixOp(
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,

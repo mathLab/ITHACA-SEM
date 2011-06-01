@@ -56,6 +56,7 @@ namespace Nektar
             eLaplacianMatrixIJOp,
             eWeakDerivMatrixOp,
             eHelmholtzMatrixOp,
+            eHybridDGHelmBndLamMatrixOp,
             SIZE_OptimizeOperationType
         };
 
@@ -68,7 +69,8 @@ namespace Nektar
             "LaplacianMatrixOp",
             "LaplacianMatrixIJOp",
             "WeakDerivMatrixOp",
-            "HelmholtzMatrixOp"
+            "HelmholtzMatrixOp",
+            "HybridDGHelmBndLamMatrixOp"
         };
 
         // This is the class which holds the optimisation parameters

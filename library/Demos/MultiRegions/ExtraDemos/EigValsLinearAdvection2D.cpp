@@ -1,12 +1,35 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ContField2DSharedPtr Exp;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
@@ -21,7 +44,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
     SpatialDomains::MeshGraph2D graph2D; 
 
     graph2D.ReadGeometry(meshfile);
@@ -43,9 +65,9 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
-    LibUtilities::BasisKey bkey1 = expansions[0]->m_basisKeyVector[1];
+    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey1 = expansions.at(0)->m_basisKeyVector[1];
     cout << "Calc. LinearAdvection E-vals:"  << endl; 
     cout << "             Advection_x    : " << ax << endl; 
     cout << "             Advection_y    : " << ay << endl; 
@@ -57,7 +79,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(graph2D,bcs);
+        AllocateSharedPtr(vComm,graph2D,bcs);
     //----------------------------------------------
 
     //----------------------------------------------

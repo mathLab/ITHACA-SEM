@@ -66,12 +66,16 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D();
 
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
+                                   LibUtilities::CommSharedPtr &pComm,
+                                   const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
 								   bool useFFT);
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
+                                   LibUtilities::CommSharedPtr &pComm,
+                                   const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
 								   bool useFFT,
                                    SpatialDomains::MeshGraph2D &graph2D);

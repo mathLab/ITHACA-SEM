@@ -66,16 +66,17 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
-        ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+        ContField3D::ContField3D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph3D &graph3D,
                                  const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,solnType,false),
+            DisContField3D(pComm,graph3D,solnType,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph3D);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,solnType);
 
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -83,11 +84,12 @@ namespace Nektar
         }
 
 
-        ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+        ContField3D::ContField3D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph3D &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-                DisContField3D(graph3D,bcs,bc_loc,solnType,false),
+                DisContField3D(pComm,graph3D,bcs,bc_loc,solnType,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
@@ -96,7 +98,7 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*this,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm, m_ncoeffs,*this,
                                                                                      solnType,
                                                                                      m_bndCondExpansions,
                                                                                      m_bndConditions,
@@ -148,7 +150,7 @@ namespace Nektar
                 map<int,int> periodicVertices;
                 GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges,periodicFaces);
 
-                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*this,
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                                                                          solnType,
                                                                                          m_bndCondExpansions,
                                                                                          m_bndConditions,
@@ -167,11 +169,12 @@ namespace Nektar
         }
 
 
-        ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+        ContField3D::ContField3D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph3D &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-                DisContField3D(graph3D,bcs,variable,solnType,false),
+                DisContField3D(pComm,graph3D,bcs,variable,solnType,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
@@ -180,7 +183,7 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*this,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                                                                      solnType,
                                                                                      m_bndCondExpansions,
                                                                                      m_bndConditions,

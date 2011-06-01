@@ -427,9 +427,32 @@ namespace Nektar
              (*inoutmat)(map,map) +=  primCoeffs[0];
         }
 
+        /**
+         * Given an edge and vector of element coefficients:
+         * - maps those elemental coefficients corresponding to the edge into
+         *   an edge-vector.
+         * - resets the element coefficients
+         * - multiplies the edge vector by the edge mass matrix
+         * - maps the edge coefficients back onto the elemental coefficients
+         */
+        void Expansion1D::AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        {
+            ASSERTL1(v_IsBoundaryInteriorExpansion(),
+                     "Not set up for non boundary-interior expansions");
+
+            NekDouble  map = v_GetVertexMap(vert);
+            Vmath::Zero(v_GetNcoeffs(), coeffs, 1);
+            coeffs[map] = primCoeffs[0];
+        }
+
         void Expansion1D::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
         {
             AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
+        }
+
+        void Expansion1D::v_AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        {
+            AddRobinEdgeContribution(vert,primCoeffs,coeffs);
         }
 
 

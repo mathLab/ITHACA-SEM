@@ -38,7 +38,8 @@
 #include <cmath> 
 
 #include <ADRSolver/EquationSystem.h>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 
 using namespace Nektar;
 
@@ -58,19 +59,20 @@ int main(int argc, char *argv[])
     //----------------------------------------------------------------
     // Read the mesh and construct container class
 
-    SessionReaderSharedPtr session;
+    LibUtilities::SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
   
     // Record start time.
     time(&starttime);
     
     // Create session reader.
-    session = MemoryManager<SessionReader>::AllocateSharedPtr(fileNameString);
+    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(fileNameString);
     
-    // Create instance of module to solve the equation specified in the session.
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
+
     try
     {
-        equ = EquationSystemFactory::CreateInstance(session->GetSolverInfo("SOLVERTYPE"), session);
+        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("SOLVERTYPE"), vComm, session);
     }
     catch (int e)
     {
@@ -100,13 +102,18 @@ int main(int argc, char *argv[])
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-        // Get Exact solution
-        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
-        equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
-        
-        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
-        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+        NekDouble vL2Error = equ->L2Error(i,false);
+        NekDouble vLinfError = equ->LinfError(i);
+        if (vComm->GetRank() == 0)
+        {
+            cout << "L 2 error (variable " << equ->GetVariable(i) << ") : " << vL2Error << endl;
+            cout << "L inf error (variable " << equ->GetVariable(i) << ") : " << vLinfError << endl;
+        }
     }
+    vComm->Finalise();
+
+    return 0;
+
 }
 
 /**

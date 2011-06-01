@@ -54,13 +54,15 @@ namespace Nektar
      * \param
      */
 
-    LinearisedAdvection::LinearisedAdvection(string &pSessionName,
+    LinearisedAdvection::LinearisedAdvection(
+            LibUtilities::CommSharedPtr                 pComm,
+            LibUtilities::SessionReaderSharedPtr        pSession,
             SpatialDomains::MeshGraphSharedPtr          pGraph,
             SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions):
-        AdvectionTerm(pSessionName, pGraph, pBoundaryConditions)
+        AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	{
         SetUpBaseFields(pGraph);
-        ImportFldBase(pSessionName + "-Base.fld",pGraph,pBoundaryConditions);
+        ImportFldBase(pSession->GetFilename() + "-Base.fld",pGraph,pBoundaryConditions);
 	}
 	
 
@@ -92,7 +94,7 @@ namespace Nektar
                 for(i = 0 ; i < m_base.num_elements(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(*mesh1D,
+                                ::AllocateSharedPtr(m_comm,*mesh1D,
                                                     *m_boundaryConditions,i);
                 }
 	        }
@@ -110,7 +112,7 @@ namespace Nektar
                 i = 0;
                 MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*mesh2D,
+                                ::AllocateSharedPtr(m_comm,*mesh2D,
                                                     *m_boundaryConditions,i);
                 m_base[0]=firstbase;
 
@@ -134,7 +136,7 @@ namespace Nektar
 
                 MultiRegions::ContField3DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(*mesh3D,
+                                ::AllocateSharedPtr(m_comm,*mesh3D,
                                                     *m_boundaryConditions,i);
                 m_base[0] = firstbase;
 
@@ -168,7 +170,7 @@ namespace Nektar
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions
-                        ::DisContField1D>::AllocateSharedPtr(*mesh1D,
+                        ::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
                                                              *m_boundaryConditions,i);
                     }
                     break;
@@ -186,7 +188,7 @@ namespace Nektar
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions
-                        ::DisContField2D>::AllocateSharedPtr(*mesh2D,
+                        ::DisContField2D>::AllocateSharedPtr(m_comm, *mesh2D,
                                                              *m_boundaryConditions,i);
                     }
                     break;

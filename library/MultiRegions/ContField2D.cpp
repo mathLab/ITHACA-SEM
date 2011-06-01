@@ -108,16 +108,17 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
-        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+        ContField2D::ContField2D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph2D &graph2D,
                                  const GlobalSysSolnType solnType):
-            DisContField2D(graph2D,solnType,false),
+            DisContField2D(pComm,graph2D,solnType,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph2D);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,solnType);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -146,13 +147,14 @@ namespace Nektar
          *                      with the boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+        ContField2D::ContField2D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType,
                                  bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
-            DisContField2D(graph2D,bcs,bc_loc,solnType,false,DeclareCoeffPhysArrays),
+            DisContField2D(pComm,graph2D,bcs,bc_loc,solnType,false,DeclareCoeffPhysArrays),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
@@ -164,7 +166,7 @@ namespace Nektar
                              periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                     solnType, m_bndCondExpansions,
                                     m_bndConditions, periodicVertices,
                                     periodicEdges,
@@ -221,7 +223,7 @@ namespace Nektar
                 GlobalSysSolnType solnType
                                     = In.m_locToGloMap->GetGlobalSysSolnType();
                 m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                    ::AllocateSharedPtr(m_ncoeffs,*this, solnType,
+                    ::AllocateSharedPtr(m_comm, m_ncoeffs,*this, solnType,
                                         m_bndCondExpansions,
                                         m_bndConditions,
                                         periodicVertices,
@@ -259,12 +261,13 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+        ContField2D::ContField2D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType,
                                  const bool CheckIfSingularSystem):
-            DisContField2D(graph2D,bcs,variable,solnType),
+            DisContField2D(pComm,graph2D,bcs,variable,solnType,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
@@ -278,7 +281,7 @@ namespace Nektar
                              periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                     solnType,
                                     m_bndCondExpansions,
                                     m_bndConditions,

@@ -46,30 +46,32 @@ namespace Nektar
         {
         }
 
-        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const LibUtilities::BasisKey &HomoBasis_y,
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+                                                       const LibUtilities::BasisKey &HomoBasis_y,
 													   const LibUtilities::BasisKey &HomoBasis_z,
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
 													   bool useFFT):
-            ExpListHomogeneous2D(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            ExpListHomogeneous2D(pComm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
         }
 
         // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
-        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const LibUtilities::BasisKey &HomoBasis_y,
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+                                                       const LibUtilities::BasisKey &HomoBasis_y,
 													   const LibUtilities::BasisKey &HomoBasis_z,
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
 													   bool useFFT,
                                                        SpatialDomains::MeshGraph1D &graph1D):
-            ExpListHomogeneous2D(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            ExpListHomogeneous2D(pComm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int n,j,nel;
             bool False = false;
             ExpList1DSharedPtr line_zero;
 
             //
-            m_lines[0] = line_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(graph1D,
+            m_lines[0] = line_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(pComm,graph1D,
                                                                       False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();

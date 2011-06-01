@@ -127,7 +127,7 @@ namespace Nektar
 
                 int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
@@ -167,7 +167,7 @@ namespace Nektar
                                 edge->SetGlobalID(indx); //Set global mesh id
                             }
 
-                            m_segGeoms.push_back(edge);
+                            m_segGeoms[indx] = edge;
                         }
                     }
                 }
@@ -214,7 +214,7 @@ namespace Nektar
                     int indx;
                     int err = element->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-                    ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
+//                    ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                     /// Read text element description.
                     TiXmlNode* elementChild = element->FirstChild();
@@ -263,7 +263,7 @@ namespace Nektar
                             TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient));
                             trigeom->SetGlobalID(indx);
 
-                            m_triGeoms.push_back(trigeom);
+                            m_triGeoms[indx] = trigeom;
                         }
                         catch(...)
                         {
@@ -302,7 +302,7 @@ namespace Nektar
                             QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
                             quadgeom->SetGlobalID(indx);
 
-                            m_quadGeoms.push_back(quadgeom);
+                            m_quadGeoms[indx] = quadgeom;
 
                         }
                         catch(...)
@@ -344,7 +344,7 @@ namespace Nektar
                 int indx;
                 int err = composite->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+//                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
 
                 TiXmlNode* compositeChild = composite->FirstChild();
                 // This is primarily to skip comments that may be present.
@@ -380,12 +380,12 @@ namespace Nektar
                                 first = false;
 
                                 Composite curVector(MemoryManager<GeometryVector>::AllocateSharedPtr());
-                                m_meshCompositeVector.push_back(curVector);
+                                m_meshComposites[indx] = curVector;
                             }
 
                             if (compositeElementStr.length() > 0)
                             {
-                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
+                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr, m_meshComposites[indx]);
                             }
                             prevCompositeElementStr = compositeElementStr;
                         }
@@ -406,13 +406,9 @@ namespace Nektar
         SegGeomSharedPtr MeshGraph2D::GetSegGeom(int eID)
         {
             SegGeomSharedPtr returnval;
-
-                if (eID >= 0 && eID < int(m_segGeoms.size()))
-                {
-                    returnval = m_segGeoms[eID];
-                }
-
-                return returnval;
+            SegGeomMap::iterator x = m_segGeoms.find(eID);
+            ASSERTL0(x != m_segGeoms.end(), "Segment not found.");
+            return x->second;
         };
 
 
@@ -422,7 +418,8 @@ namespace Nektar
         // The only allowable combinations of previous and current items
         // are V (0D); E (1D); and T and Q (2D).  Only elements of the same
         // dimension are allowed to be grouped.
-        void MeshGraph2D::ResolveGeomRef(const std::string &prevToken, const std::string &token)
+        void MeshGraph2D::ResolveGeomRef(const std::string &prevToken, const std::string &token,
+                Composite& composite)
         {
             try
             {
@@ -465,7 +462,7 @@ namespace Nektar
                 case 'E':   // Edge
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_segGeoms.size())
+                        if (m_segGeoms.find(*seqIter) == m_segGeoms.end())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -473,7 +470,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_segGeoms[*seqIter]);
+                            composite->push_back(m_segGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -483,15 +480,15 @@ namespace Nektar
                     {
                         // Set up inverse maps of tris which takes global id
                         // back to local storage in m_triGeoms;
-                        map<int, int> tri_id_map;
-                        for(int i = 0; i < m_triGeoms.size(); ++i)
-                        {
-                            tri_id_map[m_triGeoms[i]->GetGlobalID()] = i;
-                        }
+//                        map<int, int> tri_id_map;
+//                        for(int i = 0; i < m_triGeoms.size(); ++i)
+//                        {
+//                            tri_id_map[m_triGeoms[i]->GetGlobalID()] = i;
+//                        }
 
                         for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                         {
-                            if (tri_id_map.count(*seqIter) == 0 )
+                            if (m_triGeoms.count(*seqIter) == 0 )
                             {
                                 char errStr[16] = "";
                                 ::sprintf(errStr, "%d", *seqIter);
@@ -499,7 +496,7 @@ namespace Nektar
                             }
                             else
                             {
-                                m_meshCompositeVector.back()->push_back(m_triGeoms[tri_id_map.find(*seqIter)->second]);
+                                composite->push_back(m_triGeoms[*seqIter]);
                             }
                         }
                     }
@@ -514,7 +511,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_triGeoms[*seqIter]);
+                            composite->push_back(m_triGeoms[*seqIter]);
                         }
                     }
 #endif
@@ -525,15 +522,15 @@ namespace Nektar
                     {
                         // Set up inverse maps of tris which takes global id
                         // back to local storage in m_triGeoms;
-                        map<int, int> quad_id_map;
-                        for(int i = 0; i < m_quadGeoms.size(); ++i)
-                        {
-                            quad_id_map[m_quadGeoms[i]->GetGlobalID()] = i;
-                        }
+//                        map<int, int> quad_id_map;
+//                        for(int i = 0; i < m_quadGeoms.size(); ++i)
+//                        {
+//                            quad_id_map[m_quadGeoms[i]->GetGlobalID()] = i;
+//                        }
 
                         for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                         {
-                            if (quad_id_map.count(*seqIter) == 0)
+                            if (m_quadGeoms.count(*seqIter) == 0)
                             {
                                 char errStr[16] = "";
                                 ::sprintf(errStr, "%d", *seqIter);
@@ -541,7 +538,7 @@ namespace Nektar
                             }
                             else
                             {
-                                m_meshCompositeVector.back()->push_back(m_quadGeoms[quad_id_map.find(*seqIter)->second]);
+                                composite->push_back(m_quadGeoms[*seqIter]);
                             }
                         }
                     }
@@ -556,7 +553,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_quadGeoms[*seqIter]);
+                            composite->push_back(m_quadGeoms[*seqIter]);
                         }
                     }
 #endif
@@ -573,7 +570,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_meshCompositeVector.back()->push_back(m_vertSet[*seqIter]);
+                            composite->push_back(m_vertSet[*seqIter]);
                         }
                     }
                     break;
@@ -612,7 +609,7 @@ namespace Nektar
 
             ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
 
-            CompositeVectorIter compIter;
+            CompositeMapIter compIter;
             TriGeomSharedPtr triGeomShPtr;
             QuadGeomSharedPtr quadGeomShPtr;
 
@@ -620,7 +617,7 @@ namespace Nektar
 
             for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
             {
-                for (geomIter = (*compIter)->begin(); geomIter != (*compIter)->end(); ++geomIter)
+                for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
                 {
                     triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
                     quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);

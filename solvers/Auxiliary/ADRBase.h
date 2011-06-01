@@ -37,6 +37,9 @@
 #ifndef NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 #define NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/HistoryPoints.h>
 #include <SpatialDomains/SpatialData.h>
@@ -66,7 +69,8 @@ namespace Nektar
         ADRBase();
 
         /// Constructor.
-        ADRBase(const string &fileStringName,
+        ADRBase(LibUtilities::CommSharedPtr &pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession,
                 bool UseInputFileForProjectionType = false,
                 bool UseContinuousField = false);
 
@@ -227,7 +231,7 @@ namespace Nektar
 
         inline int GetNumExpModes(void)
         {
-            return m_graph->GetExpansions()[0]->m_basisKeyVector[0]
+            return m_graph->GetExpansions().at(0)->m_basisKeyVector[0]
                                                         .GetNumModes();
         }
 
@@ -413,6 +417,10 @@ namespace Nektar
 		int m_HomoDirec;             ///< number of homogenous directions
 		
     protected:
+        /// Communicator
+        LibUtilities::CommSharedPtr                 m_comm;
+        /// The session reader
+        LibUtilities::SessionReaderSharedPtr        m_session;
         /// Array holding all dependent variables.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
         /// Array holding force values.
@@ -445,6 +453,8 @@ namespace Nektar
         int m_spacedim;              ///< Spatial dimension (> expansion dim)
         int m_expdim;                ///< Dimension of the expansion
 
+        MultiRegions::GlobalSysSolnType m_solnType;
+
         /// Type of projection, i.e. Galerkin or DG.
         enum ProjectionType m_projectionType;
 
@@ -456,7 +466,7 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
 
         /// Flag to indicate if the fields should be checked for singularity.
-        Array<OneD, bool> checkIfSystemSingular;
+        Array<OneD, bool>                               m_checkIfSystemSingular;
 
         /// Perform a case-insensitive string comparison.
         int NoCaseStringCompare(const string & s1, const string& s2) ;

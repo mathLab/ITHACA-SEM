@@ -43,6 +43,7 @@ namespace Nektar
     {
         // Forward declarations
         class LocalToGlobalC0ContMap;
+        class LocalToGlobalDGMap;
         class ExpList;
 
         /// A global linear system.
@@ -79,7 +80,8 @@ namespace Nektar
                                                         = NullNekDouble1DArray);
 
         private:
-            void AssembleFullMatrix(const boost::shared_ptr<LocalToGlobalC0ContMap>& locToGloMap);
+            void AssembleFullMatrix(const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+            //void AssembleFullMatrixDG(const boost::shared_ptr<LocalToGlobalDGMap>& locToGloMap);
         };
     }
 }

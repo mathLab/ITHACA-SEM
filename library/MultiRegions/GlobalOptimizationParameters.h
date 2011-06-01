@@ -132,6 +132,11 @@ namespace Nektar
                     type = eLaplacianMatrixOp;
                 }
                 break;
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    type = eHybridDGHelmBndLamMatrixOp;
+                }
+                break;
             default:
                 {
                     ASSERTL0(false,"Optimisation suite not set up for this type"
@@ -176,6 +181,11 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     type = eLaplacianMatrixOp;
+                }
+                break;
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    type = eHybridDGHelmBndLamMatrixOp;
                 }
                 break;
             default:

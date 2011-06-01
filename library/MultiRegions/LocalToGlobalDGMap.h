@@ -54,7 +54,9 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT LocalToGlobalDGMap();
             /// Constructor for trace map for one-dimensional expansion.
-            MULTI_REGIONS_EXPORT LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT LocalToGlobalDGMap( 
+                const LibUtilities::CommSharedPtr &pComm,
+                const SpatialDomains::MeshGraph1D &graph1D,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>
@@ -62,7 +64,9 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond);
             /// Constructor for trace map for two-dimensional expansion.
-            MULTI_REGIONS_EXPORT LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT LocalToGlobalDGMap(
+                const LibUtilities::CommSharedPtr &pComm,
+                      SpatialDomains::MeshGraph2D &graph2D,
                 const ExpList1DSharedPtr &trace,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
@@ -97,6 +101,55 @@ namespace Nektar
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;
 
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
+
+            void SetUpUniversalDGMap(const ExpList &locExp);
+
+            virtual int v_GetLocalToGlobalMap(const int i) const;
+
+            virtual int v_GetGlobalToUniversalMap(const int i) const;
+
+            virtual int v_GetGlobalToUniversalMapUnique(const int i) const;
+
+            virtual const Array<OneD,const int>&  v_GetLocalToGlobalMap();
+
+            virtual const Array<OneD, const int>& v_GetGlobalToUniversalMap();
+
+            virtual const Array<OneD, const int>& v_GetGlobalToUniversalMapUnique();
+
+            virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
+
+            virtual const void v_LocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                          Array<OneD,       NekDouble>& global) const;
+
+            virtual const void v_LocalToGlobal(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            virtual const void v_GlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const;
+
+            virtual const void v_GlobalToLocal(
+                    const NekVector<const NekDouble>& global,
+                          NekVector<      NekDouble>& loc) const;
+
+            virtual const void v_Assemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const;
+
+            virtual const void v_Assemble(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            virtual const void v_UniversalAssemble(
+                          Array<OneD,     NekDouble>& pGlobal) const;
+
+            virtual const void v_UniversalAssemble(
+                          NekVector<      NekDouble>& pGlobal) const;
+
+            virtual const int v_GetFullSystemBandWidth() const;
+
         };
 
         typedef boost::shared_ptr<LocalToGlobalDGMap>  LocalToGlobalDGMapSharedPtr;

@@ -51,6 +51,8 @@ namespace Nektar
         typedef boost::shared_ptr<PrismGeom> PrismGeomSharedPtr;
         typedef std::vector< PrismGeomSharedPtr > PrismGeomVector;
         typedef std::vector< PrismGeomSharedPtr >::iterator PrismGeomVectorIter;
+        typedef std::map<int, PrismGeomSharedPtr> PrismGeomMap;
+        typedef std::map<int, PrismGeomSharedPtr>::iterator PrismGeomMapIter;
 
         class PrismGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {

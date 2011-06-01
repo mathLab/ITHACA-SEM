@@ -18,6 +18,7 @@ MeshGraph.cpp
 MeshGraph1D.cpp
 MeshGraph2D.cpp
 MeshGraph3D.cpp
+MeshPartition.cpp
 pchSpatialDomains.cpp
 PrismGeom.cpp
 PyrGeom.cpp
@@ -51,6 +52,7 @@ MeshGraph1D.h
 MeshGraph2D.h
 MeshGraph3D.h
 MeshGraph.h
+MeshPartition.h
 ParseUtils.hpp
 pchSpatialDomains.h
 PrismGeom.h

@@ -36,7 +36,7 @@
 
 namespace Nektar
 {
-    string SteadyAdvectionDiffusion::className = EquationSystemFactory::RegisterCreatorFunction("SteadyAdvectionDiffusion", SteadyAdvectionDiffusion::create);
+    string SteadyAdvectionDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("SteadyAdvectionDiffusion", SteadyAdvectionDiffusion::create);
 
     /**
      * @class SteadyAdvectionDiffusion
@@ -45,8 +45,10 @@ namespace Nektar
      *   \f$ c \cdot \nabla u -\nabla \cdot (\nabla u)  = f(x)\f$
      */
 
-    SteadyAdvectionDiffusion::SteadyAdvectionDiffusion(SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession),
+    SteadyAdvectionDiffusion::SteadyAdvectionDiffusion(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : EquationSystem(pComm,pSession),
           m_lambda(0.0)
     {
         // Define forcing function. 

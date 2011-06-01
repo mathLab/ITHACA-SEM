@@ -36,6 +36,8 @@
 #ifndef NEKTAR_SOLVERS_ADVECTIONTERM_H
 #define NEKTAR_SOLVERS_ADVECTIONTERM_H
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/HistoryPoints.h>
 #include <SpatialDomains/SpatialData.h>
@@ -59,7 +61,9 @@ namespace Nektar
         AdvectionTerm();
 		
         /// Constructor
-        AdvectionTerm(string &fileNameString,
+        AdvectionTerm(
+                LibUtilities::CommSharedPtr                 pComm,
+                LibUtilities::SessionReaderSharedPtr        pSession,
                 SpatialDomains::MeshGraphSharedPtr          pGraph,
                 SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
 		
@@ -74,8 +78,9 @@ namespace Nektar
                                Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
 		
 	protected:
+		LibUtilities::CommSharedPtr                 m_comm;
 		/// Filename of session
-		std::string m_filename;
+		LibUtilities::SessionReaderSharedPtr        m_session;
 		/// Name of the session
         std::string m_sessionName;
         /// Pointer to boundary conditions object.

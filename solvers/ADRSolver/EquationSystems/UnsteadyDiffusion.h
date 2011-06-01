@@ -9,13 +9,17 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) {
-            return MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pSession);
+        static EquationSystemSharedPtr create(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession) {
+            return MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pComm, pSession);
         }
         /// Name of class
         static std::string className;
 
-        UnsteadyDiffusion(SessionReaderSharedPtr& pSession);
+        UnsteadyDiffusion(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual ~UnsteadyDiffusion();
 

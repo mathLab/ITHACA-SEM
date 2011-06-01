@@ -58,8 +58,10 @@ namespace Nektar
      * timestepping-specific code.
      * @param   pSession        Session object to read parameters from.
      */
-    ShallowWaterSystem::ShallowWaterSystem(SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession)
+    ShallowWaterSystem::ShallowWaterSystem(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : EquationSystem(pComm, pSession)
     {
         // Load SolverInfo parameters
         pSession->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",

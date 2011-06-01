@@ -37,6 +37,7 @@
 #define EXPLIST2D_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
@@ -71,17 +72,21 @@ namespace Nektar
                         bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ExpList2D(
+                      LibUtilities::CommSharedPtr &pComm,
+                      SpatialDomains::MeshGraph2D &graph2D,
                       bool DelcareCoeffPhysArrays = true, 
                       const std::string var = "DefaultVar");
 
             /// Sets up a list of local expansions based on an expansion vector
-            MULTI_REGIONS_EXPORT ExpList2D(const SpatialDomains::ExpansionVector &expansions,
+            MULTI_REGIONS_EXPORT ExpList2D(const SpatialDomains::ExpansionMap &expansions,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
-            MULTI_REGIONS_EXPORT ExpList2D(const LibUtilities::BasisKey &TriBa,
+            MULTI_REGIONS_EXPORT ExpList2D(
+                      LibUtilities::CommSharedPtr &pComm,
+                      const LibUtilities::BasisKey &TriBa,
                       const LibUtilities::BasisKey &TriBb,
                       const LibUtilities::BasisKey &QuadBa,
                       const LibUtilities::BasisKey &QuadBb,
@@ -92,7 +97,9 @@ namespace Nektar
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
-            MULTI_REGIONS_EXPORT ExpList2D(  const SpatialDomains::CompositeVector &domain,
+            MULTI_REGIONS_EXPORT ExpList2D(  
+                        LibUtilities::CommSharedPtr &pComm,
+                        const SpatialDomains::CompositeMap &domain,
                         SpatialDomains::MeshGraph3D &graph3D);
 
             /// Destructor.

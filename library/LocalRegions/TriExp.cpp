@@ -513,7 +513,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
                 const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
                 // substep 1: calculate the metric terms of the collapsed coordinate
-                // transformation
+                // transformation (Spencer's book P150)
                 for(i = 0; i < nquad1; i++)
                 {
                     Vmath::Fill(nquad0,2.0/(1-z1[i]),&wsp6[0]+i*nquad0,1);
@@ -556,17 +556,20 @@ namespace Nektar
                 }
                 else
                 {
+                    // g_0
                     Vmath::Smul (nqtot,gmat[0][0],&wsp6[0],1,&wsp8[0],1);
                     Vmath::Svtvp(nqtot,gmat[1][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
-
                     Vmath::Vmul (nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1);
+
+                    // g_1
                     Vmath::Smul (nqtot,gmat[1][0],&wsp8[0],1,&wsp4[0],1);
 
-
+                    // g_0
                     Vmath::Smul (nqtot,gmat[2][0],&wsp6[0],1,&wsp8[0],1);
                     Vmath::Svtvp(nqtot,gmat[3][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
-
                     Vmath::Vvtvp(nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1,&wsp3[0],1);
+
+                    // g_1
                     Vmath::Svtvp(nqtot,gmat[3][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
 
                     if(dim == 3)
@@ -578,6 +581,7 @@ namespace Nektar
                         Vmath::Svtvp(nqtot,gmat[5][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
                     }
 
+                    // g_2
                     NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
                     if(dim == 3)
                     {

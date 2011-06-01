@@ -38,7 +38,7 @@
 #include <cmath>
 
 #include <ADRSolver/EquationSystem.h>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -46,28 +46,41 @@ int main(int argc, char *argv[])
     if(argc != 2)
     {
         cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        EquationSystemFactory::PrintAvailableClasses();
+        GetEquationSystemFactory().PrintAvailableClasses();
         exit(1);
     }
 
     string filename(argv[1]);
+    string vCommModule("Serial");
     time_t starttime, endtime;
     NekDouble CPUtime;
 
-    SessionReaderSharedPtr session;
+    LibUtilities::CommSharedPtr vComm;
+    LibUtilities::SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
 
     // Record start time.
     time(&starttime);
 
-    try
-    {
+//    try
+//    {
         // Create session reader.
-        session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
+        session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+
+        // Create communicator
+        if (session->DefinesSolverInfo("Communication"))
+        {
+            vCommModule = session->GetSolverInfo("Communication");
+        }
+        else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+        {
+            vCommModule = "ParallelMPI";
+        }
+        vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
         // Create instance of module to solve the equation specified in the session.
-        equ = EquationSystemFactory::CreateInstance(
-                                    session->GetSolverInfo("EQTYPE"), session);
+        equ = GetEquationSystemFactory().CreateInstance(
+                                    session->GetSolverInfo("EQTYPE"), vComm, session);
 
         // Print a summary of solver and problem parameters and initialise the
         // solver.
@@ -87,18 +100,28 @@ int main(int argc, char *argv[])
         // Evaluate and output computation time and solution accuracy.
         // The specific format of the error output is essential for the
         // regression tests to work.
-        cout << "-------------------------------------------" << endl;
-        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+        // Evaluate L2 Error
         for(int i = 0; i < equ->GetNvariables(); ++i)
         {
-            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
-            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+            NekDouble vL2Error = equ->L2Error(i,false);
+            NekDouble vLinfError = equ->LinfError(i);
+            if (vComm->GetRank() == 0)
+            {
+                cout << "L 2 error (variable " << equ->GetVariable(i) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << equ->GetVariable(i) << ") : " << vLinfError << endl;
+            }
         }
 
-        return 0;
-    }
-    catch (const std::runtime_error& e)
-    {
-        return 1;
-    }
+        vComm->Finalise();
+//    }
+//    catch (const std::runtime_error& e)
+//    {
+//        return 1;
+//    }
+//    catch (const std::string& eStr)
+//    {
+//        cout << "Error: " << eStr << endl;
+//    }
+
+    return 0;
 }

@@ -69,9 +69,11 @@ namespace Nektar
                      const ResultDataType& rhs)
     {
         // TODO - optimize for the different matrix types.
-        for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+        int n = lhs.GetRows();
+        int m = lhs.GetColumns();
+        for(unsigned int i = 0; i < n; ++i)
         {
-            for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+            for(unsigned int j = 0; j < m; ++j)
             {
                 result(i,j) = lhs(i,j)*rhs;
             }

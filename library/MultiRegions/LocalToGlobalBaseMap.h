@@ -40,6 +40,9 @@
 #include <MultiRegions/SubStructuredGraph.h>
 #include <vector>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/Communication/GsLib.hpp>
+
 
 namespace Nektar
 {
@@ -56,11 +59,67 @@ namespace Nektar
         public:
         	/// Default constructor.
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap();
+            /// Constructor with a communicator
+            MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(const LibUtilities::CommSharedPtr &pComm);
             /// Constructor for next level in multi-level static condensation.
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~LocalToGlobalBaseMap();
+
+            /// Retrieves the communicator
+            inline LibUtilities::CommSharedPtr GetComm();
+
+            inline int GetLocalToGlobalMap(const int i) const;
+
+            inline int GetGlobalToUniversalMap(const int i) const;
+
+            inline int GetGlobalToUniversalMapUnique(const int i) const;
+
+            inline const Array<OneD,const int>&  GetLocalToGlobalMap();
+
+            inline void SetLocalToGlobalMap(const Array<OneD, const int>& inarray);
+
+            inline const Array<OneD, const int>& GetGlobalToUniversalMap();
+
+            inline const Array<OneD, const int>& GetGlobalToUniversalMapUnique();
+
+            inline NekDouble GetLocalToGlobalSign(const int i) const;
+
+            inline const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
+
+            inline void SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray);
+
+            inline const void LocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                          Array<OneD,       NekDouble>& global) const;
+
+            inline const void LocalToGlobal(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            inline const void GlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const;
+
+            inline const void GlobalToLocal(
+                    const NekVector<const NekDouble>& global,
+                          NekVector<      NekDouble>& loc) const;
+
+            inline const void Assemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const;
+
+            inline const void Assemble(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            inline const void UniversalAssemble(
+                          Array<OneD,     NekDouble>& pGlobal) const;
+
+            inline const void UniversalAssemble(
+                          NekVector<      NekDouble>& pGlobal) const;
+
 
             /// Retrieve the global index of a given local boundary mode.
             inline int GetLocalToGlobalBndMap(const int i) const;
@@ -134,33 +193,40 @@ namespace Nektar
             inline void GlobalToLocalBnd(
                     const NekVector<const NekDouble>& global,
                     NekVector<NekDouble>& loc,
-                    int offset);
-
+                    int offset) const;
 
             inline void GlobalToLocalBnd(
                     const NekVector<const NekDouble>& global,
-                    NekVector<NekDouble>& loc);
+                    NekVector<NekDouble>& loc) const;
 
             inline void GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc,
-                    int offset);
+                    int offset) const;
 
             inline void GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
-                    Array<OneD,NekDouble>& loc);
+                    Array<OneD,NekDouble>& loc) const;
 
             inline void AssembleBnd(const NekVector<const NekDouble>& loc,
-                    NekVector<NekDouble>& global, int offset);
+                    NekVector<NekDouble>& global, int offset) const;
 
             inline void AssembleBnd(const NekVector<const NekDouble>& loc,
-                    NekVector<NekDouble>& global);
+                    NekVector<NekDouble>& global) const;
 
             inline void AssembleBnd(const Array<OneD,const NekDouble>& loc,
-                    Array<OneD, NekDouble>& global, int offset);
+                    Array<OneD, NekDouble>& global, int offset) const;
 
             inline void AssembleBnd(const Array<OneD, const NekDouble>& loc,
-                    Array<OneD, NekDouble>& global);
+                    Array<OneD, NekDouble>& global) const;
+
+            inline const void UniversalAssembleBnd(
+                          Array<OneD,     NekDouble>& pGlobal) const;
+
+            inline const void UniversalAssembleBnd(
+                          NekVector<      NekDouble>& pGlobal) const;
+
+            inline const int GetFullSystemBandWidth() const;
 
             /// Returns the bandwidth of the boundary system.
             inline int GetBndSystemBandWidth() const;
@@ -203,6 +269,9 @@ namespace Nektar
             inline void  SetGlobalSysSolnType(GlobalSysSolnType stype);
             
         protected:
+            /// Communicator
+            LibUtilities::CommSharedPtr m_comm;
+
             /// Number of local boundary coefficients
             int m_numLocalBndCoeffs;
             /// Total number of global boundary coefficients
@@ -249,11 +318,17 @@ namespace Nektar
             Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;
             /// Integer map of bnd cond trace number to global trace number
             Array<OneD,int>       m_bndCondTraceToGlobalTraceMap;
+            /// Integer map of process coeffs to universal space
+            Array<OneD,int>       m_globalToUniversalBndMap;
+            /// Integer map of unique process coeffs to universal space (signed)
+            Array<OneD,int>       m_globalToUniversalBndMapUnique;
 
             /// The solution type of the global system
             GlobalSysSolnType m_solnType;
             /// The bandwith of the global bnd system
             int m_bndSystemBandWidth;
+
+            Gs::gs_data * m_gsh;
 
             /// The level of recursion in the case of multi-level static
             /// condensation.
@@ -278,9 +353,174 @@ namespace Nektar
                     Array<OneD,NekDouble>& loc);
 
         private:
+            virtual int v_GetLocalToGlobalMap(const int i) const;
+
+            virtual int v_GetGlobalToUniversalMap(const int i) const;
+
+            virtual int v_GetGlobalToUniversalMapUnique(const int i) const;
+
+            virtual const Array<OneD,const int>&  v_GetLocalToGlobalMap();
+
+            virtual void v_SetLocalToGlobalMap(const Array<OneD, const int>& inarray);
+
+            virtual const Array<OneD, const int>& v_GetGlobalToUniversalMap();
+
+            virtual const Array<OneD, const int>& v_GetGlobalToUniversalMapUnique();
+
+            virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
+
+            virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
+
+            virtual void v_SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray);
+
+            virtual const void v_LocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                          Array<OneD,       NekDouble>& global) const;
+
+            virtual const void v_LocalToGlobal(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            virtual const void v_GlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const;
+
+            virtual const void v_GlobalToLocal(
+                    const NekVector<const NekDouble>& global,
+                          NekVector<      NekDouble>& loc) const;
+
+            virtual const void v_Assemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const;
+
+            virtual const void v_Assemble(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            virtual const void v_UniversalAssemble(
+                          Array<OneD,     NekDouble>& pGlobal) const;
+
+            virtual const void v_UniversalAssemble(
+                          NekVector<      NekDouble>& pGlobal) const;
+
+            virtual const int v_GetFullSystemBandWidth() const;
 
         };
 
+
+        inline LibUtilities::CommSharedPtr LocalToGlobalBaseMap::GetComm()
+        {
+            return m_comm;
+        }
+
+        inline int LocalToGlobalBaseMap::GetLocalToGlobalMap(const int i) const
+        {
+            return v_GetLocalToGlobalMap(i);
+        }
+
+        inline int LocalToGlobalBaseMap::GetGlobalToUniversalMap(const int i) const
+        {
+            return v_GetGlobalToUniversalMap(i);
+        }
+
+        inline int LocalToGlobalBaseMap::GetGlobalToUniversalMapUnique(const int i) const
+        {
+            return v_GetGlobalToUniversalMapUnique(i);
+        }
+
+        inline const Array<OneD,const int>&  LocalToGlobalBaseMap::GetLocalToGlobalMap()
+        {
+            return v_GetLocalToGlobalMap();
+        }
+
+        inline void LocalToGlobalBaseMap::SetLocalToGlobalMap(const Array<OneD, const int>& inarray)
+        {
+            v_SetLocalToGlobalMap(inarray);
+        }
+
+        inline const Array<OneD, const int>& LocalToGlobalBaseMap::GetGlobalToUniversalMap()
+        {
+            return v_GetGlobalToUniversalMap();
+        }
+
+        inline const Array<OneD, const int>& LocalToGlobalBaseMap::GetGlobalToUniversalMapUnique()
+        {
+            return v_GetGlobalToUniversalMapUnique();
+        }
+
+        inline NekDouble LocalToGlobalBaseMap::GetLocalToGlobalSign(const int i) const
+        {
+            return v_GetLocalToGlobalSign(i);
+        }
+
+        inline void LocalToGlobalBaseMap::SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray)
+        {
+            v_SetLocalToGlobalSign(inarray);
+        }
+
+        inline const Array<OneD, NekDouble>& LocalToGlobalBaseMap::GetLocalToGlobalSign() const
+        {
+            return v_GetLocalToGlobalSign();
+        }
+
+        inline const void LocalToGlobalBaseMap::LocalToGlobal(
+                const Array<OneD, const NekDouble>& loc,
+                      Array<OneD,       NekDouble>& global) const
+        {
+            v_LocalToGlobal(loc,global);
+        }
+
+        inline const void LocalToGlobalBaseMap::LocalToGlobal(
+                const NekVector<const NekDouble>& loc,
+                      NekVector<      NekDouble>& global) const
+        {
+            v_LocalToGlobal(loc,global);
+        }
+
+        inline const void LocalToGlobalBaseMap::GlobalToLocal(
+                const Array<OneD, const NekDouble>& global,
+                      Array<OneD,       NekDouble>& loc) const
+        {
+            v_GlobalToLocal(global,loc);
+        }
+
+        inline const void LocalToGlobalBaseMap::GlobalToLocal(
+                const NekVector<const NekDouble>& global,
+                      NekVector<      NekDouble>& loc) const
+        {
+            v_GlobalToLocal(global,loc);
+        }
+
+        inline const void LocalToGlobalBaseMap::Assemble(
+                const Array<OneD, const NekDouble> &loc,
+                      Array<OneD,       NekDouble> &global) const
+        {
+            v_Assemble(loc,global);
+        }
+
+        inline const void LocalToGlobalBaseMap::Assemble(
+                const NekVector<const NekDouble>& loc,
+                      NekVector<      NekDouble>& global) const
+        {
+            v_Assemble(loc,global);
+        }
+
+        inline const void LocalToGlobalBaseMap::UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal) const
+        {
+            v_UniversalAssemble(pGlobal);
+        }
+
+        inline const void LocalToGlobalBaseMap::UniversalAssemble(
+                      NekVector<      NekDouble>& pGlobal) const
+        {
+            v_UniversalAssemble(pGlobal);
+        }
+
+        inline const int LocalToGlobalBaseMap::GetFullSystemBandWidth() const
+        {
+            return v_GetFullSystemBandWidth();
+        }
 
         inline int LocalToGlobalBaseMap::GetLocalToGlobalBndMap(const int i)
                                                                         const
@@ -458,9 +698,10 @@ namespace Nektar
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
                     const NekVector<const NekDouble>& global,
                     NekVector<NekDouble>& loc,
-                    int offset)
+                    int offset) const
         {
-            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            GlobalToLocalBnd(global.GetPtr(), loc.GetPtr(), offset);
+/*            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
 
             // offset input data by length "offset" for Dirichlet boundary conditions.
@@ -475,14 +716,15 @@ namespace Nektar
             {
                 Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
             }
-        }
+*/        }
 
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
                     const NekVector<const NekDouble>& global,
-                    NekVector<NekDouble>& loc)
+                    NekVector<NekDouble>& loc) const
         {
-            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            GlobalToLocalBnd(global.GetPtr(), loc.GetPtr());
+/*            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             if(m_signChange)
@@ -493,12 +735,12 @@ namespace Nektar
             {
                 Vmath::Gathr(m_numLocalBndCoeffs, global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
             }
-        }
+*/        }
 
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
-                    Array<OneD,NekDouble>& loc, int offset)
+                    Array<OneD,NekDouble>& loc, int offset) const
         {
             ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
@@ -520,7 +762,7 @@ namespace Nektar
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
-                    Array<OneD,NekDouble>& loc)
+                    Array<OneD,NekDouble>& loc) const
         {
             ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -538,47 +780,23 @@ namespace Nektar
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
                     const NekVector<const NekDouble>& loc,
-                    NekVector<NekDouble>& global, int offset)
+                    NekVector<NekDouble>& global, int offset) const
         {
-            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
-            Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
-
-            if(m_signChange)
-            {
-                Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
-            }
-            else
-            {
-                Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
-            }
-            Vmath::Vcopy(global.GetDimension(), tmp.get() + offset, 1, global.GetRawPtr(), 1);
+            AssembleBnd(loc.GetPtr(), global.GetPtr(), offset);
         }
 
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
                     const NekVector<const NekDouble>& loc,
-                    NekVector<NekDouble>& global)
+                    NekVector<NekDouble>& global) const
         {
-            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-
-            Vmath::Zero(m_numGlobalBndCoeffs, global.GetRawPtr(), 1);
-
-            if(m_signChange)
-            {
-                Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
-            }
-            else
-            {
-                Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
-            }
+            AssembleBnd(loc.GetPtr(), global.GetPtr());
         }
 
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
                     const Array<OneD,const NekDouble>& loc,
-                    Array<OneD, NekDouble>& global, int offset)
+                    Array<OneD, NekDouble>& global, int offset) const
         {
             ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
@@ -592,13 +810,14 @@ namespace Nektar
             {
                 Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
+            UniversalAssemble(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get() + offset, 1, global.get(), 1);
         }
 
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
                     const Array<OneD, const NekDouble>& loc,
-                    Array<OneD, NekDouble>& global)
+                    Array<OneD, NekDouble>& global) const
         {
             ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -614,8 +833,8 @@ namespace Nektar
             {
                 Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), global.get());
             }
+            UniversalAssemble(global);
         }
-
 
         inline int LocalToGlobalBaseMap::GetBndSystemBandWidth() const
         {

@@ -51,6 +51,8 @@ namespace Nektar
         typedef boost::shared_ptr<TriGeom> TriGeomSharedPtr;
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
         typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
+        typedef std::map<int, TriGeomSharedPtr> TriGeomMap;
+        typedef std::map<int, TriGeomSharedPtr>::iterator TriGeomMapIter;
 
         class TriGeom: public Geometry2D
         {

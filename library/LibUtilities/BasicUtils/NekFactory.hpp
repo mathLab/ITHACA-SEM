@@ -210,10 +210,30 @@ namespace Nektar
                 }
 
 
-                /**
-                 * @brief Prints the available classes to stdout.
-                 */
-                void PrintAvailableClasses(std::ostream& pOut = std::cout)
+            /**
+             * @brief Checks if a particular module is available.
+             */
+            bool ModuleExists(tKey idKey)
+            {
+                // Now try and find the key in the map.
+                TMapFactoryIterator it = getMapFactory()->find(idKey);
+
+                if (it != getMapFactory()->end())
+                {
+                    return true;
+                }
+                return false;
+            }
+
+
+            /**
+             * @brief Prints the available classes to stdout.
+             */
+            void PrintAvailableClasses(std::ostream& pOut = std::cout)
+            {
+                pOut << std::endl << "Available classes: " << std::endl;
+                TMapFactoryIterator it;
+                for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
                 {
                     pOut << std::endl << "Available classes: " << std::endl;
                     TMapFactoryIterator it;
@@ -231,6 +251,7 @@ namespace Nektar
                         }
                     }
                 }
+            }
 
             protected:
                 /**
@@ -295,7 +316,9 @@ namespace Nektar
         typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
         typedef typename TMapFactory::iterator TMapFactoryIterator;
 
-        static tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(n)
+        NekFactory() {}
+        
+        tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(n)
                 BOOST_PP_ENUM_BINARY_PARAMS(n, tParam, x))
         {
             TMapFactoryIterator it = getMapFactory()->find(idKey);
@@ -322,7 +345,7 @@ namespace Nektar
             ASSERTL0(false, errstr.str());
         }
 
-        static tKey RegisterCreatorFunction(tKey idKey,
+        tKey RegisterCreatorFunction(tKey idKey,
                                             CreatorFunction classCreator,
                                             tDescription pDesc = "") {
             ModuleEntry e(classCreator, pDesc);
@@ -330,7 +353,19 @@ namespace Nektar
             return idKey;
         }
 
-        static void PrintAvailableClasses(std::ostream& pOut = std::cout)
+        bool ModuleExists(tKey idKey)
+        {
+            // Now try and find the key in the map.
+            TMapFactoryIterator it = getMapFactory()->find(idKey);
+
+            if (it != getMapFactory()->end())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        void PrintAvailableClasses(std::ostream& pOut = std::cout)
         {
             pOut << std::endl << "Available classes: " << std::endl;
             TMapFactoryIterator it;
@@ -349,7 +384,7 @@ namespace Nektar
             }
         }
 
-        static tKey GetKey(tDescription pDesc)
+        tKey GetKey(tDescription pDesc)
         {
             TMapFactoryIterator it;
             for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
@@ -366,14 +401,16 @@ namespace Nektar
         }
 
     protected:
-        static TMapFactory * getMapFactory() {
+        TMapFactory * getMapFactory() {
             static TMapFactory mMapFactory;
             return &mMapFactory;
         }
 
     private:
-        NekFactory() {}
-        ~NekFactory() {}
+        NekFactory(const NekFactory& rhs);
+        NekFactory& operator=(const NekFactory& rhs);
+
+        TMapFactory mMapFactory;
     };
     #undef n
     #undef FACTORY_print

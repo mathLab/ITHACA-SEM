@@ -19,6 +19,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    LibUtilities::CommSharedPtr vComm
+            = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
+
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
@@ -44,7 +47,7 @@ int main(int argc, char *argv[])
             }
             
             MultiRegions::ExpList1DSharedPtr Exp1D;
-            Exp1D = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*mesh);
+            Exp1D = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vComm,*mesh);
             Exp[0] = Exp1D;
         }
         break;
@@ -58,7 +61,7 @@ int main(int argc, char *argv[])
             }
             
             MultiRegions::ExpList2DSharedPtr Exp2D;
-            Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*mesh);
+            Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vComm,*mesh);
             Exp[0] =  Exp2D;
 
         }

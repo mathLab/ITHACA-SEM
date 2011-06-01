@@ -20,6 +20,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    LibUtilities::CommSharedPtr vComm
+            = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
+
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
@@ -69,7 +72,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(Bkey,ly,useFFT,*mesh);
+                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vComm,Bkey,ly,useFFT,*mesh);
                 Exp[0] = Exp2DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -81,7 +84,7 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList1DSharedPtr Exp1D;
                 Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                                                        ::AllocateSharedPtr(*mesh);
+                                                        ::AllocateSharedPtr(vComm,*mesh);
                 Exp[0] = Exp1D;
                 for(i = 1; i < nfields + addfields; ++i)
                 {
@@ -116,7 +119,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(Bkey,lz,useFFT,*mesh);
+                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vComm,Bkey,lz,useFFT,*mesh);
                 Exp[0] = Exp3DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -128,7 +131,7 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList2DSharedPtr Exp2D;
                 Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                                                        ::AllocateSharedPtr(*mesh);
+                                                        ::AllocateSharedPtr(vComm,*mesh);
                 Exp[0] =  Exp2D;
 
                 for(i = 1; i < nfields + addfields; ++i)
@@ -151,7 +154,7 @@ int main(int argc, char *argv[])
 
             MultiRegions::ExpList3DSharedPtr Exp3D;
             Exp3D = MemoryManager<MultiRegions::ExpList3D>
-                                                    ::AllocateSharedPtr(*mesh);
+                                                    ::AllocateSharedPtr(vComm,*mesh);
             Exp[0] =  Exp3D;
 
             for(i = 1; i < nfields + addfields; ++i)

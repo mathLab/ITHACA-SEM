@@ -53,6 +53,8 @@ namespace Nektar
         typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
         typedef std::vector< HexGeomSharedPtr > HexGeomVector;
         typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
+        typedef std::map<int, HexGeomSharedPtr> HexGeomMap;
+        typedef std::map<int, HexGeomSharedPtr>::iterator HexGeomMapIter;
 
     class HexGeom: public Geometry3D
         {

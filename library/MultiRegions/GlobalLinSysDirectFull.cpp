@@ -34,7 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysDirectFull.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/LocalToGlobalBaseMap.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -81,19 +82,18 @@ namespace Nektar
                     const boost::shared_ptr<ExpList> &pExp,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysDirect(pLinSysKey)
+                : GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {
 
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eDirectFullMatrix,
                      "This routine should only be used when using a Full Direct"
                      " matrix solve");
+            ASSERTL1(pExp->GetComm()->GetSize() == 1,
+                     "Direct full matrix solve can only be used in serial.");
 
             m_expList = pExp;
 
-            LocalToGlobalC0ContMapSharedPtr vLocToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
-                                                                pLocToGloMap);
-            AssembleFullMatrix(vLocToGloMap);
+            AssembleFullMatrix(pLocToGloMap);
         }
 
 
@@ -112,17 +112,13 @@ namespace Nektar
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            LocalToGlobalC0ContMapSharedPtr vLocToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
-                                                                pLocToGloMap);
-
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
-            int nDirDofs  = vLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
 
             if(nDirDofs)
             {
                 // calculate the dirichlet forcing
-                int nGlobDofs = vLocToGloMap->GetNumGlobalCoeffs();
+                int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
                 Array<OneD, NekDouble> tmp(nGlobDofs);
                 if(dirForcCalculated)
                 {
@@ -134,7 +130,7 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    int nLocDofs = vLocToGloMap->GetNumLocalCoeffs();
+                    int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
 
                     m_expList->GeneralMatrixOp(
                             *m_linSysKey.GetGlobalMatrixKey(),
@@ -162,7 +158,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysDirectFull::AssembleFullMatrix(
-                        const LocalToGlobalC0ContMapSharedPtr& pLocToGloMap)
+                        const LocalToGlobalBaseMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt,gid1,gid2;
             NekDouble sign1,sign2,value;
@@ -183,6 +179,7 @@ namespace Nektar
             case StdRegions::eMass:
             case StdRegions::eHelmholtz:
             case StdRegions::eLaplacian:
+            case StdRegions::eHybridDGHelmBndLam:
                 {
                     if( (2*(bwidth+1)) < rows)
                     {

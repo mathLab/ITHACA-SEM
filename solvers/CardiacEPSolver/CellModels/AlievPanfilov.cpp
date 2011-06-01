@@ -45,13 +45,13 @@ namespace Nektar
      * Registers the class with the Factory.
      */
     std::string CellModelAlievPanfilov::className
-            = CellModelFactory::RegisterCreatorFunction(
+            = GetCellModelFactory().RegisterCreatorFunction(
                 "AlievPanfilov",
                 CellModelAlievPanfilov::create,
                 "Phenomological model of canine cardiac electrophysiology.");
 
     CellModelAlievPanfilov::CellModelAlievPanfilov(
-                    SessionReaderSharedPtr& pSession, const int nq)
+                    LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
             : CellModel(pSession, nq)
     {
         pSession->LoadParameter("k",          m_k,         0.0);

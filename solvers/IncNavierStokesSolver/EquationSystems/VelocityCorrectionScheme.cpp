@@ -37,7 +37,7 @@
 
 namespace Nektar
 {
-    string VelocityCorrectionScheme::className = EquationSystemFactory::RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
+    string VelocityCorrectionScheme::className = GetEquationSystemFactory().RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
     
     
     /**
@@ -46,8 +46,9 @@ namespace Nektar
      * \param 
      * \param
      */
-    VelocityCorrectionScheme::VelocityCorrectionScheme(SessionReaderSharedPtr & pSession):
-        IncNavierStokes(pSession)
+    VelocityCorrectionScheme::VelocityCorrectionScheme(LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession):
+        IncNavierStokes(pComm,pSession)
     {
         
         // Set m_pressure to point to last field of m_fields; 

@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include "MultiRegions/MultiRegions.hpp"
 #include "MultiRegions/ContField2D.h"
 
@@ -11,6 +15,25 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
@@ -25,7 +48,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D; 
     graph2D.ReadGeometry(meshfile);
     graph2D.ReadExpansions(meshfile);
@@ -33,9 +55,9 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
-    LibUtilities::BasisKey bkey1 = expansions[0]->m_basisKeyVector[1];
+    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey1 = expansions.at(0)->m_basisKeyVector[1];
     int nmodes = bkey0.GetNumModes(); 
     cout << "Solving 2D Continuous Projection"  << endl; 
     cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;
@@ -45,7 +67,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(graph2D);
+    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vComm,graph2D);
     //----------------------------------------------  
     
     //----------------------------------------------

@@ -56,14 +56,15 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ReadElements(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ReadComposites(TiXmlDocument &doc);
-            SPATIAL_DOMAINS_EXPORT void ResolveGeomRef(const std::string &prevToken, const std::string &token);
+            SPATIAL_DOMAINS_EXPORT void ResolveGeomRef(const std::string
+                    &prevToken, const std::string &token, Composite& composite);
 
             inline const int GetCoordim(void)
             {
                 return GetSpaceDimension();
             }
 
-            inline const SegGeomVector &GetSeggeoms(void) const
+            inline const SegGeomMap &GetSeggeoms(void) const
             {
                 return m_segGeoms;
             }
@@ -73,7 +74,8 @@ namespace Nektar
                 ASSERTL2((elmt >=0)&&(elmt < m_segGeoms.size()),
                     "eid is out of range");
 
-                return m_segGeoms[elmt]->GetVid(vert);
+                //return m_segGeoms[elmt]->GetVid(vert);
+                return m_segGeoms.at(elmt)->GetVid(vert);
             }
 
         protected:

@@ -78,6 +78,7 @@ namespace Nektar
          * Initialises an empty mapping.
          */
         LocalToGlobalBaseMap::LocalToGlobalBaseMap():
+            m_comm(),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
@@ -86,6 +87,15 @@ namespace Nektar
         {
         }
 
+        LocalToGlobalBaseMap::LocalToGlobalBaseMap(const LibUtilities::CommSharedPtr &pComm):
+            m_comm(pComm),
+            m_numLocalBndCoeffs(0),
+            m_numGlobalBndCoeffs(0),
+            m_numLocalDirBndCoeffs(0),
+            m_numGlobalDirBndCoeffs(0),
+            m_bndSystemBandWidth(0)
+        {
+        }
 
         /** Create a new level of mapping using the information in
          *  multiLevelGraph and performing the following steps:
@@ -93,7 +103,8 @@ namespace Nektar
          */
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(
                     LocalToGlobalBaseMap* oldLevelMap,
-                    const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph)
+                    const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph):
+            m_comm(oldLevelMap->GetComm())
         {
             int i;
             int j;
@@ -378,5 +389,116 @@ namespace Nektar
             m_bndSystemBandWidth = bwidth;
         }
 
+
+        int LocalToGlobalBaseMap::v_GetLocalToGlobalMap(const int i) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        int LocalToGlobalBaseMap::v_GetGlobalToUniversalMap(const int i) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        int LocalToGlobalBaseMap::v_GetGlobalToUniversalMapUnique(const int i) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const Array<OneD,const int>&  LocalToGlobalBaseMap::v_GetLocalToGlobalMap()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        void  LocalToGlobalBaseMap::v_SetLocalToGlobalMap(const Array<OneD, const int>& inarray)
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const Array<OneD, const int>& LocalToGlobalBaseMap::v_GetGlobalToUniversalMap()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const Array<OneD, const int>& LocalToGlobalBaseMap::v_GetGlobalToUniversalMapUnique()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        NekDouble LocalToGlobalBaseMap::v_GetLocalToGlobalSign(const int i) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const Array<OneD, NekDouble>& LocalToGlobalBaseMap::v_GetLocalToGlobalSign() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        void LocalToGlobalBaseMap::v_SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray)
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_LocalToGlobal(
+                const Array<OneD, const NekDouble>& loc,
+                      Array<OneD,       NekDouble>& global) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_LocalToGlobal(
+                const NekVector<const NekDouble>& loc,
+                      NekVector<      NekDouble>& global) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_GlobalToLocal(
+                const Array<OneD, const NekDouble>& global,
+                      Array<OneD,       NekDouble>& loc) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_GlobalToLocal(
+                const NekVector<const NekDouble>& global,
+                      NekVector<      NekDouble>& loc) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_Assemble(
+                const Array<OneD, const NekDouble> &loc,
+                      Array<OneD,       NekDouble> &global) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_Assemble(
+                const NekVector<const NekDouble>& loc,
+                      NekVector<      NekDouble>& global) const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
+
+        const void LocalToGlobalBaseMap::v_UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal) const
+        {
+            // Do nothing here since multi-level static condensation uses a
+            // LocalToGlobalBaseMap and thus will call this routine in serial.
+        }
+
+        const void LocalToGlobalBaseMap::v_UniversalAssemble(
+                      NekVector<      NekDouble>& pGlobal) const
+        {
+            // Do nothing here since multi-level static condensation uses a
+            // LocalToGlobalBaseMap and thus will call this routine in serial.
+        }
+
+        const int LocalToGlobalBaseMap::v_GetFullSystemBandWidth() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+        }
     }
 }

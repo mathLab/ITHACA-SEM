@@ -45,7 +45,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        string ConvertGmsh::className = ConvertFactory::RegisterCreatorFunction("msh", ConvertGmsh::create);
+        string ConvertGmsh::className = GetConvertFactory().RegisterCreatorFunction("msh", ConvertGmsh::create);
 
         ConvertGmsh::ConvertGmsh()
             : Convert()
@@ -96,7 +96,7 @@ namespace Nektar
                 return;
             }
 
-            cout << "Start reading ConvertPly..." << endl;
+            cout << "Start reading ConvertGmsh..." << endl;
             while (!mshFile.eof())
             {
                 getline(mshFile, line);
@@ -168,7 +168,7 @@ namespace Nektar
                         }
 
                         // Create element
-                        ElementSharedPtr E = ElementFactory::CreateInstance(elm_type,nodeList,tags);
+                        ElementSharedPtr E = GetElementFactory().CreateInstance(elm_type,nodeList,tags);
 
                         // Determine mesh expansion dimension
                         if (E->GetDim() > m_expDim) {

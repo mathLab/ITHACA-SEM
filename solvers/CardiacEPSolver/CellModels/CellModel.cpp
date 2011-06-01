@@ -37,10 +37,18 @@
 
 namespace Nektar
 {
+    CellModelFactory& GetCellModelFactory()
+    {
+        typedef Loki::SingletonHolder<CellModelFactory,
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
+        return Type::Instance();
+    }
+
     /**
      * Cell model base class constructor.
      */
-    CellModel::CellModel(SessionReaderSharedPtr& pSession, const int nq)
+    CellModel::CellModel(LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
     {
         m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
                                           ::AllocateSharedPtr(nq);

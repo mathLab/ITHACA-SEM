@@ -46,15 +46,17 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession)
+        static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
+                                LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pSession);
+            return MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pComm, pSession);
         }
         /// Name of class
         static std::string className;
 
 
-        CoupledLinearNS(SessionReaderSharedPtr &pSesssion);
+        CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSesssion);
 
         /**
          *  Generate the linearised Navier Stokes solver based on the
@@ -65,7 +67,7 @@ namespace Nektar
                            const Array< OneD, Array<OneD, NekDouble>  > &Advfield = NullNekDoubleArrayofArray, 
                            bool IsLinearNSEquation = true);
         
-        const SpatialDomains::ExpansionVector &GenPressureExp(const SpatialDomains::ExpansionVector &VelExp);
+        const SpatialDomains::ExpansionMap &GenPressureExp(const SpatialDomains::ExpansionMap &VelExp);
         
         void Solve(void);
 

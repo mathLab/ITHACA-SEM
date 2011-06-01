@@ -58,8 +58,10 @@ namespace Nektar
     /**
      * Constructor. Creates ...
      */
-    ADR2DManifold::ADR2DManifold(string &fileNameString):
-        ADRBase(fileNameString,true),
+    ADR2DManifold::ADR2DManifold(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession):
+        ADRBase(pComm,pSession,true),
         m_infosteps(10),
         m_explicitDiffusion(true),
         m_explicitReaction(true)

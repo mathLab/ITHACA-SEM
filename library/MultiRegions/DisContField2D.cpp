@@ -59,10 +59,11 @@ namespace Nektar
         {
         }
 
-        DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+        DisContField2D::DisContField2D(LibUtilities::CommSharedPtr &pComm,
+                                       SpatialDomains::MeshGraph2D &graph2D,
                                        const GlobalSysSolnType solnType,
                                        bool SetUpJustDG):
-            ExpList2D(graph2D),
+            ExpList2D(pComm,graph2D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -162,7 +163,7 @@ namespace Nektar
                     GlobalSysSolnType solnType
                         = In.m_traceMap->GetGlobalSysSolnType();
                     m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                        AllocateSharedPtr(graph2D,m_trace,*this,solnType,
+                        AllocateSharedPtr(m_comm,graph2D,m_trace,*this,solnType,
                                           m_bndCondExpansions,m_bndConditions,
                                           periodicEdges);
 
@@ -236,17 +237,23 @@ namespace Nektar
                 }
             }
 
-            return returnval;
+            // Compare with all other processes. Return true only if all
+            // processes report having the same boundary conditions.
+            int vSame = (returnval?1:0);
+            m_comm->AllReduce(vSame, LibUtilities::ReduceMin);
+
+            return (vSame == 1);
         }
 
 
-        DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+        DisContField2D::DisContField2D(LibUtilities::CommSharedPtr &pComm,
+                                       SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
                                        const GlobalSysSolnType solnType,
                                        bool SetUpJustDG,
                                        bool DeclareCoeffPhysArrays):
-            ExpList2D(graph2D,DeclareCoeffPhysArrays,bcs.GetVariable(bc_loc)),
+            ExpList2D(pComm,graph2D,DeclareCoeffPhysArrays,bcs.GetVariable(bc_loc)),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -306,7 +313,7 @@ namespace Nektar
                 // Finally set up the trace map between element edges and
                 // trace segment expansions.
                 m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,*this,solnType,
+                    AllocateSharedPtr(pComm, graph2D,m_trace,*this,solnType,
                                       m_bndCondExpansions,m_bndConditions,
                                       periodicEdges);
 
@@ -342,14 +349,15 @@ namespace Nektar
             }
         }
 
-        DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+        DisContField2D::DisContField2D(LibUtilities::CommSharedPtr &pComm,
+                                       SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const std::string variable,
                                        const GlobalSysSolnType solnType,
                                        bool SetUpJustDG,
                                        bool DeclareCoeffPhysArrays):
 
-            ExpList2D(graph2D,DeclareCoeffPhysArrays,variable),
+            ExpList2D(pComm,graph2D,DeclareCoeffPhysArrays,variable),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -371,7 +379,7 @@ namespace Nektar
                 m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges);
 
                 m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,*this,solnType,
+                    AllocateSharedPtr(pComm, graph2D,m_trace,*this,solnType,
                                       m_bndCondExpansions,m_bndConditions, periodicEdges);
             }
         }
@@ -595,8 +603,6 @@ namespace Nektar
         {
             ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
                      "Routine currently only tested for HybridDGHelmholtz");
-            ASSERTL1(mkey.GetGlobalSysSolnType()!=eDirectFullMatrix,
-                     "Full matrix global systems are not supported for HDG expansions");
             ASSERTL1(mkey.GetGlobalSysSolnType()==m_traceMap->GetGlobalSysSolnType(),
                      "The local to global map is not set up for the requested solution type");
 
@@ -1090,6 +1096,24 @@ namespace Nektar
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
         }
+
+
+        void DisContField2D::v_GeneralMatrixOp(
+               const GlobalMatrixKey             &gkey,
+               const Array<OneD,const NekDouble> &inarray,
+                     Array<OneD,      NekDouble> &outarray,
+               bool UseContCoeffs)
+        {
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
+            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
+            const DNekScalBlkMatSharedPtr& HDGHelm = GetBlockMatrix(gkey);
+
+            m_traceMap->GlobalToLocalBnd(inarray, loc_lambda);
+            LocLambda = (*HDGHelm) * LocLambda;
+            m_traceMap->AssembleBnd(loc_lambda,outarray);
+        }
+
 
         /**
          * Search through the edge expansions and identify which ones

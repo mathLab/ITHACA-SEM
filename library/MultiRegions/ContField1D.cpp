@@ -107,16 +107,17 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
-        ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph1D &graph1D,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,solnType,false),
+            DisContField1D(pComm,graph1D,solnType,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph1D);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,solnType);
 
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -145,11 +146,12 @@ namespace Nektar
          * @param   bcs         Boundary conditions.
          * @param   bc_loc      ? (optional)
          */
-        ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,bcs,bc_loc,solnType),
+            DisContField1D(pComm,graph1D,bcs,bc_loc,solnType),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -165,7 +167,7 @@ namespace Nektar
                                 periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                     solnType,
                                     m_bndCondExpansions,
                                     m_bndConditions,
@@ -197,11 +199,12 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+                                 SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,bcs,variable,solnType),
+            DisContField1D(pComm,graph1D,bcs,variable,solnType),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -215,7 +218,7 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                     solnType,
                                     m_bndCondExpansions,
                                     m_bndConditions,
@@ -251,12 +254,13 @@ namespace Nektar
          * @param   solnType    Type of solution to use. By default Direct
          *                      Static Condensation is used.
          */
-        ContField1D::ContField1D(const LibUtilities::BasisKey &Ba,
+        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+                                 const LibUtilities::BasisKey &Ba,
                                  SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,solnType,false),
+            DisContField1D(pComm,graph1D,solnType,false),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -272,7 +276,7 @@ namespace Nektar
                                 periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_ncoeffs,*this,
+                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
                                     solnType,
                                     m_bndCondExpansions,
                                     m_bndConditions,
@@ -311,12 +315,13 @@ namespace Nektar
          *                      Static Condensation is used.
          */
 
-        ContField1D::ContField1D(const LibUtilities::BasisKey &Ba,
+        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+                                 const LibUtilities::BasisKey &Ba,
                                  SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,solnType,false),
+            DisContField1D(pComm,graph1D,solnType,false),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -330,7 +335,7 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                ::AllocateSharedPtr(m_comm, m_ncoeffs,*this,
                                                     solnType,
                                                     m_bndCondExpansions,
                                                     m_bndConditions,
@@ -632,43 +637,6 @@ namespace Nektar
             m_contCoeffs = inarray;
         }
 
-        /**
-         * This is equivalent to the operation:
-         * \f[\boldsymbol{M\hat{u}}_g\f]
-         * where \f$\boldsymbol{M}\f$ is the global matrix of type specified by
-         * \a mkey. After scattering the global array \a inarray to local
-         * level, this operation is evaluated locally by the function
-         * ExpList#GeneralMatrixOp. The global result is then obtained by a
-         * global assembly procedure.
-         *
-         * @param   mkey        This key uniquely defines the type matrix
-         *                      required for the operation.
-         * @param   inarray     The vector \f$\boldsymbol{\hat{u}}_g\f$ of size
-         *                      \f$N_{\mathrm{dof}}\f$.
-         * @param   outarray    The resulting vector of size
-         *                      \f$N_{\mathrm{dof}}\f$.
-         */
-        void ContField1D::GeneralMatrixOp(
-                                const GlobalMatrixKey             &gkey,
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
-
-        {
-            if(UseContCoeffs)
-            {
-                Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
-                Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
-                GlobalToLocal(inarray,tmp1);
-                GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
-                Assemble(tmp2,outarray);
-            }
-            else
-            {
-                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
-            }
-        }
-
         void ContField1D::v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -797,13 +765,40 @@ namespace Nektar
             IProductWRTBase(inarray,outarray,UseContCoeffs);
         }
 
+        /**
+         * This is equivalent to the operation:
+         * \f[\boldsymbol{M\hat{u}}_g\f]
+         * where \f$\boldsymbol{M}\f$ is the global matrix of type specified by
+         * \a mkey. After scattering the global array \a inarray to local
+         * level, this operation is evaluated locally by the function
+         * ExpList#GeneralMatrixOp. The global result is then obtained by a
+         * global assembly procedure.
+         *
+         * @param   mkey        This key uniquely defines the type matrix
+         *                      required for the operation.
+         * @param   inarray     The vector \f$\boldsymbol{\hat{u}}_g\f$ of size
+         *                      \f$N_{\mathrm{dof}}\f$.
+         * @param   outarray    The resulting vector of size
+         *                      \f$N_{\mathrm{dof}}\f$.
+         */
         void ContField1D::v_GeneralMatrixOp(
                                 const GlobalMatrixKey                &gkey,
                                 const Array<OneD,const NekDouble>    &inarray,
                                       Array<OneD,      NekDouble>    &outarray,
                                 bool  UseContCoeffs)
         {
-            GeneralMatrixOp(gkey,inarray,outarray,UseContCoeffs);
+            if(UseContCoeffs)
+            {
+                Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                GlobalToLocal(inarray,tmp1);
+                GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                Assemble(tmp2,outarray);
+            }
+            else
+            {
+                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+            }
         }
 
     } // end of namespace

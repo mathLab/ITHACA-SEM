@@ -38,7 +38,7 @@
 namespace Nektar
 {
 
-    string CoupledLinearNS::className = EquationSystemFactory::RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
+    string CoupledLinearNS::className = GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
 
 
     /**
@@ -48,8 +48,9 @@ namespace Nektar
      * global mapping arrays and the basic memory definitions for
      * coupled matrix system
      */ 
-    CoupledLinearNS::CoupledLinearNS(SessionReaderSharedPtr &pSession):
-        IncNavierStokes(pSession)
+    CoupledLinearNS::CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
+                            LibUtilities::SessionReaderSharedPtr &pSession):
+        IncNavierStokes(pComm, pSession)
     {
         int  n,i,j,k,eid;
         int  expdim = m_graph->GetMeshDimension();
@@ -57,7 +58,7 @@ namespace Nektar
         int  nvel   = m_velocity.num_elements();
 
         // Get Expansion list for orthogonal expansion at p-2
-        const SpatialDomains::ExpansionVector &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
+        const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
 
         m_nConvectiveFields = m_fields.num_elements();
         if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_nConvectiveFields-1),"p") == 0)
@@ -689,7 +690,7 @@ namespace Nektar
         // currently we are giving it a argument of eLInearAdvectionReaction 
         // since this then makes the matrix storage of type eFull
         MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap);
-        m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,pAh,pBh,pCh,pDh,m_locToGloMap);
+        m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,m_locToGloMap);
     }
 
     void CoupledLinearNS::v_PrintSummary(std::ostream &out)
@@ -863,23 +864,23 @@ namespace Nektar
         SolveLinearNS(forcing);
     }
 
-    const SpatialDomains::ExpansionVector &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionVector &VelExp)
+    const SpatialDomains::ExpansionMap &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)
     {
         int i;
-        SpatialDomains::ExpansionVectorShPtr returnval; 
+        SpatialDomains::ExpansionMapShPtr returnval;
 
-        returnval = MemoryManager<SpatialDomains::ExpansionVector>::AllocateSharedPtr();
+        returnval = MemoryManager<SpatialDomains::ExpansionMap>::AllocateSharedPtr();
         
-        SpatialDomains::ExpansionVector::const_iterator  expVecIter;
+        SpatialDomains::ExpansionMap::const_iterator  expMapIter;
         int nummodes;
 
-        for (expVecIter = VelExp.begin(); expVecIter != VelExp.end(); ++expVecIter)
+        for (expMapIter = VelExp.begin(); expMapIter != VelExp.end(); ++expMapIter)
         {
             LibUtilities::BasisKeyVector BasisVec;
 
-            for(i = 0; i <  (*expVecIter)->m_basisKeyVector.size(); ++i)
+            for(i = 0; i <  expMapIter->second->m_basisKeyVector.size(); ++i)
             {
-                LibUtilities::BasisKey B = (*expVecIter)->m_basisKeyVector[i];
+                LibUtilities::BasisKey B = expMapIter->second->m_basisKeyVector[i];
                 nummodes = B.GetNumModes();
                 ASSERTL0(nummodes > 3,"Velocity polynomial space not sufficiently high (>= 4)");
                 // Should probably set to be an orthogonal basis. 
@@ -889,8 +890,8 @@ namespace Nektar
 
             // Put new expansion into list. 
             SpatialDomains::ExpansionShPtr expansionElementShPtr =
-                MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr((*expVecIter)->m_geomShPtr, BasisVec);
-            returnval->push_back(expansionElementShPtr);
+                MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter->second->m_geomShPtr, BasisVec);
+            (*returnval)[expMapIter->first] = expansionElementShPtr;
         }
         
         // Save expansion into graph. 
@@ -1016,14 +1017,14 @@ namespace Nektar
         
         const Array<OneD,const int>& loctoglomap
             = m_locToGloMap->GetLocalToGlobalMap();
-        Array<OneD,const NekDouble> &loctoglosign 
+        const Array<OneD,const NekDouble>& loctoglosign
             = m_locToGloMap->GetLocalToGlobalSign();
 
         // no sign change set up for this type of expansion so define
         // default as a vector of 1.0
         if(loctoglosign == NullNekDouble1DArray)
         {
-            loctoglosign = Array<OneD, const NekDouble>(loctoglomap.num_elements(),1.0);
+            m_locToGloMap->SetLocalToGlobalSign(Array<OneD, const NekDouble>(loctoglomap.num_elements(),1.0));
         }
         
         offset = cnt1 = cnt = 0; 
@@ -1232,7 +1233,7 @@ namespace Nektar
                                                   periodicVertices,periodicEdges);
         
         MultiRegions::LocalToGlobalC0ContMapSharedPtr locToGloMap;
-        m_locToGloMap = locToGloMap = MemoryManager<MultiRegions::LocalToGlobalC0ContMap>::AllocateSharedPtr(); 
+        m_locToGloMap = locToGloMap = MemoryManager<MultiRegions::LocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm);
 
         const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = m_fields[m_velocity[0]]->GetBndCondExpansions();
         Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(nvel);
@@ -1771,11 +1772,8 @@ namespace Nektar
         locToGloMap->SetNumLocalBndCoeffs(numLocalBndCoeffs);
 
         Array<OneD, int> localToGlobalMap(numLocalCoeffs,-1);
-        locToGloMap->SetLocalToGlobalMap(localToGlobalMap);
         Array<OneD, int> localToGlobalBndMap(numLocalBndCoeffs,-1);
-        locToGloMap->SetLocalToGlobalBndMap(localToGlobalBndMap);
         Array<OneD, int> bndCondCoeffsToGlobalCoeffsMap(nLocBndCondDofs,-1);
-        locToGloMap->SetBndCondCoeffsToGlobalCoeffsMap(bndCondCoeffsToGlobalCoeffsMap);
     
         Array<OneD, NekDouble> localToGlobalSign;
         Array<OneD, NekDouble> localToGlobalBndSign;
@@ -1785,17 +1783,13 @@ namespace Nektar
         {
             localToGlobalSign = Array<OneD, NekDouble>(numLocalCoeffs,1.0);
             localToGlobalBndSign = Array<OneD, NekDouble>(numLocalBndCoeffs,1.0);
-            locToGloMap->SetLocalToGlobalSign(localToGlobalSign);
-            locToGloMap->SetLocalToGlobalBndSign(localToGlobalBndSign);
         }
 
         locToGloMap->SetGlobalSysSolnType(solnType);
         locToGloMap->SetStaticCondLevel(staticCondLevel);
         locToGloMap->SetNumPatches(nel);
         Array<OneD, unsigned int> numLocalBndCoeffsPerPatch(nel);
-        locToGloMap->SetNumLocalBndCoeffsPerPatch(numLocalBndCoeffsPerPatch);
         Array<OneD, unsigned int> numLocalIntCoeffsPerPatch(nel);
-        locToGloMap->SetNumLocalIntCoeffsPerPatch(numLocalIntCoeffsPerPatch);
 
         for(i = 0; i < nel; ++i)
         {
@@ -1937,7 +1931,17 @@ namespace Nektar
             }
         }
         locToGloMap->SetNumGlobalCoeffs(globalId);
-        
+        locToGloMap->SetLocalToGlobalMap(localToGlobalMap);
+        locToGloMap->SetLocalToGlobalBndMap(localToGlobalBndMap);
+        locToGloMap->SetBndCondCoeffsToGlobalCoeffsMap(bndCondCoeffsToGlobalCoeffsMap);
+        locToGloMap->SetNumLocalBndCoeffsPerPatch(numLocalBndCoeffsPerPatch);
+        locToGloMap->SetNumLocalIntCoeffsPerPatch(numLocalIntCoeffsPerPatch);
+        if (signChange)
+        {
+            locToGloMap->SetLocalToGlobalSign(localToGlobalSign);
+            locToGloMap->SetLocalToGlobalBndSign(localToGlobalBndSign);
+        }
+
         // Set up the local to global map for the next level when using
         // multi-level static condensation
         if( (solnType == MultiRegions::eDirectMultiLevelStaticCond) )

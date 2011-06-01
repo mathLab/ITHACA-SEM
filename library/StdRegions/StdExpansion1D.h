@@ -105,6 +105,16 @@ namespace Nektar
                 return 1;
             }
 
+            virtual int v_GetNedges() const
+            {
+                return 0;
+            }
+
+            virtual int v_GetNfaces() const
+            {
+                return 0;
+            }
+
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);

@@ -36,11 +36,13 @@
 
 namespace Nektar
 {
-    string SteadyAdvectionDiffusionReaction::className = EquationSystemFactory::RegisterCreatorFunction("SteadyAdvectionDiffusionReaction", SteadyAdvectionDiffusionReaction::create);
+    string SteadyAdvectionDiffusionReaction::className = GetEquationSystemFactory().RegisterCreatorFunction("SteadyAdvectionDiffusionReaction", SteadyAdvectionDiffusionReaction::create);
 
 
-    SteadyAdvectionDiffusionReaction::SteadyAdvectionDiffusionReaction(SessionReaderSharedPtr& pSession)
-        : SteadyAdvectionDiffusion(pSession)
+    SteadyAdvectionDiffusionReaction::SteadyAdvectionDiffusionReaction(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : SteadyAdvectionDiffusion(pComm, pSession)
     {
 
         if (pSession->DefinesParameter("Lambda"))

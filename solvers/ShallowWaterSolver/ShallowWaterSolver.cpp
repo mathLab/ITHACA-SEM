@@ -38,7 +38,8 @@
 #include <cmath>
 
 #include <ADRSolver/EquationSystem.h>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -53,20 +54,24 @@ int main(int argc, char *argv[])
     time_t starttime, endtime;
     NekDouble CPUtime;
 
-    SessionReaderSharedPtr session;
+    LibUtilities::CommSharedPtr vComm;
+    LibUtilities::SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
 
     // Record start time.
     time(&starttime);
 
+    // Create communicator
+    vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
+
     // Create session reader.
-    session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
+    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
 
     // Create instance of module to solve the equation specified in the session.
     try
     {
-        equ = EquationSystemFactory::CreateInstance(
-                                    session->GetSolverInfo("EQTYPE"), session);
+        equ = GetEquationSystemFactory().CreateInstance(
+                                    session->GetSolverInfo("EQTYPE"), vComm, session);
     }
     catch (int e)
     {

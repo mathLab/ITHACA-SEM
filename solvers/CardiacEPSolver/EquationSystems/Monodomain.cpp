@@ -57,7 +57,7 @@ namespace Nektar
      * Registers the class with the Factory.
      */
     string Monodomain::className
-            = EquationSystemFactory::RegisterCreatorFunction(
+            = GetEquationSystemFactory().RegisterCreatorFunction(
                 "Monodomain",
                 Monodomain::create,
                 "Phenomological model of canine cardiac electrophysiology.");
@@ -66,8 +66,10 @@ namespace Nektar
     /**
      *
      */
-    Monodomain::Monodomain(SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+    Monodomain::Monodomain(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pComm, pSession)
     {
         pSession->LoadParameter("epsilon",    m_epsilon,   1.0);
 
@@ -76,7 +78,7 @@ namespace Nektar
 
         ASSERTL0(vCellModel != "", "Cell Model not specified.");
 
-        m_cell = CellModelFactory::CreateInstance(vCellModel, pSession, m_fields[0]->GetNpoints());
+        m_cell = GetCellModelFactory().CreateInstance(vCellModel, pSession, m_fields[0]->GetNpoints());
 
         if (!m_explicitDiffusion)
         {

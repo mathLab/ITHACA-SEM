@@ -52,6 +52,8 @@ namespace Nektar
         typedef boost::shared_ptr<TetGeom> TetGeomSharedPtr;
         typedef std::vector< TetGeomSharedPtr > TetGeomVector;
         typedef std::vector< TetGeomSharedPtr >::iterator TetGeomVectorIter;
+        typedef std::map<int, TetGeomSharedPtr> TetGeomMap;
+        typedef std::map<int, TetGeomSharedPtr>::iterator TetGeomMapIter;
 
         class TetGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {

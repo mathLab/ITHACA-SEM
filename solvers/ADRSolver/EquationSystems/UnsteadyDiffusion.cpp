@@ -4,10 +4,12 @@
 
 namespace Nektar
 {
-    string UnsteadyDiffusion::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyDiffusion", UnsteadyDiffusion::create);
+    string UnsteadyDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyDiffusion", UnsteadyDiffusion::create);
 
-    UnsteadyDiffusion::UnsteadyDiffusion(SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+    UnsteadyDiffusion::UnsteadyDiffusion(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pComm, pSession)
     {
         pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         pSession->LoadParameter("epsilon",    m_epsilon,  0.0);

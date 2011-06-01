@@ -38,6 +38,7 @@
 #include <iomanip>
 #include <vector>
 #include <sstream>
+#include <loki/Singleton.h>
 
 #include "MeshElements.h"
 using namespace std;
@@ -46,6 +47,14 @@ namespace Nektar
 {
     namespace Utilities
     {
+        ElementFactory& GetElementFactory()
+        {
+            typedef Loki::SingletonHolder<ElementFactory,
+                Loki::CreateUsingNew,
+                Loki::NoDestroy > Type;
+            return Type::Instance();
+        }
+
         /**
          * When an edge is replaced, the element faces are also searched and
          * the corresponding face edges are updated to maintain consistency.
@@ -126,7 +135,7 @@ namespace Nektar
         }
 
         unsigned int Point::typeIds[1] = {
-                ElementFactory::RegisterCreatorFunction(15, Point::create, "Point")
+                GetElementFactory().RegisterCreatorFunction(15, Point::create, "Point")
             };
         Point::Point(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
                 : Element() {
@@ -138,11 +147,11 @@ namespace Nektar
 
 
         unsigned int Line::typeIds[5] = {
-                ElementFactory::RegisterCreatorFunction(1,  Line::create, "Order 1 Line"),
-                ElementFactory::RegisterCreatorFunction(8,  Line::create, "Order 2 Line"),
-                ElementFactory::RegisterCreatorFunction(26, Line::create, "Order 3 Line"),
-                ElementFactory::RegisterCreatorFunction(27, Line::create, "Order 4 Line"),
-                ElementFactory::RegisterCreatorFunction(28, Line::create, "Order 5 Line")
+                GetElementFactory().RegisterCreatorFunction(1,  Line::create, "Order 1 Line"),
+                GetElementFactory().RegisterCreatorFunction(8,  Line::create, "Order 2 Line"),
+                GetElementFactory().RegisterCreatorFunction(26, Line::create, "Order 3 Line"),
+                GetElementFactory().RegisterCreatorFunction(27, Line::create, "Order 4 Line"),
+                GetElementFactory().RegisterCreatorFunction(28, Line::create, "Order 5 Line")
             };
         Line::Line(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
                 : Element() {
@@ -176,11 +185,11 @@ namespace Nektar
 
 
         unsigned int Triangle::typeIds[5] = {
-                ElementFactory::RegisterCreatorFunction(2,  Triangle::create, "Order 1 Triangle"),
-                ElementFactory::RegisterCreatorFunction(9,  Triangle::create, "Order 2 Triangle"),
-                ElementFactory::RegisterCreatorFunction(21, Triangle::create, "Order 3 Triangle"),
-                ElementFactory::RegisterCreatorFunction(23, Triangle::create, "Order 4 Triangle"),
-                ElementFactory::RegisterCreatorFunction(25, Triangle::create, "Order 5 Triangle")
+                GetElementFactory().RegisterCreatorFunction(2,  Triangle::create, "Order 1 Triangle"),
+                GetElementFactory().RegisterCreatorFunction(9,  Triangle::create, "Order 2 Triangle"),
+                GetElementFactory().RegisterCreatorFunction(21, Triangle::create, "Order 3 Triangle"),
+                GetElementFactory().RegisterCreatorFunction(23, Triangle::create, "Order 4 Triangle"),
+                GetElementFactory().RegisterCreatorFunction(25, Triangle::create, "Order 5 Triangle")
             };
         Triangle::Triangle(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
                 : Element() {
@@ -228,9 +237,9 @@ namespace Nektar
 
 
         unsigned int Quadrilateral::typeIds[3] = {
-                ElementFactory::RegisterCreatorFunction(3,  Quadrilateral::create, "Order 1 Quadrilateral"),
-                ElementFactory::RegisterCreatorFunction(10, Quadrilateral::create, "Order 2 Quadrilateral"),
-                ElementFactory::RegisterCreatorFunction(16, Quadrilateral::create, "Order 3 Quadrilateral"),
+                GetElementFactory().RegisterCreatorFunction(3,  Quadrilateral::create, "Order 1 Quadrilateral"),
+                GetElementFactory().RegisterCreatorFunction(10, Quadrilateral::create, "Order 2 Quadrilateral"),
+                GetElementFactory().RegisterCreatorFunction(16, Quadrilateral::create, "Order 3 Quadrilateral"),
             };
         Quadrilateral::Quadrilateral(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
                 : Element() {
@@ -277,11 +286,11 @@ namespace Nektar
 
 
         unsigned int Tetrahedron::typeIds[5] = {
-                ElementFactory::RegisterCreatorFunction(4,  Tetrahedron::create, "Order 1 Tetrahedron"),
-                ElementFactory::RegisterCreatorFunction(11, Tetrahedron::create, "Order 2 Tetrahedron"),
-                ElementFactory::RegisterCreatorFunction(29, Tetrahedron::create, "Order 3 Tetrahedron"),
-                ElementFactory::RegisterCreatorFunction(30, Tetrahedron::create, "Order 4 Tetrahedron"),
-                ElementFactory::RegisterCreatorFunction(31, Tetrahedron::create, "Order 5 Tetrahedron")
+                GetElementFactory().RegisterCreatorFunction(4,  Tetrahedron::create, "Order 1 Tetrahedron"),
+                GetElementFactory().RegisterCreatorFunction(11, Tetrahedron::create, "Order 2 Tetrahedron"),
+                GetElementFactory().RegisterCreatorFunction(29, Tetrahedron::create, "Order 3 Tetrahedron"),
+                GetElementFactory().RegisterCreatorFunction(30, Tetrahedron::create, "Order 4 Tetrahedron"),
+                GetElementFactory().RegisterCreatorFunction(31, Tetrahedron::create, "Order 5 Tetrahedron")
             };
 
         Tetrahedron::Tetrahedron(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
@@ -408,8 +417,8 @@ namespace Nektar
 
 
         unsigned int Hexahedron::typeIds[2] = {
-                ElementFactory::RegisterCreatorFunction(5, Hexahedron::create, "Order 1 Hexahedron"),
-                ElementFactory::RegisterCreatorFunction(12, Hexahedron::create, "Order 2 Hexahedron")
+                GetElementFactory().RegisterCreatorFunction(5, Hexahedron::create, "Order 1 Hexahedron"),
+                GetElementFactory().RegisterCreatorFunction(12, Hexahedron::create, "Order 2 Hexahedron")
             };
 
         Hexahedron::Hexahedron(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)

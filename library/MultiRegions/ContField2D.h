@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
+
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
 
@@ -62,13 +64,18 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField2D();
 
             /// Construct a global continuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ContField2D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph2D &graph2D,
                         const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
+                                                = eDirectMultiLevelStaticCond
+                        );
 
             /// Construct a global continuous field based on an input mesh with
             /// boundary conditions.
-            MULTI_REGIONS_EXPORT ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ContField2D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
@@ -88,7 +95,9 @@ namespace Nektar
 
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.
-            MULTI_REGIONS_EXPORT ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ContField2D(
+                        LibUtilities::CommSharedPtr &pComm,
+                        SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType

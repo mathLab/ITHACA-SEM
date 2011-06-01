@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <SpatialDomains/SpatialData.h>
 
@@ -51,14 +51,14 @@ namespace Nektar
     /// Datatype of the NekFactory used to instantiate classes derived from
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory< std::string, CellModel,
-                                SessionReaderSharedPtr&, int> CellModelFactory;
-
+                LibUtilities::SessionReaderSharedPtr&, int> CellModelFactory;
+    CellModelFactory& GetCellModelFactory();
 
     /// Cell model base class.
     class CellModel
     {
     public:
-        CellModel(SessionReaderSharedPtr& pSession, const int nq);
+        CellModel(LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
         virtual ~CellModel() {}
 
         virtual void Update(

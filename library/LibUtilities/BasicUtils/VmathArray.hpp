@@ -309,17 +309,64 @@ using namespace Nektar;
             
             return Imin(n,&x[0],incx);
         }
-    
-    
+
         /// \brief Return the minimum element in x - called vmin to avoid
         /// conflict with min
         template<class T>  T Vmin( int n, const Array<OneD, const T> &x, const int incx)
         {
             ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-            
+
             return Vmin(n,&x[0],incx);
         }
 
+        /// \brief
+        template<class T> T Dot(int n,
+                                  const Array<OneD, const T> &w,
+                                  const Array<OneD, const T> &x)
+        {
+            ASSERTL1(n <= w.num_elements()+w.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+
+            return Dot(n,&w[0],&x[0]);
+        }
+
+        /// \brief
+        template<class T> T Dot(int n,
+                                  const Array<OneD, const T> &w, const int incw,
+                                  const Array<OneD, const T> &x, const int incx)
+        {
+            ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+
+            return Dot(n,&w[0],incw,&x[0],incx);
+        }
+
+        /// \brief
+        template<class T> T Dot2(int n,
+                                  const Array<OneD, const T> &w,
+                                  const Array<OneD, const T> &x,
+                                  const Array<OneD, const int> &y)
+        {
+            ASSERTL1(n <= w.num_elements()+w.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+
+            return Dot2(n,&w[0],&x[0],&y[0]);
+        }
+
+        /// \brief
+        template<class T> T Ddot(int n,
+                                  const Array<OneD, const T> &w, const int incw,
+                                  const Array<OneD, const T> &x, const int incx,
+                                  const Array<OneD, const int> &y, const int incy)
+        {
+            ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+
+            return Dot2(n,&w[0],incw,&x[0],incx,&y[0],incy);
+        }
+    
         /********** Memory routines  ***********************/
         
         template<class T> void Vcopy(int n, const Array<OneD, const T> &x, int incx, Array<OneD,T> &y, int const incy)

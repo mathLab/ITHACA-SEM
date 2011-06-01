@@ -36,6 +36,9 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP
 #define NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+using namespace Nektar::LibUtilities;
+
 namespace Metis
 {
     extern "C"
@@ -45,10 +48,16 @@ namespace Metis
                              int *perm, int *iperm);  
 
         void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                             int *perm, int *iperm, int *map, int *mdswitch) ;     
+                             int *perm, int *iperm, int *map, int *mdswitch);
+
+        void   METIS_PartMeshNodal(int *nElmts, int *nVerts, int *elType, int *numflag,
+                             int *nparts, int *edgecut, int *epart, int *npart);
+
+        void   METIS_PartGraphVKway(int *nVerts, int *xadj, int *adjcy, int *vertWgt, int *vertSize,
+                             int *wgtFlag, int *numflag, int *nparts, int *options, int *volume, int *part);
     }
 
-#ifdef NEKTAR_USING_METIS
+//#ifdef NEKTAR_USING_METIS
     static void onmetis(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
                   int *perm, int *iperm)
     {
@@ -74,7 +83,7 @@ namespace Metis
         METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0]);
     }
 
-    static void as_onmetis(int nVerts, Nektar::Array<OneD, int> xadj, Nektar::Array<OneD, int> adjncy, 
+    static void as_onmetis(int nVerts, Nektar::Array<OneD, int> xadj, Nektar::Array<OneD, int> adjncy,
                            Nektar::Array<OneD, int> perm,  Nektar::Array<OneD, int> iperm, Nektar::Array<OneD, int> map,
                            int mdswitch)
     {
@@ -88,7 +97,41 @@ namespace Metis
         AS_METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0],&map[0],&mdswitch);
     }
    
+    static void MeshPartition(int nElmts, int nVerts, Nektar::Array<OneD, int>& mesh, int type, int nparts,
+                            Nektar::Array<OneD, int>& edgePart, Nektar::Array<OneD, int>& nodePart)
+    {
+        int numflag = 0;
+        METIS_PartMeshNodal(&nElmts, &nVerts, &mesh[0], &type, &numflag, &nparts, &edgePart[0], &nodePart[0]);
+    }
 
-#endif //NEKTAR_USING_METIS
+    static void PartGraphVKway( int& nVerts,
+                                Nektar::Array<OneD, int>& xadj,
+                                Nektar::Array<OneD, int>& adjcy,
+                                Nektar::Array<OneD, int>& vertWgt,
+                                Nektar::Array<OneD, int>& vertSize,
+                                int& nparts,
+                                int& volume,
+                                Nektar::Array<OneD, int>& part)
+    {
+        int wgtflag = 0;
+        int *wgts = 0;
+        int *sizes = 0;
+        if (vertWgt.num_elements() > 0)
+        {
+            wgtflag += 1;
+            wgts = &vertWgt[0];
+        }
+        if (vertSize.num_elements() > 0)
+        {
+            wgtflag += 2;
+            sizes = &vertSize[0];
+        }
+        int numflag = 0;
+        int options[5];
+        options[0]=0;
+        METIS_PartGraphVKway(&nVerts, &xadj[0], &adjcy[0], wgts, sizes, &wgtflag,
+                             &numflag, &nparts, options, &volume, &part[0]);
+    }
+//#endif //NEKTAR_USING_METIS
 }
 #endif //NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP

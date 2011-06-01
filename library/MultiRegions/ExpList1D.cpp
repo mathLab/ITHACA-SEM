@@ -95,24 +95,26 @@ namespace Nektar
          *                      number of modes.
          * @param   graph1D     Domain and expansion definitions.
          */
-        ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba,
+        ExpList1D::ExpList1D(LibUtilities::CommSharedPtr &pComm,
+                             const LibUtilities::BasisKey &Ba,
                              SpatialDomains::MeshGraph1D &graph1D):
-            ExpList()
+            ExpList(pComm)
         {
             int i, id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
-            const SpatialDomains::ExpansionVector &expansions
+            const SpatialDomains::ExpansionMap &expansions
                                                     = graph1D.GetExpansions();
 
             // For each element in the mesh, create a segment expansion using
             // the supplied BasisKey and segment geometry.
-            for(i = 0; i < expansions.size(); ++i)
+            SpatialDomains::ExpansionMap::const_iterator expIt;
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
                 if(SegmentGeom = boost
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                expansions[i]->m_geomShPtr))
+                                                expIt->second->m_geomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(Ba,SegmentGeom);
@@ -158,27 +160,27 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D, bool DeclareCoeffPhysArrays):
-            ExpList()
+        ExpList1D::ExpList1D(LibUtilities::CommSharedPtr &pComm,SpatialDomains::MeshGraph1D &graph1D, bool DeclareCoeffPhysArrays):
+            ExpList(pComm)
         {
             int i,id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             // Retrieve the list of expansions
-            const SpatialDomains::ExpansionVector &expansions
+            const SpatialDomains::ExpansionMap &expansions
                                                     = graph1D.GetExpansions();
 
             // Process each expansion in the graph
-            for(i = 0; i < expansions.size(); ++i)
+            SpatialDomains::ExpansionMap::const_iterator expIt;
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
                 // Retrieve basis key from expansion
-                LibUtilities::BasisKey bkey
-                                        = expansions[i]->m_basisKeyVector[0];
+                LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
 
                 if(SegmentGeom = boost
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                expansions[i]->m_geomShPtr))
+                                                expIt->second->m_geomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -215,7 +217,7 @@ namespace Nektar
 
         /**
          * Fills the list of local expansions with the segments from the 2D
-         * mesh specified by \a domain. This CompositeVector contains a list of
+         * mesh specified by \a domain. This CompositeMap contains a list of
          * Composites which define the Neumann boundary.
          * @see     ExpList1D#ExpList1D(SpatialDomains::MeshGraph1D&, bool)
          *          for details.
@@ -226,28 +228,29 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain,
+        ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
                              SpatialDomains::MeshGraph2D &graph2D,
                              bool DeclareCoeffPhysArrays):
             ExpList()
         {
             int i,j,cnt,id=0;
             SpatialDomains::Composite comp;
+            SpatialDomains::CompositeMap::const_iterator compIt;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 
             // Process each composite region.
             cnt = 0;
-            for(i = 0; i < domain.size(); ++i)
+            for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
             {
-                comp = domain[i];
+                comp = compIt->second;
 
                 // Process each expansion in the region.
-                for(j = 0; j < comp->size(); ++j)
+                for(j = 0; j < compIt->second->size(); ++j)
                 {
                     if(SegmentGeom = boost
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                                    (*comp)[j]))
+                                                                    (*compIt->second)[j]))
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey

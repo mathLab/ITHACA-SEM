@@ -44,13 +44,16 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) {
-            return MemoryManager<CFLtester>::AllocateSharedPtr(pSession);
+        static EquationSystemSharedPtr create(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession) {
+            return MemoryManager<CFLtester>::AllocateSharedPtr(pComm, pSession);
         }
         /// Name of class
         static std::string className;
 
-        CFLtester(SessionReaderSharedPtr& pSession);
+        CFLtester(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual ~CFLtester();
 		

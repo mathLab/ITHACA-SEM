@@ -39,6 +39,7 @@
 #include <vector>
 #include <fstream>
 
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
@@ -76,22 +77,28 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays = true);
 
             /// Construct an ExpList1D from a given graph.
-            MULTI_REGIONS_EXPORT ExpList1D(const LibUtilities::BasisKey &Ba,
+            MULTI_REGIONS_EXPORT ExpList1D(
+                      LibUtilities::CommSharedPtr &pComm,
+                      const LibUtilities::BasisKey &Ba,
                       SpatialDomains::MeshGraph1D &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
-            MULTI_REGIONS_EXPORT ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ExpList1D(
+                      LibUtilities::CommSharedPtr &pComm,
+                      SpatialDomains::MeshGraph1D &graph1D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
-            MULTI_REGIONS_EXPORT ExpList1D(const SpatialDomains::CompositeVector &domain,
+            MULTI_REGIONS_EXPORT ExpList1D(
+                      const SpatialDomains::CompositeMap &domain,
                       SpatialDomains::MeshGraph2D &graph2D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
-            MULTI_REGIONS_EXPORT ExpList1D(const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+            MULTI_REGIONS_EXPORT ExpList1D(
+                      const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,

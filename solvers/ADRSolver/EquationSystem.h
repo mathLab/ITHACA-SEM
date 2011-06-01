@@ -36,8 +36,9 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEM_H
 
+#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <Auxiliary/ADRBase.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <SpatialDomains/SpatialData.h>
@@ -51,8 +52,12 @@ namespace Nektar
     typedef boost::shared_ptr<EquationSystem> EquationSystemSharedPtr;
     /// Datatype of the NekFactory used to instantiate classes derived from
     /// the EquationSystem class.
-    typedef LibUtilities::NekFactory< std::string, EquationSystem,
-        SessionReaderSharedPtr&> EquationSystemFactory;
+    typedef LibUtilities::NekFactory<
+                std::string, EquationSystem,
+                LibUtilities::CommSharedPtr&,
+                LibUtilities::SessionReaderSharedPtr&
+            > EquationSystemFactory;
+    EquationSystemFactory& GetEquationSystemFactory();
 
     /// A base class for describing how to solve specific equations.
     class EquationSystem : public ADRBase
@@ -77,14 +82,12 @@ namespace Nektar
         void Output(void);
 
     protected:
-    	    
-    	    
-    	string filename;    
-        /// The session reader
-        SessionReaderSharedPtr                  m_session;
-        Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
+
+        Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
+
         /// Initialises EquationSystem class members.
-        EquationSystem(SessionReaderSharedPtr& pSession);
+        EquationSystem( LibUtilities::CommSharedPtr& pComm,
+                        LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Evaluates a function as specified in the session file.
         void EvaluateFunction(Array<OneD, NekDouble>& pArray,

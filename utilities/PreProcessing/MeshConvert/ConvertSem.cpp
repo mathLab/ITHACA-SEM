@@ -45,7 +45,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        string ConvertSem::className = ConvertFactory::RegisterCreatorFunction("sem", ConvertSem::create);
+        string ConvertSem::className = GetConvertFactory().RegisterCreatorFunction("sem", ConvertSem::create);
 
         ConvertSem::ConvertSem()
             : Convert()
@@ -173,7 +173,7 @@ namespace Nektar
                         }
 
                         // Create element
-                        ElementSharedPtr E = ElementFactory::CreateInstance(elm_type,nodeList,tags);
+                        ElementSharedPtr E = GetElementFactory().CreateInstance(elm_type,nodeList,tags);
 
                         // Determine mesh expansion dimension
                         if (E->GetDim() > m_expDim) {

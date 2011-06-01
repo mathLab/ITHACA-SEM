@@ -78,7 +78,9 @@ namespace Nektar
          * 
          */
 
-        LinearisedAdvection(string &pSessionName,
+        LinearisedAdvection(
+                LibUtilities::CommSharedPtr                 pComm,
+                LibUtilities::SessionReaderSharedPtr        pSession,
                 SpatialDomains::MeshGraphSharedPtr          pGraph,
                 SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
 

@@ -135,6 +135,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
 
+            /// Evaluates the Helmholtz operator using a matrix-free approach.
             virtual void v_HelmholtzMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,

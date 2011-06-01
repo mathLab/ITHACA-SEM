@@ -70,6 +70,11 @@ SET(PolyLibHeaders
 	./Polylib/Polylib.h
 )	
 
+SET(CommunicationHeaders
+    ./Communication/Comm.h
+    ./Communication/CommSerial.h
+)
+
 SET(ExpressionTemplates
     ../ExpressionTemplates/AssociativeTraits.hpp
     ../ExpressionTemplates/AssociativeTransform.hpp
@@ -82,7 +87,7 @@ SET(ExpressionTemplates
     ../ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp
 )
 
-SET(BasicUtils
+SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/BoostUtil.hpp
@@ -104,6 +109,11 @@ SET(BasicUtils
     ./BasicUtils/Metis.hpp
     ./BasicUtils/XmlUtil.h
     ./BasicUtils/XmlUtil.cpp
+    ./BasicUtils/SessionReader.h
+)
+
+SET(BasicUtilsSources
+    ./BasicUtils/SessionReader.cpp
 )
 
 SET(Memory
@@ -140,6 +150,18 @@ SET(PolylibSources
 	./Polylib/Polylib.cpp
 )
 
+SET(CommunicationSources
+    ./Communication/Comm.cpp
+    ./Communication/CommSerial.cpp
+)
+
+IF(NEKTAR_USE_MPI)
+    SET(CommunicationHeaders ${CommunicationHeaders} 
+        ./Communication/CommMpi.h ./Communication/GsLib.hpp)
+    SET(CommunicationSources ${CommunicationSources}
+        ./Communication/CommMpi.cpp)
+ENDIF(NEKTAR_USE_MPI)
+
 SET(LinearAlgebraSources
 	./LinearAlgebra/blas.cpp
 	./LinearAlgebra/MatrixFuncs.cpp
@@ -164,7 +186,8 @@ SET(TimeIntegrationHeaders
 
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
-) 
+)
+
 
 SET(FFTHeaders
        ./FFT/NektarFFT.h
@@ -184,7 +207,8 @@ SET(BaseHeaders
 )
 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
-SOURCE_GROUP("Basic Utils" FILES ${BasicUtils})
+SOURCE_GROUP("Basic Utils Headers" FILES ${BasicUtilsHeaders})
+SOURCE_GROUP("Basic Utils Sources" FILES ${BasicUtilsSources})
 SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
 SOURCE_GROUP("Foundation Headers" FILES ${FoundationHeaders})
 SOURCE_GROUP("Foundation Sources" FILES ${FoundationSources})
@@ -198,6 +222,9 @@ SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
 
 SOURCE_GROUP("Interpreter Headers" FILES ${InterpreterHeaders})
 SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
+
+SOURCE_GROUP("Communication Headers" FILES ${CommunicationHeaders})
+SOURCE_GROUP("Communication Sources" FILES ${CommunicationSources})
 
 SOURCE_GROUP("Precompiled Headers" FILES ${PrecompiledHeaders})
 
@@ -214,9 +241,10 @@ SOURCE_GROUP("Base" FILES ${BaseHeaders})
 
 SET(LibUtilityHeaders
 	${Memory}
-	${BasicUtils}
+	${BasicUtilsHeaders}
 	${ExpressionTemplates}
 	${PolyLibHeaders}
+    ${CommunicationHeaders}
 	${FoundationHeaders}
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
@@ -229,8 +257,10 @@ SET(LibUtilityHeaders
 )
 
 SET(LibUtilitySources
+    ${BasicUtilsSources}
 	${FoundationSources}
 	${PolylibSources}
+    ${CommunicationSources}
 	${LinearAlgebraSources}
 	${InterpreterSources}
 	${KernelSources}
@@ -256,8 +286,9 @@ INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtili
 INSTALL(FILES ${FoundationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Foundations)
 INSTALL(FILES ${InterpreterHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Interpreter)
 INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Polylib)
+INSTALL(FILES ${CommunicationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Communication)
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates)
-INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
+INSTALL(FILES ${BasicUtilsHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
 INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
 INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)
 INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration)

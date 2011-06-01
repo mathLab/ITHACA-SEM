@@ -106,7 +106,7 @@ namespace Nektar
     NekDouble m_GasConstant;
     
     /// Initialises UnsteadySystem class members.
-    UnsteadySystem(SessionReaderSharedPtr& pSession);
+    UnsteadySystem(LibUtilities::CommSharedPtr& pComm, LibUtilities::SessionReaderSharedPtr& pSession);
     
     /// Solves an unsteady problem.
     virtual void v_DoSolve();

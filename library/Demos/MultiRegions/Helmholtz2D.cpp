@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace Nektar;
@@ -20,14 +24,47 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::SessionReaderSharedPtr vSession;
+    LibUtilities::CommSharedPtr vComm;
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
-    // default solution type multilevel statis condensation
     MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    string meshfile(argv[1]);
+    string vCommModule("Serial");
+
+    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
+    if (vSession->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = vSession->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+
+        // Force use of Iterative solver for parallel execution
+        SolnType = MultiRegions::eIterativeFull;
+    }
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -59,8 +96,8 @@ int main(int argc, char *argv[])
         }
         else if(!NoCaseStringCompare(argv[2],"IterativeCG"))
         {
-            SolnType = MultiRegions::eIterativeCG;
-            cout << "Solution Type: Iterative CG" << endl;
+            SolnType = MultiRegions::eIterativeFull;
+            cout << "Solution Type: Iterative Full Matrix" << endl;
         }
         else
         {
@@ -86,7 +123,6 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Read in mesh from input file
-        string meshfile(argv[1]);
         SpatialDomains::MeshGraph2D graph2D;
         graph2D.ReadGeometry(meshfile);
         graph2D.ReadExpansions(meshfile);
@@ -101,30 +137,22 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Print summary of solution details
         lambda = bcs.GetParameter("Lambda");
-        const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions(bcs.GetVariable(0));
-        LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
-        cout << "Solving 2D Helmholtz: "  << endl;
-        cout << "         Lambda     : " << lambda << endl;
-        cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
+        const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+        LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
+        cout << "Solving 2D Helmholtz: " << endl;
+        cout << "         Communication: " << vCommModule << endl;
+        cout << "         Solver type  : " << MultiRegions::GlobalSysSolnTypeMap[SolnType] << endl;
+        cout << "         Lambda       : " << lambda << endl;
+        cout << "         No. modes    : " << bkey0.GetNumModes() << endl;
         cout << endl;
         //----------------------------------------------
 
         //----------------------------------------------
         // Define Expansion
-        int bc_val = 0;
+        int bc_loc = 0;
         Exp = MemoryManager<MultiRegions::ContField2D>::
-            AllocateSharedPtr(graph2D,bcs,bc_val,SolnType);
-        //----------------------------------------------
-
-        //----------------------------------------------
-        // Load the global optimization parameters
-        // as specified in the (optional) input file
-        // (use helmholtz2D.xml as an example)
-        if( argc >= 4 )
-        {
-            string globoptfile(argv[3]);
-            Exp->ReadGlobalOptimizationParameters(globoptfile);
-        }
+            AllocateSharedPtr(vComm,graph2D,bcs,bc_loc,SolnType);
+        Exp->ReadGlobalOptimizationParameters(meshfile);
         //----------------------------------------------
 
         Timing("Read files and define exp ..");
@@ -195,6 +223,10 @@ int main(int argc, char *argv[])
         string   out(strtok(argv[1],"."));
         string   endfile(".fld");
         out += endfile;
+        if (vComm->GetSize() > 1)
+        {
+            out += "." + boost::lexical_cast<string>(vComm->GetRank());
+        }
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -215,6 +247,7 @@ int main(int argc, char *argv[])
         SpatialDomains::ConstExactSolutionShPtr ex_sol =
             bcs.GetExactSolution(bcs.GetVariable(0));
 
+
         if(ex_sol)
         {
             //----------------------------------------------
@@ -223,27 +256,35 @@ int main(int argc, char *argv[])
             {
                 fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
             }
-            //----------------------------------------------
-
-            //--------------------------------------------
-            // Calculate L_inf error
             Fce->SetPhys(fce);
             Fce->SetPhysState(true);
-
-
-            cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-            cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
-            cout << "H 1 error:        " << Exp->H1  (Fce->GetPhys()) << endl;
             //--------------------------------------------
+
+            //--------------------------------------------
+            // Calculate errors
+            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            if (vComm->GetRank() == 0)
+            {
+                cout << "L infinity error: " << vLinfError << endl;
+                cout << "L 2 error:        " << vL2Error << endl;
+                cout << "H 1 error:        " << vH1Error << endl;
+            }
+            //--------------------------------------------
+
         }
         //----------------------------------------------
-
-        return 0;
     }
     catch (const std::runtime_error& e)
     {
+        cout << "Caught an error" << endl;
         return 1;
     }
+
+    vComm->Finalise();
+
+    return 0;
 }
 
 

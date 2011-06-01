@@ -266,6 +266,7 @@ namespace Nektar
         typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
         typedef std::vector< SegGeomSharedPtr > SegGeomVector;
         typedef std::vector< SegGeomSharedPtr >::iterator SegGeomVectorIter;
+        typedef std::map<int, SegGeomSharedPtr> SegGeomMap;
 
     }; //end of namespace
 }; //end of namespace

@@ -38,7 +38,7 @@
 #include <cmath>
 
 #include <ADRSolver/EquationSystem.h>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -46,15 +46,17 @@ int main(int argc, char *argv[])
     if(argc != 2)
     {
         cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        EquationSystemFactory::PrintAvailableClasses();
+        GetEquationSystemFactory().PrintAvailableClasses();
         exit(1);
     }
 
     string filename(argv[1]);
+    string vCommModule("Serial");
     time_t starttime, endtime;
     NekDouble CPUtime;
 
-    SessionReaderSharedPtr session;
+    LibUtilities::CommSharedPtr vComm;
+    LibUtilities::SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
 
     // Record start time.
@@ -63,11 +65,22 @@ int main(int argc, char *argv[])
     try
     {
         // Create session reader.
-        session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
+        session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+
+        // Create communicator
+        if (session->DefinesSolverInfo("Communication"))
+        {
+            vCommModule = session->GetSolverInfo("Communication");
+        }
+        else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+        {
+            vCommModule = "ParallelMPI";
+        }
+        vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
         // Create instance of module to solve the equation specified in the session.
-        equ = EquationSystemFactory::CreateInstance(
-                                    session->GetSolverInfo("EQTYPE"), session);
+        equ = GetEquationSystemFactory().CreateInstance(
+                                    session->GetSolverInfo("EQTYPE"), vComm, session);
 
         // Print a summary of solver and problem parameters and initialise the
         // solver.

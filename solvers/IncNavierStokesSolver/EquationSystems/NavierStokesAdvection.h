@@ -77,7 +77,9 @@ namespace Nektar
          * 
          *
          */
-        NavierStokesAdvection(string &pSessionName,
+        NavierStokesAdvection(
+                LibUtilities::CommSharedPtr                 pComm,
+                LibUtilities::SessionReaderSharedPtr        pSession,
                 SpatialDomains::MeshGraphSharedPtr          pGraph,
                 SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
 

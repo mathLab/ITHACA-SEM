@@ -44,6 +44,14 @@ namespace Nektar
 {
     namespace Utilities
     {
+        ConvertFactory& GetConvertFactory()
+        {
+            typedef Loki::SingletonHolder<ConvertFactory,
+                Loki::CreateUsingNew,
+                Loki::NoDestroy > Type;
+            return Type::Instance();
+        }
+
         /**
          * Writes the mesh information stored in the data structures out to an
          * XML file in the native Nektar++ XML file format.

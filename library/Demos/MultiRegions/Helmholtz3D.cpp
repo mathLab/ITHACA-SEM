@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField3D.h>
 
 using namespace Nektar;
@@ -16,6 +20,28 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    string meshfile(argv[1]);
+
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+
+        // Force use of iterative solver for parallel execution
+        SolnType = MultiRegions::eIterativeFull;
+    }
+
     if(argc < 2)
     {
         fprintf(stderr,"Usage: Helmholtz3D  meshfile [solntype]\n");
@@ -44,8 +70,8 @@ int main(int argc, char *argv[])
         }
         else if(!NoCaseStringCompare(argv[2],"IterativeCG"))
         {
-            SolnType = MultiRegions::eIterativeCG;
-            cout << "Solution Type: Iterative CG" << endl;
+            SolnType = MultiRegions::eIterativeFull;
+            cout << "Solution Type: Iterative Full Matrix" << endl;
         }
         else
         {
@@ -60,7 +86,6 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // Read in mesh from input file
-        string meshfile(argv[1]);
         SpatialDomains::MeshGraph3D graph3D;
         graph3D.ReadGeometry(meshfile);
         graph3D.ReadExpansions(meshfile);
@@ -75,8 +100,11 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Print summary of solution details
         lambda = bcs.GetParameter("Lambda");
+        const SpatialDomains::ExpansionMap &expansions = graph3D.GetExpansions();
+        LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 3D Helmholtz:"  << endl;
         cout << "         Lambda     : " << lambda << endl;
+        cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
         cout << endl;
         //----------------------------------------------
 
@@ -84,7 +112,8 @@ int main(int argc, char *argv[])
         // Define Expansion
         int bc_val=0;
         Exp = MemoryManager<MultiRegions::ContField3D>
-                        ::AllocateSharedPtr(graph3D,bcs,bc_val,SolnType);
+                        ::AllocateSharedPtr(vComm,graph3D,bcs,bc_val,SolnType);
+        Exp->ReadGlobalOptimizationParameters(meshfile);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -98,14 +127,11 @@ int main(int argc, char *argv[])
 
         switch(coordim)
         {
-        case 1:
-            Exp->GetCoords(xc0);
-            break;
-        case 2:
-            Exp->GetCoords(xc0,xc1);
-            break;
         case 3:
             Exp->GetCoords(xc0,xc1,xc2);
+            break;
+        default:
+            ASSERTL0(false,"Coordim not valid");
             break;
         }
         //----------------------------------------------
@@ -143,6 +169,28 @@ int main(int argc, char *argv[])
         SpatialDomains::ConstExactSolutionShPtr ex_sol
                                     = bcs.GetExactSolution(bcs.GetVariable(0));
 
+        //-----------------------------------------------
+        // Write solution to file
+        string   out(strtok(argv[1],"."));
+        string   endfile(".fld");
+        out += endfile;
+        if (vComm->GetSize() > 1)
+        {
+            out += "." + boost::lexical_cast<string>(vComm->GetRank());
+        }
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+                                                    = Exp->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+        Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
+        for(i = 0; i < FieldDef.size(); ++i)
+        {
+            FieldDef[i]->m_fields.push_back("u");
+            Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+        }
+        graph3D.Write(out, FieldDef, FieldData);
+        //-----------------------------------------------
+
         if(ex_sol)
         {
             //----------------------------------------------
@@ -158,36 +206,31 @@ int main(int argc, char *argv[])
             Fce->SetPhys(fce);
             Fce->SetPhysState(true);
 
-            cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-            cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+
+            //--------------------------------------------
+            // Calculate errors
+            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            if (vComm->GetRank() == 0)
+            {
+                cout << "L infinity error: " << vLinfError << endl;
+                cout << "L 2 error:        " << vL2Error << endl;
+                cout << "H 1 error:        " << vH1Error << endl;
+            }
             //--------------------------------------------
         }
         //----------------------------------------------
-
-        //-----------------------------------------------
-        // Write solution to file
-        string   out(strtok(argv[1],"."));
-        string   endfile(".fld");
-        out += endfile;
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                                                    = Exp->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-        Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
-        for(i = 0; i < FieldDef.size(); ++i)
-        {
-            FieldDef[i]->m_fields.push_back("u");
-            Exp->AppendFieldData(FieldDef[i], FieldData[i]);
-        }
-        graph3D.Write(out, FieldDef, FieldData);
-        //-----------------------------------------------
-
-        return 0;
     }
     catch (const std::runtime_error& e)
     {
+        cout << "Caught an error" << endl;
         return 1;
     }
+
+    vComm->Finalise();
+
+    return 0;
 }
 
 

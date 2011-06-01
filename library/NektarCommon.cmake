@@ -86,6 +86,15 @@ IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
     INCLUDE(FindNativeBlasLapack)
 ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
+# Use MPI
+IF( NEKTAR_USE_MPI )
+    INCLUDE(FindMPI)
+    # Use synchronous messaging
+    IF (MPI_SYNC)
+        ADD_DEFINITIONS(-DMPI_SYNC)
+    ENDIF (MPI_SYNC)
+ENDIF( NEKTAR_USE_MPI )
+
 IF( NEKTAR_USE_MKL )
     SET(NEKTAR_USING_BLAS TRUE)
     SET(NEKTAR_USING_LAPACK TRUE)
@@ -166,41 +175,49 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
-
-    IF( MSVC )
-        # Disable the warnings about duplicate copy/assignment methods 
-        #   (4521, 4522)
-        # Disable the warning that arrays are default intialized (4351)	
-        # Disable "forcing value to bool 'true' or 'false' (performance
-        #   warning)" warning (4800)
-
-        # /Za is necessary to prevent temporaries being bound to reference
-        #   parameters.
-        SET_TARGET_PROPERTIES(${name} 
-            PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
-
-		# Enable source level parallel builds.
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-    ENDIF(  )	
-
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
     
-    IF ( NEKTAR_FULL_DEBUG )
-        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
-    ENDIF()
+    # Prevent including these common flags multiple times.
+    IF (NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
+        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
     
-    IF( NOT MSVC )
-        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
-    ENDIF()
+        IF( MSVC )
+            # Disable the warnings about duplicate copy/assignment methods 
+            #   (4521, 4522)
+            # Disable the warning that arrays are default intialized (4351)	
+            # Disable "forcing value to bool 'true' or 'false' (performance
+            #   warning)" warning (4800)
+
+            # /Za is necessary to prevent temporaries being bound to reference
+            #   parameters.
+            SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS 
+                                    "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
+
+    		# Enable source level parallel builds.
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+        ENDIF(  )	
+
+        IF ( NEKTAR_FULL_DEBUG )
+            SET(CMAKE_CXX_FLAGS_DEBUG 
+                    "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
+        ENDIF()
+   
+        IF( NOT MSVC )
+            SET(CMAKE_CXX_FLAGS_DEBUG 
+                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
+        ENDIF()
     
-    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
-    
+        SET(CMAKE_CXX_FLAGS_DEBUG
+                    "${CMAKE_CXX_FLAGS_DEBUG} -Wno-deprecated")
+                    
+        SET(CMAKE_CXX_FLAGS_RELEASE 
+                    "${CMAKE_CXX_FLAGS_RELEASE} -Wno-deprecated -DNEKTAR_RELEASE")
+    ENDIF( )
+        
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
-        # The static libraries must be compiled with position independent code 
-        # on 64 bit Linux.
-        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "-fPIC")
+        # The static libraries must be compiled with position independent
+        # code on 64 bit Linux.
+        SET_PROPERTY(TARGET ${name} APPEND PROPERTY COMPILE_FLAGS "-fPIC")
     ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
-
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
 MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
@@ -250,6 +267,14 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
         optimized tinyxml debug tinyxml
 	)
 
+    IF( NEKTAR_USE_MPI )
+        TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
+        SET_PROPERTY(TARGET ${name} 
+                     APPEND PROPERTY COMPILE_FLAGS ${MPI_COMPILE_FLAGS})
+        SET_PROPERTY(TARGET ${name}
+                     APPEND PROPERTY LINK_FLAGS ${MPI_LINK_FLAGS})
+    ENDIF( NEKTAR_USE_MPI )
+
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
         IF(NEKTAR_ENABLE_PROFILE)
             #TARGET_LINK_LIBRARIES(${name} Saturn)
@@ -258,22 +283,22 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
         # The boost thread library needs pthread on linux.
-	GET_TARGET_PROPERTY(THE_COMPILE_FLAGS ${name} COMPILE_FLAGS)
-	GET_TARGET_PROPERTY(THE_LINK_FLAGS ${name} LINK_FLAGS)
+        GET_TARGET_PROPERTY(THE_COMPILE_FLAGS ${name} COMPILE_FLAGS)
+        GET_TARGET_PROPERTY(THE_LINK_FLAGS ${name} LINK_FLAGS)
 
-	# It is possible these flags have not been set yet.
-	IF(NOT THE_COMPILE_FLAGS)
-		SET(THE_COMPILE_FLAGS "")
-	ENDIF(NOT THE_COMPILE_FLAGS)
+        # It is possible these flags have not been set yet.
+        IF(NOT THE_COMPILE_FLAGS)
+            SET(THE_COMPILE_FLAGS "")
+        ENDIF(NOT THE_COMPILE_FLAGS)
 
-	IF(NOT THE_LINK_FLAGS )
-	       SET(THE_LINK_FLAGS "")
-	ENDIF(NOT THE_LINK_FLAGS)
+        IF(NOT THE_LINK_FLAGS )
+	        SET(THE_LINK_FLAGS "")
+        ENDIF(NOT THE_LINK_FLAGS)
 
         SET_TARGET_PROPERTIES(${name} 
-            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
+                PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
         SET_TARGET_PROPERTIES(${name} 
-            PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
+                PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
 	
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
 
@@ -293,6 +318,10 @@ MACRO(ADD_NEKTAR_LIBRARY name type)
     
     # NIST Sparse BLAS only static, so link into Nektar libraries directly.
     TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
+
+    IF (NEKTAR_USE_MPI)
+        TARGET_LINK_LIBRARIES( ${name} ${GS_LIB} )
+    ENDIF (NEKTAR_USE_MPI)
     
     SET_COMMON_PROPERTIES(${name})
 

@@ -152,7 +152,7 @@ namespace Nektar
         typedef std::map<std::string, std::string> FunctionMap;
         typedef std::vector<std::string> Variable;
 
-        typedef std::vector<Composite> BoundaryRegion;
+        typedef std::map<int, Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
         typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;

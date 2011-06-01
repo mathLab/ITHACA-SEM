@@ -1082,9 +1082,53 @@ namespace Nektar
             }
         }
 
+        /**
+         * Given an edge and vector of element coefficients:
+         * - maps those elemental coefficients corresponding to the edge into
+         *   an edge-vector.
+         * - resets the element coefficients
+         * - multiplies the edge vector by the edge mass matrix
+         * - maps the edge coefficients back onto the elemental coefficients
+         */
+        void Expansion2D::AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        {
+            ASSERTL1(v_IsBoundaryInteriorExpansion(),
+                     "Not set up for non boundary-interior expansions");
+            int i,j;
+            int order_e = m_edgeExp[edgeid]->GetNcoeffs();
+
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
+
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *m_edgeExp[edgeid], primCoeffs);
+            DNekScalMat &edgemat = *m_edgeExp[edgeid]->GetLocMatrix(mkey);
+
+            NekVector<NekDouble> vEdgeCoeffs (order_e);
+
+            v_GetEdgeToElementMap(edgeid,v_GetEorient(edgeid),map,sign);
+
+            for (i = 0; i < order_e; ++i)
+            {
+                vEdgeCoeffs[i] = coeffs[map[i]]*sign[i];
+            }
+            Vmath::Zero(v_GetNcoeffs(), coeffs, 1);
+
+            vEdgeCoeffs = edgemat * vEdgeCoeffs;
+
+            for (i = 0; i < order_e; ++i)
+            {
+                coeffs[map[i]] = vEdgeCoeffs[i]*sign[i];
+            }
+        }
+
         void Expansion2D::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
         {
             AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
+        }
+
+        void Expansion2D::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        {
+            AddRobinEdgeContribution(edgeid, primCoeffs, coeffs);
         }
 
     } //end of namespace

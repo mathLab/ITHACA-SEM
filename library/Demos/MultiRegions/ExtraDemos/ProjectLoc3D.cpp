@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3D.h>
 
@@ -11,6 +15,26 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm
+        = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ExpList3DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce, tmp, tmp2;
@@ -25,7 +49,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
+//    string meshfile(argv[1]);
     SpatialDomains::MeshGraph3D graph3D;
     graph3D.ReadGeometry(meshfile);
     graph3D.ReadExpansions(meshfile);
@@ -33,17 +57,20 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
-    LibUtilities::BasisKey bkey = expansions[0]->m_basisKeyVector[0];
+    const SpatialDomains::ExpansionMap &expansions = graph3D.GetExpansions();
+    LibUtilities::BasisKey bkey = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey.GetNumModes();
-    cout << "Solving 3D Local Projection"  << endl;
-    cout << "    No. modes  : " << nmodes << endl;
-    cout << endl;
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Solving 3D Local Projection"  << endl;
+        cout << "    No. modes  : " << nmodes << endl;
+        cout << endl;
+    }
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
-    Exp = MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(graph3D);
+    Exp = MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(vComm,graph3D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -103,8 +130,27 @@ int main(int argc, char *argv[])
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-    cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Rank 0:" << endl;
+        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        for (unsigned int i = 1; i < vComm->GetSize(); ++i)
+        {
+            Array<OneD, NekDouble> data(2);
+            vComm->Recv(i, data);
+            cout << "Rank " << i << ":" << endl;
+            cout << "L infinity error: " << data[0] << endl;
+            cout << "L 2 error:        " << data[1] << endl;
+        }
+    }
+    else
+    {
+        Array<OneD, NekDouble> data(2);
+        data[0] = Exp->Linf(Fce->GetPhys());
+        data[1] = Exp->L2  (Fce->GetPhys());
+        vComm->Send(0,data);
+    }
     //--------------------------------------------
 
     return 0;

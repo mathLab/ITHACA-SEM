@@ -45,13 +45,13 @@ namespace Nektar
      * Registers the class with the Factory.
      */
     std::string CellModelFitzHughNagumo::className
-            = CellModelFactory::RegisterCreatorFunction(
+            = GetCellModelFactory().RegisterCreatorFunction(
                 "FitzHughNagumo",
                 CellModelFitzHughNagumo::create,
                 "Phenomological model of squid nerve cell.");
 
     CellModelFitzHughNagumo::CellModelFitzHughNagumo(
-                    SessionReaderSharedPtr& pSession, const int nq)
+                    LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
             : CellModel(pSession, nq)
     {
         pSession->LoadParameter("beta",          m_beta,         0.0);

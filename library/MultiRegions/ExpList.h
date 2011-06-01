@@ -36,6 +36,7 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
@@ -77,6 +78,9 @@ namespace Nektar
         public:
             /// The default constructor.
             MULTI_REGIONS_EXPORT ExpList();
+
+            /// The default constructor.
+            ExpList(LibUtilities::CommSharedPtr &pComm);
 
             /// The copy constructor.
             MULTI_REGIONS_EXPORT ExpList(const ExpList &in, bool DeclareCoeffPhysArrays = true);
@@ -678,10 +682,19 @@ namespace Nektar
                 return shared_from_this();
             }
 
+            /// Returns the comm object
+            boost::shared_ptr<LibUtilities::Comm> GetComm()
+            {
+                return m_comm;
+            }
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
                                                            const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+
+            /// Communicator
+            LibUtilities::CommSharedPtr m_comm;
 
             /// The total number of local degrees of freedom. #m_ncoeffs
             /// \f$=N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_l\f$

@@ -57,8 +57,9 @@ namespace Nektar
      * \param 
      * \param
      */
-    FitzHughNagumo::FitzHughNagumo(string &fileNameString):
-        ADRBase(fileNameString,true),
+    FitzHughNagumo::FitzHughNagumo( LibUtilities::CommSharedPtr& pComm,
+                                    LibUtilities::SessionReaderSharedPtr& pSession):
+        ADRBase(pComm,pSession,true),
         m_infosteps(10),
         m_explicitDiffusion(true),
         m_explicitReaction(true)

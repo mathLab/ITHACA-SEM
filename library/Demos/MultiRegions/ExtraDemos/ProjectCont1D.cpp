@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField1D.h>
 #include <SpatialDomains/Conditions.h>
 
@@ -13,6 +17,25 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+
+    string meshfile(argv[1]);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+    }
+
     MultiRegions::ContField1DSharedPtr Exp,Sol;
 
     int     i,j,k;
@@ -30,12 +53,9 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    infile = argv[1];
-    string in(infile);
-
     SpatialDomains::MeshGraph1D graph1D;
-    graph1D.ReadGeometry(in);
-    graph1D.ReadExpansions(in);
+    graph1D.ReadGeometry(meshfile);
+    graph1D.ReadExpansions(meshfile);
 
 //    SpatialDomains::BoundaryConditions bcs(&graph1D);
 //    bcs.Read(in);
@@ -43,8 +63,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
+    const SpatialDomains::ExpansionMap &expansions = graph1D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes(); 
     cout << "Solving 1D Continuous Projection"  << endl; 
     cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<")" << endl;
@@ -55,7 +75,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::ContField1D>
-                                        ::AllocateSharedPtr(graph1D);
+                                        ::AllocateSharedPtr(vComm,graph1D);
     //----------------------------------------------
 
     //----------------------------------------------

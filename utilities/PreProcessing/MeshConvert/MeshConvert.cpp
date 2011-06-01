@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     int vDot = vFilename.find_last_of('.');
     string ext = vFilename.substr(++vDot, vFilename.length() - vDot);
 
-    boost::shared_ptr<Convert> G = ConvertFactory::CreateInstance(ext);
+    boost::shared_ptr<Convert> G = GetConvertFactory().CreateInstance(ext);
 
     G->ReadFile(vFilename);
     G->Process();

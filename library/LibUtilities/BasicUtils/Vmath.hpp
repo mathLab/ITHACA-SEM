@@ -540,6 +540,74 @@ namespace Vmath
         return xmin;
     }
     
+    /// \brief  vvtvp (vector times vector times vector): z = w*x*y
+    template<class T> T Dot(     int n,
+                                 const T   *w,
+                                 const T   *x)
+    {
+        T sum = 0;
+
+        while( n-- )
+        {
+            sum += (*w) * (*x);
+            ++w;
+            ++x;
+        }
+        return sum;
+    }
+
+    /// \brief  vvtvp (vector times vector times vector): z = w*x*y
+    template<class T> T Dot(     int n,
+                                 const T   *w, const int incw,
+                                 const T   *x, const int incx)
+    {
+        T sum = 0;
+
+        while( n-- )
+        {
+            sum += (*w) * (*x);
+            w += incw;
+            x += incx;
+        }
+        return sum;
+    }
+
+    /// \brief  vvtvp (vector times vector times vector): z = w*x*y
+    template<class T> T Dot2(    int n,
+                                 const T   *w,
+                                 const T   *x,
+                                 const int *y)
+    {
+        T sum = 0;
+
+        while( n-- )
+        {
+            sum += (*y == 1 ? (*w) * (*x) : 0 );
+            ++w;
+            ++x;
+            ++y;
+        }
+        return sum;
+    }
+
+    /// \brief  vvtvp (vector times vector times vector): z = w*x*y
+    template<class T> T Dot2(    int n,
+                                 const T   *w, const int incw,
+                                 const T   *x, const int incx,
+                                 const int *y, const int incy)
+    {
+        T sum = 0;
+
+        while( n-- )
+        {
+            sum += (*y == 1 ? (*w) * (*x) : 0.0 );
+            w += incw;
+            x += incx;
+            y += incy;
+        }
+        return sum;
+    }
+
     /********** Memory routines  ***********************/
 
 #if 0     

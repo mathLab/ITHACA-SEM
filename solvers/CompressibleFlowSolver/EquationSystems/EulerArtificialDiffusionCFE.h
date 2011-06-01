@@ -60,14 +60,18 @@ namespace Nektar
   {
   public:
     /// Creates an instance of this class
-    static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) 
+    static EquationSystemSharedPtr create(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      return MemoryManager<EulerArtificialDiffusionCFE>::AllocateSharedPtr(pSession);
+      return MemoryManager<EulerArtificialDiffusionCFE>::AllocateSharedPtr(pComm, pSession);
     }
     /// Name of class
     static std::string className;
     
-    EulerArtificialDiffusionCFE(SessionReaderSharedPtr& pSession);
+    EulerArtificialDiffusionCFE(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession);
     
     virtual ~EulerArtificialDiffusionCFE();
 

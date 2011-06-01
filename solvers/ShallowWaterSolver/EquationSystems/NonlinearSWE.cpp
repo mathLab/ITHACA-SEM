@@ -42,10 +42,12 @@
 
 namespace Nektar
 {
-  string NonlinearSWE::className = EquationSystemFactory::RegisterCreatorFunction("NonlinearSWE", NonlinearSWE::create, "Nonlinear shallow water equation in conservative variables.");
+  string NonlinearSWE::className = GetEquationSystemFactory().RegisterCreatorFunction("NonlinearSWE", NonlinearSWE::create, "Nonlinear shallow water equation in conservative variables.");
   
-  NonlinearSWE::NonlinearSWE(SessionReaderSharedPtr& pSession)
-    : ShallowWaterSystem(pSession)
+  NonlinearSWE::NonlinearSWE(
+          LibUtilities::CommSharedPtr& pComm,
+          LibUtilities::SessionReaderSharedPtr& pSession)
+    : ShallowWaterSystem(pComm, pSession)
   {
       
     if (m_explicitAdvection)

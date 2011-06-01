@@ -111,6 +111,7 @@ namespace Nektar
 
         typedef LibUtilities::NekFactory< std::string, Convert> ConvertFactory;
 
+        ConvertFactory& GetConvertFactory();
     }
 }
 #endif

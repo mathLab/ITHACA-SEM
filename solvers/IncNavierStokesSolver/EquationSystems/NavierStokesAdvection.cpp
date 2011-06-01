@@ -54,10 +54,12 @@ namespace Nektar
      * \param
      */
 
-    NavierStokesAdvection::NavierStokesAdvection(string &pSessionName,
+    NavierStokesAdvection::NavierStokesAdvection(
+            LibUtilities::CommSharedPtr                 pComm,
+            LibUtilities::SessionReaderSharedPtr        pSession,
             SpatialDomains::MeshGraphSharedPtr          pGraph,
             SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions):
-        AdvectionTerm(pSessionName, pGraph, pBoundaryConditions)
+        AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	
     {
 

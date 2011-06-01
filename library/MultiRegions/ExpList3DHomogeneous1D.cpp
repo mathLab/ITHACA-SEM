@@ -46,26 +46,28 @@ namespace Nektar
         {
         }
 
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+                                                       const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
 													   bool useFFT):
-            ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
         {
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+                                                       const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
 													   bool useFFT,
                                                        SpatialDomains::MeshGraph2D &graph2D):
-            ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
         {
             int n,j,nel;
             bool False = false;
             ExpList2DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<ExpList2D>::AllocateSharedPtr(graph2D,
+            m_planes[0] = plane_zero = MemoryManager<ExpList2D>::AllocateSharedPtr(m_comm,graph2D,
                                                                       False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();

@@ -150,6 +150,7 @@ namespace Nektar
             {
                 TiXmlElement* operationType = paramList->FirstChildElement(
                                       ElementalOptimizationOperationTypeMap[n]);
+
                 if(operationType)
                 {
                     TiXmlElement* arrayElement = operationType

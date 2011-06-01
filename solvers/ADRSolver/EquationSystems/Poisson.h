@@ -43,14 +43,17 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) {
-            return MemoryManager<Poisson>::AllocateSharedPtr(pSession);
+        static EquationSystemSharedPtr create(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession) {
+            return MemoryManager<Poisson>::AllocateSharedPtr(pComm, pSession);
         }
         /// Name of class
         static std::string className1;
         static std::string className2;
 
-        Poisson(SessionReaderSharedPtr& pSession);
+        Poisson(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
         virtual ~Poisson();
 
     protected:

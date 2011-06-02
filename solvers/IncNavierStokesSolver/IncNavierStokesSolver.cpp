@@ -52,13 +52,15 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    string fileNameString(argv[1]);
+    string filename(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
+    string vCommModule("Serial");
 
     //----------------------------------------------------------------
     // Read the mesh and construct container class
 
+    LibUtilities::CommSharedPtr vComm;
     LibUtilities::SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
   
@@ -66,9 +68,18 @@ int main(int argc, char *argv[])
     time(&starttime);
     
     // Create session reader.
-    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(fileNameString);
-    
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
+    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+
+    // Create communicator
+    if (session->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = session->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
     try
     {

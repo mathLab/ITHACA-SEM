@@ -38,7 +38,7 @@
 #include <cmath> 
 
 #include <ADRSolver/EquationSystem.h>
-#include <ADRSolver/SessionReader.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/LinearAlgebra/Arpack.hpp>
 
 using namespace Nektar;
@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     string fileNameString(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
+    string vCommModule("Serial");
 
     //----------------------------------------------------------------
     // Read the mesh and construct container class
@@ -66,7 +67,18 @@ int main(int argc, char *argv[])
     time(&starttime);
     
     // Create session reader.
-    session = MemoryManager<SessionReader>::AllocateSharedPtr(fileNameString);
+    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+
+    // Create communicator
+    if (session->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = session->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
     
     // Create instance of module to solve the equation specified in the session.
     try

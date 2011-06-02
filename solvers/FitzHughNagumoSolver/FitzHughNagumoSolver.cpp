@@ -48,18 +48,32 @@ int main(int argc, char *argv[])
     
     ASSERTL0(argc == 2,"\n \t Usage: FitzHughNagumoSolver  meshfile \n");
 
-    string fileNameString(argv[1]);
+    string filename(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
+    string vCommModule("Serial");
+    LibUtilities::CommSharedPtr vComm;
+    LibUtilities::SessionReaderSharedPtr session;
     
     time(&starttime);    
 
-    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(fileNameString);
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
+    // Create session reader.
+    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+
+    // Create communicator
+    if (session->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = session->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    FitzHughNagumo EAD(vComm, vSession);
+    FitzHughNagumo EAD(vComm, session);
     
     // Time integration function object for unsteady equations
     LibUtilities::TimeIntegrationSchemeOperators ode;

@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
     string filename(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
+    string vCommModule("Serial");
 
     LibUtilities::CommSharedPtr vComm;
     LibUtilities::SessionReaderSharedPtr session;
@@ -61,11 +62,19 @@ int main(int argc, char *argv[])
     // Record start time.
     time(&starttime);
 
-    // Create communicator
-    vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
-
     // Create session reader.
     session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+
+    // Create communicator
+    if (session->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = session->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
     // Create instance of module to solve the equation specified in the session.
     try

@@ -13,6 +13,8 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::SessionReaderSharedPtr vSession;
+    LibUtilities::CommSharedPtr vComm;
     MultiRegions::ContField3DSharedPtr Exp, Fce;
     MultiRegions::ExpListSharedPtr DerExp1, DerExp2, DerExp3;
     int     i, nq,  coordim;
@@ -21,8 +23,20 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
     string meshfile(argv[1]);
+    string vCommModule("Serial");
 
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
+    if (vSession->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = vSession->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
 
     if (vComm->GetSize() > 1)
     {

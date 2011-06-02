@@ -22,9 +22,23 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
-
+    LibUtilities::SessionReaderSharedPtr vSession;
+    LibUtilities::CommSharedPtr vComm;
     string meshfile(argv[1]);
+    string vCommModule("Serial");
+
+    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
+    if (vSession->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = vSession->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
 
     if (vComm->GetSize() > 1)
     {

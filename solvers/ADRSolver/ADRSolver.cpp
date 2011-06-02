@@ -62,8 +62,8 @@ int main(int argc, char *argv[])
     // Record start time.
     time(&starttime);
 
-//    try
-//    {
+    try
+    {
         // Create session reader.
         session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
 
@@ -113,15 +113,15 @@ int main(int argc, char *argv[])
         }
 
         vComm->Finalise();
-//    }
-//    catch (const std::runtime_error& e)
-//    {
-//        return 1;
-//    }
-//    catch (const std::string& eStr)
-//    {
-//        cout << "Error: " << eStr << endl;
-//    }
+    }
+    catch (const std::runtime_error& e)
+    {
+        return 1;
+    }
+    catch (const std::string& eStr)
+    {
+        cout << "Error: " << eStr << endl;
+    }
 
     return 0;
 }

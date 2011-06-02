@@ -73,6 +73,7 @@ SET(PolyLibHeaders
 SET(CommunicationHeaders
     ./Communication/Comm.h
     ./Communication/CommSerial.h
+    ./Communication/GsLib.hpp
 )
 
 SET(ExpressionTemplates
@@ -157,7 +158,7 @@ SET(CommunicationSources
 
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders} 
-        ./Communication/CommMpi.h ./Communication/GsLib.hpp)
+        ./Communication/CommMpi.h)
     SET(CommunicationSources ${CommunicationSources}
         ./Communication/CommMpi.cpp)
 ENDIF(NEKTAR_USE_MPI)

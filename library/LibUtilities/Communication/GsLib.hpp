@@ -41,7 +41,9 @@ using namespace std;
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#ifdef MPI
 #include <LibUtilities/Communication/CommMpi.h>
+#endif
 using namespace Nektar;
 
 namespace Gs
@@ -52,9 +54,13 @@ namespace Gs
 
     typedef struct { void *ptr; size_t n,max; } array;
     typedef array buffer;
-
+#ifdef MPI
     typedef MPI_Comm comm_ext;
     typedef MPI_Request comm_req;
+#else
+    typedef int comm_ext;
+    typedef int comm_req;
+#endif
 
     struct comm {
       unsigned int id;
@@ -137,6 +143,7 @@ namespace Gs
     static gs_data* Init (  const Nektar::Array<OneD, long> pId,
                             const LibUtilities::CommSharedPtr& pComm)
     {
+#ifdef MPI
         if (pComm->GetSize() == 1)
         {
             return 0;
@@ -148,6 +155,9 @@ namespace Gs
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
         return nektar_gs_setup(&pId[0], pId.num_elements(), &vComm);
+#else
+        return 0;
+#endif
     }
 
 
@@ -163,6 +173,7 @@ namespace Gs
     static void Unique (    const Nektar::Array<OneD, long> pId,
                             const LibUtilities::CommSharedPtr& pComm)
     {
+#ifdef MPI
         if (pComm->GetSize() == 1)
         {
             return;
@@ -174,6 +185,7 @@ namespace Gs
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
         nektar_gs_unique(&pId[0], pId.num_elements(), &vComm);
+#endif
     }
 
 
@@ -182,10 +194,12 @@ namespace Gs
      */
     static void Finalise (gs_data *pGsh)
     {
+#ifdef MPI
         if (pGsh)
         {
             nektar_gs_free(pGsh);
         }
+#endif
     }
 
 
@@ -198,11 +212,11 @@ namespace Gs
                        gs_data *pGsh, Nektar::Array<OneD, NekDouble> pBuffer
                                                         = NullNekDouble1DArray)
     {
+#ifdef MPI
         if (!pGsh)
         {
             return;
         }
-
         if (pBuffer.num_elements() == 0)
         {
             nektar_gs(&pU[0], gs_double, pOp, false, pGsh, 0);
@@ -214,6 +228,7 @@ namespace Gs
             buf.n = pBuffer.num_elements();
             nektar_gs(&pU[0], gs_double, pOp, false, pGsh, &buf);
         }
+#endif
     }
 
 }

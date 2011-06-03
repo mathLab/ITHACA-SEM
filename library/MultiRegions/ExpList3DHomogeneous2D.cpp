@@ -472,7 +472,7 @@ namespace Nektar
 			for(int i=0 ; i<nylines/2 ; i++)
 			{
 				ky = i;
-				for (int j=0 ; i<nzlines; j++)
+				for (int j=0 ; j<nzlines; j++)
 				{
 					Vmath::Smul(2*n_coeffs_line,ky,tmp1 = temparray + (2*nzlines*j+i*2*n_coeffs_line),1,tmp2 = temparray1 + (2*nzlines*j+i*2*n_coeffs_line),1);
 				}
@@ -482,7 +482,7 @@ namespace Nektar
 			for( int i=0 ; i<nzlines/2 ; i++ )
 			{
 				kz = i;
-				Vmath::Smul(4*n_coeffs_line*nylines,kz,tmp1 = temparray + (i*4*n_coeffs_line*nylines),1,tmp2 = temparray2 + (i*4*n_coeffs_line*nylines),1);
+				Vmath::Smul(2*n_coeffs_line*nylines,kz,tmp1 = temparray + (i*2*n_coeffs_line*nylines),1,tmp2 = temparray2 + (i*2*n_coeffs_line*nylines),1);
 			}
 			
 			v_BwdTrans(temparray1,out_d1,UseContCoeffs);
@@ -535,7 +535,7 @@ namespace Nektar
 					for(int i=0 ; i<nylines/2 ; i++)
 					{
 						ky = i;
-						for (int j=0 ; i<nzlines; j++)
+						for (int j=0 ; j<nzlines; j++)
 						{
 							Vmath::Smul(2*n_coeffs_line,ky,tmp1 = temparray + (2*nzlines*j+i*2*n_coeffs_line),1,tmp2 = temparray + (2*nzlines*j+i*2*n_coeffs_line),1);
 						}
@@ -546,7 +546,7 @@ namespace Nektar
 					for( int i=0 ; i<nzlines/2 ; i++ )
 					{
 						kz = i;
-						Vmath::Smul(4*n_coeffs_line*nylines,kz,tmp1 = temparray + (i*4*n_coeffs_line*nylines),1,tmp2 = temparray + (i*4*n_coeffs_line*nylines),1);
+						Vmath::Smul(2*n_coeffs_line*nylines,kz,tmp1 = temparray + (i*2*n_coeffs_line*nylines),1,tmp2 = temparray + (i*2*n_coeffs_line*nylines),1);
 					}
 					
 				}

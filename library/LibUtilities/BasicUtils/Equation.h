@@ -33,16 +33,16 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_SPATIALDOMAINS_EQUATION_HPP
-#define NEKTAR_SPATIALDOMAINS_EQUATION_HPP
+#ifndef NEKTAR_LIBUTILITIES_EQUATION_HPP
+#define NEKTAR_LIBUTILITIES_EQUATION_HPP
 
 #include <string>
 #include <LibUtilities/Interpreter/ExpressionEvaluator.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 namespace Nektar
 {
-    namespace SpatialDomains
+    namespace LibUtilities
     {
         class Equation
         {
@@ -86,8 +86,10 @@ namespace Nektar
 
         private:
             std::string m_eqn;
-            SPATIAL_DOMAINS_EXPORT static LibUtilities::ExpressionEvaluator m_evaluator;
+            LIB_UTILITIES_EXPORT static LibUtilities::ExpressionEvaluator m_evaluator;
         };
+
+        typedef boost::shared_ptr<Equation> EquationSharedPtr;
     }
 }
 

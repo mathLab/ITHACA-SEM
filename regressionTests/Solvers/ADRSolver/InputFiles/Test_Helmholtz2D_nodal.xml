@@ -347,13 +347,13 @@
     </REGION>    
     </BOUNDARYCONDITIONS>
     
-    <FORCING>
-      <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
-    </FORCING>
+    <FUNCTION NAME="Forcing">
+      <E VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
   
-    <EXACTSOLUTION>
-      <F VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
   
   </CONDITIONS>
   

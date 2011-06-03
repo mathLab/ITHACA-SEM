@@ -812,9 +812,9 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <INITIALCONDITIONS>
-      <R FILE="Test_CylinderSubsonicMix.rst" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <F FILE="Test_CylinderSubsonicMix.rst" />
+    </FUNCTION>
 
   </CONDITIONS>
 

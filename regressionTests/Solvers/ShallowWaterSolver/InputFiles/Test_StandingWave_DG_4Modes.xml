@@ -156,17 +156,17 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <INITIALCONDITIONS>
-      <F VAR="eta"  VALUE="0.01*cos((PI/10.0)*x) +0.01*cos((PI/10.0)*y)" />
-      <F VAR="u"    VALUE="0.0" /> 
-      <F VAR="v"    VALUE="0.0" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="eta"  VALUE="0.01*cos((PI/10.0)*x) +0.01*cos((PI/10.0)*y)" />
+      <E VAR="u"    VALUE="0.0" /> 
+      <E VAR="v"    VALUE="0.0" />
+    </FUNCTION>
     
-    <EXACTSOLUTION>
-      <F VAR ="eta" VALUE="0.01*cos((PI/10.0)*x) + 0.01*cos((PI/10.0)*y)" />
-      <F VAR="u"    VALUE="0.0" /> 
-      <F VAR="v"    VALUE="0.0" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR ="eta" VALUE="0.01*cos((PI/10.0)*x) + 0.01*cos((PI/10.0)*y)" />
+      <E VAR="u"    VALUE="0.0" /> 
+      <E VAR="v"    VALUE="0.0" />
+    </FUNCTION>
     
   </CONDITIONS>
   

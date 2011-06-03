@@ -69,7 +69,7 @@ namespace Nektar
         /// Perform any initialisation necessary before solving the problem.
         void DoInitialise(void);
         /// Perform initialisation of the force.
-        void InitialiseForce();
+//        void InitialiseForce();
         /// Perform initialisation of the base flow.
         void InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base);        
 

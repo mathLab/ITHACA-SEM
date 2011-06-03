@@ -83,13 +83,13 @@
        <F LHS="Vy" VALUE="1.0" />
     </USERDEFINEDEQNS>
     
-    <INITIALCONDITIONS>
-       <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+       <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
    
-    <EXACTSOLUTION>
-       <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*(x-1*t))*sin(wavefreq*(y-1*t))" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+       <E VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*(x-1*t))*sin(wavefreq*(y-1*t))" />
+    </FUNCTION>
 
 </CONDITIONS>
 

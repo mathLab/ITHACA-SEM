@@ -41,7 +41,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <SpatialDomains/Equation.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
@@ -70,7 +70,7 @@ namespace Nektar
             {
             }
 
-            BoundaryConditionBase(BoundaryConditionType type, Equation userDefined):
+            BoundaryConditionBase(BoundaryConditionType type, LibUtilities::Equation userDefined):
                 m_boundaryConditionType(type),  m_userDefined(userDefined)
             {
             }
@@ -83,12 +83,12 @@ namespace Nektar
                 return m_boundaryConditionType;
             }
 
-            void SetUserDefined(Equation equation)
+            void SetUserDefined(LibUtilities::Equation equation)
             {
                 m_userDefined = equation;
             }
 
-            Equation GetUserDefined() const
+            LibUtilities::Equation GetUserDefined() const
             {
                 return m_userDefined;
             }
@@ -96,7 +96,7 @@ namespace Nektar
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
-            Equation m_userDefined;
+            LibUtilities::Equation m_userDefined;
         };
 
 
@@ -109,7 +109,7 @@ namespace Nektar
                 {
                 }
 
-            Equation m_dirichletCondition;
+             LibUtilities::Equation m_dirichletCondition;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
@@ -120,7 +120,7 @@ namespace Nektar
             {
             }
 
-            Equation m_neumannCondition;
+            LibUtilities::Equation m_neumannCondition;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
@@ -132,8 +132,8 @@ namespace Nektar
             }
                 // \frac{\partial {u}}{\partial{n}} +
                 // m_robinPrimativeCoeff(x,y,z)*u = m_robinFunction(x,y,z)
-                Equation m_robinFunction;
-                Equation m_robinPrimitiveCoeff;
+            LibUtilities::Equation m_robinFunction;
+            LibUtilities::Equation m_robinPrimitiveCoeff;
         };
 
 
@@ -167,22 +167,22 @@ namespace Nektar
 
         const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
 
-        typedef Equation ForcingFunction;
+        typedef LibUtilities::Equation ForcingFunction;
         typedef boost::shared_ptr<ForcingFunction> ForcingFunctionShPtr;
         typedef boost::shared_ptr<const ForcingFunction> ConstForcingFunctionShPtr;
         typedef std::map<std::string, ForcingFunctionShPtr> ForcingFunctionsMap;
 
-        typedef Equation ExactSolution;
+        typedef LibUtilities::Equation ExactSolution;
         typedef boost::shared_ptr<ExactSolution> ExactSolutionShPtr;
         typedef boost::shared_ptr<const ExactSolution> ConstExactSolutionShPtr;
         typedef std::map<std::string, ExactSolutionShPtr> ExactSolutionMap;
 
-        typedef Equation UserDefinedEqn;
+        typedef LibUtilities::Equation UserDefinedEqn;
         typedef boost::shared_ptr<UserDefinedEqn> UserDefinedEqnShPtr;
         typedef boost::shared_ptr<const UserDefinedEqn> ConstUserDefinedEqnShPtr;
         typedef std::map<std::string, UserDefinedEqnShPtr> UserDefinedEqnMap;
 
-        typedef Equation InitialCondition;
+        typedef LibUtilities::Equation InitialCondition;
         typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
         typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;
@@ -258,7 +258,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT bool SolverInfoExists(const std::string &property);
 
             SPATIAL_DOMAINS_EXPORT const std::string &GetFunction(const std::string &lhs);
-            SPATIAL_DOMAINS_EXPORT Equation GetFunctionAsEquation(const std::string &lhs);
+            SPATIAL_DOMAINS_EXPORT LibUtilities::Equation GetFunctionAsEquation(const std::string &lhs);
 
             /// Will look for the lhs equal to str and if found
             /// will return the function in str and return true.

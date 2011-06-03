@@ -86,13 +86,13 @@
             </REGION>
         </BOUNDARYCONDITIONS>
         
-        <FORCING>
-            <F VAR="u" VALUE="-(Lambda + PI*PI)*cos(PI*x)" />
-        </FORCING>
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda + PI*PI)*cos(PI*x)" />
+        </FUNCTION>
 
-        <EXACTSOLUTION>
-            <F VAR ="u" VALUE="cos(PI*x)" />
-        </EXACTSOLUTION>
+        <FUNCTION NAME="ExactSolution">
+            <E VAR ="u" VALUE="cos(PI*x)" />
+        </FUNCTION>
 
     </CONDITIONS>
 

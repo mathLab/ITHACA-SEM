@@ -100,13 +100,13 @@
        <F LHS="Vz" VALUE="1.0" />
     </USERDEFINEDEQNS>
     
-    <INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
        <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
-    </INITIALCONDITIONS>
+    </FUNCTION>
    
-    <EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
        <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
-    </EXACTSOLUTION>
+    </FUNCTION>
 
 </CONDITIONS>
 

@@ -568,55 +568,12 @@ namespace Nektar
         NekOptimize::LoadElementalOptimizationParameters(m_filename);
 
         // Set Default Parameter
-        if(m_boundaryConditions->CheckForParameter("Time") == true)
-        {
-            m_time = m_boundaryConditions->GetParameter("Time");
-        }
-        else
-        {
-            m_time = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("TimeStep") == true)
-        {
-            m_timestep = m_boundaryConditions->GetParameter("TimeStep");
-        }
-
-        if(m_boundaryConditions->CheckForParameter("NumSteps") == true)
-        {
-            m_steps = m_boundaryConditions->GetParameter("NumSteps");
-        }
-        else
-        {
-            m_steps  = 0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("IO_CheckSteps") == true)
-        {
-            m_checksteps = m_boundaryConditions->GetParameter("IO_CheckSteps");
-        }
-        else
-        {
-            m_checksteps = m_steps;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("FinTime") == true)
-        {
-            m_fintime = m_boundaryConditions->GetParameter("FinTime");
-        }
-        else
-        {
-            m_fintime = 0;
-        }
-		
-        if(m_boundaryConditions->CheckForParameter("NumQuadPointsError") == true)
-        {
-             m_NumQuadPointsError = m_boundaryConditions->GetParameter("NumQuadPointsError");
-        }
-        else
-        {
-             m_NumQuadPointsError = 0;
-        }
+        m_session->LoadParameter("Time", m_time, 0.0);
+        m_session->LoadParameter("TimeStep", m_timestep, 0.01);
+        m_session->LoadParameter("NumSteps", m_steps, 0);
+        m_session->LoadParameter("IO_CheckSteps", m_checksteps, m_steps);
+        m_session->LoadParameter("FinTime", m_fintime, 0);
+        m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
 
         // Read in spatial data
         int nq = m_fields[0]->GetNpoints();
@@ -634,14 +591,11 @@ namespace Nektar
              
       //define dimension of the forcing function     
         m_FDim = m_fields.num_elements();
-        if (m_boundaryConditions->CheckForParameter("EQTYPE")
-            && m_boundaryConditions->CheckForParameter("SOLVERTYPE"))
+        if (m_session->DefinesSolverInfo("EQTYPE")
+            && m_session->DefinesSolverInfo("SOLVERTYPE"))
         {      
-            std::string sname
-                = m_boundaryConditions->GetSolverInfo("EQTYPE");
-
-            std::string tname 
-                = m_boundaryConditions->GetSolverInfo("SOLVERTYPE"); 
+            std::string sname = m_session->GetSolverInfo("EQTYPE");
+            std::string tname = m_session->GetSolverInfo("SOLVERTYPE");
         
             if((sname=="UnsteadyNavierStokes")
                                     &&(tname=="VelocityCorrectionScheme"))
@@ -676,49 +630,18 @@ namespace Nektar
         }
     }
 
-   // Perform manipulation of the force data.
-   void ADRBase::CalcForce(Array<OneD, MultiRegions::ExpListSharedPtr> &force)
-   {
-       int nq = m_fields[0]->GetNpoints();
-       for(int i = 0 ; i < (m_spacedim); i++)
-       {
-            for(int j = 0; j < nq; j++)
-            {
-            //    (force[i]->UpdatePhys())[j]=
-            //               exp(-pow((m_fields[i]->GetPhys())[j],2));
-            	   (force[i]->UpdatePhys())[j]= (m_forces[i]->GetPhys())[j];
-            }
-            force[i]->SetPhysState(true);
-//            force[m_fields[i]]->PhysDeriv(i,force[m_fields[i]], wk);
-       }
-   }
-
    void ADRBase::SetInitialForce(NekDouble initialtime) 
    {
-	if(m_boundaryConditions->SolverInfoExists("FORCE"))
-	{
-		m_bforce=true;
-                InitialiseForcingFunctions(m_forces);
-		std::string forcefileyn= m_boundaryConditions->GetSolverInfo("FORCE");
-		//capitalise the string forcefileyn
-		std::transform(forcefileyn.begin(),forcefileyn.end(),forcefileyn.begin(), ::toupper);
-
-		if(forcefileyn=="FILE")
-		{	
-			string forcefile = m_filename.substr(0, m_filename.find_last_of("."));
-			cout<<"Force from file: "<<forcefile<<"-force.rst"<<endl;
-			ImportFldForce(forcefile + "-force.rst");
-			CalcForce(m_forces);
-		}
-		else
-		{
-			SetPhysForcingFunctions(m_forces);
-		}
-	}
-	else
-	{
-		m_bforce= false;
-	}
+       if (m_session->DefinesFunction("BodyForce"))
+       {
+           m_bforce=true;
+           InitialiseForcingFunctions(m_forces);
+           SetFunction(m_forces, "BodyForce");
+       }
+       else
+       {
+           m_bforce= false;
+       }
    }
 
       
@@ -731,44 +654,58 @@ namespace Nektar
      void ADRBase::v_SetInitialConditions(NekDouble initialtime,
                                           bool dumpInitialConditions)
     {
-        std::string restartstr = "RESTART";
         cout << "Initial Conditions:" << endl;
-        // Check for restart file.
-        if(m_boundaryConditions->FoundInitialCondition(restartstr))
+        if (m_session->DefinesFunction("InitialConditions"))
         {
-            SpatialDomains::ConstInitialConditionShPtr ifunc
-                    = m_boundaryConditions->GetInitialCondition(restartstr);
+            // Check for restart file.
+            if (m_session->GetFunctionType("InitialConditions")
+                    == LibUtilities::eFunctionTypeFile)
+            {
+                std::string restartfile
+                            = m_session->GetFunctionFilename("InitialConditions");
+                cout << "\tRestart file: "<< restartfile << endl;
+                ImportFld(restartfile, m_fields);
+            }
+            else
+            {
+                int nq = m_fields[0]->GetNpoints();
 
-            std::string restartfile = ifunc->GetEquation();
-            cout << "\tRestart file: "<< restartfile << endl;
-            ImportFld(restartfile);
+                Array<OneD,NekDouble> x0(nq);
+                Array<OneD,NekDouble> x1(nq);
+                Array<OneD,NekDouble> x2(nq);
+
+                // get the coordinates (assuming all fields have the same
+                // discretisation)
+                m_fields[0]->GetCoords(x0,x1,x2);
+
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    LibUtilities::EquationSharedPtr ifunc
+                            = m_session->GetFunction("InitialConditions", i);
+                    for(int j = 0; j < nq; j++)
+                    {
+                        (m_fields[i]->UpdatePhys())[j]
+                                = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
+                    }
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+                                                     m_fields[i]->UpdateCoeffs());
+                    cout << "\tField "<< m_session->GetVariable(i)
+                         <<": " << ifunc->GetEquation() << endl;
+                }
+            }
         }
         else
         {
             int nq = m_fields[0]->GetNpoints();
-
-            Array<OneD,NekDouble> x0(nq);
-            Array<OneD,NekDouble> x1(nq);
-            Array<OneD,NekDouble> x2(nq);
-
-            // get the coordinates (assuming all fields have the same
-            // discretisation)
-            m_fields[0]->GetCoords(x0,x1,x2);
-
             for(int i = 0 ; i < m_fields.num_elements(); i++)
             {
-                SpatialDomains::ConstInitialConditionShPtr ifunc
-                        = m_boundaryConditions->GetInitialCondition(i);
-                for(int j = 0; j < nq; j++)
-                {
-                    (m_fields[i]->UpdatePhys())[j]
-                            = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
-                }
+                Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                                                  m_fields[i]->UpdateCoeffs());
-                cout << "\tField "<< m_boundaryConditions->GetVariable(i)
-                     <<": " << ifunc->GetEquation() << endl;
+                cout << "\tField "<< m_session->GetVariable(i)
+                     <<": 0 (default)" << endl;
             }
         }
         if(dumpInitialConditions)
@@ -792,34 +729,46 @@ namespace Nektar
      * the expression provided by the BoundaryConditions object.
      * @param   force           Array of fields to assign forcing.
      */
-     void ADRBase::SetPhysForcingFunctions(
-                        Array<OneD, MultiRegions::ExpListSharedPtr> &force)
+     void ADRBase::SetFunction(
+                        Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                        const std::string& pFunctionName)
     {
-        int nq = m_fields[0]->GetNpoints();
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
-        force[0]->GetCoords(x0,x1,x2);
-        for(int i = 0 ; i < (m_FDim); i++)
-        {
-            SpatialDomains::ConstForcingFunctionShPtr ffunc
-                    = m_boundaryConditions->GetForcingFunction(i);
-            for(int j = 0; j < nq; j++)
-            {
-                (force[i]->UpdatePhys())[j]
-                        = ffunc->Evaluate(x0[j],x1[j],x2[j]);
-            }
-            force[i]->SetPhysState(true);
-        }
+         LibUtilities::FunctionType vType = m_session->GetFunctionType(pFunctionName);
+         if (vType == LibUtilities::eFunctionTypeFile)
+         {
+             std::string filename = m_session->GetFunctionFilename(pFunctionName);
+             cout << pFunctionName << " from file: " << filename << endl;
+             ImportFld(filename, pFields);
+         }
+         else if (vType == LibUtilities::eFunctionTypeExpression)
+         {
+             int nq = m_fields[0]->GetNpoints();
+             Array<OneD,NekDouble> x0(nq);
+             Array<OneD,NekDouble> x1(nq);
+             Array<OneD,NekDouble> x2(nq);
+             // get the coordinates (assuming all fields have the same
+             // discretisation)
+             pFields[0]->GetCoords(x0,x1,x2);
+             for(int i = 0 ; i < pFields.num_elements(); i++)
+             {
+                 LibUtilities::EquationSharedPtr ffunc
+                         = m_session->GetFunction(pFunctionName, i);
+                 for(int j = 0; j < nq; j++)
+                 {
+                     (pFields[i]->UpdatePhys())[j]
+                             = ffunc->Evaluate(x0[j],x1[j],x2[j]);
+                 }
+                 pFields[i]->SetPhysState(true);
+             }
+
+         }
     }
 
     void ADRBase::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &force)
    {  
         force  = Array<OneD, MultiRegions::ExpListSharedPtr>(m_FDim);
         int nq = m_fields[0]->GetNpoints();
-        switch(m_spacedim)
+        switch(m_expdim)
     	{
     	 case 1:
                    force[0] = MemoryManager<MultiRegions
@@ -1606,7 +1555,7 @@ namespace Nektar
      * coefficient storage.
      * @param   infile          Filename to read.
      */
-    void ADRBase::ImportFld(std::string &infile)
+    void ADRBase::ImportFld(std::string &infile, Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
@@ -1614,49 +1563,23 @@ namespace Nektar
         m_graph->Import(infile,FieldDef,FieldData);
 
         // copy FieldData into m_fields
-        for(int j = 0; j < m_fields.num_elements(); ++j)
+        for(int j = 0; j < pFields.num_elements(); ++j)
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                bool flag = FieldDef[i]->m_fields[j]
-                                    == m_boundaryConditions->GetVariable(j);
-                ASSERTL1(flag, (std::string("Order of ") + infile
-                            + std::string(" data and that defined in "
-                                    "m_boundaryconditions differs")).c_str());
+                ASSERTL1(FieldDef[i]->m_fields[j] == m_session->GetVariable(j),
+                         std::string("Order of ") + infile
+                         + std::string(" data and that defined in "
+                                       "m_boundaryconditions differs"));
 
-                m_fields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                  FieldDef[i]->m_fields[j]);
             }
-            m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),
-                                  m_fields[j]->UpdatePhys());
+            pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),
+                                 pFields[j]->UpdatePhys());
         }
     }
     
-    
-    
-    void ADRBase::ImportFldForce(std::string pInfile)
-    {
-    	 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
-    	 std::vector<std::vector<NekDouble>   > FieldData;
-    	 m_graph->Import(pInfile, FieldDef,FieldData);
-    	 int nvar= m_FDim;   	    
-	 for(int j=0; j <nvar; ++j)
-    	 {
-    	     for(int i=0; i<FieldDef.size(); ++i)
-    	     {
-        	  bool flag = FieldDef[i]->m_fields[j]
-    	          ==m_boundaryConditions->GetVariable(j);
-    	          ASSERTL1(flag, (std::string("Order of ") +pInfile
-    	             	     + std::string("  data and that defined in "
-    	             	     	     "m_boundaryconditions differs")).c_str());
-    	          m_forces[j]->ExtractDataToCoeffs(FieldDef[i]
-    	            	    , FieldData[i], FieldDef[i]->m_fields[j]);
-    	      }
-    	      m_forces[j]->BwdTrans(m_forces[j]->GetCoeffs(), m_forces[j]
-    	    		->UpdatePhys());    
-   	  }	    
-     }	
-
 
     /**
      * Write data to file in Tecplot format?
@@ -1980,8 +1903,8 @@ namespace Nektar
         // get the coordinates of the quad points
         m_fields[field]->GetCoords(x0,x1,x2);
 
-        SpatialDomains::ConstExactSolutionShPtr ifunc
-                        = m_boundaryConditions->GetExactSolution(field);
+        LibUtilities::EquationSharedPtr ifunc
+                            = m_session->GetFunction("ExactSolution",field);
         for(int j = 0; j < nq; j++)
         {
             outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);

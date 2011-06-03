@@ -633,7 +633,7 @@ namespace Nektar
             // Number of boundary expansion related to that region
             numBDEdge = m_fields[var]->GetBndCondExpansions()[i]->GetExpSize();
             // Evaluate boundary values g_D or g_N from input files
-            SpatialDomains::ConstInitialConditionShPtr ifunc =  m_boundaryConditions->GetInitialCondition(0);
+            LibUtilities::EquationSharedPtr ifunc =  m_session->GetFunction("InitialConditions", 0);
             npoints = m_fields[var]->GetBndCondExpansions()[i]->GetNpoints();
             Array<OneD,NekDouble> BDphysics(npoints);
             Array<OneD,NekDouble> x0(npoints,0.0);
@@ -696,7 +696,7 @@ namespace Nektar
         {
             numBDEdge = m_fields[var]->GetBndCondExpansions()[i]->GetExpSize();
             // Evaluate boundary values g_D or g_N from input files
-            SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(0);
+            LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("InitialConditions", 0);
             npoints = m_fields[var]->GetBndCondExpansions()[i]->GetNpoints();
 
             Array<OneD,NekDouble> BDphysics(npoints);

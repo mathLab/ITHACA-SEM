@@ -96,13 +96,13 @@
           <F LHS="Vx" VALUE="1"  />
         </USERDEFINEDEQNS>   
         
-        <INITIALCONDITIONS>
-          <F VAR="u" VALUE="sin(PI*x)" />
-        </INITIALCONDITIONS>
+        <FUNCTION NAME="InitialConditions">
+          <E VAR="u" VALUE="sin(PI*x)" />
+        </FUNCTION>
 
-        <EXACTSOLUTION>
-          <F VAR ="u" VALUE="sin(PI*(x-advx*t))" />
-        </EXACTSOLUTION>
+        <FUNCTION NAME="ExactSolution">
+          <E VAR ="u" VALUE="sin(PI*(x-advx*t))" />
+        </FUNCTION>
     </CONDITIONS>
 
 </NEKTAR>

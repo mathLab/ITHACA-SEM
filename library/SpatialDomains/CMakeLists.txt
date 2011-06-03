@@ -1,7 +1,6 @@
 SET(SPATIAL_DOMAINS_SOURCES
 Conditions.cpp
 #EdgeComponent.cpp
-Equation.cpp
 GeomFactors.cpp
 GeomFactors1D.cpp
 GeomFactors2D.cpp
@@ -34,7 +33,6 @@ TriGeom.cpp
 SET(SPATIAL_DOMAINS_HEADERS
 Conditions.h
 Curve.hpp
-Equation.h
 #EdgeComponent.h
 GeomFactors.h
 GeomFactors1D.h

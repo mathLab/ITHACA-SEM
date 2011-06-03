@@ -36,11 +36,11 @@
 #ifndef NEKTAR_SPATIALDOMAINS_EQUATION_CPP
 #define NEKTAR_SPATIALDOMAINS_EQUATION_CPP
 
-#include <SpatialDomains/Equation.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 
 namespace Nektar
 {
-    namespace SpatialDomains
+    namespace LibUtilities
     {
         LibUtilities::ExpressionEvaluator Equation::m_evaluator;
     }

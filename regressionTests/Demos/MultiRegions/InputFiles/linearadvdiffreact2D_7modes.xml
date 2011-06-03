@@ -280,13 +280,13 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     
-    <FORCING>
-      <F VAR="u" VALUE="Advection_x*PI*cos(PI*x)*sin(PI*y) + Advection_y*PI*sin(PI*x)*cos(PI*y) - (2*PI*PI+Lambda)*sin(PI*x)*sin(PI*y)" />
-    </FORCING>
+    <FUNCTION NAME="Forcing">
+      <E VAR="u" VALUE="Advection_x*PI*cos(PI*x)*sin(PI*y) + Advection_y*PI*sin(PI*x)*cos(PI*y) - (2*PI*PI+Lambda)*sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
   
-    <EXACTSOLUTION>
-      <F VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
   
   </CONDITIONS>
   

@@ -284,18 +284,18 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     
-    <FORCING>
-      <F VAR="u" VALUE="PI*cos(PI*x)*sin(PI*y) + PI*sin(PI*x)*cos(PI*y) - (2*PI*PI+Lambda)*sin(PI*x)*sin(PI*y)" />
-    </FORCING>
+    <FUNCTION NAME="Forcing">
+      <E VAR="u" VALUE="PI*cos(PI*x)*sin(PI*y) + PI*sin(PI*x)*cos(PI*y) - (2*PI*PI+Lambda)*sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
   
     <USERDEFINEDEQNS>
       <F LHS="Vx" VALUE="1" />
       <F LHS="Vy" VALUE="1" />
     </USERDEFINEDEQNS>  
 
-    <EXACTSOLUTION>
-      <F VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
   
   </CONDITIONS>
   

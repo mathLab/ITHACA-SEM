@@ -51,8 +51,6 @@ namespace Nektar
         : EquationSystem(pComm,pSession),
           m_lambda(0.0)
     {
-        // Define forcing function. 
-        EquationSystem::InitialiseForce();    
         // Define Velocity fields     
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim); 
         EquationSystem::InitialiseBaseFlow(m_velocity);
@@ -68,6 +66,12 @@ namespace Nektar
         out << "\tLambda          : " << m_lambda << endl;
     }
 
+
+    void SteadyAdvectionDiffusion::v_DoInitialise()
+    {
+        // set initial forcing from session file
+        SetFunction(m_fields, "Forcing");
+    }
 
     void SteadyAdvectionDiffusion::v_DoSolve()
     {

@@ -52,15 +52,15 @@
        </REGION>
     </BOUNDARYCONDITIONS>
     
-    <INITIALCONDITIONS>
-      <R FILE="Test_KovaFlow_m8.rst"/>
-   </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <F FILE="Test_KovaFlow_m8.rst"/>
+   </FUNCTION>
    
-   <EXACTSOLUTION>
-      <F VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
-      <F VAR="v" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
-      <F VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
-   </EXACTSOLUTION>
+   <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
+      <E VAR="v" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
+      <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
+   </FUNCTION>
 
 </CONDITIONS>
 

@@ -44,7 +44,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : Laplace(pComm, pSession)
     {
-        SetPhysForcingFunctions(m_fields);
+        SetFunction(m_fields, "Forcing");
     }
 
     Poisson::~Poisson()
@@ -57,7 +57,8 @@ namespace Nektar
         Laplace::v_PrintSummary(out);
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
-            out << "\tForcing func [" << i << "]: " << m_boundaryConditions->GetForcingFunction(i)->GetEquation() << endl;
+            out << "\tForcing func [" << i << "]: "
+                << m_session->GetFunction("Forcing", i)->GetEquation() << endl;
         }
     }
 }

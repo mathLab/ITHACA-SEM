@@ -94,6 +94,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
+    ./BasicUtils/Equation.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/mojo.hpp
@@ -104,16 +105,17 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Timer.h
     ./BasicUtils/Timer.cpp
     ./BasicUtils/RawType.hpp
+    ./BasicUtils/SessionReader.h
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/XmlUtil.h
     ./BasicUtils/XmlUtil.cpp
-    ./BasicUtils/SessionReader.h
 )
 
 SET(BasicUtilsSources
+    ./BasicUtils/Equation.cpp
     ./BasicUtils/SessionReader.cpp
 )
 

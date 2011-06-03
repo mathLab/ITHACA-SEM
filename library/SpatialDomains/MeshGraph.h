@@ -39,8 +39,8 @@
 #include <cstdlib>
 #include <fstream>
 
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/InterfaceComponent.h>
-#include <SpatialDomains/Equation.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>

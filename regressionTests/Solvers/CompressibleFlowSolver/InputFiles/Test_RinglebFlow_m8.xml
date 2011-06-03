@@ -396,8 +396,8 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <INITIALCONDITIONS>
-      <R FILE="Test_RinglebFlow_m8.rst" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <F FILE="Test_RinglebFlow_m8.rst" />
+    </FUNCTION>
 
   </CONDITIONS>

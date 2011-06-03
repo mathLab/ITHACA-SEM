@@ -86,16 +86,14 @@ namespace Nektar
         }
        /// Decide the kind of forcing functions
         void SetInitialForce(NekDouble initialtime=0.0) ;
-	/// populate m_forces
-        void CalcForce(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
 
        ///Initialise the dimendion of forcing functions
         void InitialiseForcingFunctions(
                         Array<OneD, MultiRegions::ExpListSharedPtr> &force);
 
         /// Populate given fields with the forcing function from session.
-        void SetPhysForcingFunctions(
-                        Array<OneD, MultiRegions::ExpListSharedPtr> &force);
+        void SetFunction(Array<OneD, MultiRegions::ExpListSharedPtr> &force,
+                         const std::string& pName);
 
         /// Populate given field with the exact solution from session.
         void EvaluateExactSolution(int field,
@@ -179,13 +177,8 @@ namespace Nektar
         void WriteFld(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables);
 
         /// Input field data from the given file.
-        void ImportFld(std::string &infile);
+        void ImportFld(std::string &infile, Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
         
-        ///Input force data from the given file.
-        void ImportFldForce(std::string infile);
-
-        
-
         /// Output a field.
         void Array_Output(const int n, std::string name,
                           const Array<OneD, const NekDouble>&inarray,

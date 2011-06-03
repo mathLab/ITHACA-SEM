@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
-#include <SpatialDomains/Equation.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/SpatialData.h>
 #include <tinyxml/tinyxml.h>
 
@@ -227,7 +227,7 @@ namespace Nektar
             {
                 SpatialDataSharedPtr fn(MemoryManager<SpatialData>
                                                     ::AllocateSharedPtr(m_nq));
-                Equation E(q->second);
+                LibUtilities::Equation E(q->second);
                 for (int i = 0; i < m_nq; ++i)
                 {
                     fn->UpdatePhys()[i] = E.Evaluate(x[i], y[i], z[i], 0.0);

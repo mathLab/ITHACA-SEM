@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/pchSpatialDomains.h>
 
-#include <SpatialDomains/Equation.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/Conditions.h>
 #include <SpatialDomains/ParseUtils.hpp>
 #include <cctype>
@@ -161,7 +161,7 @@ namespace Nektar
                 }
 
                 // Set ourselves up for evaluation later.
-                Equation::SetConstParameters(m_parameters);
+                LibUtilities::Equation::SetConstParameters(m_parameters);
             }
         }
 
@@ -964,14 +964,14 @@ namespace Nektar
         }
 
 
-        Equation BoundaryConditions::GetFunctionAsEquation(const std::string &lhs)
+        LibUtilities::Equation BoundaryConditions::GetFunctionAsEquation(const std::string &lhs)
         {
             FunctionMap::iterator fcnIter = m_functions.find(lhs);
 
             ASSERTL1(fcnIter != m_functions.end(),
                 (std::string("Unable to find requested function: ") + lhs).c_str());
 
-            return Equation(fcnIter->second);
+            return LibUtilities::Equation(fcnIter->second);
         }
 
 

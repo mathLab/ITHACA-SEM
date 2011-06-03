@@ -193,28 +193,30 @@ namespace Nektar
 
     }
     
-    void EquationSystem::InitialiseForce()
-    {
-       int nq = m_fields[0]->GetNpoints();
-       ADRBase::SetInitialForce(0.0);
-       //copy force in m_fields if it exists otherwise set m_fields to zero 
-       if(m_bforce)
-       {	     
-    	  for(int i=0; i<m_FDim; ++i)
-    	  {
-    	       Vmath::Vcopy(nq,(m_forces[i]->GetPhys()),1,(m_fields[i]
-        	->UpdatePhys()),1);
-          }
-       }
-       else
-       {     
-          for(int i=0; i<m_FDim; ++i)
-    	  {
-    	       Vmath::Zero(nq,(m_fields[i]
-        	->UpdatePhys()),1);
-          }    
-       }		
-    }
+//    void EquationSystem::InitialiseForce()
+//    {
+//        //InitialiseForcingFunctions(m_forces);
+//        SetFunction(m_fields, "Forcing");
+//       int nq = m_fields[0]->GetNpoints();
+//       ADRBase::SetInitialForce(0.0);
+//       //copy force in m_fields if it exists otherwise set m_fields to zero
+//       if(m_bforce)
+//       {
+//    	  for(int i=0; i<m_FDim; ++i)
+//    	  {
+//    	       Vmath::Vcopy(nq,(m_forces[i]->GetPhys()),1,(m_fields[i]
+//        	->UpdatePhys()),1);
+//          }
+//       }
+//       else
+//       {
+//          for(int i=0; i<m_FDim; ++i)
+//    	  {
+//    	       Vmath::Zero(nq,(m_fields[i]
+//        	->UpdatePhys()),1);
+//          }
+//       }
+//    }
     
     void EquationSystem::InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base)
     {

@@ -43,15 +43,15 @@
        </REGION>
     </BOUNDARYCONDITIONS>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="0" />
-     <F VAR="v" VALUE="0" />
-   </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="0" />
+     <E VAR="v" VALUE="0" />
+   </FUNCTION>
    
-   <EXACTSOLUTION>
-     <F VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
-      <F VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
-   </EXACTSOLUTION>
+   <FUNCTION NAME="ExactSolution">
+     <E VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+      <E VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
+   </FUNCTION>
    
    <USERDEFINEDEQNS>
      <F LHS="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />

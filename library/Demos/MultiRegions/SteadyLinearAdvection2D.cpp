@@ -175,8 +175,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define forcing function for first variable defined in file 
     fce = Array<OneD,NekDouble>(nq);
-    SpatialDomains::ConstForcingFunctionShPtr ffunc 
-        = bcs.GetForcingFunction(bcs.GetVariable(0));
+    LibUtilities::EquationSharedPtr ffunc = vSession.GetFunction("Forcing", 0);
     for(i = 0; i < nq; ++i) 
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
@@ -217,8 +216,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // See if there is an exact solution, if so 
     // evaluate and plot errors
-    SpatialDomains::ConstExactSolutionShPtr ex_sol =
-        bcs.GetExactSolution(bcs.GetVariable(0));
+    LibUtilities::EquationSharedPtr ex_sol
+                                = vSession->GetFunction("ExactSolution", 0);
 
     if(ex_sol)
     {

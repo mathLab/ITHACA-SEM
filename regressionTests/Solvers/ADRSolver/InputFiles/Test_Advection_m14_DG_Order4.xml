@@ -104,13 +104,13 @@
       <F LHS="Vy" VALUE="1" />
     </USERDEFINEDEQNS>   
     
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
+    </FUNCTION>
     
   </CONDITIONS>
   

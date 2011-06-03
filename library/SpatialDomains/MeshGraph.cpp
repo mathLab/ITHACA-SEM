@@ -1224,7 +1224,7 @@ namespace Nektar
                             ASSERTL0(nStr,"NUMMODES was not defined in EXPANSION section of input");
                             std::string nummodesStr = nStr;
 
-                            Equation nummodesEqn(nummodesStr);
+                            LibUtilities::Equation nummodesEqn(nummodesStr);
 
                             expansion_order = (int) nummodesEqn.Evaluate();
 

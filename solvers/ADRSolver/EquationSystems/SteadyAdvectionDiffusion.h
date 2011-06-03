@@ -64,6 +64,7 @@ namespace Nektar
 
 
         virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_DoInitialise();
         virtual void v_DoSolve();
     };
 }

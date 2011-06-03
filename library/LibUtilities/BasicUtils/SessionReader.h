@@ -39,6 +39,7 @@
 #include <map>
 #include <string>
 
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 class TiXmlElement;
@@ -51,6 +52,30 @@ namespace Nektar
         typedef std::map<std::string, std::string>  SolverInfoMap;
         typedef std::map<std::string, NekDouble>    ParameterMap;
         typedef std::map<std::string, std::string>  GeometricInfoMap;
+        typedef std::vector<std::string>            VariableList;
+        typedef std::map<std::string, EquationSharedPtr>  EquationMap;
+
+        enum FunctionType
+        {
+            eFunctionTypeNone,
+            eFunctionTypeExpression,
+            eFunctionTypeFile,
+            eSIZE_FunctionType
+        };
+        const char* const FunctionTypeMap[] =
+        {
+            "No Function type",
+            "Expression",
+            "File"
+        };
+        struct FunctionDefinition
+        {
+            enum FunctionType m_type;
+            std::string       m_filename;
+            EquationMap       m_expressions;
+        };
+        typedef std::map<std::string, FunctionDefinition > FunctionMap;
+
 
         class SessionReader
         {
@@ -82,6 +107,15 @@ namespace Nektar
             void MatchGeometricInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
             bool DefinesGeometricInfo(const std::string name);
 
+            std::string GetVariable(const unsigned int idx) const;
+
+            EquationSharedPtr GetFunction(const std::string& name, const std::string& variable) const;
+            EquationSharedPtr GetFunction(const std::string& name, unsigned int var) const;
+            enum FunctionType GetFunctionType(const std::string& name) const;
+            std::string GetFunctionFilename(const std::string& name) const;
+            bool DefinesFunction(const std::string& name) const;
+            bool DefinesFunction(const std::string& name, const std::string& variable) const;
+
         private:
             std::string                 m_filename;
             TiXmlDocument*              m_xmlDoc;
@@ -89,14 +123,17 @@ namespace Nektar
             SolverInfoMap               m_solverInfo;
             ParameterMap                m_parameters;
             GeometricInfoMap            m_geometricInfo;
+            FunctionMap                 m_functions;
+            VariableList                m_variables;
 
             void ReadParameters(TiXmlElement *conditions);
             void ReadSolverInfo(TiXmlElement *conditions);
             void ReadGeometricInfo(TiXmlElement *geometry);
+            void ReadVariables(TiXmlElement *conditions);
+            void ReadFunctions(TiXmlElement *conditions);
 
             /// Perform a case-insensitive string comparison.
             int NoCaseStringCompare(const std::string & s1, const std::string& s2);
-
         };
 
         typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;

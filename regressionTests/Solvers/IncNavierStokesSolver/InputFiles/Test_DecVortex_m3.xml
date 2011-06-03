@@ -152,17 +152,17 @@
          </REGION>
     </BOUNDARYCONDITIONS>
     
-    <INITIALCONDITIONS>
-        <F VAR="u" VALUE="-cos(x)*sin(y)" />
-        <F VAR="v" VALUE="sin(x)*cos(y)" />
-        <F VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+        <E VAR="u" VALUE="-cos(x)*sin(y)" />
+        <E VAR="v" VALUE="sin(x)*cos(y)" />
+        <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))" />
+    </FUNCTION>
    
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-      <F VAR="v" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-      <F VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+      <E VAR="v" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+      <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
+    </FUNCTION>
 
 </CONDITIONS>
 

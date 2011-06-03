@@ -44,8 +44,8 @@ using namespace std;
 #include <boost/algorithm/string.hpp>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <SpatialDomains/Equation.h>
-
+#include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
 namespace Nektar
@@ -73,6 +73,8 @@ namespace Nektar
 
             ReadParameters(e);
             ReadSolverInfo(e);
+            ReadVariables (e);
+            ReadFunctions (e);
 
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
 
@@ -292,6 +294,85 @@ namespace Nektar
             return (geometricInfoMapIter != m_geometricInfo.end());
         }
 
+        std::string SessionReader::GetVariable(const unsigned int idx) const
+        {
+            ASSERTL0(idx < m_variables.size(), "Variable index out of range.");
+            return m_variables[idx];
+        }
+
+        EquationSharedPtr SessionReader::GetFunction(const std::string& pName, const std::string& pVariable) const
+        {
+            FunctionMap::const_iterator it1;
+            EquationMap::const_iterator it2;
+            std::string vName = boost::to_upper_copy(pName);
+
+            ASSERTL0((it1 = m_functions.find(vName)) != m_functions.end(),
+                     std::string("No such function '") + pName
+                     + std::string("' has been defined in the session file."));
+            ASSERTL0((it2 = it1->second.m_expressions.find(pVariable)) != it1->second.m_expressions.end(),
+                     std::string("No such variable '") + pVariable
+                     + std::string("' defined for function '") + pName
+                     + std::string("' in session file."));
+            return it2->second;
+        }
+
+        EquationSharedPtr SessionReader::GetFunction(const std::string& pName, unsigned int pVar) const
+        {
+            ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
+            return GetFunction(pName, m_variables[pVar]);
+        }
+
+        enum FunctionType SessionReader::GetFunctionType(const std::string& pName) const
+        {
+            FunctionMap::const_iterator it1;
+            std::string vName = boost::to_upper_copy(pName);
+
+            it1 = m_functions.find(vName);
+            ASSERTL0 (it1 != m_functions.end(),
+                      std::string("Function '") + pName
+                      + std::string("' not found."));
+            return it1->second.m_type;
+        }
+
+        std::string SessionReader::GetFunctionFilename(const std::string& pName) const
+        {
+            FunctionMap::const_iterator it1;
+            std::string vName = boost::to_upper_copy(pName);
+
+            it1 = m_functions.find(vName);
+            ASSERTL0 (it1 != m_functions.end(),
+                      std::string("Function '") + pName
+                      + std::string("' not found."));
+            return it1->second.m_filename;
+        }
+
+        bool SessionReader::DefinesFunction(const std::string& pName) const
+        {
+            FunctionMap::const_iterator it1;
+            std::string vName = boost::to_upper_copy(pName);
+
+            if ((it1 = m_functions.find(vName)) != m_functions.end())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool SessionReader::DefinesFunction(const std::string& pName, const std::string& pVariable) const
+        {
+            FunctionMap::const_iterator it1;
+            EquationMap::const_iterator it2;
+            std::string vName = boost::to_upper_copy(pName);
+
+            if ((it1 = m_functions.find(vName)) != m_functions.end()
+                    && (it2 = it1->second.m_expressions.find(pVariable))
+                            != it1->second.m_expressions.end())
+            {
+                return true;
+            }
+            return false;
+        }
+
         void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
         {
             TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");
@@ -417,6 +498,178 @@ namespace Nektar
             }
         }
 
+
+        void SessionReader::ReadVariables(TiXmlElement *conditions)
+        {
+            TiXmlElement *variablesElement = conditions->FirstChildElement("VARIABLES");
+
+            int varIndex = 0;   // Current index, should be zero-based.
+
+            // See if we have parameters defined.  They are optional so we go on if not.
+            if (variablesElement)
+            {
+                TiXmlElement *variableElement = variablesElement->FirstChildElement("V");
+
+                // Sequential counter for the composite numbers.
+                int nextVariableNumber = -1;
+
+                while (variableElement)
+                {
+                    /// All elements are of the form: "<V ID="#"> name = value </V>", with
+                    /// ? being the element type.
+
+                    nextVariableNumber++;
+
+                    int indx;
+                    int err = variableElement->QueryIntAttribute("ID", &indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                    ASSERTL0(indx == nextVariableNumber, "Composite IDs must begin with zero and be sequential.");
+
+                    TiXmlNode* variableChild = variableElement->FirstChild();
+                    // This is primarily to skip comments that may be present.
+                    // Comments appear as nodes just like elements.
+                    // We are specifically looking for text in the body
+                    // of the definition.
+                    while(variableChild && variableChild->Type() != TiXmlNode::TEXT)
+                    {
+                        variableChild = variableChild->NextSibling();
+                    }
+
+                    ASSERTL0(variableChild, "Unable to read variable definition body.");
+                    std::string variableName = variableChild->ToText()->ValueStr();
+
+                    std::istringstream variableStrm(variableName);
+
+                    variableStrm >> variableName;
+                    m_variables.push_back(variableName);
+
+                    variableElement = variableElement->NextSiblingElement("V");
+                }
+
+                ASSERTL0(nextVariableNumber > -1, "Number of variables must be greater than zero.");
+            }
+        }
+
+
+        void SessionReader::ReadFunctions(TiXmlElement *conditions)
+        {
+            // Scan through conditions section looking for functions.
+            TiXmlElement *function = conditions->FirstChildElement("FUNCTION");
+            while (function)
+            {
+                // Every function must have a NAME attribute
+                ASSERTL0(function->Attribute("NAME"),
+                         "Attribute NAME expected for function definition on "
+                         "line "
+                         + boost::lexical_cast<std::string>(function->Row()));
+                std::string functionStr = function->Attribute("NAME");
+                ASSERTL0(!functionStr.empty(),
+                         "A name must be specified for each function.");
+
+                // Store function names in uppercase to remain case-insensitive.
+                boost::to_upper(functionStr);
+
+                // Retrieve first entry (variable, or file)
+                TiXmlElement *variable  = function->FirstChildElement();
+
+                // Create new function structure with default type of none.
+                FunctionDefinition functionDef;
+                functionDef.m_type = eFunctionTypeNone;
+
+                // Initialise all variables to zero by default
+                for (VariableList::iterator varIter = m_variables.begin();
+                    varIter != m_variables.end(); ++varIter)
+                {
+                    EquationSharedPtr eqShPtr(
+                            MemoryManager<Equation>::AllocateSharedPtr("0.0"));
+                    functionDef.m_expressions[*varIter] = eqShPtr;
+                }
+
+                // Process all entries in the function block
+                while (variable)
+                {
+                    std::string conditionType = variable->Value();
+
+                    // Expressions are denoted by E
+                    if (conditionType == "E")
+                    {
+                        // Ensure we haven't already found a file to read.
+                        ASSERTL0(functionDef.m_type != eFunctionTypeFile,
+                               "Cannot mix expressions and files in function.");
+                        functionDef.m_type = eFunctionTypeExpression;
+
+                        // Expression must have a VAR and VALUE.
+                        ASSERTL0(variable->Attribute("VAR"),
+                                 "Attribute VAR expected for function '"
+                                 + functionStr + "'.");
+                        std::string variableStr = variable->Attribute("VAR");
+
+                        ASSERTL0(variable->Attribute("VALUE"),
+                                 "Attribute VALUE expected for function '"
+                                 + functionStr + "'.");
+                        std::string fcnStr      = variable->Attribute("VALUE");
+
+                        ASSERTL0(!fcnStr.empty(),
+                                 (std::string("Expression for var: ")
+                                 + variableStr
+                                 + std::string(" must be specified.")).c_str());
+
+                        // Check it has not already been defined
+                        EquationMap::iterator fcnsIter
+                                = functionDef.m_expressions.find(variableStr);
+                        if (fcnsIter != functionDef.m_expressions.end())
+                        {
+                            // Add variable
+                            functionDef.m_expressions[variableStr]
+                                                      ->SetEquation(fcnStr);
+                        }
+                        else
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                    (std::string("Error setting forcing "
+                                    "function for variable: ")
+                                    + variableStr).c_str());
+                        }
+                    }
+
+                    // Files are denoted by F
+                    else if (conditionType == "F")
+                    {
+                        // Ensure we haven't already read expressions
+                        ASSERTL0(functionDef.m_type != eFunctionTypeExpression,
+                               "Cannot mix expressions and files in function.");
+                        functionDef.m_type = eFunctionTypeFile;
+
+                        // A file must specify the FILE attribute
+                        ASSERTL0(variable->Attribute("FILE"),
+                                 "Attribute FILE expected for function '"
+                                 + functionStr + "'.");
+                        std::string filenameStr = variable->Attribute("FILE");
+
+                        ASSERTL0(!filenameStr.empty(),
+                                 "A filename must be specified for the FILE "
+                                 "attribute of function '" + functionStr
+                                 + "'.");
+
+                        // set the filename for the function structure
+                        functionDef.m_filename = filenameStr;
+                    }
+
+                    // Nothing else supported so throw an error
+                    else
+                    {
+                        NEKERROR(ErrorUtil::ewarning,
+                                (std::string("Identifier ") + conditionType
+                                + std::string(" in Initial Conditions not "
+                                        "recognised")).c_str());
+                    }
+                    variable = variable->NextSiblingElement();
+                }
+                // Add function definition to map
+                m_functions[functionStr] = functionDef;
+                function = function->NextSiblingElement("FUNCTION");
+            }
+        }
 
         int SessionReader::NoCaseStringCompare(const std::string & s1, const std::string& s2)
         {

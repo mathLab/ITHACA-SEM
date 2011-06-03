@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    string fileNameString(argv[1]);
+    string filename(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
     string vCommModule("Serial");
@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------------------------
     // Read the mesh and construct container class
 
-    SessionReaderSharedPtr session;
+    LibUtilities::SessionReaderSharedPtr session;
+    LibUtilities::CommSharedPtr vComm;
     EquationSystemSharedPtr equ;
 
     // Record start time.
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
     // Create instance of module to solve the equation specified in the session.
     try
     {
-        equ = EquationSystemFactory::CreateInstance(session->GetSolverInfo("SOLVERTYPE"), session);
+        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("SOLVERTYPE"), vComm, session);
     }
     catch (int e)
     {

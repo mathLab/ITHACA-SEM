@@ -1,7 +1,6 @@
 IF(NEKTAR_USE_ARPACK)
 SET(IncNavierStokesStabilitySource 
        ../ADRSolver/EquationSystem.cpp
-       ../ADRSolver/SessionReader.cpp
        ../Auxiliary/ADRBase.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp

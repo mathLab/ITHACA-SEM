@@ -7304,13 +7304,13 @@ E[1,3,8,12,18,20,24,27,36,38,62,75,95,104,154,202,209,214,222,227,230,238,269,27
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="1.0/(1.0 + exp( (sqrt(x*x+y*y)-t-1.0)/epsilon ))" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="1.0/(1.0 + exp( (sqrt(x*x+y*y)-t-1.0)/epsilon ))" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="1.0/(1.0 + exp( (sqrt(x*x+y*y)-1.0)/epsilon))" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="1.0/(1.0 + exp( (sqrt(x*x+y*y)-1.0)/epsilon))" />
+    </FUNCTION>
     
   </CONDITIONS>
   

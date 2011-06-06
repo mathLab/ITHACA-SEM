@@ -106,13 +106,13 @@
 	</REGION>
     </BOUNDARYCONDITIONS>
 
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="0.0" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="0.0" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="0.25+0.5*sin(PI*(x+y))" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="0.25+0.5*sin(PI*(x+y))" />
+    </FUNCTION>
     
   </CONDITIONS>
   

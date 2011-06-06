@@ -78,19 +78,19 @@
             </REGION>-->
         </BOUNDARYCONDITIONS>
 
-        <FORCING>
-            <F VAR="u" VALUE="5.0*sin(x)" />
-            <F VAR="v" VALUE="F1" />
-        </FORCING>
+        <FUNCTION="Forcing">
+            <E VAR="u" VALUE="5.0*sin(x)" />
+            <E VAR="v" VALUE="F1" />
+        </FUNCTION>
 
-        <INITIALCONDITIONS>
+        <FUNCTION="InitialConditions">
             <F VAR ="u" VALUE="12.345" />
             <F VAR ="v" VALUE="F2" />
-        </INITIALCONDITIONS>
+        </FUNCTION>
 
-        <EXACTSOLUTION>
+        <FUNCTION="ExactSolution">
             <F VAR="u" VALUE="F3" />
             <F VAR="v" VALUE="x*y" />
-        </EXACTSOLUTION>
+        </FUNCTION>
     </CONDITIONS>
 </NEKTAR>

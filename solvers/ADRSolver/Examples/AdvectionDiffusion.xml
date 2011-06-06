@@ -105,13 +105,13 @@
       <F LHS="Vy" VALUE="1.0" />
     </USERDEFINEDEQNS>  
 
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(sin(wavefreq*FinTime))*sin(wavefreq*x)*sin(wavefreq*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="exp(sin(wavefreq*FinTime))*sin(wavefreq*x)*sin(wavefreq*y)" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
+    </FUNCTION>
     
   </CONDITIONS>
   

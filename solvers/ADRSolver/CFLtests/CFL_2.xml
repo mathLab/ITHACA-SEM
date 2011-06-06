@@ -94,13 +94,13 @@
       <F LHS="Vy" VALUE="-2*PI*x" />
     </USERDEFINEDEQNS>   
     
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="exp(-41*(((x+0.3)*(x+0.3))+((y)*(y))))" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="exp(-41*(((x+0.3)*(x+0.3))+((y)*(y))))" />
+    </FUNCTION>
     
   </CONDITIONS>
     

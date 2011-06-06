@@ -272,28 +272,22 @@ namespace Nektar
  *   </USERDEFINEDEQNS>
  * @endcode
  *
- * \subsection subsectionXmlConditionsAnalytic Analytic expressions
- * Finally, initial conditions and analytic solutions may be specified for use
- * in, or comparison with, simulations.
+ * \subsection subsectionXmlConditionsAnalytic Analytic functions
+ * Finally, multi-variable functions such as initial conditions and analytic
+ * solutions may be specified for use in, or comparison with, simulations.
+ * These may be specified using expressions or imported from a file using the
+ * Nektar++ FLD file format.
  * @code
- *   <EXACTSOLUTION>
- *     <F VAR="u" VALUE="sin(PI*x-advx*t))*cos(PI*(y-advy*t))" />
- *   </EXACTSOLUTION>
- *   <INITIALCONDITIONS>
- *     <F VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
- *   </INITIALCONDITIONS>
+ *   <FUNCTION NAME="ExactSolution">
+ *     <E VAR="u" VALUE="sin(PI*x-advx*t))*cos(PI*(y-advy*t))" />
+ *   </FUNCTION>
+ *   <FUNCTION NAME="InitialConditions>
+ *     <F FILE="session.rst" />
+ *   </FUNCTION>
  * @endcode
- Initial conditions can also be specified via a re-start file (typically named as FILENAME.rst).
- A re-start file is basically a solution file (in other words an .fld renamed as .rst) where the solution is specified.
- The expansion order used to generate the .rst file has to be the same as the one you intend to use for your simulation and
- the file has to be located in the same directory where the .xml file and the the executable are.
- An example is:
- * @code
- *   <INITIALCONDITIONS>
- *     <R FILE="Test_KovaFlow_m3.rst" />
- *   </INITIALCONDITIONS>
- * @endcode
- which uses a converged solution to initialise the flow, avoiding the long initial transient state.
- *
+ * A restart file is a solution file (in other words an .fld renamed as .rst)
+ * where the field data is specified. The expansion order used to generate the
+ * .rst file must be the same as that for the simulation. The filename must be
+ * specified relative to the location of the .xml file.
  */
 }

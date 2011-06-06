@@ -508,13 +508,13 @@
       <F LHS="Vy" VALUE="-2*PI*x" />
     </USERDEFINEDEQNS>   
     
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-32*(((x+0.5)*(x+0.5))+((y)*(y))))" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="exp(-32*(((x+0.5)*(x+0.5))+((y)*(y))))" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="exp(-32*(((x+0.5)*(x+0.5))+((y)*(y))))" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="exp(-32*(((x+0.5)*(x+0.5))+((y)*(y))))" />
+    </FUNCTION>
     
   </CONDITIONS>
 </NEKTAR>

@@ -4095,15 +4095,15 @@ E[0,4,9,16,18,21,25,28,33,39,42,55,58,74,90,103,130,234,245,248,250,253,255,258,
       <F LHS="Vy" VALUE="1.0" />
     </USERDEFINEDEQNS>   
     
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="1.0/(1.0+exp(50.0*(sqrt(x*x+y*y)-t-0.1)))" />
-      <F VAR="v" VALUE="0.0" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="1.0/(1.0+exp(50.0*(sqrt(x*x+y*y)-t-0.1)))" />
+      <E VAR="v" VALUE="0.0" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="1.0/(1.0+exp(50.0*(sqrt(x*x+y*y)-0.1)))" />
-      <F VAR="v" VALUE="0.0" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="1.0/(1.0+exp(50.0*(sqrt(x*x+y*y)-0.1)))" />
+      <E VAR="v" VALUE="0.0" />
+    </FUNCTION>
     
   </CONDITIONS>
   

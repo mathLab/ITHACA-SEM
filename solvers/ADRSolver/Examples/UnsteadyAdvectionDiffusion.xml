@@ -108,15 +108,15 @@
        <F LHS="Vy" VALUE="0.0" />
     </USERDEFINEDEQNS>
     
-    <INITIALCONDITIONS>
-       <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
-       <F VAR="v" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+       <E VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
+       <E VAR="v" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
+    </FUNCTION>
    
-    <EXACTSOLUTION>
-       <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*x)*cos(wavefreq*y)" />
-       <F VAR="v" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*x)*cos(wavefreq*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+       <E VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*x)*cos(wavefreq*y)" />
+       <E VAR="v" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*x)*cos(wavefreq*y)" />
+    </FUNCTION>
 
 </CONDITIONS>
 

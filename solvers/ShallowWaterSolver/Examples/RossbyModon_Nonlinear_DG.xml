@@ -302,15 +302,15 @@
       <F LHS="d" VALUE="1"  />
    </USERDEFINEDEQNS>   
     
-    <EXACTSOLUTION>
-      <F VAR="eta"  VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="eta"  VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="eta"  VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
-      <F VAR="u" VALUE=" ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) )" />
-      <F VAR="v" VALUE=" ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y))" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="eta"  VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
+      <E VAR="u" VALUE=" ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) )" />
+      <E VAR="v" VALUE=" ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y))" />
+    </FUNCTION>
     
   </CONDITIONS>
   

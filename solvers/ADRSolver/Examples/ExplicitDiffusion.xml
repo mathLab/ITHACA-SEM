@@ -93,13 +93,13 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
     
-    <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </FUNCTION>
     
   </CONDITIONS>
   

@@ -96,12 +96,12 @@
       </REGION>
     </BOUNDARYCONDITIONS>
     
-    <INITIALCONDITIONS>
-      <F VAR="rho"  VALUE="0" />
-      <F VAR="rhou" VALUE="0" />
-      <F VAR="rhov" VALUE="0" />
-      <F VAR="E"    VALUE="0" />
-    </INITIALCONDITIONS>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="rho"  VALUE="0" />
+      <E VAR="rhou" VALUE="0" />
+      <E VAR="rhov" VALUE="0" />
+      <E VAR="E"    VALUE="0" />
+    </FUNCTION>
     
   </CONDITIONS>
   

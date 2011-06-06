@@ -94,14 +94,14 @@ namespace Nektar
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
 
-                    return m_triGeoms.at(elmt)->GetVid(vert);
+                    return m_triGeoms.find(elmt)->second->GetVid(vert);
                 }
                 else
                 {
                     ASSERTL2(m_quadGeoms.find(elmt) != m_quadGeoms.end(),
                         "eid is out of range");
 
-                    return m_quadGeoms.at(elmt)->GetVid(vert);
+                    return m_quadGeoms.find(elmt)->second->GetVid(vert);
                 }
             }
 
@@ -113,14 +113,14 @@ namespace Nektar
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
 
-                    return m_triGeoms.at(elmt)->GetEid(edge);
+                    return m_triGeoms.find(elmt)->second->GetEid(edge);
                 }
                 else
                 {
                     ASSERTL2(m_quadGeoms.find(elmt) != m_quadGeoms.end(),
                         "eid is out of range");
 
-                    return m_quadGeoms.at(elmt)->GetEid(edge);
+                    return m_quadGeoms.find(elmt)->second->GetEid(edge);
                 }
             }
 
@@ -131,14 +131,14 @@ namespace Nektar
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
 
-                    return m_triGeoms.at(elmt)->GetEorient(edge);
+                    return m_triGeoms.find(elmt)->second->GetEorient(edge);
                 }
                 else
                 {
                     ASSERTL2(m_quadGeoms.find(elmt) != m_quadGeoms.end(),
                         "eid is out of range");
 
-                    return m_quadGeoms.at(elmt)->GetEorient(edge);
+                    return m_quadGeoms.find(elmt)->second->GetEorient(edge);
                 }
             }
 
@@ -152,14 +152,14 @@ namespace Nektar
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
 
-                    returnval = m_triGeoms.at(elmt)->GetEorient(edge);
+                    returnval = m_triGeoms.find(elmt)->second->GetEorient(edge);
                 }
                 else
                 {
                     ASSERTL2(m_quadGeoms.find(elmt) != m_quadGeoms.end(),
                         "eid is out of range");
 
-                    returnval =  m_quadGeoms.at(elmt)->GetEorient(edge);
+                    returnval =  m_quadGeoms.find(elmt)->second->GetEorient(edge);
                 }
 
                 // swap orientation if on edge 2 & 3 (if quad)

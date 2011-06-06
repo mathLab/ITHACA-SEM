@@ -75,7 +75,7 @@ namespace Nektar
                     "eid is out of range");
 
                 //return m_segGeoms[elmt]->GetVid(vert);
-                return m_segGeoms.at(elmt)->GetVid(vert);
+                return m_segGeoms.find(elmt)->second->GetVid(vert);
             }
 
         protected:

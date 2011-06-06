@@ -390,7 +390,7 @@ namespace Nektar
             Composite returnval;
             ASSERTL0(m_meshComposites.find(whichComposite) != m_meshComposites.end(),
                     "Composite not found.");
-            return m_meshComposites.at(whichComposite);
+            return m_meshComposites.find(whichComposite)->second;
         }
 
         inline const CompositeMap &MeshGraph::GetDomain(void) const

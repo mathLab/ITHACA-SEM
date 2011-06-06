@@ -66,8 +66,10 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
-    LibUtilities::BasisKey bkey1 = expansions.at(0)->m_basisKeyVector[1];
+    LibUtilities::BasisKey bkey0
+                            = expansions.begin()->second->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey1
+                            = expansions.begin()->second->m_basisKeyVector[1];
     cout << "Calc. LinearAdvection E-vals:"  << endl; 
     cout << "             Advection_x    : " << ax << endl; 
     cout << "             Advection_y    : " << ay << endl; 

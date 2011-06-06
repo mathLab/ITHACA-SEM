@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions.at(0)->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey0 
+                            = expansions.begin()->second->m_basisKeyVector[0];
+
     cout << "Solving 3D Helmholtz (Homogeneous in z-direction):"  << endl;
     cout << "         Lambda          : " << lambda << endl;
     cout << "         Lz              : " << lz << endl;

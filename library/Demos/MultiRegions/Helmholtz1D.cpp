@@ -186,6 +186,10 @@ int main(int argc, char *argv[])
         string   out(strtok(argv[1],"."));
         string   endfile(".fld");
         out += endfile;
+        if (vComm->GetSize() > 1)
+        {
+            out += "." + boost::lexical_cast<string>(vComm->GetRank());
+        }
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
             = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

@@ -41,7 +41,7 @@ using namespace std;
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#ifdef MPI
+#ifdef NEKTAR_USE_MPI
 #include <LibUtilities/Communication/CommMpi.h>
 #endif
 using namespace Nektar;
@@ -54,7 +54,7 @@ namespace Gs
 
     typedef struct { void *ptr; size_t n,max; } array;
     typedef array buffer;
-#ifdef MPI
+#ifdef NEKTAR_USE_MPI
     typedef MPI_Comm comm_ext;
     typedef MPI_Request comm_req;
 #else
@@ -143,7 +143,7 @@ namespace Gs
     static gs_data* Init (  const Nektar::Array<OneD, long> pId,
                             const LibUtilities::CommSharedPtr& pComm)
     {
-#ifdef MPI
+#ifdef NEKTAR_USE_MPI
         if (pComm->GetSize() == 1)
         {
             return 0;
@@ -173,7 +173,7 @@ namespace Gs
     static void Unique (    const Nektar::Array<OneD, long> pId,
                             const LibUtilities::CommSharedPtr& pComm)
     {
-#ifdef MPI
+#ifdef NEKTAR_USE_MPI
         if (pComm->GetSize() == 1)
         {
             return;
@@ -194,7 +194,7 @@ namespace Gs
      */
     static void Finalise (gs_data *pGsh)
     {
-#ifdef MPI
+#ifdef NEKTAR_USE_MPI
         if (pGsh)
         {
             nektar_gs_free(pGsh);
@@ -212,7 +212,7 @@ namespace Gs
                        gs_data *pGsh, Nektar::Array<OneD, NekDouble> pBuffer
                                                         = NullNekDouble1DArray)
     {
-#ifdef MPI
+#ifdef NEKTAR_USE_MPI
         if (!pGsh)
         {
             return;

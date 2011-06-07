@@ -261,7 +261,7 @@ namespace Nektar
                 normsq = vExchange[1];
 
                 // test if norm is within tolerance
-                if (normsq < 1e-12) //NekConstants::kNekIterativeTol)
+                if (sqrt(normsq) < NekConstants::kNekIterativeTol)
                 {
                     //cout << "Iterations: " << k << ", norm=" << sqrt(normsq) << endl;
                     break;

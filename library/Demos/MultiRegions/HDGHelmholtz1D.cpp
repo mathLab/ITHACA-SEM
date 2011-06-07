@@ -176,6 +176,8 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
 
+    vComm->Finalise();
+
     return 0;
 }
 

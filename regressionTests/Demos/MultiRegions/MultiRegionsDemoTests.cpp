@@ -38,13 +38,15 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 
-void RunL2RegressionTest(std::string demo, std::string input, std::string info);
+void RunL2RegressionTest(std::string demo, std::string input, std::string info, unsigned int np = 1);
 void MakeOkFile(std::string demo, std::string input, std::string info);
 
 #ifdef MAKE_OK_FILE
 #define Execute($1,$2,$3)  MakeOkFile($1,$2,$3)
+#define ExecuteParallel($1,$2,$3,$4) MakeOkFile($1,$2,$3)
 #else
 #define Execute($1,$2,$3)  RunL2RegressionTest($1,$2,$3)
+#define ExecuteParallel($1,$2,$3,$4)  RunL2RegressionTest($1,$2,$3,$4)
 #endif
 
 #ifdef _WINDOWS
@@ -112,6 +114,14 @@ int main(int argc, char* argv[])
 
     Execute("HDGHelmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","HDG Helmholtz3D Homogeneous 1D");
 
+#ifdef NEKTAR_USE_MPI
+    ExecuteParallel("Helmholtz1D", "helmholtz1D_8modes.xml","Parallel CG Helmholtz1D  P=8", 2);
+//    ExecuteParallel("HDGHelmholtz1D", "helmholtz1D_8modes.xml","Parallel HDG Helmholtz1D  P=8", 2);
+//    ExecuteParallel("Helmholtz2D", "helmholtz2D_7modes.xml","Parallel CG Helmholtz2D  P=7", 2);
+//    ExecuteParallel("HDGHelmholtz2D", "helmholtz2D_7modes.xml","Parallel HDG Helmholtz2D  P=7", 2);
+    ExecuteParallel("Helmholtz3D", "helmholtz3D_hex.xml","Parallel CG Helmholtz3D Hex", 2);
+#endif
+
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;
@@ -123,14 +133,14 @@ int main(int argc, char* argv[])
     return tests_failed;
 }
 
-void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
+void RunL2RegressionTest(std::string Demo, std::string input, std::string info, unsigned int np)
 {
     tests_total++;
     if (!quiet)
     {
         std::cout << "TESTING: " << Demo << std::flush;
     }
-    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/",np);
     int fail;
 
     // Copy input file to current location

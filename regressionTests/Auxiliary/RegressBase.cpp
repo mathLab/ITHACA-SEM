@@ -43,6 +43,8 @@
 #include <sys/stat.h>
 #include "RegressBase.h"
 
+#include "boost/lexical_cast.hpp"
+
 RegressBase::RegressBase(){
     m_prog="";
     m_progPath="";
@@ -52,12 +54,13 @@ RegressBase::RegressBase(){
 }
 
 
-RegressBase::RegressBase(std::string relative_demo_path, std::string demo_name, std::string input, std::string relative_okfile_path)
+RegressBase::RegressBase(std::string relative_demo_path, std::string demo_name, std::string input, std::string relative_okfile_path, unsigned int np)
 {
     m_prog     = demo_name;
     m_okFile   = demo_name+".ok";
     m_output   = demo_name+".err";
     m_input    = input;
+    m_np       = np;
 
     // DEMO and .OK PATH
     //m_progPath.assign(REG_PATH);
@@ -533,7 +536,13 @@ int RegressBase::CheckFiles()
 std::string RegressBase::MakeCommand(void)
 {
     std::string prog="",mesh="",comm="";
-    prog="\"" + m_progPath+m_prog;
+#ifdef NEKTAR_USE_MPI
+    if (m_np > 1)
+    {
+        prog="mpirun -np " + boost::lexical_cast<std::string>(m_np) + " ";
+    }
+#endif
+    prog+="\"" + m_progPath+m_prog;
 #if defined(NDEBUG) 
     comm=prog+"\" "+m_input;
 #else

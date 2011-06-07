@@ -66,6 +66,8 @@ protected:
     std::string m_okFile;   /**< name of .ok file         */ 
     std::string m_output;   /**< name of demo output file */ 
 	
+    unsigned int m_np;      /**< Number of processors     */
+
 public:
     /*-----------------------------------------------------------
       / CLASS CONSTRUCTORS
@@ -73,7 +75,7 @@ public:
     // default constructor
     RegressBase(void);
     
-    RegressBase(std::string relative_demo_path, std::string demo_name, std::string input, std::string relative_okfile_path);
+    RegressBase(std::string relative_demo_path, std::string demo_name, std::string input, std::string relative_okfile_path, unsigned int np = 1);
     
     /* \brief Print Attributes
      */

@@ -224,7 +224,7 @@ namespace Nektar
 
         inline int GetNumExpModes(void)
         {
-            return m_graph->GetExpansions().at(0)->m_basisKeyVector[0]
+            return m_graph->GetExpansions().begin()->second->m_basisKeyVector[0]
                                                         .GetNumModes();
         }
 

@@ -565,8 +565,6 @@ namespace Nektar
             }
         }
         
-        NekOptimize::LoadElementalOptimizationParameters(m_filename);
-
         // Set Default Parameter
         m_session->LoadParameter("Time", m_time, 0.0);
         m_session->LoadParameter("TimeStep", m_timestep, 0.01);

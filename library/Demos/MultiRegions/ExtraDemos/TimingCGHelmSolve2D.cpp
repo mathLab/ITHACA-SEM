@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
     int NumModes    = atoi(argv[3]);
     int optLevel    = atoi(argv[4]);
     // optLevel = 0  -->  elemental and matrix free
-    // optLevel = 1  -->  elemental and matrix operations
     // optLevel = 2  -->  block matrix operations 
     // optLevel = 3  -->  global matrix operation 
     // optLevel = 4  -->  optimal implementation strategies (optimal evaluation for every different evaluation)
@@ -124,23 +123,8 @@ int main(int argc, char *argv[])
             globoptfile = GlobOptFileSS.str();
         }
         break;
-    case 1:
-        {
-            stringstream ElOptFileSS;
-            ElOptFileSS << "/Users/ssherw/HDG/Meshes/Optimisation/DoElementalMatOp.xml";
-            NekOptimize::LoadElementalOptimizationParameters(ElOptFileSS.str());
-
-            stringstream GlobOptFileSS;
-            GlobOptFileSS << "/Users/ssherw/HDG/Meshes/Optimisation/NoGlobalMat.xml";
-            globoptfile = GlobOptFileSS.str();
-        }
-        break;
     case 2:
         {
-            stringstream ElOptFileSS;
-            ElOptFileSS << "/Users/ssherw/HDG/Meshes/Optimisation/DoElementalMatOp.xml";
-            NekOptimize::LoadElementalOptimizationParameters(ElOptFileSS.str());
-
             stringstream GlobOptFileSS;
             GlobOptFileSS << "/Users/ssherw/HDG/Meshes/Optimisation/DoBlockMat.xml";
             globoptfile = GlobOptFileSS.str();

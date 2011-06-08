@@ -69,8 +69,6 @@ int main(int argc, char *argv[])
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
         fprintf(stderr,"Usage: Helmholtz2D meshfile [SysSolnType]   or   \n");
-        fprintf(stderr,"Usage: Helmholtz2D meshfile [SysSolnType]"
-                " [GlobalOptimizationFile ElementalOptimizationFile]\n");
         exit(1);
     }
 
@@ -110,17 +108,6 @@ int main(int argc, char *argv[])
 
     try
     {
-        //----------------------------------------------
-        // Load the ELEMENTAL optimization parameters if they
-        // have been given as argument
-        // (use ElementalOptimisationParameters.xml as an example)
-        if( argc == 5 )
-        {
-            string eloptfile(argv[4]);
-            NekOptimize::LoadElementalOptimizationParameters(eloptfile);
-        }
-        //----------------------------------------------
-
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraph2D graph2D;

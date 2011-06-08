@@ -467,9 +467,9 @@ namespace Nektar
 			HomoBasis[0] = m_homogeneousBasis_y;
 			HomoBasis[1] = m_homogeneousBasis_z;
 			
-            std::vector<NekDouble> HomoLen;
-            HomoLen.push_back(m_lhom_y);
-			HomoLen.push_back(m_lhom_z);
+            std::vector<NekDouble> HomoLen(2);
+            HomoLen[0] = m_lhom_y;
+			HomoLen[1] = m_lhom_z;
 
             m_lines[0]->GeneralGetFieldDefinitions(returnval, 2, HomoBasis, HomoLen);
             return returnval;
@@ -571,14 +571,9 @@ namespace Nektar
          */
         void ExpListHomogeneous2D::v_WriteTecplotHeader(std::ofstream &outfile, std::string var)
         {
-            if(GetExp(0)->GetCoordim() == 1)
-            {
-                outfile << "Variables = x, y";
-            }
-            else
-            {
-                outfile << "Variables = x, y, z";
-            }
+            
+			outfile << "Variables = x, y, z";
+			
             outfile << ", "<< var << std::endl << std::endl;
         }
 

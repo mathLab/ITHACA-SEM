@@ -2,11 +2,14 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
+#include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
+#include <MultiRegions/ExpList1DHomogeneous2D.h>
+#include <MultiRegions/ExpList3DHomogeneous2D.h>
 
 using namespace Nektar;
 
@@ -78,7 +81,7 @@ int main(int argc, char *argv[])
                 ASSERTL0(false,"Dynamics cast failed");
             }
 
-            ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
+            ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"NumHomogeneousDir is only set up for 1 or 2");
 
             if(fielddef[0]->m_numHomogeneousDir == 1)
             {
@@ -98,6 +101,32 @@ int main(int argc, char *argv[])
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
+                }
+            }
+			else if(fielddef[0]->m_numHomogeneousDir == 2)
+            {
+                MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
+				
+                // Define Homogeneous expansion
+                int nylines = fielddef[0]->m_numModes[1];
+				int nzlines = fielddef[0]->m_numModes[2];
+				
+                // choose points to be at evenly spaced points at
+                const LibUtilities::PointsKey PkeyY(nylines+1,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::BasisKey  BkeyY(fielddef[0]->m_basis[1],nylines,PkeyY);
+				
+				const LibUtilities::PointsKey PkeyZ(nzlines+1,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
+                
+				NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
+				NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
+				
+                Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vComm,BkeyY,BkeyZ,ly,lz,useFFT,*mesh);
+                Exp[0] = Exp3DH2;
+				
+                for(i = 1; i < nfields; ++i)
+                {
+                    Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(*Exp3DH2);
                 }
             }
             else
@@ -136,7 +165,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
-Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vComm,Bkey,lz,useFFT,*mesh);
+				Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vComm,Bkey,lz,useFFT,*mesh);
                 Exp[0] = Exp3DH1;
 
                 for(i = 1; i < nfields; ++i)

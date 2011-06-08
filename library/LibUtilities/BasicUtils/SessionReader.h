@@ -52,6 +52,7 @@ namespace Nektar
         typedef std::map<std::string, std::string>  SolverInfoMap;
         typedef std::map<std::string, NekDouble>    ParameterMap;
         typedef std::map<std::string, std::string>  GeometricInfoMap;
+        typedef std::map<std::string, std::string>  ExpressionMap;
         typedef std::vector<std::string>            VariableList;
         typedef std::map<std::string, EquationSharedPtr>  EquationMap;
 
@@ -123,17 +124,20 @@ namespace Nektar
             SolverInfoMap               m_solverInfo;
             ParameterMap                m_parameters;
             GeometricInfoMap            m_geometricInfo;
+            ExpressionMap               m_expressions;
             FunctionMap                 m_functions;
             VariableList                m_variables;
 
             void ReadParameters(TiXmlElement *conditions);
             void ReadSolverInfo(TiXmlElement *conditions);
             void ReadGeometricInfo(TiXmlElement *geometry);
+            void ReadExpressions(TiXmlElement *conditions);
             void ReadVariables(TiXmlElement *conditions);
             void ReadFunctions(TiXmlElement *conditions);
 
             /// Perform a case-insensitive string comparison.
             int NoCaseStringCompare(const std::string & s1, const std::string& s2);
+            void SubstituteExpressions(std::string &expr);
         };
 
         typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;

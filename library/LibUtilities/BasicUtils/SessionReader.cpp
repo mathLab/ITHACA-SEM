@@ -42,6 +42,7 @@
 using namespace std;
 
 #include <boost/algorithm/string.hpp>
+//#include <boost/algorithm/string/regex.hpp>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
@@ -73,6 +74,7 @@ namespace Nektar
 
             ReadParameters(e);
             ReadSolverInfo(e);
+            ReadExpressions(e);
             ReadVariables (e);
             ReadFunctions (e);
 
@@ -499,6 +501,45 @@ namespace Nektar
         }
 
 
+        void SessionReader::ReadExpressions(TiXmlElement *conditions)
+        {
+            TiXmlElement *expressionsElement = conditions->FirstChildElement("EXPRESSIONS");
+
+            if (expressionsElement)
+            {
+                TiXmlElement *expr = expressionsElement->FirstChildElement("E");
+
+                while (expr)
+                {
+                    ASSERTL0(expr->Attribute("NAME"),
+                             "Attribute NAME expected for expression "
+                             "definition on line "
+                             + boost::lexical_cast<std::string>(expr->Row()));
+                    std::string nameString = expr->Attribute("NAME");
+                    ASSERTL0(!nameString.empty(),
+                             "A name must be specified for each expression.");
+
+                    ASSERTL0(expr->Attribute("VALUE"),
+                             "Attribute VALUE expected for expression "
+                             "definition on line "
+                             + boost::lexical_cast<std::string>(expr->Row()));
+                    std::string valString = expr->Attribute("VALUE");
+                    ASSERTL0(!valString.empty(),
+                             "A value must be specified for each expression.");
+
+                    ExpressionMap::iterator exprIter
+                                            = m_expressions.find(nameString);
+                    ASSERTL0(exprIter == m_expressions.end(),
+                             std::string("Expression '") + nameString
+                             + std::string("' already specified."));
+
+                    m_expressions[nameString] = valString;
+                    expr = expr->NextSiblingElement("E");
+                }
+            }
+        }
+
+
         void SessionReader::ReadVariables(TiXmlElement *conditions)
         {
             TiXmlElement *variablesElement = conditions->FirstChildElement("VARIABLES");
@@ -614,6 +655,8 @@ namespace Nektar
                                  + variableStr
                                  + std::string(" must be specified.")).c_str());
 
+                        SubstituteExpressions(fcnStr);
+
                         // Check it has not already been defined
                         EquationMap::iterator fcnsIter
                                 = functionDef.m_expressions.find(variableStr);
@@ -703,6 +746,18 @@ namespace Nektar
             }
 
             return (size1 < size2) ? -1 : 1;
+        }
+
+        void SessionReader::SubstituteExpressions(std::string& pExpr)
+        {
+            ExpressionMap::iterator exprIter;
+            for (exprIter = m_expressions.begin(); exprIter != m_expressions.end(); ++exprIter)
+            {
+                //boost::regex re("\b" + exprIter->first + "\b");
+                //boost::replace_all_regex(pExpr, re,
+                //        std::string("(") + exprIter->second + std::string(")"));
+                boost::replace_all(pExpr, exprIter->first, exprIter->second);
+            }
         }
     }
 }

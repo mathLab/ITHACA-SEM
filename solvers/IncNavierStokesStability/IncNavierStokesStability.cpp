@@ -92,15 +92,19 @@ int main(int argc, char *argv[])
         ASSERTL0(e == -1, "No such solver class defined.");
     }
 
-
-
+	//Evaluation of the time period
+	NekDouble ts=session->GetParameter("TimeStep");
+	NekDouble numstep=session->GetParameter("NumSteps");
+    NekDouble period= ts*numstep;
+	
     // Print a summary of solver and problem parameters and initialise
     // the solver.
     equ->PrintSummary(cout);
     equ->DoInitialise();
     //initialise force if it necessary
     equ->SetInitialForce(0.0);
-    
+	
+	    
 		int maxn=1000000; //Maximum size of the problem
         int maxnev=12;  //maximum number of eigenvalues requested
         int maxncv=30;  //Largest number of basis vector used in Implicitly Restarted Arnoldi
@@ -110,7 +114,7 @@ int main(int argc, char *argv[])
         int       n      = nfields*nq; // Number of points in eigenvalue calculation
         NekDouble tol    = 1e-6; // determines the stopping criterion.
         int       ido    = 0;  //REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
-        int       info   = 0;  // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
+        int       info   = 1;  // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
         int       nev    = 2;  // Number of eigenvalues to be evaluated
         int       ncv    = 16; // Length of the Arnoldi factorisation
         int       lworkl = 3*ncv*(ncv+2); // Size of work array
@@ -129,11 +133,16 @@ int main(int argc, char *argv[])
 	
 	    if(info !=0)
 		{
+			cout << " info=1: initial Arnoldi vector from session file" << endl;
 				//Initialise resid to values specified in the initial conditions of the session file
 				for (int k = 0; k < nfields; ++k)
 				{
 					Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &resid[k*nq], 1);
 				}
+		}
+	    else
+		{
+			cout << "info=0: random initial Arnoldi vector " << endl;
 		}
 
         // Parameters
@@ -176,13 +185,15 @@ int main(int argc, char *argv[])
             cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
             for(int k=0; k<=nev-1; ++k)
             {
-                //Plotting of real and imaginary part of the eigenvalues from workl
+             
+				//Plotting of real and imaginary part of the eigenvalues from workl
                 double r = workl[ipntr[5]-1+k];
                 double i = workl[ipntr[6]-1+k];
                 double res;
 				
 
-				cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << endl;
+				cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
+				" Frequency " << atan2(i,r)/period << endl;
             }
 
             cycle++;
@@ -246,7 +257,10 @@ int main(int argc, char *argv[])
 	for (int i = nev; i >= 0; --i)
 	{
 		cout << "Eigenvalue n. " << i+1 << " Re= "
-		<< dr[i]<< "   Im=" << di[i]<<endl;
+		<< dr[i]<< "   Im=" << di[i]
+		<< " Growth= " << log(dr[i]*dr[i]+di[i]*di[i])/period 
+		<< " Frequency=" <<atan2(di[i],dr[i])/period <<endl;
+		
 		for (int k = 0; k < nfields; ++k)
 		{
 			Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdatePhys()[0] , 1);

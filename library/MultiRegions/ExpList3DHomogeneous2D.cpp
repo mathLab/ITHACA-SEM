@@ -455,7 +455,7 @@ namespace Nektar
 				ky = i;
 				for (int j=0 ; j<m_nz; j++)
 				{
-					Vmath::Smul(2*n_points_line,ky,tmp1 = temparray + (2*m_nz*j+i*2*n_points_line),1,tmp2 = temparray1 + (2*m_nz*j+i*2*n_points_line),1);
+					Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray1+(i*2*n_points_line+j*m_ny*n_points_line),1);
 				}
 			}
 			
@@ -501,7 +501,7 @@ namespace Nektar
 						ky = i;
 						for (int j=0 ; j<m_nz; j++)
 						{
-							Vmath::Smul(2*n_points_line,ky,tmp1 = temparray + (2*m_nz*j+i*2*n_points_line),1,tmp2 = temparray + (2*m_nz*j+i*2*n_points_line),1);
+							Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1);
 						}
 					}
 				}

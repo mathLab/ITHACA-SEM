@@ -997,5 +997,137 @@ namespace Nektar
             const Test& value = m(0,0);
             
         }
+
+        BOOST_AUTO_TEST_CASE(TestBlockMatrixErrorFrom6_10)
+        {
+
+            //Array<OneD, NekDouble> f_bnd(m_BCinv->GetRows());
+            //NekVector< NekDouble > F_bnd(f_bnd.num_elements(), f_bnd, eWrapper);
+
+            //Array<OneD, NekDouble> f_int(m_BCinv->GetColumns());
+            //NekVector< NekDouble > F_int(f_int.num_elements(),f_int, eWrapper);
+
+            //Array<OneD, NekDouble > f_p(m_D_int->GetRows());
+            //NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
+
+            //typedef NekMatrix<DNekScalBlkMat, BlockMatrixTag> BlkMatDNekScalBlkMat;
+            //typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
+
+            //BlkMatDNekScalBlkMatSharedPtr      m_Btilde = MemoryManager<BlkMatDNekScalBlkMat>
+            //    ::AllocateSharedPtr(nsize_int,nsize_bndry,blkmatStorage);
+            //BlkMatDNekScalBlkMatSharedPtr   m_Cinv = MemoryManager<BlkMatDNekScalBlkMat>
+            //    ::AllocateSharedPtr(nsize_int,nsize_int,eFull);
+
+            typedef NekMatrix<double> M1;
+            typedef NekMatrix<M1, ScaledMatrixTag> M2;
+            typedef NekMatrix<M2, BlockMatrixTag> M3;
+            typedef NekMatrix<M3, BlockMatrixTag> M4;
+
+            std::vector< boost::shared_ptr<M2> > scaledMatrices;
+            for(unsigned int i = 0; i < 36; ++i)
+            {
+                double values[] = {i*4, i*4+1, i*4+2, i*4+3};
+                boost::shared_ptr<M1> matrix(new M1(2,2, values));
+                boost::shared_ptr<M2> scaled(new M2(1.0, matrix));
+                scaledMatrices.push_back(scaled);
+            }
+
+            std::vector<boost::shared_ptr<M3> > blockMatrices;
+            for(unsigned int i = 0; i < 6; ++i)
+            {
+                boost::shared_ptr<M3> blockMatrix(new M3(2,3,2,2));
+                blockMatrix->SetBlock(0, 0, scaledMatrices[i*6]);
+                blockMatrix->SetBlock(0, 1, scaledMatrices[i*6+1]);
+                blockMatrix->SetBlock(0, 2, scaledMatrices[i*6+2]);
+                blockMatrix->SetBlock(1, 0, scaledMatrices[i*6+3]);
+                blockMatrix->SetBlock(1, 1, scaledMatrices[i*6+4]);
+                blockMatrix->SetBlock(1, 2, scaledMatrices[i*6+5]);
+                blockMatrices.push_back(blockMatrix);
+            }
+
+            boost::shared_ptr<M4> matrix(new M4(3, 2, 4, 6));
+            matrix->SetBlock(0,0, blockMatrices[0]);
+            matrix->SetBlock(0,1, blockMatrices[1]);
+            matrix->SetBlock(1,0, blockMatrices[2]);
+            matrix->SetBlock(1,1, blockMatrices[3]);
+            matrix->SetBlock(2,0, blockMatrices[4]);
+            matrix->SetBlock(2,1, blockMatrices[5]);
+            std::cout << *matrix << std::endl;
+
+            double b_buf[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+            NekVector<double> b(12, b_buf);
+
+            {
+                NekVector<double> result = (*matrix)*b;
+
+                double expected_buf[] = {  1828,
+                    1906,
+                    2764,
+                    2842,
+                    5572,
+                    5650,
+                    6508,
+                    6586,
+                    9316,
+                    9394,
+                    10252,
+                    10330 };
+                NekVector<double> expected_result(12, expected_buf);
+                BOOST_CHECK_EQUAL(result, expected_result);
+            }
+
+            {
+                NekVector<double> result = b - (*matrix)*b;
+
+                double expected_buf[] = {  -1827,
+                    -1904,
+                    -2761,
+                    -2838,
+                    -5567,
+                    -5644,
+                    -6501,
+                    -6578,
+                    -9307,
+                    -9384,
+                    -10241,
+                    -10318 };
+
+                NekVector<double> expected_result(12, expected_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
+//#if 0
+//            F_int = (F_int - (*m_Btilde)*F_bnd);
+//#else
+//            for(i = 0; i < m_Btilde->GetRows(); ++i)
+//            {
+//                for(j = 0; j < m_Btilde->GetColumns(); ++j)
+//                {
+//                    F_int[i] -= (*m_Btilde)(i,j)*F_bnd[j];
+//                }
+//            }
+//#endif
+//
+//            F_int = (F_int + Transpose(*m_D_int)*F_p);                   
+//
+//#if 0
+//            F_int = (*m_Cinv)*F_int;
+//#else        
+//            Array<OneD, NekDouble> ftmp(F_int.GetDimension(),0.0);
+//            for(i = 0; i < m_Cinv->GetRows(); ++i)
+//            {
+//                for(j = 0; j < m_Cinv->GetColumns(); ++j)
+//                {
+//                    ftmp[i] += (*m_Cinv)(i,j)*F_int[j];
+//                }
+//            }
+//            for(i = 0; i < ftmp.num_elements(); ++i)
+//            {
+//                F_int[i] = ftmp[i];
+//            }
+//#endif
+
+        }
+
     }
 }

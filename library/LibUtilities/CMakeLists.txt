@@ -278,6 +278,7 @@ ADD_NEKTAR_LIBRARY(LibUtilities ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${Li
 TARGET_LINK_LIBRARIES(LibUtilities
 	${Boost_THREAD_LIBRARY}
 	${Boost_DATE_TIME_LIBRARY}
+	tinyxml
 )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
 SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)

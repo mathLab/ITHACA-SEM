@@ -393,21 +393,26 @@ namespace Nektar
         int LocalToGlobalBaseMap::v_GetLocalToGlobalMap(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
         }
 
         int LocalToGlobalBaseMap::v_GetGlobalToUniversalMap(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
         }
 
         int LocalToGlobalBaseMap::v_GetGlobalToUniversalMapUnique(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
         }
 
         const Array<OneD,const int>&  LocalToGlobalBaseMap::v_GetLocalToGlobalMap()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD,const int> result;
+            return result;
         }
 
         void  LocalToGlobalBaseMap::v_SetLocalToGlobalMap(const Array<OneD, const int>& inarray)
@@ -418,21 +423,28 @@ namespace Nektar
         const Array<OneD, const int>& LocalToGlobalBaseMap::v_GetGlobalToUniversalMap()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
         }
 
         const Array<OneD, const int>& LocalToGlobalBaseMap::v_GetGlobalToUniversalMapUnique()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
         }
 
         NekDouble LocalToGlobalBaseMap::v_GetLocalToGlobalSign(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0.0;
         }
 
         const Array<OneD, NekDouble>& LocalToGlobalBaseMap::v_GetLocalToGlobalSign() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, NekDouble> result;
+            return result;
         }
 
         void LocalToGlobalBaseMap::v_SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray)
@@ -499,6 +511,7 @@ namespace Nektar
         const int LocalToGlobalBaseMap::v_GetFullSystemBandWidth() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
         }
     }
 }

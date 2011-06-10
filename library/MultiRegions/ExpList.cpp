@@ -2314,6 +2314,8 @@ namespace Nektar
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+            static SpatialDomains::VertexComponentSharedPtr result;
+            return result;
 		}
 		
 		/**
@@ -2322,6 +2324,8 @@ namespace Nektar
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+            static SpatialDomains::VertexComponentSharedPtr result;
+            return result;
 		}
 		
 		/**

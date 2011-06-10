@@ -204,14 +204,14 @@ MACRO(SET_COMMON_PROPERTIES name)
    
         IF( NOT MSVC )
             SET(CMAKE_CXX_FLAGS_DEBUG 
-                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
+                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive -Wno-deprecated")
+
+		 SET(CMAKE_CXX_FLAGS_RELEASE 
+                    "${CMAKE_CXX_FLAGS_RELEASE} -Wno-deprecated")
         ENDIF()
-    
-        SET(CMAKE_CXX_FLAGS_DEBUG
-                    "${CMAKE_CXX_FLAGS_DEBUG} -Wno-deprecated")
-                    
+                        
         SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -Wno-deprecated -DNEKTAR_RELEASE")
+                    "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     ENDIF( )
         
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )

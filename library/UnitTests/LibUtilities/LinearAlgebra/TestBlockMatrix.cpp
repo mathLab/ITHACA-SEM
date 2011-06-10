@@ -1096,6 +1096,27 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_result, result);
             }
 
+            {
+                NekVector<double> result = b;
+                result = result - (*matrix)*b;
+
+                double expected_buf[] = {  -1827,
+                    -1904,
+                    -2761,
+                    -2838,
+                    -5567,
+                    -5644,
+                    -6501,
+                    -6578,
+                    -9307,
+                    -9384,
+                    -10241,
+                    -10318 };
+
+                NekVector<double> expected_result(12, expected_buf);
+                BOOST_CHECK_EQUAL(expected_result, result);
+            }
+
 //#if 0
 //            F_int = (F_int - (*m_Btilde)*F_bnd);
 //#else

@@ -389,41 +389,27 @@ namespace Nektar
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
 			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
 			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
-			int nP_cfs;                            //number of coefficients per plane (nP_cfs)
 			NekDouble k;                           //wave number
 			
-			if(UseContCoeffs)
-			{
-				nP_cfs = m_planes[0]->GetContNcoeffs();
-			}
-			else
-			{
-				nP_cfs= m_planes[0]->GetNcoeffs();
-			}
-			
-			int nT_cfs = nP_cfs*nF_pts;                      //number of total coefficients (nT_cfs)
-			
-			Array<OneD, NekDouble> temparray(nT_cfs);
-			Array<OneD, NekDouble> tmp1(nT_cfs);
-			Array<OneD, NekDouble> tmp2(nT_cfs);
-			Array<OneD, NekDouble> tmp3(nT_cfs);
+			Array<OneD, NekDouble> temparray(nT_pts);
+			Array<OneD, NekDouble> tmp1(nP_pts);
+			Array<OneD, NekDouble> tmp2(nP_pts);
+			Array<OneD, NekDouble> tmp3(nP_pts);
             
-			
 			for( int i=0 ; i<nF_pts ; i++ )
 			{
 				m_planes[i]->PhysDeriv( tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
 			}
 			
-            v_FwdTrans(inarray,temparray,UseContCoeffs);
+            Homogeneous1DFwdTrans(inarray,temparray,UseContCoeffs);
 			
 			for( int i=0 ; i<nF_pts/2 ; i++ )
 			{
 				k = i;
-				Vmath::Smul(2*nP_cfs,k,tmp1 = temparray + (i*2*nP_cfs),1,tmp2 = temparray + (i*2*nP_cfs),1);
+				Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
 			}
 			
-			v_BwdTrans(temparray,out_d2,UseContCoeffs);
-			
+			Homogeneous1DBwdTrans(temparray,out_d2,UseContCoeffs);
 		}
 		
 		void ExpList3DHomogeneous1D::v_PhysDerivHomo(const int dir,
@@ -434,23 +420,11 @@ namespace Nektar
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
 			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
 			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
-			int nP_cfs;                            //number of coefficients per plane (nP_cfs)
 			NekDouble k;                           //wave number
 			
-			if(UseContCoeffs)
-			{
-				nP_cfs = m_planes[0]->GetContNcoeffs();
-			}
-			else
-			{
-				nP_cfs= m_planes[0]->GetNcoeffs();
-			}
-			
-			int nT_cfs = nP_cfs*nF_pts;                      //number of total coefficients (nT_cfs)
-			
-			Array<OneD, NekDouble> temparray(nT_cfs);
-			Array<OneD, NekDouble> tmp1(nT_cfs);
-			Array<OneD, NekDouble> tmp2(nT_cfs);
+			Array<OneD, NekDouble> temparray(nT_pts);
+			Array<OneD, NekDouble> tmp1(nP_pts);
+			Array<OneD, NekDouble> tmp2(nP_pts);
             
 			if (dir < 2)
 			{
@@ -461,21 +435,17 @@ namespace Nektar
 			}
 			else
 			{
-				
-                v_FwdTrans(inarray,temparray,UseContCoeffs);
+                Homogeneous1DFwdTrans(inarray,temparray,UseContCoeffs);
 				
 			    for( int i=0 ; i<nF_pts/2 ; i++ )
 			    {
 					k = i;
-					Vmath::Smul(2*nP_cfs,k,tmp1 = temparray + (i*2*nP_cfs),1,tmp2 = temparray + (i*2*nP_cfs),1);
+					Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
 				}
 				
-			    v_BwdTrans(temparray,out_d,UseContCoeffs);
+			    Homogeneous1DBwdTrans(temparray,out_d,UseContCoeffs);
 			}
-			
 		}
-		
-
     } //end of namespace
 } //end of namespace
 

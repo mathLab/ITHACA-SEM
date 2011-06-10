@@ -435,59 +435,38 @@ namespace Nektar
 			int nyzlines      = m_lines.num_elements();   //number of Fourier points in the Fourier directions (nF_pts)
 			int npoints       = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line (nT_pts)
 			int n_points_line = npoints/nyzlines;         //number of points per line 
-			int n_coeffs_line;                            //number of coefficients per line (nP_cfs)
 			NekDouble ky,kz;                              //wave numbers in y & z direction
 			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-			
-			if(UseContCoeffs)
-			{
-				n_coeffs_line = m_lines[0]->GetContNcoeffs();
-			}
-			else
-			{
-				n_coeffs_line= m_lines[0]->GetNcoeffs();
-			}
-			
-			int ncoeffs = n_coeffs_line*nyzlines;          //number of total coefficients 
-			
-			Array<OneD, NekDouble> temparray(ncoeffs);
-			Array<OneD, NekDouble> temparray1(ncoeffs);
-			Array<OneD, NekDouble> temparray2(ncoeffs);
+			Array<OneD, NekDouble> temparray(npoints);
+			Array<OneD, NekDouble> temparray1(npoints);
+			Array<OneD, NekDouble> temparray2(npoints);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
-			
-            
 			
 			for( int i=0 ; i<nyzlines ; i++ )
 			{
 				m_lines[i]->PhysDeriv( tmp1 = inarray + i*n_points_line ,tmp2 = out_d0 + i*n_points_line);
 			}
 			
-            v_FwdTrans(inarray,temparray,UseContCoeffs);
+            Homogeneous2DFwdTrans(inarray,temparray,UseContCoeffs);
 			
-			
-			
-			for(int i=0 ; i<nylines/2 ; i++)
+			for(int i=0 ; i<m_ny/2 ; i++)
 			{
 				ky = i;
-				for (int j=0 ; j<nzlines; j++)
+				for (int j=0 ; j<m_nz; j++)
 				{
-					Vmath::Smul(2*n_coeffs_line,ky,tmp1 = temparray + (2*nzlines*j+i*2*n_coeffs_line),1,tmp2 = temparray1 + (2*nzlines*j+i*2*n_coeffs_line),1);
+					Vmath::Smul(2*n_points_line,ky,tmp1 = temparray + (2*m_nz*j+i*2*n_points_line),1,tmp2 = temparray1 + (2*m_nz*j+i*2*n_points_line),1);
 				}
 			}
 			
-			
-			for( int i=0 ; i<nzlines/2 ; i++ )
+			for( int i=0 ; i<m_nz/2 ; i++ )
 			{
 				kz = i;
-				Vmath::Smul(2*n_coeffs_line*nylines,kz,tmp1 = temparray + (i*2*n_coeffs_line*nylines),1,tmp2 = temparray2 + (i*2*n_coeffs_line*nylines),1);
+				Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray2 + (i*2*n_points_line*m_ny),1);
 			}
 			
-			v_BwdTrans(temparray1,out_d1,UseContCoeffs);
-			v_BwdTrans(temparray2,out_d2,UseContCoeffs);
-			
+			Homogeneous2DBwdTrans(temparray1,out_d1,UseContCoeffs);
+			Homogeneous2DBwdTrans(temparray2,out_d2,UseContCoeffs);
 		}
 		
 		void ExpList3DHomogeneous2D::v_PhysDerivHomo(const int dir,
@@ -498,65 +477,45 @@ namespace Nektar
 			int nyzlines      = m_lines.num_elements();   //number of Fourier points in the Fourier directions (nF_pts)
 			int npoints       = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line (nT_pts)
 			int n_points_line = npoints/nyzlines;         //number of points per line 
-			int n_coeffs_line;                            //number of coefficients per line (nP_cfs)
 			NekDouble ky,kz;                              //wave numbers in y & z direction
 			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-			
-			if(UseContCoeffs)
-			{
-				n_coeffs_line = m_lines[0]->GetContNcoeffs();
-			}
-			else
-			{
-				n_coeffs_line= m_lines[0]->GetNcoeffs();
-			}
-			
-			int ncoeffs = n_coeffs_line*nyzlines;          //number of total coefficients 
-            
-			Array<OneD, NekDouble> temparray(ncoeffs);
+			Array<OneD, NekDouble> temparray(npoints);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
 			
 			if (dir < 1)
 			{
-				for( int i=0 ; i<nyzlines ; i++ )
+				for( int i=0 ; i<nyzlines ; i++)
 				{
 					m_lines[i]->PhysDeriv( tmp1 = inarray + i*n_points_line ,tmp2 = out_d + i*n_points_line);
 				}
 			}
 			else
 			{
-				v_FwdTrans(inarray,temparray,UseContCoeffs);
+				Homogeneous2DFwdTrans(inarray,temparray,UseContCoeffs);
 				
 				if(dir == 1)
 				{
-					for(int i=0 ; i<nylines/2 ; i++)
+					for(int i=0 ; i<m_ny/2 ; i++)
 					{
 						ky = i;
-						for (int j=0 ; j<nzlines; j++)
+						for (int j=0 ; j<m_nz; j++)
 						{
-							Vmath::Smul(2*n_coeffs_line,ky,tmp1 = temparray + (2*nzlines*j+i*2*n_coeffs_line),1,tmp2 = temparray + (2*nzlines*j+i*2*n_coeffs_line),1);
+							Vmath::Smul(2*n_points_line,ky,tmp1 = temparray + (2*m_nz*j+i*2*n_points_line),1,tmp2 = temparray + (2*m_nz*j+i*2*n_points_line),1);
 						}
 					}
 				}
 				else 
 				{
-					for( int i=0 ; i<nzlines/2 ; i++ )
+					for( int i=0 ; i<m_nz/2 ; i++ )
 					{
 						kz = i;
-						Vmath::Smul(2*n_coeffs_line*nylines,kz,tmp1 = temparray + (i*2*n_coeffs_line*nylines),1,tmp2 = temparray + (i*2*n_coeffs_line*nylines),1);
+						Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray + (i*2*n_points_line*m_ny),1);
 					}
-					
 				}
-
-				v_BwdTrans(temparray,out_d,UseContCoeffs);
+				Homogeneous2DBwdTrans(temparray,out_d,UseContCoeffs);
 			}
-			
 		}
-		
-
     } //end of namespace
 } //end of namespace
 

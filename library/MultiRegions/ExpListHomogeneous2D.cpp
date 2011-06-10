@@ -392,8 +392,6 @@ namespace Nektar
             int i;
             int n_exp = 0;
             DNekMatSharedPtr    loc_mat;
-			DNekMatSharedPtr    loc_mat1;
-			DNekMatSharedPtr    loc_mat2;
             DNekBlkMatSharedPtr BlkMatrix;
 
             if((mattype == eForwardsCoeffSpace2D)
@@ -481,9 +479,9 @@ namespace Nektar
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(2);
 			HomoBasis[0] = m_homogeneousBasis_y;
 			HomoBasis[1] = m_homogeneousBasis_z;
-            std::vector<NekDouble> HomoLen;
-            HomoLen.push_back(m_lhom_y);
-			HomoLen.push_back(m_lhom_z);
+            std::vector<NekDouble> HomoLen(2);
+            HomoLen[0] = m_lhom_y;
+			HomoLen[1] = m_lhom_z;
 
              // enforce NumHomoDir == 1 by direct call
             m_lines[0]->GeneralGetFieldDefinitions(fielddef,2, HomoBasis,HomoLen);
@@ -588,9 +586,9 @@ namespace Nektar
 
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {
-                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]+
-                                             n*npoints_per_line);
-                (*m_exp)[expansion]->WriteTecplotField(outfile);
+                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]+n*npoints_per_line);
+                
+				(*m_exp)[expansion]->WriteTecplotField(outfile);
             }
         }
 

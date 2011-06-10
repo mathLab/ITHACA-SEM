@@ -41,6 +41,7 @@
 
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 class TiXmlElement;
 class TiXmlDocument;
@@ -81,41 +82,41 @@ namespace Nektar
         class SessionReader
         {
         public:
-            SessionReader(std::string& pFilename);
-            SessionReader(const SessionReader& pSrc);
-            ~SessionReader();
+            LIB_UTILITIES_EXPORT SessionReader(std::string& pFilename);
+            LIB_UTILITIES_EXPORT SessionReader(const SessionReader& pSrc);
+            LIB_UTILITIES_EXPORT ~SessionReader();
 
-            TiXmlDocument& GetDocument();
-            TiXmlElement* GetElement(const std::string& pPath);
-            bool DefinesElement(const std::string& pPath);
-            const std::string& GetFilename();
-            const std::string& GetSolverInfo(const std::string &pProperty);
+            LIB_UTILITIES_EXPORT TiXmlDocument& GetDocument();
+            LIB_UTILITIES_EXPORT TiXmlElement* GetElement(const std::string& pPath);
+            LIB_UTILITIES_EXPORT bool DefinesElement(const std::string& pPath);
+            LIB_UTILITIES_EXPORT const std::string& GetFilename();
+            LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(const std::string &pProperty);
 
-            NekDouble GetParameter(std::string pName);
+            LIB_UTILITIES_EXPORT NekDouble GetParameter(std::string pName);
 
             /// Check for and load an integer parameter
             /// Check for and load a double precision parameter
-            void LoadParameter(const std::string name, int &var, int def = 0);
-            void LoadParameter(const std::string name, NekDouble& var, const NekDouble def= 0.0);
-            bool DefinesParameter(const std::string name);
+            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, int &var, int def = 0);
+            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, NekDouble& var, const NekDouble def= 0.0);
+            LIB_UTILITIES_EXPORT bool DefinesParameter(const std::string name);
 
-            void LoadSolverInfo(const std::string name, std::string& var, const std::string def = "");
-            void MatchSolverInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
-            bool DefinesSolverInfo(const std::string name);
+            LIB_UTILITIES_EXPORT void LoadSolverInfo(const std::string name, std::string& var, const std::string def = "");
+            LIB_UTILITIES_EXPORT void MatchSolverInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
+            LIB_UTILITIES_EXPORT bool DefinesSolverInfo(const std::string name);
 
-            void LoadGeometricInfo(const std::string name, std::string& var, const std::string def = "");
-            void LoadGeometricInfo(const std::string name, bool& var, const bool def = false);
-            void MatchGeometricInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
-            bool DefinesGeometricInfo(const std::string name);
+            LIB_UTILITIES_EXPORT void LoadGeometricInfo(const std::string name, std::string& var, const std::string def = "");
+            LIB_UTILITIES_EXPORT void LoadGeometricInfo(const std::string name, bool& var, const bool def = false);
+            LIB_UTILITIES_EXPORT void MatchGeometricInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
+            LIB_UTILITIES_EXPORT bool DefinesGeometricInfo(const std::string name);
 
-            std::string GetVariable(const unsigned int idx) const;
+            LIB_UTILITIES_EXPORT std::string GetVariable(const unsigned int idx) const;
 
-            EquationSharedPtr GetFunction(const std::string& name, const std::string& variable) const;
-            EquationSharedPtr GetFunction(const std::string& name, unsigned int var) const;
-            enum FunctionType GetFunctionType(const std::string& name) const;
-            std::string GetFunctionFilename(const std::string& name) const;
-            bool DefinesFunction(const std::string& name) const;
-            bool DefinesFunction(const std::string& name, const std::string& variable) const;
+            LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(const std::string& name, const std::string& variable) const;
+            LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(const std::string& name, unsigned int var) const;
+            LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(const std::string& name) const;
+            LIB_UTILITIES_EXPORT std::string GetFunctionFilename(const std::string& name) const;
+            LIB_UTILITIES_EXPORT bool DefinesFunction(const std::string& name) const;
+            LIB_UTILITIES_EXPORT bool DefinesFunction(const std::string& name, const std::string& variable) const;
 
         private:
             std::string                 m_filename;

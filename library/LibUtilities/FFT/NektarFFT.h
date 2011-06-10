@@ -64,7 +64,7 @@ namespace Nektar
 		/// the NektarFFT class.
 		typedef LibUtilities::NekFactory< std::string, NektarFFT, int> NektarFFTFactory;
 		
-		NektarFFTFactory& GetNektarFFTFactory();
+		LIB_UTILITIES_EXPORT NektarFFTFactory& GetNektarFFTFactory();
 
 		class NektarFFT
 		{

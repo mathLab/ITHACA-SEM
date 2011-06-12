@@ -396,10 +396,14 @@ namespace Nektar
                                  "Size of the 2 periodic boundary regions "
                                  "should be equal");
 
-                        for(j = 0; j < bregions[region1ID]->size(); j++)
+                        SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
+                        for(bnd1It =  bregions[region1ID]->begin(),
+                            bnd2It =  bregions[region2ID]->begin();
+                            bnd1It != bregions[region1ID]->end();
+                            ++bnd1It, ++bnd2It)
                         {
-                            comp1 = (*(bregions[region1ID]))[j];
-                            comp2 = (*(bregions[region2ID]))[j];
+                            comp1 = bnd1It->second;
+                            comp2 = bnd2It->second;
 
                             ASSERTL0(comp1->size() == comp2->size(),
                                      "Size of the 2 periodic composites should "

@@ -2347,7 +2347,7 @@ namespace Nektar
                       std::vector<NekDouble> homoLengths;
                       if(numHomoDir)
                       {
-                          valid = ParseUtils::GenerateOrderedVector(homoLengthsString.c_str(), homoLengths);
+                          valid = ParseUtils::GenerateUnOrderedVector(homoLengthsString.c_str(), homoLengths);
                           ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
                       }
 

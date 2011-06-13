@@ -91,7 +91,7 @@ namespace Nektar
 
                 space_p).full;
         }
-        
+		
         static bool GenerateOrderedVector(const char *const str, std::vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
@@ -117,6 +117,21 @@ namespace Nektar
                          //  Begin grammar
                          (
                           real_p[functor4] >> *(',' >> real_p[functor4])
+                          )
+                         ,
+                         //  End grammar
+                         space_p).full;
+        }
+		
+		static bool GenerateUnOrderedVector(const char *const str, std::vector<NekDouble> &vec)
+        {
+            // Functors used to parse the sequence.
+            fctor5 functor5(&vec);
+            
+            return parse(str,
+                         //  Begin grammar
+                         (
+                          real_p[functor5] >> *(',' >> real_p[functor5])
                           )
                          ,
                          //  End grammar
@@ -269,6 +284,23 @@ namespace Nektar
         private:
             std::vector<NekDouble> *m_vector;
             fctor4();
+        };
+		
+		struct fctor5
+        {
+            fctor5(std::vector<NekDouble> *vec):
+			m_vector(vec)
+            {
+            }
+			
+            void operator()(NekDouble n) const
+            {
+				m_vector->push_back(n);
+            }
+			
+        private:
+            std::vector<NekDouble> *m_vector;
+            fctor5();
         };
 
     };

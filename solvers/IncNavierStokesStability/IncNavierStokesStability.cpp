@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         int       n      = nfields*nq; // Number of points in eigenvalue calculation
         NekDouble tol    = 1e-6; // determines the stopping criterion.
         int       ido    = 0;  //REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
-        int       info   = 1;  // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
+        int       info   = 0;  // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
         int       nev    = 2;  // Number of eigenvalues to be evaluated
         int       ncv    = 16; // Length of the Arnoldi factorisation
         int       lworkl = 3*ncv*(ncv+2); // Size of work array
@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
 
             ASSERTL0(ido == 1, "Unexpected reverse communication request.");
 
+			
             //fields are copied in workd[ipntr[0]-1] and following
             for (int k = 0; k < nfields; ++k)
             {
@@ -215,6 +216,7 @@ int main(int argc, char *argv[])
             {
                 Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &workd[ipntr[1]-1+k*nq], 1);
             }
+			
        }
 
         cout<< "Converged in " << iparam[8] << " iterations" << endl;
@@ -258,7 +260,7 @@ int main(int argc, char *argv[])
 	{
 		cout << "Eigenvalue n. " << i+1 << " Re= "
 		<< dr[i]<< "   Im=" << di[i]
-		<< " Growth= " << log(dr[i]*dr[i]+di[i]*di[i])/period 
+		<< " Growth= " << log(sqrt(dr[i]*dr[i]+di[i]*di[i]))/period 
 		<< " Frequency=" <<atan2(di[i],dr[i])/period <<endl;
 		
 		for (int k = 0; k < nfields; ++k)

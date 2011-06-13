@@ -238,7 +238,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
     
   <CONDITIONS>
@@ -251,8 +251,8 @@
     </SOLVERINFO>
 
     <PARAMETERS>
-      <P> TimeStep      = 0.005 </P>
-      <P> NumSteps      = 200    </P>
+      <P> TimeStep      = 0.002 </P>
+      <P> NumSteps      = 500    </P>
       <P> IO_CheckSteps = 1000  </P>
       <P> IO_InfoSteps  = 20    </P>
       <P> Re            = 7500     </P>
@@ -290,7 +290,7 @@
     </BOUNDARYCONDITIONS>
 
     <FUNCTION NAME="InitialConditions">
-       <E VAR="u" VALUE="0" />
+     <E VAR="u" VALUE="0" />
      <E VAR="v" VALUE="0" />
      <E VAR="p" VALUE="0" />
    </FUNCTION>

@@ -238,7 +238,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
     
   <CONDITIONS>
@@ -248,6 +248,8 @@
       <I PROPERTY="AdvectionForm" VALUE="Linearised"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
+    <I PROPERTY="InitialVector" VALUE="Random"/>
+
     </SOLVERINFO>
 
     <PARAMETERS>

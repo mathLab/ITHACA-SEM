@@ -92,10 +92,17 @@ int main(int argc, char *argv[])
         ASSERTL0(e == -1, "No such solver class defined.");
     }
 
+
 	//Evaluation of the time period
 	NekDouble ts=session->GetParameter("TimeStep");
 	NekDouble numstep=session->GetParameter("NumSteps");
     NekDouble period= ts*numstep;
+	
+	//Get the initial Arnoldi Vector
+	std::string invecType = session->GetSolverInfo("InitialVector");
+	
+	//NekDouble info_ar= session->GetParameter("InitialVector");
+    
 	
     // Print a summary of solver and problem parameters and initialise
     // the solver.
@@ -114,10 +121,27 @@ int main(int argc, char *argv[])
         int       n      = nfields*nq; // Number of points in eigenvalue calculation
         NekDouble tol    = 1e-6; // determines the stopping criterion.
         int       ido    = 0;  //REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
-        int       info   = 0;  // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
+		int       info;        // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
         int       nev    = 2;  // Number of eigenvalues to be evaluated
         int       ncv    = 16; // Length of the Arnoldi factorisation
         int       lworkl = 3*ncv*(ncv+2); // Size of work array
+
+	
+
+	
+	    //Type of starting initial Arnoldi vector
+		if (invecType== "Random")
+		{
+			info=0;
+		}
+		else if (invecType== "Assigned")
+		{
+			info=1;
+		
+		}
+		else {
+			ASSERTL0(false,"INITVECTOR value not recognised");
+		}
 
         // Error alerts
         ASSERTL0(n   <= maxn,  "N is greater than MAXN");

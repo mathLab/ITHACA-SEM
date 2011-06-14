@@ -245,8 +245,13 @@ namespace Nektar
             {
             }
 
+#if BOOST_VERSION < 103500
             template<typename ElementType>
             unsigned int operator()(const ElementType& rhs, const unsigned int& accum) const
+#else
+            template<typename ElementType>
+            unsigned int operator()(const unsigned int& accum, const ElementType& rhs) const
+#endif
             {
                 return accum + IsAlias<T, ElementType>::Apply(value, rhs);
             }

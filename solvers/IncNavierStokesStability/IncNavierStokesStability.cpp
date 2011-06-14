@@ -126,23 +126,8 @@ int main(int argc, char *argv[])
         int       ncv    = 16; // Length of the Arnoldi factorisation
         int       lworkl = 3*ncv*(ncv+2); // Size of work array
 
-	
 
-	
-	    //Type of starting initial Arnoldi vector
-		if (invecType== "Random")
-		{
-			info=0;
-		}
-		else if (invecType== "Assigned")
-		{
-			info=1;
-		
-		}
-		else {
-			ASSERTL0(false,"INITVECTOR value not recognised");
-		}
-
+			
         // Error alerts
         ASSERTL0(n   <= maxn,  "N is greater than MAXN");
         ASSERTL0(nev <= maxnev,"NEV is greater than MAXNEV");
@@ -154,20 +139,26 @@ int main(int argc, char *argv[])
         Array<OneD, NekDouble> workl (lworkl);
         Array<OneD, NekDouble> workd (3*n, 0.0);
         Array<OneD, MultiRegions::ExpListSharedPtr>& fields = equ->UpdateFields();
+
 	
-	    if(info !=0)
+
+		if (session->DefinesFunction("InitialConditions"))
 		{
 			cout << " info=1: initial Arnoldi vector from session file" << endl;
-				//Initialise resid to values specified in the initial conditions of the session file
-				for (int k = 0; k < nfields; ++k)
-				{
-					Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &resid[k*nq], 1);
-				}
+			info=1;
+			//Initialise resid to values specified in the initial conditions of the session file
+			for (int k = 0; k < nfields; ++k)
+			{
+				Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &resid[k*nq], 1);
+			}
+			 
 		}
-	    else
+		else
 		{
 			cout << "info=0: random initial Arnoldi vector " << endl;
+			info=0;
 		}
+
 
         // Parameters
         int iparam[11];

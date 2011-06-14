@@ -115,11 +115,10 @@ int main(int argc, char* argv[])
     Execute("HDGHelmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","HDG Helmholtz3D Homogeneous 1D");
 
 #ifdef NEKTAR_USE_MPI
-    ExecuteParallel("Helmholtz1D", "helmholtz1D_8modes.xml","Parallel CG Helmholtz1D  P=8", 2);
-//    ExecuteParallel("HDGHelmholtz1D", "helmholtz1D_8modes.xml","Parallel HDG Helmholtz1D  P=8", 2);
-//    ExecuteParallel("Helmholtz2D", "helmholtz2D_7modes.xml","Parallel CG Helmholtz2D  P=7", 2);
-//    ExecuteParallel("HDGHelmholtz2D", "helmholtz2D_7modes.xml","Parallel HDG Helmholtz2D  P=7", 2);
-    ExecuteParallel("Helmholtz3D", "helmholtz3D_hex.xml","Parallel CG Helmholtz3D Hex", 2);
+    ExecuteParallel("Helmholtz1D", "helmholtz1D_8modes.xml","Par(2) CG Helmholtz1D  P=8", 2);
+//    ExecuteParallel("Helmholtz2D", "helmholtz2D_7modes.xml","Par(2) CG Helmholtz2D  P=7", 2);
+//    ExecuteParallel("Helmholtz2D", "helmholtz2D_7modes.xml","Par(5) CG Helmholtz2D  P=7", 5);
+    ExecuteParallel("Helmholtz3D", "helmholtz3D_hex.xml",   "Par(2) CG Helmholtz3D Hex",  2);
 #endif
 
     if (tests_failed && !quiet)

@@ -450,6 +450,7 @@ namespace Nektar
             int firstNonDirGraphVertId;
             int nLocBndCondDofs = 0;
             int nLocDirBndCondDofs = 0;
+            int nExtraDirichlet = 0;
             StdRegions::StdExpansion2DSharedPtr locExpansion;
             LocalRegions::SegExpSharedPtr       bndSegExp;
             LibUtilities::BasisType             bType;
@@ -488,8 +489,8 @@ namespace Nektar
                                                 Dofs,
                                                 ReorderedGraphVertId,
                                                 firstNonDirGraphVertId,
+                                                nExtraDirichlet,
                                                 bottomUpGraph,
-                                                
                                                 checkIfSystemSingular);
 
             /**
@@ -518,8 +519,8 @@ namespace Nektar
                     nLocBndCondDofs += bndSegExp->GetNcoeffs();
                 }
             }
-            m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
-            
+            m_numLocalDirBndCoeffs = nLocDirBndCondDofs + nExtraDirichlet;
+
             /**
              * STEP 3: Set up an array which contains the offset information of
              * the different graph vertices.
@@ -907,12 +908,13 @@ namespace Nektar
                 Array<OneD, map<int,int> > &Dofs,
                 Array<OneD, map<int,int> > &ReorderedGraphVertId,
                 int          &firstNonDirGraphVertId,
+                int          &nExtraDirichlet,
                 BottomUpSubStructuredGraphSharedPtr &bottomUpGraph, 
                 const bool checkIfSystemSingular,
                 int mdswitch, 
                 bool doInteriorMap)
         {
-            int i,j,k;
+            int i,j,k,l,m;
             int cnt = 0;
             int meshVertId, meshVertId2;
             int meshEdgeId, meshEdgeId2;
@@ -965,6 +967,66 @@ namespace Nektar
                 }
             }
 
+
+            /**
+             * STEP 1.5: Exchange Dirichlet mesh vertices between processes.
+             */
+            int n = m_comm->GetSize();
+            int p  = m_comm->GetRank();
+            Array<OneD, int> counts (n, 0);
+            Array<OneD, int> offsets(n, 0);
+            counts[p] = ReorderedGraphVertId[0].size();
+            m_comm->AllReduce(counts, LibUtilities::ReduceSum);
+            for (i = 1; i < n; ++i)
+            {
+                offsets[i] = offsets[i-1] + counts[i-1];
+            }
+
+            int nTot = Vmath::Vsum(n,counts,1);
+            Array<OneD, int> vertexlist(nTot, 0);
+            std::map<int, int>::iterator it;
+            for (it = ReorderedGraphVertId[0].begin(), i = 0;
+                 it != ReorderedGraphVertId[0].end();
+                 ++it, ++i)
+            {
+                vertexlist[offsets[p] + i] = it->first;
+            }
+            m_comm->AllReduce(vertexlist, LibUtilities::ReduceSum);
+
+            for (i = 0; i < n; ++i)
+            {
+                if (i == p)
+                {
+                    continue;
+                }
+
+                for(j = 0; j < bndCondExp.num_elements(); j++)
+                {
+                    for(k = 0; k < bndCondExp[j]->GetExpSize(); k++)
+                    {
+                        bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[j]->GetExp(k));
+                        for(l = 0; l < 2; l++)
+                        {
+                            meshVertId = (bndSegExp->GetGeom1D())->GetVid(l);
+                            if(ReorderedGraphVertId[0].count(meshVertId) == 0)
+                            {
+                                for (m = 0; m < counts[i]; ++m)
+                                {
+                                    if (vertexlist[offsets[i]+m] == meshVertId)
+                                    {
+                                        ReorderedGraphVertId[0][meshVertId] = graphVertId++;
+                                        nExtraDirichlet++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            int s = (systemSingular ? 1 : 0);
+            m_comm->AllReduce(s, LibUtilities::ReduceMin);
+            systemSingular = (s == 1 ? true : false);
             if(systemSingular == true && checkIfSystemSingular)
             {
                 //last region i and j=0 edge

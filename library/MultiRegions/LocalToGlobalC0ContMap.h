@@ -127,6 +127,7 @@ namespace Nektar
                                        Array<OneD, map<int,int> > &Dofs,
                                        Array<OneD, map<int,int> > &ReorderedGraphVertId,
                                        int          &firstNonDirGraphVertID,
+                                       int          &nExtraDirichlet,
                                        BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
                                        const bool checkIfSystemSingular = false,
                                        int mdswitch = 1,

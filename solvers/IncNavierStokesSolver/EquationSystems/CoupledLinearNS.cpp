@@ -1199,6 +1199,7 @@ namespace Nektar
         int firstNonDirGraphVertId;
         int nLocBndCondDofs = 0;
         int nLocDirBndCondDofs = 0;
+        int nExtraDirichlet = 0;
         StdRegions::StdExpansion2DSharedPtr locExpansion;
         LocalRegions::SegExpSharedPtr       bndSegExp;
         LibUtilities::BasisType             bType;
@@ -1361,6 +1362,7 @@ namespace Nektar
                                            Dofs,
                                            ReorderedGraphVertId,
                                            firstNonDirGraphVertId,
+                                           nExtraDirichlet,
                                            bottomUpGraph,
                                            false,
                                            4);
@@ -1599,11 +1601,11 @@ namespace Nektar
 
         if(IsSingular)
         {
-            locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs+1);
+            locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs+nExtraDirichlet+1);
         }
         else
         {
-            locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs);
+            locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs+nExtraDirichlet);
         }
 
         /**

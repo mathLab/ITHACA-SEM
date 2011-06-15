@@ -571,7 +571,7 @@ namespace Nektar
 
             inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
 
-            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble = NekConstants::kNekUnsetDouble);
+            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble = NekConstants::kNekUnsetDouble, const NekDouble = NekConstants::kNekUnsetDouble);
 
 
             // Routines for continous matrix solution
@@ -1042,8 +1042,9 @@ namespace Nektar
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
 
-            virtual void v_EvaluateBoundaryConditions(
-                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0, 
+													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
+													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
 
@@ -1677,9 +1678,10 @@ namespace Nektar
         }
 
         inline void ExpList::EvaluateBoundaryConditions(const NekDouble time,
-                                                        const NekDouble x2_in)
+                                                        const NekDouble x2_in,
+														const NekDouble x3_in)
         {
-            v_EvaluateBoundaryConditions(time,x2_in);
+            v_EvaluateBoundaryConditions(time,x2_in,x3_in);
         }
 
         // Routines for continous matrix solution

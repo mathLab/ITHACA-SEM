@@ -180,18 +180,15 @@ namespace Nektar
         {
             int n,m;
 			
-			int ny = m_homogeneousBasis_y->GetNumPoints();
-			int nz = m_homogeneousBasis_z->GetNumPoints();
-			
 			const Array<OneD, const NekDouble> y = m_homogeneousBasis_y->GetZ();
             const Array<OneD, const NekDouble> z = m_homogeneousBasis_z->GetZ();
 			
 
-            for(n = 0; n < nz; ++n)
+            for(n = 0; n < m_nz; ++n)
             {
-				for(m = 0; m < ny; ++m)
+				for(m = 0; m < m_ny; ++m)
 				{
-					m_lines[m+n]->EvaluateBoundaryConditions(time);//,0.5*m_lhom_y*(1.0+y[m]),0.5*m_lhom_z*(1.0+z[n]));
+					m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(time,0.5*m_lhom_y*(1.0+y[m]),0.5*m_lhom_z*(1.0+z[n]));
 				}
             }
             
@@ -254,7 +251,7 @@ namespace Nektar
 			}
         }
 		
-		void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in)
+		void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in, const NekDouble x3_in)
 		{
 			EvaluateBoundaryConditions(time);
 		}

@@ -2388,7 +2388,7 @@ namespace Nektar
 
 		/**
          */
-        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in)
+        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in, const NekDouble x3_in)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

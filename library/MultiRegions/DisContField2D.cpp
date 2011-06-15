@@ -1261,9 +1261,9 @@ namespace Nektar
          * @param   bndCondExpansions   List of boundary conditions.
          * @param   bndConditions   Information about the boundary conditions.
          */
-        void DisContField2D::v_EvaluateBoundaryConditions(
-                        const NekDouble time,
-                        const NekDouble x2_in)
+        void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
+														  const NekDouble x2_in,
+														  const NekDouble x3_in)
         {
             int i,j;
             int npoints;

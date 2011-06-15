@@ -54,7 +54,7 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="10" FIELDS="u" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u" TYPE="MODIFIED" />
   </EXPANSIONS>
     
     <CONDITIONS>
@@ -75,7 +75,7 @@
       <P> IO_InfoSteps  = 10                 </P>
       <P> wavefreq      = PI                        </P>
       <P> epsilon       = 1.0                        </P>
-      <P> HomModesZ     = 6            </P>
+      <P> HomModesZ     = 4            </P>
       <P> LZ            = 1.0          </P>
     </PARAMETERS>
         

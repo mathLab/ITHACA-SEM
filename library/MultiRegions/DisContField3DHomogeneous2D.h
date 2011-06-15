@@ -109,7 +109,8 @@ namespace Nektar
                     NekDouble tau);
 			
 			virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
-													  const NekDouble x2_in = NekConstants::kNekUnsetDouble);
+													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
+													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
         };
 
         typedef boost::shared_ptr<DisContField3DHomogeneous2D>  

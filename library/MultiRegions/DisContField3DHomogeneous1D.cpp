@@ -229,7 +229,7 @@ namespace Nektar
             }
         }
 		
-		void DisContField3DHomogeneous1D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in)
+		void DisContField3DHomogeneous1D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in,const NekDouble x3_in)
 		{
 			EvaluateBoundaryConditions(time);
 		}

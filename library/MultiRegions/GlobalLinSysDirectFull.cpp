@@ -91,8 +91,6 @@ namespace Nektar
             ASSERTL1(pExp->GetComm()->GetSize() == 1,
                      "Direct full matrix solve can only be used in serial.");
 
-            m_expList = pExp;
-
             AssembleFullMatrix(pLocToGloMap);
         }
 

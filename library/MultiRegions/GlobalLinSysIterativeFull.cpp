@@ -78,7 +78,6 @@ namespace Nektar
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eIterativeFull,
                      "This routine should only be used when using an Iterative "
                      "conjugate gradient matrix solve.");
-            m_expList = pExp;
 
             ComputeDiagonalPreconditionerSum(pLocToGloMap);
         }

@@ -142,7 +142,8 @@ namespace Nektar
                 const boost::shared_ptr<ExpList> &pExpList,
                 const boost::shared_ptr<LocalToGlobalBaseMap>
                                                        &pLocToGloMap):
-            m_linSysKey(pKey)
+            m_linSysKey(pKey),
+            m_expList(pExpList)
         {
 
         }

@@ -97,8 +97,6 @@ namespace Nektar
                      "The local to global map is not set up for the requested "
                      "solution type");
 
-            m_expList = pExpList;
-
             // Allocate memory for top-level structure
             SetupTopLevel(pLocToGloMap);
 

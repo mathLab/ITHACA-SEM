@@ -121,8 +121,8 @@ namespace Nektar
 
             for(cnt  = n = 0; n < nyzlines; ++n)
             {
-                m_lines[n]->SetCoeffsArray(tmparray= m_coeffs + ncoeffs_per_line*n);
-                m_lines[n]->SetPhysArray(tmparray = m_phys + npoints_per_line*n);
+				m_coeffs[n] = m_lines[n]->UpdateCoeffs()[0];
+				m_phys[n]   = m_lines[n]->UpdatePhys()[0];
 
                 for(i = 0; i < nel; ++i)
                 {

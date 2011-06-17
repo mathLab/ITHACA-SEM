@@ -240,13 +240,13 @@ namespace Nektar
 					beta_y = 2*M_PI*(m/2)/m_lhom_y;
 					beta = beta_y*beta_y + beta_z*beta_z;
 					
-					m_lines[n]->HelmSolve(fce + cnt,
-                                         e_out = outarray + cnt1,
-                                         lambda + beta,varLambda,
-                                         varCoeff);
+					m_lines[m+(n*nhom_modes_y)]->HelmSolve(fce + cnt,
+														   e_out = outarray + cnt1,
+														   lambda + beta,varLambda,
+														   varCoeff);
                 
-					cnt  += m_lines[n]->GetTotPoints();
-					cnt1 += m_lines[n]->GetNcoeffs();
+					cnt  += m_lines[m+(n*nhom_modes_y)]->GetTotPoints();
+					cnt1 += m_lines[m+(n*nhom_modes_y)]->GetNcoeffs();
 				}
 			}
         }

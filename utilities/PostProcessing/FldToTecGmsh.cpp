@@ -112,10 +112,10 @@ int main(int argc, char *argv[])
 				int nzlines = fielddef[0]->m_numModes[2];
 				
                 // choose points to be at evenly spaced points at
-                const LibUtilities::PointsKey PkeyY(nylines+1,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey PkeyY(nylines,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyY(fielddef[0]->m_basis[1],nylines,PkeyY);
 				
-				const LibUtilities::PointsKey PkeyZ(nzlines+1,LibUtilities::ePolyEvenlySpaced);
+				const LibUtilities::PointsKey PkeyZ(nzlines,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
                 
 				NekDouble ly = fielddef[0]->m_homogeneousLengths[0];

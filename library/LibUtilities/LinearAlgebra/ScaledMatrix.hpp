@@ -239,6 +239,12 @@ namespace Nektar
             {
             }
             
+            NekMatrix(typename boost::call_traits<NumberType>::const_reference scale, const NekMatrix<InnerType, ScaledMatrixTag>& rhs) :
+                BaseType(scale,rhs.GetOwnedMatrix())
+            {
+            }
+
+
             static ThisType CreateWrapper(const ThisType& rhs)
             {
                 return ThisType(rhs);

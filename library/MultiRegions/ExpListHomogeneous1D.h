@@ -103,14 +103,20 @@ namespace Nektar
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
 			
-			/// FFT variables
-			bool                                    m_useFFT;
-			LibUtilities::NektarFFTSharedPtr        m_FFT;
-			Array<OneD,NekDouble>                   m_tmpIN;
-			Array<OneD,NekDouble>                   m_tmpOUT;
+            LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
+            {
+                return m_homogeneousBasis;
+            }
+
 
         protected:
-
+            
+            /// FFT variables
+            bool                                    m_useFFT;
+            LibUtilities::NektarFFTSharedPtr        m_FFT;
+            Array<OneD,NekDouble>                   m_tmpIN;
+            Array<OneD,NekDouble>                   m_tmpOUT;
+            
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
@@ -127,6 +133,11 @@ namespace Nektar
             virtual int v_GetNumElmts(void)
             {
                 return m_planes[0]->GetExpSize();
+            }
+
+            virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)
+            {
+                return GetHomogeneousBasis();
             }
 
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,

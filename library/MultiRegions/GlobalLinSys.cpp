@@ -141,7 +141,7 @@ namespace Nektar
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
                 const boost::shared_ptr<ExpList> &pExpList,
                 const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                       &pLocToGloMap):
+                                   &pLocToGloMap):
             m_linSysKey(pKey),
             m_expList(pExpList)
         {

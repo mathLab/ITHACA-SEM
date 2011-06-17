@@ -2278,7 +2278,7 @@ namespace Nektar
             return m_localToGlobalMap;
         }
 
-        void LocalToGlobalC0ContMap::v_SetLocalToGlobalMap(const Array<OneD, const int>& inarray)
+        void LocalToGlobalC0ContMap::v_SetLocalToGlobalMap(const Array<OneD, int>& inarray)
         {
             m_localToGlobalMap = inarray;
         }
@@ -2320,7 +2320,7 @@ namespace Nektar
             }
         }
 
-        void LocalToGlobalC0ContMap::v_SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray)
+        void LocalToGlobalC0ContMap::v_SetLocalToGlobalSign(const Array<OneD, NekDouble>& inarray)
         {
             m_localToGlobalSign = inarray;
         }

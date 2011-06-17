@@ -70,19 +70,29 @@ namespace Nektar
                                    LibUtilities::CommSharedPtr &pComm,
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
-								   bool useFFT);
+                                   bool useFFT);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
                                    LibUtilities::CommSharedPtr &pComm,
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
-								   bool useFFT,
-                                   SpatialDomains::MeshGraph2D &graph2D);
+                                   bool useFFT,
+                                   SpatialDomains::MeshGraph2D &graph2D,
+                                   const std::string var = "DefaultVar");
+
+            /// Sets up a list of local expansions based on an mesh expansion
+            MULTI_REGIONS_EXPORT  ExpList3DHomogeneous1D(
+                                    LibUtilities::CommSharedPtr &pComm,
+                                    const LibUtilities::BasisKey &HomoBasis,
+                                    const NekDouble lhom, 
+                                    bool useFFT, 
+                                    const SpatialDomains::ExpansionMap &expansions);
 
             /// Copy constructor.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In,
-                                   bool DeclarePlanesSetCoeffPhys = true);
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
+                                         const ExpList3DHomogeneous1D &In,
+                                         bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList3DHomogeneous1D();
@@ -140,6 +150,8 @@ namespace Nektar
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
 
         private:
+
+            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions);
         };
 
         inline void ExpList3DHomogeneous1D::GetCoords(Array<OneD, NekDouble> &coord_0,
@@ -160,10 +172,10 @@ namespace Nektar
         }
 		
 		inline void ExpList3DHomogeneous1D::PhysDerivHomo(const int dir,
-								                          const Array<OneD, const NekDouble> &inarray,
-								                          Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+                                                                  const Array<OneD, const NekDouble> &inarray,
+                                                                  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			v_PhysDerivHomo(dir,inarray,out_d,UseContCoeffs);
+                    v_PhysDerivHomo(dir,inarray,out_d,UseContCoeffs);
 		}
 
     } //end of namespace

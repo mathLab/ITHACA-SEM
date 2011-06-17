@@ -193,7 +193,7 @@ namespace Nektar
 
 
         /**
-         * Given a expansion vector \a expansions, containing
+         * Given an expansion vector \a expansions, containing
          * information about the domain and the spectral/hp element
          * expansion, this constructor fills the list of local
          * expansions \texttt{m_exp} with the proper expansions,
@@ -206,9 +206,11 @@ namespace Nektar
          *                      domain and the spectral/hp element
          *                      expansion.
          */
-        ExpList2D::ExpList2D(const SpatialDomains::ExpansionMap &expansions,
-                              bool DeclareCoeffPhysArrays):
-            ExpList()
+        ExpList2D::ExpList2D(
+                             LibUtilities::CommSharedPtr &pComm,
+                             const SpatialDomains::ExpansionMap &expansions,
+                             bool DeclareCoeffPhysArrays):
+            ExpList(pComm)
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;

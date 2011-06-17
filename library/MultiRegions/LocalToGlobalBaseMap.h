@@ -78,7 +78,7 @@ namespace Nektar
 
             inline const Array<OneD,const int>&  GetLocalToGlobalMap();
 
-            inline void SetLocalToGlobalMap(const Array<OneD, const int>& inarray);
+            inline void SetLocalToGlobalMap(const Array<OneD,  int>& inarray);
 
             inline const Array<OneD, const int>& GetGlobalToUniversalMap();
 
@@ -88,7 +88,7 @@ namespace Nektar
 
             inline const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
 
-            inline void SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray);
+            inline void SetLocalToGlobalSign(const Array<OneD,  NekDouble>& inarray);
 
             inline const void LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
@@ -126,7 +126,7 @@ namespace Nektar
             /// Retrieve the global indices of the local boundary modes.
             inline const Array<OneD,const int>&  GetLocalToGlobalBndMap();
             /// Set the global indices of the local boundary modes.
-            inline  void SetLocalToGlobalBndMap(Array<OneD,int> inarray);
+            inline  void SetLocalToGlobalBndMap(const Array<OneD,int> inarray);
 
             /// Returns true if using a modal expansion requiring a change of
             /// sign of some modes.
@@ -140,13 +140,13 @@ namespace Nektar
             /// Retrieve the sign change for all local boundary modes.
             inline Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
             /// Sets the sign change for all local boundary modes.
-            inline void SetLocalToGlobalBndSign(Array<OneD, NekDouble> inarray);
+            inline void SetLocalToGlobalBndSign(const Array<OneD, NekDouble> inarray);
             /// Retrieves the global index corresponding to a boundary expansion
             /// mode.
             inline int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
             /// Sets the global index corresponding to a boundary expansion
             /// mode.
-            inline void SetBndCondCoeffsToGlobalCoeffsMap(Array<OneD, int> inarray);
+            inline void SetBndCondCoeffsToGlobalCoeffsMap(const Array<OneD, int> inarray);
             /// Retrieves the global indices corresponding to the boundary
             /// expansion modes.
             inline const Array<OneD,const int>&
@@ -156,7 +156,7 @@ namespace Nektar
             inline NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
             /// Sets the modal sign associated with a given boundary
-            inline void SetBndCondCoeffsToGlobalCoeffsSign(Array<OneD, NekDouble> inarray);
+            inline void SetBndCondCoeffsToGlobalCoeffsSign(const Array<OneD, NekDouble> inarray);
 
             /// Returns the global index of the boundary trace giving the
             /// index on the boundary  expansion
@@ -244,12 +244,12 @@ namespace Nektar
             inline const Array<OneD,const unsigned int>&
                     GetNumLocalBndCoeffsPerPatch();
             /// Sets the number of local boundary coefficients in each patch.
-            inline void SetNumLocalBndCoeffsPerPatch(Array<OneD,unsigned int> inarray);
+            inline void SetNumLocalBndCoeffsPerPatch(const Array<OneD,unsigned int> inarray);
             /// Returns the number of local interior coefficients in each patch.
             inline const Array<OneD,const unsigned int>&
                     GetNumLocalIntCoeffsPerPatch();
             /// Sets the number of local interior coefficients in each patch.
-            inline void SetNumLocalIntCoeffsPerPatch(Array<OneD,unsigned int> inarray);
+            inline void SetNumLocalIntCoeffsPerPatch(const Array<OneD,unsigned int> inarray);
             /// Returns the local to global mapping for the next level in the
             /// multi-level static condensation.
             inline const LocalToGlobalBaseMapSharedPtr
@@ -361,7 +361,7 @@ namespace Nektar
 
             virtual const Array<OneD,const int>&  v_GetLocalToGlobalMap();
 
-            virtual void v_SetLocalToGlobalMap(const Array<OneD, const int>& inarray);
+            virtual void v_SetLocalToGlobalMap(const Array<OneD,  int>& inarray);
 
             virtual const Array<OneD, const int>& v_GetGlobalToUniversalMap();
 
@@ -371,7 +371,7 @@ namespace Nektar
 
             virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
 
-            virtual void v_SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray);
+            virtual void v_SetLocalToGlobalSign(const Array<OneD, NekDouble>& inarray);
 
             virtual const void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
@@ -433,7 +433,7 @@ namespace Nektar
             return v_GetLocalToGlobalMap();
         }
 
-        inline void LocalToGlobalBaseMap::SetLocalToGlobalMap(const Array<OneD, const int>& inarray)
+        inline void LocalToGlobalBaseMap::SetLocalToGlobalMap(const Array<OneD, int>& inarray)
         {
             v_SetLocalToGlobalMap(inarray);
         }
@@ -453,7 +453,7 @@ namespace Nektar
             return v_GetLocalToGlobalSign(i);
         }
 
-        inline void LocalToGlobalBaseMap::SetLocalToGlobalSign(const Array<OneD, const NekDouble>& inarray)
+        inline void LocalToGlobalBaseMap::SetLocalToGlobalSign(const Array<OneD, NekDouble>& inarray)
         {
             v_SetLocalToGlobalSign(inarray);
         }
@@ -606,8 +606,7 @@ namespace Nektar
             }
         }
 
-        inline void LocalToGlobalBaseMap::SetBndCondCoeffsToGlobalCoeffsSign(
-                                                                             Array<OneD, NekDouble> inarray )
+        inline void LocalToGlobalBaseMap::SetBndCondCoeffsToGlobalCoeffsSign(const  Array<OneD, NekDouble> inarray )
         {
             m_bndCondCoeffsToGlobalCoeffsSign = inarray;
         }
@@ -619,7 +618,7 @@ namespace Nektar
             return m_bndCondCoeffsToGlobalCoeffsMap;
         }
 
-        inline void LocalToGlobalBaseMap::SetBndCondCoeffsToGlobalCoeffsMap(Array<OneD,int> inarray)
+        inline void LocalToGlobalBaseMap::SetBndCondCoeffsToGlobalCoeffsMap(const Array<OneD,int> inarray)
         {
             m_bndCondCoeffsToGlobalCoeffsMap = inarray;
         }
@@ -874,7 +873,7 @@ namespace Nektar
             return m_numLocalBndCoeffsPerPatch;
         }
 
-        inline void LocalToGlobalBaseMap::SetNumLocalBndCoeffsPerPatch(Array<OneD,unsigned int> inarray)
+        inline void LocalToGlobalBaseMap::SetNumLocalBndCoeffsPerPatch(const Array<OneD,unsigned int> inarray)
         {
             m_numLocalBndCoeffsPerPatch = inarray;
         }
@@ -885,7 +884,7 @@ namespace Nektar
             return m_numLocalIntCoeffsPerPatch;
         }
 
-        inline void LocalToGlobalBaseMap::SetNumLocalIntCoeffsPerPatch(Array<OneD,unsigned int> inarray)
+        inline void LocalToGlobalBaseMap::SetNumLocalIntCoeffsPerPatch(const Array<OneD,unsigned int> inarray)
         {
             m_numLocalIntCoeffsPerPatch = inarray;
         }

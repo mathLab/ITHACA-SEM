@@ -78,10 +78,12 @@ namespace Nektar
                       bool DelcareCoeffPhysArrays = true, 
                       const std::string var = "DefaultVar");
 
-            /// Sets up a list of local expansions based on an expansion vector
-            MULTI_REGIONS_EXPORT ExpList2D(const SpatialDomains::ExpansionMap &expansions,
+            /// Sets up a list of local expansions based on an expansion  Mapr
+            MULTI_REGIONS_EXPORT ExpList2D(
+                      LibUtilities::CommSharedPtr &pComm,
+                      const SpatialDomains::ExpansionMap &expansions,
                       bool DeclareCoeffPhysArrays = true);
-
+            
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
             MULTI_REGIONS_EXPORT ExpList2D(

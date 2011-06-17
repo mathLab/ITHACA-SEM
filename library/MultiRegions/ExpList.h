@@ -688,6 +688,12 @@ namespace Nektar
                 return m_comm;
             }
 
+            // Wrapper functions for Homogeneous Expansions
+            inline LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
+            {
+                return GetHomogeneousBasis();
+            }
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
@@ -1055,7 +1061,16 @@ namespace Nektar
                                             vector<map<int,int> > & periodicVertices,
                                             map<int,int>& periodicEdges);
 
+            // Homogeneous direction wrapper functions. 
+            virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)
+            {
+                ASSERTL0(false,
+                         "This method is not defined or valid for this class type");
+                return LibUtilities::NullBasisSharedPtr; 
+            }
+
         };
+
 
         /// Shared pointer to an ExpList object.
         typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;

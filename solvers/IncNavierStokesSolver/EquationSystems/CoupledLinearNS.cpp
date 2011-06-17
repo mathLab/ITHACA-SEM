@@ -68,7 +68,7 @@ namespace Nektar
         // Decide how to declare explist for pressure. 
         if(expdim == 2)
         {
-            m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(pressure_exp);
+            m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(pComm, pressure_exp);
             SetUp2DExpansionC0ContMap();
             //SetUp2DExpansionC0ContMap(MultiRegions::eDirectStaticCond);
         }
@@ -1146,8 +1146,7 @@ namespace Nektar
         // Back solve first level of static condensation for interior
         // velocity space and store in F_int
         F_int = (*m_Cinv)*(F_int + Transpose(*m_D_int)*F_p - Transpose(*m_Btilde)*F_bnd);
-                   
-              
+                  
         // Unpack solution from Bnd and  F_int to m_fields 
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements

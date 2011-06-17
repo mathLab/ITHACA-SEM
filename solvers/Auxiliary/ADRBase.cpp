@@ -337,57 +337,57 @@ namespace Nektar
                 }
                 case 2:
                 {
-					if(m_HomogeneousType == eHomogeneous1D)
-					{
-						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-						
-						if(!(mesh2D = boost::dynamic_pointer_cast<
-							 SpatialDomains::MeshGraph2D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
-						}
-				    }
-				    else
-				    {
-						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-						
-						if(!(mesh2D = boost::dynamic_pointer_cast<
-							 SpatialDomains::MeshGraph2D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						i = 0;
-						MultiRegions::ContField2DSharedPtr firstfield =
-						MemoryManager<MultiRegions::ContField2D>
-						::AllocateSharedPtr(m_comm,*mesh2D,
-											*m_boundaryConditions,i,solnType,
-											DeclareCoeffPhysArrays,
-											m_checkIfSystemSingular[0]);
-						
-						firstfield->ReadGlobalOptimizationParameters(m_filename);
-						
-						m_fields[0] = firstfield;
-						for(i = 1 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-							::AllocateSharedPtr(*firstfield,
-												*mesh2D,*m_boundaryConditions,i,
-												DeclareCoeffPhysArrays,
-												m_checkIfSystemSingular[i]);
-						}
-					}
-					
+                    if(m_HomogeneousType == eHomogeneous1D)
+                    {
+                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+                        MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+			
+                        if(!(mesh2D = boost::dynamic_pointer_cast<
+                             SpatialDomains::MeshGraph2D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+                        
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                ::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+                        }
+                    }
+                    else
+                    {
+                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+			
+                        if(!(mesh2D = boost::dynamic_pointer_cast<
+                             SpatialDomains::MeshGraph2D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        i = 0;
+                        MultiRegions::ContField2DSharedPtr firstfield =
+                            MemoryManager<MultiRegions::ContField2D>
+                            ::AllocateSharedPtr(m_comm,*mesh2D,
+                                                *m_boundaryConditions,i,solnType,
+                                                DeclareCoeffPhysArrays,
+                                                m_checkIfSystemSingular[0]);
+                        
+                        firstfield->ReadGlobalOptimizationParameters(m_filename);
+                        
+                        m_fields[0] = firstfield;
+                        for(i = 1 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(*firstfield,
+                                                    *mesh2D,*m_boundaryConditions,i,
+                                                    DeclareCoeffPhysArrays,
+                                                    m_checkIfSystemSingular[i]);
+                        }
+                    }
+                    
                     break;
                 }
                 case 3:
@@ -424,9 +424,9 @@ namespace Nektar
 					}
                     break;
                 }
-                default:
-                    ASSERTL0(false,"Expansion dimension not recognised");
-                    break;
+            default:
+                ASSERTL0(false,"Expansion dimension not recognised");
+                break;
             }
         }
         else // Discontinuous Field
@@ -586,7 +586,6 @@ namespace Nektar
         ScanForHistoryPoints();
         
         
-             
       //define dimension of the forcing function     
         m_FDim = m_fields.num_elements();
         if (m_session->DefinesSolverInfo("EQTYPE")
@@ -831,7 +830,7 @@ namespace Nektar
         for(int i = 0 ; i < m_fields.num_elements(); i++)
         {
             SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-                            = m_boundaryConditions->GetUserDefinedEqn(i);
+                = m_session->GetFunction("UserDefinedEqns",i);
             for(int j = 0; j < nq; j++)
             {
                 outfield[i][j] = ifunc->Evaluate(x0[j],x1[j],x2[j]);

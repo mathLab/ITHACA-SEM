@@ -122,7 +122,7 @@ namespace Nektar
              {
                  m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
              }
-
+             
              // check to see if any user defined boundary condition is
              // indeed implemented
              

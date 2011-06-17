@@ -50,7 +50,7 @@
     </BOUNDARYCONDITIONS>
 
    <FUNCTION NAME="InitialConditions">
-     <E VAR="u" VALUE="0" />
+     <E VAR="u" VALUE="y*(1-y)" />
      <E VAR="v" VALUE="0" />
    </FUNCTION>
 

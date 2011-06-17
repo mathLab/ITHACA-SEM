@@ -89,12 +89,12 @@ int main(int argc, char* argv[])
 
 
     //Test Coupled LinearNS Kovasznay Flow
-    Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Steady Oseen Kovasznay Flow P=6");
+    Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Steady Oseen Kovasznay flow P=6");
     Execute("IncNavierStokesSolver","Test_Kovas_Quad6_Tri4_mixedbcs.xml","Steady Oseen Kovasznay flow, mixed elements and bcs P=7");
 
 
     //Test Coupled LinearNS unsteady Channel Flow
-    Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady Challen Flow with Coupled Solve , P=8");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady channel flow with coupled solve , P=8");
 
     if (tests_failed && !quiet)
     {

@@ -45,7 +45,7 @@
     </GEOMETRY>
     
     <EXPANSIONS>
-       <E COMPOSITE="C[0]" NUMMODES="9" TYPE="MODIFIED" />
+       <E COMPOSITE="C[0]" NUMMODES="9" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
     
     <CONDITIONS>
@@ -85,14 +85,14 @@
       </REGION>
     </BOUNDARYCONDITIONS> 
     
-     <FORCING>
-      <F VAR="u" VALUE="-2*((2*y*y*y)-(3*y*y)+1)+6*((1-(x*x))*((2*y)-1))" />
-    </FORCING>
+     <FUNCTION NAME="Forcing">
+      <E VAR="u" VALUE="-2*((2*y*y*y)-(3*y*y)+1)+6*((1-(x*x))*((2*y)-1))" />
+    cd
     
             
-    <EXACTSOLUTION>
-       <F VAR="u" VALUE="(1-(x*x))*((2*y*y*y)-(3*y*y)+1)" />
-    </EXACTSOLUTION>
+    <FUNCTION NAME="ExactSolution">
+       <E VAR="u" VALUE="(1-(x*x))*((2*y*y*y)-(3*y*y)+1)" />
+    </FUNCTION>
 
 </CONDITIONS>
 

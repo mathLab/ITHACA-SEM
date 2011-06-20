@@ -279,7 +279,6 @@ namespace Nektar
     {
         int i;
         bool DeclareCoeffPhysArrays = true;
-        MultiRegions::GlobalSysSolnType solnType = MultiRegions::eDirectMultiLevelStaticCond;
 
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         m_spacedim = mesh->GetSpaceDimension()+m_HomoDirec;
@@ -295,7 +294,6 @@ namespace Nektar
 					if(m_HomogeneousType == eHomogeneous2D)
 					{
 						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 						
 						if(!(mesh1D = boost::dynamic_pointer_cast<
 							 SpatialDomains::MeshGraph1D>(mesh)))
@@ -311,7 +309,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,m_solnType);
 						}
 					}
 					else 
@@ -328,7 +326,7 @@ namespace Nektar
 						{
 							m_fields[i] = MemoryManager<MultiRegions::ContField1D>
 							::AllocateSharedPtr(m_comm,*mesh1D,
-                                                *m_boundaryConditions,i);
+                                                *m_boundaryConditions,i,m_solnType);
 						}
 						
 					}
@@ -340,7 +338,6 @@ namespace Nektar
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
                         SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                        MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 			
                         if(!(mesh2D = boost::dynamic_pointer_cast<
                              SpatialDomains::MeshGraph2D>(mesh)))
@@ -354,7 +351,7 @@ namespace Nektar
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+                                ::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,m_solnType);
                         }
                     }
                     else
@@ -371,7 +368,7 @@ namespace Nektar
                         MultiRegions::ContField2DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField2D>
                             ::AllocateSharedPtr(m_comm,*mesh2D,
-                                                *m_boundaryConditions,i,solnType,
+                                                *m_boundaryConditions,i,m_solnType,
                                                 DeclareCoeffPhysArrays,
                                                 m_checkIfSystemSingular[0]);
                         
@@ -410,7 +407,7 @@ namespace Nektar
 						MultiRegions::ContField3DSharedPtr firstfield =
 								MemoryManager<MultiRegions::ContField3D>
 										::AllocateSharedPtr(m_comm,*mesh3D,
-															*m_boundaryConditions,i);
+															*m_boundaryConditions,i,m_solnType);
 
 						firstfield->ReadGlobalOptimizationParameters(m_filename);
                     
@@ -438,7 +435,6 @@ namespace Nektar
 					if(m_HomogeneousType == eHomogeneous2D)
 					{
 						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 						
 						if(!(mesh1D = boost::dynamic_pointer_cast<
 							 SpatialDomains::MeshGraph1D>(mesh)))
@@ -454,7 +450,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,m_solnType);
 						}
 					}
 					else 
@@ -471,7 +467,7 @@ namespace Nektar
 						{
 							m_fields[i] = MemoryManager<MultiRegions
 							::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
-																 *m_boundaryConditions,i);
+																 *m_boundaryConditions,i,m_solnType);
 						}
 					}
 					
@@ -482,7 +478,6 @@ namespace Nektar
 					if(m_HomogeneousType == eHomogeneous1D)
 					{
 						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 						
 						if(!(mesh2D = boost::dynamic_pointer_cast<
 							 SpatialDomains::MeshGraph2D>(mesh)))
@@ -496,7 +491,7 @@ namespace Nektar
 						for(i = 0 ; i < m_fields.num_elements(); i++)
 						{
 							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+							::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,m_solnType);
 						}
 				    }
 				    else
@@ -513,7 +508,7 @@ namespace Nektar
 						{
 							m_fields[i] = MemoryManager<MultiRegions
 							::DisContField2D>::AllocateSharedPtr(m_comm,*mesh2D,
-																 *m_boundaryConditions,i);
+																 *m_boundaryConditions,i,m_solnType);
 						}
 					}
 					

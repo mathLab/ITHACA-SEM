@@ -106,6 +106,14 @@ namespace Nektar
              * evaluated
              */ 
             MULTI_REGIONS_EXPORT void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+			
+			inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &GetBndCondExpansions();
+			
+			inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &GetBndConditions();
+			
+			inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
+			
+			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
             
         protected:
             /**
@@ -120,7 +128,7 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional
              * expansion.
              */ 
-            Array<OneD,MultiRegions::ExpList2DHomogeneous1DSharedPtr>   m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>   m_bndCondExpansions;
 
             /**
              * \brief An array which contains the information about
@@ -149,10 +157,38 @@ namespace Nektar
 			virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
 													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
 													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+			
+			virtual const Array<OneD,const boost::shared_ptr<ExpList> > &v_GetBndCondExpansions(void);
+			
+			virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
+			
+            virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
+			
+			virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>& v_UpdateBndConditions();
         };
 
         typedef boost::shared_ptr<DisContField3DHomogeneous1D>  
             DisContField3DHomogeneous1DSharedPtr;
+		
+		inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &DisContField3DHomogeneous1D::GetBndCondExpansions()
+        {
+            return m_bndCondExpansions;
+        }
+		
+		inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous1D::GetBndConditions()
+		{
+			return m_bndConditions;
+		}
+		
+		inline MultiRegions::ExpListSharedPtr &DisContField3DHomogeneous1D::UpdateBndCondExpansion(int i)
+		{
+			return m_bndCondExpansions[i];
+		}
+		
+		inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>&DisContField3DHomogeneous1D::UpdateBndConditions()
+		{
+			return m_bndConditions;
+		}
 
     } //end of namespace
 } //end of namespace

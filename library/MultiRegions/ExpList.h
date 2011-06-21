@@ -308,18 +308,22 @@ namespace Nektar
             /// quadrature points \f$\boldsymbol{x}_i\f$.
             inline void GetCoord(Array<OneD, NekDouble> &coords);
 			
-			/// This function calculates the 3 gradient's components of a variable.
-			/// The variable is supplied in physical space and the routine has been implemented
-			/// to work out the gradient in case of one ore more homogeneous directions.
-			/// The spatial derivate along homogenous directions is performaed in the wave-space.
-			inline void PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
-									  Array<OneD, NekDouble> &out_d0,
-									  Array<OneD, NekDouble> &out_d1, 
-									  Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			// Homogeneous transforms
+			inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs = false);
 			
-			inline void PhysDerivHomo(const int dir,
-                                      const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
+			inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs = false);
+			
+			inline void Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs = false);
+			
+			inline void Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs = false);
 
             /// This function calculates Surface Normal vector of a smooth
             /// manifold.
@@ -517,19 +521,18 @@ namespace Nektar
             /// This function discretely evaluates the derivative of a function
             /// \f$f(\boldsymbol{x})\f$ on the domain consisting of all
             /// elements of the expansion.
-            MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD, NekDouble> &out_d0,
-                           Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                           Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
-
-            MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
-                           const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD, NekDouble> &out_d);
+			inline void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+								  Array<OneD, NekDouble> &out_d0,
+								  Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+								  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray, bool UseContCoeffs = false);
+			
+            inline void PhysDeriv(const int dir,
+								  const Array<OneD, const NekDouble> &inarray,
+								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
 
 
             // functions associated with DisContField
-            inline const Array<OneD, const  boost::shared_ptr<ExpList> >
-                &GetBndCondExpansions();
+            inline const Array<OneD, const  boost::shared_ptr<ExpList> > &GetBndCondExpansions();
 
             inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 			
@@ -984,15 +987,31 @@ namespace Nektar
 			
 			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
 			
-			virtual void v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
-										 Array<OneD, NekDouble> &out_d0,
-										 Array<OneD, NekDouble> &out_d1, 
-										 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d0,
+									 Array<OneD, NekDouble> &out_d1, 
+									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs = false);
 			
 			
-			virtual void v_PhysDerivHomo(const int dir,
-                                         const Array<OneD, const NekDouble> &inarray,
-                                         Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
+			virtual void v_PhysDeriv(const int dir,
+									 const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+			
+			virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
+			
+			virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
+			
+			virtual void v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
+			
+			virtual void v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
 			
 			
             virtual void v_SetUpPhysNormals(
@@ -1041,12 +1060,9 @@ namespace Nektar
         private:
             virtual int v_GetContNcoeffs() const;
 
-            virtual const
-                Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                &v_GetBndConditions();
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
 
-            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                &v_UpdateBndConditions();
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions();
 
             virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0, 
 													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
@@ -1408,22 +1424,62 @@ namespace Nektar
 		/**
 		 *
 		 */
-		inline void ExpList::PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
-										   Array<OneD, NekDouble> &out_d0,
-										   Array<OneD, NekDouble> &out_d1, 
-										   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		inline void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+									   Array<OneD, NekDouble> &out_d0,
+									   Array<OneD, NekDouble> &out_d1, 
+									   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
 		{
-			v_PhysDerivHomo(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
+			v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
 		}
 		
 		/**
 		 *
 		 */
-		inline void ExpList::PhysDerivHomo(const int dir,
-								           const Array<OneD, const NekDouble> &inarray,
-								           Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		inline void ExpList::PhysDeriv(const int dir,
+									   const Array<OneD, const NekDouble> &inarray,
+									   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			v_PhysDerivHomo(dir,inarray,out_d,UseContCoeffs);
+			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												   Array<OneD, NekDouble> &outarray, 
+												   bool UseContCoeffs)
+		{
+			v_Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												   Array<OneD, NekDouble> &outarray, 
+												   bool UseContCoeffs)
+		{
+			v_Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												   Array<OneD, NekDouble> &outarray, 
+												   bool UseContCoeffs)
+		{
+			v_Homogeneous2DFwdTrans(inarray,outarray,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												   Array<OneD, NekDouble> &outarray, 
+												   bool UseContCoeffs)
+		{
+			v_Homogeneous2DBwdTrans(inarray,outarray,UseContCoeffs);
 		}
 		
         /**
@@ -1608,8 +1664,7 @@ namespace Nektar
 
 
         // functions associated with DisContField
-        inline const Array<OneD, const  boost::shared_ptr<ExpList> >
-                                            &ExpList::GetBndCondExpansions()
+        inline const Array<OneD, const  boost::shared_ptr<ExpList> > &ExpList::GetBndCondExpansions()
         {
             return v_GetBndCondExpansions();
         }

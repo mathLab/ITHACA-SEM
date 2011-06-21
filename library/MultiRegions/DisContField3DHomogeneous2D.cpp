@@ -156,7 +156,7 @@ namespace Nektar
 			int nbnd = bregions.size();
 			
 			
-			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DHomogeneous2DSharedPtr>(nbnd);
+			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
 			
 			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
 			
@@ -254,6 +254,26 @@ namespace Nektar
 		void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in, const NekDouble x3_in)
 		{
 			EvaluateBoundaryConditions(time);
+		}
+		
+		const Array<OneD,const boost::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
+		{
+			return GetBndCondExpansions();
+		}
+		
+		const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous2D::v_GetBndConditions()
+		{
+			return GetBndConditions();
+		}
+		
+		boost::shared_ptr<ExpList> &DisContField3DHomogeneous2D::v_UpdateBndCondExpansion(int i)
+		{
+			return UpdateBndCondExpansion(i);
+		}
+		
+		Array<OneD, SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous2D::v_UpdateBndConditions()
+		{
+			return UpdateBndConditions();
 		}
 
 

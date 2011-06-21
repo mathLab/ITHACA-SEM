@@ -1111,41 +1111,28 @@ namespace Nektar
         }
 
         // Evaluate V\cdot Grad(u)
-		if(m_HomoDirec > 0)
+		switch(ndim)
 		{
-			grad1 = Array<OneD, NekDouble> (nPointsTot);
-            grad2 = Array<OneD, NekDouble> (nPointsTot);
-            m_fields[0]->PhysDerivHomo(u,grad0,grad1,grad2,m_UseContCoeff);
-            Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
-            Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
-            Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
-		}
-		else
-		{	
-			switch(ndim)
-			{
-				case 1:
-					m_fields[0]->PhysDeriv(u,grad0);
-					Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
-					break;
-				case 2:
-					grad1 = Array<OneD, NekDouble> (nPointsTot);
-					m_fields[0]->PhysDeriv(u,grad0,grad1);
-					Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
-					Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
-					break;
-				case 3:
-					grad1 = Array<OneD, NekDouble> (nPointsTot);
-					grad2 = Array<OneD, NekDouble> (nPointsTot);
-					m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
-					Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
-					Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
-					Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
-					break;
-
-				default:
-					ASSERTL0(false,"dimension unknown");
-			}
+			case 1:
+				m_fields[0]->PhysDeriv(u,grad0);
+				Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
+				break;
+			case 2:
+				grad1 = Array<OneD, NekDouble> (nPointsTot);
+				m_fields[0]->PhysDeriv(u,grad0,grad1);
+				Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
+				Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
+				break;
+			case 3:
+				grad1 = Array<OneD, NekDouble> (nPointsTot);
+				grad2 = Array<OneD, NekDouble> (nPointsTot);
+				m_fields[0]->PhysDeriv(u,grad0,grad1,grad2,m_UseContCoeff);
+				Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
+				Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
+				Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
+				break;
+			default:
+				ASSERTL0(false,"dimension unknown");
 		}
     }
 

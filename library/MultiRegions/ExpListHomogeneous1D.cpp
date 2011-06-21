@@ -88,6 +88,18 @@ namespace Nektar
         ExpListHomogeneous1D::~ExpListHomogeneous1D()
         {
         }
+		
+		void ExpListHomogeneous1D::v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        {
+			// Forwards trans
+            Homogeneous1DTrans(inarray,outarray,true, UseContCoeffs);
+        }
+		
+		void ExpListHomogeneous1D::v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        {
+			// Backwards trans
+            Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
+        }
 
         void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {

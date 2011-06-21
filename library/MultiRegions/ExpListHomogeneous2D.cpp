@@ -105,6 +105,18 @@ namespace Nektar
         ExpListHomogeneous2D::~ExpListHomogeneous2D()
         {
         }
+		
+		void ExpListHomogeneous2D::v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        {
+			// Forwards trans
+            Homogeneous2DTrans(inarray,outarray,true, UseContCoeffs);
+        }
+		
+		void ExpListHomogeneous2D::v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        {
+			// Backwards trans
+            Homogeneous2DTrans(inarray,outarray,false, UseContCoeffs);
+        }
 
         void ExpListHomogeneous2D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {

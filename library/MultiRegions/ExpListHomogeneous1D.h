@@ -169,20 +169,26 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                         std::string var);
+			
+			virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
+			
+			virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
 
         private:
         };
 
         inline void ExpListHomogeneous1D::Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-            // Forwards trans
-            Homogeneous1DTrans(inarray,outarray,true, UseContCoeffs);
+			v_Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
         }
-
+		
         inline void ExpListHomogeneous1D::Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-            // Backwards trans
-            Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
+            v_Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
         }
 
     } //end of namespace

@@ -472,10 +472,10 @@ namespace Nektar
          *                          derivative \f$\frac{d}{dx_3}\f$ will not be
          *                          calculated.
          */
-        void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+        void ExpList::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d0,
                                 Array<OneD, NekDouble> &out_d1,
-                                Array<OneD, NekDouble> &out_d2)
+                                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
         {
             int  i;
             Array<OneD, NekDouble> e_out_d0;
@@ -498,9 +498,9 @@ namespace Nektar
             }
         }
 
-        void ExpList::PhysDeriv(const int dir,
+        void ExpList::v_PhysDeriv(const int dir,
                                 const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &out_d)
+                                Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
         {
             int  i;
             Array<OneD, NekDouble> e_out_d;
@@ -2138,24 +2138,37 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 		
-		void ExpList::v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
-									  Array<OneD, NekDouble> &out_d0,
-									  Array<OneD, NekDouble> &out_d1, 
-									  Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		void ExpList::v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs)
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
 		}
 		
-		void ExpList::v_PhysDerivHomo(const int dir,
-									  const Array<OneD, const NekDouble> &inarray,
-									  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		void ExpList::v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs)
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
 		}
-
-
+		
+		void ExpList::v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		void ExpList::v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											  Array<OneD, NekDouble> &outarray, 
+											  bool UseContCoeffs)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
 
         // wrapper functions about virtual functions
         Array<OneD, NekDouble> &ExpList::v_UpdateContCoeffs()

@@ -168,20 +168,26 @@ namespace Nektar
             virtual void v_WriteTecplotField(std::ofstream &outfile,int expansion);
 
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion, std::string var);
+			
+			virtual void v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
+			
+			virtual void v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+												 Array<OneD, NekDouble> &outarray, 
+												 bool UseContCoeffs = false);
 
         private:
         };
 
         inline void ExpListHomogeneous2D::Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-            // Forwards trans
-            Homogeneous2DTrans(inarray,outarray,true, UseContCoeffs);
+			v_Homogeneous2DFwdTrans(inarray,outarray,UseContCoeffs);
         }
-
+		
         inline void ExpListHomogeneous2D::Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-            // Backwards trans
-            Homogeneous2DTrans(inarray,outarray,false, UseContCoeffs);
+            v_Homogeneous2DBwdTrans(inarray,outarray,UseContCoeffs);
         }
 
     } //end of namespace

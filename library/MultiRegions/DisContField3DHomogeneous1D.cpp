@@ -141,9 +141,11 @@ namespace Nektar
             SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
             int nbnd = bregions.size();
             
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList2DHomogeneous1DSharedPtr>(nbnd);
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
             
             m_bndConditions = m_planes[0]->UpdateBndConditions();
+			
+			MultiRegions::ExpList2DHomogeneous1DSharedPtr locExpList;
             
             boost::shared_ptr<StdRegions::StdExpansionVector> exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             
@@ -162,9 +164,9 @@ namespace Nektar
                     }
                 }
                 
-                m_bndCondExpansions[i] =
-                MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(m_comm,HomoBasis,lhom,m_useFFT,exp,PlanesBndCondExp);
-                
+				locExpList = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(m_comm,HomoBasis,lhom,m_useFFT,exp,PlanesBndCondExp);
+               
+				m_bndCondExpansions[i] = locExpList;
             }
             
             EvaluateBoundaryConditions();
@@ -232,6 +234,26 @@ namespace Nektar
 		void DisContField3DHomogeneous1D::v_EvaluateBoundaryConditions(const NekDouble time,const NekDouble x2_in,const NekDouble x3_in)
 		{
 			EvaluateBoundaryConditions(time);
+		}
+		
+		const Array<OneD,const boost::shared_ptr<ExpList> > &DisContField3DHomogeneous1D::v_GetBndCondExpansions(void)
+		{
+			return GetBndCondExpansions();
+		}
+		
+		const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous1D::v_GetBndConditions()
+		{
+			return GetBndConditions();
+		}
+		
+		boost::shared_ptr<ExpList> &DisContField3DHomogeneous1D::v_UpdateBndCondExpansion(int i)
+		{
+			return UpdateBndCondExpansion(i);
+		}
+		
+		Array<OneD, SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous1D::v_UpdateBndConditions()
+		{
+			return UpdateBndConditions();
 		}
 
 

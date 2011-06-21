@@ -396,10 +396,10 @@ namespace Nektar
         }
 		
 		
-		void ExpList3DHomogeneous1D::v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
-													 Array<OneD, NekDouble> &out_d0,
-													 Array<OneD, NekDouble> &out_d1, 
-													 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		void ExpList3DHomogeneous1D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+												 Array<OneD, NekDouble> &out_d0,
+												 Array<OneD, NekDouble> &out_d1, 
+												 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
 		
 		{
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
@@ -428,9 +428,9 @@ namespace Nektar
 			Homogeneous1DBwdTrans(temparray,out_d2,UseContCoeffs);
 		}
 		
-		void ExpList3DHomogeneous1D::v_PhysDerivHomo(const int dir,
-													 const Array<OneD, const NekDouble> &inarray,
-													 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		void ExpList3DHomogeneous1D::v_PhysDeriv(const int dir,
+												 const Array<OneD, const NekDouble> &inarray,
+												 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		
 		{
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
@@ -461,6 +461,22 @@ namespace Nektar
 				
 			    Homogeneous1DBwdTrans(temparray,out_d,UseContCoeffs);
 			}
+		}
+		
+		void ExpList3DHomogeneous1D::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+											   Array<OneD, NekDouble> &out_d0,
+											   Array<OneD, NekDouble> &out_d1, 
+											   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		
+        {
+            v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
+        }
+		
+		void ExpList3DHomogeneous1D::PhysDeriv(const int dir,
+											   const Array<OneD, const NekDouble> &inarray,
+											   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		{
+			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
 		}
     } //end of namespace
 } //end of namespace

@@ -173,17 +173,7 @@ namespace Nektar
                                   const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eHexExp, NekOptimize::eIProductWRTDerivBase, 3>::
-                DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
-            }
-            else
-            {
-                HexExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-            }  
+            HexExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
 
 
@@ -804,20 +794,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                            StdRegions::eHexExp, NekOptimize::eMassMatrixOp, 3>
-                                ::DoMatOp(  m_base[0]->GetNumModes(),
-                                            m_base[1]->GetNumModes(),
-                                            m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
-            }
+            StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void HexExp::v_LaplacianMatrixOp(
@@ -825,21 +802,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eHexExp, NekOptimize::eLaplacianMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                HexExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
-            }
-
+            HexExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void HexExp::v_LaplacianMatrixOp(const int k1, const int k2, 
@@ -847,21 +810,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                    StdRegions::eHexExp, NekOptimize::eLaplacianMatrixIJOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
+            StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
-            }
         }
 
         void HexExp::v_WeakDerivMatrixOp(const int i,
@@ -869,21 +819,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eHexExp, NekOptimize::eWeakDerivMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,
-                                                        mkey);
-            }
+            StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
         
         void HexExp::v_WeakDirectionalDerivMatrixOp(
@@ -891,21 +827,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eHexExp, NekOptimize::eWeakDerivMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,
+            StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,
                                                                 outarray,mkey);
-            }
         }
         
         void HexExp::v_MassLevelCurvatureMatrixOp(
@@ -913,21 +836,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eHexExp, NekOptimize::eMassMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,
+            StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,
                                                                 outarray,mkey);
-            }
         }
 
         void HexExp::v_HelmholtzMatrixOp(
@@ -935,20 +845,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eHexExp, NekOptimize::eHelmholtzMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-            
-            if(doMatOp)
-            {
-                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                HexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-            }
+            HexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         

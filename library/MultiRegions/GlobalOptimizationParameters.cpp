@@ -149,7 +149,7 @@ namespace Nektar
             for(n = 0; n < SIZE_OptimizeOperationType; n++)
             {
                 TiXmlElement* operationType = paramList->FirstChildElement(
-                                      ElementalOptimizationOperationTypeMap[n]);
+                                      OptimizationOperationTypeMap[n]);
 
                 if(operationType)
                 {
@@ -164,7 +164,7 @@ namespace Nektar
                         ASSERTL0(err == TIXML_SUCCESS,(
                            std::string("Unable to read DO_GLOBAL_MAT_OP "
                                        "attribute VALUE for ")
-                         + std::string(ElementalOptimizationOperationTypeMap[n])
+                         + std::string(OptimizationOperationTypeMap[n])
                          + std::string(".")
                         ));
 
@@ -187,7 +187,7 @@ namespace Nektar
                             ASSERTL0(err == TIXML_SUCCESS, (
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute TRI for ")
-                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(OptimizationOperationTypeMap[n])
                                + std::string(".")));
 
                             m_doBlockMatOp[n][0] = (bool) value;
@@ -196,7 +196,7 @@ namespace Nektar
                             ASSERTL0(err == TIXML_SUCCESS, (
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute QUAD for ")
-                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(OptimizationOperationTypeMap[n])
                              + std::string(".")));
 
                             m_doBlockMatOp[n][1] = (bool) value;
@@ -206,7 +206,7 @@ namespace Nektar
                             ASSERTL0(err == TIXML_SUCCESS, (
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute TET for ")
-                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(OptimizationOperationTypeMap[n])
                              + std::string(".")));
 
                             m_doBlockMatOp[n][0] = (bool) value;
@@ -215,7 +215,7 @@ namespace Nektar
                             ASSERTL0(err == TIXML_SUCCESS, (
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute PYR for ")
-                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(OptimizationOperationTypeMap[n])
                              + std::string(".")));
 
                             m_doBlockMatOp[n][1] = (bool) value;
@@ -224,7 +224,7 @@ namespace Nektar
                             ASSERTL0(err == TIXML_SUCCESS, (
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute PRISM for ")
-                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(OptimizationOperationTypeMap[n])
                              + std::string(".")));
 
                             m_doBlockMatOp[n][2] = (bool) value;
@@ -233,7 +233,7 @@ namespace Nektar
                             ASSERTL0(err == TIXML_SUCCESS, (
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute HEX for ")
-                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(OptimizationOperationTypeMap[n])
                              + std::string(".")));
 
                             m_doBlockMatOp[n][3] = (bool) value;

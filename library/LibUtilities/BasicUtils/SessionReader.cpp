@@ -60,8 +60,9 @@ namespace Nektar
             ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
             bool loadOkay = m_xmlDoc->LoadFile();
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
-                pFilename).c_str());
+            ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+                pFilename + ". Check XML standards compliance. Error on line: "
+                + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
 
             TiXmlHandle docHandle(m_xmlDoc);
 

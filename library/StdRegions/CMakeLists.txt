@@ -13,7 +13,6 @@ StdQuadExp.cpp
 StdSegExp.cpp
 StdTetExp.cpp
 StdTriExp.cpp
-OptimizationParametersAccess.cpp
 )
 
 SET(STD_REGIONS_HEADERS
@@ -37,9 +36,6 @@ StdTriExp.h
 LocalRegionsDeclarations.hpp
 SpatialDomainsDeclarations.hpp
 StdRegions.hpp
-ElementalOptimizationParameters.hpp
-ElementalOptimizationParametersTraits.hpp
-OptimizationParametersAccess.h
 )
 
 ADD_DEFINITIONS(-DSTD_REGIONS_EXPORTS)
@@ -54,9 +50,4 @@ TARGET_LINK_LIBRARIES(StdRegions
 SET_LAPACK_LINK_LIBRARIES(StdRegions)
 
 INSTALL(FILES ${STD_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions)
-
-
-#TARGET_LINK_LIBRARIES(StdRegions
-#        optimized LibUtilities debug LibUtilities-g
-#)
 

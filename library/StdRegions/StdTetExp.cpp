@@ -237,7 +237,6 @@ namespace Nektar
                                 const Array<OneD, const NekDouble>& wz)
         {
             return TripleInnerProduct( inarray, wx, wy, wz );
-
         }
 
 
@@ -361,17 +360,7 @@ namespace Nektar
             }
             else
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTetExp, NekOptimize::eBwdTrans, 3>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    StdExpansion::BwdTrans_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    StdTetExp::v_BwdTrans_SumFac(inarray,outarray);
-                }
+                StdTetExp::v_BwdTrans_SumFac(inarray,outarray);
             }
         }
 
@@ -572,17 +561,7 @@ namespace Nektar
             }
             else
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTetExp, NekOptimize::eIProductWRTBase, 3>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    StdTetExp::v_IProductWRTBase_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray);
-                }
+                StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray);
             }
 
         }
@@ -725,17 +704,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> & outarray)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<eStdTetExp, NekOptimize::eIProductWRTDerivBase, 3>::
-                DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdTetExp::v_IProductWRTDerivBase_MatOp(dir,inarray,outarray);
-            }
-            else
-            {
-                StdTetExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-            }
+            StdTetExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
 
 

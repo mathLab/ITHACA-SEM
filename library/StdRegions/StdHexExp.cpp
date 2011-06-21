@@ -272,17 +272,7 @@ namespace Nektar
             }
             else
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eIProductWRTBase, 3>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    StdHexExp::v_IProductWRTBase_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    StdHexExp::v_IProductWRTBase_SumFac(inarray,outarray);
-                }
+                StdHexExp::v_IProductWRTBase_SumFac(inarray,outarray);
             }
         }
 
@@ -384,17 +374,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> & outarray)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eIProductWRTDerivBase, 3>::
-                DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdHexExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
-            }
-            else
-            {
-                StdHexExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-            }
+            StdHexExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
 
 
@@ -945,21 +925,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                                eStdHexExp, NekOptimize::eMassMatrixOp, 3>
-                                    ::DoMatOp(  m_base[0]->GetNumModes(),
-                                                m_base[1]->GetNumModes(),
-                                                m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
-            }
-
+            StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void StdHexExp::v_LaplacianMatrixOp(
@@ -967,21 +933,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                            eStdHexExp, NekOptimize::eLaplacianMatrixOp, 3>
-                                    ::DoMatOp(  m_base[0]->GetNumModes(),
-                                                m_base[1]->GetNumModes(),
-                                                m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdHexExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
-            }
-
+            StdHexExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void StdHexExp::v_LaplacianMatrixOp(const int k1, const int k2,
@@ -989,22 +941,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                            eStdHexExp, NekOptimize::eLaplacianMatrixIJOp, 3>
-                                    ::DoMatOp(  m_base[0]->GetNumModes(),
-                                                m_base[1]->GetNumModes(),
-                                                m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
+            StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
-            }
-
         }
 
         void StdHexExp::v_WeakDerivMatrixOp(const int i,
@@ -1012,21 +950,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                            eStdHexExp, NekOptimize::eWeakDerivMatrixOp, 3>
-                                    ::DoMatOp(  m_base[0]->GetNumModes(),
-                                                m_base[1]->GetNumModes(),
-                                                m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,
+            StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,
                                                         mkey);
-            }
         }
 
         void StdHexExp::v_HelmholtzMatrixOp(
@@ -1034,20 +959,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                            eStdHexExp, NekOptimize::eHelmholtzMatrixOp, 3>
-                                    ::DoMatOp(  m_base[0]->GetNumModes(),
-                                                m_base[1]->GetNumModes(),
-                                                m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdHexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-            }
+            StdHexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void StdHexExp::v_LaplacianMatrixOp_MatFree(
@@ -2509,20 +2421,7 @@ namespace Nektar
             }
             else
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<
-                                    eStdHexExp, NekOptimize::eBwdTrans, 3>
-                                        ::DoMatOp(  m_base[0]->GetNumModes(),
-                                                    m_base[1]->GetNumModes(),
-                                                    m_base[2]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    StdExpansion::BwdTrans_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    StdHexExp::BwdTrans_SumFac(inarray,outarray);
-                }
+                StdHexExp::BwdTrans_SumFac(inarray,outarray);
             }
 /*
 #if 1

@@ -45,7 +45,6 @@
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
-#include <StdRegions/OptimizationParametersAccess.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar

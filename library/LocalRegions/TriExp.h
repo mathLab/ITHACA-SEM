@@ -128,35 +128,14 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eIProductWRTBase>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::IProductWRTBase_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    TriExp::IProductWRTBase_SumFac(inarray,outarray);
-                }
+                TriExp::IProductWRTBase_SumFac(inarray,outarray);
             }
 
             void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD, NekDouble> & outarray)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eIProductWRTDerivBase>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
-                }
-                else
-                {
-                    TriExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-                }
-
+                TriExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
 
             //-----------------------------
@@ -224,34 +203,14 @@ namespace Nektar
                               Array<OneD,NekDouble> &outarray,
                               const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eMassMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eLaplacianMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
                     TriExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
-                }
             }
 
             void LaplacianMatrixOp(const int k1, const int k2,
@@ -259,17 +218,7 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eLaplacianMatrixIJOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
-                }
+                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
             }
 
             void WeakDerivMatrixOp(const int i,
@@ -277,68 +226,28 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eWeakDerivMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
-                }
+                StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
             }
 
             void WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray,
                                               const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eWeakDerivMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray,
                                               const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eMassMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eHelmholtzMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                if(doMatOp)
-                {
-                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    TriExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                TriExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
 

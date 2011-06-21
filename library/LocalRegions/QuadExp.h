@@ -139,17 +139,7 @@ namespace Nektar
                 }
                 else
                 {
-                    bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eIProductWRTBase>::
-                        DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                    
-                    if(doMatOp)
-                    {
-                        QuadExp::IProductWRTBase_MatOp(inarray,outarray);
-                    }
-                    else
-                    {
-                        QuadExp::IProductWRTBase_SumFac(inarray,outarray);
-                    }  
+                    QuadExp::IProductWRTBase_SumFac(inarray,outarray);
                 }
             }
 
@@ -157,17 +147,7 @@ namespace Nektar
                                       const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD, NekDouble> & outarray)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eIProductWRTDerivBase>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
-                }
-                else
-                {
-                    QuadExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-                }  
+                QuadExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
         
             //-----------------------------
@@ -234,34 +214,14 @@ namespace Nektar
                               Array<OneD,NekDouble> &outarray,
                               const StdRegions::StdMatrixKey &mkey)
             {              
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eMassMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {           
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eLaplacianMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    QuadExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                QuadExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void LaplacianMatrixOp(const int k1, const int k2, 
@@ -269,17 +229,7 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {           
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eLaplacianMatrixIJOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
-                }
+                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
             }
 
             void WeakDerivMatrixOp(const int i,
@@ -287,68 +237,28 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eWeakDerivMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
-                }
+                StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
             }
             
             void WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray,
                                               const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eWeakDerivMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray,
                                               const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eMassMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eHelmholtzMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    QuadExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                QuadExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }       
 
         protected:
@@ -392,11 +302,11 @@ namespace Nektar
 
             QuadExp();
 
-	    virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
+            virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
             {
-	      ASSERTL1(dir >= 0 &&dir <= 1,"input dir is out of range");
-	      return m_base[dir];
-	    }
+                ASSERTL1(dir >= 0 &&dir <= 1,"input dir is out of range");
+                return m_base[dir];
+            }
 
             virtual int v_GetNumPoints(const int dir) const 
             {

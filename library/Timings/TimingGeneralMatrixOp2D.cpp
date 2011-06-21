@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
         fprintf(stderr,"    where: - NumModes is the number of 1D modes of the expansion \n");
         fprintf(stderr,"    where: - OptimisationLevel is one of the following:\n");
         fprintf(stderr,"                  0: Use elemental sum-factorisation evaluation \n");
-        fprintf(stderr,"                  1: Use elemental matrix evaluation (do not use this option) \n");
         fprintf(stderr,"                  2: Use elemental matrix evaluation using blockmatrices \n");
         fprintf(stderr,"                  3: Use global matrix evaluation \n");
         fprintf(stderr,"                  4: Use optimal evaluation (this option requires optimisation-files being set-up) \n");
@@ -94,37 +93,18 @@ int main(int argc, char *argv[])
         }
     }
 
-     BCfileName << "UnitSquare_DirichletBoundaryConditions.xml";
-     ExpansionsFileName << "NektarExpansionsNummodes" << NumModes << ".xml";
+    BCfileName << "UnitSquare_DirichletBoundaryConditions.xml";
+    ExpansionsFileName << "NektarExpansionsNummodes" << NumModes << ".xml";
 
-     switch(optLevel)
-     {
-     case 0:
-         {
-             GlobOptFileName << "NoGlobalMat.xml";
-         }
-         break;
-     case 1:
-         {
-             boost::filesystem::path ElOptFilePath = basePath / 
-                 boost::filesystem::path("Timings") / 
-                 boost::filesystem::path("InputFiles") /
-                 boost::filesystem::path("Optimisation") /
-                 boost::filesystem::path("DoElementalMatOp.xml");
-             NekOptimize::LoadElementalOptimizationParameters(ElOptFilePath.file_string());
-             
-             GlobOptFileName << "NoGlobalMat.xml";
-         }
+    switch(optLevel)
+    {
+    case 0:
+        {
+            GlobOptFileName << "NoGlobalMat.xml";
+        }
         break;
     case 2:
         {
-            boost::filesystem::path ElOptFilePath = basePath / 
-                boost::filesystem::path("Timings") / 
-                boost::filesystem::path("InputFiles") /
-                boost::filesystem::path("Optimisation") /
-                boost::filesystem::path("DoElementalMatOp.xml");
-            NekOptimize::LoadElementalOptimizationParameters(ElOptFilePath.file_string());
-            
             GlobOptFileName << "DoBlockMat.xml";
         }
         break;

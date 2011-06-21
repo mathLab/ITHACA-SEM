@@ -35,13 +35,42 @@
 
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <StdRegions/StdRegions.hpp>
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <StdRegions/ElementalOptimizationParameters.hpp>
 
 namespace Nektar
 {
     namespace NekOptimize
     {
+        // enumeration of all operations that are optimisable
+        enum OptimizationOperationType
+        {
+            eBwdTrans,
+            eIProductWRTBase,
+            eIProductWRTDerivBase,
+            eMassMatrixOp,
+            eLaplacianMatrixOp,
+            eLaplacianMatrixIJOp,
+            eWeakDerivMatrixOp,
+            eHelmholtzMatrixOp,
+            eHybridDGHelmBndLamMatrixOp,
+            SIZE_OptimizeOperationType
+        };
+
+        const char* const OptimizationOperationTypeMap[] =
+        {
+            "BwdTrans",
+            "IProductWRTBase",
+            "IProductWRTDerivBase",
+            "MassMatrixOp",
+            "LaplacianMatrixOp",
+            "LaplacianMatrixIJOp",
+            "WeakDerivMatrixOp",
+            "HelmholtzMatrixOp",
+            "HybridDGHelmBndLamMatrixOp"
+        };
+
         /// Processes global optimisation parameters from a session.
         class GlobalOptParam
         {
@@ -104,7 +133,7 @@ namespace Nektar
          */
         inline const bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
         {
-            ElementalOptimizationOperationType type;
+            OptimizationOperationType type;
             switch(i)
             {
             case StdRegions::eBwdTrans:
@@ -155,7 +184,7 @@ namespace Nektar
          */
         inline  const Array<OneD, const bool> &GlobalOptParam::DoBlockMatOp(const StdRegions::MatrixType i) const
         {
-            ElementalOptimizationOperationType type;
+            OptimizationOperationType type;
             switch(i)
             {
             case StdRegions::eBwdTrans:

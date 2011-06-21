@@ -153,34 +153,14 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eIProductWRTBase>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::IProductWRTBase_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    StdTriExp::IProductWRTBase_SumFac(inarray,outarray);
-                }  
+                StdTriExp::IProductWRTBase_SumFac(inarray,outarray);
             }
 
             void IProductWRTDerivBase(const int dir, 
                                       const Array<OneD, const NekDouble>& inarray, 
                                       Array<OneD, NekDouble> & outarray)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eIProductWRTDerivBase>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
-                }
-                else
-                {
-                    StdTriExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-                }  
+                StdTriExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
 
             /** \brief Fill outarray with mode \a mode of expansion
@@ -241,17 +221,7 @@ namespace Nektar
             void BwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eBwdTrans>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdExpansion::BwdTrans_MatOp(inarray,outarray);
-                }
-                else
-                {
-                    StdTriExp::BwdTrans_SumFac(inarray,outarray);
-                }               
+                StdTriExp::BwdTrans_SumFac(inarray,outarray);
             }
 
             STD_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble>& inarray,
@@ -348,34 +318,14 @@ namespace Nektar
                               Array<OneD,NekDouble> &outarray,
                               const StdMatrixKey &mkey)
             {              
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eMassMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
             {                
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eLaplacianMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdTriExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdTriExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             void LaplacianMatrixOp(const int k1, const int k2, 
@@ -383,17 +333,7 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
             {           
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eLaplacianMatrixIJOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
-                }
+                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
             }
 
             void WeakDerivMatrixOp(const int i,
@@ -401,34 +341,14 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eWeakDerivMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
-                }
+                StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
             }
             
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<eStdTriExp, NekOptimize::eHelmholtzMatrixOp>::
-                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
-                if(doMatOp)
-                {
-                    StdTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-                }
-                else
-                {
-                    StdTriExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-                }
+                StdTriExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }       
 
         protected:

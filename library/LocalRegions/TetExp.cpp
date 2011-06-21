@@ -611,20 +611,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eTetExp, NekOptimize::eHelmholtzMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                TetExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                TetExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-            }
+            TetExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
 
@@ -999,21 +986,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                        StdRegions::eTetExp, NekOptimize::eLaplacianMatrixOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                TetExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                TetExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
-            }
-
+            TetExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
         void TetExp::v_LaplacianMatrixOp(const int k1, const int k2,
@@ -1021,21 +994,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            bool doMatOp = NekOptimize::ElementalOptimization<
-                    StdRegions::eTetExp, NekOptimize::eLaplacianMatrixIJOp, 3>
-                            ::DoMatOp(  m_base[0]->GetNumModes(),
-                                        m_base[1]->GetNumModes(),
-                                        m_base[2]->GetNumModes());
-
-            if(doMatOp)
-            {
-                TetExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
+            StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
-            }
         }
 
         void TetExp::v_LaplacianMatrixOp_MatFree(

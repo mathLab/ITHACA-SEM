@@ -7,6 +7,9 @@
 #ifdef SHARK
 #include <CHUD/CHUD.h> 
 #endif
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField2D.h>
 
 
@@ -14,11 +17,15 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    LibUtilities::SessionReaderSharedPtr vSession;
+    LibUtilities::CommSharedPtr vComm;
     MultiRegions::ContField2DSharedPtr Exp,Fce,Sol;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce,sol; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     NekDouble  lambda;
+    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    string vCommModule("Serial");
 
     if(argc != 5)
     {
@@ -51,7 +58,7 @@ int main(int argc, char *argv[])
             return 0;
         }
     }
-    //----------------------
+    //----------------------------------------------
 
     //----------------------------------------------
     // Retrieve the necessary input files
@@ -111,6 +118,37 @@ int main(int argc, char *argv[])
     string meshfile      = MeshFileSS.str();
     string expansionfile = ExpansionsFileSS.str();
     string bcfile        = BCfileSS.str();
+
+    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
+    if (vSession->DefinesSolverInfo("Communication"))
+    {
+        vCommModule = vSession->GetSolverInfo("Communication");
+    }
+    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        vCommModule = "ParallelMPI";
+    }
+
+    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
+
+    if (vComm->GetSize() > 1)
+    {
+        if (vComm->GetRank() == 0)
+        {
+            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
+            vPartitioner->PartitionMesh(vComm->GetSize());
+            vPartitioner->WritePartitions(vSession, meshfile);
+        }
+
+        vComm->Block();
+
+        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
+
+        // Force use of Iterative solver for parallel execution
+        SolnType = MultiRegions::eIterativeFull;
+    }
+    
 
     string globoptfile;
 
@@ -197,7 +235,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(graph2D,bcs);
+        AllocateSharedPtr(vComm,graph2D,bcs);
     //----------------------------------------------
     //    NumElements = Exp->GetExpSize();
 
@@ -306,7 +344,8 @@ int main(int argc, char *argv[])
         graph2D.SetBasisKey(SpatialDomains::eQuadrilateral, BkeyQ);
 
         MultiRegions::ExpList2DSharedPtr ErrorExp = 
-            MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(graph2D);
+            MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vComm,
+                                                                      graph2D);
     
     
         int ErrorCoordim = ErrorExp->GetCoordim(0);

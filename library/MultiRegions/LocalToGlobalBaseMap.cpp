@@ -232,7 +232,7 @@ namespace Nektar
 
             // Also initialise some more data members
             m_solnType              = solnTypeOld;
-            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond,
+            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond||m_solnType==eIterativeMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;

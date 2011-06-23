@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
 
@@ -51,13 +52,13 @@ namespace Nektar
          * Registers the class with the Factory.
          */
         string GlobalLinSysIterativeStaticCond::className
-                = GlobalLinSysFactory::RegisterCreatorFunction(
+                = GetGlobalLinSysFactory().RegisterCreatorFunction(
                     "IterativeStaticCond",
                     GlobalLinSysIterativeStaticCond::create,
                     "Iterative static condensation.");
 
         string GlobalLinSysIterativeStaticCond::className2
-                = GlobalLinSysFactory::RegisterCreatorFunction(
+                = GetGlobalLinSysFactory().RegisterCreatorFunction(
                     "IterativeMultiLevelStaticCond",
                     GlobalLinSysIterativeStaticCond::create,
                     "Iterative multi-level static condensation.");
@@ -88,16 +89,14 @@ namespace Nektar
                                                             &pLocToGloMap)
                 : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap)
         {
-            ASSERTL1((pKey.GetGlobalSysSolnType()==eDirectStaticCond)||
-                     (pKey.GetGlobalSysSolnType()==eDirectMultiLevelStaticCond),
+            ASSERTL1((pKey.GetGlobalSysSolnType()==eIterativeStaticCond)||
+                     (pKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond),
                      "This constructor is only valid when using static "
                      "condensation");
             ASSERTL1(pKey.GetGlobalSysSolnType()
                         == pLocToGloMap->GetGlobalSysSolnType(),
                      "The local to global map is not set up for the requested "
                      "solution type");
-
-            m_expList = pExpList;
 
             // Allocate memory for top-level structure
             SetupTopLevel(pLocToGloMap);
@@ -139,6 +138,14 @@ namespace Nektar
         }
 
 
+        /// Solve the linear system for given input and output vectors.
+        void GlobalLinSysIterativeStaticCond::Solve( const Array<OneD,const NekDouble> &in,
+                                                 Array<OneD, NekDouble> &out)
+        {
+            ASSERTL0(false, "NOT IMPLEMENTED");
+        }
+
+
         /**
          * Solve a global linear system using the conjugate gradient method.
          * We solve only for the non-Dirichlet modes. The operator is evaluated
@@ -148,38 +155,34 @@ namespace Nektar
          * @param       pOutput     Solution vector of non-Dirichlet DOFs.
          */
         void GlobalLinSysIterativeStaticCond::Solve(
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput)
+                    const NekVector<NekDouble> &pInput,
+                          NekVector<NekDouble> &pOutput)
         {
+            ASSERTL1(pInput.GetRows()  == m_gmat->GetColumns(),
+                     "Input rows do not match number of matrix columns.");
+            ASSERTL1(pOutput.GetRows() == m_gmat->GetRows(),
+                     "Output rows do not match number of matrix rows.");
+
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm = m_expList->GetComm();
 
-            // Get vector sizes
-            int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nLocal  = m_locToGloMap->GetNumLocalCoeffs();
-            int nNonDir = nGlobal - nDir;
+            int nGlobHomBndDofs = pInput.GetRows();
 
             // Allocate array storage
-            Array<OneD, NekDouble> d_A    (nGlobal, 0.0);
-            Array<OneD, NekDouble> p_A    (nGlobal, 0.0);
-            Array<OneD, NekDouble> robin_A(nGlobal, 0.0);
-            Array<OneD, NekDouble> robin_l(nLocal,  0.0);
-            Array<OneD, NekDouble> z_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> z_new_A(nNonDir, 0.0);
-            Array<OneD, NekDouble> r_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> r_new_A(nNonDir, 0.0);
+            Array<OneD, NekDouble> d_A    (nGlobHomBndDofs, 0.0);
+            Array<OneD, NekDouble> p_A    (nGlobHomBndDofs, 0.0);
+            Array<OneD, NekDouble> z_A    (nGlobHomBndDofs, 0.0);
+            Array<OneD, NekDouble> z_new_A(nGlobHomBndDofs, 0.0);
+            Array<OneD, NekDouble> r_A    (nGlobHomBndDofs, 0.0);
+            Array<OneD, NekDouble> r_new_A(nGlobHomBndDofs, 0.0);
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> in(nNonDir,pInput,eWrapper);
-            NekVector<NekDouble> out(nNonDir,pOutput,eWrapper);
-            NekVector<NekDouble> r(nNonDir,r_A,eWrapper);
-            NekVector<NekDouble> r_new(nNonDir,r_new_A,eWrapper);
-            NekVector<NekDouble> z(nNonDir,z_A,eWrapper);
-            NekVector<NekDouble> z_new(nNonDir,z_new_A,eWrapper);
-            NekVector<NekDouble> d(nNonDir,d_A + nDir, eWrapper);
-            NekVector<NekDouble> p(nNonDir,p_A + nDir,eWrapper);
-            NekVector<NekDouble> robin(nNonDir,robin_A + nDir, eWrapper);
+            NekVector<NekDouble> r(nGlobHomBndDofs,r_A,eWrapper);
+            NekVector<NekDouble> r_new(nGlobHomBndDofs,r_new_A,eWrapper);
+            NekVector<NekDouble> z(nGlobHomBndDofs,z_A,eWrapper);
+            NekVector<NekDouble> z_new(nGlobHomBndDofs,z_new_A,eWrapper);
+            NekVector<NekDouble> d(nGlobHomBndDofs,d_A, eWrapper);
+            NekVector<NekDouble> p(nGlobHomBndDofs,p_A,eWrapper);
 
             int k;
             NekDouble alpha, beta, norm;
@@ -188,96 +191,50 @@ namespace Nektar
             DNekMat &M = m_preconditioner;
 
             // Initialise with zero as the initial guess.
-            r = in;
+            r = pInput;
             z = M * r;
             d = z;
             k = 0;
 
-            Array<OneD, int> map = m_locToGloMap->GetGlobalToUniversalMapUnique();
+            //Array<OneD, int> map = m_locToGloMap->GetGlobalToUniversalMapUnique();
+            Array<OneD, int> map(nGlobHomBndDofs, 1);
 
             // If input vector is zero, set zero output and skip solve.
-            if (VDmath::Ddot2(vComm, nNonDir, r_A, 1, r_A, 1, map + nDir, 1)
+            if (VDmath::Ddot2(vComm, nGlobHomBndDofs, r_A, 1, r_A, 1, map, 1)
                     < NekConstants::kNekZeroTol)
             {
-                Vmath::Zero(nNonDir, pOutput, 1);
+                Vmath::Zero(nGlobHomBndDofs, pOutput.GetRawPtr(), 1);
                 return;
             }
 
             // Continue until convergence
             while (true)
             {
-                // Perform matrix-vector operation A*d_i
-                //m_expList->GeneralMatrixOp(*m_linSysKey.GetGlobalMatrixKey(),
-                //                            d_A, p_A, true);
-
-                // retrieve robin boundary condition information and apply robin
-                // boundary conditions to the solution.
-/*                const std::map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                                                    = m_expList->GetRobinBCInfo();
-                if(vRobinBCInfo.size() > 0)
-                {
-                    // Operation: p_A = A * d_A
-                    // First map d_A to local solution
-                    m_locToGloMap->GlobalToLocal(d_A, robin_l);
-
-                    // Iterate over all the elements computing Robin BCs where
-                    // necessary
-                    for (int n = 0; n < m_expList->GetNumElmts(); ++n)
-                    {
-                        int nel = m_expList->GetOffset_Elmt_Id(n);
-                        int offset = m_expList->GetCoeff_Offset(n);
-                        int ncoeffs = m_expList->GetExp(nel)->GetNcoeffs();
-
-                        if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
-                        {
-                            RobinBCInfoSharedPtr rBC;
-                            Array<OneD, NekDouble> tmp;
-                            StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
-
-                            // add local matrix contribution
-                            for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
-                            {
-                                vExp->AddRobinEdgeContribution(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs, tmp = robin_l + offset);
-                            }
-                        }
-                        else
-                        {
-                            Vmath::Zero(ncoeffs, &robin_l[offset], 1);
-                        }
-                    }
-
-                    // Map local Robin contribution back to global coefficients
-                    m_locToGloMap->LocalToGlobal(robin_l, robin_A);
-                    // Add them to the output of the GeneralMatrixOp
-                    Vmath::Vadd(nGlobal, p_A, 1, robin_A, 1, p_A, 1);
-                }
-*/
-
+                p = (*m_gmat)*d;
 
                 // compute step length
-                alpha = VDmath::Ddot2(vComm, nNonDir,
-                                        d_A + nDir, 1,
-                                        p_A + nDir, 1,
-                                        map + nDir, 1);
-                alpha = VDmath::Ddot2(vComm, nNonDir,
+                alpha = VDmath::Ddot2(vComm, nGlobHomBndDofs,
+                                        d_A, 1,
+                                        p_A, 1,
+                                        map, 1);
+                alpha = VDmath::Ddot2(vComm, nGlobHomBndDofs,
                                         z_A, 1,
                                         r_A, 1,
-                                        map + nDir, 1) / alpha;
+                                        map, 1) / alpha;
 
                 // approximate solution
-                out   = out + alpha*d;
+                pOutput   = pOutput + alpha*d;
 
                 // compute residual
                 r_new = r   - alpha*p;
 
                 // Test if residual is small enough
-                norm = VDmath::Ddot2(vComm, nNonDir,
+                norm = VDmath::Ddot2(vComm, nGlobHomBndDofs,
                                         r_new_A, 1,
                                         r_new_A, 1,
-                                        map + nDir, 1);
+                                        map, 1);
 
-                cout << "Iteration " << k << ", norm=" << sqrt(norm) << endl;
-                if (sqrt(norm) < 1e-06) //NekConstants::kNekIterativeTol)
+                if (sqrt(norm) < NekConstants::kNekIterativeTol)
                 {
                     break;
                 }
@@ -286,14 +243,14 @@ namespace Nektar
                 z_new = M * r_new;
 
                 // Improvement achieved
-                beta = VDmath::Ddot2(vComm, nNonDir,
+                beta = VDmath::Ddot2(vComm, nGlobHomBndDofs,
                                         r_A, 1,
                                         z_A, 1,
-                                        map + nDir, 1);
-                beta = VDmath::Ddot2(vComm, nNonDir,
+                                        map, 1);
+                beta = VDmath::Ddot2(vComm, nGlobHomBndDofs,
                                         r_new_A, 1,
                                         z_new_A, 1,
-                                        map + nDir, 1) / beta;
+                                        map, 1) / beta;
 
                 // Compute new search direction
                 d = z_new + beta*d;
@@ -388,7 +345,7 @@ namespace Nektar
                 if(atLastLevel)
                 {
                     //Solve(F_HomBnd,V_GlobHomBnd);
-                    Solve(F+nDirBndDofs, out+nDirBndDofs);
+                    Solve(F_HomBnd,V_GlobHomBnd);
                 }
                 else
                 {
@@ -615,6 +572,7 @@ namespace Nektar
                 }
                 cnt += loc_lda;
             }
+            ComputeDiagonalPreconditioner(pLocToGloMap);
         }
 
 
@@ -816,9 +774,29 @@ namespace Nektar
             // level. Save the other matrices at this level though.
             m_schurCompl.reset();
 
-            m_recursiveSchurCompl = MemoryManager<GlobalLinSysDirectStaticCond>::
+            m_recursiveSchurCompl = MemoryManager<GlobalLinSysIterativeStaticCond>::
                 AllocateSharedPtr(m_linSysKey,m_expList,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],pLocToGloMap);
         }
+
+        /**
+         * Diagonal preconditioner computed by evaluating the local matrix
+         * acting on each basis vector (0,...,0,1,0,...,0). (deprecated)
+         * @param   pLocToGloMap    Local to global mapping.
+         */
+        void GlobalLinSysIterativeStaticCond::ComputeDiagonalPreconditioner(
+                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+        {
+            int nInt = m_gmat->GetRows();
+            m_preconditioner = DNekMat(nInt, nInt, eDIAGONAL);
+
+            for (unsigned int i = 0; i < nInt; ++i)
+            {
+                m_preconditioner.SetValue(i,i,1.0/(*m_gmat)(i,i));
+            }
+            cout << "Computed preconditioner" << endl;
+        }
+
+
 
     }
 }

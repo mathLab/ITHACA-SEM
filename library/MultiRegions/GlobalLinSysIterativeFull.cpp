@@ -262,7 +262,6 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (sqrt(normsq) < NekConstants::kNekIterativeTol)
                 {
-                    //cout << "Iterations: " << k << ", norm=" << sqrt(normsq) << endl;
                     break;
                 }
 

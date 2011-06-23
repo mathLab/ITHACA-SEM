@@ -92,10 +92,20 @@ int main(int argc, char *argv[])
             SolnType = MultiRegions::eDirectFullMatrix;
             cout << "Solution Type: Full Matrix" << endl;
         }
-        else if(!NoCaseStringCompare(argv[2],"IterativeCG"))
+        else if(!NoCaseStringCompare(argv[2],"IterativeFull"))
         {
             SolnType = MultiRegions::eIterativeFull;
             cout << "Solution Type: Iterative Full Matrix" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"IterativeMultiLevelStaticCond"))
+        {
+            SolnType = MultiRegions::eIterativeMultiLevelStaticCond;
+            cout << "Solution Type: Iterative Multi-level Static Cond" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"IterativeStaticCond"))
+        {
+            SolnType = MultiRegions::eIterativeStaticCond;
+            cout << "Solution Type: Iterative Static Cond" << endl;
         }
         else
         {

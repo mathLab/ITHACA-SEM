@@ -697,7 +697,7 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if( (solnType == eDirectMultiLevelStaticCond && nGraphVerts) )
+            if( (solnType == eDirectMultiLevelStaticCond || solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
@@ -1342,11 +1342,13 @@ namespace Nektar
                     }
                     break;
                 case eDirectStaticCond:
+                case eIterativeStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
                     }
                     break;
                 case eDirectMultiLevelStaticCond:
+                case eIterativeMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph, mdswitch);
                     }
@@ -1918,11 +1920,13 @@ namespace Nektar
                     }
                     break;
                 case eDirectStaticCond:
+                case eIterativeStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
                     }
                     break;
                 case eDirectMultiLevelStaticCond:
+                case eIterativeMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
                     }
@@ -2191,7 +2195,7 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if( (solnType == eDirectMultiLevelStaticCond) && nGraphVerts )
+            if( (solnType == eDirectMultiLevelStaticCond || solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {

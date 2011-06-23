@@ -27,7 +27,7 @@ GlobalLinSysDirectFull.cpp
 GlobalLinSysDirectStaticCond.cpp
 GlobalLinSysIterative.cpp
 GlobalLinSysIterativeFull.cpp
-#GlobalLinSysIterativeStaticCond.cpp
+GlobalLinSysIterativeStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
 LocalToGlobalBaseMap.cpp
@@ -66,7 +66,7 @@ GlobalLinSysDirectFull.h
 GlobalLinSysDirectStaticCond.h
 GlobalLinSysIterative.h
 GlobalLinSysIterativeFull.h
-#GlobalLinSysIterativeStaticCond.h
+GlobalLinSysIterativeStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
 LocalToGlobalBaseMap.h

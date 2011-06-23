@@ -66,17 +66,20 @@ namespace Nektar
         }
 
         /// Solve the linear system for given input and output vectors.
-        void GlobalLinSysDirect::Solve( const Array<OneD,const NekDouble> &in,
-                          Array<OneD,      NekDouble> &out)
+        void GlobalLinSysDirect::v_SolveLinearSystem(
+                const int pNumRows,
+                const Array<OneD,const NekDouble> &pInput,
+                      Array<OneD,      NekDouble> &pOutput,
+                const int pNumDir)
         {
-            DNekVec Vin(in.num_elements(),in);
-            DNekVec Vout(out.num_elements(),out,eWrapper);
+            DNekVec Vin(pInput.num_elements(),pInput);
+            DNekVec Vout(pOutput.num_elements(),pOutput,eWrapper);
             m_linSys->Solve(Vin,Vout);
         }
 
         /// Solve the linear system for given input and output vectors
         /// using a specified local to global map.
-        void GlobalLinSysDirect::Solve( const Array<OneD, const NekDouble> &in,
+        void GlobalLinSysDirect::v_Solve( const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble> &pDirForcing)

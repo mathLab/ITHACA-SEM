@@ -73,25 +73,18 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeFull();
 
-            /// Solve the linear system for given input and output vectors.
-            MULTI_REGIONS_EXPORT virtual void Solve( 
-                    const Array<OneD,const NekDouble> &in,
-                          Array<OneD,      NekDouble> &out);
+        private:
+            // Local to global map.
+            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            MULTI_REGIONS_EXPORT virtual void Solve(
+            virtual void v_Solve(
                     const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
                     const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                     const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
-
-        private:
-            // Local to global map.
-            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
-            // Operator preconditioner matrix.
-            DNekMat                                     m_preconditioner;
 
             // Populates the preconditioner with the identity matrix.
             void ComputeNullPreconditioner(
@@ -106,6 +99,13 @@ namespace Nektar
             // matrix using a more efficient summation of local matrix entries.
             void ComputeDiagonalPreconditionerSum(
                 const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+
+            virtual void v_DoMatrixMultiply(
+                    const Array<OneD, NekDouble>& pInput,
+                          Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_ComputePreconditioner();
+
         };
     }
 }

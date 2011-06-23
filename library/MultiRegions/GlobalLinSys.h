@@ -61,38 +61,34 @@ namespace Nektar
             const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
         GlobalLinSysFactory& GetGlobalLinSysFactory();
 
+
         /// A global linear system.
         class GlobalLinSys
         {
         public:
             /// Default constructor
-            GlobalLinSys(void)
-            {
-            }
+            MULTI_REGIONS_EXPORT
+            GlobalLinSys();
 
             /// Constructor for full direct matrix solve.
+            MULTI_REGIONS_EXPORT
             GlobalLinSys(const GlobalLinSysKey &pKey,
                     const boost::shared_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap);
 
             /// Returns the key associated with the system.
-            const GlobalLinSysKey &GetKey(void) const
-            {
-                return m_linSysKey;
-            }
-
-            /// Solve the linear system for given input and output vectors.
-            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD,const NekDouble> &in,
-                              Array<OneD,      NekDouble> &out) = 0;
+            const inline GlobalLinSysKey &GetKey(void) const;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble> &dirForcing
-                                                = NullNekDouble1DArray) = 0;
+            MULTI_REGIONS_EXPORT
+            inline void Solve(
+                    const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const Array<OneD, const NekDouble> &dirForcing
+                                                = NullNekDouble1DArray);
 
         protected:
             /// Key associated with this linear system.
@@ -100,12 +96,67 @@ namespace Nektar
             /// Local Matrix System
             boost::shared_ptr<ExpList>              m_expList;
 
+            /// Solve the linear system for given input and output vectors.
+            inline void SolveLinearSystem(
+                    const int pNumRows,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput,
+                    const int pNumDir = 0);
+
             DNekScalMatSharedPtr GetBlock(unsigned int n);
             DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
-        private:
 
+        private:
+            /// Solve a linear system based on mapping.
+            virtual void v_Solve(
+                        const Array<OneD, const NekDouble> &in,
+                              Array<OneD,       NekDouble> &out,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const Array<OneD, const NekDouble> &dirForcing
+                                                = NullNekDouble1DArray) = 0;
+
+            /// Solve a basic matrix system.
+            virtual void v_SolveLinearSystem(
+                    const int pNumRows,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput,
+                    const int pNumDir) = 0;
         };
 
+
+        /**
+         *
+         */
+        const inline GlobalLinSysKey &GlobalLinSys::GetKey(void) const
+        {
+            return m_linSysKey;
+        }
+
+
+        /**
+         *
+         */
+        inline void GlobalLinSys::Solve(
+                    const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const Array<OneD, const NekDouble> &dirForcing)
+        {
+            v_Solve(in,out,locToGloMap,dirForcing);
+        }
+
+
+        /**
+         *
+         */
+        inline void GlobalLinSys::SolveLinearSystem(
+                const int pNumRows,
+                const Array<OneD,const NekDouble> &pInput,
+                      Array<OneD,      NekDouble> &pOutput,
+                const int pNumDir)
+        {
+            v_SolveLinearSystem(pNumRows, pInput, pOutput, pNumDir);
+        }
 
     } //end of namespace
 } //end of namespace

@@ -71,15 +71,15 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectFull();
 
+        private:
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
+            virtual void v_Solve( const Array<OneD, const NekDouble> &in,
                               Array<OneD,       NekDouble> &out,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
-        private:
             void AssembleFullMatrix(const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
             //void AssembleFullMatrixDG(const boost::shared_ptr<LocalToGlobalDGMap>& locToGloMap);
         };

@@ -89,19 +89,6 @@ namespace Nektar
 
             virtual ~GlobalLinSysIterativeStaticCond();
 
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            virtual void Solve(
-                        const Array<OneD, const NekDouble>  &in,
-                              Array<OneD,       NekDouble>  &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble>  &dirForcing
-                                                        = NullNekDouble1DArray);
-
-            /// Solve the linear system for given input and output vectors.
-            virtual void Solve( const Array<OneD,const NekDouble> &in,
-                                                     Array<OneD, NekDouble> &out);
-
         private:
             /// Schur complement for Direct Static Condensation.
             GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;
@@ -112,14 +99,17 @@ namespace Nektar
             DNekScalBlkMatSharedPtr m_C;
             DNekScalBlkMatSharedPtr m_invD;
 
+            /// Global matrix on which the iterative solver acts.
             DNekMatSharedPtr m_gmat;
-            // Operator preconditioner matrix.
-            DNekMat                                     m_preconditioner;
 
-            /// Solve the shur complement system
-            void Solve(
-                    const NekVector<NekDouble> &pInput,
-                          NekVector<NekDouble> &pOutput);
+            /// Solve the linear system for given input and output vectors
+            /// using a specified local to global map.
+            virtual void v_Solve(
+                        const Array<OneD, const NekDouble>  &in,
+                              Array<OneD,       NekDouble>  &out,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const Array<OneD, const NekDouble>  &dirForcing
+                                                        = NullNekDouble1DArray);
 
             /// Initialise this object
             void Initialise(
@@ -138,8 +128,17 @@ namespace Nektar
             void ConstructNextLevelCondensedSystem(
                     const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
 
+            /// Compute a diagonal preconditioner of the Shur-complement matrix.
             void ComputeDiagonalPreconditioner(
                     const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+
+            /// Perform a Shur-complement matrix multiply operation.
+            virtual void v_DoMatrixMultiply(
+                    const Array<OneD, NekDouble>& pInput,
+                          Array<OneD, NekDouble>& pOutput);
+
+            /// Compute the preconditioner for the Shur-complement matrix.
+            virtual void v_ComputePreconditioner();
          };
     }
 }

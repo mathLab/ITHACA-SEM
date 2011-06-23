@@ -724,8 +724,10 @@ namespace Nektar
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
-
-            SetUpUniversalC0ContMap(locExp);
+            else
+            {
+                SetUpUniversalC0ContMap(locExp);
+            }
         }
 
 

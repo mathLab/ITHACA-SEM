@@ -158,7 +158,7 @@ namespace Nektar
         /**
          *
          */
-        void GlobalLinSysDirectStaticCond::Solve(
+        void GlobalLinSysDirectStaticCond::v_Solve(
                     const Array<OneD, const NekDouble>  &in,
                           Array<OneD,       NekDouble>  &out,
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,

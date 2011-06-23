@@ -104,7 +104,7 @@ namespace Nektar
         /**
          * Solve the linear system using a full global matrix system.
          */
-        void GlobalLinSysDirectFull::Solve(
+        void GlobalLinSysDirectFull::v_Solve(
                     const Array<OneD, const NekDouble>  &pInput,
                           Array<OneD,       NekDouble>  &pOutput,
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
@@ -140,12 +140,12 @@ namespace Nektar
                 }
 
                 Array<OneD, NekDouble> offsetarray;
-                GlobalLinSysDirect::Solve(tmp + nDirDofs,
-                            offsetarray = pOutput + nDirDofs);
+                SolveLinearSystem(nGlobDofs, tmp + nDirDofs,
+                            offsetarray = pOutput + nDirDofs, nDirDofs);
             }
             else
             {
-                GlobalLinSysDirect::Solve(pInput,pOutput);
+                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(), pInput,pOutput);
             }
         }
 

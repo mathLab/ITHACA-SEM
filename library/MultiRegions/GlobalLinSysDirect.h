@@ -62,22 +62,27 @@ namespace Nektar
                 
                 MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
                 
-                /// Solve the linear system for given input and output vectors.
-                MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD,const NekDouble> &in,
-                                                         Array<OneD, NekDouble> &out);
                 
-                /// Solve the linear system for given input and output vectors
-                /// using a specified local to global map.
-                MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
-                                                         Array<OneD, NekDouble> &out,
-                                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                                                         const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
-                
-        protected:
+		    protected:
                 /// Basic linear system object.
                 DNekLinSysSharedPtr m_linSys;
-                
-        private:
+
+                /// Solve the linear system for given input and output vectors
+                /// using a specified local to global map.
+                virtual void v_Solve(
+                        const Array<OneD, const NekDouble> &in,
+                        Array<OneD, NekDouble> &out,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
+
+                /// Solve the linear system for given input and output vectors.
+                virtual void v_SolveLinearSystem(
+                        const int pNumRows,
+                        const Array<OneD,const NekDouble> &pInput,
+                              Array<OneD,      NekDouble> &pOutput,
+                        const int pNumDir = 0);
+
+		    private:
                 
         };
     }

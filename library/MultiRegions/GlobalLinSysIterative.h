@@ -60,9 +60,25 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterative();
 
         protected:
+            /// Global to universal unique map
+            Array<OneD, int>                            m_map;
+
+            /// Operator preconditioner matrix.
+            DNekMatSharedPtr                            m_preconditioner;
 
         private:
+            /// Solve the matrix system
+            virtual void v_SolveLinearSystem(
+                    const int pNumRows,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput,
+                    const int pNumDir);
 
+            virtual void v_DoMatrixMultiply(
+                    const Array<OneD, NekDouble>& pInput,
+                          Array<OneD, NekDouble>& pOutput) = 0;
+
+            virtual void v_ComputePreconditioner() = 0;
         };
     }
 }

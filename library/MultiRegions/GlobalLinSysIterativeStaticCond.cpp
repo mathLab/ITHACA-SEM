@@ -138,138 +138,10 @@ namespace Nektar
         }
 
 
-        /// Solve the linear system for given input and output vectors.
-        void GlobalLinSysIterativeStaticCond::Solve( const Array<OneD,const NekDouble> &in,
-                                                 Array<OneD, NekDouble> &out)
-        {
-            ASSERTL0(false, "NOT IMPLEMENTED");
-        }
-
-
-        /**
-         * Solve a global linear system using the conjugate gradient method.
-         * We solve only for the non-Dirichlet modes. The operator is evaluated
-         * using the local-matrix representation. Distributed math routines are
-         * used to support parallel execution of the solver.
-         * @param       pInput      Input vector of non-Dirichlet DOFs.
-         * @param       pOutput     Solution vector of non-Dirichlet DOFs.
-         */
-        void GlobalLinSysIterativeStaticCond::Solve(
-                    const NekVector<NekDouble> &pInput,
-                          NekVector<NekDouble> &pOutput)
-        {
-            ASSERTL1(pInput.GetRows()  == m_gmat->GetColumns(),
-                     "Input rows do not match number of matrix columns.");
-            ASSERTL1(pOutput.GetRows() == m_gmat->GetRows(),
-                     "Output rows do not match number of matrix rows.");
-
-            // Get the communicator for performing data exchanges
-            LibUtilities::CommSharedPtr vComm = m_expList->GetComm();
-
-            int nGlobHomBndDofs = pInput.GetRows();
-
-            // Allocate array storage
-            Array<OneD, NekDouble> d_A    (nGlobHomBndDofs, 0.0);
-            Array<OneD, NekDouble> p_A    (nGlobHomBndDofs, 0.0);
-            Array<OneD, NekDouble> z_A    (nGlobHomBndDofs, 0.0);
-            Array<OneD, NekDouble> z_new_A(nGlobHomBndDofs, 0.0);
-            Array<OneD, NekDouble> r_A    (nGlobHomBndDofs, 0.0);
-            Array<OneD, NekDouble> r_new_A(nGlobHomBndDofs, 0.0);
-
-            // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> r(nGlobHomBndDofs,r_A,eWrapper);
-            NekVector<NekDouble> r_new(nGlobHomBndDofs,r_new_A,eWrapper);
-            NekVector<NekDouble> z(nGlobHomBndDofs,z_A,eWrapper);
-            NekVector<NekDouble> z_new(nGlobHomBndDofs,z_new_A,eWrapper);
-            NekVector<NekDouble> d(nGlobHomBndDofs,d_A, eWrapper);
-            NekVector<NekDouble> p(nGlobHomBndDofs,p_A,eWrapper);
-
-            int k;
-            NekDouble alpha, beta, norm;
-
-            // INVERSE of preconditioner matrix.
-            DNekMat &M = m_preconditioner;
-
-            // Initialise with zero as the initial guess.
-            r = pInput;
-            z = M * r;
-            d = z;
-            k = 0;
-
-            //Array<OneD, int> map = m_locToGloMap->GetGlobalToUniversalMapUnique();
-            Array<OneD, int> map(nGlobHomBndDofs, 1);
-
-            // If input vector is zero, set zero output and skip solve.
-            if (VDmath::Ddot2(vComm, nGlobHomBndDofs, r_A, 1, r_A, 1, map, 1)
-                    < NekConstants::kNekZeroTol)
-            {
-                Vmath::Zero(nGlobHomBndDofs, pOutput.GetRawPtr(), 1);
-                return;
-            }
-
-            // Continue until convergence
-            while (true)
-            {
-                p = (*m_gmat)*d;
-
-                // compute step length
-                alpha = VDmath::Ddot2(vComm, nGlobHomBndDofs,
-                                        d_A, 1,
-                                        p_A, 1,
-                                        map, 1);
-                alpha = VDmath::Ddot2(vComm, nGlobHomBndDofs,
-                                        z_A, 1,
-                                        r_A, 1,
-                                        map, 1) / alpha;
-
-                // approximate solution
-                pOutput   = pOutput + alpha*d;
-
-                // compute residual
-                r_new = r   - alpha*p;
-
-                // Test if residual is small enough
-                norm = VDmath::Ddot2(vComm, nGlobHomBndDofs,
-                                        r_new_A, 1,
-                                        r_new_A, 1,
-                                        map, 1);
-
-                if (sqrt(norm) < NekConstants::kNekIterativeTol)
-                {
-                    break;
-                }
-
-                // Apply preconditioner to new residual
-                z_new = M * r_new;
-
-                // Improvement achieved
-                beta = VDmath::Ddot2(vComm, nGlobHomBndDofs,
-                                        r_A, 1,
-                                        z_A, 1,
-                                        map, 1);
-                beta = VDmath::Ddot2(vComm, nGlobHomBndDofs,
-                                        r_new_A, 1,
-                                        z_new_A, 1,
-                                        map, 1) / beta;
-
-                // Compute new search direction
-                d = z_new + beta*d;
-
-                // Next step
-                r = r_new;
-                z = z_new;
-                k++;
-
-                ASSERTL1(k < 20000,
-                         "Exceeded maximum number of iterations (20000)");
-            }
-        }
-
-
         /**
          *
          */
-        void GlobalLinSysIterativeStaticCond::Solve(
+        void GlobalLinSysIterativeStaticCond::v_Solve(
                     const Array<OneD, const NekDouble>  &in,
                           Array<OneD,       NekDouble>  &out,
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
@@ -344,8 +216,9 @@ namespace Nektar
                 // solve boundary system
                 if(atLastLevel)
                 {
+                    Array<OneD, NekDouble> offsetarray;
                     //Solve(F_HomBnd,V_GlobHomBnd);
-                    Solve(F_HomBnd,V_GlobHomBnd);
+                    SolveLinearSystem(nGlobHomBndDofs, F+nDirBndDofs,offsetarray=out+nDirBndDofs);
                 }
                 else
                 {
@@ -572,7 +445,6 @@ namespace Nektar
                 }
                 cnt += loc_lda;
             }
-            ComputeDiagonalPreconditioner(pLocToGloMap);
         }
 
 
@@ -778,25 +650,42 @@ namespace Nektar
                 AllocateSharedPtr(m_linSysKey,m_expList,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],pLocToGloMap);
         }
 
+
+        /**
+         *
+         */
+        void GlobalLinSysIterativeStaticCond::v_DoMatrixMultiply(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput)
+        {
+            NekVector<NekDouble> in (pInput.num_elements(), pInput,  eWrapper);
+            NekVector<NekDouble> out(pOutput.num_elements(), pOutput, eWrapper);
+            out = (*m_gmat)*in;
+        }
+
+
         /**
          * Diagonal preconditioner computed by evaluating the local matrix
          * acting on each basis vector (0,...,0,1,0,...,0). (deprecated)
          * @param   pLocToGloMap    Local to global mapping.
          */
-        void GlobalLinSysIterativeStaticCond::ComputeDiagonalPreconditioner(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+        void GlobalLinSysIterativeStaticCond::v_ComputePreconditioner()
         {
-            int nInt = m_gmat->GetRows();
-            m_preconditioner = DNekMat(nInt, nInt, eDIAGONAL);
+            ASSERTL1(m_gmat.get(),
+                     "Matrix must be defined to compute preconditioner.");
+            ASSERTL1(!m_preconditioner.get(),
+                     "Preconditioner has already been defined.");
 
-            for (unsigned int i = 0; i < nInt; ++i)
+            int n = m_gmat->GetRows();
+            m_map = Array<OneD, int>(n, 1);
+            MatrixStorage storage = eDIAGONAL;
+            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(n, n, storage);
+            DNekMat &M = (*m_preconditioner);
+
+            for (unsigned int i = 0; i < n; ++i)
             {
-                m_preconditioner.SetValue(i,i,1.0/(*m_gmat)(i,i));
+                M.SetValue(i,i,1.0/(*m_gmat)(i,i));
             }
-            cout << "Computed preconditioner" << endl;
         }
-
-
-
     }
 }

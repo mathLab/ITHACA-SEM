@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
-    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eNoSolnType;
     string meshfile(argv[1]);
     string vCommModule("Serial");
 
@@ -48,6 +48,23 @@ int main(int argc, char *argv[])
     }
 
     vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
+    if (vSession->DefinesSolverInfo("GlobalSysSoln"))
+    {
+        for (i = 0; i < MultiRegions::eSIZE_GlobalSysSolnType; ++i)
+        {
+            if (MultiRegions::GlobalSysSolnTypeMap[i]
+                    == vSession->GetSolverInfo("GlobalSysSoln"))
+            {
+                SolnType = (MultiRegions::GlobalSysSolnType)i;
+            }
+        }
+        ASSERTL0(SolnType != MultiRegions::eNoSolnType,
+                 "Unknown Solution type in session file.");
+    }
+    else
+    {
+        SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    }
 
     if (vComm->GetSize() > 1)
     {

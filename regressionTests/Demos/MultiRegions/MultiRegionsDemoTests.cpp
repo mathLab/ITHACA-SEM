@@ -96,7 +96,9 @@ int main(int argc, char* argv[])
 
     Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, Direct Full Matrix");
     
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_iter.xml","CG Helmholtz2D  P=7 All BCs, Iterative Full Matrix");
+    //Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_iter.xml","CG Helmholtz2D  P=7 All BCs, Iterative Full Matrix");
+
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_iter_ml.xml","CG Helmholtz2D  P=7 All BCs, Iterative ML Static Condensation");
 
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  P=7");
 

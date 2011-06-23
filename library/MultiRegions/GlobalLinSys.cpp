@@ -130,6 +130,13 @@ namespace Nektar
          * function.
          */
 
+
+        GlobalLinSys::GlobalLinSys()
+        {
+
+        }
+
+
         /**
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by
@@ -148,6 +155,10 @@ namespace Nektar
 
         }
 
+
+        /**
+         *
+         */
         GlobalLinSysFactory& GetGlobalLinSysFactory()
         {
             typedef Loki::SingletonHolder<GlobalLinSysFactory,
@@ -155,6 +166,7 @@ namespace Nektar
                 Loki::NoDestroy > Type;
             return Type::Instance();
         }
+
 
         /**
          * Retrieves a the block matrix from n'th expansion using the matrix

@@ -98,15 +98,6 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectStaticCond();
 
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            MULTI_REGIONS_EXPORT virtual void Solve(
-                        const Array<OneD, const NekDouble>  &in,
-                              Array<OneD,       NekDouble>  &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble>  &dirForcing
-                                                        = NullNekDouble1DArray);
-
         private:
             /// Schur complement for Direct Static Condensation.
             GlobalLinSysDirectStaticCondSharedPtr m_recursiveSchurCompl;
@@ -116,6 +107,15 @@ namespace Nektar
             DNekScalBlkMatSharedPtr m_BinvD;
             DNekScalBlkMatSharedPtr m_C;
             DNekScalBlkMatSharedPtr m_invD;
+
+            /// Solve the linear system for given input and output vectors
+            /// using a specified local to global map.
+            virtual void v_Solve(
+                        const Array<OneD, const NekDouble>  &in,
+                              Array<OneD,       NekDouble>  &out,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const Array<OneD, const NekDouble>  &dirForcing
+                                                        = NullNekDouble1DArray);
 
             /// Initialise this object
             void Initialise(

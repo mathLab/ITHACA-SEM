@@ -85,9 +85,9 @@ namespace Nektar
 	    // Assume all fields but last to be convected by velocity. 
 		m_nConvectiveFields=numfields-1;
         
-		m_velocity = Array<OneD,int>(m_spacedim);
+		m_velocity = Array<OneD,int>(m_nConvectiveFields);
 		
-		for(i = 0; i < m_expdim; ++i)
+		for(i = 0; i <m_nConvectiveFields; ++i)
         {
             for(j = 0; j < numfields; ++j)
             {

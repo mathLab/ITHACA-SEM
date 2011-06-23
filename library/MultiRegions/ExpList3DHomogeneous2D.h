@@ -100,16 +100,6 @@ namespace Nektar
                            Array<OneD, NekDouble> &xc1,
                            Array<OneD, NekDouble> &xc2);
 			
-			MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-								                Array<OneD, NekDouble> &out_d0,
-								                Array<OneD, NekDouble> &out_d1, 
-								                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
-			
-			MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
-								                const Array<OneD, const NekDouble> &inarray,
-								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
-			
-			
         protected:
 
             /// Definition of the total number of degrees of freedom and
@@ -121,16 +111,6 @@ namespace Nektar
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
-			
-			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d0,
-									 Array<OneD, NekDouble> &out_d1, 
-									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
-			
-			virtual void v_PhysDeriv(const int dir,
-									 const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
-
 
             virtual void v_WriteTecplotZone(std::ofstream &outfile,
                                             int expansion);

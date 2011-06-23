@@ -114,6 +114,11 @@ namespace Nektar
 			inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 			
 			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
+			
+			/// \brief Set up a list of element ids and edge ids the link to the
+            /// boundary conditions
+            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+														   Array<OneD,int> &EdgeID);
             
         protected:
             /**
@@ -136,6 +141,12 @@ namespace Nektar
              * regions.
              */ 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
+			
+			virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
+                                                Array<OneD,int> &EdgeID)
+            {
+                GetBoundaryToElmtMap(ElmtID,EdgeID);
+            }
 
         private:
             // virtual functions

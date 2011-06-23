@@ -107,7 +107,15 @@ namespace Nektar
             {
                 return m_homogeneousBasis;
             }
-
+			
+			MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+								                Array<OneD, NekDouble> &out_d0,
+								                Array<OneD, NekDouble> &out_d1, 
+								                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
+								                const Array<OneD, const NekDouble> &inarray,
+								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
         protected:
             
@@ -177,6 +185,15 @@ namespace Nektar
 			virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
+			
+			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d0,
+									 Array<OneD, NekDouble> &out_d1, 
+									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			virtual void v_PhysDeriv(const int dir,
+									 const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
         private:
         };

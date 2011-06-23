@@ -112,6 +112,15 @@ namespace Nektar
 												Array<OneD, NekDouble> &outarray,
 												bool XtoZ);
 			
+			MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+								                Array<OneD, NekDouble> &out_d0,
+								                Array<OneD, NekDouble> &out_d1, 
+								                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
+								                const Array<OneD, const NekDouble> &inarray,
+								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
+			
 			/// FFT variables
 			bool                                    m_useFFT;
 			LibUtilities::NektarFFTSharedPtr        m_FFT_y;
@@ -176,6 +185,15 @@ namespace Nektar
 			virtual void v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
+			
+			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d0,
+									 Array<OneD, NekDouble> &out_d1, 
+									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			virtual void v_PhysDeriv(const int dir,
+									 const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
         private:
         };

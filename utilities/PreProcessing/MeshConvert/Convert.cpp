@@ -83,19 +83,9 @@ namespace Nektar
 
             WriteXmlComposites(geomTag);
 
-            // Write the <DOMAIN> subsection.
-            TiXmlElement * domain = new TiXmlElement ("DOMAIN" );
-            domain->LinkEndChild( new TiXmlText( " C[0] " ));
-            geomTag->LinkEndChild( domain );
+            WriteXmlDomain(geomTag);
 
-            // Write a default <EXPANSIONS> section.
-            TiXmlElement * expansions = new TiXmlElement ("EXPANSIONS");
-            TiXmlElement * exp1 = new TiXmlElement ( "E");
-            exp1->SetAttribute("COMPOSITE","C[0]");
-            exp1->SetAttribute("NUMMODES",8);
-            exp1->SetAttribute("TYPE","MODIFIED");
-            expansions->LinkEndChild(exp1);
-            root->LinkEndChild(expansions);
+            WriteXmlExpansions(root);
 
             // Save the XML file.
             doc.SaveFile( pFilename );
@@ -258,6 +248,47 @@ namespace Nektar
             }
 
             pRoot->LinkEndChild( verTag );
+        }
+
+        void Convert::WriteXmlDomain(TiXmlElement * pRoot)
+        {
+            // Write the <DOMAIN> subsection.
+            TiXmlElement * domain = new TiXmlElement ("DOMAIN" );
+            std::string list;
+            for (int i = 0; i < m_composite.size(); ++i)
+            {
+                if (m_composite[i]->items[0]->GetDim() == m_expDim)
+                {
+                    if (list.length() > 0)
+                    {
+                        list += ",";
+                    }
+                    list += boost::lexical_cast<std::string>(i);
+                }
+            }
+            domain->LinkEndChild( new TiXmlText(" C[" + list + "] "));
+            pRoot->LinkEndChild( domain );
+        }
+
+        void Convert::WriteXmlExpansions(TiXmlElement * pRoot)
+        {
+            // Write a default <EXPANSIONS> section.
+            TiXmlElement * expansions = new TiXmlElement ("EXPANSIONS");
+            for (int i = 0; i < m_composite.size(); ++i)
+            {
+                if (m_composite[i]->items[0]->GetDim() == m_expDim)
+                {
+                    TiXmlElement * exp = new TiXmlElement ( "E");
+                    exp->SetAttribute("COMPOSITE",
+                            "C[" + boost::lexical_cast<std::string>(i) + "]");
+                    exp->SetAttribute("NUMMODES",7);
+                    exp->SetAttribute("FIELDS","u");
+                    exp->SetAttribute("TYPE","MODIFIED");
+                    expansions->LinkEndChild(exp);
+                }
+            }
+            pRoot->LinkEndChild(expansions);
+
         }
 
         int Convert::FindNodeIndex(const NodeSharedPtr pSrc)

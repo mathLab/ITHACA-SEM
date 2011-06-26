@@ -349,15 +349,14 @@ namespace Nektar
 		Array<OneD, NekDouble> Vx(maxpts);
 		Array<OneD, NekDouble> Qx(maxpts);  
 		Array<OneD, NekDouble> Qy(maxpts);
-		
+		Array<OneD, NekDouble> Q(maxpts); 
+
 		switch(m_nConvectiveFields)
 		{
 			case 1:
 				ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
 				break;
-			case 2:
- 				Array<OneD, NekDouble> Q(maxpts); 
-				
+			case 2:				
 				for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
 				{
 					string type = PBndConds[n]->GetUserDefined().GetEquation(); 

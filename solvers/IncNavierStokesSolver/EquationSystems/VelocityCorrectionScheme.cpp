@@ -354,9 +354,12 @@ namespace Nektar
 		switch(m_nConvectiveFields)
 		{
 			case 1:
-				ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
-				break;
-			case 2:				
+			{
+				    ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
+	                break;
+			}
+			case 2:
+			{
 				for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
 				{
 					string type = PBndConds[n]->GetUserDefined().GetEquation(); 
@@ -420,7 +423,9 @@ namespace Nektar
 					}
 				}
 				break;
+			}
 			case 3:
+			{
 				Array<OneD, NekDouble> Uz(maxpts);
 				Array<OneD, NekDouble> Vz(maxpts);
 				Array<OneD, NekDouble> Wx(maxpts);
@@ -535,6 +540,7 @@ namespace Nektar
 		     	}
 				//end case 3:
 				break;
+			}
 		}
     }
 

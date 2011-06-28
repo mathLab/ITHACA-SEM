@@ -334,18 +334,27 @@ int main(int argc, char *argv[])
     else
     {
         // Declare variables
-        std::string evlFile     = session->GetFilename() + ".evl";
         Array<OneD, MultiRegions::ExpListSharedPtr>& fields
                                 = equ->UpdateFields();
         int nfields             = fields.num_elements();
-        int nq                  = fields[0]->GetNpoints() - 1;
+        int nq                  = fields[0]->GetNpoints();
         int ntot                = nfields*nq;
         int converged           = 0;
+        NekDouble resnorm;
+        std::string evlFile     = session->GetFilename() + ".evl";
         int kdim                = 0;
         int nvec                = 0;
         int nits                = 0;
         NekDouble evtol         = 1e-06;
-        NekDouble resnorm;
+
+        // Initialise progress output and load session parameters
+        ofstream evlout(evlFile.c_str());
+        session->LoadParameter("kdim",  kdim,  8);
+        session->LoadParameter("nvec",  nvec,  1);
+        session->LoadParameter("nits",  nits,  500);
+        session->LoadParameter("evtol", evtol, 1e-06);
+
+        // Allocate memory
         Array<OneD, NekDouble> alpha                (kdim + 1,      0.0);
         Array<OneD, NekDouble> wr                   (kdim,          0.0);
         Array<OneD, NekDouble> wi                   (kdim,          0.0);
@@ -357,13 +366,6 @@ int main(int argc, char *argv[])
             Kseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
             Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
         }
-
-        // Initialise progress output and load session parameters
-        ofstream evlout(evlFile.c_str());
-        session->LoadParameter("kdim",  kdim,  8);
-        session->LoadParameter("nvec",  nvec,  1);
-        session->LoadParameter("nits",  nits,  500);
-        session->LoadParameter("evtol", evtol, 1e-06);
 
         // Print session parameters
         cout << "Krylov-space dimension: " << kdim << endl;
@@ -479,7 +481,7 @@ void EV_update(
         Array<OneD, NekDouble> &tgt)
 {
     Array<OneD, MultiRegions::ExpListSharedPtr>& fields = equ->UpdateFields();
-    int nfields = fields.num_elements() - 1;
+    int nfields = fields.num_elements();
     int nq = fields[0]->GetNpoints();
 
     // Copy starting vector into first sequence element.

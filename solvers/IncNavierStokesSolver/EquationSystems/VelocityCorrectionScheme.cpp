@@ -314,14 +314,30 @@ namespace Nektar
             }
         }
     }
-    
-    void VelocityCorrectionScheme::CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
+	
+	void VelocityCorrectionScheme::CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
-        int  i,n;
+		switch(m_nConvectiveFields)
+		{
+			case 1:
+				ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
+				break;
+			case 2:
+ 				CalcPressureBCs2D(fields,N);
+				break;
+			case 3:
+				CalcPressureBCs3D(fields,N);
+				break;
+		}
+    }
+    
+    void VelocityCorrectionScheme::CalcPressureBCs2D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
+	{
+		int  i,n;
         
 		Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
-
+		
         PBndConds = m_pressure->GetBndConditions();
         PBndExp   = m_pressure->GetBndCondExpansions();
 		
@@ -334,7 +350,7 @@ namespace Nektar
 		int elmtid,nq,offset, boundary;
 		
 		bool NegateNormals;
-
+		
         // find the maximum values of points 
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
@@ -344,205 +360,98 @@ namespace Nektar
             }
         }
 		
-		Array<OneD, const NekDouble> U,V,W,Nu,Nv,Nw;
+		Array<OneD, const NekDouble> U,V,Nu,Nv;
 		Array<OneD, NekDouble> Uy(maxpts);
 		Array<OneD, NekDouble> Vx(maxpts);
 		Array<OneD, NekDouble> Qx(maxpts);  
 		Array<OneD, NekDouble> Qy(maxpts);
 		Array<OneD, NekDouble> Q(maxpts); 
-
-		switch(m_nConvectiveFields)
+		
+		for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
 		{
-			case 1:
+			
+			string type = PBndConds[n]->GetUserDefined().GetEquation(); 
+			int exp_size = PBndExp[n]->GetExpSize();
+			
+			if(type == "H")
 			{
-				    ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
-	                break;
-			}
-			case 2:
-			{
-				for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
+				for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
 				{
-					string type = PBndConds[n]->GetUserDefined().GetEquation(); 
+					// find element and edge of this expansion. 
+					// calculate curl x curl v;
+					elmtid = m_pressureBCtoElmtID[cnt];
+					elmt   = m_fields[0]->GetExp(elmtid);
+					nq     = elmt->GetTotPoints();
+					offset = m_fields[0]->GetPhys_Offset(elmtid);
 					
-					if(type == "H")
-					{
-						for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
-						{
-							// find element and edge of this expansion. 
-							// calculate curl x curl v;
-							elmtid = m_pressureBCtoElmtID[cnt];
-							elmt   = m_fields[0]->GetExp(elmtid);
-							nq     = elmt->GetTotPoints();
-							offset = m_fields[0]->GetPhys_Offset(elmtid);
-								
-							U = fields[m_velocity[0]] + offset;
-							V = fields[m_velocity[1]] + offset; 
-								
-							// Calculating vorticity Q = (dv/dx - du/dy)
-							elmt->PhysDeriv(0,V,Vx);
-							elmt->PhysDeriv(1,U,Uy);
-								
-							Vmath::Vsub(nq,Vx,1,Uy,1,Q,1);
-								
-							// Calculate  Curl(Q) = Qy i - Qx j 
-							elmt->PhysDeriv(Q,Qx,Qy);
-								
-							Nu = N[0] + offset;
-							Nv = N[1] + offset; 
-								
-							// Evaluate [N - kinvis Curlx Curl V].n
-							// x-component (stored in Qy)
-							Vmath::Svtvp(nq,-m_kinvis,Qy,1,Nu,1,Qy,1);
-							
-							// y-component (stored in Qx )
-							Vmath::Svtvp(nq,m_kinvis,Qx,1,Nv,1,Qx,1);
-								
-							Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
-								
-							boundary = m_pressureBCtoTraceID[cnt];
-								
-							// Get edge values and put into Uy, Vx
-							elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
-							elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
-								
-							// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
-							Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
-							// Decide if normals facing outwards
-							NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
-								
-							Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
-						}
-					}
-					else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
-					{
-						cnt += PBndExp[n]->GetExpSize();
-					}
-					else
-					{
-						ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
-					}
+					U = fields[m_velocity[0]] + offset;
+					V = fields[m_velocity[1]] + offset; 
+					
+					// Calculating vorticity Q = (dv/dx - du/dy)
+					elmt->PhysDeriv(0,V,Vx);
+					elmt->PhysDeriv(1,U,Uy);
+					
+					Vmath::Vsub(nq,Vx,1,Uy,1,Q,1);
+					
+					// Calculate  Curl(Q) = Qy i - Qx j 
+					elmt->PhysDeriv(Q,Qx,Qy);
+					
+					Nu = N[0] + offset;
+					Nv = N[1] + offset; 
+					
+					// Evaluate [N - kinvis Curlx Curl V].n
+					// x-component (stored in Qy)
+					Vmath::Svtvp(nq,-m_kinvis,Qy,1,Nu,1,Qy,1);
+					
+					// y-component (stored in Qx )
+					Vmath::Svtvp(nq,m_kinvis,Qx,1,Nv,1,Qx,1);
+					
+					Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
+					
+					boundary = m_pressureBCtoTraceID[cnt];
+					
+					// Get edge values and put into Uy, Vx
+					elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
+					elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
+					
+					// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
+					Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
+					// Decide if normals facing outwards
+					NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
+					
+					Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
 				}
-				break;
 			}
-			case 3:
+			else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
 			{
-				Array<OneD, NekDouble> Uz(maxpts);
-				Array<OneD, NekDouble> Vz(maxpts);
-				Array<OneD, NekDouble> Wx(maxpts);
-				Array<OneD, NekDouble> Wy(maxpts);
-				Array<OneD, NekDouble> Qz(maxpts);
-								
-				if(m_HomogeneousType == eHomogeneous1D)
-			    {					
-					for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
-					{
-							string type = PBndConds[n]->GetUserDefined().GetEquation(); 
-							
-							if(type == "H")
-							{
-								for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
-								{
-									// find element and edge of this expansion. 
-									// calculate curl x curl v;
-									elmtid = m_pressureBCtoElmtID[cnt];
-									elmt   = m_fields[0]->GetExp(elmtid);
-									nq     = elmt->GetTotPoints();
-									offset = m_fields[0]->GetPhys_Offset(elmtid);
-										
-									U = fields[m_velocity[0]] + offset;
-									V = fields[m_velocity[1]] + offset;
-									W = fields[m_velocity[2]] + offset;
-									
-										
-									// Calculating vorticity Q = Qx i + Qy j + Qz k
-									elmt->PhysDeriv(1,W,Wy);
-									elmt->PhysDeriv(2,V,Vz);
-									elmt->PhysDeriv(2,U,Uz);
-									elmt->PhysDeriv(0,W,Wx);
-									elmt->PhysDeriv(0,V,Vx);
-									elmt->PhysDeriv(1,U,Uy);
-										
-									Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
-									Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
-									Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
-										
-									// Calculate  NxQ = Curl(Q) = (Qzy-Qyz) i + (Qxz-Qzx) j + (Qyx-Qxy) k
-									// NxQ = NxQ_x i + NxQ_y j + NxQ_z k
-									// Using the memory space assocaited with the velocity derivatives to
-									// store the vorticity derivatives to save space.
-									// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
-									elmt->PhysDeriv(1,Qz,Uy);
-									elmt->PhysDeriv(2,Qy,Uz);
-									elmt->PhysDeriv(2,Qx,Vx);
-									elmt->PhysDeriv(0,Qz,Vz);
-									elmt->PhysDeriv(0,Qy,Wx);
-									elmt->PhysDeriv(1,Qx,Wy);
-									
-									// Using the sorage space associated with the 3 components of the vorticity
-									// to store the 3 components od the vorticity curl to save space
-									// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy
-									Vmath::Vsub(nq,Uy,1,Uz,1,Qx,1);
-									Vmath::Vsub(nq,Vx,1,Vz,1,Qy,1);
-									Vmath::Vsub(nq,Wx,1,Wy,1,Qz,1);
-										
-									Nu = N[0] + offset;
-									Nv = N[1] + offset;
-									//Nw = N[2] + offset; not required
-										
-									// Evaluate [N - kinvis Curlx Curl V]
-									
-									// x-component (stored in Qx)
-									Vmath::Svtvp(nq,-m_kinvis,Qx,1,Nu,1,Qx,1);
-									// y-component (stored in Qy)
-									Vmath::Svtvp(nq,-m_kinvis,Qy,1,Nv,1,Qy,1);
-									// z-component (stored in Qz) not required for this approach
-									// the third component of the normal vector is always zero
-									//Vmath::Svtvp(nq,-m_kinvis,Qz,1,Nw,1,Qz,1);
-									
-									//We need now to multiply by the normal
-									Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
-										
-									boundary = m_pressureBCtoTraceID[cnt];
-										
-									// Get edge values and put into Uy, Vx
-									elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
-									elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
-										
-									// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
-									Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
-									// Decide if normals facing outwards
-									NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
-									
-									Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
-								}
-							}
-							else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
-							{
-								cnt += PBndExp[n]->GetExpSize();
-							}
-							else
-							{
-								ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
-							}
-						}
-				}
-				else if(m_HomogeneousType == eHomogeneous2D)
-				{
-					ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 2D approach");
-				}
-				else if(m_HomogeneousType == eHomogeneous3D)
-				{
-					ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 3D approach");
-				}
-				else
-				{
-					ASSERTL0(false,"Velocity correction scheme not set up for 3D spectral element approach");
-		     	}
-				//end case 3:
-				break;
+				cnt += PBndExp[n]->GetExpSize();
+			}
+			else
+			{
+				ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
 			}
 		}
-    }
+	}
+	
+	void VelocityCorrectionScheme::CalcPressureBCs3D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
+	{
+		if(m_HomogeneousType == eHomogeneous1D)
+		{
+			ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 2D approach");
+		}
+		else if(m_HomogeneousType == eHomogeneous2D)
+		{
+			ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 2D approach");
+		}
+		else if(m_HomogeneousType == eHomogeneous3D)
+		{
+			ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 3D approach");
+		}
+		else
+		{
+			ASSERTL0(false,"Velocity correction scheme not set up for 3D spectral element approach");
+		}
+	}
 
     
     // Evaluate divergence of velocity field. 

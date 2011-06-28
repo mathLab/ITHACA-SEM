@@ -77,6 +77,7 @@ namespace Nektar
             m_offset_elmt_id(),
             m_transState(eNotSet),
             m_physState(false),
+		    m_FourierSpace(eNotDef),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
                                                         ::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
@@ -100,6 +101,7 @@ namespace Nektar
             m_offset_elmt_id(),
             m_transState(eNotSet),
             m_physState(false),
+		    m_FourierSpace(eNotDef),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
                                                         ::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
@@ -117,6 +119,7 @@ namespace Nektar
             m_npoints(in.m_npoints),
             m_transState(eNotSet),
             m_physState(false),
+		    m_FourierSpace(eNotDef),
             m_exp(in.m_exp),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
@@ -2138,7 +2141,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 		
-		void ExpList::v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+		void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs)
 		{
@@ -2146,7 +2149,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
 		}
 		
-		void ExpList::v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+		void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs)
 		{
@@ -2154,22 +2157,6 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
 		}
 		
-		void ExpList::v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs)
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		void ExpList::v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs)
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-
         // wrapper functions about virtual functions
         Array<OneD, NekDouble> &ExpList::v_UpdateContCoeffs()
         {

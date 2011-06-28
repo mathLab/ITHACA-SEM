@@ -115,6 +115,10 @@ namespace Nektar
          */
     
         void CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N);
+		
+		void CalcPressureBCs2D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N);
+		
+		void CalcPressureBCs3D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N);
 
         // Virtual functions 
         virtual void v_PrintSummary(std::ostream &out);

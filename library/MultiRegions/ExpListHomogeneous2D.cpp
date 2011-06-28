@@ -106,13 +106,13 @@ namespace Nektar
         {
         }
 		
-		void ExpListHomogeneous2D::v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous2D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
 			// Forwards trans
             Homogeneous2DTrans(inarray,outarray,true, UseContCoeffs);
         }
 		
-		void ExpListHomogeneous2D::v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous2D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
 			// Backwards trans
             Homogeneous2DTrans(inarray,outarray,false, UseContCoeffs);
@@ -140,7 +140,10 @@ namespace Nektar
                 }
             }
 
-            Homogeneous2DFwdTrans(outarray,outarray,UseContCoeffs);
+			if(m_FourierSpace != eCoef)
+			{
+				HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
+			}
         }
 
         void ExpListHomogeneous2D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -163,8 +166,11 @@ namespace Nektar
                 }
                 cnt1   += m_lines[n]->GetTotPoints();
             }
-
-                Homogeneous2DBwdTrans(outarray,outarray);
+			
+			if(m_FourierSpace != eCoef)
+			{
+				HomogeneousBwdTrans(outarray,outarray);
+			}
         }
 
 
@@ -649,25 +655,46 @@ namespace Nektar
 				m_lines[i]->PhysDeriv( tmp1 = inarray + i*n_points_line ,tmp2 = out_d0 + i*n_points_line);
 			}
 			
-            Homogeneous2DFwdTrans(inarray,temparray,UseContCoeffs);
-			
-			for(int i=0 ; i<m_ny/2 ; i++)
+			if(m_FourierSpace != eCoef)
 			{
-				ky = i;
-				for (int j=0 ; j<m_nz; j++)
+				HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+			
+				for(int i=0 ; i<m_ny/2 ; i++)
 				{
-					Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray1+(i*2*n_points_line+j*m_ny*n_points_line),1);
+					ky = i;
+					for (int j=0 ; j<m_nz; j++)
+					{
+						Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray1+(i*2*n_points_line+j*m_ny*n_points_line),1);
+					}
+				}
+			
+				for( int i=0 ; i<m_nz/2 ; i++ )
+				{
+					kz = i;
+					Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray2 + (i*2*n_points_line*m_ny),1);
+				}
+			
+				HomogeneousBwdTrans(temparray1,out_d1,UseContCoeffs);
+				HomogeneousBwdTrans(temparray2,out_d2,UseContCoeffs);
+			}
+			else 
+			{
+				for(int i=0 ; i<m_ny/2 ; i++)
+				{
+					ky = i;
+					for (int j=0 ; j<m_nz; j++)
+					{
+						Vmath::Smul(2*n_points_line,ky,tmp1= inarray + (i*2*n_points_line+j*m_ny*n_points_line),1,tmp2 = out_d1 + (i*2*n_points_line+j*m_ny*n_points_line),1);
+					}
+				}
+				
+				for( int i=0 ; i<m_nz/2 ; i++ )
+				{
+					kz = i;
+					Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = inarray + (i*2*n_points_line*m_ny),1,tmp2 = out_d2 + (i*2*n_points_line*m_ny),1);
 				}
 			}
-			
-			for( int i=0 ; i<m_nz/2 ; i++ )
-			{
-				kz = i;
-				Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray2 + (i*2*n_points_line*m_ny),1);
-			}
-			
-			Homogeneous2DBwdTrans(temparray1,out_d1,UseContCoeffs);
-			Homogeneous2DBwdTrans(temparray2,out_d2,UseContCoeffs);
+
 		}
 		
 		void ExpListHomogeneous2D::v_PhysDeriv(const int dir,
@@ -693,28 +720,54 @@ namespace Nektar
 			}
 			else
 			{
-				Homogeneous2DFwdTrans(inarray,temparray,UseContCoeffs);
-				
-				if(dir == 1)
+				if(m_FourierSpace != eCoef)
 				{
-					for(int i=0 ; i<m_ny/2 ; i++)
+					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+				
+					if(dir == 1)
 					{
-						ky = i;
-						for (int j=0 ; j<m_nz; j++)
+						for(int i=0 ; i<m_ny/2 ; i++)
 						{
-							Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1);
+							ky = i;
+							for (int j=0 ; j<m_nz; j++)
+							{
+								Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1);
+							}
 						}
 					}
+					else 
+					{
+						for( int i=0 ; i<m_nz/2 ; i++ )
+						{
+							kz = i;
+							Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray + (i*2*n_points_line*m_ny),1);
+						}
+					}
+					HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
 				}
 				else 
 				{
-					for( int i=0 ; i<m_nz/2 ; i++ )
+					if(dir == 1)
 					{
-						kz = i;
-						Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray + (i*2*n_points_line*m_ny),1);
+						for(int i=0 ; i<m_ny/2 ; i++)
+						{
+							ky = i;
+							for (int j=0 ; j<m_nz; j++)
+							{
+								Vmath::Smul(2*n_points_line,ky,tmp1=inarray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=out_d+(i*2*n_points_line+j*m_ny*n_points_line),1);
+							}
+						}
+					}
+					else 
+					{
+						for( int i=0 ; i<m_nz/2 ; i++ )
+						{
+							kz = i;
+							Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = inarray + (i*2*n_points_line*m_ny),1,tmp2 = out_d + (i*2*n_points_line*m_ny),1);
+						}
 					}
 				}
-				Homogeneous2DBwdTrans(temparray,out_d,UseContCoeffs);
+
 			}
 		}
 		

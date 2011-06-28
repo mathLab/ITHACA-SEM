@@ -98,6 +98,7 @@ namespace Nektar
                            Array<OneD, NekDouble> &xc0,
                            Array<OneD, NekDouble> &xc1,
                            Array<OneD, NekDouble> &xc2);
+			
         protected:
 
             /// Definition of the total number of degrees of freedom and
@@ -127,7 +128,7 @@ namespace Nektar
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
-
+		
     } //end of namespace
 } //end of namespace
 

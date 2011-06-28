@@ -94,9 +94,9 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
 
-            inline void Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
-            inline void Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous2DClosePacked(
                               const Array<OneD, const NekDouble> &inarray,
@@ -178,11 +178,11 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion, std::string var);
 			
-			virtual void v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
-			virtual void v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
@@ -198,14 +198,14 @@ namespace Nektar
         private:
         };
 
-        inline void ExpListHomogeneous2D::Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-			v_Homogeneous2DFwdTrans(inarray,outarray,UseContCoeffs);
+			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs);
         }
 		
-        inline void ExpListHomogeneous2D::Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-            v_Homogeneous2DBwdTrans(inarray,outarray,UseContCoeffs);
+            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
         }
 
     } //end of namespace

@@ -71,7 +71,14 @@ namespace Nektar
         typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
-
+		
+		enum FourierSpaceType
+		{
+			ePhys,
+			eCoef,
+			eNotDef
+		};
+		
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public boost::enable_shared_from_this<ExpList>
         {
@@ -121,8 +128,8 @@ namespace Nektar
             // Returns the total number of local degrees of freedom
             // for element eid
             MULTI_REGIONS_EXPORT int GetNcoeffs(const int eid) const;
-
-            inline int GetContNcoeffs(void) const;
+			
+			inline int GetContNcoeffs(void) const;
 
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
@@ -151,6 +158,14 @@ namespace Nektar
             /// This function returns the transformed state #m_transState of
             /// the coefficient arrays.
             inline TransState GetTransState(void) const;
+			
+			/// Sets the Fourier Space to the one of the possible configuration
+			/// ePhys, eCoef or eNotSet
+            inline void SetFourierSpace(const FourierSpaceType fourierspace);
+			
+            /// This function returns the Fourie Space condition, which is stored
+			/// in the variable m_FourierSpace.
+            inline FourierSpaceType GetFourierSpace(void) const;
 
             /// Fills the array #m_phys
             inline void SetPhys(const Array<OneD, const NekDouble> &inarray);
@@ -309,22 +324,14 @@ namespace Nektar
             inline void GetCoord(Array<OneD, NekDouble> &coords);
 			
 			// Homogeneous transforms
-			inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs = false);
 			
-			inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs = false);
 			
-			inline void Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs = false);
-			
-			inline void Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs = false);
-
             /// This function calculates Surface Normal vector of a smooth
             /// manifold.
             MULTI_REGIONS_EXPORT void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
@@ -801,6 +808,8 @@ namespace Nektar
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
+			
+			FourierSpaceType m_FourierSpace;
 
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
@@ -997,22 +1006,13 @@ namespace Nektar
 									 const Array<OneD, const NekDouble> &inarray,
 									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
 			
-			virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
-			virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
-			
-			virtual void v_Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
-			
-			virtual void v_Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
-			
 			
             virtual void v_SetUpPhysNormals(
                                             const StdRegions::StdExpansionVector &locexp);
@@ -1187,6 +1187,22 @@ namespace Nektar
         inline TransState ExpList::GetTransState() const
         {
             return m_transState;
+        }
+		
+		/**
+         *
+         */
+        inline void ExpList::SetFourierSpace(const FourierSpaceType fourierspace)
+        {
+            m_FourierSpace = fourierspace;
+        }
+		
+        /**
+         *
+         */
+        inline FourierSpaceType ExpList::GetFourierSpace() const
+        {
+            return m_FourierSpace;
         }
 
         /**
@@ -1445,41 +1461,21 @@ namespace Nektar
 		/**
 		 *
 		 */
-		inline void ExpList::Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+		inline void ExpList::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												   Array<OneD, NekDouble> &outarray, 
 												   bool UseContCoeffs)
 		{
-			v_Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
+			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs);
 		}
 		
 		/**
 		 *
 		 */
-		inline void ExpList::Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+		inline void ExpList::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												   Array<OneD, NekDouble> &outarray, 
 												   bool UseContCoeffs)
 		{
-			v_Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
-		}
-		
-		/**
-		 *
-		 */
-		inline void ExpList::Homogeneous2DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												   Array<OneD, NekDouble> &outarray, 
-												   bool UseContCoeffs)
-		{
-			v_Homogeneous2DFwdTrans(inarray,outarray,UseContCoeffs);
-		}
-		
-		/**
-		 *
-		 */
-		inline void ExpList::Homogeneous2DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												   Array<OneD, NekDouble> &outarray, 
-												   bool UseContCoeffs)
-		{
-			v_Homogeneous2DBwdTrans(inarray,outarray,UseContCoeffs);
+			v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
 		}
 		
         /**

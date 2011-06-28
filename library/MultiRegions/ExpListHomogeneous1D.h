@@ -89,9 +89,9 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
 
-            inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
-            inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous1DClosePacked(
                               const Array<OneD, const NekDouble> &inarray,
@@ -132,6 +132,10 @@ namespace Nektar
             NekDouble                       m_lhom;  ///< Width of homogeneous direction
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
+			
+			/// Variable to determine if the we are using the Fouirer expansion
+			/// in coefficient or physical space.
+			bool m_SemiPhysSpace;
 
             DNekBlkMatSharedPtr GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs = false) const;
 
@@ -178,11 +182,11 @@ namespace Nektar
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                         std::string var);
 			
-			virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
-			virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
@@ -198,14 +202,14 @@ namespace Nektar
         private:
         };
 
-        inline void ExpListHomogeneous1D::Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-			v_Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
+			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs);
         }
 		
-        inline void ExpListHomogeneous1D::Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous1D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-            v_Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
+            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
         }
 
     } //end of namespace

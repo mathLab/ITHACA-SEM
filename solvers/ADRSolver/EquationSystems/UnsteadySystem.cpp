@@ -124,16 +124,27 @@ namespace Nektar
     {
         int i,n,nchk = 0;
         int ncoeffs = m_fields[0]->GetNcoeffs();
+		int npoints = m_fields[0]->GetNpoints();
         int nvariables = m_fields.num_elements();
 
         // Set up wrapper to fields data storage.
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
         Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
-
+		
         for(i = 0; i < nvariables; ++i)
         {
-            m_fields[i]->SetPhysState(false);
-            fields[i]  = m_fields[i]->UpdatePhys();
+			if(m_HomogeneousType != eNotHomogeneous)
+			{
+				fields[i] = Array<OneD, NekDouble> (npoints);
+				m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),fields[i]);
+				m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
+			}
+			else 
+			{
+				fields[i]  = m_fields[i]->UpdatePhys();
+			}
+			
+			m_fields[i]->SetPhysState(false);
         }
 		
         // Declare an array of TimeIntegrationSchemes For multi-stage
@@ -347,7 +358,15 @@ namespace Nektar
 			// At the end of the time integration, store final solution.
 			for(i = 0; i < nvariables; ++i)
 			{
-				m_fields[i]->UpdatePhys() = fields[i];
+				if(m_HomogeneousType == eHomogeneous1D)
+				{
+					m_fields[i]->HomogeneousBwdTrans(fields[i],m_fields[i]->UpdatePhys());
+					m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
+				}
+				else 
+				{
+					m_fields[i]->UpdatePhys() = fields[i];
+				}
 			}
 		}
 		
@@ -405,7 +424,15 @@ namespace Nektar
 			// At the end of the time integration, store final solution.
 			for(i = 0; i < nvariables; ++i)
 			{
-				m_fields[i]->UpdatePhys() = fields[i];
+				if(m_HomogeneousType != eNotHomogeneous)
+				{
+					m_fields[i]->HomogeneousBwdTrans(fields[i],m_fields[i]->UpdatePhys());
+					m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
+				}
+				else 
+				{
+					m_fields[i]->UpdatePhys() = fields[i];
+				}
 			}
 	    }
     }

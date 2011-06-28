@@ -217,7 +217,10 @@ namespace Nektar
 			}
 
             // Fourier transform forcing function
-			Homogeneous2DFwdTrans(inarray,fce,UseContCoeffs);
+			if(m_FourierSpace != eCoef)
+			{
+				HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
+			}
 
             for(n = 0; n < m_nz; ++n)
             {

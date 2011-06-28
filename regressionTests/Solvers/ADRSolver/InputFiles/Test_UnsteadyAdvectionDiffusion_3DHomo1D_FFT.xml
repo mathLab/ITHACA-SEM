@@ -101,11 +101,11 @@
     </USERDEFINEDEQNS>
     
     <FUNCTION NAME="InitialConditions">
-       <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
+       <E VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
     </FUNCTION>
    
     <FUNCTION NAME="ExactSolution">
-       <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
+       <E VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
     </FUNCTION>
 
 </CONDITIONS>

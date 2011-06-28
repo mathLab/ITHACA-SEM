@@ -82,11 +82,11 @@
     </BOUNDARYCONDITIONS>
     
     <FUNCTION NAME="Forcing">
-      <F VAR="u" VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(LZ*LZ))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+      <E VAR="u" VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(LZ*LZ))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
     </FUNCTION>
     
     <FUNCTION NAME="ExactSolution">
-       <F VAR ="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+       <E VAR ="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
     </FUNCTION>
 
 </CONDITIONS>

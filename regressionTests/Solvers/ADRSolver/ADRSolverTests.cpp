@@ -95,8 +95,12 @@ int main(int argc, char* argv[])
 	
 	Execute("ADRSolver","Test_Helmholtz_3DHomo1D_MVM.xml","3D-Homogeneous-1D Helmholtz/Steady Diffusion (MVM)");
 	
+	Execute("ADRSolver","Test_Helmholtz_3DHomo2D_MVM.xml","3D-Homogeneous-2D Helmholtz/Steady Diffusion (MVM)");
+	
 #ifdef NEKTAR_USE_FFTW
 	Execute("ADRSolver","Test_Helmholtz_3DHomo1D_FFT.xml","3D-Homogeneous-1D Helmholtz/Steady Diffusion (FFT)");
+	
+	Execute("ADRSolver","Test_Helmholtz_3DHomo2D_FFT.xml","3D-Homogeneous-2D Helmholtz/Steady Diffusion (FFT)");
 #endif
 	
     // Test Steady Advection Diffusion Reaction
@@ -138,8 +142,12 @@ int main(int argc, char* argv[])
 	
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_MVM.xml","3D-Homogeneous-1D unsteady advection-diffusion (MVM)");
 	
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml","3D-Homogeneous-2D unsteady advection-diffusion (MVM)");
+	
 #ifdef NEKTAR_USE_FFTW
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml","3D-Homogeneous-1D unsteady advection-diffusion (FFT)");
+	
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo2D_FFT.xml","3D-Homogeneous-2D unsteady advection-diffusion (FFT)");
 #endif
 	
     if (tests_failed && !quiet)

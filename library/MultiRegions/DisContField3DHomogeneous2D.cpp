@@ -195,7 +195,7 @@ namespace Nektar
             // Fourier transform coefficient space boundary values
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->Homogeneous2DFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
             }    
         }
         
@@ -230,7 +230,10 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-            Homogeneous2DFwdTrans(inarray,fce);
+			if(m_FourierSpace != eCoef)
+			{
+				HomogeneousFwdTrans(inarray,fce);
+			}
 
             for(n = 0; n < nhom_modes_z; ++n)
             {

@@ -62,6 +62,8 @@ namespace Nektar
             int nzplanes = m_homogeneousBasis->GetNumPoints();
 
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
+			
+			m_SemiPhysSpace = false;
 
 			if(m_useFFT)
 			{
@@ -89,13 +91,13 @@ namespace Nektar
         {
         }
 		
-		void ExpListHomogeneous1D::v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
 			// Forwards trans
             Homogeneous1DTrans(inarray,outarray,true, UseContCoeffs);
         }
 		
-		void ExpListHomogeneous1D::v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
 			// Backwards trans
             Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
@@ -122,8 +124,11 @@ namespace Nektar
                     cnt1  += m_planes[n]->GetNcoeffs();
                 }
             }
-
-            Homogeneous1DFwdTrans(outarray,outarray,UseContCoeffs);
+			
+			if(m_FourierSpace != eCoef)
+			{
+				HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
+			}
         }
 
         void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -146,8 +151,11 @@ namespace Nektar
                 }
                 cnt1   += m_planes[n]->GetTotPoints();
             }
-
-                Homogeneous1DBwdTrans(outarray,outarray);
+			
+			if(m_FourierSpace != eCoef)
+			{
+				 HomogeneousBwdTrans(outarray,outarray);
+			}
         }
 
 
@@ -577,15 +585,27 @@ namespace Nektar
 				m_planes[i]->PhysDeriv( tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
 			}
 			
-            Homogeneous1DFwdTrans(inarray,temparray,UseContCoeffs);
-			
-			for( int i=0 ; i<nF_pts/2 ; i++ )
+			if(m_FourierSpace != eCoef)
 			{
-				k = i;
-				Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
+				HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+				
+				for( int i=0 ; i<nF_pts/2 ; i++ )
+				{
+					k = i;
+					Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
+				}
+				
+				HomogeneousBwdTrans(temparray,out_d2,UseContCoeffs);
 			}
-			
-			Homogeneous1DBwdTrans(temparray,out_d2,UseContCoeffs);
+			else 
+			{
+				for( int i=0 ; i<nF_pts/2 ; i++ )
+				{
+					k = i;
+					Vmath::Smul(2*nP_pts,k,tmp1 = inarray + (i*2*nP_pts),1,tmp2 = out_d2 + (i*2*nP_pts),1);
+				}
+			}
+
 		}
 		
 		void ExpListHomogeneous1D::v_PhysDeriv(const int dir,
@@ -611,15 +631,26 @@ namespace Nektar
 			}
 			else
 			{
-                Homogeneous1DFwdTrans(inarray,temparray,UseContCoeffs);
+                if(m_FourierSpace != eCoef)
+				{
+					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
 				
-			    for( int i=0 ; i<nF_pts/2 ; i++ )
-			    {
-					k = i;
-					Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
+			        for( int i=0 ; i<nF_pts/2 ; i++ )
+			        {
+						k = i;
+						Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
+					}
+				
+					HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
 				}
-				
-			    Homogeneous1DBwdTrans(temparray,out_d,UseContCoeffs);
+				else
+				{
+					for( int i=0 ; i<nF_pts/2 ; i++ )
+			        {
+						k = i;
+						Vmath::Smul(2*nP_pts,k,tmp1 = inarray + (i*2*nP_pts),1,tmp2 = out_d + (i*2*nP_pts),1);
+					}
+				}
 			}
 		}
 		

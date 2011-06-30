@@ -49,8 +49,13 @@ namespace Nektar
                         const int edge,
                         const LibUtilities::PointsKey &to_key);
 
+            ///Set up edge tangents (given 1D element)
+            virtual void v_ComputeTangents(
+            	    	const GeometrySharedPtr &geom,
+            	    	const int edge,
+            	    	const LibUtilities::PointsKey &to_key);            
+
             /**
-             * @todo Implement tangents.
              * @todo Implement 1D quadrature metrics.
              * @todo Implement 1D laplacian metrics.
              */

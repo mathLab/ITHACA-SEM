@@ -501,19 +501,32 @@ namespace Nektar
             }
         }
 
-        void ExpList::v_PhysDeriv(const int dir,
-                                const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
-        {
-            int  i;
-            Array<OneD, NekDouble> e_out_d;
-
-            for(i= 0; i < (*m_exp).size(); ++i)
-            {
-                e_out_d = out_d + m_phys_offset[i];
-                (*m_exp)[i]->PhysDeriv(dir, inarray+m_phys_offset[i], e_out_d);
-            }
-        }
+	void ExpList::v_PhysDeriv(Direction edir, const Array<OneD, const NekDouble> &inarray,
+					Array<OneD, NekDouble> &out_d, bool boolUseContCoeffs)
+	{
+	     int i;		
+	     if(edir==MultiRegions::eS)
+	     {
+	      	  Array<OneD, NekDouble> e_out_ds;	     
+	      	  for(i=0; i<(*m_exp).size(); ++i)
+	      	  {
+	      	  	  e_out_ds = out_d + m_phys_offset[i];
+	     		 (*m_exp)[i]->PhysDeriv_s(inarray+m_phys_offset[i],e_out_ds);
+		  }	      	  
+	      }
+	      else
+	      {
+	      	 // convert enum into int
+	      	 int intdir= (int)edir;
+	      	 Array<OneD, NekDouble> e_out_d;
+	      	 for(i= 0; i < (*m_exp).size(); ++i)
+	      	 {
+	      	 	 e_out_d = out_d + m_phys_offset[i];
+	      	 	 (*m_exp)[i]->PhysDeriv(intdir, inarray+m_phys_offset[i], e_out_d);
+	      	 }	      	 
+	      	      
+	      }	      
+	}
 
 
         /**
@@ -2354,7 +2367,13 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+/**********************************************************************************/
+	void ExpList::v_SetUpPhysTangents(
+				const StdRegions::StdExpansionVector &kocexp)
+	{
+	    ASSERTL0(false, 
+	    	      "This method is not defined or valid for this class type");
+	}
 		/**
          */
         void ExpList::v_SetUpTangents()

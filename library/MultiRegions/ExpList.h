@@ -64,7 +64,16 @@ namespace Nektar
         class LocalToGlobalDGMap;
         class ExpList0D;
         class ExpList1D;
-		class ExpList2D;
+	class ExpList2D;
+	
+	enum Direction
+	{
+	    eX,
+	    eY,
+	    eZ,
+	    eS
+	};
+		
 
         /// A map between global matrix keys and their associated block
         /// matrices.
@@ -534,6 +543,10 @@ namespace Nektar
             /// quadrature points.
             inline Array<OneD, NekDouble> &UpdatePhys();
 
+	    inline void PhysDeriv(Direction edir, 
+								  const Array<OneD, const NekDouble> &inarray,
+								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);	
+	    
             /// This function discretely evaluates the derivative of a function
             /// \f$f(\boldsymbol{x})\f$ on the domain consisting of all
             /// elements of the expansion.
@@ -607,6 +620,9 @@ namespace Nektar
                                              Array<OneD,      NekDouble> &outarray);
 
             inline void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
+
+ 	    inline void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+ 	                
 
             inline void SetUpTangents();
 
@@ -972,6 +988,9 @@ namespace Nektar
                                     Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
+  	    virtual void v_SetUpPhysTangents(
+		                	    const StdRegions::StdExpansionVector &locexp);
+	    
             virtual void v_FwdTrans(
                                     const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
@@ -1010,11 +1029,9 @@ namespace Nektar
 									 Array<OneD, NekDouble> &out_d1, 
 									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs = false);
 			
-			
-			virtual void v_PhysDeriv(const int dir,
+			virtual void v_PhysDeriv(Direction edir, 
 									 const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
-			
+									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);			
 			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
@@ -1463,6 +1480,13 @@ namespace Nektar
 		{
 			v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
 		}
+
+	inline void ExpList::PhysDeriv(Direction edir,
+							   const Array<OneD, const NekDouble> &inarray,
+							   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+	{
+	    v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
+	}		
 		
 		/**
 		 *
@@ -1471,7 +1495,8 @@ namespace Nektar
 									   const Array<OneD, const NekDouble> &inarray,
 									   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
+			MultiRegions::Direction edir =(MultiRegions::Direction)dir;
+			v_PhysDeriv(edir,inarray, out_d,UseContCoeffs);
 		}
 		
 		/**
@@ -1832,6 +1857,12 @@ namespace Nektar
             v_SetUpPhysNormals(locexp);
         }
 
+        inline void ExpList::SetUpPhysTangents(
+                                const StdRegions::StdExpansionVector &locexp)
+        {
+            v_SetUpPhysTangents(locexp);
+        }
+        
         inline void ExpList::SetUpTangents()
         {
             v_SetUpTangents();

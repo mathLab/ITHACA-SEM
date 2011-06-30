@@ -992,6 +992,10 @@ namespace Nektar
                 v_SetUpPhysNormals(exp2d,edge);
             }
 
+	    void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+	    {
+	    	v_SetUpPhysTangents(exp2d, edge);
+	    }
             void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fx,
@@ -1054,6 +1058,11 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
+
+            void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+	    {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+	    }
 
         int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
             {
@@ -1294,6 +1303,13 @@ namespace Nektar
                          "local expansions");
             }
 
+	    void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+	    	    		Array<OneD, NekDouble> &out_ds)
+	    {
+	    	    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+	    	    	    "local expansions");
+	    }
+	
             void StdExpansion::v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0)

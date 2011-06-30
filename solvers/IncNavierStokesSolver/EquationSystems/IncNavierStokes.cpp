@@ -133,8 +133,11 @@ namespace Nektar
                  if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
                  {
                      if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
-                     {
-                         ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                     {                     	     
+                     	 if(m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "I")
+                         {  	 	 
+                             ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                         }
                      }
                  }
              }

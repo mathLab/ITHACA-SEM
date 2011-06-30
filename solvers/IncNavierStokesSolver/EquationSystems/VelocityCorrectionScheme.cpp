@@ -157,7 +157,7 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
     {
-        cout <<  "\tSovler Type     : Velocity Correction" <<endl;
+        cout <<  "\tSolver Type     : Velocity Correction" <<endl;
         TimeParamSummary(out);
         cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
     }

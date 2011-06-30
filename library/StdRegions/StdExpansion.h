@@ -816,6 +816,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
 
+	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
+
 
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false)
             {
@@ -1055,6 +1057,11 @@ namespace Nektar
                 v_PhysDeriv (dir, inarray, outarray);
             }
 
+	    void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+	    	    	     Array<OneD, NekDouble> &out_ds)
+	    {
+	    	v_PhysDeriv_s(inarray,out_ds);
+	    }
             void PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
                                       const Array<OneD, const NekDouble>& direction,
                                       Array<OneD, NekDouble> &outarray)
@@ -1157,6 +1164,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
+
+	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             
@@ -1458,6 +1467,8 @@ namespace Nektar
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3);
 
+	    STD_REGIONS_EXPORT virtual void v_PhysDeriv_s (const Array<OneD, const NekDouble>& inarray,
+	    	    			Array<OneD, NekDouble> &out_ds);
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0);

@@ -418,20 +418,19 @@ namespace Nektar
             Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> diff(nquad0);
 
-            StdExpansion1D::PhysTensorDeriv(inarray,diff);
-
+            StdExpansion1D::PhysTensorDeriv(inarray,diff);            
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
+            {           	    
                 if(out_d0.num_elements())
                 {
                     Vmath::Vmul(nquad0,&gmat[0][0],1,&diff[0],1,
-                                &out_d0[0],1);
+                                &out_d0[0],1);              
                 }
 
                 if(out_d1.num_elements())
                 {
                     Vmath::Vmul(nquad0,&gmat[1][0],1,&diff[0],1,
-                                &out_d1[0],1);
+                                &out_d1[0],1);                    
                 }
 
                 if(out_d2.num_elements())
@@ -441,7 +440,7 @@ namespace Nektar
                 }
             }
             else 
-            {
+            {           	    
                 if(out_d0.num_elements())
                 {
                     Vmath::Smul(nquad0, gmat[0][0], diff, 1,
@@ -461,6 +460,44 @@ namespace Nektar
                 }
             } 
         } 
+     
+        void SegExp::PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+                               Array<OneD,NekDouble> &out_ds)
+        {
+      
+            int    nquad0 = m_base[0]->GetNumPoints();
+            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
+            int     coordim  = m_geom->GetCoordim();
+            Array<OneD, NekDouble> out_ds_tmp(nquad0,0.0);           
+            switch(coordim)
+            {
+            case 2:
+            	    
+            	    Array<OneD, NekDouble> inarray_d0(nquad0);            
+                    Array<OneD, NekDouble> inarray_d1(nquad0);
+                    
+                    SegExp::PhysDeriv(inarray,inarray_d0,inarray_d1);                    
+                    Array<OneD, Array<OneD, NekDouble> > tangents;
+                    tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
+
+                    for(int k=0; k<coordim; ++k)
+                    {
+                    	    tangents[k]= Array<OneD, NekDouble>(nquad0); 
+                    }
+                    tangents = GetMetricInfo()->GetTangent();
+                    ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
+                    	    "tangent vectors do not exist: check if a boundary region is defined as I ");
+                    // \nabla u \cdot tangent
+                    Vmath::Vmul(nquad0,tangents[0],1,inarray_d0,1,out_ds_tmp,1);                   
+                    Vmath::Vadd(nquad0,out_ds_tmp,1,out_ds,1,out_ds,1);              
+                    Vmath::Zero(nquad0,out_ds_tmp,1);                  
+                    Vmath::Vmul(nquad0,tangents[1],1,inarray_d1,1,out_ds_tmp,1);
+                    Vmath::Vadd(nquad0,out_ds_tmp,1,out_ds,1,out_ds,1);
+
+            }
+
+        }        
+      
         
         void SegExp::PhysDeriv(const int dir, 
                                const Array<OneD, const NekDouble>& inarray,
@@ -1218,6 +1255,11 @@ namespace Nektar
             }
 */        }
 
+	void SegExp::v_SetUpPhysTangents(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
+	{
+
+	     GetMetricInfo()->ComputeTangents(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());
+	}
         // Unpack data from input file assuming it comes from the same expansion type
         void SegExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
                                            const int offset, 

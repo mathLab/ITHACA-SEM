@@ -685,7 +685,7 @@ namespace Nektar
         
         }
 
-        // Set up global coupled boundary sovler. 
+        // Set up global coupled boundary solver. 
         // This is a key to define the solution matrix type
         // currently we are giving it a argument of eLInearAdvectionReaction 
         // since this then makes the matrix storage of type eFull
@@ -1997,6 +1997,159 @@ namespace Nektar
         
         m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
         variables[i] = "p"; 
+        
+        
+        
+/*        
+        
+        
+        
+        int       physTot = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> dery = Array<OneD, NekDouble>(physTot);
+        Array<OneD, NekDouble> der2y = Array<OneD, NekDouble>(physTot);
+        Array<OneD, NekDouble> gradp = Array<OneD, NekDouble>(physTot);
+        Array<OneD, NekDouble> derx = Array<OneD, NekDouble>(physTot);
+        Array<OneD, NekDouble> der2x = Array<OneD, NekDouble>(physTot);
+
+	Array<OneD, NekDouble> deriv =Array<OneD, NekDouble>(physTot);        
+
+        m_fields[0]->PhysDeriv(1,m_fields[0]->GetPhys(), dery);
+        m_fields[0]->PhysDeriv(1,dery, der2y);
+        m_pressure->PhysDeriv(0,m_pressure->GetPhys(), gradp);
+
+        m_fields[0]->PhysDeriv(0,m_fields[0]->GetPhys(), derx);
+        m_fields[0]->PhysDeriv(0,derx, der2x);        
+//        m_fieldsbnd[0]->PhysDeriv_s(m_fieldsbnd[0]->GetPhys(), ders);
+        
+	Array<OneD,NekDouble> x0(physTot);
+        Array<OneD,NekDouble> x1(physTot);  
+        m_fields[0]->GetCoords(x0,x1);
+        double sum=0;
+        int Iregion;
+        Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = m_fields[0]->GetBndConditions();
+        
+        for(int d=0; d< bndConditions.num_elements(); d++)
+        {
+       	   if(bndConditions[d]->GetUserDefined().GetEquation()== "I")
+       	   {
+       	       Iregion=d;
+       	   }
+       	}           
+        
+        
+cout<<"  coupledsol deriv_s"<<endl;                         	    
+        //m_fields[0]->GetExp(0)->PhysDeriv(0,m_fields[0]->GetPhys(),deriv); 
+         const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = m_fields[0]->GetBndCondExpansions();  
+
+        //bndCondExp[3]->PhysDeriv_s(m_fields[0]->GetPhys(),dtest);
+
+	
+	int nq1D= bndCondExp[Iregion]->GetTotPoints();
+      
+        
+
+	Array<OneD,NekDouble> x0_1D(nq1D);
+        Array<OneD,NekDouble> x1_1D(nq1D);        
+        
+
+        //bndICondExp[0]->GetCoords(x0_1D,x1_1D); 
+	bndCondExp[Iregion]->GetCoords(x0_1D,x1_1D);
+	
+	
+	
+	Array<OneD, NekDouble> dtest =Array<OneD, NekDouble>(nq1D,0.0);
+	Array<OneD, NekDouble> dtest1 =Array<OneD, NekDouble>(nq1D,0.0);
+	//bndICondExp[0]->PhysDeriv_s(bndICondExp[0]->GetPhys(),dtest);
+	bndCondExp[Iregion]->PhysDeriv_s(bndCondExp[Iregion]->GetPhys(),dtest); 
+	
+
+        for(int r=0; r<physTot; ++r)
+        {
+		if(x0[r]==0.5)
+                {
+                	cout<<"nq"<<physTot<<"  nq="<<r<<"  derivatives along vert line :"<<endl;
+                	cout<<"y="<<x1[r]<<"  dery:"<<dery[r]<<" derx="<<derx[r]<<endl;
+                }
+        }
+        
+        for(int w=0; w< nq1D; ++w)
+        {
+/*        	
+        	cout<<"   w:"<<w<<"                            y="<<x1[w]<<endl;
+         	if((x1[w]==0.0)||(x1[w]==1.0) )
+         	{
+         	    cout<<"                  derivatives at the walls:"<<endl;
+                    cout<<"x="<<x0[w]<<"  u(x,y)="<<(m_fields[0]->GetPhys())[w]<<"  dery"<<dery[w]<<"  der2y"<<der2y[w]<<endl;
+                }          	
+         	if(x1[w]==0.25)
+         	{
+         	    cout<<"derivatives at y=0.25:"<<endl;
+                    cout<<"x="<<x0[w]<<"  u(x,y)="<<(m_fields[0]->GetPhys())[w]<<"  dery"<<dery[w]<<"  der2y"<<der2y[w]<<endl;
+                }    
+*/
+/*
+         	if(x1[w]==0.5)
+         	{
+         	    cout<<"derivatives at central line:"<<endl;
+                    cout<<"x="<<x0[w]<<"  u(x,y)="<<(m_fields[0]->GetPhys())[w]<<
+                    "  derx"<<derx[w]<<"  dery"<<dery[w]<<"  der2y"<<der2y[w]<<endl;
+                    cout<<"x="<<x0[w]<<"  deriv along s:"<<dtest1[w]<<endl;
+                    
+                   
+                    if(derx[w]!=ders[w])
+                    {
+                	cout<<"                 WRONG!!!!!!!!!!!"<<endl;
+                    }
+                
+                }
+
+
+		if(x0_1D[w]==0.5)
+                {
+                	cout<<"nq1D="<<nq1D<<"  nq="<<w<<"  derivatives along vert line:"<<endl;
+                	cout<<"y="<<x1_1D[w]<<"  ders:"<<dtest[w]<<endl;
+                }
+/*                
+                cout<<"x:"<<x0[w]<<"  u(x,y)="<<(m_fields[0]->GetPhys())[w]<<" pressure:"<<(m_pressure->GetPhys())[w]<<endl;
+                cout<<"x:"<<x0[w]<<"         pressure gradient:"<<gradp[w]<<endl;
+                cout<<"Fx:"<<(m_forces[0]->GetPhys())[w]<<
+                "  sum_x:"<<-(m_fields[0]->GetPhys())[w]*derx[w]
+                -(m_fields[1]->GetPhys())[w]*dery[w]+
+                der2x[w]+der2y[w]-gradp[w]+(m_forces[0]->GetPhys())[w]<<endl;
+                
+        	cout<<"adv"<<-(m_fields[0]->GetPhys())[w]*derx[w]-(m_fields[1]->GetPhys())[w]*dery[w]<<endl;
+		cout<<"visc"<<der2x[w]+der2y[w]<<endl; 
+		
+//                sum+=abs(-(m_fields[0]->GetPhys())[w]*derx[w]-(m_fields[1]->GetPhys())[w]*dery[w]+
+//                der2x[w]+der2y[w]-gradp[w]+(m_forces[0]->GetPhys())[w]);
+
+        }
+        if( sum > pow(10.0,-4.0) )
+        {
+        	cout<<"solution is not stationary"<<"   sum_x ="<<sum<<endl;
+        }
+        
+        
+        
+        
+        
+*/        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
   
         ADRBase::Output(m_fields[0],fieldcoeffs,variables);
     }

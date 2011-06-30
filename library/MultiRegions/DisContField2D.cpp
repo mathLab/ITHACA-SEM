@@ -397,7 +397,6 @@ namespace Nektar
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
             int nbnd = bregions.size();
-
             // count the number of non-periodic boundary regions
             int cnt2 = 0;
             for(i = 0; i < nbnd; ++i)
@@ -409,12 +408,12 @@ namespace Nektar
                     {
                         cnt2++;
                     }
-                }
+                }              
             }
 
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
-
+	    
             cnt=0;
 
             // list non-periodic boundaries
@@ -438,6 +437,11 @@ namespace Nektar
 
                     m_bndCondExpansions[cnt]  = locExpList;
                     m_bndConditions[cnt++]    = locBCond;
+                    string type =m_bndConditions[i]->GetUserDefined().GetEquation();                  
+            	    if(type== "I")
+                    {    
+                  	  locExpList->SetUpPhysTangents(*m_exp);        	  
+                    }                    
                 }
             }
         }
@@ -871,8 +875,7 @@ namespace Nektar
                     EdgeGID[Eid] = cnt++;
                 }
             }
-
-
+  
             // Loop over elements and find edges that match;
             for(cnt = n = 0; n < GetExpSize(); ++n)
             {
@@ -883,15 +886,16 @@ namespace Nektar
                     if(EdgeGID.count(id) > 0)
                     {
                         bid = EdgeGID.find(id)->second;
-                        ASSERTL1(ElmtID[bid] == -1,"Edge already set");
+    
+/// @todo check the ASSERTL1(ElmtID[bid] == -1,"Edge already set") about the Robin  bcs 
+                        //ASSERTL1(ElmtID[bid] == -1,"Edge already set");
                         ElmtID[bid] = n;
                         EdgeID[bid] = i;
                         cnt ++;
                     }
                 }
             }
-
-            ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
+            ASSERTL1(cnt >= nbcs,"Failed to visit all boundary condtiions");
         }
 
         /// Note this routine changes m_trace->m_coeffs space;

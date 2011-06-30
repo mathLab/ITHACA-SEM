@@ -679,7 +679,33 @@ namespace Nektar
             }
         }
 
-
+	void ExpList1D::SetUpPhysTangents(
+		const StdRegions::StdExpansionVector &locexp)
+	{
+	    map<int, int> EdgeGID;
+	    int i,cnt,n,id;
+	    
+	    //setup map of all global ids along booundary
+	    for(cnt = i=0; i< (*m_exp).size(); ++i)
+	    {
+	        id = (*m_exp)[i]->GetGeom1D()->GetEid();
+	        EdgeGID[id] = cnt++;
+	    }
+	    
+	    //loop over elements and find edges that match
+	    for(cnt = n =0; n< locexp.size(); ++n)
+	    {
+	       for(i=0; i < locexp[n]->GetNedges(); ++i)
+	       {
+	       	  id = locexp[n]->GetGeom2D()->GetEid(i);
+	       	  if(EdgeGID.count(id)> 0)
+	       	  {
+	       	      (*m_exp)[EdgeGID.find(id)->second]
+	       	      			->SetUpPhysTangents(locexp[n],i);
+	       	  }
+	       }
+	    }
+	}
         /**
          * Upwind the left and right states given by the Arrays Fwd
          * and Bwd using the vector quantity Vec and ouput the
@@ -889,6 +915,12 @@ namespace Nektar
             SetUpPhysNormals(locexp);
         }
 
+	void ExpList1D::v_SetUpPhysTangents(
+				const StdRegions::StdExpansionVector &locexp)
+	{
+	    SetUpPhysTangents(locexp);
+	}
+	
         /**
          * Writes out the header for a <PIECE> VTK XML segment describing the
          * geometric information which comprises this element. This includes

@@ -165,7 +165,16 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
-
+/*********************************************************************************************************/
+	   /**
+	   *\brief Evaluate the derivative along a line: \f$ d/ds=
+	   *\frac{m_spacedim}{||tangent||}d/d{\xi}  \f$. The derivative is calculated performing
+	   *the product \f$ du/d{s}=\nabla u \cdot tangent \f$.
+	   *\param inarray function to derive
+	   *\param out_ds result of the derivative operation 
+	   **/
+           LOCAL_REGIONS_EXPORT void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray, 
+            	    Array<OneD, NekDouble> &out_ds);
             //----------------------------
             // Evaluations Methods
             //---------------------------
@@ -250,6 +259,9 @@ namespace Nektar
 
             virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge);
 
+
+	    virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge);
+            
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 return DetExpansionType();
@@ -366,6 +378,12 @@ namespace Nektar
                 PhysDeriv(dir,inarray,outarray);
             }
 
+	    virtual void v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+	    	    		       Array<OneD,NekDouble> &out_ds)
+	    {
+	        PhysDeriv_s(inarray, out_ds);
+	    }
+	    
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                     Array<OneD,NekDouble> &outarray)

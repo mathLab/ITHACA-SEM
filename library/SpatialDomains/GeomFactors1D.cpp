@@ -178,7 +178,8 @@ namespace Nektar
                 {
                     // i-th component of normal = 1/derivative_i.
                     m_gmat[i][0] = (fabs(m_deriv[0][i][0])
-                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][0]: 0.0;
+                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][0]: 0.0;                                          
+                    
                     // i-th component contribution to Jacobian.
                     m_jac[0]    += m_deriv[0][i][0]*m_deriv[0][i][0];
                 }
@@ -197,7 +198,7 @@ namespace Nektar
                     for(int j = 0; j < nquad; ++j)
                     {
                         m_gmat[i][j] = (fabs(m_deriv[0][i][j])
-                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][j] : 0.0;
+                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][j] : 0.0;                   
                     }
                     // compute jacobian for this dimension.
                     Vmath::Vvtvp(nquad,m_deriv[0][i],1,m_deriv[0][i],1,m_jac,1,m_jac,1);
@@ -225,7 +226,6 @@ namespace Nektar
         {
             int k;
             int nq      = to_key.GetNumPoints();
-
             // Ensure we have a 2D geometry.
             Geometry2DSharedPtr g;
             if (!(g = boost::dynamic_pointer_cast<Geometry2D>(geom)))
@@ -255,6 +255,86 @@ namespace Nektar
                 }
             }
         }
+ 
+
+        void GeomFactors1D::v_ComputeTangents(
+        			const GeometrySharedPtr &geom,
+        			const int edge,
+        			const LibUtilities::PointsKey &to_key)
+        {
+     	
+            int k;
+            int nquad= to_key.GetNumPoints();             
+            Geometry2DSharedPtr g;
+            if (!(g= boost::dynamic_pointer_cast<Geometry2D>(geom)))
+            {
+            	ASSERTL0(false, "FAIL");
+            }
+            GeomFactorsSharedPtr gf = geom->GetMetricInfo();
+            //cannot use m_type here 
+            //GeomType gtype = gf->GetGtype();
+            GeomType gtype= m_type;                  
+            m_tangent =Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+            for( k=0; k< m_coordDim; ++k)
+            {
+                m_tangent[k] = Array<OneD, NekDouble>(nquad);
+            }
+	
+            int i;
+            StdRegions::ExpansionType shape = m_coords[0]->DetExpansionType();
+
+            NekDouble fac;
+            // Regular geometry case
+            if((gtype == eRegular)||(gtype == eMovingRegular))
+            {
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                        Vmath::Fill(nquad, m_deriv[0][i][0],m_tangent[i],1);
+                }
+
+                // normalise
+                fac = 0.0;
+                for(i =0 ; i < m_coordDim; ++i)
+                {
+                    fac += m_tangent[i][0]*m_tangent[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Smul(nquad,fac,m_tangent[i],1,m_tangent[i],1);
+                }   
+            }
+         
+            else   // Set up deformed tangents 
+            {
+
+           	Array<OneD, NekDouble> jac(m_coordDim*nquad);            	
+            	    
+            	for(i = 0; i < m_coordDim; ++i)
+                {
+                	for(int j=0; j<nquad; j++)
+                        {
+                	m_tangent[i][j] = m_deriv[0][i][j];
+                	}
+                }
+                //normalise normal vectors
+                Array<OneD,NekDouble> work(nquad,0.0);
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vvtvp(nquad, m_tangent[i],1, m_tangent[i],1,work,1,work,1);
+                }
+
+                Vmath::Vsqrt(nquad,work,1,work,1);
+                Vmath::Sdiv(nquad,1.0,work,1,work,1);
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vmul(nquad, m_tangent[i],1,work,1,m_tangent[i],1);                    
+                }                 
+            }           
+        }
+                
 
     }
 }

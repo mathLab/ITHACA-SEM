@@ -209,11 +209,11 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
 
+	    
             inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
             {
                 return m_bndConditions;
             }
-
 
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
@@ -250,7 +250,7 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional
              * expansion.
              */
-            Array<OneD,MultiRegions::ExpListSharedPtr>       m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>       m_bndCondExpansions;                    	
 
             /**
              * \brief An array which contains the information about
@@ -258,7 +258,7 @@ namespace Nektar
              * regions.
              */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
-
+	    
             /**
              * \brief This function discretises the boundary conditions by setting up
              * a list of one-dimensional boundary expansions.
@@ -352,12 +352,12 @@ namespace Nektar
             {
 	      return GetBndCondExpansions();
             }
-
+	    
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
             {
                 return GetBndConditions();
             }
-
+	    
             inline MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];

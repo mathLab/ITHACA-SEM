@@ -809,7 +809,7 @@ namespace Nektar
                         Vmath::Reverse(nqe,returnval[i],1, returnval[i],1);
                     }
                 }
-            }
+            }            
         }
 
 

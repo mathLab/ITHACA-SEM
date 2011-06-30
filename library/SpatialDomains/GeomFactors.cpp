@@ -186,7 +186,17 @@ namespace Nektar
         {
             ASSERTL0(false, "Cannot compute normals for this geometry.");
         }
-
+   
+	/**
+	 *Placeholder function.
+	 */
+	 void GeomFactors::v_ComputeTangents(
+	 	 	const GeometrySharedPtr &geom2D,
+	 	 	const int edge,
+	 	 	const LibUtilities::PointsKey &to_key)
+	 {
+	     ASSERTL0(false, "Cannot compute tangents for this geometry.");
+	 }
 
         /**
          * Placeholder function.

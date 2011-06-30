@@ -147,7 +147,11 @@ namespace Nektar
                             const GeometrySharedPtr &geom2D,
                             const int edge,
                             const LibUtilities::PointsKey &to_key);
-
+            /// Computes the edge tangents from 1D element
+            inline void ComputeTangents(
+            	    	    const GeometrySharedPtr &geom2D,
+            	    	    const int edge,
+            	    	    const LibUtilities::PointsKey &to_key);
             /// Computes the edge normals for 1D geometries only.
             inline void ComputeEdgeNormals(
                             const int edge,
@@ -165,6 +169,9 @@ namespace Nektar
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetNormal() const;
 
+	    /// Returns the tangent vectors evaluated at each quadrature point
+	    inline const Array<OneD, const Array<OneD, NekDouble> >
+	    						    &GetTangent() const;                                                            
             /// Returns a single tangent vector.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetTangent(int i);
@@ -243,7 +250,13 @@ namespace Nektar
             /// the number of quadrature points. Each block holds a component
             /// of the normal vectors.
             Array<OneD, Array<OneD,NekDouble> > m_normal;
-
+            /// Array of size (coordim)x(nquad) which holds the components of
+            /// the tangent vector at each quadrature point. The array is
+            /// populated as \a m_coordDim consecutive blocks of size equal to
+            /// the number of quadrature points. Each block holds a component
+            /// of the tangent vectors.
+           
+            Array<OneD, Array<OneD,NekDouble> > m_tangent;
             /// Instance for a specific expansion/coordinate dimension without
             /// the generation of any factors. This constructor is protected
             /// since only dimension-specific GeomFactors classes should be
@@ -270,6 +283,11 @@ namespace Nektar
                         const LibUtilities::PointsKey &to_key,
                         Array<OneD, Array<OneD, NekDouble> > &output) const;
 
+            /// (2D only) Compute tangents based on a 1D element.
+            virtual void v_ComputeTangents(
+            	    	const GeometrySharedPtr &geom2D,
+            	    	const int edge,
+            	    	const LibUtilities::PointsKey &to_key);
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();
 
@@ -395,6 +413,14 @@ namespace Nektar
             v_ComputeNormals(geom2D, edge, to_key);
         }
 
+	/// Computes the edge tangents from a 1D element
+	inline void GeomFactors::ComputeTangents(
+			const GeometrySharedPtr &geom2D,
+			const int edge,
+			const LibUtilities::PointsKey &to_key)
+	{
+	   v_ComputeTangents(geom2D, edge, to_key);
+	}
         /// Computes the edge normals for 1D geometries only.
         inline void GeomFactors::ComputeEdgeNormals(
                         const int edge,
@@ -431,6 +457,12 @@ namespace Nektar
             return m_normal;
         }
 
+	/// Returns the tangent vectors evaluated at each quadrature point.
+	inline const Array<OneD, const Array<OneD, NekDouble> >
+						&GeomFactors::GetTangent() const
+	{
+	     return m_tangent;
+	}
         /// Returns a single tangent vector.
         inline const Array<OneD, const Array<OneD, NekDouble> >
                                                 &GeomFactors::GetTangent(int i)

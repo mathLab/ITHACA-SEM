@@ -165,10 +165,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
-/*********************************************************************************************************/
+
 	   /**
-	   *\brief Evaluate the derivative along a line: \f$ d/ds=
-	   *\frac{m_spacedim}{||tangent||}d/d{\xi}  \f$. The derivative is calculated performing
+	   *\brief Evaluate the derivative along a line: \f$ d/ds=\frac{spacedim}{||tangent||}d/d{\xi}  \f$.
+	   * The derivative is calculated performing
 	   *the product \f$ du/d{s}=\nabla u \cdot tangent \f$.
 	   *\param inarray function to derive
 	   *\param out_ds result of the derivative operation 

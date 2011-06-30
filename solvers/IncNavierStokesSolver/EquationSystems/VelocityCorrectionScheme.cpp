@@ -435,9 +435,90 @@ namespace Nektar
 	
 	void VelocityCorrectionScheme::CalcPressureBCs3D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
 	{
+		Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
+		Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
+		
+		PBndConds = m_pressure->GetBndConditions();
+		PBndExp   = m_pressure->GetBndCondExpansions();
+		
 		if(m_HomogeneousType == eHomogeneous1D)
 		{
-			ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 2D approach");
+			Array<OneD, NekDouble> U,V,W,Nu,Nv;
+			
+			for(int n = 0 ; n < PBndConds.num_elements(); ++n)
+			{
+				string type = PBndConds[n]->GetUserDefined().GetEquation();
+				
+				if(type == "H")
+				{
+					PBndExp[n]->SetFourierSpace(MultiRegions::eCoef);
+					int npoints = PBndExp[n]->GetNpoints();
+					
+					Array<OneD, NekDouble> U(npoints);
+					Array<OneD, NekDouble> V(npoints);
+					Array<OneD, NekDouble> W(npoints);
+					Array<OneD, NekDouble> Nu(npoints);
+					Array<OneD, NekDouble> Nv(npoints);
+					
+					Array<OneD, NekDouble> Uy(npoints);
+					Array<OneD, NekDouble> Uz(npoints);
+					Array<OneD, NekDouble> Vx(npoints);
+					Array<OneD, NekDouble> Vz(npoints);
+					Array<OneD, NekDouble> Wx(npoints);
+					Array<OneD, NekDouble> Wy(npoints);
+					Array<OneD, NekDouble> Qx(npoints);  
+					Array<OneD, NekDouble> Qy(npoints);
+					Array<OneD, NekDouble> Qz(npoints);
+					
+					m_pressure->GetBCValues(U,fields[0],n);
+					m_pressure->GetBCValues(V,fields[1],n);
+					m_pressure->GetBCValues(W,fields[2],n);
+					// Third component of the advection not required for this approach
+					m_pressure->GetBCValues(Nu,N[0],n);
+					m_pressure->GetBCValues(Nv,N[1],n);
+					
+					// Calculating vorticity Q = Qx i + Qy j + Qz k
+					PBndExp[n]->PhysDeriv(1,W,Wy);
+					PBndExp[n]->PhysDeriv(2,V,Vz);
+					PBndExp[n]->PhysDeriv(2,U,Uz);
+					PBndExp[n]->PhysDeriv(0,W,Wx);
+					PBndExp[n]->PhysDeriv(0,V,Vx);
+					PBndExp[n]->PhysDeriv(1,U,Uy);
+					
+					Vmath::Vsub(npoints,Wy,1,Vz,1,Qx,1);
+					Vmath::Vsub(npoints,Uz,1,Wx,1,Qy,1);
+					Vmath::Vsub(npoints,Vx,1,Uy,1,Qz,1);
+					
+					// Calculate  NxQ = Curl(Q) = (Qzy-Qyz) i + (Qxz-Qzx) j + (Qyx-Qxy) k
+					// NxQ = NxQ_x i + NxQ_y j + NxQ_z k
+					// Using the memory space assocaited with the velocity derivatives to
+					// store the vorticity derivatives to save space.
+					// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
+					PBndExp[n]->PhysDeriv(1,Qz,Uy);
+					PBndExp[n]->PhysDeriv(2,Qy,Uz);
+					PBndExp[n]->PhysDeriv(2,Qx,Vx);
+					PBndExp[n]->PhysDeriv(0,Qz,Vz);
+					
+					// Using the storage space associated with the 3 components of the vorticity
+					// to store the 3 components od the vorticity curl to save space
+					// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy 
+					// The last one is not required becasue the third component of the normal vector is always zero.
+					Vmath::Vsub(npoints,Uy,1,Uz,1,Qx,1);
+					Vmath::Vsub(npoints,Vx,1,Vz,1,Qy,1);
+					
+					// Evaluate [N - kinvis Curlx Curl V]
+					// x-component (stored in Qx)
+					Vmath::Svtvp(npoints,-m_kinvis,Qx,1,Nu,1,Qx,1);
+					// y-component (stored in Qy)
+					Vmath::Svtvp(npoints,-m_kinvis,Qy,1,Nv,1,Qy,1);
+					// z-component (stored in Qz) not required for this approach
+					// the third component of the normal vector is always zero
+					
+					// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n)
+					m_pressure->NormVectorIProductWRTBase(Qx,Qy,PBndExp[n]->UpdateCoeffs(),n);
+				}
+			}
+						
 		}
 		else if(m_HomogeneousType == eHomogeneous2D)
 		{

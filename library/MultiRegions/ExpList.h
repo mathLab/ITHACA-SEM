@@ -332,6 +332,15 @@ namespace Nektar
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs = false);
 			
+			inline void GetBCValues(Array<OneD, NekDouble> &BndVals, 
+									const Array<OneD, NekDouble> &TotField, 
+									int BndID);
+			
+			inline void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+												  Array<OneD, const NekDouble> &V2,
+												  Array<OneD, NekDouble> &outarray,
+												  int BndID);
+			
             /// This function calculates Surface Normal vector of a smooth
             /// manifold.
             MULTI_REGIONS_EXPORT void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
@@ -1014,13 +1023,20 @@ namespace Nektar
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
-            virtual void v_SetUpPhysNormals(
-                                            const StdRegions::StdExpansionVector &locexp);
+			virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
+									   const Array<OneD, NekDouble> &TotField, 
+									   int BndID);
+			
+			virtual void v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+												     Array<OneD, const NekDouble> &V2,
+												     Array<OneD, NekDouble> &outarray,
+												     int BndID);
+			
+            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
             virtual void v_SetUpTangents();
 
-            virtual void v_GetBoundaryToElmtMap(
-                                                Array<OneD, int> &ElmtID,
+            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
 
             virtual void v_ReadGlobalOptimizationParameters(
@@ -1476,6 +1492,27 @@ namespace Nektar
 												   bool UseContCoeffs)
 		{
 			v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::GetBCValues(Array<OneD, NekDouble> &BndVals, 
+						                 const Array<OneD, NekDouble> &TotField, 
+						                 int BndID)
+		{
+			v_GetBCValues(BndVals,TotField,BndID);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+									                   Array<OneD, const NekDouble> &V2,
+									                   Array<OneD, NekDouble> &outarray,
+									                   int BndID)
+		{
+			v_NormVectorIProductWRTBase(V1,V2,outarray,BndID);
 		}
 		
         /**

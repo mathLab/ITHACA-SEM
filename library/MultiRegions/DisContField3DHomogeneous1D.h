@@ -119,6 +119,23 @@ namespace Nektar
             /// boundary conditions
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
 														   Array<OneD,int> &EdgeID);
+			
+			/// This funtion extract form a vector containing a full 3D-homogenous-1D field
+			/// the value associated with a specific boundary conditions.
+			/// TotField is the full field contaning all the physical values
+			/// BndVals is the vector where the boundary physical values are stored
+			/// BndID is the identifier of the boundary region
+			MULTI_REGIONS_EXPORT void GetBCValues(Array<OneD, NekDouble> &BndVals, 
+												  const Array<OneD, NekDouble> &TotField, 
+												  int BndID);
+			
+			// This function calculate the inner product of two vectors (V1 and V2) 
+			// respect to the basis along a boundary region.
+			// outarray is the inner product result multiplied by the normal to the edge (specified by the BndID) 
+			MULTI_REGIONS_EXPORT void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+																Array<OneD, const NekDouble> &V2,
+																Array<OneD, NekDouble> &outarray,
+																int BndID);
             
         protected:
             /**
@@ -147,6 +164,21 @@ namespace Nektar
             {
                 GetBoundaryToElmtMap(ElmtID,EdgeID);
             }
+			
+			virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
+							           const Array<OneD, NekDouble> &TotField, 
+							           int BndID)
+			{
+				GetBCValues(BndVals,TotField,BndID);
+			}
+			
+			virtual void v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+										             Array<OneD, const NekDouble> &V2,
+										             Array<OneD, NekDouble> &outarray,
+										             int BndID)
+			{
+				NormVectorIProductWRTBase(V1,V2,outarray,BndID);
+			}
 
         private:
             // virtual functions

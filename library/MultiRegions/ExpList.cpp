@@ -2157,6 +2157,24 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
 		}
 		
+		
+		void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
+									const Array<OneD, NekDouble> &TotField, 
+									int BndID)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		void ExpList::v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+								                  Array<OneD, const NekDouble> &V2,
+								                  Array<OneD, NekDouble> &outarray,
+								                  int BndID)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
         // wrapper functions about virtual functions
         Array<OneD, NekDouble> &ExpList::v_UpdateContCoeffs()
         {

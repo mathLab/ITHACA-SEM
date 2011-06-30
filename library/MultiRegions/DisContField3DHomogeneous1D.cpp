@@ -147,14 +147,14 @@ namespace Nektar
 			
 			MultiRegions::ExpList2DHomogeneous1DSharedPtr locExpList;
             
-            boost::shared_ptr<StdRegions::StdExpansionVector> exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
-            
             int nplanes = m_planes.num_elements();
             Array<OneD, MultiRegions::ExpListSharedPtr> PlanesBndCondExp(nplanes);
             
             for(i = 0; i < nbnd; ++i)
             {
-                for(n = 0; n < nplanes; ++n)
+				boost::shared_ptr<StdRegions::StdExpansionVector> exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+                
+				for(n = 0; n < nplanes; ++n)
                 {
                     PlanesBndCondExp[n] = m_planes[n]->UpdateBndCondExpansion(i);
 
@@ -261,7 +261,128 @@ namespace Nektar
 		
 		void DisContField3DHomogeneous1D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
 		{
-			m_planes[0]->GetBoundaryToElmtMap(ElmtID,EdgeID);
+			Array<OneD, int> ElmtID_tmp;
+			Array<OneD, int> EdgeID_tmp;
+			
+			m_planes[0]->GetBoundaryToElmtMap(ElmtID_tmp,EdgeID_tmp);
+			
+			int nel_per_plane = m_planes[0]->GetExpSize();
+			
+			int nplanes = m_planes.num_elements();
+			int MapSize = ElmtID_tmp.num_elements();
+			
+			ElmtID = Array<OneD, int>(nplanes*MapSize);
+			EdgeID = Array<OneD, int>(nplanes*MapSize);
+			
+			for(int i = 0; i < nplanes; i++)
+			{
+				for(int j = 0; j < MapSize; j++)
+				{
+					ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_plane;
+					EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+				}
+			}
+		}
+		
+		void DisContField3DHomogeneous1D::GetBCValues(Array<OneD, NekDouble> &BndVals, 
+													  const Array<OneD, NekDouble> &TotField, 
+													  int BndID)
+		{
+			Array<OneD, int> ElmtID;
+			Array<OneD, int> EdgeID;
+			StdRegions::StdExpansionSharedPtr elmt;
+			StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
+			
+			Array<OneD, const NekDouble> tmp_Tot;
+			Array<OneD, NekDouble> tmp_BC;
+			
+			GetBoundaryToElmtMap(ElmtID,EdgeID);
+			
+			int cnt = 0;
+			int exp_size, elmtID, boundaryID, offset, exp_dim, pos;
+			
+			for(int n = 0; n < m_bndConditions.num_elements(); ++n)
+			{
+				if(n == BndID)
+				{
+					exp_size = m_bndCondExpansions[n]->GetExpSize();
+					pos = 0;
+					for(int i = 0; i < exp_size; i++)
+					{
+						elmtID = ElmtID[cnt];
+						boundaryID = EdgeID[cnt];
+						
+						exp_dim = m_bndCondExpansions[n]->GetExp(i)->GetTotPoints();
+						offset = GetPhys_Offset(elmtID);
+						
+						elmt = GetExp(elmtID);
+						
+						temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i));
+		
+						elmt->GetEdgePhysVals(boundaryID,temp_BC_exp,tmp_Tot = TotField + offset,tmp_BC = BndVals + pos);
+						
+						pos += exp_dim;
+						cnt++;
+					}
+				}
+				else
+				{
+					cnt += m_bndCondExpansions[n]->GetExpSize();
+				}
+			}
+		}
+		
+		void DisContField3DHomogeneous1D::NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+																	Array<OneD, const NekDouble> &V2,
+																	Array<OneD, NekDouble> &outarray,
+																	int BndID)
+		{
+			Array<OneD, int> ElmtID;
+			Array<OneD, int> EdgeID;
+			StdRegions::StdExpansionSharedPtr elmt;
+			StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
+			
+			Array<OneD, const NekDouble> tmp_V1;
+			Array<OneD, const NekDouble> tmp_V2;
+			Array<OneD, NekDouble> tmp_outarray;
+			
+			GetBoundaryToElmtMap(ElmtID,EdgeID);
+			
+			bool NegateNormals;
+			
+			int cnt = 0;
+			int exp_size, elmtID, boundaryID, offset;
+			
+			for(int n = 0; n < m_bndConditions.num_elements(); ++n)
+			{
+				if(n == BndID)
+				{
+					exp_size = m_bndCondExpansions[n]->GetExpSize();
+					
+					for(int i = 0; i < exp_size; i++)
+					{
+						elmtID = ElmtID[cnt];
+						boundaryID = EdgeID[cnt];
+						
+						offset = m_bndCondExpansions[n]->GetPhys_Offset(i);
+						
+						elmt = GetExp(elmtID);
+						
+						temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i));
+						
+						// Decide if normals facing outwards
+						NegateNormals = (elmt->GetEorient(boundaryID) == StdRegions::eForwards)? false:true;
+						
+						temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + offset,tmp_V2 = V2 + offset,tmp_outarray = outarray + offset,NegateNormals);
+			
+						cnt++;
+					}
+				}
+				else
+				{
+					cnt += m_bndCondExpansions[n]->GetExpSize();
+				}
+			}
 		}
 
 

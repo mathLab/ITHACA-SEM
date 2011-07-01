@@ -191,6 +191,18 @@ namespace Nektar
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
         static int nchk = 0;
+        
+        int n_fields = m_fields.num_elements();
+
+        if(m_HomogeneousType != eNotHomogeneous)
+	{
+           for(i = 0; i < n_fields; i++)
+           {
+              m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys()); 
+              m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
+              m_fields[i]->SetPhysState(false);
+           }
+        }
 
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
@@ -227,8 +239,15 @@ namespace Nektar
                 //updating physical space
                 for(i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_fields[i]->SetPhys(fields[i]);
-                    m_fields[i]->SetPhysState(true);
+                    if(m_HomogeneousType != eNotHomogeneous)
+	            {
+                        m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
+                    }
+                    else
+                    {
+                        m_fields[i]->SetPhys(fields[i]);
+                        m_fields[i]->SetPhysState(true);
+                    }
                 }
                 
                 Checkpoint_Output(nchk++);
@@ -238,8 +257,15 @@ namespace Nektar
         //updating physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
-            m_fields[i]->SetPhys(fields[i]);
-            m_fields[i]->SetPhysState(true);
+            if(m_HomogeneousType != eNotHomogeneous)
+	    {
+                m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
+            }
+            else
+            {
+                m_fields[i]->SetPhys(fields[i]);
+                m_fields[i]->SetPhysState(true);
+            }
         }
     }
 

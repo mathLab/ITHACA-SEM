@@ -220,10 +220,9 @@ namespace Nektar
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         NekDouble  lambda = 1.0/aii_Dt/m_kinvis; 
 
-        F[0] = Array<OneD, NekDouble> (phystot*m_nConvectiveFields);
-        for(n = 1; n < m_nConvectiveFields; ++n)
+        for(n = 0; n < m_nConvectiveFields; ++n)
         {
-            F[n] = F[n-1] + phystot;
+           F[n] = Array<OneD, NekDouble> (phystot);
         }
 		
         SetBoundaryConditions(time);
@@ -448,6 +447,7 @@ namespace Nektar
 			for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 			{
 				string type = PBndConds[n]->GetUserDefined().GetEquation();
+                                PBndExp[n]->SetFourierSpace(MultiRegions::eCoef);
 				
 				if(type == "H")
 				{
@@ -477,12 +477,12 @@ namespace Nektar
 					m_pressure->GetBCValues(Nv,N[1],n);
 					
 					// Calculating vorticity Q = Qx i + Qy j + Qz k
-					m_pressure->PhysDeriv(1,W,Wy);
-					m_pressure->PhysDeriv(2,V,Vz);
-					m_pressure->PhysDeriv(2,U,Uz);
-					m_pressure->PhysDeriv(0,W,Wx);
-					m_pressure->PhysDeriv(0,V,Vx);
-					m_pressure->PhysDeriv(1,U,Uy);
+					PBndExp[n]->PhysDeriv(1,W,Wy,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(2,V,Vz,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(2,U,Uz,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(0,W,Wx,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(0,V,Vx,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(1,U,Uy,m_UseContCoeff);
 					
 					Vmath::Vsub(npoints,Wy,1,Vz,1,Qx,1);
 					Vmath::Vsub(npoints,Uz,1,Wx,1,Qy,1);
@@ -493,10 +493,10 @@ namespace Nektar
 					// Using the memory space assocaited with the velocity derivatives to
 					// store the vorticity derivatives to save space.
 					// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
-					m_pressure->PhysDeriv(1,Qz,Uy);
-					m_pressure->PhysDeriv(2,Qy,Uz);
-					m_pressure->PhysDeriv(2,Qx,Vx);
-					m_pressure->PhysDeriv(0,Qz,Vz);
+					PBndExp[n]->PhysDeriv(1,Qz,Uy,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(2,Qy,Uz,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(2,Qx,Vx,m_UseContCoeff);
+					PBndExp[n]->PhysDeriv(0,Qz,Vz,m_UseContCoeff);
 					
 					// Using the storage space associated with the 3 components of the vorticity
 					// to store the 3 components od the vorticity curl to save space

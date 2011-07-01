@@ -47,6 +47,11 @@
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/DisContField2D.h>
 
+#include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/DisContField3DHomogeneous2D.h>
+
 #include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
 
 //#define TIMING

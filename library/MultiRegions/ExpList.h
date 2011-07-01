@@ -543,7 +543,7 @@ namespace Nektar
             /// quadrature points.
             inline Array<OneD, NekDouble> &UpdatePhys();
 
-	    inline void PhysDeriv(Direction edir, 
+	        inline void PhysDeriv(Direction edir, 
 								  const Array<OneD, const NekDouble> &inarray,
 								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);	
 	    
@@ -1029,9 +1029,14 @@ namespace Nektar
 									 Array<OneD, NekDouble> &out_d1, 
 									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs = false);
 			
+			virtual void v_PhysDeriv(const int dir,
+									 const Array<OneD, const NekDouble> &inarray,
+									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+			
 			virtual void v_PhysDeriv(Direction edir, 
 									 const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);			
+									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+			
 			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
@@ -1480,13 +1485,6 @@ namespace Nektar
 		{
 			v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
 		}
-
-	inline void ExpList::PhysDeriv(Direction edir,
-							   const Array<OneD, const NekDouble> &inarray,
-							   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
-	{
-	    v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
-	}		
 		
 		/**
 		 *
@@ -1495,9 +1493,15 @@ namespace Nektar
 									   const Array<OneD, const NekDouble> &inarray,
 									   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			MultiRegions::Direction edir =(MultiRegions::Direction)dir;
-			v_PhysDeriv(edir,inarray, out_d,UseContCoeffs);
+			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
 		}
+
+	    inline void ExpList::PhysDeriv(Direction edir,
+							   const Array<OneD, const NekDouble> &inarray,
+							   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+	{
+	    v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
+	}		
 		
 		/**
 		 *

@@ -451,7 +451,6 @@ namespace Nektar
 				
 				if(type == "H")
 				{
-					PBndExp[n]->SetFourierSpace(MultiRegions::eCoef);
 					int npoints = PBndExp[n]->GetNpoints();
 					
 					Array<OneD, NekDouble> U(npoints);
@@ -478,12 +477,12 @@ namespace Nektar
 					m_pressure->GetBCValues(Nv,N[1],n);
 					
 					// Calculating vorticity Q = Qx i + Qy j + Qz k
-					PBndExp[n]->PhysDeriv(1,W,Wy);
-					PBndExp[n]->PhysDeriv(2,V,Vz);
-					PBndExp[n]->PhysDeriv(2,U,Uz);
-					PBndExp[n]->PhysDeriv(0,W,Wx);
-					PBndExp[n]->PhysDeriv(0,V,Vx);
-					PBndExp[n]->PhysDeriv(1,U,Uy);
+					m_pressure->PhysDeriv(1,W,Wy);
+					m_pressure->PhysDeriv(2,V,Vz);
+					m_pressure->PhysDeriv(2,U,Uz);
+					m_pressure->PhysDeriv(0,W,Wx);
+					m_pressure->PhysDeriv(0,V,Vx);
+					m_pressure->PhysDeriv(1,U,Uy);
 					
 					Vmath::Vsub(npoints,Wy,1,Vz,1,Qx,1);
 					Vmath::Vsub(npoints,Uz,1,Wx,1,Qy,1);
@@ -494,10 +493,10 @@ namespace Nektar
 					// Using the memory space assocaited with the velocity derivatives to
 					// store the vorticity derivatives to save space.
 					// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
-					PBndExp[n]->PhysDeriv(1,Qz,Uy);
-					PBndExp[n]->PhysDeriv(2,Qy,Uz);
-					PBndExp[n]->PhysDeriv(2,Qx,Vx);
-					PBndExp[n]->PhysDeriv(0,Qz,Vz);
+					m_pressure->PhysDeriv(1,Qz,Uy);
+					m_pressure->PhysDeriv(2,Qy,Uz);
+					m_pressure->PhysDeriv(2,Qx,Vx);
+					m_pressure->PhysDeriv(0,Qz,Vz);
 					
 					// Using the storage space associated with the 3 components of the vorticity
 					// to store the 3 components od the vorticity curl to save space

@@ -1044,8 +1044,9 @@ namespace Nektar
 
         // Evaluate the divergence
         for(int i = 0; i < ndim; ++i)
-        {
-            m_fields[0]->PhysDeriv(i,F[i],tmp);
+        {        	
+            //m_fields[0]->PhysDeriv(i,F[i],tmp);
+            m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[i],F[i],tmp);            
             Vmath::Vadd(nPointsTot, tmp, 1, div, 1, div, 1);
         }
 
@@ -1493,7 +1494,8 @@ namespace Nektar
             variables[i] = m_boundaryConditions->GetVariable(i);
         }
         
-        WriteFld(outname, m_fields[0], fieldcoeffs, variables);
+        WriteFld(outname, m_fields[0], fieldcoeffs, variables);       
+        
     }
 
 

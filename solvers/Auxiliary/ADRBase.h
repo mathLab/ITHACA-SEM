@@ -64,6 +64,7 @@ namespace Nektar
     class ADRBase
     {
     public:
+   	    
 
         /// Default constructor.
         ADRBase();

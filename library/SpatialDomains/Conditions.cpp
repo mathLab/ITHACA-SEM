@@ -373,7 +373,7 @@ namespace Nektar
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("00.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
-                        }
+                        }                       
                         else
                         {
                             // Use the iterator from above, which must point to the variable.
@@ -383,11 +383,13 @@ namespace Nektar
                             {
                                 std::string equation, userDefined;
 
-                                while(attr) {
+                                while(attr) 
+                                {
 
                                     attrName = attr->Name();
 
-                                    if (attrName=="USERDEFINEDTYPE") {
+                                    if (attrName=="USERDEFINEDTYPE") 
+                                    {
 
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();
@@ -410,8 +412,7 @@ namespace Nektar
                                         equation = attrData;
                                       }
                                       attr = attr->Next();
-                                    }
-
+                                 }
                                     BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(equation, userDefined));
                                     (*boundaryConditions)[*iter]  = neumannCondition;
                             }

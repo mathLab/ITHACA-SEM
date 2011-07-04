@@ -195,7 +195,7 @@ namespace Nektar
 									 Array<OneD, NekDouble> &out_d1, 
 									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
 			
-			virtual void v_PhysDeriv(const int dir,
+			virtual void v_PhysDeriv(Direction edir,
 									 const Array<OneD, const NekDouble> &inarray,
 									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 

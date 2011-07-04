@@ -697,7 +697,7 @@ namespace Nektar
 
 		}
 		
-		void ExpListHomogeneous2D::v_PhysDeriv(const int dir,
+		void ExpListHomogeneous2D::v_PhysDeriv(Direction edir,
 											   const Array<OneD, const NekDouble> &inarray,
 											   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		
@@ -706,6 +706,8 @@ namespace Nektar
 			int npoints       = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line (nT_pts)
 			int n_points_line = npoints/nyzlines;         //number of points per line 
 			NekDouble ky,kz;                              //wave numbers in y & z direction
+			//convert enum into int
+			int dir = (int)edir;
 			
 			Array<OneD, NekDouble> temparray(npoints);
 			Array<OneD, NekDouble> tmp1;
@@ -784,7 +786,9 @@ namespace Nektar
 											 const Array<OneD, const NekDouble> &inarray,
 											 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
+			//convert int into enum
+			MultiRegions::Direction edir =(MultiRegions::Direction)dir;			
+			v_PhysDeriv(edir,inarray,out_d,UseContCoeffs);
 		}
 
 

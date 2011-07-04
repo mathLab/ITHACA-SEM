@@ -72,9 +72,15 @@ namespace Nektar
 	    eY,
 	    eZ,
 	    eS
-	};
-		
+	};	   
 
+    MultiRegions::Direction const DirCartesianMap[] =
+    {
+    	   eX,
+    	   eY,
+    	   eZ
+    }; 
+    
         /// A map between global matrix keys and their associated block
         /// matrices.
         typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;

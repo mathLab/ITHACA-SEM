@@ -387,8 +387,10 @@ namespace Nektar
 					V = fields[m_velocity[1]] + offset; 
 					
 					// Calculating vorticity Q = (dv/dx - du/dy)
-					elmt->PhysDeriv(0,V,Vx);
-					elmt->PhysDeriv(1,U,Uy);
+					//elmt->PhysDeriv(0,V,Vx);
+					//elmt->PhysDeriv(1,U,Uy);
+					elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
+					elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);					
 					
 					Vmath::Vsub(nq,Vx,1,Uy,1,Q,1);
 					
@@ -477,12 +479,18 @@ namespace Nektar
 					m_pressure->GetBCValues(Nv,N[1],n);
 					
 					// Calculating vorticity Q = Qx i + Qy j + Qz k
-					PBndExp[n]->PhysDeriv(1,W,Wy,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(2,V,Vz,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(2,U,Uz,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(0,W,Wx,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(0,V,Vx,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(1,U,Uy,m_UseContCoeff);
+					//PBndExp[n]->PhysDeriv(1,W,Wy);
+					//PBndExp[n]->PhysDeriv(2,V,Vz);
+					//PBndExp[n]->PhysDeriv(2,U,Uz);
+					//PBndExp[n]->PhysDeriv(0,W,Wx);
+					//PBndExp[n]->PhysDeriv(0,V,Vx);
+					//PBndExp[n]->PhysDeriv(1,U,Uy);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[1],W,Wy);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],V,Vz);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],U,Uz);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[0],W,Wx);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);					
 					
 					Vmath::Vsub(npoints,Wy,1,Vz,1,Qx,1);
 					Vmath::Vsub(npoints,Uz,1,Wx,1,Qy,1);
@@ -493,11 +501,14 @@ namespace Nektar
 					// Using the memory space assocaited with the velocity derivatives to
 					// store the vorticity derivatives to save space.
 					// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
-					PBndExp[n]->PhysDeriv(1,Qz,Uy,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(2,Qy,Uz,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(2,Qx,Vx,m_UseContCoeff);
-					PBndExp[n]->PhysDeriv(0,Qz,Vz,m_UseContCoeff);
-					
+					//PBndExp[n]->PhysDeriv(1,Qz,Uy);
+					//PBndExp[n]->PhysDeriv(2,Qy,Uz);
+					//PBndExp[n]->PhysDeriv(2,Qx,Vx);
+					//PBndExp[n]->PhysDeriv(0,Qz,Vz);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[1],Qz,Uy);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],Qy,Uz);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],Qx,Vx);
+					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[0],Qz,Vz);
 					// Using the storage space associated with the 3 components of the vorticity
 					// to store the 3 components od the vorticity curl to save space
 					// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy 
@@ -545,7 +556,8 @@ namespace Nektar
         
         for(i = 0; i < m_velocity.num_elements(); ++i)
         {
-            m_fields[m_velocity[i]]->PhysDeriv(i,fields[m_velocity[i]], wk);
+            //m_fields[m_velocity[i]]->PhysDeriv(i,fields[m_velocity[i]], wk);
+	    m_fields[m_velocity[i]]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[m_velocity[i]], wk);
             Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
         }
         

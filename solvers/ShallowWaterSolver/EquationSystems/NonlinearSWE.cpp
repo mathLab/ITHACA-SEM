@@ -219,8 +219,10 @@ namespace Nektar
 	      // Get the ith component of the  flux vector in (physical space)
 	      NonlinearSWE::GetFluxVector2D(i, physarray, fluxvector);
 	      
-	      m_fields[0]->PhysDeriv(0,fluxvector[0],tmp);
-	      m_fields[0]->PhysDeriv(1,fluxvector[1],tmp1);
+	      //m_fields[0]->PhysDeriv(0,fluxvector[0],tmp);
+	      //m_fields[0]->PhysDeriv(1,fluxvector[1],tmp1);
+	      m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],fluxvector[0],tmp);
+	      m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],fluxvector[1],tmp1);
 	      Vmath::Vadd(nq,tmp,1,tmp1,1,outarray[i],1);
 	      Vmath::Neg(nq,outarray[i],1);
 	    }

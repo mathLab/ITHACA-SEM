@@ -388,7 +388,8 @@ namespace Nektar
                     // Differentiation & Inner product wrt base. 
                     for(j = 0; j < nvel; ++j)
                     {
-                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(j,phys,deriv);
+                        //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(j,phys,deriv);
+			m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);		
                         StdRegions::StdExpansionSharedPtr locExp = m_pressure->GetExp(eid);
                         locExp->IProductWRTBase(deriv,pcoeffs);
                         // copy into column major storage. 
@@ -407,7 +408,9 @@ namespace Nektar
                     // Differentiation & Inner product wrt base. 
                     for(j = 0; j < nvel; ++j)
                     {
-                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(j,phys,
+                        //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(j,phys,
+                        //                                                deriv);
+                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,
                                                                         deriv);
                         m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                         // copy into column major storage. 
@@ -445,7 +448,8 @@ namespace Nektar
                         {
                             AdvDeriv[nv] = m_fields[nv]->UpdatePhys(); 
                         }
-                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(nv,Advfield[nv] + phys_offset, AdvDeriv[nv]);
+                        //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(nv,Advfield[nv] + phys_offset, AdvDeriv[nv]);
+                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(MultiRegions::DirCartesianMap[nv],Advfield[nv] + phys_offset, AdvDeriv[nv]);
                     }
                 }
 
@@ -461,7 +465,9 @@ namespace Nektar
                     {
                         
                         // Differentiation & Inner product wrt base. 
-                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(k,phys,
+                        //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(k,phys,
+                        //                                                deriv);
+                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(MultiRegions::DirCartesianMap[k],phys,
                                                                         deriv);
                      
                         for(j = 0; j < nbmap; ++j)
@@ -538,7 +544,8 @@ namespace Nektar
                     for(k = 0; k < nvel; ++k)
                     {
                         // Differentiation & Inner product wrt base. 
-                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(k,phys,deriv);
+                        //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(k,phys,deriv);
+                        m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(MultiRegions::DirCartesianMap[k],phys,deriv);
                         
                         for(j = 0; j < nbmap; ++j) // C set up as transpose
                         {

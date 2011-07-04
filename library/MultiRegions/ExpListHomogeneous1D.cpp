@@ -608,7 +608,7 @@ namespace Nektar
 
 		}
 		
-		void ExpListHomogeneous1D::v_PhysDeriv(const int dir,
+		void ExpListHomogeneous1D::v_PhysDeriv(Direction edir,
 											   const Array<OneD, const NekDouble> &inarray,
 											   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		
@@ -617,6 +617,8 @@ namespace Nektar
 			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
 			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
 			NekDouble k;                           //wave number
+			//convert enum into int
+			int dir= (int)edir;
 			
 			Array<OneD, NekDouble> temparray(nT_pts);
 			Array<OneD, NekDouble> tmp1(nP_pts);
@@ -667,7 +669,9 @@ namespace Nektar
 											 const Array<OneD, const NekDouble> &inarray,
 											 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
+			//convert int into enum
+			MultiRegions::Direction edir=(MultiRegions::Direction)dir;
+			v_PhysDeriv(edir,inarray,out_d,UseContCoeffs);
 		}
    } //end of namespace
 } //end of namespace

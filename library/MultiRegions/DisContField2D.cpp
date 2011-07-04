@@ -1321,7 +1321,6 @@ namespace Nektar
                                    >(m_bndConditions[i])->m_neumannCondition
                                    ).Evaluate(x0[j],x1[j],x2[j],time);
                         }
-
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
                     }

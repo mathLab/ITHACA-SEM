@@ -117,17 +117,7 @@ namespace Nektar
 
         for(i = 0; i < nvariables; ++i)
         {
-            if(m_HomogeneousType != eNotHomogeneous)
-			{
-				fields[i] = Array<OneD, NekDouble> (npoints);
-				m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),fields[i]);
-				m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
-			}
-			else 
-			{
-				fields[i]  = m_fields[i]->UpdatePhys();
-			}
-			
+			fields[i]  = m_fields[i]->UpdatePhys();
 			m_fields[i]->SetPhysState(false);
         }
 
@@ -278,15 +268,7 @@ namespace Nektar
         // At the end of the time integration, store final solution.
         for(i = 0; i < nvariables; ++i)
         {
-            if(m_HomogeneousType == eHomogeneous1D)
-			{
-				m_fields[i]->HomogeneousBwdTrans(fields[i],m_fields[i]->UpdatePhys());
-				m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
-			}
-			else 
-			{
-				m_fields[i]->UpdatePhys() = fields[i];
-			}
+			m_fields[i]->UpdatePhys() = fields[i];
         }
     }
 

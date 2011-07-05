@@ -59,7 +59,7 @@ namespace Nektar
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
         
-        for(i = 0; i < m_expdim; ++i)
+        for(i = 0; i < m_spacedim; ++i)
         {
             for(j = 0; j < numfields; ++j)
             {
@@ -193,17 +193,7 @@ namespace Nektar
         static int nchk = 0;
         
         int n_fields = m_fields.num_elements();
-
-        if(m_HomogeneousType != eNotHomogeneous)
-	{
-           for(i = 0; i < n_fields; i++)
-           {
-              m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys()); 
-              m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
-              m_fields[i]->SetPhysState(false);
-           }
-        }
-
+		
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
@@ -236,37 +226,21 @@ namespace Nektar
             // dump data in m_fields->m_coeffs to file. 
             if(n&&(!((n+1)%m_checksteps)))
             {
-                //updating physical space
-                for(i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    if(m_HomogeneousType != eNotHomogeneous)
-	            {
-                        m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
-                    }
-                    else
-                    {
-                        m_fields[i]->SetPhys(fields[i]);
-                        m_fields[i]->SetPhysState(true);
-                    }
-                }
-                
-                Checkpoint_Output(nchk++);
-            }
+				for(i = 0; i < m_nConvectiveFields; ++i)
+				{
+					m_fields[i]->SetPhys(fields[i]);
+					m_fields[i]->SetPhysState(true);
+				}
+				Checkpoint_Output(nchk++);
+			}
         }
 
         //updating physical space
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            if(m_HomogeneousType != eNotHomogeneous)
-	    {
-                m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
-            }
-            else
-            {
-                m_fields[i]->SetPhys(fields[i]);
-                m_fields[i]->SetPhysState(true);
-            }
-        }
+		for(i = 0; i < m_nConvectiveFields; ++i)
+		{
+			m_fields[i]->SetPhys(fields[i]);
+			m_fields[i]->SetPhysState(true);
+		}
     }
 
     // Evaluation -N(V) for all fields except pressure using m_velocity

@@ -449,8 +449,7 @@ namespace Nektar
 			for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 			{
 				string type = PBndConds[n]->GetUserDefined().GetEquation();
-                                PBndExp[n]->SetFourierSpace(MultiRegions::eCoef);
-				
+                                
 				if(type == "H")
 				{
 					int npoints = PBndExp[n]->GetNpoints();
@@ -474,17 +473,12 @@ namespace Nektar
 					m_pressure->GetBCValues(U,fields[0],n);
 					m_pressure->GetBCValues(V,fields[1],n);
 					m_pressure->GetBCValues(W,fields[2],n);
+					
 					// Third component of the advection not required for this approach
 					m_pressure->GetBCValues(Nu,N[0],n);
 					m_pressure->GetBCValues(Nv,N[1],n);
 					
 					// Calculating vorticity Q = Qx i + Qy j + Qz k
-					//PBndExp[n]->PhysDeriv(1,W,Wy);
-					//PBndExp[n]->PhysDeriv(2,V,Vz);
-					//PBndExp[n]->PhysDeriv(2,U,Uz);
-					//PBndExp[n]->PhysDeriv(0,W,Wx);
-					//PBndExp[n]->PhysDeriv(0,V,Vx);
-					//PBndExp[n]->PhysDeriv(1,U,Uy);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[1],W,Wy);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],V,Vz);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],U,Uz);
@@ -501,14 +495,11 @@ namespace Nektar
 					// Using the memory space assocaited with the velocity derivatives to
 					// store the vorticity derivatives to save space.
 					// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
-					//PBndExp[n]->PhysDeriv(1,Qz,Uy);
-					//PBndExp[n]->PhysDeriv(2,Qy,Uz);
-					//PBndExp[n]->PhysDeriv(2,Qx,Vx);
-					//PBndExp[n]->PhysDeriv(0,Qz,Vz);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[1],Qz,Uy);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],Qy,Uz);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[2],Qx,Vx);
 					PBndExp[n]->PhysDeriv(MultiRegions::DirCartesianMap[0],Qz,Vz);
+					
 					// Using the storage space associated with the 3 components of the vorticity
 					// to store the 3 components od the vorticity curl to save space
 					// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy 
@@ -554,10 +545,9 @@ namespace Nektar
                 
         Vmath::Zero(physTot,Forcing[0],1);
         
-        for(i = 0; i < m_velocity.num_elements(); ++i)
+        for(i = 0; i < m_nConvectiveFields; ++i)
         {
-            //m_fields[m_velocity[i]]->PhysDeriv(i,fields[m_velocity[i]], wk);
-	    m_fields[m_velocity[i]]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[m_velocity[i]], wk);
+			m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
             Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
         }
         
@@ -579,11 +569,11 @@ namespace Nektar
         
         if(m_nConvectiveFields == 2)
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[m_velocity[0]], Forcing[m_velocity[1]]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1]);
         }
         else
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[m_velocity[0]], Forcing[m_velocity[1]],Forcing[m_velocity[2]]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1],Forcing[2]);
         }
         
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will

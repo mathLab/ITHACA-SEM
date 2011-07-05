@@ -351,7 +351,7 @@ namespace Nektar
 			bool NegateNormals;
 			
 			int cnt = 0;
-			int exp_size, elmtID, boundaryID, offset;
+			int exp_size, elmtID, boundaryID, Phys_offset, Coef_offset;
 			
 			for(int n = 0; n < m_bndConditions.num_elements(); ++n)
 			{
@@ -364,7 +364,8 @@ namespace Nektar
 						elmtID = ElmtID[cnt];
 						boundaryID = EdgeID[cnt];
 						
-						offset = m_bndCondExpansions[n]->GetPhys_Offset(i);
+						Phys_offset = m_bndCondExpansions[n]->GetPhys_Offset(i);
+						Coef_offset = m_bndCondExpansions[n]->GetCoeff_Offset(i);
 						
 						elmt = GetExp(elmtID);
 						
@@ -373,7 +374,7 @@ namespace Nektar
 						// Decide if normals facing outwards
 						NegateNormals = (elmt->GetEorient(boundaryID) == StdRegions::eForwards)? false:true;
 						
-						temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + offset,tmp_V2 = V2 + offset,tmp_outarray = outarray + offset,NegateNormals);
+						temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + Phys_offset,tmp_V2 = V2 + Phys_offset,tmp_outarray = outarray + Coef_offset,NegateNormals);
 			
 						cnt++;
 					}

@@ -162,17 +162,9 @@ namespace Nektar
         // ToDo: here we should add a check that V has right dimension
 		
         int nPointsTot = pFields[0]->GetNpoints();
-        Array<OneD, NekDouble> grad0,grad1,grad2,der2x,der2m;
+        Array<OneD, NekDouble> grad0,grad1,grad2;
 		
-        // check to see if wk space is defined
-        if (pWk.num_elements())
-        {
-            grad0 = pWk;
-        }
-        else
-        {
-            grad0 = Array<OneD, NekDouble> (ndim*nPointsTot);
-        }
+        grad0 = Array<OneD, NekDouble> (nPointsTot);
 		
         // Evaluate V\cdot Grad(u)
         switch(ndim)
@@ -182,18 +174,19 @@ namespace Nektar
 				Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
 				break;
 			case 2:
-				grad1 = grad0 + nPointsTot;
+				grad1 = Array<OneD, NekDouble> (nPointsTot);
 		        pFields[0]->PhysDeriv(pU,grad0,grad1);
 				Vmath::Vmul (nPointsTot,grad0,1,pV[0],1,pOutarray,1);
 			    Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
 				break;	 
 			case 3:
-				grad1 = grad0 + nPointsTot;
-				grad2 = grad1 + nPointsTot;
+				grad1 = Array<OneD, NekDouble> (nPointsTot);
+				grad2 = Array<OneD, NekDouble> (nPointsTot);
 				pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
-
-				 break;
-				
+				Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
+				Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
+				Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
+				break;
 			default:
 				ASSERTL0(false,"dimension unknown");
         }

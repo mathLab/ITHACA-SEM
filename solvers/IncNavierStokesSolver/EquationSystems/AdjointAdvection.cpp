@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File LinearisedAdvection.cpp
+// File AdjointAdvection.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Evaluation of the linearised advective term
+// Description: Evaluation of the adjoint advective term
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/EquationSystems/LinearisedAdvection.h>
+#include <IncNavierStokesSolver/EquationSystems/AdjointAdvection.h>
 #include <cstdio>
 #include <cstdlib>
 
@@ -42,7 +42,7 @@ namespace Nektar
     /**
      * Basic construnctor
      */
-    LinearisedAdvection::LinearisedAdvection(void):
+    AdjointAdvection::AdjointAdvection(void):
         AdvectionTerm()
     {     
     }
@@ -54,7 +54,7 @@ namespace Nektar
      * \param
      */
 
-    LinearisedAdvection::LinearisedAdvection(
+    AdjointAdvection::AdjointAdvection(
             LibUtilities::CommSharedPtr                 pComm,
             LibUtilities::SessionReaderSharedPtr        pSession,
             SpatialDomains::MeshGraphSharedPtr          pGraph,
@@ -62,16 +62,17 @@ namespace Nektar
         AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	{
         SetUpBaseFields(pGraph);
-        ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph,pBoundaryConditions);
+		  ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + "-Base.fld",pGraph,pBoundaryConditions);
+		//ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph,pBoundaryConditions);
 	}
 	
 
-	LinearisedAdvection::~LinearisedAdvection()
+	AdjointAdvection::~AdjointAdvection()
 	{
 	}
 	
 
-	void LinearisedAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh)
+	void AdjointAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh)
 	{
 	    int nvariables = m_boundaryConditions->GetNumVariables();
 	    int i;
@@ -210,7 +211,7 @@ namespace Nektar
      * coefficient storage.
      * @param   infile          Filename to read.
      */
-    void LinearisedAdvection::ImportFldBase(std::string pInfile,
+    void AdjointAdvection::ImportFldBase(std::string pInfile,
             SpatialDomains::MeshGraphSharedPtr pGraph,
             SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions)
     {
@@ -241,7 +242,7 @@ namespace Nektar
     }
 
 
-	void LinearisedAdvection:: v_DoAdvection(
+	void AdjointAdvection:: v_DoAdvection(
 										  Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
 										  const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
 										  Array<OneD, Array<OneD, NekDouble> > &pOutarray,
@@ -316,7 +317,7 @@ namespace Nektar
 
 
 	//Evaluation of the advective terms
-    void LinearisedAdvection::ComputeAdvectionTerm(
+    void AdjointAdvection::ComputeAdvectionTerm(
 										  Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
 										  int pVelocityComponent,
 										  const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
@@ -341,7 +342,7 @@ namespace Nektar
         grad_base_v0 = Array<OneD, NekDouble> (ndim*nPointsTot, 0.0);
         grad_base_w0 = Array<OneD, NekDouble> (ndim*nPointsTot, 0.0);
 		
-		//Evaluate the linearised advection term
+		//Evaluate the adjoint advection term
 		switch(ndim) 
         {
 			// 1D
@@ -377,10 +378,12 @@ namespace Nektar
                         Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
                         //Evaluate U du'/dx+ V du'/dy
                         Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-                        //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
+						//Evaluate - (U du'/dx+ V du'/dy)
+						Vmath::Neg(nPointsTot,pOutarray,1);
+                        //Evaluate -(U du'/dx+ V du'/dy)+u' dU/dx
                         Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-                        //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
-                        Vmath::Vvtvp(nPointsTot,grad_base_u1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
+                        //Evaluate -(U du'/dx+ V du'/dy) +u' dU/dx +v' dV/dx
+                        Vmath::Vvtvp(nPointsTot,grad_base_v0,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
 						break;
 			
                     //y-equation
@@ -389,8 +392,10 @@ namespace Nektar
                         Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
                         //Evaluate U dv'/dx+ V dv'/dy
                         Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-                        //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
-                        Vmath::Vvtvp(nPointsTot,grad_base_v0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+						//Evaluate -(U dv'/dx+ V dv'/dy)
+						Vmath::Neg(nPointsTot,pOutarray,1);
+                        //Evaluate (U dv'/dx+ V dv'/dy)+u' dU/dy
+                        Vmath::Vvtvp(nPointsTot,grad_base_u1,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
                         //Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
                         Vmath::Vvtvp(nPointsTot,grad_base_v1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
 						break;
@@ -400,6 +405,8 @@ namespace Nektar
 								
 			//3D
 			case 3:
+				
+				//NOT YET IMPLEMENTED
 				grad1 = grad0 + nPointsTot;
 				grad2 = grad1 + nPointsTot;
 				grad_base_u1 = grad_base_u0 + nPointsTot;

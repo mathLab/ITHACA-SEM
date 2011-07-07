@@ -40,6 +40,7 @@
 #include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
 #include <IncNavierStokesSolver/EquationSystems/LinearisedAdvection.h>
 #include <IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.h>
+#include <IncNavierStokesSolver/EquationSystems/AdjointAdvection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 
@@ -73,7 +74,8 @@ namespace Nektar
         eConvective,
         eNonConservative,
         eLinearised,
-        eAdvectionFormSize
+		eAdjoint,
+		eAdvectionFormSize
     };
     
     // Keep this consistent with the enums in EquationType.
@@ -83,6 +85,7 @@ namespace Nektar
         "Convective",
         "NonConservative",
         "Linearised",
+		"Adjoint"
     };
 	
     /**

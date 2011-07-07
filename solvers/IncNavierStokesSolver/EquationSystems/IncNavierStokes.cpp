@@ -173,6 +173,14 @@ namespace Nektar
                     m_advObject = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
                 }
                 break;
+					
+				//Adjoint term
+                case eAdjoint:
+                {
+                    m_advObject = MemoryManager<AdjointAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
+                }
+					break;		
+					
 
                 default:
                     ASSERTL0(false,"Advection form not known");

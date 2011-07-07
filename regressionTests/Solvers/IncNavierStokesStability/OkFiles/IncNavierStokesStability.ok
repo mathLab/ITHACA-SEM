@@ -1,10 +1,10 @@
 IncNavierStokesStability
 ==========================================
 ChanStability.xml
-L 2 error (variable u): 2.58912
-L inf error (variable u): 1
-L 2 error (variable v): 0.0147971
-L inf error (variable v): 0.00794262
-L 2 error (variable p): 0.00255619
-L inf error (variable p): 0.0017822
+L 2 error (variable u): 2.58921
+L inf error (variable u): 1.00006
+L 2 error (variable v): 0.0199038
+L inf error (variable v): 0.0106814
+L 2 error (variable p): 0.0130821
+L inf error (variable p): 0.00776315
 ----------------------------------------

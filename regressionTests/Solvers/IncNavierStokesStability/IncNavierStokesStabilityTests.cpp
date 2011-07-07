@@ -53,6 +53,7 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define COPY_COMMAND "cp "
 #endif
 
+
 static int tests_total = 0;
 static int tests_passed = 0;
 static int tests_failed = 0;
@@ -74,6 +75,7 @@ int main(int argc, char* argv[])
     {
         quiet = true;
     }
+	
     //Test Channel Flow
     Execute("IncNavierStokesStability","ChanStability.xml","Channel Flow P=11");
 
@@ -100,7 +102,6 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesStability/OkFiles/");
     int fail;
 
-	std::string input2=input+"-Base";
 	
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
@@ -186,15 +187,12 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesStability/OkFiles/");
     int fail;
 
-
-	std::string input2=input+"-Base";
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesStability/InputFiles/" + input);
-	boost::filesystem::path filePath2(std::string(REG_PATH) + "Solvers/IncNavierStokesStability/InputFiles/ChanStability-Base.fld");
 	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
 	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
-	std::string syscommand3 = std::string(COPY_COMMAND) + filePath2.file_string() + "rst .";
+	std::string syscommand3 = std::string(COPY_COMMAND) + filePath.file_string() + "bse .";
 
     int status1 = system(syscommand1.c_str());
     if(status1)
@@ -235,6 +233,7 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
 #endif
 
     system(cleanup.c_str());
+	
 }
 
 

@@ -248,8 +248,9 @@
       <I PROPERTY="AdvectionForm" VALUE="Linearised"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
-       <I PROPERTY="InitialVector" VALUE="Assigned"/>
-
+       <I PROPERTY="InitialVector" VALUE="Random"/>
+      <I PROPERTY="EigenvalueAlgorithm" VALUE="ModifiedArnoldi"/>
+ 
     </SOLVERINFO>
 
     <PARAMETERS>

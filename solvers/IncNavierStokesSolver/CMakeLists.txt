@@ -7,6 +7,7 @@ SET(IncNavierStokesSolverSource
        ./EquationSystems/AdvectionTerm.cpp
        ./EquationSystems/NavierStokesAdvection.cpp
        ./EquationSystems/LinearisedAdvection.cpp
+       ./EquationSystems/AdjointAdvection.cpp
        ./IncNavierStokesSolver.cpp 
        )
 

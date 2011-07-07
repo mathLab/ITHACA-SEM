@@ -62,8 +62,7 @@ namespace Nektar
         AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	{
         SetUpBaseFields(pGraph);
-		  ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + "-Base.fld",pGraph,pBoundaryConditions);
-		//ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph,pBoundaryConditions);
+		   ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph,pBoundaryConditions);
 	}
 	
 

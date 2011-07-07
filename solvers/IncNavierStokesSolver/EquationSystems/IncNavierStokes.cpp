@@ -202,6 +202,16 @@ namespace Nektar
         
         int n_fields = m_fields.num_elements();
 		
+		if(m_HomogeneousType != eNotHomogeneous) //Homogeneous case semi-phys integration
+		{
+			for(i = 0; i < n_fields; ++i)
+			{
+				m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+				m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
+				m_fields[i]->SetPhysState(false);
+			}
+		}
+		
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
@@ -234,20 +244,52 @@ namespace Nektar
             // dump data in m_fields->m_coeffs to file. 
             if(n&&(!((n+1)%m_checksteps)))
             {
-				for(i = 0; i < m_nConvectiveFields; ++i)
+				if(m_HomogeneousType != eNotHomogeneous)
 				{
-					m_fields[i]->SetPhys(fields[i]);
-					m_fields[i]->SetPhysState(true);
+					for(i = 0; i < n_fields; ++i)
+					{
+						m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
+						m_fields[i]->SetPhysState(false);
+					}
+					
+					Checkpoint_Output(nchk++);
+					
+					for(i = 0; i < n_fields; ++i)
+					{
+						m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
+						m_fields[i]->SetPhysState(false);
+					}
+					
 				}
-				Checkpoint_Output(nchk++);
+				else 
+				{
+					for(i = 0; i < m_nConvectiveFields; ++i)
+					{
+						m_fields[i]->SetPhys(fields[i]);
+						m_fields[i]->SetPhysState(true);
+					}
+					Checkpoint_Output(nchk++);
+					
+				}
 			}
         }
 
         //updating physical space
-		for(i = 0; i < m_nConvectiveFields; ++i)
+		if(m_HomogeneousType != eNotHomogeneous)
 		{
-			m_fields[i]->SetPhys(fields[i]);
-			m_fields[i]->SetPhysState(true);
+			for(i = 0; i < n_fields; ++i)
+			{
+				m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
+				m_fields[i]->SetPhysState(false);
+			}			
+		}
+		else 
+		{
+			for(i = 0; i < m_nConvectiveFields; ++i)
+			{
+				m_fields[i]->SetPhys(fields[i]);
+				m_fields[i]->SetPhysState(true);
+			}
 		}
     }
 
@@ -317,12 +359,6 @@ namespace Nektar
 			}
 		}
 	}
-	
-
- 	
-	
-    
-
     // case insensitive string comparison from web
 } //end of namespace
 

@@ -1505,9 +1505,9 @@ namespace Nektar
 	    inline void ExpList::PhysDeriv(Direction edir,
 							   const Array<OneD, const NekDouble> &inarray,
 							   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
-	{
-	    v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
-	}		
+		{
+			v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
+		}		
 		
 		/**
 		 *

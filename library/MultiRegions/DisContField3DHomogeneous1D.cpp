@@ -145,8 +145,6 @@ namespace Nektar
             
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 			
-			MultiRegions::ExpList2DHomogeneous1DSharedPtr locExpList;
-            
             int nplanes = m_planes.num_elements();
             Array<OneD, MultiRegions::ExpListSharedPtr> PlanesBndCondExp(nplanes);
             
@@ -165,8 +163,6 @@ namespace Nektar
                 }
                 
 				m_bndCondExpansions[i] = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(m_comm,HomoBasis,lhom,m_useFFT,exp,PlanesBndCondExp);
-               
-				 //= locExpList;
             }
             
             EvaluateBoundaryConditions();
@@ -185,7 +181,7 @@ namespace Nektar
             // Fourier transform coefficient space boundary values
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+				m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
             }    
         }
         
@@ -261,43 +257,56 @@ namespace Nektar
 		
 		void DisContField3DHomogeneous1D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
 		{
-			Array<OneD, int> ElmtID_tmp;
-			Array<OneD, int> EdgeID_tmp;
 			
-			m_planes[0]->GetBoundaryToElmtMap(ElmtID_tmp,EdgeID_tmp);
-			
-			int nel_per_plane = m_planes[0]->GetExpSize();
-			
-			int nplanes = m_planes.num_elements();
-			int MapSize = ElmtID_tmp.num_elements();
-			
-			ElmtID = Array<OneD, int>(nplanes*MapSize);
-			EdgeID = Array<OneD, int>(nplanes*MapSize);
-			
-			for(int i = 0; i < nplanes; i++)
+			if(m_BCtoElmMap.num_elements() == 0)
 			{
-				for(int j = 0; j < MapSize; j++)
+				Array<OneD, int> ElmtID_tmp;
+				Array<OneD, int> EdgeID_tmp;
+				
+				m_planes[0]->GetBoundaryToElmtMap(ElmtID_tmp,EdgeID_tmp);
+				int nel_per_plane = m_planes[0]->GetExpSize();
+				int nplanes = m_planes.num_elements();
+				
+				int MapSize = ElmtID_tmp.num_elements();
+				
+				ElmtID = Array<OneD, int>(nplanes*MapSize);
+				EdgeID = Array<OneD, int>(nplanes*MapSize);
+				for(int i = 0; i < nplanes; i++)
 				{
-					ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_plane;
-					EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+					for(int j = 0; j < MapSize; j++)
+					{
+						ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_plane;
+						EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+					}
 				}
+				m_BCtoElmMap = Array<OneD, int>(nplanes*MapSize);
+				m_BCtoEdgMap = Array<OneD, int>(nplanes*MapSize);
+				
+				Vmath::Vcopy(nplanes*MapSize,ElmtID,1,m_BCtoElmMap,1);
+				Vmath::Vcopy(nplanes*MapSize,EdgeID,1,m_BCtoEdgMap,1);
 			}
+			else 
+			{
+				int MapSize = m_BCtoElmMap.num_elements();
+				
+				ElmtID = Array<OneD, int>(MapSize);
+				EdgeID = Array<OneD, int>(MapSize);
+				
+				Vmath::Vcopy(MapSize,m_BCtoElmMap,1,ElmtID,1);
+				Vmath::Vcopy(MapSize,m_BCtoEdgMap,1,EdgeID,1);
+			}			
 		}
 		
 		void DisContField3DHomogeneous1D::GetBCValues(Array<OneD, NekDouble> &BndVals, 
 													  const Array<OneD, NekDouble> &TotField, 
 													  int BndID)
 		{
-			Array<OneD, int> ElmtID;
-			Array<OneD, int> EdgeID;
 			StdRegions::StdExpansionSharedPtr elmt;
 			StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
 			
 			Array<OneD, const NekDouble> tmp_Tot;
 			Array<OneD, NekDouble> tmp_BC;
-			
-			GetBoundaryToElmtMap(ElmtID,EdgeID);
-			
+						
 			int cnt = 0;
 			int exp_size, elmtID, boundaryID, offset, exp_dim, pos;
 			
@@ -309,8 +318,8 @@ namespace Nektar
 					pos = 0;
 					for(int i = 0; i < exp_size; i++)
 					{
-						elmtID = ElmtID[cnt];
-						boundaryID = EdgeID[cnt];
+						elmtID = m_BCtoElmMap[cnt];
+						boundaryID = m_BCtoEdgMap[cnt];
 						
 						exp_dim = m_bndCondExpansions[n]->GetExp(i)->GetTotPoints();
 						offset = GetPhys_Offset(elmtID);
@@ -337,17 +346,13 @@ namespace Nektar
 																	Array<OneD, NekDouble> &outarray,
 																	int BndID)
 		{
-			Array<OneD, int> ElmtID;
-			Array<OneD, int> EdgeID;
 			StdRegions::StdExpansionSharedPtr elmt;
 			StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
 			
 			Array<OneD, const NekDouble> tmp_V1;
 			Array<OneD, const NekDouble> tmp_V2;
 			Array<OneD, NekDouble> tmp_outarray;
-			
-			GetBoundaryToElmtMap(ElmtID,EdgeID);
-			
+
 			bool NegateNormals;
 			
 			int cnt = 0;
@@ -361,8 +366,8 @@ namespace Nektar
 					
 					for(int i = 0; i < exp_size; i++)
 					{
-						elmtID = ElmtID[cnt];
-						boundaryID = EdgeID[cnt];
+						elmtID = m_BCtoElmMap[cnt];
+						boundaryID = m_BCtoEdgMap[cnt];
 						
 						Phys_offset = m_bndCondExpansions[n]->GetPhys_Offset(i);
 						Coef_offset = m_bndCondExpansions[n]->GetCoeff_Offset(i);

@@ -113,7 +113,7 @@ namespace Nektar
 								                Array<OneD, NekDouble> &out_d1, 
 								                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
 			
-			MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
+			MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
 								                const Array<OneD, const NekDouble> &inarray,
 								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
@@ -133,10 +133,6 @@ namespace Nektar
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
 			
-			/// Variable to determine if the we are using the Fouirer expansion
-			/// in coefficient or physical space.
-			bool m_SemiPhysSpace;
-
             DNekBlkMatSharedPtr GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs = false) const;
 
             DNekBlkMatSharedPtr GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs = false) const;

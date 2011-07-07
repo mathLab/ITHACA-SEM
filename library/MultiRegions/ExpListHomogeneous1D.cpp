@@ -62,8 +62,6 @@ namespace Nektar
             int nzplanes = m_homogeneousBasis->GetNumPoints();
 
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
-			
-			m_SemiPhysSpace = false;
 
 			if(m_useFFT)
 			{
@@ -576,9 +574,9 @@ namespace Nektar
 			NekDouble k;                           //wave number
 			
 			Array<OneD, NekDouble> temparray(nT_pts);
-			Array<OneD, NekDouble> tmp1(nP_pts);
-			Array<OneD, NekDouble> tmp2(nP_pts);
-			Array<OneD, NekDouble> tmp3(nP_pts);
+			Array<OneD, NekDouble> tmp1;
+			Array<OneD, NekDouble> tmp2;
+			Array<OneD, NekDouble> tmp3;
             
 			for( int i=0 ; i<nF_pts ; i++ )
 			{
@@ -621,14 +619,14 @@ namespace Nektar
 			int dir= (int)edir;
 			
 			Array<OneD, NekDouble> temparray(nT_pts);
-			Array<OneD, NekDouble> tmp1(nP_pts);
-			Array<OneD, NekDouble> tmp2(nP_pts);
+			Array<OneD, NekDouble> tmp1;
+			Array<OneD, NekDouble> tmp2;
             
 			if (dir < 2)
 			{
 				for( int i=0 ; i<nF_pts ; i++ )
 				{
-					m_planes[i]->PhysDeriv(dir, tmp1 = inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
+					m_planes[i]->PhysDeriv(edir, tmp1 = inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
 				}
 			}
 			else
@@ -665,12 +663,10 @@ namespace Nektar
             v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
         }
 		
-		void ExpListHomogeneous1D::PhysDeriv(const int dir,
+		void ExpListHomogeneous1D::PhysDeriv(Direction edir,
 											 const Array<OneD, const NekDouble> &inarray,
 											 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			//convert int into enum
-			MultiRegions::Direction edir=(MultiRegions::Direction)dir;
 			v_PhysDeriv(edir,inarray,out_d,UseContCoeffs);
 		}
    } //end of namespace

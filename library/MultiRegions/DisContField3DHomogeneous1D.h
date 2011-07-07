@@ -129,13 +129,20 @@ namespace Nektar
 												  const Array<OneD, NekDouble> &TotField, 
 												  int BndID);
 			
-			// This function calculate the inner product of two vectors (V1 and V2) 
-			// respect to the basis along a boundary region.
-			// outarray is the inner product result multiplied by the normal to the edge (specified by the BndID) 
+			/// This function calculate the inner product of two vectors (V1 and V2) 
+			/// respect to the basis along a boundary region.
+			/// outarray is the inner product result multiplied by the normal to the edge (specified by the BndID) 
 			MULTI_REGIONS_EXPORT void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
 																Array<OneD, const NekDouble> &V2,
 																Array<OneD, NekDouble> &outarray,
 																int BndID);
+			
+			/// Storage space for the boundary to element and boundary to trace map.
+			/// This member variable is really allocated just in case a boundary expansion
+			/// recasting is required at the solver level. Otherwise is the 2 vectors are not filled up.
+			/// If is needed all the funcitons whihc require to use this map do not have to recalculate it anymore.
+			Array<OneD, int> m_BCtoElmMap;
+			Array<OneD, int> m_BCtoEdgMap;
             
         protected:
             /**

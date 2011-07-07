@@ -505,14 +505,8 @@ namespace Nektar
 								  const Array<OneD, const NekDouble> &inarray,
 								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
         {
-            int  i;
-            Array<OneD, NekDouble> e_out_d;
-			
-            for(i= 0; i < (*m_exp).size(); ++i)
-            {
-                e_out_d = out_d + m_phys_offset[i];
-                (*m_exp)[i]->PhysDeriv(dir, inarray+m_phys_offset[i], e_out_d);
-            }
+			Direction edir = DirCartesianMap[dir];
+            v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
         }
 
 	void ExpList::v_PhysDeriv(Direction edir, const Array<OneD, const NekDouble> &inarray,
@@ -2142,8 +2136,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
-
+		
         void ExpList::v_LinearAdvectionDiffusionReactionSolve(
                        const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,

@@ -234,7 +234,7 @@ namespace Nektar
 #ifdef UseContCoeffs
         m_pressure->HelmSolve(F[0], m_pressure->UpdateContCoeffs(),0.0,true);
 #else
-        m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(),0.0);
+		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(),0.0);
 #endif
 
         // Viscous Term forcing
@@ -251,7 +251,6 @@ namespace Nektar
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 #endif
         }
-		
     }
 
     
@@ -370,7 +369,6 @@ namespace Nektar
 		{
 			
 			string type = PBndConds[n]->GetUserDefined().GetEquation(); 
-			int exp_size = PBndExp[n]->GetExpSize();
 			
 			if(type == "H")
 			{
@@ -387,8 +385,6 @@ namespace Nektar
 					V = fields[m_velocity[1]] + offset; 
 					
 					// Calculating vorticity Q = (dv/dx - du/dy)
-					//elmt->PhysDeriv(0,V,Vx);
-					//elmt->PhysDeriv(1,U,Uy);
 					elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
 					elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);					
 					
@@ -433,7 +429,7 @@ namespace Nektar
 			}
 		}
 	}
-	
+		
 	void VelocityCorrectionScheme::CalcPressureBCs3D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
 	{
 		Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
@@ -452,6 +448,8 @@ namespace Nektar
                                 
 				if(type == "H")
 				{
+					PBndExp[n]->SetFourierSpace(MultiRegions::eCoef);
+					
 					int npoints = PBndExp[n]->GetNpoints();
 					
 					Array<OneD, NekDouble> U(npoints);
@@ -517,9 +515,10 @@ namespace Nektar
 					
 					// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n)
 					m_pressure->NormVectorIProductWRTBase(Qx,Qy,PBndExp[n]->UpdateCoeffs(),n);
+					
+					PBndExp[n]->SetFourierSpace(MultiRegions::ePhys);
 				}
 			}
-						
 		}
 		else if(m_HomogeneousType == eHomogeneous2D)
 		{
@@ -535,7 +534,6 @@ namespace Nektar
 		}
 	}
 
-    
     // Evaluate divergence of velocity field. 
     void   VelocityCorrectionScheme::SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields, Array<OneD, Array<OneD, NekDouble> > &Forcing, const NekDouble aii_Dt)
     {                

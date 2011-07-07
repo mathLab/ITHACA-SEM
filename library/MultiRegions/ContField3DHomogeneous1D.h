@@ -108,7 +108,6 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                     bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing);
-
         };
 
         typedef boost::shared_ptr<ContField3DHomogeneous1D>  

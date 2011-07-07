@@ -8,6 +8,8 @@ SET(IncNavierStokesStabilitySource
        ../IncNavierStokesSolver//EquationSystems/AdvectionTerm.cpp
        ../IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/EquationSystems/LinearisedAdvection.cpp
+       ../IncNavierStokesSolver/EquationSystems/AdjointAdvection.cpp
+
        ./IncNavierStokesStability.cpp 
        )
 

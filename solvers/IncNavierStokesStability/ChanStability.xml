@@ -249,7 +249,6 @@
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
        <I PROPERTY="InitialVector" VALUE="Assigned"/>
-                  <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond" />
 
 
     </SOLVERINFO>
@@ -261,8 +260,7 @@
       <P> IO_InfoSteps  = 20    </P>
       <P> Re            = 7500     </P>
       <P> Kinvis        = 1.0/Re     </P>
-      <P> N_slices      = 1     </P>
-
+      <P> kdim          = 20       </P>
     </PARAMETERS>
 
     <VARIABLES>

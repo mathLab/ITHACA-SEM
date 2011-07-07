@@ -64,6 +64,7 @@ void EV_small(
 
 /// Tests for convergence of eigenvalues of H.
 int EV_test(
+		const NekDouble period,
         const int itrn,
         const int kdim,
         Array<OneD, NekDouble> &zvec,
@@ -135,15 +136,16 @@ int main(int argc, char *argv[])
 	NekDouble ts=session->GetParameter("TimeStep");
 	NekDouble numstep=session->GetParameter("NumSteps");
     NekDouble period= ts*numstep;
-	bool useModifiedArnoldi;
-	
+	bool useModifiedArnoldi=false;
 	//Get the initial Arnoldi Vector
+	
 	std::string invecType = session->GetSolverInfo("InitialVector");
 	
 	//NekDouble info_ar= session->GetParameter("InitialVector");
-    session->MatchSolverInfo("EigenvalueAlgorithm","ModifiedArnoldi",useModifiedArnoldi,true);
+    session->MatchSolverInfo("EigenvalueAlgorithm","ModifiedArnoldi",useModifiedArnoldi,false);
+
 	
-    // Print a summary of solver and problem parameters and initialise
+	// Print a summary of solver and problem parameters and initialise
     // the solver.
     equ->PrintSummary(cout);
     equ->DoInitialise();
@@ -155,7 +157,7 @@ int main(int argc, char *argv[])
     {
 		int maxn=1000000; //Maximum size of the problem
         int maxnev=12;  //maximum number of eigenvalues requested
-        int maxncv=30;  //Largest number of basis vector used in Implicitly Restarted Arnoldi
+        int maxncv=200;  //Largest number of basis vector used in Implicitly Restarted Arnoldi
 
         int       nfields= equ->UpdateFields().num_elements()-1;
         int       nq     = equ->UpdateFields()[0]->GetNpoints(); // Number of points in the mesh
@@ -163,11 +165,15 @@ int main(int argc, char *argv[])
         NekDouble tol    = 1e-6; // determines the stopping criterion.
         int       ido    = 0;  //REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
 		int       info;        // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
-        int       nev    = 2;  // Number of eigenvalues to be evaluated
-        int       ncv    = 16; // Length of the Arnoldi factorisation
+        int       nev    = 20;  // Number of eigenvalues to be evaluated
+        int       ncv=100;          // Length of the Arnoldi factorisation
         int       lworkl = 3*ncv*(ncv+2); // Size of work array
 
-
+		
+		//Load values from session file if defined 
+        session->LoadParameter("kdim",  ncv, 16);
+        session->LoadParameter("nvec",  nev, 2);
+        session->LoadParameter("evtol", tol, 1e-6);
 			
         // Error alerts
         ASSERTL0(n   <= maxn,  "N is greater than MAXN");
@@ -218,7 +224,12 @@ int main(int argc, char *argv[])
         int ipntr[14];
 
         int cycle = 0;
-        while(ido != 99)//ido==-1 || ido==1 || ido==0)
+		
+		FILE *pFile;
+		std::string name = session->GetFilename().substr(0,session->GetFilename().find_last_of('.'))+".evl";
+		pFile= fopen (name.c_str(), "w");
+       
+		while(ido != 99)//ido==-1 || ido==1 || ido==0)
         {
             //Routine for eigenvalue evaluation for non-symmetric operators
             Arpack::Dnaupd( ido,        // reverse comm flag
@@ -239,6 +250,10 @@ int main(int argc, char *argv[])
                             info);
 
             cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
+		
+			fprintf (pFile, "Iteration: %i\t ", cycle);
+			fprintf (pFile, "\n");
+
             for(int k=0; k<=nev-1; ++k)
             {
              
@@ -250,11 +265,18 @@ int main(int argc, char *argv[])
 
 				cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
 				" Frequency " << atan2(i,r)/period << endl;
+			
+				fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
+				fprintf (pFile, "\n");
+				
+				
             }
 
             cycle++;
 
             if (ido == 99) break;
+			
+			
 
             ASSERTL0(ido == 1, "Unexpected reverse communication request.");
 
@@ -275,7 +297,9 @@ int main(int argc, char *argv[])
 			
         }
 
-        cout<< "Converged in " << iparam[8] << " iterations" << endl;
+		fclose (pFile);
+        
+		cout<< "Converged in " << iparam[8] << " iterations" << endl;
 
         ASSERTL0(info >= 0," Error with Dnaupd");
 
@@ -312,8 +336,9 @@ int main(int argc, char *argv[])
         //Printing of eigenvalues
         cout << "~~~~~~~~Eigenvalues of the problem~~~~~~~~" <<endl;
 
-        for (int i = nev; i >= 0; --i)
-        {
+        //for (int i = nev; i >= 0; --i)
+        for(int i= 0; i< nconv; ++i)
+		{
             cout << "Eigenvalue n. " << i+1 << " Re= "
             << dr[i]<< "   Im=" << di[i]
             << " Growth= " << log(sqrt(dr[i]*dr[i]+di[i]*di[i]))/period
@@ -324,6 +349,7 @@ int main(int argc, char *argv[])
                 Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdatePhys()[0] , 1);
                 fields[k]->SetPhysState(true);
             }
+			
             std::string file = session->GetFilename().substr(0,session->GetFilename().find_last_of('.'))
             + ".eig." + boost::lexical_cast<std::string>(nev-i);
             equ->WriteFld(file);
@@ -341,14 +367,20 @@ int main(int argc, char *argv[])
         int ntot                = nfields*nq;
         int converged           = 0;
         NekDouble resnorm;
-        std::string evlFile     = session->GetFilename() + ".evl";
+        std::string evlFile     = session->GetFilename().substr(0,session->GetFilename().find_last_of('.')) + ".evl";
         int kdim                = 0;
         int nvec                = 0;
         int nits                = 0;
         NekDouble evtol         = 1e-06;
+		
+		//Computation of the period
+		NekDouble ts=session->GetParameter("TimeStep");
+		NekDouble numstep=session->GetParameter("NumSteps");
+		NekDouble period= ts*numstep;
 
         // Initialise progress output and load session parameters
         ofstream evlout(evlFile.c_str());
+		
         session->LoadParameter("kdim",  kdim,  8);
         session->LoadParameter("nvec",  nvec,  1);
         session->LoadParameter("nits",  nits,  500);
@@ -409,7 +441,7 @@ int main(int argc, char *argv[])
             EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
 
             // Test for convergence.
-            converged = EV_test(i,i,zvec,wr,wi,resnorm,evtol,std::min(i,nvec),evlout);
+            converged = EV_test(period,i,i,zvec,wr,wi,resnorm,evtol,std::min(i,nvec),evlout);
         }
 
         // Continue with full sequence
@@ -441,7 +473,7 @@ int main(int argc, char *argv[])
             EV_small(Tseq, ntot, alpha, kdim, zvec, wr, wi, resnorm);
 
             // Test for convergence.
-            converged = EV_test(i,kdim,zvec,wr,wi,resnorm,evtol,nvec,evlout);
+            converged = EV_test(period,i,kdim,zvec,wr,wi,resnorm,evtol,nvec,evlout);
         }
 
         // Close the runtime info file.
@@ -559,6 +591,7 @@ void EV_small(
  *
  */
 int EV_test(
+		const NekDouble period,
         const int itrn,
         const int kdim,
         Array<OneD, NekDouble> &zvec,
@@ -570,8 +603,8 @@ int EV_test(
         ofstream &evlout)
 {
     int idone = 0;
-    NekDouble re_ev, im_ev, abs_ev, ang_ev, re_Aev, im_Aev;
-    NekDouble period = 0.1;
+    NekDouble re_ev, im_ev, abs_ev, ang_ev, re_Aev, im_Aev;	
+   // NekDouble period = 0.1;
     Array<OneD, NekDouble> resid(kdim);
     for (int i = 0; i < kdim; ++i)
     {

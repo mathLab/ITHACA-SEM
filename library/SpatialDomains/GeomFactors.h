@@ -148,7 +148,7 @@ namespace Nektar
                             const int edge,
                             const LibUtilities::PointsKey &to_key);
             /// Computes the edge tangents from 1D element
-            inline void ComputeTangents(
+            inline void ComputeEdgeTangents(
             	    	    const GeometrySharedPtr &geom2D,
             	    	    const int edge,
             	    	    const LibUtilities::PointsKey &to_key);
@@ -169,9 +169,10 @@ namespace Nektar
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetNormal() const;
 
-	    /// Returns the tangent vectors evaluated at each quadrature point
+	    /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
+	    /// The tangent vectors are set using the function ComputeEdgeTangents.
 	    inline const Array<OneD, const Array<OneD, NekDouble> >
-	    						    &GetTangent() const;                                                            
+	    						    &GetEdgeTangent() const;                                                            
             /// Returns a single tangent vector.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetTangent(int i);
@@ -284,7 +285,7 @@ namespace Nektar
                         Array<OneD, Array<OneD, NekDouble> > &output) const;
 
             /// (2D only) Compute tangents based on a 1D element.
-            virtual void v_ComputeTangents(
+            virtual void v_ComputeEdgeTangents(
             	    	const GeometrySharedPtr &geom2D,
             	    	const int edge,
             	    	const LibUtilities::PointsKey &to_key);
@@ -414,12 +415,12 @@ namespace Nektar
         }
 
 	/// Computes the edge tangents from a 1D element
-	inline void GeomFactors::ComputeTangents(
+	inline void GeomFactors::ComputeEdgeTangents(
 			const GeometrySharedPtr &geom2D,
 			const int edge,
 			const LibUtilities::PointsKey &to_key)
 	{
-	   v_ComputeTangents(geom2D, edge, to_key);
+	   v_ComputeEdgeTangents(geom2D, edge, to_key);
 	}
         /// Computes the edge normals for 1D geometries only.
         inline void GeomFactors::ComputeEdgeNormals(
@@ -457,10 +458,12 @@ namespace Nektar
             return m_normal;
         }
 
-	/// Returns the tangent vectors evaluated at each quadrature point.
+        /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
+	/// The tangent vectors are set using the function ComputeEdgeTangents.
 	inline const Array<OneD, const Array<OneD, NekDouble> >
-						&GeomFactors::GetTangent() const
+						&GeomFactors::GetEdgeTangent() const
 	{
+	     ASSERTL0(m_tangent.num_elements()>0," tangent vectors are not computed for this line");	
 	     return m_tangent;
 	}
         /// Returns a single tangent vector.

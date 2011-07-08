@@ -74,10 +74,13 @@ int main(int argc, char* argv[])
     {
         quiet = true;
     }
+    
     //Test Channel Flow
     Execute("IncNavierStokesSolver","Test_ChanFlow_m3.xml","Channel Flow P=3");
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8.xml","Channel Flow P=8");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_m8_BodyForce.xml","Channel Flow P=8 BodyForce");    
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8_singular.xml","Channel Flow P=8 Singularity Check");
+    Execute("IncNavierStokesSolver","Test_ChanFlow2D_bcsfromfiles.xml","Channel Flow P=5 Boundary Conditions from files");  
     
     //Test Kovasznay Flow
     Execute("IncNavierStokesSolver","Test_KovaFlow_m3.xml","Kovasznay Flow P=3");
@@ -117,12 +120,19 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
     int fail;
-
+    
+	std::string input1=input;
+	input1.erase(input1.end()-4,input1.end());
+        
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
+	boost::filesystem::path filePath1(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input1);	
+	std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
 	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
+	std::string syscommand3 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_1.bc .";	
+	std::string syscommand4 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_3.bc .";
+	std::string syscommand5 = std::string(COPY_COMMAND) + filePath1.file_string() + "_v_3.bc .";	
 
 	int status = system(syscommand.c_str());
     if(status)
@@ -141,7 +151,19 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 			exit(2);
 		}
 
-	}
+	}	
+	//files for the Test_ChanFlow2D_bcsfromfiles.xml
+	if(input=="Test_ChanFlow2D_bcsfromfiles.")
+	{
+	   int status3 = system(syscommand3.c_str());
+	   int status4 = system(syscommand4.c_str());
+	   int status5 = system(syscommand5.c_str());	   
+		if((status3)||(status4)||(status5))
+		{
+			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
+			exit(2);
+		}
+	}	
 
 	input = input+"xml";
 
@@ -174,9 +196,9 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     }
 
 #ifdef _WINDOWS
-	std::string cleanup = "del /Q *.xml *.fld *.chk *.rst";
+	std::string cleanup = "del /Q *.xml *.fld *.chk *.rst *.bc";
 #else
-    std::string cleanup = "rm -f *.xml *.fld *.chk *.rst";
+    std::string cleanup = "rm -f *.xml *.fld *.chk *.rst *.bc";
 #endif
 
     system(cleanup.c_str());
@@ -188,13 +210,20 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
 	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
     int fail;
+    
+	std::string input1=input;
+	input1.erase(input1.end()-4,input1.end());    
 
 
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
-	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);
+	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);	
+	boost::filesystem::path filePath1(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input1);	
 	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
 	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
+	std::string syscommand3 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_1.bc .";	
+	std::string syscommand4 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_3.bc .";
+	std::string syscommand5 = std::string(COPY_COMMAND) + filePath1.file_string() + "_v_3.bc .";	
 
     int status1 = system(syscommand1.c_str());
     if(status1)
@@ -214,6 +243,18 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
 		}
 
 	}
+	//files for the Test_ChanFlow2D_bcsfromfiles.xml
+	if(input=="Test_ChanFlow2D_bcsfromfiles.")
+	{
+	   int status3 = system(syscommand3.c_str());
+	   int status4 = system(syscommand4.c_str());
+	   int status5 = system(syscommand5.c_str());	   
+		if((status3)||(status4)||(status5))
+		{
+			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
+			exit(2);
+		}
+	}
 
 	input = input+"xml";
 
@@ -227,9 +268,9 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
         tests_failed++;
 	}
 #ifdef _WINDOWS
-	std::string cleanup = "del /Q *.xml *.fld *.chk *.rst";
+	std::string cleanup = "del /Q *.xml *.fld *.chk *.rst *.bc";
 #else
-    std::string cleanup = "rm -f *.xml *.fld *.chk *.rst";
+    std::string cleanup = "rm -f *.xml *.fld *.chk *.rst *.bc";
 #endif
 
     system(cleanup.c_str());

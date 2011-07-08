@@ -257,12 +257,11 @@ namespace Nektar
         }
  
 
-        void GeomFactors1D::v_ComputeTangents(
+        void GeomFactors1D::v_ComputeEdgeTangents(
         			const GeometrySharedPtr &geom,
         			const int edge,
         			const LibUtilities::PointsKey &to_key)
-        {
-     	
+        {   	
             int k;
             int nquad= to_key.GetNumPoints();             
             Geometry2DSharedPtr g;

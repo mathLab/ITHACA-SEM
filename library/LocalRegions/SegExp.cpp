@@ -463,8 +463,7 @@ namespace Nektar
      
         void SegExp::PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
                                Array<OneD,NekDouble> &out_ds)
-        {
-      
+        {     
             int    nquad0 = m_base[0]->GetNumPoints();
             Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
             int     coordim  = m_geom->GetCoordim();
@@ -484,7 +483,7 @@ namespace Nektar
                     {
                     	    tangents[k]= Array<OneD, NekDouble>(nquad0); 
                     }
-                    tangents = GetMetricInfo()->GetTangent();
+                    tangents = GetMetricInfo()->GetEdgeTangent();                 
                     ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
                     	    "tangent vectors do not exist: check if a boundary region is defined as I ");
                     // \nabla u \cdot tangent
@@ -1257,8 +1256,7 @@ namespace Nektar
 
 	void SegExp::v_SetUpPhysTangents(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
 	{
-
-	     GetMetricInfo()->ComputeTangents(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());
+	     GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());
 	}
         // Unpack data from input file assuming it comes from the same expansion type
         void SegExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 

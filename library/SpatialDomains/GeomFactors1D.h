@@ -50,7 +50,7 @@ namespace Nektar
                         const LibUtilities::PointsKey &to_key);
 
             ///Set up edge tangents (given 1D element)
-            virtual void v_ComputeTangents(
+            virtual void v_ComputeEdgeTangents(
             	    	const GeometrySharedPtr &geom,
             	    	const int edge,
             	    	const LibUtilities::PointsKey &to_key);            

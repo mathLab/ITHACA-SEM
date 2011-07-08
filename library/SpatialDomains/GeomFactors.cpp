@@ -190,7 +190,7 @@ namespace Nektar
 	/**
 	 *Placeholder function.
 	 */
-	 void GeomFactors::v_ComputeTangents(
+	 void GeomFactors::v_ComputeEdgeTangents(
 	 	 	const GeometrySharedPtr &geom2D,
 	 	 	const int edge,
 	 	 	const LibUtilities::PointsKey &to_key)

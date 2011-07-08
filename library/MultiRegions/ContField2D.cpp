@@ -272,6 +272,8 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
+/******************************************************************************************************************/
+            m_graph2D=graph2D;            
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph2D);
 
@@ -290,7 +292,7 @@ namespace Nektar
                                     CheckIfSingularSystem);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);           
         }
 
 

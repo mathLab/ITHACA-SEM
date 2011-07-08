@@ -90,7 +90,8 @@ namespace Nektar
                                   AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
                                   m_bndCondExpansions,m_bndConditions,
                                   periodicEdges);
-                */            }
+                */            
+            }
         }
 
         // Copy type constructor which declares new boundary conditions
@@ -106,6 +107,7 @@ namespace Nektar
             // Set up boundary conditions for this variable.
             GenerateBoundaryConditionExpansion(graph2D,bcs,
                                                bcs.GetVariable(bc_loc));
+            m_graph2D=graph2D;
             if(DeclareCoeffPhysArrays)
             {
                 EvaluateBoundaryConditions();
@@ -206,7 +208,7 @@ namespace Nektar
                     m_trace        = In.m_trace;
                     m_traceMap     = In.m_traceMap;
                 }
-            }
+            }            
         }
 
 
@@ -260,6 +262,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph2D,bcs,
                                                bcs.GetVariable(bc_loc),
                                                DeclareCoeffPhysArrays);
+            m_graph2D=graph2D;          
             if(DeclareCoeffPhysArrays == true)
             {
                 EvaluateBoundaryConditions();
@@ -346,7 +349,7 @@ namespace Nektar
                     }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
-            }
+            }      
         }
 
         DisContField2D::DisContField2D(LibUtilities::CommSharedPtr &pComm,
@@ -363,6 +366,7 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
                                                DeclareCoeffPhysArrays);
+            m_graph2D=graph2D;            
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph2D);
 
@@ -438,9 +442,9 @@ namespace Nektar
                     m_bndCondExpansions[cnt]  = locExpList;
                     m_bndConditions[cnt++]    = locBCond;
                     string type =m_bndConditions[i]->GetUserDefined().GetEquation();                  
-            	    if(type== "I")
+            	    if((type== "I")||(type=="CalcBC"))
                     {    
-                  	  locExpList->SetUpPhysTangents(*m_exp);        	  
+                  	  locExpList->SetUpPhysTangents(*m_exp);                  	  
                     }                    
                 }
             }
@@ -895,7 +899,7 @@ namespace Nektar
                     }
                 }
             }
-            ASSERTL1(cnt >= nbcs,"Failed to visit all boundary condtiions");
+            ASSERTL1(cnt >= nbcs,"Failed to visit all boundary conditions");
         }
 
         /// Note this routine changes m_trace->m_coeffs space;
@@ -1269,12 +1273,13 @@ namespace Nektar
 														  const NekDouble x2_in,
 														  const NekDouble x3_in)
         {
+        	
             int i,j;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
 
             MultiRegions::ExpListSharedPtr locExpList;
-
+   
             for(i = 0; i < nbnd; ++i)
             {
                 if(time == 0.0 || m_bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
@@ -1283,7 +1288,7 @@ namespace Nektar
                     npoints = locExpList->GetNpoints();
                     Array<OneD,NekDouble> x0(npoints,0.0);
                     Array<OneD,NekDouble> x1(npoints,0.0);
-                    Array<OneD,NekDouble> x2(npoints,0.0);
+                    Array<OneD,NekDouble> x2(npoints,0.0);                                                         
 
                     if(x2_in == NekConstants::kNekUnsetDouble) //homogeneous input case for x2
                     {
@@ -1298,55 +1303,156 @@ namespace Nektar
                     if(m_bndConditions[i]->GetBoundaryConditionType()
                        == SpatialDomains::eDirichlet)
                     {
-                        for(j = 0; j < npoints; j++)
+                    	string filebcs  =  (boost::static_pointer_cast<
+                    	    SpatialDomains::DirichletBoundaryCondition
+                    	    >(m_bndConditions[i])->m_dirichletCondition
+                    	     ).GetEquation();
+                    	string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
+
+//                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
+			if(iffile=="FILE")
                         {
-                            (locExpList->UpdatePhys())[j]
+                             int lenfile = filebcs.length(); 	
+                             filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);          
+                             string var = filebcs.substr(0, filebcs.find_last_of("."));
+                             int len=var.length();
+                             var = var.substr(len-1,len);                                                                    
+                             std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<std::vector<NekDouble> > FieldData;
+                             cout<<"boundary condition from file:"<<filebcs<<endl;
+                             m_graph2D.Import(filebcs,FieldDef, FieldData);
+                             // copy FieldData into locExpList
+			     //ATTENTION!!! always FieldDef[i]->m_field[0] one one field stored                                            
+                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
+                                                 FieldDef[0]->m_fields[0]);                                                
+                             //locExpList->BwdTrans(locExpList->GetCoeffs(),
+                             //		locExpList->UpdatePhys());   
+                                   
+                        }
+                        else
+                        {
+                            for(j = 0; j < npoints; j++)
+                            {
+                               (locExpList->UpdatePhys())[j]
                                 = (boost::static_pointer_cast<
                                    SpatialDomains::DirichletBoundaryCondition
                                    >(m_bndConditions[i])->m_dirichletCondition
                                    ).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
+                            }
 
-                        locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
+                            locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                         locExpList->UpdateCoeffs());
+                        }
                     }
                     else if(m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eNeumann)
                     {
-                        for(j = 0; j < npoints; j++)
+            		string filebcs  =  (boost::static_pointer_cast<
+            			SpatialDomains::NeumannBoundaryCondition
+            			>(m_bndConditions[i])->m_neumannCondition
+            			).GetEquation();
+            	 	string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
+//                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
+			if(iffile=="FILE")
                         {
-                            (locExpList->UpdatePhys())[j]
+
+                             int lenfile = filebcs.length(); 	
+                             filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);                              
+                             string var = filebcs.substr(0, filebcs.find_last_of("."));
+                             int len=var.length();
+                             var = var.substr(len-1,len);     
+                             std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<std::vector<NekDouble> > FieldData;
+                             cout<<"boundary condition from file:"<<filebcs<<endl;
+                             m_graph2D.Import(filebcs,FieldDef, FieldData);
+                             // copy FieldData into locExpList
+			     //ATTENTION!!! always FieldDef[i]->m_field[0] one one field stored                                            
+                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
+                                             FieldDef[0]->m_fields[0]);                                                                                     
+                             //locExpList->BwdTrans(locExpList->GetCoeffs(),
+                             // 		locExpList->UpdatePhys());
+                             locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                            locExpList->UpdateCoeffs());                                    
+
+                        }
+                        else
+                        {	
+                            for(j = 0; j < npoints; j++)
+                            {
+                                (locExpList->UpdatePhys())[j]
                                 = (boost::static_pointer_cast<
                                    SpatialDomains::NeumannBoundaryCondition
                                    >(m_bndConditions[i])->m_neumannCondition
                                    ).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
-                        locExpList->IProductWRTBase(locExpList->GetPhys(),
+                            }
+                            locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
+                        }
                     }
                     else if(m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eRobin)
                     {
-                        for(j = 0; j < npoints; j++)
-                        {
-                            (locExpList->UpdatePhys())[j]
-                                = (boost::static_pointer_cast<
-                                   SpatialDomains::RobinBoundaryCondition
-                                   >(m_bndConditions[i])->m_robinFunction).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
+            		string filebcs  =  (boost::static_pointer_cast<
+            			SpatialDomains::RobinBoundaryCondition
+            			>(m_bndConditions[i])->m_robinFunction
+            			).GetEquation();
+            		string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
 
-                        locExpList->IProductWRTBase(locExpList->GetPhys(),
+//                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
+			if(iffile=="FILE")
+                        {
+                             int lenfile = filebcs.length(); 	
+                             filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);        
+                             string var = filebcs.substr(0, filebcs.find_last_of("."));
+                             int len=var.length();
+                             var = var.substr(len-1,len);                               
+                             std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<std::vector<NekDouble> > FieldData;
+
+                             m_graph2D.Import(filebcs,FieldDef, FieldData);
+
+                             // copy FieldData into locExpList
+			     //ATTENTION!!! always FieldDef[i]->m_field[0] one one field stored                                         
+                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
+                                                 FieldDef[0]->m_fields[0]);                                                
+
+                             locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
 
-                        // put primitive coefficient into the physical space storage
-                        for(j = 0; j < npoints; j++)
-                        {
-                            (locExpList->UpdatePhys())[j]
-                                = (boost::static_pointer_cast<
-                                   SpatialDomains::RobinBoundaryCondition
-                                   >(m_bndConditions[i])->m_robinPrimitiveCoeff).Evaluate(x0[j],x1[j],x2[j],time);
+                             // put primitive coefficient into the physical space storage
+                             for(j = 0; j < npoints; j++)
+                             {
+                                    (locExpList->UpdatePhys())[j]
+                                	= (boost::static_pointer_cast<
+                                	SpatialDomains::RobinBoundaryCondition
+                                	>(m_bndConditions[i])->m_robinPrimitiveCoeff).Evaluate(x0[j],x1[j],x2[j],time);
+                             }
+                             
                         }
-                    }
+                        else
+                        {
+         	    
+                        	for(j = 0; j < npoints; j++)
+                        	{
+                        		(locExpList->UpdatePhys())[j]
+                        			= (boost::static_pointer_cast<
+                        				SpatialDomains::RobinBoundaryCondition
+                        				>(m_bndConditions[i])->m_robinFunction).Evaluate(x0[j],x1[j],x2[j],time);
+                        	}
+
+                        	locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
+
+                                // put primitive coefficient into the physical space storage
+                                for(j = 0; j < npoints; j++)
+                                {
+                                	(locExpList->UpdatePhys())[j]
+                                	= (boost::static_pointer_cast<
+                                		SpatialDomains::RobinBoundaryCondition
+                                		>(m_bndConditions[i])->m_robinPrimitiveCoeff).Evaluate(x0[j],x1[j],x2[j],time);
+                                }
+                        }
+                    }    
                     else
                     {
                         ASSERTL0(false,"This type of BC not implemented yet");

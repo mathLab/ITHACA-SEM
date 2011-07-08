@@ -237,7 +237,8 @@ namespace Nektar
                         const std::string variable,
                         vector<map<int,int> > & periodicVertices,
                         map<int,int>& periodicEdges);
-        protected:
+	    SpatialDomains::MeshGraph2D m_graph2D;
+        protected:        	
             /**
              * \brief An object which contains the discretised
              * boundary conditions.
@@ -250,7 +251,8 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional
              * expansion.
              */
-            Array<OneD,MultiRegions::ExpListSharedPtr>       m_bndCondExpansions;                    	
+            Array<OneD,MultiRegions::ExpListSharedPtr>       m_bndCondExpansions;              
+            
 
             /**
              * \brief An array which contains the information about

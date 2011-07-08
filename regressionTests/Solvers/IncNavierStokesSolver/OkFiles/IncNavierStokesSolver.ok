@@ -8,6 +8,14 @@ L inf error (variable v): 2.77645e-16
 L 2 error (variable p): 7.08552e-15
 L inf error (variable p): 5.81757e-14
 ----------------------------------------
+Test_ChanFlow_m8_BodyForce.xml
+L 2 error (variable u) : 9.90432e-06
+L inf error (variable u) : 1.40068e-05
+L 2 error (variable v) : 0
+L inf error (variable v) : 4.38057e-16
+L 2 error (variable p) : 1.88534e-14
+L inf error (variable p) : 4.66903e-14
+----------------------------------------
 Test_ChanFlow_m8.xml
 L 2 error (variable u): 5.22576e-16
 L inf error (variable u): 1.18516e-14
@@ -15,6 +23,14 @@ L 2 error (variable v): 1.93624e-16
 L inf error (variable v): 8.1589e-16
 L 2 error (variable p): 1.64561e-14
 L inf error (variable p): 7.41629e-14
+----------------------------------------
+Test_ChanFlow2D_bcsfromfiles.xml
+L 2 error (variable u) : 6.20621e-16
+L inf error (variable u) : 5.05151e-15
+L 2 error (variable v) : 5.88457e-16
+L inf error (variable v) : 2.07194e-15
+L 2 error (variable p) : 1.47409e-14
+L inf error (variable p) : 6.35048e-14
 ----------------------------------------
 Test_KovaFlow_m3.xml
 L 2 error (variable u): 0.34362

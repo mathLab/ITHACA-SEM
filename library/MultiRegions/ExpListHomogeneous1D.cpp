@@ -169,16 +169,16 @@ namespace Nektar
 
                 if(UseContCoeffs)
                 {
-                    cnt    += m_planes[n]->GetContNcoeffs();
+                    cnt1    += m_planes[n]->GetContNcoeffs();
                 }
                 else
                 {
-                    cnt    += m_planes[n]->GetNcoeffs();
+                    cnt1    += m_planes[n]->GetNcoeffs();
                 }
-                cnt1   += m_planes[n]->GetTotPoints();
+                cnt   += m_planes[n]->GetTotPoints();
             }
         }
-
+		
         void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
         {
             if(m_useFFT)

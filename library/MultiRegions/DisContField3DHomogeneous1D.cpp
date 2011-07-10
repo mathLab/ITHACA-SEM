@@ -308,35 +308,36 @@ namespace Nektar
 			Array<OneD, NekDouble> tmp_BC;
 						
 			int cnt = 0;
-			int exp_size, elmtID, boundaryID, offset, exp_dim, pos;
+			int pos = 0;
+			int exp_size, exp_size_per_plane, elmtID, boundaryID, offset, exp_dim;
 			
-			for(int n = 0; n < m_bndConditions.num_elements(); ++n)
+			for(int k = 0; k < m_planes.num_elements(); k++)
 			{
-				if(n == BndID)
+				for(int n = 0; n < m_bndConditions.num_elements(); ++n)
 				{
 					exp_size = m_bndCondExpansions[n]->GetExpSize();
-					pos = 0;
-					for(int i = 0; i < exp_size; i++)
+					exp_size_per_plane = exp_size/m_planes.num_elements();
+					
+					for(int i = 0; i < exp_size_per_plane; i++)
 					{
-						elmtID = m_BCtoElmMap[cnt];
-						boundaryID = m_BCtoEdgMap[cnt];
+						if(n == BndID)
+						{
+							elmtID = m_BCtoElmMap[cnt];
+							boundaryID = m_BCtoEdgMap[cnt];
 						
-						exp_dim = m_bndCondExpansions[n]->GetExp(i)->GetTotPoints();
-						offset = GetPhys_Offset(elmtID);
+							exp_dim = m_bndCondExpansions[n]->GetExp(i+k*exp_size_per_plane)->GetTotPoints();
+							offset = GetPhys_Offset(elmtID);
 						
-						elmt = GetExp(elmtID);
+							elmt = GetExp(elmtID);
 						
-						temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i));
+							temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i+k*exp_size_per_plane));
 		
-						elmt->GetEdgePhysVals(boundaryID,temp_BC_exp,tmp_Tot = TotField + offset,tmp_BC = BndVals + pos);
+							elmt->GetEdgePhysVals(boundaryID,temp_BC_exp,tmp_Tot = TotField + offset,tmp_BC = BndVals + pos);
 						
-						pos += exp_dim;
+							pos += exp_dim;
+						}
 						cnt++;
 					}
-				}
-				else
-				{
-					cnt += m_bndCondExpansions[n]->GetExpSize();
 				}
 			}
 		}
@@ -356,37 +357,35 @@ namespace Nektar
 			bool NegateNormals;
 			
 			int cnt = 0;
-			int exp_size, elmtID, boundaryID, Phys_offset, Coef_offset;
+			int exp_size, exp_size_per_plane, elmtID, boundaryID, Phys_offset, Coef_offset;
 			
-			for(int n = 0; n < m_bndConditions.num_elements(); ++n)
+			for(int k = 0; k < m_planes.num_elements(); k++)
 			{
-				if(n == BndID)
+				for(int n = 0; n < m_bndConditions.num_elements(); ++n)
 				{
 					exp_size = m_bndCondExpansions[n]->GetExpSize();
+					exp_size_per_plane = exp_size/m_planes.num_elements();
 					
-					for(int i = 0; i < exp_size; i++)
+					for(int i = 0; i < exp_size_per_plane; i++)
 					{
-						elmtID = m_BCtoElmMap[cnt];
-						boundaryID = m_BCtoEdgMap[cnt];
+						if(n == BndID)
+						{
+							elmtID = m_BCtoElmMap[cnt];
+							boundaryID = m_BCtoEdgMap[cnt];
 						
-						Phys_offset = m_bndCondExpansions[n]->GetPhys_Offset(i);
-						Coef_offset = m_bndCondExpansions[n]->GetCoeff_Offset(i);
+							Phys_offset = m_bndCondExpansions[n]->GetPhys_Offset(i+k*exp_size_per_plane);
+							Coef_offset = m_bndCondExpansions[n]->GetCoeff_Offset(i+k*exp_size_per_plane);
 						
-						elmt = GetExp(elmtID);
+							elmt = GetExp(elmtID);
+							temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i+k*exp_size_per_plane));
 						
-						temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i));
+							// Decide if normals facing outwards
+							NegateNormals = (elmt->GetEorient(boundaryID) == StdRegions::eForwards)? false:true;
 						
-						// Decide if normals facing outwards
-						NegateNormals = (elmt->GetEorient(boundaryID) == StdRegions::eForwards)? false:true;
-						
-						temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + Phys_offset,tmp_V2 = V2 + Phys_offset,tmp_outarray = outarray + Coef_offset,NegateNormals);
-			
+							temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + Phys_offset,tmp_V2 = V2 + Phys_offset,tmp_outarray = outarray + Coef_offset,NegateNormals);
+						}
 						cnt++;
 					}
-				}
-				else
-				{
-					cnt += m_bndCondExpansions[n]->GetExpSize();
 				}
 			}
 		}

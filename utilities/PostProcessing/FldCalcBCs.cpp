@@ -368,13 +368,15 @@ int main(int argc, char *argv[])
             Array<OneD,NekDouble> x1(nq1D);  
             outfieldx[region]->GetCoords(x0,x1);            
             //u,v equation:
-            
+cout<<"region="<<region<<" nq1D="<<nq1D<<endl;            
             for(int j=0; j<nq1D; j++)
             {
+/*            	              	    
             	(outfieldx[region]->UpdatePhys())[j] = 
             	   20*sin(2*x0[j]);
             	(outfieldy[region]->UpdatePhys())[j] =
-            	   20*2*cos(2*x0[j])/3.14;
+            	   20*2*cos(2*x0[j])/3.14159265;		   
+*/		
             }
             	   
                

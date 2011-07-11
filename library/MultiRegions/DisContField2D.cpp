@@ -1272,8 +1272,7 @@ namespace Nektar
         void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
 														  const NekDouble x2_in,
 														  const NekDouble x3_in)
-        {
-        	
+        {       	
             int i,j;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
@@ -1321,13 +1320,9 @@ namespace Nektar
                              std::vector<std::vector<NekDouble> > FieldData;
                              cout<<"boundary condition from file:"<<filebcs<<endl;
                              m_graph2D.Import(filebcs,FieldDef, FieldData);
-                             // copy FieldData into locExpList
-			     //ATTENTION!!! always FieldDef[i]->m_field[0] one one field stored                                            
+                             // copy FieldData into locExpList                                            
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
-                                                 FieldDef[0]->m_fields[0]);                                                
-                             //locExpList->BwdTrans(locExpList->GetCoeffs(),
-                             //		locExpList->UpdatePhys());   
-                                   
+                                                 FieldDef[0]->m_fields[0]);                                       
                         }
                         else
                         {
@@ -1355,7 +1350,6 @@ namespace Nektar
 //                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
 			if(iffile=="FILE")
                         {
-
                              int lenfile = filebcs.length(); 	
                              filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);                              
                              string var = filebcs.substr(0, filebcs.find_last_of("."));
@@ -1365,15 +1359,9 @@ namespace Nektar
                              std::vector<std::vector<NekDouble> > FieldData;
                              cout<<"boundary condition from file:"<<filebcs<<endl;
                              m_graph2D.Import(filebcs,FieldDef, FieldData);
-                             // copy FieldData into locExpList
-			     //ATTENTION!!! always FieldDef[i]->m_field[0] one one field stored                                            
+                             // copy FieldData into locExpList                                           
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
-                                             FieldDef[0]->m_fields[0]);                                                                                     
-                             //locExpList->BwdTrans(locExpList->GetCoeffs(),
-                             // 		locExpList->UpdatePhys());
-                             locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                            locExpList->UpdateCoeffs());                                    
-
+                                             FieldDef[0]->m_fields[0]);
                         }
                         else
                         {	
@@ -1397,7 +1385,7 @@ namespace Nektar
             			>(m_bndConditions[i])->m_robinFunction
             			).GetEquation();
             		string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
-
+//Never tested!!!
 //                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
 			if(iffile=="FILE")
                         {
@@ -1411,13 +1399,11 @@ namespace Nektar
 
                              m_graph2D.Import(filebcs,FieldDef, FieldData);
 
-                             // copy FieldData into locExpList
-			     //ATTENTION!!! always FieldDef[i]->m_field[0] one one field stored                                         
+                             // copy FieldData into locExpList                                       
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
                                                  FieldDef[0]->m_fields[0]);                                                
-
-                             locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                    locExpList->UpdateCoeffs());
+                             //locExpList->IProductWRTBase(locExpList->GetPhys(),
+                             //                       locExpList->UpdateCoeffs());
 
                              // put primitive coefficient into the physical space storage
                              for(j = 0; j < npoints; j++)

@@ -25,12 +25,12 @@ L 2 error (variable p): 1.64561e-14
 L inf error (variable p): 7.41629e-14
 ----------------------------------------
 Test_ChanFlow2D_bcsfromfiles.xml
-L 2 error (variable u) : 6.20621e-16
-L inf error (variable u) : 5.05151e-15
-L 2 error (variable v) : 5.88457e-16
-L inf error (variable v) : 2.07194e-15
-L 2 error (variable p) : 1.47409e-14
-L inf error (variable p) : 6.35048e-14
+L 2 error (variable u) : 2.17082e-13
+L inf error (variable u) : 1.21858e-12
+L 2 error (variable v) : 2.2939e-13
+L inf error (variable v) : 2.17804e-13
+L 2 error (variable p) : 7.65953e-11
+L inf error (variable p) : 1.5213e-10
 ----------------------------------------
 Test_KovaFlow_m3.xml
 L 2 error (variable u): 0.34362

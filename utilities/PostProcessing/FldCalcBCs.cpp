@@ -378,9 +378,8 @@ cout<<"region="<<region<<" nq1D="<<nq1D<<endl;
             	   20*2*cos(2*x0[j])/3.14159265;		   
 */		
             }
-            	   
-               
-            //
+
+            
             Array<OneD, Array<OneD, NekDouble> > tangents;
             tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
 
@@ -390,9 +389,10 @@ cout<<"region="<<region<<" nq1D="<<nq1D<<endl;
             }   
             
             // need the tangents related to the expList1D outfieldx[region]
-            //tangents = geom->GetTangent1D();
-            //tangents = outfieldx[region]->GetGeom()->GetMetricInfo()->GetTangent1D();
-//cout<<"tangent x="<<tangents[0][1]<<"  y="<<tangents[1][1]<<endl;            
+
+           LocalRegions::SegExpSharedPtr  bndSegExp =  boost::dynamic_pointer_cast<LocalRegions::SegExp>(outfieldx[region]->GetExp(0)); 
+           tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
+cout<<"tangent x="<<tangents[0][0]<<" y="<<tangents[1][0]<<endl;
 	}
 	
 	void WriteBcs(string variable, int region, string fieldfile,SpatialDomains::MeshGraphSharedPtr &mesh,

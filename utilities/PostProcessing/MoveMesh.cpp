@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     else
     {
 */    
-    	    //nfields = fielddef[0]->m_fields.size();   
+    	    //fielddef[0]->m_fields.size() can count also pressure be careful!!       	    
             nfields = fielddef[0]->m_fields.size();       	    
   //  }
  
@@ -202,16 +202,22 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble> y_c(nvertl);        
     Array<OneD, NekDouble> Deltaold(nvertl,-200);
     for(int i=0; i<nvertl; i++)
-    {  
+    {
+      //NekDouble u_min=100;      	    
       ASSERTL0(yold_up[i]>yold_low[i],"problem with the curve points");
       for(int j=0; j<nq; j++)
-      {     	 
+      {   
       	 //u is along y in this case..    NB:streak=u+y???
          if(xold_up[i]== x[j]  &&  (fields[1]->GetPhys()[j]+y[j]) < 0.001  && y[j]>=yold_low[i] && y[j]<=yold_up[i])
          {
+              //if(   (fields[1]->GetPhys()[j]+y[j])< abs(u_min))
+              //{
       	      y_c[i] = y[j];
       	      x_c[i] = x[j];
-      	      Deltaold[i]= yold_up[i] - y_c[i];     	       
+      	      Deltaold[i]= yold_up[i] - y_c[i];    
+      	      //u_min= (fields[1]->GetPhys()[j]+y[j]);
+      	      //}
+      	      
          }         	          	 
       }
       if(Deltaold[i]==-200)
@@ -686,5 +692,6 @@ cout<<"writing.. v:"<<nextVertexNumber<<endl;
        	    }	
        	    meshnew->LinkEndChild(elementnew);
        	    docnew.SaveFile( newfile ); 
+       	    cout<<"new file:"<<newfile<<endl;
 	   
 	}

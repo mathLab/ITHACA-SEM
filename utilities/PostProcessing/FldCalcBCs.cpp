@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
        	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldy);
     void WriteBcs(string variable, int region, string fieldfile, SpatialDomains::MeshGraphSharedPtr &mesh, 
     	    MultiRegions::ExpListSharedPtr &outregionfield);
-    
+    void WriteFld(string outfile, SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD, MultiRegions::ExpListSharedPtr> &fields );
     
     int i,j;
     if(argc != 3)
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  \n");
         exit(1);
     }
-
+    
     LibUtilities::CommSharedPtr vComm
             = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
     //----------------------------------------------
@@ -66,19 +66,24 @@ int main(int argc, char *argv[])
  
     // Define Expansion   
     Array<OneD, MultiRegions::ExpListSharedPtr> fields;   
-    int nfields;   
+    int nfields; 
+/*   
     if(boundaryConditions->GetSolverInfo("SOLVERTYPE")=="CoupledLinearisedNS")
     {
             //pressure is subtracted
-            //nfields = fields.num_elements()-1;
-            nfields = fielddef[0]->m_fields.size()-1;            
+            //nfields = fields.num_elements();
+            nfields = fielddef[0]->m_fields.size();            
     }
     else
     {
     	    //nfields = fielddef[0]->m_fields.size();   
             nfields = fielddef[0]->m_fields.size()-1;       	    
     }
- 
+*/
+    //fields.num_elements() is empty!!!
+    //fielddef[0]->m_fields.size() can counts also pressure be careful!!!
+    nfields= fielddef[0]->m_fields.size();
+cout<<"nfields"<<nfields<<endl;     
     SetFields(graphShPt,boundaryConditions,fields,nfields,vComm);
     //----------------------------------------------   
      
@@ -92,16 +97,17 @@ int main(int argc, char *argv[])
         fields[j]->BwdTrans(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());
     }
     //----------------------------------------------    
-   
+    
     // determine the I regions
     //hypothesis: the number of I regions is the same for all the variables
     //hypothesis: all the I regions have the same nq points
     int nIregions, lastIregion,nq1D; 
-    const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();    
+    const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();      
     Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
-    
+  
     nIregions=0;
     int nbnd= bndConditions.num_elements();
+  
     for(int r=0; r<nbnd; r++)
     {
     	  if(bndConditions[r]->GetUserDefined().GetEquation()=="CalcBC")
@@ -115,7 +121,8 @@ int main(int argc, char *argv[])
     
     //set output fields
     Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions();   
-    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldy= fields[1]->GetBndCondExpansions();        
+    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldy= fields[1]->GetBndCondExpansions(); 
+    
     //--------------------------------------------------------
     
     //manipulate data 
@@ -123,13 +130,34 @@ int main(int argc, char *argv[])
     int coordim = graphShPt->GetMeshDimension();       
     for(int s=0; s< Iregions.num_elements(); s++)
     {
+  	    
            if(Iregions[s]!=-1)
            {             			
-       	        Manipulate(Iregions[s],coordim, fields, bndfieldx,bndfieldy);
+       	        Manipulate(Iregions[s],coordim, fields, bndfieldx,bndfieldy);       	       
       	   }
-    } 
+
+    }
+    //--------------------------------------------------------------------------------------
+  
+/*
+    //add y to obtain the streak u=u'+y and write fld file
+    int nq=fields[0]->GetTotPoints();
+    Array<OneD, NekDouble> x(nq,0.0);
+    Array<OneD, NekDouble> y(nq,0.0);
+    fields[0]->GetCoords(x,y); 
+    for(int i=0; i<nq; i++)
+    {
+    	(fields[1]->UpdatePhys())[i]=(fields[1]->GetPhys())[i]+y[i];   	
+    }
+      
+      //write fld file for the streak
+    string   file = fieldfile.substr(0,fieldfile.find_last_of("."));
+    file= file+"_streak.fld";
+    WriteFld(file,graphShPt,fields);
+    	
     //---------------------------------------------------------------
-    
+*/    
+
     //write bcs files: one for each I region and each variable
     for(int s=0; s<nbnd; s++)
     {    	 
@@ -140,7 +168,8 @@ int main(int argc, char *argv[])
       	        var="v";
       	        WriteBcs(var,Iregions[s], fieldfile,graphShPt,bndfieldy[Iregions[s]]);      	      	      
       	  }
-     }    
+     }
+     
 }
 				
 	// Define Expansion       		
@@ -417,5 +446,49 @@ cout<<"tangent x="<<tangents[0][0]<<" y="<<tangents[1][0]<<endl;
 	
 	}
     
-    
+        void WriteFld(string outfile,SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
+        {
+            //variables array dimension is defined by fields!!!	
+            Array<OneD, std::string> variables(fields.num_elements());   
+            if( variables.num_elements()==2)
+            {            	    
+               variables[0]="u";            
+               variables[1]="v";
+            }
+            else
+            {
+            	    ASSERTL0(false, " a 2D fld solution of a SteadyAdvectionDiffusion equation  is expected ");
+            }
+            Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(fields.num_elements());
+           
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            = fields[0]->GetFieldDefinitions();
+         
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+            //this cycle is needed in order to use the the appendfielddata with coeffs function!!!
+            for(int i = 0; i < fields.num_elements(); ++i)
+            {
+            	if (fields[i]->GetPhysState()==true)
+            	{	
+                    fields[i]->FwdTrans_IterPerExp(fields[i]->GetPhys(),fields[i]->UpdateCoeffs());
+                }
+                fieldcoeffs[i] = fields[i]->UpdateCoeffs();
+            }
+            
+            // copy Data into FieldData and set variable
+            for(int j = 0; j < fieldcoeffs.num_elements(); ++j)
+            {
+            	//fieldcoeffs[j] = fields[j]->UpdateCoeffs();             	    
+            	for(int i = 0; i < FieldDef.size(); ++i)
+          	 {
+          	     // Could do a search here to find correct variable
+          	     FieldDef[i]->m_fields.push_back(variables[j]);
+          	     //remark: appendfielddata without fieldcoeffs input gives always the first field!!!
+          	     //fields[0]->AppendFieldData(FieldDef[i], FieldData[i]);          	     
+          	     fields[0]->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[j]);
+          	 }
+            }
+            mesh->Write(outfile,FieldDef,FieldData);            
+            
+        }
     

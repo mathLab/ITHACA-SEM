@@ -376,6 +376,28 @@ namespace Nektar
             return false;
         }
 
+        bool SessionReader::DefinesTag(const std::string& pName)
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            TagMap::iterator vTagIterator = m_tags.find(vName);
+            return (vTagIterator != m_tags.end());
+        }
+
+        void SessionReader::SetTag(const std::string& pName, const std::string& pValue)
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            m_tags[vName] = pValue;
+        }
+
+        const std::string SessionReader::GetTag(const std::string& pName)
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            TagMap::iterator vTagIterator = m_tags.find(vName);
+            ASSERTL0(vTagIterator != m_tags.end(),
+                     "Requested tag does not exist.");
+            return vTagIterator->second;
+        }
+
         void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
         {
             TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");

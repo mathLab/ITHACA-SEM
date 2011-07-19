@@ -56,6 +56,7 @@ namespace Nektar
         typedef std::map<std::string, std::string>  ExpressionMap;
         typedef std::vector<std::string>            VariableList;
         typedef std::map<std::string, EquationSharedPtr>  EquationMap;
+        typedef std::map<std::string, std::string>  TagMap;
 
         enum FunctionType
         {
@@ -118,6 +119,10 @@ namespace Nektar
             LIB_UTILITIES_EXPORT bool DefinesFunction(const std::string& name) const;
             LIB_UTILITIES_EXPORT bool DefinesFunction(const std::string& name, const std::string& variable) const;
 
+            LIB_UTILITIES_EXPORT bool DefinesTag(const std::string& pName);
+            LIB_UTILITIES_EXPORT void SetTag(const std::string& pName, const std::string& pValue);
+            LIB_UTILITIES_EXPORT const std::string GetTag(const std::string& pName);
+
         private:
             std::string                 m_filename;
             TiXmlDocument*              m_xmlDoc;
@@ -128,6 +133,7 @@ namespace Nektar
             ExpressionMap               m_expressions;
             FunctionMap                 m_functions;
             VariableList                m_variables;
+            TagMap                      m_tags;
 
             void ReadParameters(TiXmlElement *conditions);
             void ReadSolverInfo(TiXmlElement *conditions);

@@ -62,6 +62,11 @@ namespace Nektar
         return Type::Instance();
     }
 
+    // Default constructor
+    EquationSystem::EquationSystem(void)
+    {
+    }
+
     /**
      * This constructor is protected as the objects of this class are never
      * instantiated directly.

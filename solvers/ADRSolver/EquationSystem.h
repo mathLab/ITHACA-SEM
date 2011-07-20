@@ -63,6 +63,8 @@ namespace Nektar
     class EquationSystem : public ADRBase
     {
     public:
+        EquationSystem(void);
+
         /// Destructor
         virtual ~EquationSystem();
 

@@ -46,7 +46,8 @@ namespace Nektar
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
-            return MemoryManager<Poisson>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<Poisson>::AllocateSharedPtr(pComm, pSession);
+            return p;
         }
         /// Name of class
         static std::string className1;

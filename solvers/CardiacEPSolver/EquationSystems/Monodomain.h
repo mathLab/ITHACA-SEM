@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MONODOMAIN_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MONODOMAIN_H
 
-#include <ADRSolver/EquationSystems/UnsteadySystem.h>
+#include <Auxiliary/UnsteadySystem.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
 
 namespace Nektar

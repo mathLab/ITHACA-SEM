@@ -37,7 +37,7 @@
 #include <cstdlib>
 #include <cmath>
 
-#include <ADRSolver/EquationSystem.h>
+#include <Auxiliary/EquationSystem.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;

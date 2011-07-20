@@ -35,7 +35,7 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_ADVECTIONDIFFUSION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_ADVECTIONDIFFUSION_H
 
-#include <ADRSolver/EquationSystem.h>
+#include <Auxiliary/EquationSystem.h>
 
 namespace Nektar
 {
@@ -47,7 +47,8 @@ namespace Nektar
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<SteadyAdvectionDiffusion>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusion>::AllocateSharedPtr(pComm, pSession);
+            return p;
         }
         
         /// Name of class

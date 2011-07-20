@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYSYSTEM_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYSYSTEM_H
 
-#include <ADRSolver/EquationSystem.h>
+#include <Auxiliary/EquationSystem.h>
 #include <time.h>
 
 namespace Nektar

@@ -41,7 +41,7 @@
 #include <cmath> 
 #include <iomanip>
 
-#include <ADRSolver/EquationSystem.h>
+#include <Auxiliary/EquationSystem.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/LinearAlgebra/Arpack.hpp>

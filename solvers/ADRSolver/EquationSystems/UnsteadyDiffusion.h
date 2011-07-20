@@ -1,7 +1,7 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYDIFFUSION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYDIFFUSION_H
 
-#include <ADRSolver/EquationSystems/UnsteadySystem.h>
+#include <Auxiliary/UnsteadySystem.h>
 
 namespace Nektar
 {
@@ -12,7 +12,8 @@ namespace Nektar
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
-            return MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pComm, pSession);
+            return p;
         }
         /// Name of class
         static std::string className;

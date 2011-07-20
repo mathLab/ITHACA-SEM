@@ -36,7 +36,7 @@
 #include <string>
 using std::string;
 
-#include <ADRSolver/EquationSystem.h>
+#include <Auxiliary/EquationSystem.h>
 
 namespace Nektar
 {

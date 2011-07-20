@@ -47,7 +47,8 @@ namespace Nektar
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<SteadyAdvectionDiffusionReaction>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusionReaction>::AllocateSharedPtr(pComm, pSession);
+            return p;
         }
         
         /// Name of class

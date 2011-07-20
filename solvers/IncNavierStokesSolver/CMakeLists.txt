@@ -1,5 +1,5 @@
 SET(IncNavierStokesSolverSource 
-       ../ADRSolver/EquationSystem.cpp
+       ../Auxiliary/EquationSystem.cpp
        ../Auxiliary/ADRBase.cpp
        ./EquationSystems/CoupledLinearNS.cpp
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp

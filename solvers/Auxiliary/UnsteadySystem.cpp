@@ -38,7 +38,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/BasicUtils/Timer.h>
-#include <ADRSolver/EquationSystems/UnsteadySystem.h>
+#include <Auxiliary/UnsteadySystem.h>
 
 namespace Nektar
 {

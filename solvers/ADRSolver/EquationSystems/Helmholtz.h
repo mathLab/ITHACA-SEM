@@ -47,7 +47,8 @@ namespace Nektar
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<Helmholtz>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<Helmholtz>::AllocateSharedPtr(pComm, pSession);
+            return p;
         }
 
         /// Name of class

@@ -1,7 +1,7 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_LAPLACE_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_LAPLACE_H
 
-#include <ADRSolver/EquationSystem.h>
+#include <Auxiliary/EquationSystem.h>
 
 namespace Nektar
 {
@@ -13,7 +13,8 @@ namespace Nektar
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<Laplace>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<Laplace>::AllocateSharedPtr(pComm, pSession);
+            return p;
         }
         
         /// Name of class

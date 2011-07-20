@@ -207,6 +207,11 @@ namespace Nektar
             return m_fields;
         }
 
+        inline Array<OneD, MultiRegions::ExpListSharedPtr> &UpdateForces(void)
+        {
+            return m_forces;
+        }
+
 	/// Return final time
 	inline NekDouble GetFinalTime()
 	{
@@ -369,47 +374,45 @@ namespace Nektar
         }
 
         NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
-                            const NekDouble x2j, const NekDouble time)
+                                  const NekDouble x2j, const NekDouble time)
         {
             return v_AdvectionSphere(x0j, x1j, x2j, time);
         }
 
         NekDouble Morphogenesis(const int field, const NekDouble x0j,
-                            const NekDouble x1j, const NekDouble x2j,
-                            const NekDouble time)
+                                const NekDouble x1j, const NekDouble x2j,
+                                const NekDouble time)
         {
             return v_Morphogenesis(field, x0j, x1j, x2j, time);
         }
 		
-		/// Number of Quadrature points used to work out the error
-		int  m_NumQuadPointsError;
-		
-		bool m_UseContCoeff;
-		
-		///Parameter for homogeneous expansions
-		
-		enum HomogeneousType
-		{
-			eHomogeneous1D,
-			eHomogeneous2D,
-			eHomogeneous3D,
-			eNotHomogeneous
-		};
-		
-		bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
-		
-		enum HomogeneousType m_HomogeneousType;
-		
-		NekDouble m_LhomX;           ///< physical length in X direction (if homogeneous) 
-		NekDouble m_LhomY;           ///< physical length in Y direction (if homogeneous)
-		NekDouble m_LhomZ;           ///< physical length in Z direction (if homogeneous)
-		
-		int m_npointsX;              ///< number of points in X direction (if homogeneous)
-		int m_npointsY;              ///< number of points in Y direction (if homogeneous)
-		int m_npointsZ;              ///< number of points in Z direction (if homogeneous)
-		
-		int m_HomoDirec;             ///< number of homogenous directions
-		
+        /// Number of Quadrature points used to work out the error
+        int  m_NumQuadPointsError;
+        bool m_UseContCoeff;
+	
+        ///Parameter for homogeneous expansions
+        enum HomogeneousType
+        {
+            eHomogeneous1D,
+            eHomogeneous2D,
+            eHomogeneous3D,
+            eNotHomogeneous
+        };
+	
+        bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
+	
+        enum HomogeneousType m_HomogeneousType;
+	
+        NekDouble m_LhomX; ///< physical length in X direction (if homogeneous)
+        NekDouble m_LhomY; ///< physical length in Y direction (if homogeneous)
+        NekDouble m_LhomZ; ///< physical length in Z direction (if homogeneous)
+	
+        int m_npointsX;    ///< number of points in X direction (if homogeneous)
+        int m_npointsY;    ///< number of points in Y direction (if homogeneous)
+        int m_npointsZ;    ///< number of points in Z direction (if homogeneous)
+
+        int m_HomoDirec;   ///< number of homogenous directions
+	
     protected:
         /// Communicator
         LibUtilities::CommSharedPtr                 m_comm;

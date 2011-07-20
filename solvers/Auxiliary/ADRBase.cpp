@@ -56,6 +56,7 @@ namespace Nektar
      * Basic construnctor
      */
     ADRBase::ADRBase(void):
+        m_bforce(false),
         m_fields(0)
     {
     }
@@ -74,7 +75,8 @@ namespace Nektar
     ADRBase::ADRBase(LibUtilities::CommSharedPtr &pComm,
                      LibUtilities::SessionReaderSharedPtr& pSession,
                      bool UseInputFileForProjectionType,
-                     bool UseContinuousField)
+                     bool UseContinuousField):
+        m_bforce(false)
     {
         m_comm = pComm;
         m_session = pSession;
@@ -115,8 +117,7 @@ namespace Nektar
 
             m_filename = m_filename + "." + boost::lexical_cast<std::string>(m_comm->GetRank());
             m_solnType = MultiRegions::eIterativeFull;
-            m_sessionName = m_sessionName.substr(0,
-                                            m_sessionName.find_last_of("."));
+            m_sessionName = m_sessionName.substr(0,m_sessionName.find_last_of("."));
         }
 
         SpatialDomains::MeshGraph graph;
@@ -129,7 +130,7 @@ namespace Nektar
         // Also read and store the boundary conditions
         SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-                                        ::AllocateSharedPtr(meshptr);
+            ::AllocateSharedPtr(meshptr);
         m_boundaryConditions->Read(m_filename);
 
         // Read and store history point data
@@ -140,56 +141,59 @@ namespace Nektar
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
 
-		// Setting parameteres for homogenous problems
-		
-		m_HomoDirec       = 0;
-		m_useFFT          = false;
-		m_HomogeneousType = eNotHomogeneous;
-		
-		if(m_boundaryConditions->SolverInfoExists("HOMOGENEOUS"))
-		{
-			std::string HomoStr = m_boundaryConditions->GetSolverInfo("HOMOGENEOUS");
-			m_spacedim          = 3;
-			
-			if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
-			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
-			{
-				m_HomogeneousType = eHomogeneous1D;
-				m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
-				m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
-				m_HomoDirec       = 1;
-			}
-			
-			if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
-			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
-			{
-				m_HomogeneousType = eHomogeneous2D;
-				m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
-				m_LhomY           = m_boundaryConditions->GetParameter("LY");
-				m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
-				m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
-				m_HomoDirec       = 2;
-			}
-			
-			if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
-			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
-			{
-				m_HomogeneousType = eHomogeneous3D;
-				m_npointsX        = m_boundaryConditions->GetParameter("HomModesX");
-				m_LhomX           = m_boundaryConditions->GetParameter("LX");
-				m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
-				m_LhomY           = m_boundaryConditions->GetParameter("LY");
-				m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
-				m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
-				m_HomoDirec       = 3;
-			}
-			
-			if(m_boundaryConditions->SolverInfoExists("USEFFT"))
-			{
-				m_useFFT = true;
-			}
-		}
-		
+        // Setting parameteres for homogenous problems
+        m_HomoDirec       = 0;
+        m_useFFT          = false;
+        m_HomogeneousType = eNotHomogeneous;
+	
+        if(m_boundaryConditions->SolverInfoExists("HOMOGENEOUS"))
+        {
+            std::string HomoStr = m_boundaryConditions->GetSolverInfo("HOMOGENEOUS");
+            m_spacedim          = 3;
+            
+            if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
+               (HomoStr == "1D")||(HomoStr == "Homo1D"))
+            {
+                m_HomogeneousType = eHomogeneous1D;
+                m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
+                m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+                m_HomoDirec       = 1;
+            }
+            
+            if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
+               (HomoStr == "2D")||(HomoStr == "Homo2D"))
+            {
+                m_HomogeneousType = eHomogeneous2D;
+                m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
+                m_LhomY           = m_boundaryConditions->GetParameter("LY");
+                m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
+                m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+                m_HomoDirec       = 2;
+            }
+            
+            if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
+               (HomoStr == "3D")||(HomoStr == "Homo3D"))
+            {
+                m_HomogeneousType = eHomogeneous3D;
+                m_npointsX        = m_boundaryConditions->GetParameter("HomModesX");
+                m_LhomX           = m_boundaryConditions->GetParameter("LX");
+                m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
+                m_LhomY           = m_boundaryConditions->GetParameter("LY");
+                m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
+                m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+                m_HomoDirec       = 3;
+            }
+            
+            if(m_boundaryConditions->SolverInfoExists("USEFFT"))
+            {
+                m_useFFT = true;
+            }
+        }
+        else
+        {
+            m_npointsZ = 1; // set to default value so can use to identify 2d or 3D (homogeneous) expansions
+        }
+	
         // Options to determine type of projection from file or
         // directly from constructor
         if(UseInputFileForProjectionType == true)
@@ -291,49 +295,49 @@ namespace Nektar
             {
                 case 1:
                 {
-					if(m_HomogeneousType == eHomogeneous2D)
-					{
-						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						
-						if(!(mesh1D = boost::dynamic_pointer_cast<
-							 SpatialDomains::MeshGraph1D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,m_solnType);
-						}
-					}
-					else 
-					{
-						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						
-						if( !(mesh1D = boost::dynamic_pointer_cast<
-							  SpatialDomains::MeshGraph1D>(mesh)) )
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::ContField1D>
-							::AllocateSharedPtr(m_comm,*mesh1D,
-                                                *m_boundaryConditions,i,m_solnType);
-						}
-						
-					}
-					
+                    if(m_HomogeneousType == eHomogeneous2D)
+                    {
+                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+			
+                        if(!(mesh1D = boost::dynamic_pointer_cast<
+                             SpatialDomains::MeshGraph1D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
+                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+                        
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
+                                ::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,m_solnType);
+                        }
+                    }
+                    else 
+                    {
+                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+			
+                        if( !(mesh1D = boost::dynamic_pointer_cast<
+                              SpatialDomains::MeshGraph1D>(mesh)) )
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(m_comm,*mesh1D,
+                                                    *m_boundaryConditions,i,m_solnType);
+                        }
+			
+                    }
+                    
                     break;
                 }
-                case 2:
+            case 2:
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
@@ -350,8 +354,7 @@ namespace Nektar
                         
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
-                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,m_solnType);
+                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,m_solnType);
                         }
                     }
                     else
@@ -388,39 +391,39 @@ namespace Nektar
                     break;
                 }
                 case 3:
-                {
-					if(m_HomogeneousType == eHomogeneous3D)
-					{
-					    ASSERTL0(false,"3D fully periodic problems not implemented yet");	
-					}
-					else
-					{
-						SpatialDomains::MeshGraph3DSharedPtr mesh3D;
-
-						if(!(mesh3D = boost::dynamic_pointer_cast<
-										SpatialDomains::MeshGraph3D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
+                    {
+                        if(m_HomogeneousType == eHomogeneous3D)
+                        {
+                            ASSERTL0(false,"3D fully periodic problems not implemented yet");	
+                        }
+                        else
+                        {
+                            SpatialDomains::MeshGraph3DSharedPtr mesh3D;
+                            
+                            if(!(mesh3D = boost::dynamic_pointer_cast<
+                                 SpatialDomains::MeshGraph3D>(mesh)))
+                            {
+                                ASSERTL0(false,"Dynamics cast failed");
+                            }
+                            
+                            i = 0;
+                            MultiRegions::ContField3DSharedPtr firstfield =
+                                MemoryManager<MultiRegions::ContField3D>
+                                ::AllocateSharedPtr(m_comm,*mesh3D,
+                                                    *m_boundaryConditions,i,m_solnType);
+                            
+                            firstfield->ReadGlobalOptimizationParameters(m_filename);
+                            
+                            m_fields[0] = firstfield;
+                            for(i = 1 ; i < m_fields.num_elements(); i++)
+                            {
+                                m_fields[i] = MemoryManager<MultiRegions::ContField3D>
+                                    ::AllocateSharedPtr(*firstfield,
+                                                        *mesh3D,*m_boundaryConditions,i);
 						}
-
-						i = 0;
-						MultiRegions::ContField3DSharedPtr firstfield =
-								MemoryManager<MultiRegions::ContField3D>
-										::AllocateSharedPtr(m_comm,*mesh3D,
-															*m_boundaryConditions,i,m_solnType);
-
-						firstfield->ReadGlobalOptimizationParameters(m_filename);
-                    
-						m_fields[0] = firstfield;
-						for(i = 1 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::ContField3D>
-											::AllocateSharedPtr(*firstfield,
-															*mesh3D,*m_boundaryConditions,i);
-						}
-					}
-                    break;
-                }
+                        }
+                        break;
+                    }
             default:
                 ASSERTL0(false,"Expansion dimension not recognised");
                 break;
@@ -432,129 +435,129 @@ namespace Nektar
             {
                 case 1:
                 {
-					if(m_HomogeneousType == eHomogeneous2D)
-					{
-						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						
-						if(!(mesh1D = boost::dynamic_pointer_cast<
-							 SpatialDomains::MeshGraph1D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,m_solnType);
-						}
-					}
-					else 
-					{
-						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						
-						if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
-							 ::MeshGraph1D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions
-							::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
-																 *m_boundaryConditions,i,m_solnType);
-						}
-					}
-					
+                    if(m_HomogeneousType == eHomogeneous2D)
+                    {
+                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+			
+                        if(!(mesh1D = boost::dynamic_pointer_cast<
+                             SpatialDomains::MeshGraph1D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
+                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+                        
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
+                                ::AllocateSharedPtr(m_comm,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i,m_solnType);
+                        }
+                    }
+                    else 
+                    {
+                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+			
+                        if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
+                             ::MeshGraph1D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions
+                                ::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
+                                                                     *m_boundaryConditions,i,m_solnType);
+                        }
+                    }
+                    
                     break;
                 }
-                case 2:
+            case 2:
                 {
-					if(m_HomogeneousType == eHomogeneous1D)
-					{
-						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-						
-						if(!(mesh2D = boost::dynamic_pointer_cast<
-							 SpatialDomains::MeshGraph2D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,m_solnType);
-						}
-				    }
-				    else
-				    {
-						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-						
-						if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
-							 ::MeshGraph2D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions
-							::DisContField2D>::AllocateSharedPtr(m_comm,*mesh2D,
-																 *m_boundaryConditions,i,m_solnType);
-						}
-					}
-					
+                    if(m_HomogeneousType == eHomogeneous1D)
+                    {
+                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+			
+                        if(!(mesh2D = boost::dynamic_pointer_cast<
+                             SpatialDomains::MeshGraph2D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+                        
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
+                                ::AllocateSharedPtr(m_comm,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i,m_solnType);
+                        }
+                    }
+                    else
+                    {
+                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+			
+                        if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
+                             ::MeshGraph2D>(mesh)))
+                        {
+                            ASSERTL0(false,"Dynamics cast failed");
+                        }
+			
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions
+                                ::DisContField2D>::AllocateSharedPtr(m_comm,*mesh2D,
+                                                                     *m_boundaryConditions,i,m_solnType);
+                        }
+                    }
+                    
                     break;
                 }
-                case 3:
-				{
-					if(m_HomogeneousType == eHomogeneous3D)
-					{
-					    ASSERTL0(false,"3D fully periodic problems not implemented yet");	
-					}
-					else
-					{
-						ASSERTL0(false,"3 D not set up");
-					}
-					break;
-				}
-                default:
-                    ASSERTL0(false,"Expansion dimension not recognised");
+            case 3:
+                {
+                    if(m_HomogeneousType == eHomogeneous3D)
+                    {
+                        ASSERTL0(false,"3D fully periodic problems not implemented yet");	
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"3 D not set up");
+                    }
                     break;
+                }
+            default:
+                ASSERTL0(false,"Expansion dimension not recognised");
+                break;
             }
-
+            
             // Set up Normals.
             switch(m_expdim)
             {
-                case 1:
+            case 1:
                     // no need??...
-                    break;
-                case 2:
+                break;
+            case 2:
                 {
                     m_traceNormals
-                            = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-
+                        = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                    
                     for(i = 0; i < m_spacedim; ++i)
                     {
                         m_traceNormals[i] = Array<OneD, NekDouble> (m_fields[0]
-                                                    ->GetTrace()->GetNpoints());
+                                                                    ->GetTrace()->GetNpoints());
                     }
-
+                    
                     m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
                     break;
                 }
-                case 3:
-                    ASSERTL0(false,"3 D not set up");
+            case 3:
+                ASSERTL0(false,"3 D not set up");
                     break;
-                default:
+            default:
                     ASSERTL0(false,"Expansion dimension not recognised");
                     break;
             }
@@ -580,8 +583,7 @@ namespace Nektar
 
         ScanForHistoryPoints();
         
-        
-      //define dimension of the forcing function     
+        //define dimension of the forcing function     
         m_FDim = m_fields.num_elements();
         if (m_session->DefinesSolverInfo("EQTYPE")
             && m_session->DefinesSolverInfo("SOLVERTYPE"))
@@ -767,20 +769,31 @@ namespace Nektar
         switch(m_expdim)
     	{
     	 case 1:
-                   force[0] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr
-                            (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
-                        Vmath::Zero(nq,(force[0]->UpdatePhys()),1);
-                            break;
-    	 case 2:
-                   for(int i = 0 ; i < m_FDim; i++)
-                   {
-                   	force[i] = MemoryManager<MultiRegions
-                                ::DisContField2D>::AllocateSharedPtr
-                                (*boost::static_pointer_cast<MultiRegions::DisContField2D>(m_fields[i]));
-                        Vmath::Zero(nq,(force[i]->UpdatePhys()),1);
-                   }
-                   break;
+             force[0] = MemoryManager<MultiRegions
+                ::DisContField1D>::AllocateSharedPtr
+                 (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
+             Vmath::Zero(nq,(force[0]->UpdatePhys()),1);
+             break;
+        case 2:
+            if(m_HomogeneousType == eHomogeneous1D)
+             {
+                 bool DeclarePlaneSetCoeffsPhys = true;
+                 for(int i = 0 ; i < force.num_elements(); i++)
+                 {
+                     force[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous1D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
+                 }
+             }
+             else
+             {
+                 for(int i = 0 ; i < force.num_elements(); i++)
+                 {
+                     force[i] = MemoryManager<MultiRegions
+                         ::ExpList2D>::AllocateSharedPtr
+                         (*boost::static_pointer_cast<MultiRegions::ExpList2D>(m_fields[i]));
+                     Vmath::Zero(nq,(force[i]->UpdatePhys()),1);
+                 }
+             }
+             break;
 /**
          case 3:
                    for( int i = 0 ; i < m_FDim; i++)
@@ -849,16 +862,16 @@ namespace Nektar
                                const Array<OneD, NekDouble> &exactsoln,
                                bool Normalised)
     {
-		NekDouble L2error = -1.0;
-		
-		if(m_NumQuadPointsError == 0)
-		{
-			if(m_fields[field]->GetPhysState() == false)
-			{
-				m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
-                                       m_fields[field]->UpdatePhys());
-			}
-
+        NekDouble L2error = -1.0;
+        
+        if(m_NumQuadPointsError == 0)
+        {
+            if(m_fields[field]->GetPhysState() == false)
+            {
+                m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
+                                          m_fields[field]->UpdatePhys());
+            }
+            
 			if(exactsoln.num_elements())
 			{
 				L2error = m_fields[field]->L2(exactsoln);

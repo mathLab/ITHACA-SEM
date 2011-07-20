@@ -49,8 +49,8 @@ namespace Nektar
     /**
      * @class ADRBase
      * It is basically a class handling vector valued fields
+     * @todo Enforce coding standards policy (line length)
      */
-
 
     /**
      * Basic construnctor
@@ -756,8 +756,12 @@ namespace Nektar
          }
     }
 
+     /**
+      * @todo implement 3D case
+      * @todo
+      */
     void ADRBase::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &force)
-   {  
+    {
         force  = Array<OneD, MultiRegions::ExpListSharedPtr>(m_FDim);
         int nq = m_fields[0]->GetNpoints();
         switch(m_expdim)
@@ -788,7 +792,7 @@ namespace Nektar
                    }
                    break;
 */
-	}
+    	}
     }
 
 
@@ -800,7 +804,7 @@ namespace Nektar
      * @param   outfield            Storage for exact solution.
      * @param   time                The time at which to evaluate the solution.
      */
-  void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &exactsoln, const NekDouble time)
+    void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &exactsoln, const NekDouble time)
     { 
       v_EvaluateExactSolution(field,exactsoln,time);
     }
@@ -859,13 +863,17 @@ namespace Nektar
 			{
 				L2error = m_fields[field]->L2(exactsoln);
 			}
-			else
+			else if (m_session->DefinesFunction("ExactSolution"))
 			{
 				Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 
 				EvaluateExactSolution(field,exactsoln,m_time);
 
 				L2error = m_fields[field]->L2(exactsoln);
+			}
+			else
+			{
+			    L2error = m_fields[field]->L2();
 			}
 
 			if(Normalised == true)
@@ -912,13 +920,17 @@ namespace Nektar
 			{
 				Linferror = m_fields[field]->Linf(exactsoln);
 			}
-			else
+			else if (m_session->DefinesFunction("ExactSolution"))
 			{
 				Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 
 				EvaluateExactSolution(field,exactsoln,m_time);
 
 				Linferror = m_fields[field]->Linf(exactsoln);
+			}
+			else
+			{
+			    Linferror = 0.0;
 			}
 		}
 		else 
@@ -1599,47 +1611,47 @@ namespace Nektar
         Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
     }
 
-  /**
-   * Write data to file in Tecplot format
-   * @param   n                   Checkpoint index.
-   * @param   name                Additional name (appended to session name).
-   * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
-   */
-  void ADRBase::WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace)
-  {
-    int nq = m_fields[0]->GetTotPoints();
+    /**
+     * Write data to file in Tecplot format
+     * @param   n                   Checkpoint index.
+     * @param   name                Additional name (appended to session name).
+     * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
+     */
+    void ADRBase::WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace)
+    {
+        int nq = m_fields[0]->GetTotPoints();
 
-    std::string var = "";
-    for(int j = 0; j < m_fields.num_elements(); ++j)
-      {
-	var = var + ", " + m_boundaryConditions->GetVariable(j);
-      }
+        std::string var = "";
+        for(int j = 0; j < m_fields.num_elements(); ++j)
+        {
+            var = var + ", " + m_boundaryConditions->GetVariable(j);
+        }
 
-    char chkout[16] = "";
-    sprintf(chkout, "%d", n);
-    std::string outname = m_sessionName + "_" + name + "_" + chkout + ".dat";
-    ofstream outfile(outname.c_str());
+        char chkout[16] = "";
+        sprintf(chkout, "%d", n);
+        std::string outname = m_sessionName + "_" + name + "_" + chkout + ".dat";
+        ofstream outfile(outname.c_str());
 
-    // put inarray in m_phys
-    if (IsInPhysicalSpace == false)
-      {
-	for(int i = 0; i < m_fields.num_elements(); ++i)
-	  {
-	    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-	  }
-      }
+        // put inarray in m_phys
+        if (IsInPhysicalSpace == false)
+        {
+            for(int i = 0; i < m_fields.num_elements(); ++i)
+            {
+                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+            }
+        }
 
-    m_fields[0]->WriteTecplotHeader(outfile,var);
+        m_fields[0]->WriteTecplotHeader(outfile,var);
 
-    for(int i = 0; i < m_fields[0]->GetExpSize(); ++i)
-      {
-	m_fields[0]->WriteTecplotZone(outfile,i);
-	for(int j = 0; j < m_fields.num_elements(); ++j)
-    	  {
-    	    m_fields[j]->WriteTecplotField(outfile,i);
-    	  }
-      }
-  }
+        for(int i = 0; i < m_fields[0]->GetExpSize(); ++i)
+        {
+            m_fields[0]->WriteTecplotZone(outfile,i);
+            for(int j = 0; j < m_fields.num_elements(); ++j)
+            {
+                m_fields[j]->WriteTecplotField(outfile,i);
+            }
+        }
+    }
 
     /**
      *

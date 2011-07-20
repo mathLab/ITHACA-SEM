@@ -33,6 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+///@todo Documentation
+///@todo Implement eigenmode output for modified Arnoldi
+
 #include <cstdio>
 #include <cstdlib>
 #include <cmath> 
@@ -137,14 +140,9 @@ int main(int argc, char *argv[])
 	NekDouble numstep=session->GetParameter("NumSteps");
     NekDouble period= ts*numstep;
 	bool useModifiedArnoldi=false;
-	//Get the initial Arnoldi Vector
-	
-	std::string invecType = session->GetSolverInfo("InitialVector");
-	
-	//NekDouble info_ar= session->GetParameter("InitialVector");
+
     session->MatchSolverInfo("EigenvalueAlgorithm","ModifiedArnoldi",useModifiedArnoldi,false);
 
-	
 	// Print a summary of solver and problem parameters and initialise
     // the solver.
     equ->PrintSummary(cout);
@@ -494,12 +492,20 @@ int main(int argc, char *argv[])
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-        // Get Exact solution
-        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
-        equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+        if (session->DefinesFunction("ExactSolution"))
+        {
+            // Get Exact solution
+            Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
+            equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
         
-        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
-        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
+            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+        }
+        else
+        {
+            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
+            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+        }
     }
 }
 

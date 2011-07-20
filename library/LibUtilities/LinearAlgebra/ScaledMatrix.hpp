@@ -127,6 +127,14 @@ namespace Nektar
                 m_scale(rhs.m_scale)
             {
             }
+
+
+            NekMatrix(typename boost::call_traits<NumberType>::const_reference scale, const NekMatrix<InnerType, ScaledMatrixTag>& rhs) :
+                BaseType(rhs),
+                m_matrix(rhs.m_matrix),
+                m_scale(scale)
+            {
+            }
             
             ConstGetValueType operator()(unsigned int row, unsigned int col) const
             {

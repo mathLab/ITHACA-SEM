@@ -63,10 +63,7 @@ namespace ErrorUtil
             boost::lexical_cast<std::string>(level) +  
             std::string(" assertion violation\n") +
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-            boost::lexical_cast<std::string>(routine) + 
-            std::string("[") +  
-            boost::lexical_cast<std::string>(lineNumber) + 
-            std::string("]\n") +
+            std::string("Where   : ") + boost::lexical_cast<std::string>(routine) +  std::string("[") +  boost::lexical_cast<std::string>(lineNumber) +  std::string("]\n") + std::string("Message : ") + 
 #endif
             msg;
             
@@ -75,11 +72,11 @@ namespace ErrorUtil
             case efatal:
                 if( outStream )
                 {
-                    (*outStream) << "Fatal: " << baseMsg << std::endl;
+                    (*outStream) << "Fatal   : " << baseMsg << std::endl;
                 }
                 else
-                {
-                    std::cerr << std::endl << "Fatal: " << baseMsg << std::endl;
+                {                             
+                    std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
                 }
                 throw NekError(baseMsg);
                 break;

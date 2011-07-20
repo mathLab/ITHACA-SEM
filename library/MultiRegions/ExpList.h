@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ExpList.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -732,7 +731,22 @@ namespace Nektar
             // Wrapper functions for Homogeneous Expansions
             inline LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {
-                return GetHomogeneousBasis();
+                return v_GetHomogeneousBasis();
+            }
+
+            boost::shared_ptr<ExpList> &GetPlane(int n)
+            {
+                return v_GetPlane(n);
+            }
+
+            inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
+            {
+                v_Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
+            }
+
+            inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
+            {
+                v_Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
             }
 
         protected:
@@ -1129,6 +1143,20 @@ namespace Nektar
                 return LibUtilities::NullBasisSharedPtr; 
             }
 
+            virtual boost::shared_ptr<ExpList> &v_GetPlane(int n);
+
+            virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
+            {
+                ASSERTL0(false,
+                         "This method is not defined or valid for this class type");
+            }
+            
+            virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
+            {
+                ASSERTL0(false,
+                         "This method is not defined or valid for this class type");
+            }
+
         };
 
 
@@ -1136,7 +1164,7 @@ namespace Nektar
         typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;
         /// An empty ExpList object.
         static ExpList NullExpList;
-
+        static ExpListSharedPtr NullExpListSharedPtr;
 
         // Inline routines follow.
 

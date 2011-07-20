@@ -49,7 +49,7 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-													   bool useFFT):
+                                                       bool useFFT):
             ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
         {
         }
@@ -61,7 +61,7 @@ namespace Nektar
                                                        bool useFFT,
                                                        SpatialDomains::MeshGraph2D &graph2D,
                                                        const std::string var):
-        ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
         {
             GenExpList3DHomogeneous1D(graph2D.GetExpansions(var));            
         }

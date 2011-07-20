@@ -129,9 +129,22 @@ namespace Nektar
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
 
+            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+                                            SpatialDomains::BoundaryConditions &bcs,
+                                            const std::string variable,
+                                            vector<map<int,int> > & periodicVertices,
+                                            map<int,int>& periodicEdges)
+                                            
+            {
+                //ASSERTL1(nplane < m_planes.num_elements(),"Cannot specify nplanes larger than size of m_planes");
+                m_planes[0]->GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
+            }
+
         private:
 
             MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions);
+
+
         };
 
         inline void ExpList3DHomogeneous1D::GetCoords(Array<OneD, NekDouble> &coord_0,

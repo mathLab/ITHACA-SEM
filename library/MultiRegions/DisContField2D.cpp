@@ -402,16 +402,11 @@ namespace Nektar
 
             int nbnd = bregions.size();
             // count the number of non-periodic boundary regions
-            int cnt2 = 0;
             for(i = 0; i < nbnd; ++i)
             {
                 if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     cnt++;
-                    if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
-                    {
-                        cnt2++;
-                    }
                 }              
             }
 

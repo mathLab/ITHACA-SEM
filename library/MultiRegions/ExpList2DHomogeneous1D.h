@@ -111,7 +111,7 @@ namespace Nektar
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
-
+            
             virtual void v_WriteTecplotZone(std::ofstream &outfile,
                                             int expansion);
 

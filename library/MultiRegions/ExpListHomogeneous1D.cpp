@@ -62,11 +62,11 @@ namespace Nektar
             int nzplanes = m_homogeneousBasis->GetNumPoints();
 
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
-
-			if(m_useFFT)
-			{
-				m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nzplanes);
-			}
+            
+            if(m_useFFT)
+            {
+                m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nzplanes);
+            }
         }
 
 
@@ -77,7 +77,11 @@ namespace Nektar
             ExpList(In,false),
             m_homogeneousBasis(In.m_homogeneousBasis),
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
-            m_lhom(In.m_lhom)
+            m_lhom(In.m_lhom),
+            m_useFFT(In.m_useFFT),
+            m_FFT(In.m_FFT),
+            m_tmpIN(In.m_tmpIN),
+            m_tmpOUT(In.m_tmpOUT)
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }
@@ -89,15 +93,15 @@ namespace Nektar
         {
         }
 		
-		void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-			// Forwards trans
+            // Forwards trans
             Homogeneous1DTrans(inarray,outarray,true, UseContCoeffs);
         }
 		
-		void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
-			// Backwards trans
+            // Backwards trans
             Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
         }
 
@@ -122,11 +126,10 @@ namespace Nektar
                     cnt1  += m_planes[n]->GetNcoeffs();
                 }
             }
-			
-			if(m_FourierSpace != eCoef)
-			{
-				HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
-			}
+            if(m_FourierSpace != eCoef)
+            {
+                HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
+            }
         }
 
         void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -150,10 +153,10 @@ namespace Nektar
                 cnt1   += m_planes[n]->GetTotPoints();
             }
 			
-			if(m_FourierSpace != eCoef)
-			{
-				 HomogeneousBwdTrans(outarray,outarray);
-			}
+            if(m_FourierSpace != eCoef)
+            {
+                HomogeneousBwdTrans(outarray,outarray);
+            }
         }
 
 
@@ -182,82 +185,92 @@ namespace Nektar
         void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
         {
             if(m_useFFT)
-			{
+            {
 				
-				int n = m_planes.num_elements();  //number of Fourier points in the Fourier direction
-				int s = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane
-				int p = s/n;                      //number of points per plane = n of Fourier transform required
-				
-				Array<OneD, NekDouble> fft_in(s);
+                int n = m_planes.num_elements();  //number of Fourier points in the Fourier direction
+                int s = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane
+                int p = s/n;                      //number of points per plane = n of Fourier transform required
+		
+                Array<OneD, NekDouble> fft_in(s);
                 Array<OneD, NekDouble> fft_out(s);
-				
-				ShuffleIntoHomogeneous1DClosePacked(inarray,fft_in,false);
-				
-				if(IsForwards)
-				{
-					for(int i=0;i<p;i++)
-					{
-						m_FFT->FFTFwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
-					}
-					
-				}
-				else 
-				{
-					for(int i=0;i<p;i++)
-					{
-						m_FFT->FFTBwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
-					}
-				}
-				
-				UnshuffleFromHomogeneous1DClosePacked(fft_out,outarray,false);
-				
-			}
-			else 
-			{
-				
-			    DNekBlkMatSharedPtr blkmat;
-				
+		
+                ShuffleIntoHomogeneous1DClosePacked(inarray,fft_in,false);
+		
+                if(IsForwards)
+                {
+                    for(int i=0;i<p;i++)
+                    {
+                        m_FFT->FFTFwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
+                    }
+                    
+                }
+                else 
+                {
+                    for(int i=0;i<p;i++)
+                    {
+                        m_FFT->FFTBwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
+                    }
+                }
+		
+                UnshuffleFromHomogeneous1DClosePacked(fft_out,outarray,false);
+		
+            }
+            else 
+            {
+                
+                DNekBlkMatSharedPtr blkmat;
+		
                 if(inarray.num_elements() == m_npoints) //transform phys space
                 {
-					if(IsForwards)
-					{
-						blkmat = GetHomogeneous1DBlockMatrix(eForwardsPhysSpace1D);
-					}
-					else
-					{
-						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsPhysSpace1D);
-					}
+                    if(IsForwards)
+                    {
+                        blkmat = GetHomogeneous1DBlockMatrix(eForwardsPhysSpace1D);
+                    }
+                    else
+                    {
+                        blkmat = GetHomogeneous1DBlockMatrix(eBackwardsPhysSpace1D);
+                    }
                 }
-				else
+                else
                 {
-					if(IsForwards)
-					{
-						blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D,UseContCoeffs);
-					}
-					else
-					{
-						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D,UseContCoeffs);
-					}
+                    if(IsForwards)
+                    {
+                        blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D,UseContCoeffs);
+                    }
+                    else
+                    {
+                        blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D,UseContCoeffs);
+                    }
                 }
-				
+		
                 int nrows = blkmat->GetRows();
                 int ncols = blkmat->GetColumns();
-				
+		
                 Array<OneD, NekDouble> sortedinarray(ncols);
                 Array<OneD, NekDouble> sortedoutarray(nrows);
-				
+		
 				
                 ShuffleIntoHomogeneous1DClosePacked(inarray,sortedinarray,!IsForwards);
-				
+                
                 // Create NekVectors from the given data arrays
                 NekVector<const NekDouble> in (ncols,sortedinarray,eWrapper);
                 NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
-				
+		
                 // Perform matrix-vector multiply.
+#if 0
+                for(int n = 0; n < nrows; ++n)
+                {
+                    for(int m = 0; m < ncols; ++m)
+                    {
+                        out[n] = (*blkmat)(n,m)*in[m];
+                    }
+                }
+#else
                 out = (*blkmat)*in;
+#endif
 				
                 UnshuffleFromHomogeneous1DClosePacked(sortedoutarray,outarray,IsForwards);
-			}
+            }
         }
 
         void ExpListHomogeneous1D::ShuffleIntoHomogeneous1DClosePacked(
@@ -631,45 +644,45 @@ namespace Nektar
 			}
 			else
 			{
-                if(m_FourierSpace != eCoef)
-				{
-					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
-				
+                            if(m_FourierSpace != eCoef)
+                            {
+                                HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+                                
 			        for( int i=0 ; i<nF_pts/2 ; i++ )
 			        {
-						k = i;
-						Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
-					}
+                                    k = i;
+                                    Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
+                                }
 				
-					HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
-				}
-				else
-				{
-					for( int i=0 ; i<nF_pts/2 ; i++ )
+                                HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
+                            }
+                            else
+                            {
+                                for( int i=0 ; i<nF_pts/2 ; i++ )
 			        {
 						k = i;
 						Vmath::Smul(2*nP_pts,k,tmp1 = inarray + (i*2*nP_pts),1,tmp2 = out_d + (i*2*nP_pts),1);
-					}
-				}
+                                }
+                            }
 			}
 		}
-		
-		void ExpListHomogeneous1D::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-											 Array<OneD, NekDouble> &out_d0,
-											 Array<OneD, NekDouble> &out_d1, 
-											 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
-		
+        
+        void ExpListHomogeneous1D::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD, NekDouble> &out_d0,
+                                             Array<OneD, NekDouble> &out_d1, 
+                                             Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+            
         {
             v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
         }
-		
-		void ExpListHomogeneous1D::PhysDeriv(Direction edir,
-											 const Array<OneD, const NekDouble> &inarray,
-											 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
-		{
-			v_PhysDeriv(edir,inarray,out_d,UseContCoeffs);
-		}
-   } //end of namespace
+	
+        void ExpListHomogeneous1D::PhysDeriv(Direction edir,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+        {
+            v_PhysDeriv(edir,inarray,out_d,UseContCoeffs);
+        }
+    } //end of namespace
 } //end of namespace
 
 

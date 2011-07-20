@@ -1351,7 +1351,6 @@ namespace Nektar
             }
         }
 
-#ifdef NOTNEEDED // SJS: Think this needs depracating
         /**
          * For each element of shape given by \a shape in field \a
          * var, replace the current BasisKeyVector describing the
@@ -1364,12 +1363,15 @@ namespace Nektar
          * @param   shape           The shape of elements to be changed.
          * @param   keys            The new basis vector to apply to those elements.
          */
-        void MeshGraph::SetBasisKey(std::string var,
-                                    SpatialDomains::GeomShapeType shape,
-                                    LibUtilities::BasisKeyVector &keys)
+        void MeshGraph::SetBasisKey(SpatialDomains::GeomShapeType shape,
+                                    LibUtilities::BasisKeyVector &keys,
+                                    std::string var)
         {
             ExpansionMapIter elemIter;
-            for (elemIter = m_expansions.begin(); elemIter != m_expansions.end(); ++elemIter)
+
+            ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(var)->second;
+
+            for (elemIter = expansionMap->begin(); elemIter != expansionMap->end(); ++elemIter)
             {
                 if ((elemIter->second)->m_geomShPtr->GetGeomShapeType() == shape)
                 {
@@ -1377,7 +1379,6 @@ namespace Nektar
                 }
             }
         }
-#endif
 
         /**
          * Read the geometry-related information from the given file. This

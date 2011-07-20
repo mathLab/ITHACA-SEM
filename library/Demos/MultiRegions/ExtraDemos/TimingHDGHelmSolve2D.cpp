@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     string expansionfile = ExpansionsFileSS.str();
     string bcfile        = BCfileSS.str();
 
-    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(bcfile);
 
     if (vSession->DefinesSolverInfo("Communication"))
     {

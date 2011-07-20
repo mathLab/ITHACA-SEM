@@ -946,7 +946,8 @@ namespace Nektar
         
           int ncoeffs = v_GetNcoeffs();
           int nedges  = v_GetNedges();
-          
+
+#if 1
           DNekScalMat &InvMass = *v_GetLocMatrix(StdRegions::eInvMass);
           DNekScalMat &Dmat    = *v_GetLocMatrix(DerivType[dir]);
           
@@ -963,6 +964,31 @@ namespace Nektar
           DNekVec Out_d (ncoeffs,out_d,eWrapper);
 
           Out_d  = InvMass*Coeffs;
+#else
+          StdRegions::MatrixType LamToQType[3] = {StdRegions::eHybridDGLamToQ0,
+                                                  StdRegions::eHybridDGLamToQ1,
+                                                  StdRegions::eHybridDGLamToQ2};
+          
+          DNekScalMat &LamToQ = *v_GetLocMatrix(LamToQType[dir],0.0,1.0);
+          int nedgetot = 0;
+          for(i = 0; i < EdgeExp.num_elements(); ++i)
+          {
+              nedgetot += EdgeExp[i]->GetNcoeffs();
+          }
+          
+          Array< OneD, NekDouble > lam(nedgetot), e_tmp;
+          int nedgecoeffs = 0;
+          for(i = 0; i < EdgeExp.num_elements(); ++i)
+          {
+              EdgeExp[i]->SetCoeffsToOrientation(v_GetCartersianEorient(i),ExpExp[i]->GetCoeffs(),e_tmp = lam + nedgecoeffs  );
+              nedgecoeffs += EdgeExp[i]->GetNcoeffs();
+          }
+
+          DNekVec Lam(nedgetot,lam,eWrapper);
+          DNekVec Out_d (ncoeffs,out_d,eWrapper);
+
+          Out_d  = LamToQ*LamCoeffs;
+#endif
       }
 
         enum BndToLocMatrixMapType

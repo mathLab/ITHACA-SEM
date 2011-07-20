@@ -415,11 +415,6 @@ namespace Nektar
             return result;
         }
 
-        void  LocalToGlobalBaseMap::v_SetLocalToGlobalMap(const Array<OneD, int>& inarray)
-        {
-            ASSERTL0(false, "Not defined for this type of mapping.");
-        }
-
         const Array<OneD, const int>& LocalToGlobalBaseMap::v_GetGlobalToUniversalMap()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
@@ -445,11 +440,6 @@ namespace Nektar
             ASSERTL0(false, "Not defined for this type of mapping.");
             static Array<OneD, NekDouble> result;
             return result;
-        }
-
-        void LocalToGlobalBaseMap::v_SetLocalToGlobalSign(const Array<OneD, NekDouble>& inarray)
-        {
-            ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
         const void LocalToGlobalBaseMap::v_LocalToGlobal(

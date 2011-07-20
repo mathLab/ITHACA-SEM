@@ -109,7 +109,7 @@ namespace Nektar
             
             SetCoeffPhys(); 
 
-            SetupBoundaryConditions(HomoBasis,lhom,bcs);
+            SetupBoundaryConditions(HomoBasis,lhom,bcs,bcs.GetVariable(bc_loc));
         }
 
 
@@ -200,10 +200,10 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-			if(m_FourierSpace != eCoef)
-			{
-				HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
-			}
+            if(m_FourierSpace != eCoef)
+            {
+                HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
+            }
 
             for(n = 0; n < nhom_modes; ++n)
             {

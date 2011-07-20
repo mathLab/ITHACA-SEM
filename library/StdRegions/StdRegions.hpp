@@ -111,6 +111,8 @@ namespace Nektar
             "NodalTetExp",
         };
 
+        /** @todo we need to tidy up matrix construction approach
+         *  probably using a factory type approach                 */
         enum MatrixType
         {
             eMass,

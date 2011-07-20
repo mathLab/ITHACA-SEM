@@ -501,14 +501,14 @@ namespace Nektar
             }
         }
 		
-		void ExpList::v_PhysDeriv(const int dir,
-								  const Array<OneD, const NekDouble> &inarray,
-								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+        void ExpList::v_PhysDeriv(const int dir,
+                                  const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
         {
-			Direction edir = DirCartesianMap[dir];
+            Direction edir = DirCartesianMap[dir];
             v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
         }
-
+        
 	void ExpList::v_PhysDeriv(Direction edir, const Array<OneD, const NekDouble> &inarray,
 					Array<OneD, NekDouble> &out_d, bool boolUseContCoeffs)
 	{
@@ -1993,7 +1993,7 @@ namespace Nektar
         }
 
         const Array<OneD,const boost::shared_ptr<ExpList> >
-                                        &ExpList::v_GetBndCondExpansions()
+                                        &ExpList::v_GetBndCondExpansions(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2410,7 +2410,7 @@ namespace Nektar
 		/**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                                            &ExpList::v_GetBndConditions()
+                                            &ExpList::v_GetBndConditions(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2458,6 +2458,13 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+        }
+
+        ExpListSharedPtr &ExpList::v_GetPlane(int n)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            return NullExpListSharedPtr;
         }
     } //end of namespace
 } //end of namespace

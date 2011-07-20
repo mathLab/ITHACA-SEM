@@ -193,8 +193,6 @@ namespace Nektar
 
             virtual const Array<OneD,const int>&  v_GetLocalToGlobalMap();
 
-            virtual void v_SetLocalToGlobalMap(const Array<OneD, int>& inarray);
-
             virtual const Array<OneD, const int>& v_GetGlobalToUniversalMap();
 
             virtual const Array<OneD, const int>& v_GetGlobalToUniversalMapUnique();
@@ -202,8 +200,6 @@ namespace Nektar
             virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
 
             virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
-
-            virtual void v_SetLocalToGlobalSign(const Array<OneD,  NekDouble>& inarray);
 
             virtual const void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,

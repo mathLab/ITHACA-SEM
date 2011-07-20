@@ -117,6 +117,11 @@ namespace Nektar
 								                const Array<OneD, const NekDouble> &inarray,
 								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
+            ExpListSharedPtr &GetPlane(int n)
+            {
+                return m_planes[n];
+            }
+
         protected:
             
             /// FFT variables
@@ -194,6 +199,21 @@ namespace Nektar
 			virtual void v_PhysDeriv(Direction edir,
 									 const Array<OneD, const NekDouble> &inarray,
 									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
+
+            virtual ExpListSharedPtr &v_GetPlane(int n)
+            {
+                return GetPlane(n);
+            }
+
+            virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
+            {
+                Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
+            }
+            
+            virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
+            {
+                Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
+            }
 
         private:
         };

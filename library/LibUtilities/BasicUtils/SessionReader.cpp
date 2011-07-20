@@ -587,7 +587,7 @@ namespace Nektar
                     int indx;
                     int err = variableElement->QueryIntAttribute("ID", &indx);
                     ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                    ASSERTL0(indx == nextVariableNumber, "Composite IDs must begin with zero and be sequential.");
+                    ASSERTL0(indx == nextVariableNumber, "Variables section IDs must begin with zero and be sequential.");
 
                     TiXmlNode* variableChild = variableElement->FirstChild();
                     // This is primarily to skip comments that may be present.

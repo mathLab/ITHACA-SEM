@@ -197,24 +197,13 @@ namespace Nektar
             int n,m;
             int cnt = 0;
             int cnt1 = 0;
-			
-			NekDouble beta_y;
+            int nhom_modes_y = m_homogeneousBasis_y->GetNumModes();
+			int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
+            NekDouble beta_y;
 			NekDouble beta_z;
 			NekDouble beta; 
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
-			
-			int npoints_per_line = m_lines[0]->GetTotPoints();
-			int ncoeffs_per_line;
-			
-			if(UseContCoeffs)
-			{
-				ncoeffs_per_line = m_lines[0]->GetContNcoeffs();
-			}
-			else 
-			{
-				ncoeffs_per_line = m_lines[0]->GetNcoeffs();
-			}
 
             // Fourier transform forcing function
 			if(m_FourierSpace != eCoef)
@@ -222,22 +211,28 @@ namespace Nektar
 				HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
 			}
 
-            for(n = 0; n < m_nz; ++n)
+            for(n = 0; n < nhom_modes_z; ++n)
             {
-				for(m = 0; m < m_ny; ++m)
+				for(m = 0; m < nhom_modes_y; ++m)
 				{
 					beta_z = 2*M_PI*(n/2)/m_lhom_z;
 					beta_y = 2*M_PI*(m/2)/m_lhom_y;
-					
 					beta = beta_y*beta_y + beta_z*beta_z;
 					
-					m_lines[m+(n*m_ny)]->HelmSolve(fce + cnt,
-												   e_out = outarray + cnt1,
-												   lambda + beta,UseContCoeffs,
-												   dirForcing, varLambda,varCoeff);
+					m_lines[n]->HelmSolve(fce + cnt,
+										  e_out = outarray + cnt1,
+										  lambda + beta,UseContCoeffs,
+										  dirForcing, varLambda,varCoeff);
                 
-					cnt  += npoints_per_line;
-					cnt1 += ncoeffs_per_line;
+					cnt  += m_lines[n]->GetTotPoints();
+					if(UseContCoeffs)
+					{
+                    cnt1 += m_lines[n]->GetContNcoeffs();
+					}
+					else
+					{
+                    cnt1 += m_lines[n]->GetNcoeffs();
+					}
 				}
 			}
         }

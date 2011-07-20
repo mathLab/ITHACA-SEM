@@ -101,7 +101,7 @@ namespace Nektar
                     ASSERTL0(false,"Local To Global map not defined for this dimension");
                 }
             }
-
+            
             Nektar::Array<OneD, long> tmp(m_globalToUniversalMap.num_elements());
             for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
             {
@@ -921,8 +921,8 @@ namespace Nektar
             int meshVertId, meshVertId2;
             int meshEdgeId, meshEdgeId2;
             int graphVertId = 0;
-            StdRegions::StdExpansion2DSharedPtr locExpansion;
-            LocalRegions::SegExpSharedPtr       bndSegExp;
+            StdRegions::StdExpansion2DSharedPtr  locExpansion;
+            LocalRegions::SegExpSharedPtr        bndSegExp;
             MultiRegions::ExpList0DSharedPtr     bndVertExp;
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
             map<int,int>::iterator mapIt;
@@ -951,9 +951,8 @@ namespace Nektar
                 // If all boundaries are Dirichlet take out of mask 
                 if(cnt == bndConditions.num_elements())
                 {
-                    for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
+                    for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                     {
-                    
                         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
                         meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
                         ReorderedGraphVertId[1][meshEdgeId] = graphVertId++;
@@ -993,6 +992,7 @@ namespace Nektar
             {
                 vertexlist[offsets[p] + i] = it->first;
             }
+
             m_comm->AllReduce(vertexlist, LibUtilities::ReduceSum);
 
             for (i = 0; i < n; ++i)
@@ -1004,7 +1004,7 @@ namespace Nektar
 
                 for(j = 0; j < bndCondExp.num_elements(); j++)
                 {
-                    for(k = 0; k < bndCondExp[j]->GetExpSize(); k++)
+                    for(k = 0; k < bndCondExp[j]->GetNumElmts(); k++)
                     {
                         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[j]->GetExp(k));
                         for(l = 0; l < 2; l++)
@@ -1374,6 +1374,7 @@ namespace Nektar
             {
                 ReorderedGraphVertId[1][mapIt->first] = iperm[mapIt->second] + graphVertId;
             }
+
             if(doInteriorMap)
             {
                 for(mapIt = intTempGraphVertId.begin(); mapIt != intTempGraphVertId.end(); mapIt++)
@@ -1475,7 +1476,7 @@ namespace Nektar
              */
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
-                for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
+                for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndCondFaceExp = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
@@ -2118,7 +2119,7 @@ namespace Nektar
             int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
-                for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
+                for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndCondFaceExp  = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
                     cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
@@ -2284,11 +2285,6 @@ namespace Nektar
             return m_localToGlobalMap;
         }
 
-        void LocalToGlobalC0ContMap::v_SetLocalToGlobalMap(const Array<OneD, int>& inarray)
-        {
-            m_localToGlobalMap = inarray;
-        }
-
         const Array<OneD,const int>&
                     LocalToGlobalC0ContMap::v_GetGlobalToUniversalMap(void)
         {
@@ -2324,11 +2320,6 @@ namespace Nektar
             {
                 return NullNekDouble1DArray;
             }
-        }
-
-        void LocalToGlobalC0ContMap::v_SetLocalToGlobalSign(const Array<OneD, NekDouble>& inarray)
-        {
-            m_localToGlobalSign = inarray;
         }
 
         const void LocalToGlobalC0ContMap::v_LocalToGlobal(

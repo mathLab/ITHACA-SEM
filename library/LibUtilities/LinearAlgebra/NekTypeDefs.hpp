@@ -64,10 +64,15 @@ namespace Nektar
 
     typedef boost::shared_ptr<DNekBlkMat>    DNekBlkMatSharedPtr;
 
-    typedef NekMatrix<DNekScalMat, BlockMatrixTag> DNekScalBlkMat;
+    typedef NekMatrix<DNekBlkMat, BlockMatrixTag> BlkMatDNekBlkMat;
+    typedef boost::shared_ptr<BlkMatDNekBlkMat>  BlkMatDNekBlkMatSharedPtr;
 
-    typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr;
+    typedef NekMatrix<DNekScalMat, BlockMatrixTag> DNekScalBlkMat;
+    typedef boost::shared_ptr<DNekScalBlkMat>      DNekScalBlkMatSharedPtr;
     static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
+    
+    typedef NekMatrix<DNekScalBlkMat, BlockMatrixTag> BlkMatDNekScalBlkMat;
+    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
 
     typedef NekMatrix<DNekScalBlkMat, BlockMatrixTag> BlkMatDNekScalBlkMat;
     typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;

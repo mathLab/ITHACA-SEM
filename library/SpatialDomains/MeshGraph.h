@@ -293,7 +293,8 @@ namespace Nektar
 
                 /// Sets the basis key for all expansions of the given shape.
                 SPATIAL_DOMAINS_EXPORT void SetBasisKey(SpatialDomains::GeomShapeType shape,
-                    LibUtilities::BasisKeyVector &keys);
+                                                        LibUtilities::BasisKeyVector &keys,
+                                                        std::string var = "DefaultVar");
 
                 inline const ExpansionMap &GetExpansions(void);
 

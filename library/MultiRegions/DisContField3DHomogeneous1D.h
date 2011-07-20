@@ -74,7 +74,7 @@ namespace Nektar
             /// Destructor. 
             MULTI_REGIONS_EXPORT ~DisContField3DHomogeneous1D();
             
-            MULTI_REGIONS_EXPORT void SetupBoundaryConditions(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, SpatialDomains::BoundaryConditions &bcs);
+            MULTI_REGIONS_EXPORT void SetupBoundaryConditions(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, SpatialDomains::BoundaryConditions &bcs, const std::string variable);
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -107,42 +107,37 @@ namespace Nektar
              */ 
             MULTI_REGIONS_EXPORT void EvaluateBoundaryConditions(const NekDouble time = 0.0);
 			
-			inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &GetBndCondExpansions();
+            inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &GetBndCondExpansions();
 			
-			inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &GetBndConditions();
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &GetBndConditions();
 			
-			inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
+            inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 			
-			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
-			
-			/// \brief Set up a list of element ids and edge ids the link to the
+            inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
+            
+            /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-														   Array<OneD,int> &EdgeID);
+            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,Array<OneD,int> &EdgeID);
 			
-			/// This funtion extract form a vector containing a full 3D-homogenous-1D field
-			/// the value associated with a specific boundary conditions.
-			/// TotField is the full field contaning all the physical values
-			/// BndVals is the vector where the boundary physical values are stored
-			/// BndID is the identifier of the boundary region
-			MULTI_REGIONS_EXPORT void GetBCValues(Array<OneD, NekDouble> &BndVals, 
-												  const Array<OneD, NekDouble> &TotField, 
-												  int BndID);
+            /// This funtion extract form a vector containing a full
+            /// 3D-homogenous-1D field the value associated with a
+            /// specific boundary conditions.
+            /// TotField is the full field contaning all the physical values
+            /// BndVals is the vector where the boundary physical values are stored
+            /// BndID is the identifier of the boundary region
+            MULTI_REGIONS_EXPORT void GetBCValues(Array<OneD, NekDouble> &BndVals, const Array<OneD, NekDouble> &TotField,  int BndID);
+            
+            /// This function calculate the inner product of two vectors (V1 and V2) 
+            /// respect to the basis along a boundary region.
+            /// outarray is the inner product result multiplied by the normal to the edge (specified by the BndID) 
+            MULTI_REGIONS_EXPORT void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1, Array<OneD, const NekDouble> &V2, Array<OneD, NekDouble> &outarray, int BndID);
 			
-			/// This function calculate the inner product of two vectors (V1 and V2) 
-			/// respect to the basis along a boundary region.
-			/// outarray is the inner product result multiplied by the normal to the edge (specified by the BndID) 
-			MULTI_REGIONS_EXPORT void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
-																Array<OneD, const NekDouble> &V2,
-																Array<OneD, NekDouble> &outarray,
-																int BndID);
-			
-			/// Storage space for the boundary to element and boundary to trace map.
-			/// This member variable is really allocated just in case a boundary expansion
-			/// recasting is required at the solver level. Otherwise is the 2 vectors are not filled up.
-			/// If is needed all the funcitons whihc require to use this map do not have to recalculate it anymore.
-			Array<OneD, int> m_BCtoElmMap;
-			Array<OneD, int> m_BCtoEdgMap;
+            /// Storage space for the boundary to element and boundary to trace map.
+            /// This member variable is really allocated just in case a boundary expansion
+            /// recasting is required at the solver level. Otherwise is the 2 vectors are not filled up.
+            /// If is needed all the funcitons whihc require to use this map do not have to recalculate it anymore.
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoEdgMap;
             
         protected:
             /**
@@ -187,6 +182,17 @@ namespace Nektar
 				NormVectorIProductWRTBase(V1,V2,outarray,BndID);
 			}
 
+
+           inline virtual const Array<OneD,const MultiRegions::ExpListSharedPtr> & v_GetBndCondExpansions(void)
+            {
+                return GetBndCondExpansions();
+            }
+
+           virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
+           {
+               return GetBndConditions();
+           }
+
         private:
             // virtual functions
             virtual void v_HelmSolve(
@@ -208,10 +214,6 @@ namespace Nektar
 													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
 													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 			
-			virtual const Array<OneD,const boost::shared_ptr<ExpList> > &v_GetBndCondExpansions(void);
-			
-			virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
-			
             virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 			
 			virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>& v_UpdateBndConditions();
@@ -232,7 +234,7 @@ namespace Nektar
 		
 		inline MultiRegions::ExpListSharedPtr &DisContField3DHomogeneous1D::UpdateBndCondExpansion(int i)
 		{
-			return m_bndCondExpansions[i];
+                    return m_bndCondExpansions[i];
 		}
 		
 		inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>&DisContField3DHomogeneous1D::UpdateBndConditions()

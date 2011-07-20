@@ -67,62 +67,74 @@ int main(int argc, char *argv[])
     // Record start time.
     time(&starttime);
     
-    // Create session reader.
-    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
-
-    // Create communicator
-    if (session->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = session->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
-
     try
     {
-        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("SOLVERTYPE"), vComm, session);
-    }
-    catch (int e)
-    {
-        ASSERTL0(e == -1, "No such solver class defined.");
-    }
-
-    // Print a summary of solver and problem parameters and initialise
-    // the solver.
-    equ->PrintSummary(cout);
-    equ->DoInitialise();
-    //initialise force if it necessary
-    equ->SetInitialForce(0.0);
-    // Solve the problem.
-    equ->DoSolve();
-
-    // Record end time.
-    time(&endtime);
-    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
- 
-    // Write output to .fld file
-    equ->Output();
-    
-    // Evaluate and output computation time and solution accuracy.
-    // The specific format of the error output is essential for the
-    // regression tests to work.
-    cout << "-------------------------------------------" << endl;
-    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
-    for(int i = 0; i < equ->GetNvariables(); ++i)
-    {
-        NekDouble vL2Error = equ->L2Error(i,false);
-        NekDouble vLinfError = equ->LinfError(i);
-        if (vComm->GetRank() == 0)
+        // Create session reader.
+        session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
+        
+        // Create communicator
+        if (session->DefinesSolverInfo("Communication"))
         {
-            cout << "L 2 error (variable " << equ->GetVariable(i) << ") : " << vL2Error << endl;
-            cout << "L inf error (variable " << equ->GetVariable(i) << ") : " << vLinfError << endl;
+            vCommModule = session->GetSolverInfo("Communication");
         }
-    }
-    vComm->Finalise();
+        else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+        {
+            vCommModule = "ParallelMPI";
+        }
+        vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
+        try
+        {
+            equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("SOLVERTYPE"), vComm, session);
+        }
+        catch (int e)
+        {
+            ASSERTL0(e == -1, "No such solver class defined.");
+        }
+        
+        // Print a summary of solver and problem parameters and initialise
+        // the solver.
+        equ->PrintSummary(cout);
+        equ->DoInitialise();
+        //initialise force if it necessary
+        equ->SetInitialForce(0.0);
+        // Solve the problem.
+        equ->DoSolve();
+        
+        // Record end time.
+        time(&endtime);
+        CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+        
+        // Write output to .fld file
+        equ->Output();
+        
+        // Evaluate and output computation time and solution accuracy.
+        // The specific format of the error output is essential for the
+        // regression tests to work.
+        cout << "-------------------------------------------" << endl;
+        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+        for(int i = 0; i < equ->GetNvariables(); ++i)
+        {
+            NekDouble vL2Error = equ->L2Error(i,false);
+            NekDouble vLinfError = equ->LinfError(i);
+            if (vComm->GetRank() == 0)
+            {
+                cout << "L 2 error (variable " << equ->GetVariable(i) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << equ->GetVariable(i) << ") : " << vLinfError << endl;
+            }
+        }
+        vComm->Finalise();
+    }
+    catch (const std::runtime_error& e)
+    {
+        return 1;
+    }
+    catch (const std::string& eStr)
+    {
+        cout << "Error: " << eStr << endl;
+    }
+    
+    
     return 0;
 
 }

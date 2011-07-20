@@ -52,6 +52,7 @@ namespace Nektar
         eNoEquationType,
         eSteadyStokes,
         eSteadyOseen,
+        eSteadyLinearisedNS,
         eUnsteadyStokes,
         eUnsteadyNavierStokes,
         eEquationTypeSize
@@ -63,6 +64,7 @@ namespace Nektar
         "NoType",
         "SteadyStokes",
         "SteadyOseen",
+        "SteadyLinearisedNS",
         "UnsteadyStokes",
         "UnsteadyNavierStokes"
     };
@@ -74,8 +76,8 @@ namespace Nektar
         eConvective,
         eNonConservative,
         eLinearised,
-		eAdjoint,
-		eAdvectionFormSize
+        eAdjoint,
+        eAdvectionFormSize
     };
     
     // Keep this consistent with the enums in EquationType.
@@ -85,7 +87,7 @@ namespace Nektar
         "Convective",
         "NonConservative",
         "Linearised",
-		"Adjoint"
+        "Adjoint"
     };
 	
     /**
@@ -96,6 +98,7 @@ namespace Nektar
     class IncNavierStokes: public EquationSystem
     {
     public:           
+        IncNavierStokes(void);
 
         // Destructor
         virtual ~IncNavierStokes();

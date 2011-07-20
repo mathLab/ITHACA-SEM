@@ -35,11 +35,19 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <Auxiliary/ADRBase.h>
 #include <cstdio>
 #include <cstdlib>
 
 namespace Nektar
 {
+    
+
+    // Default Constructor
+    IncNavierStokes::IncNavierStokes(void)
+    {
+    }
+
     
     /**
      * Constructor. Creates ...
@@ -52,7 +60,7 @@ namespace Nektar
         EquationSystem(pComm, pSession),
         m_infosteps(10)
     {
-        int i,j;
+        int i,j,expdim;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
                 
@@ -99,6 +107,7 @@ namespace Nektar
          {
          case eSteadyStokes: 
          case eSteadyOseen: 
+         case eSteadyLinearisedNS: 
              break;
          case eUnsteadyNavierStokes:
              {
@@ -342,23 +351,26 @@ namespace Nektar
 
     }
 	
-	//time dependent boundary conditions updating
+    //time dependent boundary conditions updating
 	
-	void IncNavierStokes::SetBoundaryConditions(NekDouble time)
-	{
-		int  nvariables = m_fields.num_elements();
-		
-		for (int i = 0; i < nvariables; ++i)
-		{
-			for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
-			{	
-			   if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
-			   {
-				  m_fields[i]->EvaluateBoundaryConditions(time);
-			   }
-			}
-		}
-	}
+    void IncNavierStokes::SetBoundaryConditions(NekDouble time)
+    {
+        int  nvariables = m_fields.num_elements();
+	
+        for (int i = 0; i < nvariables; ++i)
+        {
+            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
+            {	
+                if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+                {
+                    m_fields[i]->EvaluateBoundaryConditions(time);
+                }
+            }
+        }
+    }
+    
+    
+
     // case insensitive string comparison from web
 } //end of namespace
 

@@ -2,6 +2,7 @@ SET(IncNavierStokesSolverSource
        ../ADRSolver/EquationSystem.cpp
        ../Auxiliary/ADRBase.cpp
        ./EquationSystems/CoupledLinearNS.cpp
+       ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
        ./EquationSystems/AdvectionTerm.cpp

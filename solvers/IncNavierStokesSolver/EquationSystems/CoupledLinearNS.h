@@ -36,59 +36,15 @@
 #ifndef NEKTAR_SOLVERS_COUPLEDSTOKESSCHEME_H
 #define NEKTAR_SOLVERS_COUPLEDSTOKESSCHEME_H
 
+#include <IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.h>
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
 {     
 
-    class CoupledLinearNS: public IncNavierStokes
+    typedef struct coupledSolverMatrices
     {
-    public:
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-                                LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            return MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pComm, pSession);
-        }
-        /// Name of class
-        static std::string className;
-
-
-        CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
-                        LibUtilities::SessionReaderSharedPtr &pSesssion);
-
-        /**
-         *  Generate the linearised Navier Stokes solver based on the
-         *  static condensation of the interior velocity space and
-         *  pressure modes.
-         */
-        void SetUpCoupledMatrix(const NekDouble lambda = 0.0, 
-                           const Array< OneD, Array<OneD, NekDouble>  > &Advfield = NullNekDoubleArrayofArray, 
-                           bool IsLinearNSEquation = true);
-        
-        const SpatialDomains::ExpansionMap &GenPressureExp(const SpatialDomains::ExpansionMap &VelExp);
-        
-        void Solve(void);
-
-        /**
-         *   Solve the coupled linear Navier-Stokes solve using matrix
-         *   systems set up at construction.  The solution is stored
-         *   in #m_velocity and #m_pressure.
-         */
-        void SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing);
-
-        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-                                       Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                                       const NekDouble time,
-                                       const NekDouble a_iixDt);
-
-        void EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                               const NekDouble time);
-    protected:
-        
-    private:
         /**  \brief Boundary-interior Laplacian plus linearised convective
              terms pre-multiplying Cinv: 
              \f$ m\_BCinv[n,m] = (\nabla \phi^b_n, \nu \nabla
@@ -122,11 +78,87 @@ namespace Nektar
          */
         DNekScalBlkMatSharedPtr  m_D_int; 
         
-        MultiRegions::GlobalLinSysSharedPtr m_CoupledBndSys; 
+        MultiRegions::GlobalLinSysSharedPtr m_CoupledBndSys;
+    } CoupledSolverMatrices;
+
+    class CoupledLinearNS: public IncNavierStokes
+    {
+    public:
+        /// Creates an instance of this class
+        static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
+                                LibUtilities::SessionReaderSharedPtr& pSession)
+        {
+            return MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pComm, pSession);
+        }
+        /// Name of class
+        static std::string className;        
         
-        MultiRegions::LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+        CoupledLinearNS(void);
+
+        CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSesssion);
+
+        /**
+         *  Generate the linearised Navier Stokes solver based on the
+         *  static condensation of the interior velocity space and
+         *  pressure modes.
+         */
+        void SetUpCoupledMatrix(const NekDouble lambda = 0.0, 
+                                const Array< OneD, Array<OneD, NekDouble>  > &Advfield = NullNekDoubleArrayofArray, 
+                                bool IsLinearNSEquation = true);
         
-        void SetUp2DExpansionC0ContMap(const MultiRegions::GlobalSysSolnType solnType = MultiRegions::eDirectMultiLevelStaticCond);
+        
+        const SpatialDomains::ExpansionMap &GenPressureExp(const SpatialDomains::ExpansionMap &VelExp);
+        
+        void Solve(void);
+
+        /**
+         *   Solve the coupled linear Navier-Stokes solve using matrix
+         *   systems set up at construction.  The solution is stored
+         *   in #m_velocity and #m_pressure.
+         */
+        void SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing);
+        
+        void SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing,
+                           Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                           MultiRegions::ExpListSharedPtr &pressure,
+                           const int HomogeneousMode = 0);
+        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                                       Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                                       const NekDouble time,
+                                       const NekDouble a_iixDt);
+
+        void EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                               const NekDouble time);
+
+        Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
+        
+    protected:
+        
+    private:
+        ///  Identify if a single mode is required for stability analysis. 
+        bool m_singleMode; 
+        /// Id of the single mode 0 or 1.
+        int  m_singleModeID;
+
+        Array<OneD, CoupledSolverMatrices> m_mat;
+        
+
+        /**
+         *  Generate the linearised Navier Stokes solver based on the
+         *  static condensation of the interior velocity space and
+         *  pressure modes. This call also allows for a Fourier mode
+         *  to be specified, however if HomogeneneousMode= 0 then can
+         *  be used for a standared 2D and hopefully 3D (in the
+         *  future).
+         */
+        void SetUpCoupledMatrix(const NekDouble lambda, 
+                                const Array< OneD, Array<OneD, NekDouble> > &Advfield, 
+                                bool       IsLinearNSEquation,
+                                const int  HomogeneousMode,
+                                CoupledSolverMatrices &mat,
+                                CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap);
 
         virtual void v_PrintSummary(std::ostream &out);
 
@@ -137,6 +169,8 @@ namespace Nektar
         virtual void v_Output(void);
     };
     
+
+
 } //end of namespace
 
 #endif //COUPLEDSTOKESSCHEME_H

@@ -50,41 +50,46 @@ using namespace Nektar;
 
 /// Generates a new vector in the sequence by applying the linear operator.
 void EV_update(
-        EquationSystemSharedPtr &equ,
-        Array<OneD, NekDouble> &src,
-        Array<OneD, NekDouble> &tgt);
+               EquationSystemSharedPtr &equ,
+               Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
+               Array<OneD, NekDouble> &src,
+               Array<OneD, NekDouble> &tgt,
+               bool VelCorrectionScheme);
 
 /// Generates the upper Hessenberg matrix H and computes its eigenvalues.
 void EV_small(
-        Array<OneD, Array<OneD, NekDouble> > &Kseq,
-        const int ntot,
-        const Array<OneD, NekDouble> &alpha,
-        const int kdim,
-        Array<OneD, NekDouble> &zvec,
-        Array<OneD, NekDouble> &wr,
-        Array<OneD, NekDouble> &wi,
-        NekDouble &resnorm);
+              Array<OneD, Array<OneD, NekDouble> > &Kseq,
+              const int ntot,
+              const Array<OneD, NekDouble> &alpha,
+              const int kdim,
+              Array<OneD, NekDouble> &zvec,
+              Array<OneD, NekDouble> &wr,
+              Array<OneD, NekDouble> &wi,
+              NekDouble &resnorm);
 
 /// Tests for convergence of eigenvalues of H.
 int EV_test(
-		const NekDouble period,
-        const int itrn,
-        const int kdim,
-        Array<OneD, NekDouble> &zvec,
-        Array<OneD, NekDouble> &wr,
-        Array<OneD, NekDouble> &wi,
-        const NekDouble resnorm,
-        const NekDouble evtol,
-        const int nvec,
-        ofstream &evlout);
+            const NekDouble period,
+            const int itrn,
+            const int kdim,
+            Array<OneD, NekDouble> &zvec,
+            Array<OneD, NekDouble> &wr,
+            Array<OneD, NekDouble> &wi,
+            const NekDouble resnorm,
+            const NekDouble evtol,
+            const int nvec,
+            ofstream &evlout,
+            NekDouble &resid0,
+            bool VelCorrectionScheme);
+
 
 /// Sorts a sequence of eigenvectors/eigenvalues by magnitude.
 void EV_sort(
-        Array<OneD, NekDouble> &evec,
-        Array<OneD, NekDouble> &wr,
-        Array<OneD, NekDouble> &wi,
-        Array<OneD, NekDouble> &test,
-        const int dim);
+             Array<OneD, NekDouble> &evec,
+             Array<OneD, NekDouble> &wr,
+             Array<OneD, NekDouble> &wi,
+             Array<OneD, NekDouble> &test,
+             const int dim);
 
 
 int main(int argc, char *argv[])
@@ -110,403 +115,463 @@ int main(int argc, char *argv[])
     // Record start time.
     time(&starttime);
     
-    // Create session reader.
-    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
-
-    // Create communicator
-    if (session->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = session->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
-    
-    // Create instance of module to solve the equation specified in the session.
     try
     {
-        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("SOLVERTYPE"), vComm, session);
-    }
-    catch (int e)
-    {
-        ASSERTL0(e == -1, "No such solver class defined.");
-    }
-
-
-	//Evaluation of the time period
-	NekDouble ts=session->GetParameter("TimeStep");
-	NekDouble numstep=session->GetParameter("NumSteps");
-    NekDouble period= ts*numstep;
-	bool useModifiedArnoldi=false;
-
-    session->MatchSolverInfo("EigenvalueAlgorithm","ModifiedArnoldi",useModifiedArnoldi,false);
-
-	// Print a summary of solver and problem parameters and initialise
-    // the solver.
-    equ->PrintSummary(cout);
-    equ->DoInitialise();
-    //initialise force if it necessary
-    equ->SetInitialForce(0.0);
-	
-    // --- ORIGINAL ARNOLDI ALGORITHM (USING ARPACK) ---
-    if (!useModifiedArnoldi)
-    {
-		int maxn=1000000; //Maximum size of the problem
-        int maxnev=12;  //maximum number of eigenvalues requested
-        int maxncv=200;  //Largest number of basis vector used in Implicitly Restarted Arnoldi
-
-        int       nfields= equ->UpdateFields().num_elements()-1;
-        int       nq     = equ->UpdateFields()[0]->GetNpoints(); // Number of points in the mesh
-        int       n      = nfields*nq; // Number of points in eigenvalue calculation
-        NekDouble tol    = 1e-6; // determines the stopping criterion.
-        int       ido    = 0;  //REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
-		int       info;        // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
-        int       nev    = 20;  // Number of eigenvalues to be evaluated
-        int       ncv=100;          // Length of the Arnoldi factorisation
-        int       lworkl = 3*ncv*(ncv+2); // Size of work array
-
-		
-		//Load values from session file if defined 
-        session->LoadParameter("kdim",  ncv, 16);
-        session->LoadParameter("nvec",  nev, 2);
-        session->LoadParameter("evtol", tol, 1e-6);
-			
-        // Error alerts
-        ASSERTL0(n   <= maxn,  "N is greater than MAXN");
-        ASSERTL0(nev <= maxnev,"NEV is greater than MAXNEV");
-        ASSERTL0(ncv <= maxncv,"NEV is greater than MAXNEV");
-        ASSERTL0(2   <= ncv-nev,"NCV-NEV is less than 2");
-
-        Array<OneD, NekDouble> resid (n);
-        Array<OneD, NekDouble> v     (n*ncv);
-        Array<OneD, NekDouble> workl (lworkl);
-        Array<OneD, NekDouble> workd (3*n, 0.0);
-        Array<OneD, MultiRegions::ExpListSharedPtr>& fields = equ->UpdateFields();
-
-	
-
-		if (session->DefinesFunction("InitialConditions"))
-		{
-			cout << " info=1: initial Arnoldi vector from session file" << endl;
-			info=1;
-			//Initialise resid to values specified in the initial conditions of the session file
-			for (int k = 0; k < nfields; ++k)
-			{
-				Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &resid[k*nq], 1);
-			}
-			 
-		}
-		else
-		{
-			cout << "info=0: random initial Arnoldi vector " << endl;
-			info=0;
-		}
-
-
-        // Parameters
-        int iparam[11];
-        iparam[0] = 1;      // strategy for shift-invert
-        iparam[1] = 0;      // (deprecated)
-        iparam[2] = 400;    // maximum number of iterations allowed/taken
-        iparam[3] = 1;      // blocksize to be used for recurrence
-        iparam[4] = 0;      // number of converged ritz eigenvalues
-        iparam[5] = 0;      // (deprecated)
-        iparam[6] = 1;      // computation mode 1=> matrix-vector prod
-        iparam[7] = 0;      // (for shift-invert)
-        iparam[8] = 0;      // number of MV operations
-        iparam[9] = 0;      // number of BV operations
-        iparam[10]= 0;      // number of reorthogonalisation steps
-
-        int ipntr[14];
-
-        int cycle = 0;
-		
-		FILE *pFile;
-		std::string name = session->GetFilename().substr(0,session->GetFilename().find_last_of('.'))+".evl";
-		pFile= fopen (name.c_str(), "w");
-       
-		while(ido != 99)//ido==-1 || ido==1 || ido==0)
-        {
-            //Routine for eigenvalue evaluation for non-symmetric operators
-            Arpack::Dnaupd( ido,        // reverse comm flag
-                            "I",       // B='I' for std eval problem
-                            n,          // problem size
-                            "LM",      // type of problem (Largest Mag)
-                            nev,        // number of eigenvalues to compute
-                            tol,        // stopping tolerance
-                            resid.get(),// array to store residuals
-                            ncv,        // number of Lanczos vectors to use
-                            v.get(),    // storage for lanczos vectors
-                            n,
-                            iparam,     // mode
-                            ipntr,
-                            workd.get(),
-                            workl.get(),
-                            lworkl,
-                            info);
-
-            cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
-		
-			fprintf (pFile, "Iteration: %i\t ", cycle);
-			fprintf (pFile, "\n");
-
-            for(int k=0; k<=nev-1; ++k)
-            {
-             
-				//Plotting of real and imaginary part of the eigenvalues from workl
-                double r = workl[ipntr[5]-1+k];
-                double i = workl[ipntr[6]-1+k];
-                double res;
-				
-
-				cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
-				" Frequency " << atan2(i,r)/period << endl;
-			
-				fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
-				fprintf (pFile, "\n");
-				
-				
-            }
-
-            cycle++;
-
-            if (ido == 99) break;
-			
-			
-
-            ASSERTL0(ido == 1, "Unexpected reverse communication request.");
-
-			
-            //fields are copied in workd[ipntr[0]-1] and following
-            for (int k = 0; k < nfields; ++k)
-            {
-                Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &fields[k]->UpdatePhys()[0] , 1);
-            }
-
-            equ->DoSolve();
-
-            //Evoluted fields are copied into workd[inptr[1]-1] and following
-            for (int k = 0; k < nfields; ++k)
-            {
-                Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &workd[ipntr[1]-1+k*nq], 1);
-            }
-			
-        }
-
-		fclose (pFile);
+        // Create session reader.
+        session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
         
-		cout<< "Converged in " << iparam[8] << " iterations" << endl;
-
-        ASSERTL0(info >= 0," Error with Dnaupd");
-
-        Array<OneD, int> ritzSelect(ncv,0);
-        Array<OneD, NekDouble> dr(nev+1,0.0);
-        Array<OneD, NekDouble> di(nev+1,0.0);
-        Array<OneD, NekDouble> workev(3*ncv);
-        Array<OneD, NekDouble> z(n*(nev+1));
-        double sigmar = 0.0, sigmai = 0.0;
-
-        //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
-        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n,
-                       sigmar, sigmai, workev.get(), "I", n, "LM", nev, tol,
-                       resid.get(), ncv, v.get(), n, iparam, ipntr, workd.get(), workl.get(),
-                       lworkl,info);
-
-        ASSERTL0(info == 0, " Error with Dneupd");
-
-        //number of "converged" Ritz values. This represents the number of Ritz values that satisfy
-        //the convergence criterion.
-        int nconv=iparam[4];
-
-        cout << "===========================================" << endl;
-        cout << "Stability Analysis " << endl;
-        cout << "1)Size of the problem: " << n << " points" << endl;
-        cout << "2)The number of Ritz values requested: " << nev << endl;
-        cout << "3)The number of Arnoldi vectors generated: " << ncv << endl;
-        cout << "4)What portion of the spectrum: " << "LM" << endl;
-        cout << "5)The number of the converged Ritz value: " << nconv << endl;
-        cout << "6)The number of OP*x: "<< iparam[8] <<endl;
-        cout << "7)The number of Implicit Arnoldi update iterations taken: "<< iparam[2] <<endl;
-        cout << "8)The convergence criterion: "<< tol << endl;
-
-        //Printing of eigenvalues
-        cout << "~~~~~~~~Eigenvalues of the problem~~~~~~~~" <<endl;
-
-        //for (int i = nev; i >= 0; --i)
-        for(int i= 0; i< nconv; ++i)
-		{
-            cout << "Eigenvalue n. " << i+1 << " Re= "
-            << dr[i]<< "   Im=" << di[i]
-            << " Growth= " << log(sqrt(dr[i]*dr[i]+di[i]*di[i]))/period
-            << " Frequency=" <<atan2(di[i],dr[i])/period <<endl;
-
-            for (int k = 0; k < nfields; ++k)
-            {
-                Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdatePhys()[0] , 1);
-                fields[k]->SetPhysState(true);
-            }
-			
-            std::string file = session->GetFilename().substr(0,session->GetFilename().find_last_of('.'))
-            + ".eig." + boost::lexical_cast<std::string>(nev-i);
-            equ->WriteFld(file);
-        }
-    }
-
-    // --- MODIFIED ARNOLDI ALGORITHM ---
-    else
-    {
-        // Declare variables
-        Array<OneD, MultiRegions::ExpListSharedPtr>& fields
-                                = equ->UpdateFields();
-        int nfields             = fields.num_elements();
-        int nq                  = fields[0]->GetNpoints();
-        int ntot                = nfields*nq;
-        int converged           = 0;
-        NekDouble resnorm;
-        std::string evlFile     = session->GetFilename().substr(0,session->GetFilename().find_last_of('.')) + ".evl";
-        int kdim                = 0;
-        int nvec                = 0;
-        int nits                = 0;
-        NekDouble evtol         = 1e-06;
-		
-		//Computation of the period
-		NekDouble ts=session->GetParameter("TimeStep");
-		NekDouble numstep=session->GetParameter("NumSteps");
-		NekDouble period= ts*numstep;
-
-        // Initialise progress output and load session parameters
-        ofstream evlout(evlFile.c_str());
-		
-        session->LoadParameter("kdim",  kdim,  8);
-        session->LoadParameter("nvec",  nvec,  1);
-        session->LoadParameter("nits",  nits,  500);
-        session->LoadParameter("evtol", evtol, 1e-06);
-
-        // Allocate memory
-        Array<OneD, NekDouble> alpha                (kdim + 1,      0.0);
-        Array<OneD, NekDouble> wr                   (kdim,          0.0);
-        Array<OneD, NekDouble> wi                   (kdim,          0.0);
-        Array<OneD, NekDouble> zvec                 (kdim * kdim,   0.0);
-        Array<OneD, Array<OneD, NekDouble> > Kseq   (kdim + 1);
-        Array<OneD, Array<OneD, NekDouble> > Tseq   (kdim + 1);
-        for (int i = 0; i < kdim + 1; ++i)
+        // Create communicator
+        if (session->DefinesSolverInfo("Communication"))
         {
-            Kseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
-            Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
+            vCommModule = session->GetSolverInfo("Communication");
         }
-
-        // Print session parameters
-        cout << "Krylov-space dimension: " << kdim << endl;
-        cout << "Number of vectors:      " << nvec << endl;
-        cout << "Max iterations:         " << nits << endl;
-        cout << "Eigenvalue tolerance:   " << evtol << endl;
-
-        // Copy starting vector into second sequence element (temporary).
-        for (int k = 0; k < nfields; ++k)
+        else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
         {
-            Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &Kseq[1][0] + k*nq, 1);
+            vCommModule = "ParallelMPI";
         }
-
-        // Perform one iteration to enforce boundary conditions.
-        // Set this as the initial value in the sequence.
-        EV_update(equ, Kseq[1], Kseq[0]);
-
-        // Normalise first vector in sequence
-        alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
-        alpha[0] = std::sqrt(alpha[0]);
-        Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
-
-        // Fill initial krylov sequence
-        for (int i = 1; !converged && i <= kdim; ++i)
-        {
-            // Compute next vector
-            EV_update(equ, Kseq[i-1], Kseq[i]);
-
-            // Normalise
-            alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
-            alpha[i] = std::sqrt(alpha[i]);
-            Vmath::Smul(ntot, 1.0/alpha[i], Kseq[i], 1, Kseq[i], 1);
-
-            // Copy Krylov sequence into temporary storage
-            for (int k = 0; k < i + 1; ++k)
-            {
-                Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
-            }
-
-            // Generate Hessenberg matrix and compute eigenvalues of it.
-            EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
-
-            // Test for convergence.
-            converged = EV_test(period,i,i,zvec,wr,wi,resnorm,evtol,std::min(i,nvec),evlout);
-        }
-
-        // Continue with full sequence
-        for (int i = kdim + 1; !converged && i <= nits; ++i)
-        {
-            // Shift all the vectors in the sequence.
-            // First vector is removed.
-            for (int j = 1; j <= kdim; ++j)
-            {
-                alpha[j-1] = alpha[j];
-                Vmath::Vcopy(ntot, Kseq[j], 1, Kseq[j-1], 1);
-            }
-
-            // Compute next vector
-            EV_update(equ, Kseq[kdim - 1], Kseq[kdim]);
-
-            // Compute new scale factor
-            alpha[kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[kdim][0], 1, &Kseq[kdim][0], 1));
-            alpha[kdim] = std::sqrt(alpha[kdim]);
-            Vmath::Smul(ntot, 1.0/alpha[kdim], Kseq[kdim], 1, Kseq[kdim], 1);
-
-            // Copy Krylov sequence into temporary storage
-            for (int k = 0; k < kdim + 1; ++k)
-            {
-                Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
-            }
-
-            // Generate Hessenberg matrix and compute eigenvalues of it
-            EV_small(Tseq, ntot, alpha, kdim, zvec, wr, wi, resnorm);
-
-            // Test for convergence.
-            converged = EV_test(period,i,kdim,zvec,wr,wi,resnorm,evtol,nvec,evlout);
-        }
-
-        // Close the runtime info file.
-        evlout.close();
-    }
-
-    // Record end time.
-    time(&endtime);
-    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
- 
-    // Write output to .fld file
-    equ->Output();
-    
-    // Evaluate and output computation time and solution accuracy.
-    // The specific format of the error output is essential for the
-    // regression tests to work.
-    cout << "-------------------------------------------" << endl;
-    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
-    for(int i = 0; i < equ->GetNvariables(); ++i)
-    {
-        if (session->DefinesFunction("ExactSolution"))
-        {
-            // Get Exact solution
-            Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
-            equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+        vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
         
-            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
-            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+        // Create instance of module to solve the equation specified in the session.
+        try
+        {
+            equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("SOLVERTYPE"), vComm, session);
+        }
+        catch (int e)
+        {
+            ASSERTL0(e == -1, "No such solver class defined.");
+        }
+        
+        // Print a summary of solver and problem parameters and initialise
+        // the solver.
+        equ->PrintSummary(cout);
+        equ->DoInitialise();
+        
+        //Evaluation of the time period
+        NekDouble period;
+        bool VelCorrectionScheme; 
+        session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",VelCorrectionScheme, false);
+        Array<OneD, MultiRegions::ExpListSharedPtr> fields,forces;
+        fields = equ->UpdateFields();
+
+        if(VelCorrectionScheme)
+        {
+            period = session->GetParameter("TimeStep")* session->GetParameter("NumSteps");
         }
         else
         {
-            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
-            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+            period = 1.0;
+            ASSERTL0(session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
+            equ->SetInitialForce(0.0);
+            forces = equ->UpdateForces();
+        }
+        
+        //Get the initial Arnoldi Vector
+        std::string invecType = session->GetSolverInfo("InitialVector");
+        
+        bool useModifiedArnoldi=false;
+        session->MatchSolverInfo("EigenvalueAlgorithm","ModifiedArnoldi",
+                                 useModifiedArnoldi,false);
+        
+	
+        // --- ORIGINAL ARNOLDI ALGORITHM (USING ARPACK) ---
+        if (!useModifiedArnoldi)
+        {
+            int maxn=1000000; //Maximum size of the problem
+            int maxnev=12;    //maximum number of eigenvalues requested
+            int maxncv=200;   //Largest number of basis vector used in Implicitly Restarted Arnoldi
+            
+            int nfields,n; 
+            int nq     = fields[0]->GetNpoints(); // Number of points in the mesh
+            int ido    = 0;  //REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
+            int info;        // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
+            int nev    = 20;  // Number of eigenvalues to be evaluated
+            int ncv    = 100; // Length of the Arnoldi factorisation
+            int lworkl = 3*ncv*(ncv+2); // Size of work array
+            NekDouble tol    = 1e-6; // determines the stopping criterion.
+            
+            
+            if(VelCorrectionScheme)
+            {
+                nfields= fields.num_elements()-1;		
+            }
+            else
+            {
+                nfields = fields.num_elements();
+            }
+            
+            n = nfields*nq;
+            
+            //Load values from session file if defined 
+            session->LoadParameter("kdim",  ncv, 16);
+            session->LoadParameter("nvec",  nev, 2);
+            session->LoadParameter("evtol", tol, 1e-6);
+            
+            // Error alerts
+            ASSERTL0(n   <= maxn,  "N is greater than MAXN");
+            ASSERTL0(nev <= maxnev,"NEV is greater than MAXNEV");
+            ASSERTL0(ncv <= maxncv,"NEV is greater than MAXNEV");
+            ASSERTL0(2   <= ncv-nev,"NCV-NEV is less than 2");
+            
+            Array<OneD, NekDouble> resid (n);
+            Array<OneD, NekDouble> v     (n*ncv);
+            Array<OneD, NekDouble> workl (lworkl);
+            Array<OneD, NekDouble> workd (3*n, 0.0);
+            
+            if (session->DefinesFunction("InitialConditions"))
+            {
+                cout << " info=1: initial Arnoldi vector from session file" << endl;
+                info=1;
+                //Initialise resid to values specified in the initial conditions of the session file
+                for (int k = 0; k < nfields; ++k)
+                {
+                    Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &resid[k*nq], 1);
+                }
+                
+            }
+            else
+            {
+                cout << "info=0: random initial Arnoldi vector " << endl;
+                info=0;
+            }
+            
+            // Parameters
+            int iparam[11];
+            iparam[0] = 1;      // strategy for shift-invert
+            iparam[1] = 0;      // (deprecated)
+            iparam[2] = 400;    // maximum number of iterations allowed/taken
+            iparam[3] = 1;      // blocksize to be used for recurrence
+            iparam[4] = 0;      // number of converged ritz eigenvalues
+            iparam[5] = 0;      // (deprecated)
+            iparam[6] = 1;      // computation mode 1=> matrix-vector prod
+            iparam[7] = 0;      // (for shift-invert)
+            iparam[8] = 0;      // number of MV operations
+            iparam[9] = 0;      // number of BV operations
+            iparam[10]= 0;      // number of reorthogonalisation steps
+            
+            int ipntr[14];
+            
+            int cycle = 0;
+            
+            FILE *pFile;
+            std::string name = session->GetFilename().substr(0,session->GetFilename().find_last_of('.'))+".evl";
+            pFile= fopen (name.c_str(), "w");
+            
+            while(ido != 99)//ido==-1 || ido==1 || ido==0)
+            {
+                //Routine for eigenvalue evaluation for non-symmetric operators
+                Arpack::Dnaupd( ido,        // reverse comm flag
+                                "I",       // B='I' for std eval problem
+                                n,          // problem size
+                                "LM",      // type of problem (Largest Mag)
+                                nev,        // number of eigenvalues to compute
+                                tol,        // stopping tolerance
+                                resid.get(),// array to store residuals
+                                ncv,        // number of Lanczos vectors to use
+                                v.get(),    // storage for lanczos vectors
+                                n,
+                                iparam,     // mode
+                                ipntr,
+                                workd.get(),
+                                workl.get(),
+                                lworkl,
+                                info);
+                
+                cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
+                
+                fprintf (pFile, "Iteration: %i\t ", cycle);
+                fprintf (pFile, "\n");
+                
+                for(int k=0; k<=nev-1; ++k)
+                {                
+                    //Plotting of real and imaginary part of the
+                    //eigenvalues from workl
+                    double r = workl[ipntr[5]-1+k];
+                    double i = workl[ipntr[6]-1+k];
+                    double res;
+                    
+                    if(VelCorrectionScheme)
+                    {
+                        cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
+                            " Frequency " << atan2(i,r)/period << endl;
+                        
+                        fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
+                        fprintf (pFile, "\n");
+                    }
+                    else
+                    {
+                        NekDouble invmag = 1.0/(r*r + i*i);
+                        cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " inverse real " << -r*invmag <<  " inverse imag " << i*invmag << endl;
+                        
+                        fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, inverse real:  %f\t, inverse imag:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),-r*invmag, i*invmag);
+                        fprintf (pFile, "\n");
+                    }
+                }
+                cycle++;
+                if (ido == 99) break;
+                
+                ASSERTL0(ido == 1, "Unexpected reverse communication request.");
+                
+                //fields are copied in workd[ipntr[0]-1] and following
+                if(VelCorrectionScheme)
+                {
+                    for (int k = 0; k < nfields; ++k)
+                    {
+                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &fields[k]->UpdatePhys()[0] , 1);
+                    }
+                }
+                else
+                {
+                    for (int k = 0; k < nfields; ++k)
+                    {
+                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &forces[k]->UpdatePhys()[0] , 1);
+                    }
+                }
+                
+                equ->DoSolve();
+                
+                //Evoluted fields are copied into workd[inptr[1]-1]
+                //and following
+                for (int k = 0; k < nfields; ++k)
+                {
+                    if(!VelCorrectionScheme)
+                    {
+                        fields[k]->BwdTrans(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+                    }
+                    Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &workd[ipntr[1]-1+k*nq], 1);
+                }
+                
+            }
+            fclose (pFile);
+            
+            cout<< "Converged in " << iparam[8] << " iterations" << endl;
+            
+            ASSERTL0(info >= 0," Error with Dnaupd");
+            
+            Array<OneD, int> ritzSelect(ncv,0);
+            Array<OneD, NekDouble> dr(nev+1,0.0);
+            Array<OneD, NekDouble> di(nev+1,0.0);
+            Array<OneD, NekDouble> workev(3*ncv);
+            Array<OneD, NekDouble> z(n*(nev+1));
+            double sigmar = 0.0, sigmai = 0.0;
+            
+            //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
+            Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, "LM", nev, tol, resid.get(), ncv, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+            
+            ASSERTL0(info == 0, " Error with Dneupd");
+            
+            int nconv=iparam[4];
+            
+            cout << "===========================================" << endl;
+            cout << "Stability Analysis " << endl;
+            cout << "1)Size of the problem: " << n << " points" << endl;
+            cout << "2)The number of Ritz values requested: " << nev << endl;
+            cout << "3)The number of Arnoldi vectors generated: " << ncv << endl;
+            cout << "4)What portion of the spectrum: " << "LM" << endl;
+            cout << "5)The number of the converged Ritz value: " << nconv << endl;
+            cout << "6)The number of OP*x: "<< iparam[8] <<endl;
+            cout << "7)The number of Implicit Arnoldi update iterations taken: "<< iparam[2] <<endl;
+            cout << "8)The convergence criterion: "<< tol << endl;
+            
+            //Printing of eigenvalues
+            cout << "~~~~~~~~Eigenvalues of the problem~~~~~~~~" <<endl;
+            
+            //for (int i = nev; i >= 0; --i)
+            for(int i= 0; i< nconv; ++i)
+            {
+                if(VelCorrectionScheme)
+                {
+                    cout << "Eigenvalue n. " << i+1 << " Re= "
+                         << dr[i]<< "   Im=" << di[i]
+                         << " Growth= " << log(sqrt(dr[i]*dr[i]+di[i]*di[i]))/period
+                         << " Frequency=" <<atan2(di[i],dr[i])/period <<endl;
+                }
+                else
+                {
+                    NekDouble invmag = 1.0/(dr[i]*dr[i]+di[i]*di[i]);
+                    cout << "Eigenvalue n. " << i+1 << " Re= "
+                         << dr[i]<< "   Im=" << di[i]
+                         << " Inverse real= " << -dr[i]*invmag
+                         << " Inverse imag=" <<  di[i]*invmag << endl;
+                }
+                
+                for (int k = 0; k < nfields; ++k)
+                {
+                    Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdatePhys()[0] , 1);
+                    fields[k]->SetPhysState(true);
+                }
+                
+                std::string file = session->GetFilename().substr(0,session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
+                equ->WriteFld(file);
+            }
+        }
+        // --- MODIFIED ARNOLDI ALGORITHM ---
+        else
+        {
+            // Declare variables
+            int nfields             = fields.num_elements();
+            int nq                  = fields[0]->GetNpoints();
+            int ntot                = nfields*nq;
+            int converged           = 0;
+            NekDouble resnorm;
+            std::string evlFile     = session->GetFilename().substr(0,session->GetFilename().find_last_of('.')) + ".evl";
+            int kdim                = 0;
+            int nvec                = 0;
+            int nits                = 0;
+            NekDouble evtol         = 1e-06;
+            
+            // Initialise progress output and load session parameters
+            ofstream evlout(evlFile.c_str());
+            
+            session->LoadParameter("kdim",  kdim,  8);
+            session->LoadParameter("nvec",  nvec,  1);
+            session->LoadParameter("nits",  nits,  500);
+            session->LoadParameter("evtol", evtol, 1e-06);
+            
+            // Allocate memory
+            Array<OneD, NekDouble> alpha                (kdim + 1,      0.0);
+            Array<OneD, NekDouble> wr                   (kdim,          0.0);
+            Array<OneD, NekDouble> wi                   (kdim,          0.0);
+            Array<OneD, NekDouble> zvec                 (kdim * kdim,   0.0);
+            Array<OneD, Array<OneD, NekDouble> > Kseq   (kdim + 1);
+            Array<OneD, Array<OneD, NekDouble> > Tseq   (kdim + 1);
+            for (int i = 0; i < kdim + 1; ++i)
+            {
+                Kseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
+                Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
+            }
+            
+            // Print session parameters
+            cout << "Krylov-space dimension: " << kdim << endl;
+            cout << "Number of vectors:      " << nvec << endl;
+            cout << "Max iterations:         " << nits << endl;
+            cout << "Eigenvalue tolerance:   " << evtol << endl;
+            
+            // Copy starting vector into second sequence element (temporary).
+            if(VelCorrectionScheme)
+            {
+                for (int k = 0; k < nfields; ++k)
+                {
+                    Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &Kseq[1][0] + k*nq, 1);
+                }
+            }
+            else
+            {
+                for (int k = 0; k < nfields; ++k)
+                {
+                    Vmath::Vcopy(nq, &forces[k]->GetPhys()[0], 1, &Kseq[1][0] + k*nq, 1);
+                }
+            }            
+            // Perform one iteration to enforce boundary conditions.
+            // Set this as the initial value in the sequence.
+            EV_update(equ, fields, Kseq[1], Kseq[0],VelCorrectionScheme);
+            cout << "Iteration: " << 0 <<  endl;
+            
+            // Normalise first vector in sequence
+            alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
+            alpha[0] = std::sqrt(alpha[0]);
+            Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
+            
+            // Fill initial krylov sequence
+            NekDouble resid0;
+            for (int i = 1; !converged && i <= kdim; ++i)
+            {
+                // Compute next vector
+                EV_update(equ, fields, Kseq[i-1], Kseq[i],VelCorrectionScheme);
+                
+                // Normalise
+                alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
+                alpha[i] = std::sqrt(alpha[i]);
+                Vmath::Smul(ntot, 1.0/alpha[i], Kseq[i], 1, Kseq[i], 1);
+                
+                // Copy Krylov sequence into temporary storage
+                for (int k = 0; k < i + 1; ++k)
+                {
+                    Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+                }
+                
+                // Generate Hessenberg matrix and compute eigenvalues of it.
+                EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
+                
+                // Test for convergence.
+                converged = EV_test(period,i,i,zvec,wr,wi,resnorm,evtol,std::min(i,nvec),evlout,resid0,VelCorrectionScheme);
+                cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
+            }
+            
+            // Continue with full sequence
+            for (int i = kdim + 1; !converged && i <= nits; ++i)
+            {
+                // Shift all the vectors in the sequence.
+                // First vector is removed.
+                NekDouble invnorm = 1.0/sqrt(Blas::Ddot(ntot,Kseq[1],1,Kseq[1],1));
+                for (int j = 1; j <= kdim; ++j)
+                {
+                    alpha[j-1] = alpha[j];
+                    Vmath::Smul(ntot,invnorm,Kseq[j],1,Kseq[j],1);
+                    Vmath::Vcopy(ntot, Kseq[j], 1, Kseq[j-1], 1);
+                }
+                
+                // Compute next vector
+                EV_update(equ, fields, Kseq[kdim - 1], Kseq[kdim],VelCorrectionScheme);
+                
+                // Compute new scale factor
+                alpha[kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[kdim][0], 1, &Kseq[kdim][0], 1));
+                alpha[kdim] = std::sqrt(alpha[kdim]);
+                Vmath::Smul(ntot, 1.0/alpha[kdim], Kseq[kdim], 1, Kseq[kdim], 1);
+                
+                // Copy Krylov sequence into temporary storage
+                for (int k = 0; k < kdim + 1; ++k)
+                {
+                    Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+                }
+                
+                // Generate Hessenberg matrix and compute eigenvalues of it
+                EV_small(Tseq, ntot, alpha, kdim, zvec, wr, wi, resnorm);
+                
+                // Test for convergence.
+                converged = EV_test(period,i,kdim,zvec,wr,wi,resnorm,evtol,nvec,evlout,resid0,VelCorrectionScheme);
+                cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
+            }
+            
+            // Close the runtime info file.
+            evlout.close();
+        }
+        
+        // Record end time.
+        time(&endtime);
+        CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+        
+        // Write output to .fld file
+        equ->Output();
+    
+        // Evaluate and output computation time and solution accuracy.
+        // The specific format of the error output is essential for the
+        // regression tests to work.
+        cout << "-------------------------------------------" << endl;
+        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+        for(int i = 0; i < equ->GetNvariables(); ++i)
+        {
+            if (session->DefinesFunction("ExactSolution"))
+            {
+                // Get Exact solution
+                Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
+                equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+                
+                cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
+                cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+            }
+            else
+            {
+                cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
+                cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+            }
         }
     }
+    catch (const std::string& eStr)
+    {
+        cout << "Error: " << eStr << endl;
+    }
+
+    return 0;
 }
 
 
@@ -515,25 +580,46 @@ int main(int argc, char *argv[])
  */
 void EV_update(
         EquationSystemSharedPtr &equ,
+        Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
         Array<OneD, NekDouble> &src,
-        Array<OneD, NekDouble> &tgt)
+        Array<OneD, NekDouble> &tgt,
+        bool VelCorrectionScheme)
 {
-    Array<OneD, MultiRegions::ExpListSharedPtr>& fields = equ->UpdateFields();
     int nfields = fields.num_elements();
     int nq = fields[0]->GetNpoints();
 
     // Copy starting vector into first sequence element.
-    for (int k = 0; k < nfields; ++k)
+    if(VelCorrectionScheme)
     {
-        Vmath::Vcopy(nq, &src[0] + k*nq, 1, &fields[k]->UpdatePhys()[0], 1);
+        for (int k = 0; k < nfields; ++k)
+        {
+            Vmath::Vcopy(nq, &src[0] + k*nq, 1, &fields[k]->UpdatePhys()[0], 1);
+        }
+    }
+    else
+    {
+        for (int k = 0; k < nfields; ++k)
+        {
+            Vmath::Vcopy(nq, &src[0] + k*nq, 1, &equ->UpdateForces()[k]->UpdatePhys()[0], 1);
+        }
     }
     equ->DoSolve();
     // Copy starting vector into first sequence element.
-    for (int k = 0; k < nfields; ++k)
+    if(VelCorrectionScheme)
     {
-        Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &tgt[0] + k*nq, 1);
+        for (int k = 0; k < nfields; ++k)
+        {
+            Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &tgt[0] + k*nq, 1);
+        }
     }
-
+    else
+    {
+        for (int k = 0; k < nfields; ++k)
+        {
+            fields[k]->BwdTrans(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+            Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &tgt[0] + k*nq, 1);
+        }
+    }
 }
 
 
@@ -582,8 +668,9 @@ void EV_small(
             H[j*kdim+i] /= R[j*kdimp+j];
         }
     }
+
     H[(kdim-1)*kdim+kdim] = alpha[kdim]
-                * std::fabs(R[kdim*kdimp+kdim] / R[(kdim-1)*kdimp + kdim-1]);
+        * std::fabs(R[kdim*kdimp+kdim] / R[(kdim-1)*kdimp + kdim-1]);
 
     Lapack::dgeev_('N','V',kdim,&H[0],kdim,&wr[0],&wi[0],0,1,&zvec[0],kdim,&rwork[0],lwork,ier);
 
@@ -597,52 +684,82 @@ void EV_small(
  *
  */
 int EV_test(
-		const NekDouble period,
-        const int itrn,
-        const int kdim,
-        Array<OneD, NekDouble> &zvec,
-        Array<OneD, NekDouble> &wr,
-        Array<OneD, NekDouble> &wi,
-        const NekDouble resnorm,
-        const NekDouble evtol,
-        const int nvec,
-        ofstream &evlout)
+            const NekDouble period,
+            const int itrn,
+            const int kdim,
+            Array<OneD, NekDouble> &zvec,
+            Array<OneD, NekDouble> &wr,
+            Array<OneD, NekDouble> &wi,
+            const NekDouble resnorm,
+            const NekDouble evtol,
+            const int nvec,
+            ofstream &evlout,
+            NekDouble &resid0,
+            bool VelCorrectionScheme)
 {
     int idone = 0;
     NekDouble re_ev, im_ev, abs_ev, ang_ev, re_Aev, im_Aev;	
-   // NekDouble period = 0.1;
+    // NekDouble period = 0.1;
+
     Array<OneD, NekDouble> resid(kdim);
     for (int i = 0; i < kdim; ++i)
     {
         resid[i] = resnorm * std::fabs(zvec[kdim - 1 + i*kdim]) /
-                std::sqrt(Vmath::Dot(kdim, &zvec[0] + i*kdim, 1, &zvec[0] + i*kdim, 1));
+            std::sqrt(Vmath::Dot(kdim, &zvec[0] + i*kdim, 1, &zvec[0] + i*kdim, 1));
         if (wi[i] < 0.0) resid[i-1] = resid[i] = hypot(resid[i-1], resid[i]);
     }
     EV_sort(zvec, wr, wi, resid, kdim);
-
+    
     if (resid[nvec-1] < evtol) idone = nvec;
-
+    
     evlout << "-- Iteration = " << itrn << ", H(k+1, k) = " << resnorm << endl;
     evlout.precision(4);
     evlout.setf(ios::scientific, ios::floatfield);
-    evlout << "EV  Magnitude   Angle       Growth      Frequency   Residual"
-            << endl;
-    for (int i = 0; i < kdim; i++) {
-      re_ev  = wr[i];
-      im_ev  = wi[i];
-      abs_ev = hypot (re_ev, im_ev);
-      ang_ev = atan2 (im_ev, re_ev);
-      re_Aev = log (abs_ev) / period;
-      im_Aev = ang_ev       / period;
-      evlout << setw(2)  << i
-           << setw(12) << abs_ev
-           << setw(12) << ang_ev
-       << setw(12) << re_Aev
-       << setw(12) << im_Aev
-       << setw(12) << resid[i]
-       << endl;
+    if(VelCorrectionScheme)
+    {
+        evlout << "EV  Magnitude   Angle       Growth      Frequency   Residual"
+               << endl;
+        for (int i = 0; i < kdim; i++) 
+        {
+            re_ev  = wr[i];
+            im_ev  = wi[i];
+            abs_ev = hypot (re_ev, im_ev);
+            ang_ev = atan2 (im_ev, re_ev);
+            re_Aev = log (abs_ev) / period;
+            im_Aev = ang_ev       / period;
+            evlout << setw(2)  << i
+                   << setw(12) << abs_ev
+                   << setw(12) << ang_ev
+                   << setw(12) << re_Aev
+                   << setw(12) << im_Aev
+                   << setw(12) << resid[i]
+                   << endl;
+        }
+    }
+    else
+    {
+        evlout << "EV  Magnitude   Angle      inverse real  inverse imag  Residual"
+               << endl;
+        for (int i = 0; i < kdim; i++) 
+        {
+            re_ev  = wr[i];
+            im_ev  = wi[i];
+            abs_ev = hypot (re_ev, im_ev);
+            ang_ev = atan2 (im_ev, re_ev);
+            re_Aev = -wr[i]/(abs_ev*abs_ev);
+            im_Aev =  wi[i]/(abs_ev*abs_ev);
+            evlout << setw(2)  << i
+                   << setw(12) << abs_ev
+                   << setw(12) << ang_ev
+                   << setw(12) << re_Aev
+                   << setw(12) << im_Aev
+                   << setw(12) << resid[i]
+                   << endl;
+        }
+
     }
 
+    resid0 = resid[0];
     return idone;
 }
 

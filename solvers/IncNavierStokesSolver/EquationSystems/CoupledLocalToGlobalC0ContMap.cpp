@@ -650,12 +650,9 @@ namespace Nektar
         m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(nLocBndCondDofs,-1);
         
 
-        // If required, set up the sign-vector
-        if(m_signChange)
-        {
-            m_localToGlobalSign    = Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
-            m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
-        }
+        // Set default sign array. 
+        m_localToGlobalSign    = Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
+        m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
 
         m_solnType = solnType;
         m_staticCondLevel = staticCondLevel;

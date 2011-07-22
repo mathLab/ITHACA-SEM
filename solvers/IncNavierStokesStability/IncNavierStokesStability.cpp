@@ -92,6 +92,37 @@ void EV_sort(
              const int dim);
 
 
+void OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool VelCorrectionScheme)
+{
+    int k;
+                    
+    //Plotting of real and imaginary part of the
+    //eigenvalues from workl
+    for(int k=0; k<=nev-1; ++k)
+    {                
+        double r = workl[ipntr[5]-1+k];
+        double i = workl[ipntr[6]-1+k];
+        double res;
+                        
+        if(VelCorrectionScheme)
+        {
+            cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
+                " Frequency " << atan2(i,r)/period << endl;
+            
+            fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
+            fprintf (pFile, "\n");
+        }
+        else
+        {
+            NekDouble invmag = 1.0/(r*r + i*i);
+            cout << k << ": Re " << sqrt(r*r+i*i) << ", Imag " << atan2(i,r) << " inverse real " << -r*invmag <<  " inverse imag " << i*invmag << endl;
+            
+            fprintf (pFile, "EV: %i\t , Re: %f\t, Imag:  %f\t, inverse real:  %f\t, inverse imag:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),-r*invmag, i*invmag);
+            fprintf (pFile, "\n");
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if(argc != 2)
@@ -256,8 +287,58 @@ int main(int argc, char *argv[])
             std::string name = session->GetFilename().substr(0,session->GetFilename().find_last_of('.'))+".evl";
             pFile= fopen (name.c_str(), "w");
             
+            //Routine for eigenvalue evaluation for non-symmetric operators
+            Arpack::Dnaupd( ido,        // reverse comm flag
+                            "I",       // B='I' for std eval problem
+                            n,          // problem size
+                            "LM",      // type of problem (Largest Mag)
+                            nev,        // number of eigenvalues to compute
+                            tol,        // stopping tolerance
+                            resid.get(),// array to store residuals
+                            ncv,        // number of Lanczos vectors to use
+                            v.get(),    // storage for lanczos vectors
+                            n,
+                            iparam,     // mode
+                            ipntr,
+                            workd.get(),
+                            workl.get(),
+                            lworkl,
+                            info);
+            ASSERTL0(info == 0, " Error with Dnaupd");
+            
             while(ido != 99)//ido==-1 || ido==1 || ido==0)
-            {
+            {                
+                ASSERTL0(ido == 1, "Unexpected reverse communication request.");
+                
+                //fields are copied in workd[ipntr[0]-1] and following
+                if(VelCorrectionScheme)
+                {
+                    for (int k = 0; k < nfields; ++k)
+                    {
+                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &fields[k]->UpdatePhys()[0] , 1);
+                    }
+                }
+                else
+                {
+                    for (int k = 0; k < nfields; ++k)
+                    {
+                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &forces[k]->UpdatePhys()[0] , 1);
+                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1,&workd[ipntr[2]-1+k*nq], 1);
+                    }
+                }
+                
+                equ->DoSolve();
+                
+                //Evoluted fields are copied into workd[inptr[1]-1]
+                //and following
+                for (int k = 0; k < nfields; ++k)
+                {
+                    if(!VelCorrectionScheme)
+                    {
+                        fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+                    }
+                    Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &workd[ipntr[1]-1+k*nq], 1);
+                }
                 //Routine for eigenvalue evaluation for non-symmetric operators
                 Arpack::Dnaupd( ido,        // reverse comm flag
                                 "I",       // B='I' for std eval problem
@@ -275,72 +356,22 @@ int main(int argc, char *argv[])
                                 workl.get(),
                                 lworkl,
                                 info);
-                
+                ASSERTL0(info == 0, " Error with Dnaupd");
+
                 cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
-                
                 fprintf (pFile, "Iteration: %i\t ", cycle);
                 fprintf (pFile, "\n");
-                
-                for(int k=0; k<=nev-1; ++k)
-                {                
-                    //Plotting of real and imaginary part of the
-                    //eigenvalues from workl
-                    double r = workl[ipntr[5]-1+k];
-                    double i = workl[ipntr[6]-1+k];
-                    double res;
-                    
-                    if(VelCorrectionScheme)
-                    {
-                        cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
-                            " Frequency " << atan2(i,r)/period << endl;
-                        
-                        fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
-                        fprintf (pFile, "\n");
-                    }
-                    else
-                    {
-                        NekDouble invmag = 1.0/(r*r + i*i);
-                        cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " inverse real " << -r*invmag <<  " inverse imag " << i*invmag << endl;
-                        
-                        fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, inverse real:  %f\t, inverse imag:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),-r*invmag, i*invmag);
-                        fprintf (pFile, "\n");
-                    }
+    
+                if(cycle >= ncv-1)
+                {
+                    OutputEv(pFile,nev, workl,ipntr,period, VelCorrectionScheme);
                 }
+                
                 cycle++;
-                if (ido == 99) break;
-                
-                ASSERTL0(ido == 1, "Unexpected reverse communication request.");
-                
-                //fields are copied in workd[ipntr[0]-1] and following
-                if(VelCorrectionScheme)
-                {
-                    for (int k = 0; k < nfields; ++k)
-                    {
-                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &fields[k]->UpdatePhys()[0] , 1);
-                    }
-                }
-                else
-                {
-                    for (int k = 0; k < nfields; ++k)
-                    {
-                        Vmath::Vcopy(nq, &workd[ipntr[0]-1+k*nq], 1, &forces[k]->UpdatePhys()[0] , 1);
-                    }
-                }
-                
-                equ->DoSolve();
-                
-                //Evoluted fields are copied into workd[inptr[1]-1]
-                //and following
-                for (int k = 0; k < nfields; ++k)
-                {
-                    if(!VelCorrectionScheme)
-                    {
-                        fields[k]->BwdTrans(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
-                    }
-                    Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &workd[ipntr[1]-1+k*nq], 1);
-                }
-                
             }
+
+
+
             fclose (pFile);
             
             cout<< "Converged in " << iparam[8] << " iterations" << endl;
@@ -616,7 +647,7 @@ void EV_update(
     {
         for (int k = 0; k < nfields; ++k)
         {
-            fields[k]->BwdTrans(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+            fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
             Vmath::Vcopy(nq, &fields[k]->GetPhys()[0], 1, &tgt[0] + k*nq, 1);
         }
     }

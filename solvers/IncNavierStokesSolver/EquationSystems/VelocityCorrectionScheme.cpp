@@ -51,6 +51,12 @@ namespace Nektar
         IncNavierStokes(pComm,pSession)
     {
         
+    }
+
+    void VelocityCorrectionScheme::v_InitObject()
+    {
+        IncNavierStokes::v_InitObject();
+
         // Set m_pressure to point to last field of m_fields; 
         if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_fields.num_elements()-1),"p") == 0)
         {
@@ -185,6 +191,15 @@ namespace Nektar
         default:
             ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
         }
+    }
+
+    Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
+    {
+        int vVar = m_boundaryConditions->GetNumVariables();
+        Array<OneD, bool> vChecks(vVar, false);
+        vChecks[vVar-1] = true;
+        cout << vVar << " -> Set " << vVar -1 << endl;
+        return vChecks;
     }
 
     void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 

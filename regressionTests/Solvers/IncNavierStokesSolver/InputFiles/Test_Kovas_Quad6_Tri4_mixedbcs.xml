@@ -54,7 +54,7 @@
      <E VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
    </FUNCTION>
    
-   <FUNCTION NAME="UserDefinedEqns"> 
+   <FUNCTION NAME="AdvectionVelocity"> 
      <E VAR="u" VALUE="1 - exp(-LAMBDA*x)*cos(2*PI*y)" />
      <E VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
    </FUNCTION>

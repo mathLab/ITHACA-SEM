@@ -88,6 +88,8 @@ namespace Nektar
         UnsteadySystem(LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession);
 
+        virtual void v_InitObject();
+
         /// Solves an unsteady problem.
         virtual void v_DoSolve();
 

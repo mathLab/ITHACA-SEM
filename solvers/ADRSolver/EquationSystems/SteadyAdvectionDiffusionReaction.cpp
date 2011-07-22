@@ -44,10 +44,15 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : SteadyAdvectionDiffusion(pComm, pSession)
     {
+    }
 
-        if (pSession->DefinesParameter("Lambda"))
+    void SteadyAdvectionDiffusionReaction::v_InitObject()
+    {
+        SteadyAdvectionDiffusion::v_InitObject();
+
+        if (m_session->DefinesParameter("Lambda"))
         {
-            m_lambda = pSession->GetParameter("Lambda");
+            m_lambda = m_session->GetParameter("Lambda");
         }
 
     }

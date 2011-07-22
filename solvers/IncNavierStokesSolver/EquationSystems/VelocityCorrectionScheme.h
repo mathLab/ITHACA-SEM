@@ -57,7 +57,9 @@ namespace Nektar
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
                                 LibUtilities::SessionReaderSharedPtr& pSession) {
-            return MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
+            return p;
         }
         /// Name of class
         static std::string className;
@@ -73,6 +75,8 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual ~VelocityCorrectionScheme();
+
+        virtual void v_InitObject();
 
         void EvaluatePressureBCs(const Array<OneD, const Array< OneD,  NekDouble> > &fields, const Array<OneD, const Array< OneD,  NekDouble> > &N);
         
@@ -127,10 +131,7 @@ namespace Nektar
 
         virtual void v_DoInitialise(void);
 
-        virtual void v_Output(void)
-        {
-            ADRBase::Output();
-        }
+        virtual Array<OneD, bool> v_GetSystemSingularChecks();
 
     };
 

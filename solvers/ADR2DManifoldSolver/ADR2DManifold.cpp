@@ -47,7 +47,7 @@ namespace Nektar
      * Basic construnctor
      */
     ADR2DManifold::ADR2DManifold(void):
-        ADRBase(),
+        EquationSystem(),
         m_infosteps(100),
         m_explicitAdvection(true),
         m_explicitDiffusion(true),
@@ -61,7 +61,7 @@ namespace Nektar
     ADR2DManifold::ADR2DManifold(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession):
-        ADRBase(pComm,pSession,true),
+        EquationSystem(pComm,pSession),
         m_infosteps(10),
         m_explicitDiffusion(true),
         m_explicitReaction(true)
@@ -2166,7 +2166,9 @@ namespace Nektar
 
         default:
             {
-                EvaluateExactSolution(field,outfield,time);
+                LibUtilities::EquationSharedPtr vEqu
+                        = m_session->GetFunction("ExactSolution", field);
+                EvaluateFunction(outfield,vEqu,time);
             }
         }
     }
@@ -2501,7 +2503,7 @@ namespace Nektar
     {
         cout << "=======================================================================" << endl;
         cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
-        ADRBase::SessionSummary(out);
+        EquationSystem::SessionSummary(out);
         AdditionalSessionSummary(out);
         switch(m_equationType)
         {
@@ -2516,7 +2518,7 @@ namespace Nektar
             }
             out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
 
-            ADRBase::TimeParamSummary(out);
+            EquationSystem::TimeParamSummary(out);
             break;
 
         case eUnsteadyDiffusion:
@@ -2529,7 +2531,7 @@ namespace Nektar
               out << "\tDiffusion Advancement   : Implicit" <<endl;
           }
           out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-          ADRBase::TimeParamSummary(out);
+          EquationSystem::TimeParamSummary(out);
           break;
 
       case eUnsteadyDiffusionReaction:
@@ -2554,7 +2556,7 @@ namespace Nektar
               out << "\tReaction Advancement    : Implicit" <<endl;
           }
           out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-          ADRBase::TimeParamSummary(out);
+          EquationSystem::TimeParamSummary(out);
           break;
       }
     cout << "=======================================================================" << endl;

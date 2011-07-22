@@ -54,7 +54,7 @@
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
 
-#include <Auxiliary/ADRBase.h>
+#include <Auxiliary/EquationSystem.h>
 
 namespace Nektar
 {
@@ -95,7 +95,7 @@ namespace Nektar
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 
         /// Type of projection, i.e. Galerkin or DG.
-        enum ADRBase::ProjectionType m_projectionType;
+        enum EquationSystem::ProjectionType m_projectionType;
 
 
         int m_spacedim;              ///< Spatial dimension (> expansion dim)

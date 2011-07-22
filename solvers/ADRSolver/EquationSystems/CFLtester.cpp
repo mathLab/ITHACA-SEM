@@ -46,6 +46,12 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm, pSession)
     {
+    }
+
+    void CFLtester::v_InitObject()
+    {
+        UnsteadySystem::v_InitObject();
+
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         int nq = m_fields[0]->GetNpoints();

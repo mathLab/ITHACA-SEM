@@ -63,20 +63,26 @@ namespace Nektar
           LibUtilities::SessionReaderSharedPtr& pSession)
     : EquationSystem(pComm, pSession)
   {
+  }
+
+  void UnsteadySystem::v_InitObject()
+  {
+      EquationSystem::v_InitObject();
+
     // Load SolverInfo parameters
-    pSession->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
+    m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
 			      m_explicitDiffusion,true);
-    pSession->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit",
+    m_session->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit",
 			      m_explicitAdvection,true);
     
     // Determine TimeIntegrationMethod to use.
-    ASSERTL0(pSession->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
+    ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
 	     "No TIMEINTEGRATIONMETHOD defined in session.");
     int i;
     for (i = 0; i < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++i)
       {
 	bool match;
-	pSession->MatchSolverInfo("TIMEINTEGRATIONMETHOD",
+	m_session->MatchSolverInfo("TIMEINTEGRATIONMETHOD",
 				  LibUtilities::TimeIntegrationMethodMap[i], match, false);
 	if (match)
 	  {
@@ -91,14 +97,14 @@ namespace Nektar
     // if discontinuous Galerkin determine numerical flux to use
     if (m_projectionType == eDiscontinuousGalerkin)
       {
-	ASSERTL0(pSession->DefinesSolverInfo("UPWINDTYPE"),
+	ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
 		 "No UPWINDTYPE defined in session.");
 	
 	int i;
 	for (i = 0; i < (int)SIZE_UpwindType; ++i)
 	  {
 	    bool match;
-	    pSession->MatchSolverInfo("UPWINDTYPE",
+	    m_session->MatchSolverInfo("UPWINDTYPE",
 				      UpwindTypeMap[i], match, false);
 	    if (match)
 	      {
@@ -145,7 +151,7 @@ namespace Nektar
 
     
     // Load generic input parameters
-    pSession->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+    m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
   }
   
   /**

@@ -103,6 +103,8 @@ namespace Nektar
         // Destructor
         virtual ~IncNavierStokes();
 
+        virtual void v_InitObject();
+
     protected: 
 
         /// Advection term

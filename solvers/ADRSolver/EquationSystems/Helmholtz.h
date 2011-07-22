@@ -42,12 +42,15 @@ namespace Nektar
     class Helmholtz : public Poisson
     {
     public:
+        friend class MemoryManager<Helmholtz>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<Helmholtz>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
 
@@ -55,12 +58,18 @@ namespace Nektar
         static std::string className1;
         static std::string className2;
 
-        Helmholtz(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
         virtual ~Helmholtz();
 
     protected:
+        Helmholtz(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
+
+        virtual void v_InitObject();
         virtual void v_PrintSummary(std::ostream &out);
+
+    private:
+        virtual Array<OneD, bool> v_GetSystemSingularChecks();
+
     };
 }
 

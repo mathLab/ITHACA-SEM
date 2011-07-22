@@ -3,8 +3,7 @@ SET(ShallowWaterSolverSource
        ./EquationSystems/ShallowWaterSystem.cpp
        ./EquationSystems/LinearSWE.cpp
        ./EquationSystems/NonlinearSWE.cpp		
-       ../Auxiliary/EquationSystem.cpp
-       ../Auxiliary/ADRBase.cpp)
+       ../Auxiliary/EquationSystem.cpp)
 
 ADD_SOLVER_EXECUTABLE(ShallowWaterSolver 
 			${ShallowWaterSolverSource})

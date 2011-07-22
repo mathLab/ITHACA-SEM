@@ -38,7 +38,7 @@
 #define NEKTAR_SOLVERS_ADVECTIONDIFFUSIONREACTION_ADVECTIONDIFFUSIONREACTION_H
 
 #include <MultiRegions/DisContField2D.h>
-#include <Auxiliary/ADRBase.h>
+#include <Auxiliary/EquationSystem.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -82,7 +82,7 @@ namespace Nektar
      * a DisContField2D class
      */
 
-    class ADR2DManifold: public ADRBase
+    class ADR2DManifold: public EquationSystem
     {
     public:
 

@@ -63,18 +63,19 @@ namespace Nektar
   class EulerCFE : public CompressibleFlowSystem
   {
   public:
+      friend class MemoryManager<EulerCFE>;
+
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      return MemoryManager<EulerCFE>::AllocateSharedPtr(pComm, pSession);
+      EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pComm, pSession);
+      p->InitObject();
+      return p;
     }
     /// Name of class
     static std::string className;
-    
-    EulerCFE(LibUtilities::CommSharedPtr& pComm,
-            LibUtilities::SessionReaderSharedPtr& pSession);
     
     virtual ~EulerCFE();
 
@@ -82,6 +83,11 @@ namespace Nektar
     ProblemType                                     m_problemType;   
     
   protected:
+
+    EulerCFE(LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession);
+
+    virtual void v_InitObject();
 
     /// Print a summary of time stepping parameters.
     virtual void v_PrintSummary(std::ostream &out);

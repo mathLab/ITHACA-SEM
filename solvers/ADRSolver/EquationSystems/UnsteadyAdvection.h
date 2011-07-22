@@ -43,23 +43,26 @@ namespace Nektar
     class UnsteadyAdvection : public UnsteadySystem
     {
     public:
+        friend class MemoryManager<UnsteadyAdvection>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className;
 
-        UnsteadyAdvection(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
-
         virtual ~UnsteadyAdvection();
 
     protected:
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
+
+        UnsteadyAdvection(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,
@@ -69,6 +72,8 @@ namespace Nektar
                           Array<OneD,  Array<OneD, NekDouble> > &outarray,
                           const NekDouble time);
 
+        virtual void v_InitObject();
+
         // DG Advection routines
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
 
@@ -76,8 +81,6 @@ namespace Nektar
 
         // Print Summary
         virtual void v_PrintSummary(std::ostream &out);
-    private:
-
     };
 }
 

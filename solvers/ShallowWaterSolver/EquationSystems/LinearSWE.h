@@ -50,24 +50,29 @@ namespace Nektar
   class LinearSWE : public ShallowWaterSystem
   {
   public:
+      friend class MemoryManager<LinearSWE>;
+
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      return MemoryManager<LinearSWE>::AllocateSharedPtr(pComm, pSession);
+        EquationSystemSharedPtr p = MemoryManager<LinearSWE>::AllocateSharedPtr(pComm, pSession);
+        p->InitObject();
+        return p;
     }
     /// Name of class
     static std::string className;
     
+    virtual ~LinearSWE();
+
+  protected:
     LinearSWE(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession);
     
-    virtual ~LinearSWE();
+    virtual void v_InitObject();
     
-  protected:
-   
     void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
 		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
 		  const NekDouble time);

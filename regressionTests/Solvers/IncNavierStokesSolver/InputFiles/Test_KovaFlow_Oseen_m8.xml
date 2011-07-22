@@ -53,10 +53,10 @@
       <E VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
    </FUNCTION>
    
-   <USERDEFINEDEQNS>
-     <F LHS="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
-     <F LHS="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
-   </USERDEFINEDEQNS>
+   <FUNCTION NAME="AdvectionField">
+     <E VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+     <E VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
+   </FUNCTION>
   
 
 </CONDITIONS>

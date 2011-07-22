@@ -8,23 +8,26 @@ namespace Nektar
     class UnsteadyDiffusion : public UnsteadySystem
     {
     public:
+        friend class MemoryManager<UnsteadyDiffusion>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className;
 
+        virtual ~UnsteadyDiffusion();
+
+    protected:
         UnsteadyDiffusion(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual ~UnsteadyDiffusion();
-
-    protected:
         void DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                     const NekDouble time);
@@ -39,6 +42,7 @@ namespace Nektar
                       NekDouble time,
                       NekDouble lambda);
 
+        virtual void v_InitObject();
 
     private:
         NekDouble m_waveFreq;

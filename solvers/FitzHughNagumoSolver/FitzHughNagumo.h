@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERS_FitzHughNagumo_FitzHughNagumo_H
 
 #include <MultiRegions/DisContField2D.h>
-#include <Auxiliary/ADRBase.h>
+#include <Auxiliary/EquationSystem.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
@@ -75,7 +75,7 @@ namespace Nektar
      * a DisContField2D class 
      */
     
-    class FitzHughNagumo: public ADRBase
+    class FitzHughNagumo: public EquationSystem
     {
     public:           
 

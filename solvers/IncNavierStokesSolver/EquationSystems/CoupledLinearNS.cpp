@@ -62,6 +62,12 @@ namespace Nektar
         m_singleModeID(0),
         IncNavierStokes(pComm, pSession)
     {
+    }
+
+    void CoupledLinearNS::v_InitObject()
+    {
+        IncNavierStokes::v_InitObject();
+
         int  n,i,j,k,eid;
         int  expdim = m_graph->GetMeshDimension();
         int  n_exp  = m_fields[m_velocity[0]]->GetNumElmts();
@@ -85,14 +91,14 @@ namespace Nektar
 
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
-                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(pComm, Homo1DKey, m_LhomZ, m_useFFT, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_comm, Homo1DKey, m_LhomZ, m_useFFT, pressure_exp);
 
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                
             }
             else
             {
-                m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(pComm, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_comm, pressure_exp);
                 nz = 1;
             }
             
@@ -118,7 +124,7 @@ namespace Nektar
 
                     // base mode
                     int nz_loc = 2;
-                    m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(pComm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
+                    m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
                 }
                 else
                 {
@@ -126,7 +132,7 @@ namespace Nektar
 
                     // base mode
                     int nz_loc = 2;
-                    m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(pComm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
+                    m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
                 }
             }
             else
@@ -135,13 +141,13 @@ namespace Nektar
                 
                 // base mode
                 int nz_loc = 1;
-                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(pComm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
+                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
                 
                 if(nz > 1)
                 {
                     nz_loc = 2;
                     // Assume all higher modes have the same boundary conditions and re-use mapping
-                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(pComm,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc,solntype);
+                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc,solntype);
                     for(i = 2; i < nz; ++i)
                     {
                         m_locToGloMap[i] = m_locToGloMap[1];
@@ -1208,7 +1214,7 @@ namespace Nektar
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
 
-                EvaluateUserDefinedEqn(AdvField); 
+                EvaluateFunction(AdvField,"AdvectionVelocity");
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
                 SetInitialForce(0.0);
@@ -1223,7 +1229,7 @@ namespace Nektar
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
 
-                EvaluateUserDefinedEqn(AdvField); 
+                EvaluateFunction(AdvField,"AdvectionVelocity");
 
                 
                 SetUpCoupledMatrix(0.0,AdvField,true);
@@ -1772,7 +1778,8 @@ namespace Nektar
         m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
         variables[i] = "p"; 
   
-        ADRBase::Output(m_fields[0],fieldcoeffs,variables);
+        std::string outname = m_sessionName + ".fld";
+        WriteFld(outname,m_fields[0],fieldcoeffs,variables);
     }
 }
 

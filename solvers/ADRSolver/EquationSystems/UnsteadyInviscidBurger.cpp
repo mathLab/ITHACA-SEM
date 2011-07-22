@@ -11,11 +11,17 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm,pSession)
     {
-        pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
+    }
+
+    void UnsteadyInviscidBurger::v_InitObject()
+    {
+        UnsteadySystem::v_InitObject();
+
+        m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
 
         if (m_explicitAdvection)
         {
-            m_ode.DefineOdeRhs        (&UnsteadyInviscidBurger::DoOdeRhs,        this);
+            m_ode.DefineOdeRhs     (&UnsteadyInviscidBurger::DoOdeRhs,        this);
             m_ode.DefineProjection (&UnsteadyInviscidBurger::DoOdeProjection, this);
         }
         else

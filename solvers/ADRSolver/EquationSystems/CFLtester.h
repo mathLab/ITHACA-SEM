@@ -43,24 +43,27 @@ namespace Nektar
     class CFLtester : public UnsteadySystem
     {
     public:
+        friend class MemoryManager<CFLtester>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<CFLtester>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className;
-
-        CFLtester(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual ~CFLtester();
 		
     protected:
         
 		Array<OneD, Array<OneD, NekDouble> > m_velocity;
+
+        CFLtester(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,
@@ -70,6 +73,8 @@ namespace Nektar
                           Array<OneD,  Array<OneD, NekDouble> > &outarray,
                           const NekDouble time);
 
+        virtual void v_InitObject();
+
         // DG Advection routines
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
 
@@ -78,7 +83,7 @@ namespace Nektar
         // Print Summary
         virtual void v_PrintSummary(std::ostream &out);
     private:
-		
+
 		virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
 										const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
 

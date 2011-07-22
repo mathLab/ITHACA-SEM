@@ -45,9 +45,15 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : Poisson(pComm, pSession)
     {
-        if (pSession->DefinesParameter("Lambda"))
+    }
+
+    void Helmholtz::v_InitObject()
+    {
+        Poisson::v_InitObject();
+
+        if (m_session->DefinesParameter("Lambda"))
         {
-            m_lambda = pSession->GetParameter("Lambda");
+            m_lambda = m_session->GetParameter("Lambda");
         }
     }
 
@@ -59,5 +65,17 @@ namespace Nektar
     void Helmholtz::v_PrintSummary(std::ostream &out)
     {
         Poisson::v_PrintSummary(out);
+    }
+
+    Array<OneD, bool> Helmholtz::v_GetSystemSingularChecks()
+    {
+        if (m_lambda == 0)
+        {
+            return Array<OneD, bool>(m_boundaryConditions->GetNumVariables(), true);
+        }
+        else
+        {
+            return Array<OneD, bool>(m_boundaryConditions->GetNumVariables(), false);
+        }
     }
 }

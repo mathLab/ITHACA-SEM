@@ -1,7 +1,7 @@
 SET(FitzHughNagumoSolverSource 
        ./FitzHughNagumoSolver.cpp 
        ./FitzHughNagumo.cpp
-       ../Auxiliary/ADRBase.cpp)
+       ../Auxiliary/EquationSystem.cpp)
 
 ADD_SOLVER_EXECUTABLE(FitzHughNagumoSolver 
 			${FitzHughNagumoSolverSource})

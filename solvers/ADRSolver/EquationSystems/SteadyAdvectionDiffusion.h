@@ -42,28 +42,32 @@ namespace Nektar
     class SteadyAdvectionDiffusion : public EquationSystem
     {
     public:
+        friend class MemoryManager<SteadyAdvectionDiffusion>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusion>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
         
         /// Name of class
         static std::string className;
 
-        SteadyAdvectionDiffusion(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
         virtual ~SteadyAdvectionDiffusion();
 
     protected:
         NekDouble m_lambda;
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
+        SteadyAdvectionDiffusion(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
 
+        virtual void v_InitObject();
         virtual void v_PrintSummary(std::ostream &out);
         virtual void v_DoInitialise();
         virtual void v_DoSolve();

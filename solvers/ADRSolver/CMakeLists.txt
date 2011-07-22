@@ -11,8 +11,7 @@ SET(ADRSolverSource
        ./EquationSystems/UnsteadyInviscidBurger.cpp
        ./EquationSystems/CFLtester.cpp
        ../Auxiliary/UnsteadySystem.cpp
-       ../Auxiliary/EquationSystem.cpp
-       ../Auxiliary/ADRBase.cpp)
+       ../Auxiliary/EquationSystem.cpp)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 
 			${ADRSolverSource})

@@ -38,6 +38,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <MultiRegions/LocalToGlobalDGMap.h>
 #include <Auxiliary/UnsteadySystem.h>
 
 namespace Nektar
@@ -67,22 +68,28 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : EquationSystem(pComm, pSession)
     {
+    }
+
+    void UnsteadySystem::v_InitObject()
+    {
+        EquationSystem::v_InitObject();
+
         // Load SolverInfo parameters
-        pSession->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
+        m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
                                     m_explicitDiffusion,true);
-        pSession->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit",
+        m_session->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit",
                                     m_explicitAdvection,true);
-        pSession->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
+        m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                     m_explicitReaction, true);
 
         // Determine TimeIntegrationMethod to use.
-        ASSERTL0(pSession->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
+        ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
                 "No TIMEINTEGRATIONMETHOD defined in session.");
         int i;
         for (i = 0; i < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++i)
         {
             bool match;
-            pSession->MatchSolverInfo("TIMEINTEGRATIONMETHOD",
+            m_session->MatchSolverInfo("TIMEINTEGRATIONMETHOD",
                     LibUtilities::TimeIntegrationMethodMap[i], match, false);
             if (match)
             {
@@ -94,7 +101,7 @@ namespace Nektar
                                         "Invalid time integration type.");
 
         // Load generic input parameters
-        pSession->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
 		
 		if(m_boundaryConditions->CheckForParameter("CFL") == true)
 		{

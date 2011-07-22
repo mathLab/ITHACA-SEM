@@ -48,6 +48,8 @@ namespace Nektar
   {
   public:
 
+      friend class MemoryManager<CompressibleFlowSystem>;
+
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
             LibUtilities::CommSharedPtr& pComm,
@@ -58,14 +60,16 @@ namespace Nektar
     /// Name of class
     static std::string className;
     
+    virtual ~CompressibleFlowSystem();
+
+  protected:
+
     CompressibleFlowSystem(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession);
-    
-    virtual ~CompressibleFlowSystem(); 
-    
-  protected:
 
+    virtual void v_InitObject();
+    
     /// Print a summary of time stepping parameters.
     virtual void v_PrintSummary(std::ostream &out);
 

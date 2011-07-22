@@ -11,8 +11,14 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm, pSession)
     {
-        pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
-        pSession->LoadParameter("epsilon",    m_epsilon,  0.0);
+    }
+
+    void UnsteadyDiffusion::v_InitObject()
+    {
+        UnsteadySystem::v_InitObject();
+
+        m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
+        m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
         if (m_explicitDiffusion)
         {

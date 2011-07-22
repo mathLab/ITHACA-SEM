@@ -37,6 +37,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <MultiRegions/LocalToGlobalDGMap.h>
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
@@ -50,6 +51,11 @@ namespace Nektar
     : UnsteadySystem(pComm, pSession)
   {
 
+  }
+
+  void CompressibleFlowSystem::v_InitObject()
+  {
+      UnsteadySystem::v_InitObject();
   }
 
   CompressibleFlowSystem::~CompressibleFlowSystem()

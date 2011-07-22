@@ -5,8 +5,7 @@ SET(CompressibleFlowSolverSource
        ./EquationSystems/EulerArtificialDiffusionCFE.cpp
        ./EquationSystems/NavierStokesCFE.cpp
        ../Auxiliary/EquationSystem.cpp
-       ./EquationSystems/UnsteadySystem.cpp
-       ../Auxiliary/ADRBase.cpp)
+       ./EquationSystems/UnsteadySystem.cpp)
 
 ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver 
 			${CompressibleFlowSolverSource})

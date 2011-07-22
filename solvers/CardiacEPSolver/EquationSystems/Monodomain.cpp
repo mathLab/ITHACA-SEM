@@ -71,14 +71,20 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm, pSession)
     {
-        pSession->LoadParameter("epsilon",    m_epsilon,   1.0);
+    }
+
+    void Monodomain::v_InitObject()
+    {
+        UnsteadySystem::v_InitObject();
+
+        m_session->LoadParameter("epsilon",    m_epsilon,   1.0);
 
         std::string vCellModel;
-        pSession->LoadSolverInfo("CELLMODEL", vCellModel, "");
+        m_session->LoadSolverInfo("CELLMODEL", vCellModel, "");
 
         ASSERTL0(vCellModel != "", "Cell Model not specified.");
 
-        m_cell = GetCellModelFactory().CreateInstance(vCellModel, pSession, m_fields[0]->GetNpoints());
+        m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]->GetNpoints());
 
         if (!m_explicitDiffusion)
         {
@@ -157,7 +163,7 @@ namespace Nektar
     void Monodomain::v_SetInitialConditions(NekDouble initialtime,
                         bool dumpInitialConditions)
     {
-        ADRBase::v_SetInitialConditions(initialtime, dumpInitialConditions);
+        EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions);
         /*
         cout << "Set initial conditions." << endl;
         int nq = m_fields[0]->GetNpoints();

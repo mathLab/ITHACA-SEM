@@ -8,22 +8,26 @@ namespace Nektar
     class UnsteadyAdvectionDiffusion : public UnsteadySystem
     {
     public:
+        friend class MemoryManager<UnsteadyAdvectionDiffusion>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<UnsteadyAdvectionDiffusion>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className;
 
-        UnsteadyAdvectionDiffusion(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
         virtual ~UnsteadyAdvectionDiffusion();
 
     protected:
+        UnsteadyAdvectionDiffusion(
+                LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
+
         virtual void DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                     const NekDouble time);
@@ -32,6 +36,8 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >&outarray,
                       NekDouble time,
                       NekDouble lambda);
+
+        virtual void v_InitObject();
 
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
 

@@ -43,7 +43,7 @@ namespace Nektar
      * Basic construnctor
      */
     FitzHughNagumo::FitzHughNagumo(void):
-        ADRBase(),
+        EquationSystem(),
         m_infosteps(100),
         m_explicitAdvection(true),
         m_explicitDiffusion(true),
@@ -59,7 +59,7 @@ namespace Nektar
      */
     FitzHughNagumo::FitzHughNagumo( LibUtilities::CommSharedPtr& pComm,
                                     LibUtilities::SessionReaderSharedPtr& pSession):
-        ADRBase(pComm,pSession,true),
+        EquationSystem(pComm,pSession),
         m_infosteps(10),
         m_explicitDiffusion(true),
         m_explicitReaction(true)
@@ -1562,7 +1562,7 @@ namespace Nektar
   {   
     cout << "=======================================================================" << endl;
     cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
-    ADRBase::SessionSummary(out);
+    EquationSystem::SessionSummary(out);
     if(m_explicitDiffusion)
       {
 	out << "\tDiffusion Advancement   : Explicit" <<endl;
@@ -1603,7 +1603,7 @@ namespace Nektar
     out << "\tfrequency2 : " << m_frequency2 << endl;
     out << "\tdiffrate : " << m_diffrate << endl;
 
-    ADRBase::TimeParamSummary(out);
+    EquationSystem::TimeParamSummary(out);
 
     cout << "=======================================================================" << endl;
   }

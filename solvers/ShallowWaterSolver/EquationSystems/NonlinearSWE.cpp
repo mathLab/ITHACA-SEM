@@ -38,6 +38,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <MultiRegions/LocalToGlobalDGMap.h>
 #include <ShallowWaterSolver/EquationSystems/NonlinearSWE.h>
 
 namespace Nektar
@@ -49,6 +50,11 @@ namespace Nektar
           LibUtilities::SessionReaderSharedPtr& pSession)
     : ShallowWaterSystem(pComm, pSession)
   {
+  }
+
+  void NonlinearSWE::v_InitObject()
+  {
+      ShallowWaterSystem::v_InitObject();
       
     if (m_explicitAdvection)
       {

@@ -83,11 +83,11 @@ namespace Nektar
             if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
                (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
             {
-                m_projectionType = ADRBase::eGalerkin;
+                m_projectionType = EquationSystem::eGalerkin;
             }
             else if(ProjectStr == "DisContinuous")
             {
-                m_projectionType = ADRBase::eDiscontinuousGalerkin;
+                m_projectionType = EquationSystem::eDiscontinuousGalerkin;
             }
             else
             {
@@ -98,7 +98,7 @@ namespace Nektar
         {
             cerr << "Projection type not specified in SOLVERINFO,"
             "defaulting to continuous Galerkin" << endl;
-            m_projectionType = ADRBase::eGalerkin;
+            m_projectionType = EquationSystem::eGalerkin;
         }
 	}
 

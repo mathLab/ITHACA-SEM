@@ -48,6 +48,11 @@ namespace Nektar
           LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleFlowSystem(pComm, pSession)
   {
+  }
+
+  void NavierStokesCFE::v_InitObject()
+  {
+      CompressibleFlowSystem::v_InitObject();
 
     if(m_boundaryConditions->SolverInfoExists("PROBLEMTYPE"))
       {
@@ -97,7 +102,7 @@ namespace Nektar
       {
       default:
 	{
-	  ADRBase::v_SetInitialConditions(initialtime,false);
+	  EquationSystem::v_SetInitialConditions(initialtime,false);
 	}
 	break;
       }

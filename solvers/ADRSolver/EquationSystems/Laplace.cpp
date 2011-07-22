@@ -45,7 +45,11 @@ namespace Nektar
         : EquationSystem(pComm, pSession),
           m_lambda(0.0)
     {
+    }
 
+    void Laplace::v_InitObject()
+    {
+        EquationSystem::v_InitObject();
     }
 
     Laplace::~Laplace()
@@ -69,4 +73,8 @@ namespace Nektar
         }
     }
 
+    Array<OneD, bool> Laplace::v_GetSystemSingularChecks()
+    {
+        return Array<OneD, bool>(m_boundaryConditions->GetNumVariables(), true);
+    }
 }

@@ -5,8 +5,7 @@ SET(CardiacEPSolverSource
        ./CellModels/FitzhughNagumo.cpp
        ./CellModels/AlievPanfilov.cpp
        ../Auxiliary/UnsteadySystem.cpp
-       ../Auxiliary/EquationSystem.cpp
-       ../Auxiliary/ADRBase.cpp)
+       ../Auxiliary/EquationSystem.cpp)
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver 
 			${CardiacEPSolverSource})

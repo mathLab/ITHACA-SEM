@@ -37,6 +37,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <MultiRegions/LocalToGlobalDGMap.h>
 #include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
 namespace Nektar
@@ -48,6 +49,11 @@ namespace Nektar
           LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleFlowSystem(pComm, pSession)
   {
+  }
+
+  void EulerCFE::v_InitObject()
+  {
+      CompressibleFlowSystem::v_InitObject();
 
     if(m_boundaryConditions->SolverInfoExists("PROBLEMTYPE"))
       {
@@ -102,7 +108,7 @@ namespace Nektar
 	break;
       default:
 	{
-	  ADRBase::v_SetInitialConditions(initialtime,false);
+	  EquationSystem::v_SetInitialConditions(initialtime,false);
 	}
 	break;
       }

@@ -59,19 +59,19 @@ namespace Nektar
   class NavierStokesCFE : public CompressibleFlowSystem
   {
   public:
+      friend class MemoryManager<NavierStokesCFE>;
+
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      return MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pComm, pSession);
+      EquationSystemSharedPtr p = MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pComm, pSession);
+      p->InitObject();
+      return p;
     }
     /// Name of class
     static std::string className;
-    
-    NavierStokesCFE(
-            LibUtilities::CommSharedPtr& pComm,
-            LibUtilities::SessionReaderSharedPtr& pSession);
     
     virtual ~NavierStokesCFE();
 
@@ -79,7 +79,11 @@ namespace Nektar
     ProblemType                                     m_problemType;   
     
   protected:
+    NavierStokesCFE(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession);
 
+    virtual void v_InitObject();
     /// Print a summary of time stepping parameters.
     virtual void v_PrintSummary(std::ostream &out);
 

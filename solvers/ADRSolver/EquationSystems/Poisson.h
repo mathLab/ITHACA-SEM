@@ -42,23 +42,33 @@ namespace Nektar
     class Poisson : public Laplace
     {
     public:
+        friend class MemoryManager<Poisson>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<Poisson>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className1;
         static std::string className2;
 
-        Poisson(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
         virtual ~Poisson();
 
     protected:
+        Poisson(LibUtilities::CommSharedPtr& pComm,
+                LibUtilities::SessionReaderSharedPtr& pSession);
+
+        virtual void v_InitObject();
+
         virtual void v_PrintSummary(std::ostream &out);
+
+    private:
+        virtual Array<OneD, bool> v_GetSystemSingularChecks();
+
     };
 }
 

@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
-#include <Auxiliary/ADRBase.h>
+#include <Auxiliary/EquationSystem.h>
 #include <cstdio>
 #include <cstdlib>
 
@@ -60,6 +60,12 @@ namespace Nektar
         EquationSystem(pComm, pSession),
         m_infosteps(10)
     {
+    }
+
+    void IncNavierStokes::v_InitObject()
+    {
+        EquationSystem::v_InitObject();
+
         int i,j,expdim;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
@@ -90,7 +96,7 @@ namespace Nektar
          for(i = 0; i < (int) eEquationTypeSize; ++i)
          {
              bool match;
-             pSession->MatchSolverInfo("EQTYPE",kEquationTypeStr[i],match,false);
+             m_session->MatchSolverInfo("EQTYPE",kEquationTypeStr[i],match,false);
              if(match)
              {
                  m_equationType = (EquationType)i; 
@@ -115,7 +121,7 @@ namespace Nektar
                  for(i = 0; i < (int) eAdvectionFormSize; ++i)
                  {
                      bool match;
-                     pSession->MatchSolverInfo("ADVECTIONFORM",kAdvectionFormStr[i],match,false);
+                     m_session->MatchSolverInfo("ADVECTIONFORM",kAdvectionFormStr[i],match,false);
                      
                      if(match)
                      {

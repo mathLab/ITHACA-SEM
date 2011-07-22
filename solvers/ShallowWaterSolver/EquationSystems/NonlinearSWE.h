@@ -51,24 +51,30 @@ namespace Nektar
   class NonlinearSWE : public ShallowWaterSystem
   {
   public:
+      friend class MemoryManager<NonlinearSWE>;
+
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      return MemoryManager<NonlinearSWE>::AllocateSharedPtr(pComm, pSession);
+      EquationSystemSharedPtr p = MemoryManager<NonlinearSWE>::AllocateSharedPtr(pComm, pSession);
+      p->InitObject();
+      return p;
     }
     /// Name of class
     static std::string className;
     
+    virtual ~NonlinearSWE();
+
+  protected:
+
     NonlinearSWE(
             LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession);
+
+    virtual void v_InitObject();
     
-    virtual ~NonlinearSWE();
-    
-  protected:
-   
     void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
 		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
 		  const NekDouble time);

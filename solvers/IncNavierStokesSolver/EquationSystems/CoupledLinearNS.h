@@ -84,19 +84,20 @@ namespace Nektar
     class CoupledLinearNS: public IncNavierStokes
     {
     public:
+        friend class MemoryManager<CoupledLinearNS>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
                                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pComm, pSession);
+            p->InitObject();
+            return p;
         }
         /// Name of class
         static std::string className;        
         
         CoupledLinearNS(void);
-
-        CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
-                        LibUtilities::SessionReaderSharedPtr &pSesssion);
 
         /**
          *  Generate the linearised Navier Stokes solver based on the
@@ -135,6 +136,10 @@ namespace Nektar
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         
     protected:
+        CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSesssion);
+
+        virtual void v_InitObject();
         
     private:
         ///  Identify if a single mode is required for stability analysis. 

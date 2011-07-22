@@ -47,26 +47,32 @@ namespace Nektar
     class Monodomain : public UnsteadySystem
     {
     public:
+        friend class MemoryManager<Monodomain>;
+
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<Monodomain>::AllocateSharedPtr(pComm,pSession);
+            EquationSystemSharedPtr p = MemoryManager<Monodomain>::AllocateSharedPtr(pComm,pSession);
+            p->InitObject();
+            return p;
         }
 
         /// Name of class
         static std::string className;
 
+        /// Desctructor
+        virtual ~Monodomain();
+
+    protected:
         /// Constructor
         Monodomain(
                 LibUtilities::CommSharedPtr& pComm,
                 LibUtilities::SessionReaderSharedPtr& pSession);
 
-        /// Desctructor
-        virtual ~Monodomain();
+        virtual void v_InitObject();
 
-    protected:
         /// Solve for the diffusion term.
         void DoImplicitSolve(
                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,

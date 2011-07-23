@@ -201,6 +201,12 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
         exit(2);
     }
 
+    int status2 = system(syscommand2.c_str());
+    if(status2)
+    {
+        std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
+        exit(2);
+    }
 
 	//Base flow
 

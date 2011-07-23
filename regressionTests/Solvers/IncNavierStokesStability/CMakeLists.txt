@@ -12,6 +12,10 @@ ADD_REGRESSION_EXECUTABLE(IncNavierStokesStabilityTest
 
 IF(REGRESSION_MAKE_OK_FILES_EXEC)
 
+  SET(IncNavierStokesStabilityMakeOkFileSource
+        ./IncNavierStokesStabilityMakeOkFile.cpp
+            ../../Auxiliary/RegressBase.cpp)
+            
   SET(IncNavierStokesStabilityMakeOkFileHeaders
             ../../Auxiliary/RegressBase.h)
        

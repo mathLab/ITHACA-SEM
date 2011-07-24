@@ -86,12 +86,12 @@ namespace Nektar
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
 		
-		enum FourierSpaceType
-		{
-			ePhys,
-			eCoef,
-			eNotDef
-		};
+        enum FourierSpaceType
+        {
+            ePhys,
+            eCoef,
+            eNotDef
+        };
 		
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public boost::enable_shared_from_this<ExpList>
@@ -177,8 +177,8 @@ namespace Nektar
 			/// ePhys, eCoef or eNotSet
             inline void SetFourierSpace(const FourierSpaceType fourierspace);
 			
-            /// This function returns the Fourie Space condition, which is stored
-			/// in the variable m_FourierSpace.
+            /// This function returns the Fourier Space condition,
+            /// which is stored in the variable m_FourierSpace.
             inline FourierSpaceType GetFourierSpace(void) const;
 
             /// Fills the array #m_phys
@@ -854,7 +854,8 @@ namespace Nektar
 
             BlockMatrixMapShPtr  m_blockMat;
 			
-			FourierSpaceType m_FourierSpace;
+            //@todo should this be in ExpList or ExpListHomogeneous1D.cpp
+            FourierSpaceType m_FourierSpace;
 
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.

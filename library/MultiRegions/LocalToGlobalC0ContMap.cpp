@@ -579,6 +579,13 @@ namespace Nektar
                 m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
                 m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD, NekDouble>(nLocBndCondDofs,1.0);
             }
+            else
+            {
+                m_localToGlobalSign = NullNekDouble1DArray;
+                m_localToGlobalBndSign = NullNekDouble1DArray;
+                m_bndCondCoeffsToGlobalCoeffsSign = NullNekDouble1DArray;
+            }
+
             m_solnType = solnType;
             m_staticCondLevel = 0;
             m_numPatches =  locExpVector.size();
@@ -2312,14 +2319,7 @@ namespace Nektar
 
         const Array<OneD, NekDouble>& LocalToGlobalC0ContMap::v_GetLocalToGlobalSign() const
         {
-            if (m_signChange)
-            {
-                return m_localToGlobalSign;
-            }
-            else
-            {
-                return NullNekDouble1DArray;
-            }
+            return m_localToGlobalSign;
         }
 
         const void LocalToGlobalC0ContMap::v_LocalToGlobal(

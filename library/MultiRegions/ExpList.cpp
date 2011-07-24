@@ -1958,37 +1958,49 @@ namespace Nektar
                 offset += datalen;
             }
 
-            ASSERTL0(i!= fielddef->m_fields.size(),"Field not found in data file");
-
-            // Determine mapping from element ids to location in
-            // expansion list
-            map<int, int> ElmtID_to_ExpID;
-            for(i = 0; i < (*m_exp).size(); ++i)
+            if(i == fielddef->m_fields.size())
             {
-                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                cerr << "Field (" << field << ") not found in data file. Setting it to zero. " << endl;
+                Vmath::Zero(coeffs.num_elements(),coeffs,1);
             }
-
-            int modes_offset = 0;
-            Array<OneD, NekDouble> coeff_tmp;
-
-            for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
+            else
             {
-                int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
-                int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_numModes,modes_offset);
-                if(fielddef->m_uniOrder == true) // reset modes_offset to zero
+
+                // Determine mapping from element ids to location in
+                // expansion list
+                map<int, int> ElmtID_to_ExpID;
+                // loop in reverse order so that in case where using
+                // and Homogeneous expansion it sets geometry ids to
+                // first part of m_exp list. Otherwise will set to
+                // second (complex) expansiosn
+                for(i = (*m_exp).size()-1; i >=0; --i)
                 {
-                    modes_offset = 0;
+                    ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
                 }
-                // copy data if of same length as expansion
-                if(datalen == (*m_exp)[eid]->GetNcoeffs())
+
+                int modes_offset = 0;
+                Array<OneD, NekDouble> coeff_tmp;
+                
+                for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
-                    Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]],1);
+                    int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
+                    int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_numModes,modes_offset);
+                    if(fielddef->m_uniOrder == true) // reset modes_offset to zero
+                    {
+                        modes_offset = 0;
+                    }
+
+                    // copy data if of same length as expansion
+                    if(datalen == (*m_exp)[eid]->GetNcoeffs())
+                    {
+                        Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]],1);
+                    }
+                    else // unpack data to new order
+                    {
+                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid]);
+                    }
+                    offset += datalen;
                 }
-                else // unpack data to new order
-                {
-                    (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid]);
-                }
-                offset += datalen;
             }
         }
 

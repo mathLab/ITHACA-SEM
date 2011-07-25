@@ -46,14 +46,14 @@ namespace Nektar
     /**
      * Basic construnctor
      */
-    ADR2DManifold::ADR2DManifold(void):
-        EquationSystem(),
-        m_infosteps(100),
-        m_explicitAdvection(true),
-        m_explicitDiffusion(true),
-        m_explicitReaction(true)
-    {
-    }
+//    ADR2DManifold::ADR2DManifold(void):
+//        EquationSystem(),
+//        m_infosteps(100),
+//        m_explicitAdvection(true),
+//        m_explicitDiffusion(true),
+//        m_explicitReaction(true)
+//    {
+//    }
 
     /**
      * Constructor. Creates ...
@@ -436,7 +436,7 @@ namespace Nektar
         int npoints = m_fields[0]->GetNpoints();
         switch(m_projectionType)
         {
-            case eDiscontinuousGalerkin:
+            case MultiRegions::eDiscontinuousGalerkin:
             {
                 switch(m_equationType)
                 {
@@ -1005,7 +1005,7 @@ namespace Nektar
     fields[i]  = m_fields[i]->UpdateCoeffs();
       }
 
-    if(m_projectionType==eGalerkin)
+    if(m_projectionType==MultiRegions::eGalerkin)
       {
     // calculate the variable u* = Mu
     // we are going to TimeIntegrate this new variable u*
@@ -1098,7 +1098,7 @@ namespace Nektar
 
             m_time += m_timestep;
 
-            if(m_projectionType==eGalerkin)
+            if(m_projectionType==MultiRegions::eGalerkin)
             {
                 // Project the solution u* onto the boundary conditions to
                 // obtain the actual solution

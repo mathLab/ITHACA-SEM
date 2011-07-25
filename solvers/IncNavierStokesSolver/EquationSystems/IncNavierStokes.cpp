@@ -41,14 +41,7 @@
 
 namespace Nektar
 {
-    
 
-    // Default Constructor
-    IncNavierStokes::IncNavierStokes(void)
-    {
-    }
-
-    
     /**
      * Constructor. Creates ...
      *

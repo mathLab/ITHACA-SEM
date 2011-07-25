@@ -41,14 +41,6 @@ namespace Nektar
     string CoupledLinearNS::className = GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
 
 
-    // Default constructor
-    CoupledLinearNS::CoupledLinearNS(void):
-        m_singleMode(false),
-        m_singleModeID(0)
-    {
-    }
-
-
     /**
      *  @class CoupledLinearNS 
      *
@@ -1204,7 +1196,7 @@ namespace Nektar
             }
         case eSteadyStokes:
             SetUpCoupledMatrix();
-            SetInitialForce(0.0);
+            //SetInitialForce(0.0);
             break;
         case eSteadyOseen:
             {
@@ -1217,7 +1209,7 @@ namespace Nektar
                 EvaluateFunction(AdvField,"AdvectionVelocity");
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
-                SetInitialForce(0.0);
+                //SetInitialForce(0.0);
             }
             break;
         case eSteadyLinearisedNS:
@@ -1234,7 +1226,7 @@ namespace Nektar
                 
                 SetUpCoupledMatrix(0.0,AdvField,true);
 
-                SetInitialForce(0.0);
+                //SetInitialForce(0.0);
             }
             break;
         case eNoEquationType:
@@ -1251,8 +1243,8 @@ namespace Nektar
         EvaluateAdvectionTerms(inarray,outarray);
         int nqtot  =m_fields[0]->GetTotPoints(); 
         //add the force
-	if(m_bforce)
-	{	
+        if(m_session->DefinesFunction("BodyForce"))
+        {
             for(int i = 0; i < m_nConvectiveFields; ++i)
             {
                 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
@@ -1321,7 +1313,7 @@ namespace Nektar
     {
         Array <OneD, Array<OneD, NekDouble> > forcing(m_velocity.num_elements());
         
-        if(m_bforce)
+        if(m_session->DefinesFunction("BodyForce"))
         {
             for(int i = 0; i < m_velocity.num_elements(); ++i)
             {

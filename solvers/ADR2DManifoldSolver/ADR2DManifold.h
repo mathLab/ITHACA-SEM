@@ -90,7 +90,7 @@ namespace Nektar
          * Default constructor.
          *
          */
-        ADR2DManifold();
+//        ADR2DManifold();
 
         /**
          * Constructor.

@@ -192,7 +192,6 @@ int main(int argc, char *argv[])
         {
             period = 1.0;
             ASSERTL0(session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
-            equ->SetInitialForce(0.0);
             forces = equ->UpdateForces();
         }
         

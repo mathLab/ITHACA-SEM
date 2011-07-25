@@ -77,7 +77,7 @@ namespace Nektar
 	    int i;
 	    m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
 
-	    if (m_projectionType = EquationSystem::eGalerkin)
+	    if (m_projectionType = MultiRegions::eGalerkin)
 	    {
 	        switch (m_expdim)
 	        {

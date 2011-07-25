@@ -7,8 +7,7 @@ templates
 library/Demos/StdRegions/ExtraDemos
 library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver
-solvers/BoussinesqSolver
-solvers/EulerSolver
+solvers/CardiacEPSolver
 solvers/FitzHughNagumoSolver
 docs/*.doc
 docs/arch

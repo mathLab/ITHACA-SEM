@@ -97,8 +97,6 @@ namespace Nektar
         /// Name of class
         static std::string className;        
         
-        CoupledLinearNS(void);
-
         /**
          *  Generate the linearised Navier Stokes solver based on the
          *  static condensation of the interior velocity space and

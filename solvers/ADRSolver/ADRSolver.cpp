@@ -37,7 +37,8 @@
 #include <cstdlib>
 #include <cmath>
 
-#include <Auxiliary/EquationSystem.h>
+#include <Auxiliary/Driver.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
@@ -46,24 +47,25 @@ int main(int argc, char *argv[])
     if(argc != 2)
     {
         cout << "\nUsage: ADRSolver  sessionfile" << endl;
+        cout << "Drivers" << endl;
+        cout << "-------" << endl;
+        GetDriverFactory().PrintAvailableClasses();
+        cout << "EquationSystems" << endl;
+        cout << "---------------" << endl;
         GetEquationSystemFactory().PrintAvailableClasses();
         exit(1);
     }
 
     string filename(argv[1]);
     string vCommModule("Serial");
-    time_t starttime, endtime;
-    NekDouble CPUtime;
+    string vDriverModule("Standard");
 
     LibUtilities::CommSharedPtr vComm;
     LibUtilities::SessionReaderSharedPtr session;
-    EquationSystemSharedPtr equ;
+    DriverSharedPtr drv;
 
-    // Record start time.
-    time(&starttime);
-
-//    try
-//    {
+    try
+    {
         // Create session reader.
         session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
 
@@ -78,50 +80,27 @@ int main(int argc, char *argv[])
         }
         vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
 
-        // Create instance of module to solve the equation specified in the session.
-        equ = GetEquationSystemFactory().CreateInstance(
-                                    session->GetSolverInfo("EQTYPE"), vComm, session);
-
-        // Print a summary of solver and problem parameters and initialise the
-        // solver.
-        equ->PrintSummary(cout);
-        equ->DoInitialise();
-
-        // Solve the problem.
-        equ->DoSolve();
-
-        // Record end time.
-        time(&endtime);
-        CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
-
-        // Write output to .fld file
-        equ->Output();
-
-        // Evaluate and output computation time and solution accuracy.
-        // The specific format of the error output is essential for the
-        // regression tests to work.
-        // Evaluate L2 Error
-        for(int i = 0; i < equ->GetNvariables(); ++i)
+        // Create driver
+        if (session->DefinesSolverInfo("Driver"))
         {
-            NekDouble vL2Error = equ->L2Error(i,false);
-            NekDouble vLinfError = equ->LinfError(i);
-            if (vComm->GetRank() == 0)
-            {
-                cout << "L 2 error (variable " << equ->GetVariable(i) << ") : " << vL2Error << endl;
-                cout << "L inf error (variable " << equ->GetVariable(i) << ") : " << vLinfError << endl;
-            }
+            vDriverModule = session->GetSolverInfo("Driver");
         }
+        drv = GetDriverFactory().CreateInstance(vDriverModule, vComm, session);
 
+        // Execute driver
+        drv->Execute();
+
+        // Finalise communication
         vComm->Finalise();
-//    }
-//    catch (const std::runtime_error& e)
-//    {
-//        return 1;
-//    }
-//    catch (const std::string& eStr)
-//    {
-//        cout << "Error: " << eStr << endl;
-//    }
+    }
+    catch (const std::runtime_error& e)
+    {
+        return 1;
+    }
+    catch (const std::string& eStr)
+    {
+        cout << "Error: " << eStr << endl;
+    }
 
     return 0;
 }

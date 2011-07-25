@@ -10,6 +10,8 @@ SET(ADRSolverSource
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp
        ./EquationSystems/CFLtester.cpp
+       ../Auxiliary/Driver.cpp
+       ../Auxiliary/DriverStandard.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp)
 

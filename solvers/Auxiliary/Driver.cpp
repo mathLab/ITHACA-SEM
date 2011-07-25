@@ -29,74 +29,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Incompressible Navier Stokes solver
+// Description: Main Driver for the Stability Solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Auxiliary/Driver.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
 
-using namespace Nektar;
-
-int main(int argc, char *argv[])
+namespace Nektar
 {
-    
-    if(argc != 2)
+	
+	DriverFactory& GetDriverFactory()
     {
-        cerr << "\n \t Usage: IncNavierStokes  input.xml \n" << endl;
-        exit(1);
+        typedef Loki::SingletonHolder<DriverFactory,
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
+        return Type::Instance();
     }
+	
+	
 
-    string filename(argv[1]);
-    string vCommModule("Serial");
-    string vDriverModule("Standard");
+    /**
+     *
+     */
+    Driver::Driver(LibUtilities::CommSharedPtr pComm,
+				   LibUtilities::SessionReaderSharedPtr pSession)
+	: m_comm(pComm),
+	  m_session(pSession)
 
-    LibUtilities::CommSharedPtr vComm;
-    LibUtilities::SessionReaderSharedPtr session;
+	{
 
-    DriverSharedPtr drv;
-  
-    try
-    {
-        // Create session reader.
-        session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
-        
-        // Create communicator
-        if (session->DefinesSolverInfo("Communication"))
-        {
-            vCommModule = session->GetSolverInfo("Communication");
-        }
-        else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-        {
-            vCommModule = "ParallelMPI";
-        }
-        vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
-
-        // Create driver
-        if (session->DefinesSolverInfo("Driver"))
-        {
-            vDriverModule = session->GetSolverInfo("Driver");
-        }
-        drv = GetDriverFactory().CreateInstance(vDriverModule, vComm, session);
-
-        drv->Execute();
-
-        vComm->Finalise();
-    }
-    catch (const std::runtime_error& e)
-    {
-        return 1;
-    }
-    catch (const std::string& eStr)
-    {
-        cout << "Error: " << eStr << endl;
-    }
-    
-    
-    return 0;
-
-}
+	}
+	
+	Driver::~Driver()
+	
+	{
+	}
+	
+}	
+	
 
 /**
  * $Log $

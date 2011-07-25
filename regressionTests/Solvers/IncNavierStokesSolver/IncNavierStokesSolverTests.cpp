@@ -36,6 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
 void RunL2RegressionTest(std::string demo, std::string input, std::string info);
@@ -99,6 +100,9 @@ int main(int argc, char* argv[])
     //Test Coupled LinearNS unsteady Channel Flow
     Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady channel flow with coupled solve , P=8");
 
+    //Test Modified Arnoldi stability (VelCorrectionScheme)
+    Execute("IncNavierStokesSolver","ChanStability.xml","Linear stability (Mod. Arnoldi): Channel");
+
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;
@@ -121,51 +125,33 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
     int fail;
     
-	std::string input1=input;
-	input1.erase(input1.end()-4,input1.end());
-        
-    // Copy input file to current location
-	input.erase(input.end()-3,input.end());
-	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);
-	boost::filesystem::path filePath1(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input1);	
-	std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
-	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
-	std::string syscommand3 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_1.bc .";	
-	std::string syscommand4 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_3.bc .";
-	std::string syscommand5 = std::string(COPY_COMMAND) + filePath1.file_string() + "_v_3.bc .";	
+	std::string basename = input;
+	basename.erase(basename.end()-4,basename.end());
+	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + basename);
+	std::vector<std::string> extensions;
+	extensions.push_back(".xml");
+	extensions.push_back(".rst");
+	extensions.push_back(".bse");
+	extensions.push_back("_u_1.bc");
+	extensions.push_back("_u_3.bc");
+	extensions.push_back("_v_3.bc");
 
-	int status = system(syscommand.c_str());
-    if(status)
-    {
-        std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-        exit(2);
-    }
-
-	//Restart files just needed for the Kovasznay Flow so far
-	if(input=="Test_KovaFlow_m3." || input=="Test_KovaFlow_m8.")
+	for (unsigned int i = 0; i < extensions.size(); ++i)
 	{
-	   int status2 = system(syscommand2.c_str());
-		if(status2)
-		{
-			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-			exit(2);
-		}
-
-	}	
-	//files for the Test_ChanFlow2D_bcsfromfiles.xml
-	if(input=="Test_ChanFlow2D_bcsfromfiles.")
-	{
-	   int status3 = system(syscommand3.c_str());
-	   int status4 = system(syscommand4.c_str());
-	   int status5 = system(syscommand5.c_str());	   
-		if((status3)||(status4)||(status5))
-		{
-			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-			exit(2);
-		}
-	}	
-
-	input = input+"xml";
+	    struct stat vFileInfo;
+	    std::string source  = filePath.file_string() + extensions[i];
+	    std::string command = std::string(COPY_COMMAND) + filePath.file_string() + extensions[i] + " .";
+	    int vNotPresent = stat(source.c_str(), &vFileInfo);
+	    if (!vNotPresent)
+	    {
+	        int status = system(command.c_str());
+	        if(status)
+	        {
+	            std::cerr << "Unable to copy file:" << source << " to current location" << std::endl;
+	            exit(2);
+	        }
+	    }
+	}
 
     if(fail = Test.TestL2()) // test failed
     {
@@ -211,52 +197,33 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
     int fail;
     
-	std::string input1=input;
-	input1.erase(input1.end()-4,input1.end());    
+    std::string basename = input;
+    basename.erase(basename.end()-4,basename.end());
+    boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + basename);
+    std::vector<std::string> extensions;
+    extensions.push_back(".xml");
+    extensions.push_back(".rst");
+    extensions.push_back(".bse");
+    extensions.push_back("_u_1.bc");
+    extensions.push_back("_u_3.bc");
+    extensions.push_back("_v_3.bc");
 
-
-    // Copy input file to current location
-	input.erase(input.end()-3,input.end());
-	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);	
-	boost::filesystem::path filePath1(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input1);	
-	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
-	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
-	std::string syscommand3 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_1.bc .";	
-	std::string syscommand4 = std::string(COPY_COMMAND) + filePath1.file_string() + "_u_3.bc .";
-	std::string syscommand5 = std::string(COPY_COMMAND) + filePath1.file_string() + "_v_3.bc .";	
-
-    int status1 = system(syscommand1.c_str());
-    if(status1)
+    for (unsigned int i = 0; i < extensions.size(); ++i)
     {
-        std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-        exit(2);
+        struct stat vFileInfo;
+        std::string source  = filePath.file_string() + extensions[i];
+        std::string command = std::string(COPY_COMMAND) + filePath.file_string() + extensions[i] + " .";
+        int vNotPresent = stat(source.c_str(), &vFileInfo);
+        if (!vNotPresent)
+        {
+            int status = system(command.c_str());
+            if(status)
+            {
+                std::cerr << "Unable to copy file:" << source << " to current location" << std::endl;
+                exit(2);
+            }
+        }
     }
-
-	//Restart files just needed for the Kovasznay Flow so far
-	if((input == "Test_KovaFlow_m3.") || (input == "Test_KovaFlow_m8."))
-	{
-		int status2 = system(syscommand2.c_str());
-		if(status2)
-		{
-			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-			exit(2);
-		}
-
-	}
-	//files for the Test_ChanFlow2D_bcsfromfiles.xml
-	if(input=="Test_ChanFlow2D_bcsfromfiles.")
-	{
-	   int status3 = system(syscommand3.c_str());
-	   int status4 = system(syscommand4.c_str());
-	   int status5 = system(syscommand5.c_str());	   
-		if((status3)||(status4)||(status5))
-		{
-			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-			exit(2);
-		}
-	}
-
-	input = input+"xml";
 
     if(fail = Test.MakeOkFile())
     {

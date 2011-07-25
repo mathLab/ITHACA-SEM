@@ -71,10 +71,6 @@ namespace Nektar
         return Type::Instance();
     }
 
-    // Default constructor
-    EquationSystem::EquationSystem(void)
-    {
-    }
 
     /**
      * This constructor is protected as the objects of this class are never
@@ -88,6 +84,10 @@ namespace Nektar
     {
     }
 
+
+    /**
+     *
+     */
     void EquationSystem::v_InitObject()
     {
         m_filename = m_session->GetFilename();
@@ -214,11 +214,11 @@ namespace Nektar
             if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
                (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
             {
-                m_projectionType = eGalerkin;
+                m_projectionType = MultiRegions::eGalerkin;
             }
             else if(ProjectStr == "DisContinuous")
             {
-                m_projectionType = eDiscontinuousGalerkin;
+                m_projectionType = MultiRegions::eDiscontinuousGalerkin;
             }
             else
             {
@@ -229,7 +229,7 @@ namespace Nektar
         {
             cerr << "Projection type not specified in SOLVERINFO,"
                     "defaulting to continuous Galerkin" << endl;
-            m_projectionType = eGalerkin;
+            m_projectionType = MultiRegions::eGalerkin;
         }
 
         // Enforce singularity check for some problems
@@ -244,7 +244,7 @@ namespace Nektar
         m_expdim   = m_graph->GetMeshDimension();
 
         // Continuous Galerkin projection
-        if(m_projectionType == eGalerkin)
+        if(m_projectionType == MultiRegions::eGalerkin)
         {
             switch(m_expdim)
             {
@@ -538,21 +538,44 @@ namespace Nektar
 
         ScanForHistoryPoints();
 
-        //define dimension of the forcing function
-        m_FDim = m_fields.num_elements();
-        if (m_session->DefinesSolverInfo("EQTYPE")
-            && m_session->DefinesSolverInfo("SOLVERTYPE"))
+        if (m_session->DefinesFunction("BodyForce"))
         {
-            std::string sname = m_session->GetSolverInfo("EQTYPE");
-            std::string tname = m_session->GetSolverInfo("SOLVERTYPE");
-
-            if((sname=="UnsteadyNavierStokes")
-                                    &&(tname=="VelocityCorrectionScheme"))
+            m_forces  = Array<OneD, MultiRegions::ExpListSharedPtr>(v_GetForceDimension());
+            int nq = m_fields[0]->GetNpoints();
+            switch(m_expdim)
             {
-                m_FDim=(m_fields.num_elements() -1);
+                case 1:
+                    m_forces[0] = MemoryManager<MultiRegions
+                            ::DisContField1D>::AllocateSharedPtr
+                                 (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
+                    Vmath::Zero(nq,(m_forces[0]->UpdatePhys()),1);
+                    break;
+                case 2:
+                    if(m_HomogeneousType == eHomogeneous1D)
+                    {
+                        bool DeclarePlaneSetCoeffsPhys = true;
+                        for(int i = 0 ; i < m_forces.num_elements(); i++)
+                        {
+                            m_forces[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous1D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
+                        }
+                    }
+                    else
+                    {
+                        for(int i = 0 ; i < m_forces.num_elements(); i++)
+                        {
+                            m_forces[i] = MemoryManager<MultiRegions
+                                    ::ExpList2D>::AllocateSharedPtr
+                                     (*boost::static_pointer_cast<MultiRegions::ExpList2D>(m_fields[i]));
+                            Vmath::Zero(nq,(m_forces[i]->UpdatePhys()),1);
+                        }
+                    }
+                    break;
+                case 3:
+                    ASSERTL0(false, "Force function not implemented for 3D.");
             }
-        }
 
+            EvaluateFunction(m_forces, "BodyForce");
+        }
 
         // If a tangent vector policy is defined then the local tangent vectors
         // on each element need to be generated.
@@ -565,12 +588,6 @@ namespace Nektar
         ZeroPhysFields();
     }
 
-    void EquationSystem::InitObject()
-    {
-        cout << "EquationSystem init object" << endl;
-        v_InitObject();
-    }
-
     /**
      *
      */
@@ -579,54 +596,36 @@ namespace Nektar
 
     }
 
+
     /**
-     * This allows initialisation of the solver which cannot be completed
-     * during object construction (such as setting of initial conditions).
      *
-     * Public interface routine to virtual function implementation.
      */
-    void EquationSystem::DoInitialise(void)
+    void EquationSystem::LoadParameter(std::string name, int &var, int def)
     {
-        v_DoInitialise();
+        if(m_boundaryConditions->CheckForParameter(name) == true)
+        {
+            var = m_boundaryConditions->GetParameter(name);
+        }
+        else
+        {
+            var  = def;
+        }
     }
 
 
     /**
-     * Performs the actual solve.
      *
-     * Public interface routine to virtual function implementation.
      */
-    void EquationSystem::DoSolve(void)
+    void EquationSystem::LoadParameter(std::string name, NekDouble &var, NekDouble def)
     {
-        v_DoSolve();
-    }
-
-
-    /**
-     * Perform output operations after solve.
-     */
-    void EquationSystem::Output(void)
-    {
-        v_Output();
-    }
-
-
-    /**
-     * Prints a summary of variables and problem parameters.
-     *
-     * Public interface routine to virtual function implementation.
-     *
-     * @param   out             The ostream object to write to.
-     */
-    void EquationSystem::PrintSummary(std::ostream &out)
-    {
-        out << "=======================================================================" << endl;
-        out << "\tEquation Type   : " << m_session->GetSolverInfo("EQTYPE") << endl;
-        SessionSummary(out);
-
-        v_PrintSummary(out);
-
-        out << "=======================================================================" << endl;
+        if(m_boundaryConditions->CheckForParameter(name) == true)
+        {
+            var = m_boundaryConditions->GetParameter(name);
+        }
+        else
+        {
+            var  = def;
+        }
     }
 
 
@@ -750,11 +749,11 @@ namespace Nektar
      */
     void EquationSystem::SetBoundaryConditions(NekDouble time)
     {
-      int nvariables = m_fields.num_elements();
-      for (int i = 0; i < nvariables; ++i)
-      {
-          m_fields[i]->EvaluateBoundaryConditions(time);
-      }
+        int nvariables = m_fields.num_elements();
+        for (int i = 0; i < nvariables; ++i)
+        {
+            m_fields[i]->EvaluateBoundaryConditions(time);
+        }
     }
 
 
@@ -1014,7 +1013,14 @@ namespace Nektar
                     Array<OneD, NekDouble> &outfield,
                     const NekDouble time)
     {
+        ASSERTL0 (m_session->DefinesFunction("ExactSolution"),
+                    "No ExactSolution provided in session file.");
+        ASSERTL0 (outfield.num_elements() == m_fields[field]->GetNpoints(),
+                    "ExactSolution array size mismatch.");
 
+        LibUtilities::EquationSharedPtr vEqu
+                    = m_session->GetFunction("ExactSolution",field);
+        EvaluateFunction(outfield,vEqu,m_time);
     }
 
 
@@ -1032,9 +1038,9 @@ namespace Nektar
     	base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
     	int nq = m_fields[0]->GetNpoints();
         std::string velStr[3] = {"Vx","Vy","Vz"};        
-        if(m_boundaryConditions->SolverInfoExists("BASEFLOWFILE"))
+        if(m_session->DefinesSolverInfo("BaseFlowFile"))
         {
-        	std::string baseyn= m_boundaryConditions->GetSolverInfo("BASEFLOWFILE");
+        	std::string baseyn= m_session->GetSolverInfo("BaseFlowFile");
         	//capitalise the string baseyn
         	std::transform(baseyn.begin(), baseyn.end(), baseyn.begin()
         		, ::toupper);
@@ -1082,7 +1088,7 @@ namespace Nektar
     	   int i;
        	   //NUM VARIABLES CAN BE DIFFERENT FROM THE DIMENSION OF THE BASE FLOW
     	   m_base =Array<OneD, MultiRegions::ExpListSharedPtr> (m_spacedim);
-    	   if (m_projectionType = EquationSystem::eGalerkin)
+    	   if (m_projectionType = MultiRegions::eGalerkin)
 	   {
 	        switch (m_expdim)
 	        {
@@ -1273,19 +1279,9 @@ namespace Nektar
         }
     }
 
-   void EquationSystem::SetInitialForce(NekDouble initialtime)
-   {
-       if (m_session->DefinesFunction("BodyForce"))
-       {
-           m_bforce=true;
-           InitialiseForcingFunctions(m_forces);
-           EvaluateFunction(m_forces, "BodyForce");
-       }
-       else
-       {
-           m_bforce= false;
-       }
-   }
+//   void EquationSystem::SetInitialForce(NekDouble initialtime)
+//   {
+//   }
 
 
 
@@ -1293,51 +1289,9 @@ namespace Nektar
       * @todo implement 3D case
       * @todo
       */
-    void EquationSystem::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &force)
-    {
-        force  = Array<OneD, MultiRegions::ExpListSharedPtr>(m_FDim);
-        int nq = m_fields[0]->GetNpoints();
-        switch(m_expdim)
-        {
-         case 1:
-             force[0] = MemoryManager<MultiRegions
-                ::DisContField1D>::AllocateSharedPtr
-                 (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
-             Vmath::Zero(nq,(force[0]->UpdatePhys()),1);
-             break;
-        case 2:
-            if(m_HomogeneousType == eHomogeneous1D)
-             {
-                 bool DeclarePlaneSetCoeffsPhys = true;
-                 for(int i = 0 ; i < force.num_elements(); i++)
-                 {
-                     force[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous1D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
-                 }
-             }
-             else
-             {
-                 for(int i = 0 ; i < force.num_elements(); i++)
-                 {
-                     force[i] = MemoryManager<MultiRegions
-                         ::ExpList2D>::AllocateSharedPtr
-                         (*boost::static_pointer_cast<MultiRegions::ExpList2D>(m_fields[i]));
-                     Vmath::Zero(nq,(force[i]->UpdatePhys()),1);
-                 }
-             }
-             break;
-/**
-         case 3:
-                   for( int i = 0 ; i < m_FDim; i++)
-                   {
-                        force[i] = MemoryManager<MultiRegions
-                                ::DisContField3D>::AllocateSharedPtr
-                                (*boost::static_pointer_cast<MultiRegions::DisContField3D>(m_fields[i]));
-//                        Vmath::Zero(nq,(force[i]->UpdatePhys()),1);
-                   }
-                   break;
-*/
-        }
-    }
+//    void EquationSystem::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &force)
+//    {
+//    }
 
     /**
      * Computes the weak Green form of advection terms (without boundary
@@ -2096,7 +2050,7 @@ namespace Nektar
             out << "\tSpatial   Dim.  : " << m_spacedim << endl;
             out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
         }
-        if(m_projectionType == eGalerkin)
+        if(m_projectionType == MultiRegions::eGalerkin)
         {
             out << "\tProjection Type : Galerkin" <<endl;
         }
@@ -2159,28 +2113,73 @@ namespace Nektar
         return (size1 < size2) ? -1 : 1;
     }
 
-    void EquationSystem::LoadParameter(std::string name, int &var, int def)
+    Array<OneD, bool> EquationSystem::v_GetSystemSingularChecks()
     {
-        if(m_boundaryConditions->CheckForParameter(name) == true)
-        {
-            var = m_boundaryConditions->GetParameter(name);
-        }
-        else
-        {
-            var  = def;
-        }
+        return Array<OneD, bool>(m_boundaryConditions->GetNumVariables(), false);
     }
 
-    void EquationSystem::LoadParameter(std::string name, NekDouble &var, NekDouble def)
+    int EquationSystem::v_GetForceDimension()
     {
-        if(m_boundaryConditions->CheckForParameter(name) == true)
-        {
-            var = m_boundaryConditions->GetParameter(name);
-        }
-        else
-        {
-            var  = def;
-        }
+        return 0;
+    }
+
+    void EquationSystem::v_GetFluxVector(const int i, Array<OneD,
+                        Array<OneD, NekDouble> >&physfield,
+                        Array<OneD, Array<OneD, NekDouble> >&flux)
+    {
+        ASSERTL0(false, "v_GetFluxVector: This function is not valid "
+                        "for the Base class");
+    }
+
+    void EquationSystem::v_GetFluxVector(const int i, const int j,
+                        Array<OneD, Array<OneD, NekDouble> >&physfield,
+                        Array<OneD, Array<OneD, NekDouble> >&flux)
+    {
+        ASSERTL0(false, "v_GetqFluxVector: This function is not valid "
+                        "for the Base class");
+    }
+
+    void EquationSystem::v_GetFluxVector(const int i, Array<OneD,
+                        Array<OneD, NekDouble> >&physfield,
+                        Array<OneD, Array<OneD, NekDouble> >&fluxX,
+                        Array<OneD, Array<OneD, NekDouble> > &fluxY)
+    {
+        ASSERTL0(false, "v_GetFluxVector: This function is not valid "
+                        "for the Base class");
+    }
+
+    void EquationSystem::v_NumericalFlux(
+                        Array<OneD, Array<OneD, NekDouble> > &physfield,
+                        Array<OneD, Array<OneD, NekDouble> > &numflux)
+    {
+        ASSERTL0(false, "v_NumericalFlux: This function is not valid "
+                        "for the Base class");
+    }
+
+    void EquationSystem::v_NumericalFlux(
+                        Array<OneD, Array<OneD, NekDouble> > &physfield,
+                        Array<OneD, Array<OneD, NekDouble> > &numfluxX,
+                        Array<OneD, Array<OneD, NekDouble> > &numfluxY )
+    {
+        ASSERTL0(false, "v_NumericalFlux: This function is not valid "
+                        "for the Base class");
+    }
+
+    void EquationSystem::v_NumFluxforScalar(
+                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+    {
+        ASSERTL0(false, "v_NumFluxforScalar: This function is not valid "
+                        "for the Base class");
+    }
+
+    void EquationSystem::v_NumFluxforVector(
+                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                Array<OneD, Array<OneD, NekDouble > >  &qflux)
+    {
+        ASSERTL0(false, "v_NumFluxforVector: This function is not valid "
+                        "for the Base class");
     }
 
 }

@@ -95,7 +95,7 @@ namespace Nektar
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 
         /// Type of projection, i.e. Galerkin or DG.
-        enum EquationSystem::ProjectionType m_projectionType;
+        enum MultiRegions::ProjectionType m_projectionType;
 
 
         int m_spacedim;              ///< Spatial dimension (> expansion dim)

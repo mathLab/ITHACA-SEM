@@ -202,6 +202,11 @@ namespace Nektar
         return vChecks;
     }
 
+    int VelocityCorrectionScheme::v_GetForceDimension()
+    {
+        return m_boundaryConditions->GetNumVariables() - 1;
+    }
+
     void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                                     const NekDouble time)
@@ -210,13 +215,13 @@ namespace Nektar
         m_advObject->DoAdvection(m_fields, inarray, outarray);
 
         //add the force
-	if(m_bforce)
-	{	
-	  int nqtot      = m_fields[0]->GetTotPoints();		
-	  for(int i = 0; i < m_nConvectiveFields; ++i)
-          {
-              Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
-          }        
+        if(m_session->DefinesFunction("BodyForce"))
+        {
+            int nqtot      = m_fields[0]->GetTotPoints();
+            for(int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
+            }
         }        
 
         // Set pressure BCs

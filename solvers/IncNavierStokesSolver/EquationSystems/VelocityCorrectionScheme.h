@@ -133,6 +133,7 @@ namespace Nektar
 
         virtual Array<OneD, bool> v_GetSystemSingularChecks();
 
+        virtual int v_GetForceDimension();
     };
 
     

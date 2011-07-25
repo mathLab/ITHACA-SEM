@@ -94,7 +94,7 @@ namespace Nektar
 
         switch (m_projectionType)
         {
-        case eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuousGalerkin:
             {
                 int ncoeffs    = inarray[0].num_elements();
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
@@ -117,7 +117,7 @@ namespace Nektar
 
                 break;
             }
-            case eGalerkin:
+            case MultiRegions::eGalerkin:
             {
                 // Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
@@ -148,7 +148,7 @@ namespace Nektar
 
         switch(m_projectionType)
         {
-        case eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuousGalerkin:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
@@ -159,7 +159,7 @@ namespace Nektar
                 }
             }
             break;
-        case eGalerkin:
+        case MultiRegions::eGalerkin:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 

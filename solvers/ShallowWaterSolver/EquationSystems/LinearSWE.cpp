@@ -85,7 +85,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuousGalerkin:
 	{
 	  // add to u equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
@@ -99,7 +99,7 @@ namespace Nektar
 	  Vmath::Vadd(ncoeffs,tmp,1,outarray[2],1,outarray[2],1);
 	}
 	break;
-      case eGalerkin:
+      case MultiRegions::eGalerkin:
 	{
 	  // add to u equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
@@ -128,7 +128,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuousGalerkin:
 	{
 	  //-------------------------------------------------------
 	  //inarray in physical space
@@ -179,7 +179,7 @@ namespace Nektar
 	    }
 	}
 	break;
-      case eGalerkin:
+      case MultiRegions::eGalerkin:
 	{
 	  
 	  Array<OneD,NekDouble> tmp(nq);
@@ -233,7 +233,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuousGalerkin:
 	{
 	  // Just copy over array
 	  int npoints = GetNpoints();
@@ -245,7 +245,7 @@ namespace Nektar
 	   SetBoundaryConditions(outarray,time);
 	}
 	break;
-      case eGalerkin:
+      case MultiRegions::eGalerkin:
 	{
 	  EquationSystem::SetBoundaryConditions(time);
 	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());

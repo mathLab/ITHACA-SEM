@@ -78,19 +78,9 @@ namespace Nektar
     class FitzHughNagumo: public EquationSystem
     {
     public:           
-
-        /**
-         * Default constructor. 
-         * 
-         */ 
-        FitzHughNagumo();
-
-    
         /**
          * Constructor.
          * /param 
-         * 
-         *
          */
         FitzHughNagumo( LibUtilities::CommSharedPtr& pComm,
                         LibUtilities::SessionReaderSharedPtr& pSession);

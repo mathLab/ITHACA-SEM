@@ -85,6 +85,12 @@ namespace Nektar
             "IterativeMultiLevelStaticCond"
         };
 
+        /// Type of Galerkin projection.
+        enum ProjectionType
+        {
+            eGalerkin,
+            eDiscontinuousGalerkin
+        };
 
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;

@@ -98,8 +98,6 @@ namespace Nektar
     class IncNavierStokes: public EquationSystem
     {
     public:           
-        IncNavierStokes(void);
-
         // Destructor
         virtual ~IncNavierStokes();
 

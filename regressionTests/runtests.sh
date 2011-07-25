@@ -5,5 +5,5 @@ Demos/MultiRegions/MultiRegionsDemoTest && \
 Solvers/ADRSolver/ADRSolverTest && \
 Solvers/IncNavierStokesSolver/IncNavierStokesSolverTest && \
 Solvers/CompressibleFlowSolver/CompressibleFlowSolverTest && \
-#Solvers/IncNavierStokesStability/IncNavierStokesStabilityTest 
+Solvers/ShallowWaterSolver/ShallowWaterSolverTest
 rm -f *.dat *.err *.pos

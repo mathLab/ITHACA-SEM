@@ -85,7 +85,7 @@ namespace Nektar
 	
     switch(m_projectionType)
       {
-      case eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuousGalerkin:
 	{
 	  
 	  // conservative formulation compute h
@@ -95,6 +95,7 @@ namespace Nektar
 	  // add to hu equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
 	  Vmath::Vmul(nq,h,1,tmp,1,tmp,1);
+	  m_fields[0]->IProductWRTBase(tmp,tmp);
 	  m_fields[0]->IProductWRTBase(tmp,tmp);
 	  Vmath::Vadd(ncoeffs,tmp,1,outarray[1],1,outarray[1],1);
 	  
@@ -106,7 +107,7 @@ namespace Nektar
 	  Vmath::Vadd(ncoeffs,tmp,1,outarray[2],1,outarray[2],1);
 	}
 	break;
-      case eGalerkin:
+      case MultiRegions::eGalerkin:
 	{
 	    // conservative formulation compute h
 	  // h = \eta + d
@@ -142,7 +143,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuousGalerkin:
 	{
 	  //-------------------------------------------------------
 	  //inarray in physical space
@@ -198,7 +199,7 @@ namespace Nektar
 	    }
 	}
 	break;
-      case eGalerkin:
+      case MultiRegions::eGalerkin:
 	{
 	  Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
 	  Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
@@ -263,14 +264,14 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuousGalerkin:
 	{
 	  ConservativeToPrimitive(inarray,outarray);
 	  SetBoundaryConditions(outarray,time);
 	  PrimitiveToConservative(outarray,outarray);
 	}
 	break;
-      case eGalerkin:
+      case MultiRegions::eGalerkin:
 	{
 	  ConservativeToPrimitive(inarray,outarray);
 	  EquationSystem::SetBoundaryConditions(time);

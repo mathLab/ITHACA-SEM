@@ -1206,7 +1206,19 @@ namespace Nektar
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
 
-                EvaluateFunction(AdvField,"AdvectionVelocity");
+                if(m_session->DefinesFunction("AdvectionVelocity"))
+                {
+                    std::vector<std::string> fieldStr;
+                    for(int i = 0; i < m_velocity.num_elements(); ++i)
+                    {
+                        fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                    }
+                    SetFunction(fieldStr,AdvField,"AdvectionVelocity");
+                }
+                else
+                {
+                    ASSERTL0(false,"Must define an Advection Velocity section");
+                }
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
                 //SetInitialForce(0.0);
@@ -1220,10 +1232,21 @@ namespace Nektar
                 {
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
-
-                EvaluateFunction(AdvField,"AdvectionVelocity");
-
                 
+                if(m_session->DefinesFunction("AdvectionVelocity"))
+                {
+                    std::vector<std::string> fieldStr;
+                    for(int i = 0; i < m_velocity.num_elements(); ++i)
+                    {
+                        fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                    }
+                    SetFunction(fieldStr,AdvField,"AdvectionVelocity");
+                }
+                else
+                {
+                    ASSERTL0(false,"Must define an AdvectionVelocity section");
+                }
+
                 SetUpCoupledMatrix(0.0,AdvField,true);
 
                 //SetInitialForce(0.0);

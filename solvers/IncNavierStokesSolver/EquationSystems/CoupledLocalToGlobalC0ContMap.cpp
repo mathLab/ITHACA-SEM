@@ -551,9 +551,9 @@ namespace Nektar
                         {
                             // vertices with mix condition;
                             id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetVid(0);
-                            if(DirVertChk.count(id) == 0)
+                            if(DirVertChk.count(id*nvel+j) == 0)
                             {
-                                DirVertChk[id] = 1;
+                                DirVertChk[id*nvel+j] = 1;
                                 for(n = 0; n < nz_loc; ++n)
                                 {
                                     graphVertOffset[ReorderedGraphVertId[0][id]*nvel*nz_loc+j*nz_loc + n] *= -1; 
@@ -561,9 +561,9 @@ namespace Nektar
                             }
                             
                             id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetVid(1);
-                            if(DirVertChk.count(id) == 0)
+                            if(DirVertChk.count(id*nvel+j) == 0)
                             {
-                                DirVertChk[id] = 1;
+                                DirVertChk[id*nvel+j] = 1;
                                 for(n = 0; n < nz_loc; ++n)
                                 {
                                     graphVertOffset[ReorderedGraphVertId[0][id]*nvel*nz_loc+j*nz_loc+n] *= -1; 

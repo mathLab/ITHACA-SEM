@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IncNavierStokesSolver.cpp
+// File DriverModifiedArnoldi.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Incompressible Navier Stokes solver
+// Description: Driver for eigenvalue analysis using the modified Arnoldi
+//              method.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -40,13 +41,14 @@
 namespace Nektar
 
 {
-	string DriverModified::className = GetDriverFactory().RegisterCreatorFunction("ModifiedArnoldi", DriverModified::create);
+	string DriverModifiedArnoldi::className = GetDriverFactory().RegisterCreatorFunction("ModifiedArnoldi", DriverModifiedArnoldi::create);
  
 	/**
 	 *
 	 */
-    DriverModified::DriverModified(LibUtilities::CommSharedPtr                pComm,
-							      LibUtilities::SessionReaderSharedPtr        pSession)
+	DriverModifiedArnoldi::DriverModifiedArnoldi(
+	        LibUtilities::CommSharedPtr                pComm,
+			LibUtilities::SessionReaderSharedPtr        pSession)
         : Driver(pComm,pSession)
 	{
 	}
@@ -55,7 +57,7 @@ namespace Nektar
     /**
      *
      */
-	DriverModified::~DriverModified()
+	DriverModifiedArnoldi::~DriverModifiedArnoldi()
 	{
 	}
 	
@@ -63,7 +65,7 @@ namespace Nektar
 	/**
 	 *
 	 */
-	void DriverModified::v_InitObject()
+	void DriverModifiedArnoldi::v_InitObject()
 	{
         try
         {
@@ -112,7 +114,7 @@ namespace Nektar
 	/**
 	 *
 	 */
-	void DriverModified::v_Execute()
+	void DriverModifiedArnoldi::v_Execute()
 	{
         int nfields             = m_fields.num_elements();
         int nq                  = m_fields[0]->GetNpoints();
@@ -256,7 +258,7 @@ namespace Nektar
 	}
 	
 	
-	void DriverModified::OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool VelCorrectionScheme)
+	void DriverModifiedArnoldi::OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool VelCorrectionScheme)
 	{
 		int k;
 		
@@ -287,7 +289,7 @@ namespace Nektar
 		}
 	}
 	
-	void DriverModified::EV_update(
+	void DriverModifiedArnoldi::EV_update(
 				   Array<OneD, NekDouble> &src,
 				   Array<OneD, NekDouble> &tgt)
 	{
@@ -337,7 +339,7 @@ namespace Nektar
 	/**
 	 *
 	 */
-	void DriverModified::EV_small(
+	void DriverModifiedArnoldi::EV_small(
 				  Array<OneD, Array<OneD, NekDouble> > &Kseq,
 				  const int ntot,
 				  const Array<OneD, NekDouble> &alpha,
@@ -394,7 +396,7 @@ namespace Nektar
 	/**
 	 *
 	 */
-	int DriverModified::EV_test(
+	int DriverModifiedArnoldi::EV_test(
 				const int itrn,
 				const int kdim,
 				Array<OneD, NekDouble> &zvec,
@@ -475,7 +477,7 @@ namespace Nektar
 	/**
 	 *
 	 */
-	void DriverModified::EV_sort(
+	void DriverModifiedArnoldi::EV_sort(
 				 Array<OneD, NekDouble> &evec,
 				 Array<OneD, NekDouble> &wr,
 				 Array<OneD, NekDouble> &wi,

@@ -50,7 +50,7 @@ namespace Nektar
     {
         Laplace::v_InitObject();
 
-        EvaluateFunction(m_fields, "Forcing");
+        EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
     }
 
     Poisson::~Poisson()

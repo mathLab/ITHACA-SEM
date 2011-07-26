@@ -12,6 +12,8 @@ SET(ADRSolverSource
        ./EquationSystems/CFLtester.cpp
        ../Auxiliary/Driver.cpp
        ../Auxiliary/DriverStandard.cpp
+       ../Auxiliary/DriverArnoldi.cpp
+       ../Auxiliary/DriverModifiedArnoldi.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp)
 

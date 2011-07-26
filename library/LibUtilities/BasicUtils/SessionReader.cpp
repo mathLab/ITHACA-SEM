@@ -303,6 +303,11 @@ namespace Nektar
             return m_variables[idx];
         }
 
+        std::vector<std::string> SessionReader::GetVariables() const
+        {
+            return m_variables;
+        }
+
         EquationSharedPtr SessionReader::GetFunction(const std::string& pName, const std::string& pVariable) const
         {
             FunctionMap::const_iterator it1;

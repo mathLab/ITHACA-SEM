@@ -111,6 +111,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT bool DefinesGeometricInfo(const std::string name);
 
             LIB_UTILITIES_EXPORT std::string GetVariable(const unsigned int idx) const;
+            LIB_UTILITIES_EXPORT std::vector<std::string> GetVariables() const;
 
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(const std::string& name, const std::string& variable) const;
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(const std::string& name, unsigned int var) const;

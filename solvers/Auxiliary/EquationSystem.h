@@ -101,8 +101,15 @@ namespace Nektar
                 std::string pFunctionName,
                 const NekDouble pTime = 0.0);
 
-        /// Populate given fields with the forcing function from session.
+        /// Populate given fields with the function from session.
         void EvaluateFunction(
+                std::vector<std::string> pFieldNames,
+                Array<OneD, Array<OneD, NekDouble> > &pFields,
+                const std::string& pName);
+
+        /// Populate given fields with the function from session.
+        void EvaluateFunction(
+                std::vector<std::string> pFieldNames,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const std::string& pName);
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File DriverModified.h
+// File DriverModifiedArnoldi.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,26 +29,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Driver class for the stability solver with Modified Arnoldi Algorithm
+// Description: Driver class for eigenvalue analysis using the modified Arnoldi
+//              method.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_DRIVERMODIFIED_H
-#define NEKTAR_SOLVERS_DRIVERMODIFIED_H
+#ifndef NEKTAR_SOLVERS_DRIVERMODIFIEDARNOLDI_H
+#define NEKTAR_SOLVERS_DRIVERMODIFIEDARNOLDI_H
 
 #include <Auxiliary/Driver.h>
 
 namespace Nektar
 {
-    class DriverModified: public Driver
+    class DriverModifiedArnoldi: public Driver
     {
     public:
-		friend class MemoryManager<DriverModified>;
+		friend class MemoryManager<DriverModifiedArnoldi>;
 		
 		/// Creates an instance of this class
         static DriverSharedPtr create(LibUtilities::CommSharedPtr& pComm,
 									  LibUtilities::SessionReaderSharedPtr& pSession) {
-            DriverSharedPtr p = MemoryManager<DriverModified>::AllocateSharedPtr(pComm, pSession);
+            DriverSharedPtr p = MemoryManager<DriverModifiedArnoldi>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
             return p;
 		}
@@ -68,11 +69,12 @@ namespace Nektar
 		Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
 
         /// Constructor
-        DriverModified( LibUtilities::CommSharedPtr                 pComm,
-                        LibUtilities::SessionReaderSharedPtr        pSession);
+		DriverModifiedArnoldi(
+		        LibUtilities::CommSharedPtr                 pComm,
+                LibUtilities::SessionReaderSharedPtr        pSession);
 
         /// Destructor
-        virtual ~DriverModified();
+        virtual ~DriverModifiedArnoldi();
 
         /// Virtual function for initialisation implementation.
         virtual void v_InitObject();

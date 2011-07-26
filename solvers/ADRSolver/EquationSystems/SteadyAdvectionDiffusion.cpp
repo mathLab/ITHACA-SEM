@@ -76,7 +76,7 @@ namespace Nektar
     void SteadyAdvectionDiffusion::v_DoInitialise()
     {
         // set initial forcing from session file
-        EvaluateFunction(m_fields, "Forcing");
+        EvaluateFunction(m_session->GetVariables(), m_fields, "Forcing");
     }
 
     void SteadyAdvectionDiffusion::v_DoSolve()

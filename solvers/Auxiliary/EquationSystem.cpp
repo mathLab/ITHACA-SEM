@@ -574,7 +574,13 @@ namespace Nektar
                     ASSERTL0(false, "Force function not implemented for 3D.");
             }
 
-            EvaluateFunction(m_forces, "BodyForce");
+            std::vector<std::string> fieldStr;
+            for(int i = 0; i < v_GetForceDimension(); ++i)
+            {
+                fieldStr.push_back(m_session->GetVariable(i));
+            }
+
+            EvaluateFunction(fieldStr, m_forces, "BodyForce");
         }
 
         // If a tangent vector policy is defined then the local tangent vectors
@@ -672,6 +678,9 @@ namespace Nektar
             std::string pFunctionName,
             const NekDouble pTime)
     {
+        ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                    "Function '" + pFunctionName + "' does not exist.");
+
         int nq = m_fields[0]->GetNpoints();
 
         Array<OneD,NekDouble> x0(nq);
@@ -707,15 +716,16 @@ namespace Nektar
      * @param   force           Array of fields to assign forcing.
      */
     void EquationSystem::EvaluateFunction(
-                        Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                        std::vector<std::string> pFieldNames,
+                        Array<OneD, Array<OneD, NekDouble> > &pFields,
                         const std::string& pFunctionName)
     {
+        ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                    "Function '" + pFunctionName + "' does not exist.");
         LibUtilities::FunctionType vType = m_session->GetFunctionType(pFunctionName);
         if (vType == LibUtilities::eFunctionTypeFile)
         {
-            std::string filename = m_session->GetFunctionFilename(pFunctionName);
-            cout << pFunctionName << " from file: " << filename << endl;
-            ImportFld(filename, pFields);
+            ASSERTL0(false, "Reading from file to array not implemented.");
         }
         else if (vType == LibUtilities::eFunctionTypeExpression)
         {
@@ -725,17 +735,60 @@ namespace Nektar
             Array<OneD,NekDouble> x2(nq);
             // get the coordinates (assuming all fields have the same
             // discretisation)
-            pFields[0]->GetCoords(x0,x1,x2);
-            for(int i = 0 ; i < pFields.num_elements(); i++)
+            m_fields[0]->GetCoords(x0,x1,x2);
+            ASSERTL0(pFieldNames.size() == pFields.num_elements(),
+                     "FieldNames size mismatch.");
+            for(int i = 0 ; i < pFieldNames.size(); i++)
             {
                 LibUtilities::EquationSharedPtr ffunc
-                        = m_session->GetFunction(pFunctionName, i);
+                        = m_session->GetFunction(pFunctionName, pFieldNames[i]);
+                for(int j = 0; j < nq; j++)
+                {
+                    pFields[i][j] = ffunc->Evaluate(x0[j],x1[j],x2[j]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Populates a forcing function for each of the dependent variables using
+     * the expression provided by the BoundaryConditions object.
+     * @param   force           Array of fields to assign forcing.
+     */
+    void EquationSystem::EvaluateFunction(
+                        std::vector<std::string> pFieldNames,
+                        Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                        const std::string& pFunctionName)
+    {
+        ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                    "Function '" + pFunctionName + "' does not exist.");
+        LibUtilities::FunctionType vType = m_session->GetFunctionType(pFunctionName);
+        if (vType == LibUtilities::eFunctionTypeFile)
+        {
+            std::string filename = m_session->GetFunctionFilename(pFunctionName);
+            cout << pFunctionName << " from file: " << filename << endl;
+            ImportFld(filename, pFields);
+        }
+        else if (vType == LibUtilities::eFunctionTypeExpression)
+        {
+            int nq = pFields[0]->GetNpoints();
+            Array<OneD,NekDouble> x0(nq);
+            Array<OneD,NekDouble> x1(nq);
+            Array<OneD,NekDouble> x2(nq);
+            // get the coordinates (assuming all fields have the same
+            // discretisation)
+            pFields[0]->GetCoords(x0,x1,x2);
+            ASSERTL0(pFieldNames.size() == pFields.num_elements(),
+                     "FieldNames size mismatch.");
+            for(int i = 0 ; i < pFieldNames.size(); i++)
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                        = m_session->GetFunction(pFunctionName, pFieldNames[i]);
                 for(int j = 0; j < nq; j++)
                 {
                     (pFields[i]->UpdatePhys())[j]
-                            = ffunc->Evaluate(x0[j],x1[j],x2[j]);
+                                   = ffunc->Evaluate(x0[j],x1[j],x2[j]);
                 }
-                pFields[i]->SetPhysState(true);
             }
         }
     }

@@ -1196,7 +1196,6 @@ namespace Nektar
             }
         case eSteadyStokes:
             SetUpCoupledMatrix();
-            //SetInitialForce(0.0);
             break;
         case eSteadyOseen:
             {
@@ -1206,22 +1205,18 @@ namespace Nektar
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
 
-                if(m_session->DefinesFunction("AdvectionVelocity"))
+                ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+                            "Advection Velocity section must be defined in "
+                            "session file.");
+
+                std::vector<std::string> fieldStr;
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
-                    std::vector<std::string> fieldStr;
-                    for(int i = 0; i < m_velocity.num_elements(); ++i)
-                    {
-                        fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                    }
-                    SetFunction(fieldStr,AdvField,"AdvectionVelocity");
+                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
-                else
-                {
-                    ASSERTL0(false,"Must define an Advection Velocity section");
-                }
+                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
-                //SetInitialForce(0.0);
             }
             break;
         case eSteadyLinearisedNS:
@@ -1233,23 +1228,18 @@ namespace Nektar
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
                 
-                if(m_session->DefinesFunction("AdvectionVelocity"))
+                ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+                            "Advection Velocity section must be defined in "
+                            "session file.");
+
+                std::vector<std::string> fieldStr;
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
-                    std::vector<std::string> fieldStr;
-                    for(int i = 0; i < m_velocity.num_elements(); ++i)
-                    {
-                        fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                    }
-                    SetFunction(fieldStr,AdvField,"AdvectionVelocity");
+                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
-                else
-                {
-                    ASSERTL0(false,"Must define an AdvectionVelocity section");
-                }
+                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
 
                 SetUpCoupledMatrix(0.0,AdvField,true);
-
-                //SetInitialForce(0.0);
             }
             break;
         case eNoEquationType:

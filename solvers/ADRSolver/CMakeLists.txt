@@ -12,10 +12,14 @@ SET(ADRSolverSource
        ./EquationSystems/CFLtester.cpp
        ../Auxiliary/Driver.cpp
        ../Auxiliary/DriverStandard.cpp
-       ../Auxiliary/DriverArnoldi.cpp
        ../Auxiliary/DriverModifiedArnoldi.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp)
+
+IF (NEKTAR_USE_ARPACK)
+    SET(ADRSolverSource ${ADRSolverSource}
+               ../Auxiliary/DriverArnoldi.cpp)
+ENDIF (NEKTAR_USE_ARPACK)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 
 			${ADRSolverSource})

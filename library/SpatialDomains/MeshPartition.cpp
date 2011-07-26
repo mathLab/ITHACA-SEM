@@ -45,14 +45,14 @@
 
 #include <tinyxml/tinyxml.h>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/graph_utility.hpp>
-
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/ParseUtils.hpp>
 #include <SpatialDomains/MeshPartition.h>
 #include <LibUtilities/BasicUtils/Metis.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_utility.hpp>
 
 namespace Nektar
 {

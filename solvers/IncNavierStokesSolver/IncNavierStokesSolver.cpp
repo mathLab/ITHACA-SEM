@@ -54,7 +54,6 @@ int main(int argc, char *argv[])
 
     LibUtilities::CommSharedPtr vComm;
     LibUtilities::SessionReaderSharedPtr session;
-
     DriverSharedPtr drv;
   
     try
@@ -80,8 +79,10 @@ int main(int argc, char *argv[])
         }
         drv = GetDriverFactory().CreateInstance(vDriverModule, vComm, session);
 
+        // Execute driver
         drv->Execute();
 
+        // Finalise communications
         vComm->Finalise();
     }
     catch (const std::runtime_error& e)
@@ -93,11 +94,5 @@ int main(int argc, char *argv[])
         cout << "Error: " << eStr << endl;
     }
     
-    
     return 0;
-
 }
-
-/**
- * $Log $
-**/

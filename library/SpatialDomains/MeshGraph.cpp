@@ -660,6 +660,47 @@ namespace Nektar
             TiXmlElement* element = mesh->FirstChildElement("VERTEX");
             ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
 
+            NekDouble xscale,yscale,zscale;
+            
+            // check to see if any scaling parameters are in
+            // attributes and determine these values
+            LibUtilities::ExpressionEvaluator expEvaluator;
+            const char *xscal =  element->Attribute("XSCALE");
+            if(!xscal)
+            {
+                xscale = 1.0;
+            }
+            else
+            {
+                std::string xscalstr = xscal;
+                expEvaluator.DefineFunction("",xscalstr);
+                xscale = expEvaluator.Evaluate();
+            }
+
+            const char *yscal =  element->Attribute("YSCALE");
+            if(!yscal)
+            {
+                yscale = 1.0;
+            }
+            else
+            {
+                std::string yscalstr = yscal;
+                expEvaluator.DefineFunction("",yscalstr);
+                yscale = expEvaluator.Evaluate();
+            }
+                
+            const char *zscal = element->Attribute("ZSCALE");
+            if(!zscal)
+            {
+                zscale = 1.0;
+            }
+            else
+            {
+                std::string zscalstr = zscal;
+                expEvaluator.DefineFunction("",zscalstr);
+                zscale = expEvaluator.Evaluate();
+            }
+            
             TiXmlElement *vertex = element->FirstChildElement("V");
 
             int indx;
@@ -706,9 +747,14 @@ namespace Nektar
                     while(!vertexDataStrm.fail())
                     {
                         vertexDataStrm >> xval >> yval >> zval;
-
-                        // Need to check it here because we may not be good after the read
-                        // indicating that there was nothing to read.
+                        
+                        xval *= xscale;
+                        yval *= yscale;
+                        zval *= zscale;
+                        
+                        // Need to check it here because we may not be
+                        // good after the read indicating that there
+                        // was nothing to read.
                         if (!vertexDataStrm.fail())
                         {
                             VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));

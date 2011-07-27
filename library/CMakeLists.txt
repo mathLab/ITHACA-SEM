@@ -163,7 +163,7 @@ ENDIF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT )
 
 
 SET(LibrarySubDirs LibUtilities LocalRegions MultiRegions SpatialDomains
-StdRegions Stochastic)
+StdRegions)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs Demos)
 SET(TimingsSubDirs Timings)

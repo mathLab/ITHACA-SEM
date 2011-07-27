@@ -1569,10 +1569,12 @@ namespace Nektar
 
         Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
         NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
+        NekVector<  NekDouble > F_p_tmp(m_mat[mode].m_Cinv->GetRows());
 
         // fbnd does not currently hold the pressure mean
         F_bnd = F_bnd - (*m_mat[mode].m_BCinv)*F_int;
-        F_p   = (*m_mat[mode].m_D_int)*((*m_mat[mode].m_Cinv)*F_int);
+        F_p_tmp = (*m_mat[mode].m_Cinv)*F_int;
+        F_p = (*m_mat[mode].m_D_int) * F_p_tmp;
         
         // construct inner forcing 
         Array<OneD, NekDouble > bnd   (m_locToGloMap[mode]->GetNumGlobalCoeffs(),0.0);
@@ -1719,8 +1721,9 @@ namespace Nektar
 
         // Back solve first level of static condensation for interior
         // velocity space and store in F_int
-        F_int = (*m_mat[mode].m_Cinv)*(F_int + Transpose(*m_mat[mode].m_D_int)*F_p 
-                                       - Transpose(*m_mat[mode].m_Btilde)*F_bnd);
+        F_int = F_int + Transpose(*m_mat[mode].m_D_int)*F_p
+                                       - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
+        F_int = (*m_mat[mode].m_Cinv)*F_int;
     
         // Unpack solution from Bnd and F_int to v_coeffs 
         cnt = cnt1 = 0;

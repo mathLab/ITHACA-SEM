@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/HistoryPoints.h>
 #include <SpatialDomains/SpatialData.h>
@@ -58,11 +59,24 @@
 
 namespace Nektar
 {
-	
+    class AdvectionTerm;
+
+    /// A shared pointer to an EquationSystem object
+    typedef boost::shared_ptr<AdvectionTerm> AdvectionTermSharedPtr;
+    /// Datatype of the NekFactory used to instantiate classes derived from
+    /// the EquationSystem class.
+    typedef LibUtilities::NekFactory<
+            std::string, AdvectionTerm,
+            LibUtilities::CommSharedPtr&,
+            LibUtilities::SessionReaderSharedPtr&
+        > AdvectionTermFactory;
+    AdvectionTermFactory& GetAdvectionTermFactory();
+
     /// Base class for the development of solvers.
     class AdvectionTerm
     {
     public:
+
         /// Default constructor.
         AdvectionTerm();
 		

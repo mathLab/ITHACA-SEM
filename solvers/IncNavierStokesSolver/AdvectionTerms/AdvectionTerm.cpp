@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
+#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <cstdio>
 #include <cstdlib>
 
@@ -42,6 +42,15 @@
 #include <string>
 namespace Nektar
 {
+
+    AdvectionTermFactory& GetAdvectionTermFactory()
+    {
+        typedef Loki::SingletonHolder<AdvectionTermFactory,
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
+        return Type::Instance();
+    }
+
     /**
      * Basic construnctor
      */

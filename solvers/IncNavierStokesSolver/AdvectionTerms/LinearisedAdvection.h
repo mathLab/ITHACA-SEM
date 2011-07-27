@@ -52,7 +52,7 @@
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
 
-#include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
+#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 
 //#define TIMING
 

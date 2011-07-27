@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.h>
+#include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
 #include <cstdio>
 #include <cstdlib>
 

@@ -37,10 +37,10 @@
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
 #include <Auxiliary/EquationSystem.h>
-#include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
-#include <IncNavierStokesSolver/EquationSystems/LinearisedAdvection.h>
-#include <IncNavierStokesSolver/EquationSystems/NavierStokesAdvection.h>
-#include <IncNavierStokesSolver/EquationSystems/AdjointAdvection.h>
+#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
+#include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
+#include <IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 

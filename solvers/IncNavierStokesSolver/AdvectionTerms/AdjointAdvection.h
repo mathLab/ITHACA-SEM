@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
-#define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
+#ifndef NEKTAR_SOLVERS_ADJOINTADVECTION_H
+#define NEKTAR_SOLVERS_ADJOINTADVECTION_H
 
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/HistoryPoints.h>
@@ -47,14 +47,10 @@
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/DisContField2D.h>
 
-#include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/DisContField3DHomogeneous2D.h>
-
-#include <IncNavierStokesSolver/EquationSystems/AdvectionTerm.h>
+#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 
 //#define TIMING
+
 //#ifdef TIMING
 //#include <time.h>
 //#include <sys/time.h>
@@ -64,8 +60,8 @@
 namespace Nektar
 {     
 
-    class NavierStokesAdvection: public AdvectionTerm
-	
+
+    class AdjointAdvection: public AdvectionTerm
     {
     public:           
 
@@ -73,46 +69,51 @@ namespace Nektar
          * Default constructor. 
          * 
          */ 
-        NavierStokesAdvection();
+        AdjointAdvection();
 
 
         /**
          * Constructor.
          * \param 
          * 
-         *
          */
-        NavierStokesAdvection(
+
+        AdjointAdvection(
                 LibUtilities::CommSharedPtr                 pComm,
                 LibUtilities::SessionReaderSharedPtr        pSession,
                 SpatialDomains::MeshGraphSharedPtr          pGraph,
                 SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
 
-		
-		 ~NavierStokesAdvection();
-     		
+		virtual ~AdjointAdvection();
+     
 		//Virtual function for the evaluation of the advective terms
 		virtual void v_DoAdvection(
 								   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
 								   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
 								   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
 								   Array<OneD, NekDouble> &pWk);
-   
-	protected:
-
-		int   m_nConvectiveFields;  /// Number of fields to be convected; 
 		
-        Array<OneD, int> m_velocity; ///< int which identifies which components of m_fields contains the velocity (u,v,w);
-	    		
-        //Function for the evaluation of the linearised advective terms
-        void ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
-                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                         const Array<OneD, Array<OneD, NekDouble> > &pV,
-                         const Array<OneD, const NekDouble> &pU,
-                         Array<OneD, NekDouble> &pOutarray,
-                         Array<OneD, NekDouble> &pWk);
+	protected:
+		//Storage of the base flow
+		Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
+ 		int                                             m_nConvectiveFields;
+		Array<OneD, int>                                m_velocity;
 
-	};
+        void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
+
+        /// Import Base flow
+        void ImportFldBase(std::string pInfile,
+                SpatialDomains::MeshGraphSharedPtr pGraph,
+                SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions);
+
+        //Function for the evaluation of the adjoint advective terms
+        void ComputeAdvectionTerm(
+                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                         int pVelocityComponent,
+                         const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
+                         Array<OneD, NekDouble> &pOutarray);
+
+    };
     
     
 } //end of namespace

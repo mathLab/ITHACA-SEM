@@ -249,7 +249,7 @@
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
        <I PROPERTY="InitialVector" VALUE="Random"/>
-      <I PROPERTY="EigenvalueAlgorithm" VALUE="ModifiedArnoldi"/>
+      <I PROPERTY="Driver" VALUE="ModifiedArnoldi"/>
  
     </SOLVERINFO>
 

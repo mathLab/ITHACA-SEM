@@ -34,6 +34,7 @@
 
 #include "Node.hpp"
 #include "RemoveAllUnecessaryTemporaries.hpp"
+#include <boost/version.hpp>
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
 #include <boost/fusion/include/accumulate.hpp>
 
@@ -245,7 +246,7 @@ namespace Nektar
             {
             }
 
-#if BOOST_VERSION < 103500
+#if BOOST_VERSION < 104200
             template<typename ElementType>
             unsigned int operator()(const ElementType& rhs, const unsigned int& accum) const
 #else

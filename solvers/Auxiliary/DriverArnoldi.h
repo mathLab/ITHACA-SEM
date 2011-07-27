@@ -44,9 +44,9 @@ namespace Nektar
     class DriverArnoldi: public Driver
     {
     public:
-		friend class MemoryManager<DriverArnoldi>;
+        friend class MemoryManager<DriverArnoldi>;
 		
-		/// Creates an instance of this class
+        /// Creates an instance of this class
         static DriverSharedPtr create(LibUtilities::CommSharedPtr& pComm,
 									  LibUtilities::SessionReaderSharedPtr& pSession) {
             DriverSharedPtr p = MemoryManager<DriverArnoldi>::AllocateSharedPtr(pComm, pSession);

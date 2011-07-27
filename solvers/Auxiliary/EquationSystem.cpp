@@ -535,7 +535,6 @@ namespace Nektar
         Array<OneD, NekDouble> x(nq), y(nq), z(nq);
         m_fields[0]->GetCoords(x,y,z);
         m_spatialParameters->EvaluateParameters(x,y,z);
-
         ScanForHistoryPoints();
 
         if (m_session->DefinesFunction("BodyForce"))
@@ -725,7 +724,24 @@ namespace Nektar
         LibUtilities::FunctionType vType = m_session->GetFunctionType(pFunctionName);
         if (vType == LibUtilities::eFunctionTypeFile)
         {
-            ASSERTL0(false, "Reading from file to array not implemented.");
+            int nfields = pFieldNames.size();
+
+            std::string filename = m_session->GetFunctionFilename(pFunctionName);
+            cout << pFunctionName << " from file: " << filename << endl;
+            // declare tmp space for coefficients
+            Array< OneD, Array<OneD, NekDouble> > coeffs(nfields);
+            coeffs[0] = Array<OneD, NekDouble> (nfields*m_fields[0]->GetNcoeffs(),0.0);
+            for(int i = 1; i < nfields; ++i)
+            {
+                coeffs[i] = coeffs[i-1] + m_fields[i]->GetNcoeffs();
+            }
+            
+            ImportFld(filename, pFieldNames, coeffs);
+            // transform coefficients to physical space. 
+            for(int i = 0; i < nfields; ++i)
+            {
+                m_fields[0]->BwdTrans(coeffs[i],pFields[i]);
+            }
         }
         else if (vType == LibUtilities::eFunctionTypeExpression)
         {
@@ -1887,6 +1903,37 @@ namespace Nektar
                                  pFields[j]->UpdatePhys());
         }
     }
+
+
+    /**
+     * Import field from infile and load into the array \a
+     * coeffs. 
+     *
+     * @param infile Filename to read.
+     * @param fieldStr an array of string identifying fields to be imported
+     * @param coeffs and array of array of coefficients to store imported data
+     */
+    void EquationSystem::ImportFld(std::string &infile, std::vector< std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs)
+    {
+
+        ASSERTL0(fieldStr.size() <= coeffs.num_elements(),"length of fieldstr should be the same as pFields");
+        
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+        std::vector<std::vector<NekDouble> > FieldData;
+        
+        m_graph->Import(infile,FieldDef,FieldData);
+        
+        // copy FieldData into m_fields
+        for(int j = 0; j < fieldStr.size(); ++j)
+        {
+            for(int i = 0; i < FieldDef.size(); ++i)
+            {
+                m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                 fieldStr[j], coeffs[j]);
+            }
+        }
+    }
+    
 
 
     /**

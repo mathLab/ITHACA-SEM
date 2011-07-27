@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IncNavierStokesSolver.cpp
+// File DriverStandard.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -38,63 +38,63 @@
 namespace Nektar
 
 {
-	string DriverStandard::className = GetDriverFactory().RegisterCreatorFunction("Standard", DriverStandard::create);
+    string DriverStandard::className = GetDriverFactory().RegisterCreatorFunction("Standard", DriverStandard::create);
 
-	/**
+    /**
 	 *
      */
     DriverStandard::DriverStandard(LibUtilities::CommSharedPtr                pComm,
-							       LibUtilities::SessionReaderSharedPtr       pSession)
+                                   LibUtilities::SessionReaderSharedPtr       pSession)
         : Driver(pComm,pSession)
-	{
-	}
-	
-
-	/**
-	 *
-	 */
-	DriverStandard:: ~DriverStandard()
-	{
-	}
-	
-	
-	/**
-	 *
-	 */
-	void DriverStandard::v_InitObject()
-	{
-	    try
+    {
+    }
+    
+    
+    /**
+     *
+     */
+    DriverStandard:: ~DriverStandard()
+    {
+    }
+    
+    
+    /**
+     *
+     */
+    void DriverStandard::v_InitObject()
+    {
+        try
         {
-	        ASSERTL0(m_session->DefinesSolverInfo("EqType"),
-	                 "EqType SolverInfo tag must be defined.");
-	        std::string vEquation = m_session->GetSolverInfo("EqType");
-	        if (m_session->DefinesSolverInfo("SolverType"))
-	        {
-	            vEquation = m_session->GetSolverInfo("SolverType");
-	        }
-	        ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
-	            "Solver module '" + vEquation + "' is not defined.\n"
-	            "Ensure equation name is correct and module is compiled.\n");
+            ASSERTL0(m_session->DefinesSolverInfo("EqType"),
+                     "EqType SolverInfo tag must be defined.");
+            std::string vEquation = m_session->GetSolverInfo("EqType");
+            if (m_session->DefinesSolverInfo("SolverType"))
+            {
+                vEquation = m_session->GetSolverInfo("SolverType");
+            }
+            ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
+                     "Solver module '" + vEquation + "' is not defined.\n"
+                     "Ensure equation name is correct and module is compiled.\n");
 
-	        m_equ = Array<OneD, EquationSystemSharedPtr>(1);
+            m_equ = Array<OneD, EquationSystemSharedPtr>(1);
             m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
         }
-		catch (int e)
+        catch (int e)
         {
             ASSERTL0(e == -1, "No such class class defined.");
             cout << "An error occured during driver initialisation." << endl;
         }
-	}
-
-	
-	void DriverStandard::v_Execute()
-	
-	{
+    }
+    
+    
+    void DriverStandard::v_Execute()
+        
+    {
         m_equ[0]->DoInitialise();
         m_equ[0]->PrintSummary(cout);
-		m_equ[0]->DoSolve();
-		m_equ[0]->Output();
-
+        m_equ[0]->DoSolve();
+        m_equ[0]->Output();
+        
         // Evaluate and output computation time and solution accuracy.
         // The specific format of the error output is essential for the
         // regression tests to work.
@@ -109,7 +109,7 @@ namespace Nektar
                 cout << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
             }
         }
-	}
+    }
 
 }
 

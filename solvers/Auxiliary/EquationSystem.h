@@ -205,6 +205,11 @@ namespace Nektar
                 std::string &infile,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
+
+         /// Output a field.
+         /// Input field data into array from the given file.
+         void ImportFld(std::string &infile, std::vector<std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs);
+
         /// Output a field.
         void Array_Output(
                 const int n,

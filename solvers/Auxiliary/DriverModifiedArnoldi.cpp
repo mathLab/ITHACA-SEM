@@ -89,6 +89,7 @@ namespace Nektar
             cout << "An error occured during driver initialisation." << endl;
         }
 
+        /// @todo could probably define m_VelCorrectionScheme to be m_TimeStepperScheme? 
         m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_VelCorrectionScheme, false);
         m_fields = m_equ[0]->UpdateFields();
 
@@ -258,256 +259,256 @@ namespace Nektar
 	}
 	
 	
-	void DriverModifiedArnoldi::OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool VelCorrectionScheme)
-	{
-		int k;
-		
-		//Plotting of real and imaginary part of the
-		//eigenvalues from workl
-		for(int k=0; k<=nev-1; ++k)
-		{                
-			double r = workl[ipntr[5]-1+k];
-			double i = workl[ipntr[6]-1+k];
-			double res;
-			
-			if(VelCorrectionScheme)
-			{
-				cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
-                " Frequency " << atan2(i,r)/period << endl;
-				
-				fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
-				fprintf (pFile, "\n");
-			}
-			else
-			{
-				NekDouble invmag = 1.0/(r*r + i*i);
-				cout << k << ": Re " << sqrt(r*r+i*i) << ", Imag " << atan2(i,r) << " inverse real " << -r*invmag <<  " inverse imag " << i*invmag << endl;
-				
-				fprintf (pFile, "EV: %i\t , Re: %f\t, Imag:  %f\t, inverse real:  %f\t, inverse imag:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),-r*invmag, i*invmag);
-				fprintf (pFile, "\n");
-			}
-		}
-	}
+    void DriverModifiedArnoldi::OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool VelCorrectionScheme)
+    {
+        int k;
 	
-	void DriverModifiedArnoldi::EV_update(
-				   Array<OneD, NekDouble> &src,
-				   Array<OneD, NekDouble> &tgt)
-	{
-		int nfields = m_fields.num_elements();
-		int nq = m_fields[0]->GetNpoints();
+        //Plotting of real and imaginary part of the
+        //eigenvalues from workl
+        for(int k=0; k<=nev-1; ++k)
+        {                
+            double r = workl[ipntr[5]-1+k];
+            double i = workl[ipntr[6]-1+k];
+            double res;
+            
+            if(VelCorrectionScheme)
+            {
+                cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
+                    " Frequency " << atan2(i,r)/period << endl;
 		
-		// Copy starting vector into first sequence element.
-		if(m_VelCorrectionScheme)
-		{
-			for (int k = 0; k < nfields; ++k)
-			{
-				Vmath::Vcopy(nq, &src[0] + k*nq, 1,
-				                 &m_fields[k]->UpdatePhys()[0], 1);
-			}
-		}
-		else
-		{
-			for (int k = 0; k < nfields; ++k)
-			{
-				Vmath::Vcopy(nq, &src[0] + k*nq, 1,
-				                 &m_forces[k]->UpdatePhys()[0], 1);
-			}
-		}
-		m_equ[0]->DoSolve();
-		// Copy starting vector into first sequence element.
-		if(m_VelCorrectionScheme)
-		{
-			for (int k = 0; k < nfields; ++k)
-			{
-				Vmath::Vcopy(nq, &m_fields[k]->GetPhys()[0], 1,
-				                 &tgt[0] + k*nq, 1);
-			}
-		}
-		else
-		{
-			for (int k = 0; k < nfields; ++k)
-			{
-				m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
-				                                 m_fields[k]->UpdatePhys());
-				Vmath::Vcopy(nq, &m_fields[k]->GetPhys()[0], 1,
-				                 &tgt[0] + k*nq, 1);
-			}
-		}
-	}
+                fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
+                fprintf (pFile, "\n");
+            }
+            else
+            {
+                NekDouble invmag = 1.0/(r*r + i*i);
+                cout << k << ": Re " << sqrt(r*r+i*i) << ", Imag " << atan2(i,r) << " inverse real " << -r*invmag <<  " inverse imag " << i*invmag << endl;
+		
+                fprintf (pFile, "EV: %i\t , Re: %f\t, Imag:  %f\t, inverse real:  %f\t, inverse imag:  %f\t ",k, sqrt(r*r+i*i), atan2(i,r),-r*invmag, i*invmag);
+                fprintf (pFile, "\n");
+            }
+        }
+    }
+    
+    void DriverModifiedArnoldi::EV_update(
+                                          Array<OneD, NekDouble> &src,
+                                          Array<OneD, NekDouble> &tgt)
+    {
+        int nfields = m_fields.num_elements();
+        int nq = m_fields[0]->GetNpoints();
 	
-	
-	/**
-	 *
-	 */
-	void DriverModifiedArnoldi::EV_small(
-				  Array<OneD, Array<OneD, NekDouble> > &Kseq,
-				  const int ntot,
-				  const Array<OneD, NekDouble> &alpha,
-				  const int kdim,
-				  Array<OneD, NekDouble> &zvec,
-				  Array<OneD, NekDouble> &wr,
-				  Array<OneD, NekDouble> &wi,
-				  NekDouble &resnorm)
-	{
-		int kdimp = kdim + 1;
-		int lwork = 10*kdim;
-		int ier;
-		Array<OneD, NekDouble> R(kdimp * kdimp, 0.0);
-		Array<OneD, NekDouble> H(kdimp * kdim, 0.0);
-		Array<OneD, NekDouble> rwork(lwork, 0.0);
-		
-		// Modified G-S orthonormalisation
-		for (int i = 0; i < kdimp; ++i)
-		{
-			NekDouble gsc = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
-			ASSERTL0(gsc != 0.0, "Vectors are linearly independent.");
-			R[i*kdimp+i] = gsc;
-			Vmath::Smul(ntot, 1.0/gsc, Kseq[i], 1, Kseq[i], 1);
-			for (int j = i + 1; j < kdimp; ++j)
-			{
-				gsc = Vmath::Dot(ntot, Kseq[i], 1, Kseq[j], 1);
-				Vmath::Svtvp(ntot, -gsc, Kseq[i], 1, Kseq[j], 1, Kseq[j], 1);
-				R[j*kdimp+i] = gsc;
-			}
-		}
-		
-		// Compute H matrix
-		for (int i = 0; i < kdim; ++i)
-		{
-			for (int j = 0; j < kdim; ++j)
-			{
-				H[j*kdim+i] = alpha[j+1] * R[(j+1)*kdimp+i]
-				- Vmath::Dot(j, &H[0] + i, kdim, &R[0] + j*kdimp, 1);
-				H[j*kdim+i] /= R[j*kdimp+j];
-			}
-		}
-		
-		H[(kdim-1)*kdim+kdim] = alpha[kdim]
-        * std::fabs(R[kdim*kdimp+kdim] / R[(kdim-1)*kdimp + kdim-1]);
-		
-		Lapack::dgeev_('N','V',kdim,&H[0],kdim,&wr[0],&wi[0],0,1,&zvec[0],kdim,&rwork[0],lwork,ier);
-		
-		ASSERTL0(!ier, "Error with dgeev");
-		
-		resnorm = H[(kdim-1)*kdim + kdim];
-	}
+        // Copy starting vector into first sequence element.
+        if(m_VelCorrectionScheme)
+        {
+            for (int k = 0; k < nfields; ++k)
+            {
+                Vmath::Vcopy(nq, &src[0] + k*nq, 1,
+                             &m_fields[k]->UpdatePhys()[0], 1);
+            }
+        }
+        else
+        {
+            for (int k = 0; k < nfields; ++k)
+            {
+                Vmath::Vcopy(nq, &src[0] + k*nq, 1,
+                             &m_forces[k]->UpdatePhys()[0], 1);
+            }
+        }
+        m_equ[0]->DoSolve();
+        // Copy starting vector into first sequence element.
+        if(m_VelCorrectionScheme)
+        {
+            for (int k = 0; k < nfields; ++k)
+            {
+                Vmath::Vcopy(nq, &m_fields[k]->GetPhys()[0], 1,
+                             &tgt[0] + k*nq, 1);
+            }
+        }
+        else
+        {
+            for (int k = 0; k < nfields; ++k)
+            {
+                m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
+                                                 m_fields[k]->UpdatePhys());
+                Vmath::Vcopy(nq, &m_fields[k]->GetPhys()[0], 1,
+                             &tgt[0] + k*nq, 1);
+            }
+        }
+    }
 	
 	
-	/**
-	 *
-	 */
-	int DriverModifiedArnoldi::EV_test(
-				const int itrn,
-				const int kdim,
-				Array<OneD, NekDouble> &zvec,
-				Array<OneD, NekDouble> &wr,
-				Array<OneD, NekDouble> &wi,
-				const NekDouble resnorm,
-				const int nvec,
-				ofstream &evlout,
-				NekDouble &resid0)
-	{
-		int idone = 0;
-		NekDouble re_ev, im_ev, abs_ev, ang_ev, re_Aev, im_Aev;	
-		// NekDouble period = 0.1;
-		
-		Array<OneD, NekDouble> resid(kdim);
-		for (int i = 0; i < kdim; ++i)
-		{
-			resid[i] = resnorm * std::fabs(zvec[kdim - 1 + i*kdim]) /
-            std::sqrt(Vmath::Dot(kdim, &zvec[0] + i*kdim, 1, &zvec[0] + i*kdim, 1));
-			if (wi[i] < 0.0) resid[i-1] = resid[i] = hypot(resid[i-1], resid[i]);
-		}
-		EV_sort(zvec, wr, wi, resid, kdim);
-		
-		if (resid[nvec-1] < m_evtol) idone = nvec;
-		
-		evlout << "-- Iteration = " << itrn << ", H(k+1, k) = " << resnorm << endl;
-		evlout.precision(4);
-		evlout.setf(ios::scientific, ios::floatfield);
-		if(m_VelCorrectionScheme)
-		{
-			evlout << "EV  Magnitude   Angle       Growth      Frequency   Residual"
-			<< endl;
-			for (int i = 0; i < kdim; i++) 
-			{
-				re_ev  = wr[i];
-				im_ev  = wi[i];
-				abs_ev = hypot (re_ev, im_ev);
-				ang_ev = atan2 (im_ev, re_ev);
-				re_Aev = log (abs_ev) / m_period;
-				im_Aev = ang_ev       / m_period;
-				evlout << setw(2)  << i
-				<< setw(12) << abs_ev
-				<< setw(12) << ang_ev
-				<< setw(12) << re_Aev
-				<< setw(12) << im_Aev
-				<< setw(12) << resid[i]
-				<< endl;
-			}
-		}
-		else
-		{
-			evlout << "EV  Magnitude   Angle      inverse real  inverse imag  Residual"
-			<< endl;
-			for (int i = 0; i < kdim; i++) 
-			{
-				re_ev  = wr[i];
-				im_ev  = wi[i];
-				abs_ev = hypot (re_ev, im_ev);
-				ang_ev = atan2 (im_ev, re_ev);
-				re_Aev = -wr[i]/(abs_ev*abs_ev);
-				im_Aev =  wi[i]/(abs_ev*abs_ev);
-				evlout << setw(2)  << i
-				<< setw(12) << abs_ev
-				<< setw(12) << ang_ev
-				<< setw(12) << re_Aev
-				<< setw(12) << im_Aev
-				<< setw(12) << resid[i]
-				<< endl;
-			}
-			
-		}
-		
-		resid0 = resid[0];
-		return idone;
-	}
+    /**
+     *
+     */
+    void DriverModifiedArnoldi::EV_small(
+                                         Array<OneD, Array<OneD, NekDouble> > &Kseq,
+                                         const int ntot,
+                                         const Array<OneD, NekDouble> &alpha,
+                                         const int kdim,
+                                         Array<OneD, NekDouble> &zvec,
+                                         Array<OneD, NekDouble> &wr,
+                                         Array<OneD, NekDouble> &wi,
+                                         NekDouble &resnorm)
+    {
+        int kdimp = kdim + 1;
+        int lwork = 10*kdim;
+        int ier;
+        Array<OneD, NekDouble> R(kdimp * kdimp, 0.0);
+        Array<OneD, NekDouble> H(kdimp * kdim, 0.0);
+        Array<OneD, NekDouble> rwork(lwork, 0.0);
 	
+        // Modified G-S orthonormalisation
+        for (int i = 0; i < kdimp; ++i)
+        {
+            NekDouble gsc = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
+            ASSERTL0(gsc != 0.0, "Vectors are linearly independent.");
+            R[i*kdimp+i] = gsc;
+            Vmath::Smul(ntot, 1.0/gsc, Kseq[i], 1, Kseq[i], 1);
+            for (int j = i + 1; j < kdimp; ++j)
+            {
+                gsc = Vmath::Dot(ntot, Kseq[i], 1, Kseq[j], 1);
+                Vmath::Svtvp(ntot, -gsc, Kseq[i], 1, Kseq[j], 1, Kseq[j], 1);
+                R[j*kdimp+i] = gsc;
+            }
+        }
 	
-	/**
-	 *
-	 */
-	void DriverModifiedArnoldi::EV_sort(
-				 Array<OneD, NekDouble> &evec,
-				 Array<OneD, NekDouble> &wr,
-				 Array<OneD, NekDouble> &wi,
-				 Array<OneD, NekDouble> &test,
-				 const int dim)
-	{
-		Array<OneD, NekDouble> z_tmp(dim,0.0);
-		NekDouble wr_tmp, wi_tmp, te_tmp;
-		for (int j = 1; j < dim; ++j)
-		{
-			wr_tmp = wr[j];
-			wi_tmp = wi[j];
-			te_tmp = test[j];
-			Vmath::Vcopy(dim, &evec[0] + j*dim, 1, &z_tmp[0], 1);
-			int i = j - 1;
-			while (i >= 0 && test[i] > te_tmp)
-			{
-				wr[i+1] = wr[i];
-				wi[i+1] = wi[i];
-				test[i+1] = test[i];
-				Vmath::Vcopy(dim, &evec[0] + i*dim, 1, &evec[0] + (i+1)*dim, 1);
-				i--;
-			}
-			wr[i+1] = wr_tmp;
-			wi[i+1] = wi_tmp;
-			test[i+1] = te_tmp;
-			Vmath::Vcopy(dim, &z_tmp[0], 1, &evec[0] + (i+1)*dim, 1);
-		}	
-	};
+        // Compute H matrix
+        for (int i = 0; i < kdim; ++i)
+        {
+            for (int j = 0; j < kdim; ++j)
+            {
+                H[j*kdim+i] = alpha[j+1] * R[(j+1)*kdimp+i]
+                    - Vmath::Dot(j, &H[0] + i, kdim, &R[0] + j*kdimp, 1);
+                H[j*kdim+i] /= R[j*kdimp+j];
+            }
+        }
 	
+        H[(kdim-1)*kdim+kdim] = alpha[kdim]
+            * std::fabs(R[kdim*kdimp+kdim] / R[(kdim-1)*kdimp + kdim-1]);
+	
+        Lapack::dgeev_('N','V',kdim,&H[0],kdim,&wr[0],&wi[0],0,1,&zvec[0],kdim,&rwork[0],lwork,ier);
+	
+        ASSERTL0(!ier, "Error with dgeev");
+	
+        resnorm = H[(kdim-1)*kdim + kdim];
+    }
+    
+	
+    /**
+     *
+     */
+    int DriverModifiedArnoldi::EV_test(
+                                       const int itrn,
+                                       const int kdim,
+                                       Array<OneD, NekDouble> &zvec,
+                                       Array<OneD, NekDouble> &wr,
+                                       Array<OneD, NekDouble> &wi,
+                                       const NekDouble resnorm,
+                                       const int nvec,
+                                       ofstream &evlout,
+                                       NekDouble &resid0)
+    {
+        int idone = 0;
+        NekDouble re_ev, im_ev, abs_ev, ang_ev, re_Aev, im_Aev;	
+        // NekDouble period = 0.1;
+	
+        Array<OneD, NekDouble> resid(kdim);
+        for (int i = 0; i < kdim; ++i)
+        {
+            resid[i] = resnorm * std::fabs(zvec[kdim - 1 + i*kdim]) /
+                std::sqrt(Vmath::Dot(kdim, &zvec[0] + i*kdim, 1, &zvec[0] + i*kdim, 1));
+            if (wi[i] < 0.0) resid[i-1] = resid[i] = hypot(resid[i-1], resid[i]);
+        }
+        EV_sort(zvec, wr, wi, resid, kdim);
+	
+        if (resid[nvec-1] < m_evtol) idone = nvec;
+	
+        evlout << "-- Iteration = " << itrn << ", H(k+1, k) = " << resnorm << endl;
+        evlout.precision(4);
+        evlout.setf(ios::scientific, ios::floatfield);
+        if(m_VelCorrectionScheme)
+        {
+            evlout << "EV  Magnitude   Angle       Growth      Frequency   Residual"
+                   << endl;
+            for (int i = 0; i < kdim; i++) 
+            {
+                re_ev  = wr[i];
+                im_ev  = wi[i];
+                abs_ev = hypot (re_ev, im_ev);
+                ang_ev = atan2 (im_ev, re_ev);
+                re_Aev = log (abs_ev) / m_period;
+                im_Aev = ang_ev       / m_period;
+                evlout << setw(2)  << i
+                       << setw(12) << abs_ev
+                       << setw(12) << ang_ev
+                       << setw(12) << re_Aev
+                       << setw(12) << im_Aev
+                       << setw(12) << resid[i]
+                       << endl;
+            }
+        }
+        else
+        {
+            evlout << "EV  Magnitude   Angle      inverse real  inverse imag  Residual"
+                   << endl;
+            for (int i = 0; i < kdim; i++) 
+            {
+                re_ev  = wr[i];
+                im_ev  = wi[i];
+                abs_ev = hypot (re_ev, im_ev);
+                ang_ev = atan2 (im_ev, re_ev);
+                re_Aev = -wr[i]/(abs_ev*abs_ev);
+                im_Aev =  wi[i]/(abs_ev*abs_ev);
+                evlout << setw(2)  << i
+                       << setw(12) << abs_ev
+                       << setw(12) << ang_ev
+                       << setw(12) << re_Aev
+                       << setw(12) << im_Aev
+                       << setw(12) << resid[i]
+                       << endl;
+            }
+            
+        }
+	
+        resid0 = resid[0];
+        return idone;
+    }
+    
+    
+    /**
+     *
+     */
+    void DriverModifiedArnoldi::EV_sort(
+                                        Array<OneD, NekDouble> &evec,
+                                        Array<OneD, NekDouble> &wr,
+                                        Array<OneD, NekDouble> &wi,
+                                        Array<OneD, NekDouble> &test,
+                                        const int dim)
+    {
+        Array<OneD, NekDouble> z_tmp(dim,0.0);
+        NekDouble wr_tmp, wi_tmp, te_tmp;
+        for (int j = 1; j < dim; ++j)
+        {
+            wr_tmp = wr[j];
+            wi_tmp = wi[j];
+            te_tmp = test[j];
+            Vmath::Vcopy(dim, &evec[0] + j*dim, 1, &z_tmp[0], 1);
+            int i = j - 1;
+            while (i >= 0 && test[i] > te_tmp)
+            {
+                wr[i+1] = wr[i];
+                wi[i+1] = wi[i];
+                test[i+1] = test[i];
+                Vmath::Vcopy(dim, &evec[0] + i*dim, 1, &evec[0] + (i+1)*dim, 1);
+                i--;
+            }
+            wr[i+1] = wr_tmp;
+            wi[i+1] = wi_tmp;
+            test[i+1] = te_tmp;
+            Vmath::Vcopy(dim, &z_tmp[0], 1, &evec[0] + (i+1)*dim, 1);
+        }	
+    };
+    
 }
 	
 	

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AdvectionTerm.h
+// File Driver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -62,31 +62,31 @@ namespace Nektar
     class Driver
     {
     public:
-		/// Destructor
-		virtual ~Driver();
-
-		/// Initialise Object
-		inline void InitObject();
-
+        /// Destructor
+        virtual ~Driver();
+        
+        /// Initialise Object
+        inline void InitObject();
+        
 		/// Execute driver
-		inline void Execute();
-		
-	protected:
-		/// Communication object
+        inline void Execute();
+	
+    protected:
+        /// Communication object
         LibUtilities::CommSharedPtr                 m_comm;
-		
-		/// Session reader object
-		LibUtilities::SessionReaderSharedPtr        m_session;
-
-		/// Equation system to solve
-		Array<OneD, EquationSystemSharedPtr>        m_equ;
-		
+	
+        /// Session reader object
+        LibUtilities::SessionReaderSharedPtr        m_session;
+        
+        /// Equation system to solve
+        Array<OneD, EquationSystemSharedPtr>        m_equ;
+	
         /// Initialises EquationSystem class members.
         Driver( LibUtilities::CommSharedPtr pComm,
-               LibUtilities::SessionReaderSharedPtr pSession);
-
+                LibUtilities::SessionReaderSharedPtr pSession);
+        
         virtual void v_InitObject() = 0;
-
+        
 		/// Virtual function for solve implementation.
         virtual void v_Execute() = 0;
 	};

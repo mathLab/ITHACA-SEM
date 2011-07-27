@@ -1255,7 +1255,7 @@ namespace Nektar
                     for(i = 0; i < nquad0; ++i)
                     {
                         infile.getline(str,sizeof(str));
-                        sscanf(str,"%*lf %*lf %lf",&m_phys[0]+j*nquad0+i);
+                        sscanf(str,"%*f %*f %lf",&m_phys[0]+j*nquad0+i);
                     }
                 }
             } 

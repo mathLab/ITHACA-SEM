@@ -1947,36 +1947,36 @@ namespace Nektar
      * @param   inarray     Field data to write out.
      * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
      */
-    void EquationSystem::Array_Output(const int n, std::string name,
-                               const Array<OneD, const NekDouble>&inarray,
-                               bool IsInPhysicalSpace)
-    {
-        int nq = m_fields[0]->GetTotPoints();
-
-        Array<OneD, NekDouble> tmp(nq);
-
-        // save values
-        Vmath::Vcopy(nq, m_fields[0]->GetPhys(), 1, tmp, 1);
-
-        // put inarray in m_phys
-        if (IsInPhysicalSpace == false)
-        {
-            m_fields[0]->BwdTrans(inarray,(m_fields[0]->UpdatePhys()));
-        }
-        else
-        {
-            Vmath::Vcopy(nq,inarray,1,(m_fields[0]->UpdatePhys()),1);
-        }
-
-        char chkout[16] = "";
-        sprintf(chkout, "%d", n);
-        std::string outname = m_sessionName +"_" + name + "_" + chkout + ".chk";
-        ofstream outfile(outname.c_str());
-        m_fields[0]->WriteToFile(outfile,eTecplot);
-
-        // copy back the original values
-        Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
-    }
+//    void EquationSystem::Array_Output(const int n, std::string name,
+//                               const Array<OneD, const NekDouble>&inarray,
+//                               bool IsInPhysicalSpace)
+//    {
+//        int nq = m_fields[0]->GetTotPoints();
+//
+//        Array<OneD, NekDouble> tmp(nq);
+//
+//        // save values
+//        Vmath::Vcopy(nq, m_fields[0]->GetPhys(), 1, tmp, 1);
+//
+//        // put inarray in m_phys
+//        if (IsInPhysicalSpace == false)
+//        {
+//            m_fields[0]->BwdTrans(inarray,(m_fields[0]->UpdatePhys()));
+//        }
+//        else
+//        {
+//            Vmath::Vcopy(nq,inarray,1,(m_fields[0]->UpdatePhys()),1);
+//        }
+//
+//        char chkout[16] = "";
+//        sprintf(chkout, "%d", n);
+//        std::string outname = m_sessionName +"_" + name + "_" + chkout + ".chk";
+//        ofstream outfile(outname.c_str());
+//        m_fields[0]->WriteToFile(outfile,eTecplot);
+//
+//        // copy back the original values
+//        Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
+//    }
 
     /**
      * Write data to file in Tecplot format

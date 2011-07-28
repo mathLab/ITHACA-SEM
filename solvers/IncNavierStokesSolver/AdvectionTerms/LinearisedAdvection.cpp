@@ -39,14 +39,8 @@
 
 namespace Nektar
 {
-    /**
-     * Basic construnctor
-     */
-    LinearisedAdvection::LinearisedAdvection(void):
-        AdvectionTerm()
-    {     
-    }
-    
+    string LinearisedAdvection::className = GetAdvectionTermFactory().RegisterCreatorFunction("Linearised", LinearisedAdvection::create);
+
     /**
      * Constructor. Creates ...
      *
@@ -55,21 +49,27 @@ namespace Nektar
      */
 
     LinearisedAdvection::LinearisedAdvection(
-            LibUtilities::CommSharedPtr                 pComm,
-            LibUtilities::SessionReaderSharedPtr        pSession,
-            SpatialDomains::MeshGraphSharedPtr          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions):
+            LibUtilities::CommSharedPtr&                 pComm,
+            LibUtilities::SessionReaderSharedPtr&        pSession,
+            SpatialDomains::MeshGraphSharedPtr&          pGraph,
+            SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions):
         AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	{
-        SetUpBaseFields(pGraph);
-        ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph,pBoundaryConditions);
 	}
 	
 
-	LinearisedAdvection::~LinearisedAdvection()
+	void LinearisedAdvection::v_InitObject()
 	{
+	    AdvectionTerm::v_InitObject();
+
+        SetUpBaseFields(m_graph);
+        ImportFldBase(m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + ".bse",m_graph,m_boundaryConditions);
 	}
-	
+
+    LinearisedAdvection::~LinearisedAdvection()
+    {
+    }
+
 
 	void LinearisedAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh)
 	{

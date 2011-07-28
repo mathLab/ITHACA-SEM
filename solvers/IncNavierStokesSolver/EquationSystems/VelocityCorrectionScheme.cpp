@@ -198,7 +198,6 @@ namespace Nektar
         int vVar = m_boundaryConditions->GetNumVariables();
         Array<OneD, bool> vChecks(vVar, false);
         vChecks[vVar-1] = true;
-        cout << vVar << " -> Set " << vVar -1 << endl;
         return vChecks;
     }
 

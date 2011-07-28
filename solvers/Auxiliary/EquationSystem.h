@@ -181,9 +181,10 @@ namespace Nektar
                 bool NumericalFluxIncludesNormal = true,
                 bool InFieldIsInPhysSpace = false);
 
-        /// Write checkpoint file.
+        /// Write checkpoint file of #m_fields.
         void Checkpoint_Output(const int n);
-        /// Write checkpoint file.
+
+        /// Write checkpoint file of custom data fields.
         void Checkpoint_Output(
                 const int n,
                 MultiRegions::ExpListSharedPtr &field,
@@ -211,11 +212,11 @@ namespace Nektar
          void ImportFld(std::string &infile, std::vector<std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs);
 
         /// Output a field.
-        void Array_Output(
-                const int n,
-                std::string name,
-                const Array<OneD, const NekDouble>&inarray,
-                bool IsInPhysicalSpace);
+//        void Array_Output(
+//                const int n,
+//                std::string name,
+//                const Array<OneD, const NekDouble>&inarray,
+//                bool IsInPhysicalSpace);
 
         void WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace);
 

@@ -39,14 +39,9 @@
 
 namespace Nektar
 {
-    /**
-     * Basic construnctor
-     */
-    AdjointAdvection::AdjointAdvection(void):
-        AdvectionTerm()
-    {     
-    }
-    
+    string AdjointAdvection::className = GetAdvectionTermFactory().RegisterCreatorFunction("Adjoint", AdjointAdvection::create);
+
+
     /**
      * Constructor. Creates ...
      *
@@ -73,7 +68,7 @@ namespace Nektar
 
 	void AdjointAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh)
 	{
-	    int nvariables = m_boundaryConditions->GetNumVariables();
+	    int nvariables = m_session->GetVariables().size();
 	    int i;
 	    m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
 

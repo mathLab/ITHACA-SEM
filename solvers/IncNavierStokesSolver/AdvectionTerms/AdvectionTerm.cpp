@@ -51,14 +51,7 @@ namespace Nektar
         return Type::Instance();
     }
 
-    /**
-     * Basic construnctor
-     */
-    AdvectionTerm::AdvectionTerm(void)
-    {     
-		
-    }
-    
+
     /**
      * Constructor. Creates ...
      *
@@ -66,28 +59,32 @@ namespace Nektar
      * \param
      */
     AdvectionTerm::AdvectionTerm(
-            LibUtilities::CommSharedPtr                 pComm,
-            LibUtilities::SessionReaderSharedPtr        pSession,
-            SpatialDomains::MeshGraphSharedPtr          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions)
+            LibUtilities::CommSharedPtr&                 pComm,
+            LibUtilities::SessionReaderSharedPtr&        pSession,
+            SpatialDomains::MeshGraphSharedPtr&          pGraph,
+            SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions)
         : m_comm(pComm),
           m_session(pSession),
           m_graph(pGraph),
           m_boundaryConditions(pBoundaryConditions)
 	{
+	}
+
+    void AdvectionTerm::v_InitObject()
+    {
         // Set space dimension for use in class
-        m_spacedim = pGraph->GetSpaceDimension();
-        m_expdim   = pGraph->GetMeshDimension();
+        m_spacedim = m_graph->GetSpaceDimension();
+        m_expdim   = m_graph->GetMeshDimension();
 
         // Save the basename of input file name for output details.
-		m_sessionName = pSession->GetFilename();
+		m_sessionName = m_session->GetFilename();
 		m_sessionName = m_sessionName.substr(0,
 											 m_sessionName.find_last_of("."));
 
-        if(m_boundaryConditions->SolverInfoExists("PROJECTION"))
+        if(m_session->DefinesSolverInfo("PROJECTION"))
         {
             std::string ProjectStr
-            = m_boundaryConditions->GetSolverInfo("PROJECTION");
+            = m_session->GetSolverInfo("PROJECTION");
 
             if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
                (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))

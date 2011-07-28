@@ -120,7 +120,6 @@ namespace Nektar
         NekDouble     m_kinvis;        ///< Kinematic viscosity
         int           m_infosteps;     ///< dump info to stdout at steps time
         EquationType  m_equationType;  ///< equation type;
-        AdvectionForm m_advectionForm; ///< Form of advection terms. 
 
         // Time integration classes
         LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;

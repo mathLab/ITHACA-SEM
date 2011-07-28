@@ -80,6 +80,8 @@ namespace Nektar
                 "EquationSystem '" + vEquation + "' is not defined.\n"
                 "Ensure equation name is correct and module is compiled.\n");
 
+            m_session->SetTag("AdvectiveType","Linearised");
+
             m_equ = Array<OneD, EquationSystemSharedPtr>(1);
             m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
         }
@@ -95,7 +97,6 @@ namespace Nektar
 
         if(m_VelCorrectionScheme)
         {
-            cout << "Velocity correction scheme" << endl;
             m_period = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
         }
         else

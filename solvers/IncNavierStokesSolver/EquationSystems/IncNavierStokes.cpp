@@ -98,8 +98,6 @@ namespace Nektar
          }
          ASSERTL0(i != eEquationTypeSize,"EQTYPE not found in SOLVERINFO section");
 
-         m_advectionForm = eNoAdvectionForm;
-         
          // This probably should to into specific implementations 
          // Equation specific Setups 
          switch(m_equationType)
@@ -109,21 +107,6 @@ namespace Nektar
          case eSteadyLinearisedNS: 
              break;
          case eUnsteadyNavierStokes:
-             {
-                 // Set up advection form
-                 for(i = 0; i < (int) eAdvectionFormSize; ++i)
-                 {
-                     bool match;
-                     m_session->MatchSolverInfo("ADVECTIONFORM",kAdvectionFormStr[i],match,false);
-                     
-                     if(match)
-                     {
-                         m_advectionForm = (AdvectionForm)i; 
-                         break;
-                     }
-                 }
-                 ASSERTL0(i != eAdvectionFormSize,"ADVECTIONFORM not found in SOLVERINFO section");
-             }
          case eUnsteadyStokes:
              
              if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
@@ -166,34 +149,12 @@ namespace Nektar
 
         if (m_equationType == eUnsteadyNavierStokes)
         {
-            switch(m_advectionForm)
+            std::string vConvectiveType = "Convective";
+            if (m_session->DefinesTag("AdvectiveType"))
             {
-                //Classic advective term
-                case eConvective: case eNonConservative:
-                {
-                    m_advObject = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
-                }
-                break;
-
-                //Linearised term
-                case eLinearised:
-                {
-                    m_advObject = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
-                }
-                break;
-					
-				//Adjoint term
-                case eAdjoint:
-                {
-                    m_advObject = MemoryManager<AdjointAdvection>::AllocateSharedPtr(m_comm, m_session, m_graph, m_boundaryConditions);
-                }
-					break;		
-					
-
-                default:
-                    ASSERTL0(false,"Advection form not known");
-                    break;
+                vConvectiveType = m_session->GetTag("AdvectiveType");
             }
+            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_comm, m_session, m_graph, m_boundaryConditions);
         }
     }
 
@@ -329,23 +290,24 @@ namespace Nektar
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
 
+        m_advObject->DoAdvection(m_fields,inarray,outarray,Deriv);
 
-        switch(m_advectionForm)
-        {
-        case eConvective: case eNonConservative:
-            {
-                int i;
-                for(i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    AdvectionNonConservativeForm(velocity,inarray[i],outarray[i],Deriv);
-                    Vmath::Neg(nqtot,outarray[i],1);
-                }
-            }
-            break; 
-        default:
-            ASSERTL0(false,"Advection form not known");
-            break;
-        }        
+//        switch(m_advectionForm)
+//        {
+//        case eConvective: case eNonConservative:
+//            {
+//                int i;
+//                for(i = 0; i < m_nConvectiveFields; ++i)
+//                {
+//                    AdvectionNonConservativeForm(velocity,inarray[i],outarray[i],Deriv);
+//                    Vmath::Neg(nqtot,outarray[i],1);
+//                }
+//            }
+//            break;
+//        default:
+//            ASSERTL0(false,"Advection form not known");
+//            break;
+//        }
 
 
     }

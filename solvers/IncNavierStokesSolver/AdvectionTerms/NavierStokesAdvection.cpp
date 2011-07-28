@@ -39,14 +39,9 @@
 
 namespace Nektar
 {
-    /**
-     * Basic construnctor
-     */
-    NavierStokesAdvection::NavierStokesAdvection(void):
-        AdvectionTerm()
-    {     
-    }
-    
+    string NavierStokesAdvection::className  = GetAdvectionTermFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);
+    string NavierStokesAdvection::className2 = GetAdvectionTermFactory().RegisterCreatorFunction("NonConservative", NavierStokesAdvection::create);
+
     /**
      * Constructor. Creates ...
      *
@@ -55,10 +50,10 @@ namespace Nektar
      */
 
     NavierStokesAdvection::NavierStokesAdvection(
-            LibUtilities::CommSharedPtr                 pComm,
-            LibUtilities::SessionReaderSharedPtr        pSession,
-            SpatialDomains::MeshGraphSharedPtr          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions):
+            LibUtilities::CommSharedPtr&                 pComm,
+            LibUtilities::SessionReaderSharedPtr&        pSession,
+            SpatialDomains::MeshGraphSharedPtr&          pGraph,
+            SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions):
         AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	
     {
@@ -76,75 +71,63 @@ namespace Nektar
 											    Array<OneD, NekDouble> &pWk)
 	
 	{
-		int i,j;
-		int VelDim;
-		int numfields = pFields.num_elements();
-		std::string velids[] = {"u","v","w"};
-        int nqtot      = pFields[0]->GetTotPoints();
+	    int i,j;
+	    int VelDim;
+	    int numfields = pFields.num_elements();
+	    std::string velids[] = {"u","v","w"};
+	    int nqtot      = pFields[0]->GetTotPoints();
 
 	    // Assume all fields but last to be convected by velocity. 
-		m_nConvectiveFields=numfields-1;
-        
-		m_velocity = Array<OneD,int>(m_nConvectiveFields);
-		
-		for(i = 0; i <m_nConvectiveFields; ++i)
-        {
-            for(j = 0; j < numfields; ++j)
-            {
-                std::string var = m_boundaryConditions->GetVariable(j);
-                if(NoCaseStringCompare(velids[i],var) == 0)
-                {
-                    m_velocity[i] = j;
-                    break;
-                }
-                
-                if(j == numfields)
-                {
-                    std::string error = "Failed to find field: " + var; 
-                    ASSERTL0(false,error.c_str());
-                }
-            }
-        }
-		
-        VelDim     = m_velocity.num_elements();
-        
-		Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
-        
-		Array<OneD, NekDouble > Deriv;
-        
-        for(i = 0; i < VelDim; ++i)
-        {
-            velocity[i] = pInarray[m_velocity[i]];
-        }
-		
-		// Set up Derivative work space; 
-        if(pWk.num_elements())
-        {
-            ASSERTL0(pWk.num_elements() > nqtot*VelDim,"Workspace is not sufficient");
-            Deriv = pWk;
-        }
-        else
-        {
-            Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
-        }
-		
-		for(i=0; i< m_nConvectiveFields; ++i)
-		{
-		 ComputeAdvectionTerm(m_boundaryConditions, pFields,velocity,pInarray[i],pOutarray[i],Deriv);
-		 
-			
-/**			if(i == 0)
-			{
-			   for (int k=0; k<nqtot;++k)
-			   {
-				   pOutarray[0][k] = -2;
-			   }
-			}
-*/			
-		Vmath::Neg(nqtot,pOutarray[i],1);
-			
-			
-		}
+	    m_nConvectiveFields=numfields-1;
+
+	    m_velocity = Array<OneD,int>(m_nConvectiveFields);
+
+	    for(i = 0; i <m_nConvectiveFields; ++i)
+	    {
+	        for(j = 0; j < numfields; ++j)
+	        {
+	            std::string var = m_boundaryConditions->GetVariable(j);
+	            if(NoCaseStringCompare(velids[i],var) == 0)
+	            {
+	                m_velocity[i] = j;
+	                break;
+	            }
+
+	            if(j == numfields)
+	            {
+	                std::string error = "Failed to find field: " + var;
+	                ASSERTL0(false,error.c_str());
+	            }
+	        }
+	    }
+
+	    VelDim     = m_velocity.num_elements();
+
+	    Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
+
+	    Array<OneD, NekDouble > Deriv;
+
+	    for(i = 0; i < VelDim; ++i)
+	    {
+	        velocity[i] = pInarray[m_velocity[i]];
+	    }
+
+	    // Set up Derivative work space;
+	    if(pWk.num_elements())
+	    {
+	        ASSERTL0(pWk.num_elements() > nqtot*VelDim,"Workspace is not sufficient");
+	        Deriv = pWk;
+	    }
+	    else
+	    {
+	        Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
+	    }
+
+	    for(i=0; i< m_nConvectiveFields; ++i)
+	    {
+	        ComputeAdvectionTerm(m_boundaryConditions, pFields,velocity,pInarray[i],pOutarray[i],Deriv);
+	        Vmath::Neg(nqtot,pOutarray[i],1);
+	    }
 	 }
 
 

@@ -68,7 +68,9 @@ namespace Nektar
     typedef LibUtilities::NekFactory<
             std::string, AdvectionTerm,
             LibUtilities::CommSharedPtr&,
-            LibUtilities::SessionReaderSharedPtr&
+            LibUtilities::SessionReaderSharedPtr&,
+            SpatialDomains::MeshGraphSharedPtr&,
+            SpatialDomains::BoundaryConditionsSharedPtr&
         > AdvectionTermFactory;
     AdvectionTermFactory& GetAdvectionTermFactory();
 
@@ -76,19 +78,10 @@ namespace Nektar
     class AdvectionTerm
     {
     public:
-
-        /// Default constructor.
-        AdvectionTerm();
-		
-        /// Constructor
-        AdvectionTerm(
-                LibUtilities::CommSharedPtr                 pComm,
-                LibUtilities::SessionReaderSharedPtr        pSession,
-                SpatialDomains::MeshGraphSharedPtr          pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
-		
 		/// Destructor
 		virtual ~AdvectionTerm();
+
+        inline void InitObject();
 
 		/// Compute advection term
 		inline void DoAdvection(
@@ -111,10 +104,18 @@ namespace Nektar
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
 
-
         int m_spacedim;              ///< Spatial dimension (> expansion dim)
         int m_expdim;                ///< Dimension of the expansion
 		int nvariables;              ///< Number of variables
+
+        /// Constructor
+        AdvectionTerm(
+                LibUtilities::CommSharedPtr&                 pComm,
+                LibUtilities::SessionReaderSharedPtr&        pSession,
+                SpatialDomains::MeshGraphSharedPtr&          pGraph,
+                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions);
+
+        virtual void v_InitObject();
 
         //Virtual function for the evaluation of the advective term
         virtual void v_DoAdvection(
@@ -128,8 +129,10 @@ namespace Nektar
 
 	};
     
-	/// Pointer to an AdvectionTerm object.
-    typedef boost::shared_ptr<AdvectionTerm> AdvectionTermSharedPtr;
+    inline void AdvectionTerm::InitObject()
+    {
+        v_InitObject();
+    }
 
     inline void AdvectionTerm::DoAdvection(
                            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,

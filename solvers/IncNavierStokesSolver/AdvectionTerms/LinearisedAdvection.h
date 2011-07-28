@@ -68,41 +68,36 @@ namespace Nektar
 
     class LinearisedAdvection: public AdvectionTerm
     {
-    public:           
+    public:
+        friend class MemoryManager<LinearisedAdvection>;
 
-        /**
-         * Default constructor. 
-         * 
-         */ 
-        LinearisedAdvection();
+        /// Creates an instance of this class
+        static AdvectionTermSharedPtr create(LibUtilities::CommSharedPtr& pComm,
+                                LibUtilities::SessionReaderSharedPtr& pSession,
+                                SpatialDomains::MeshGraphSharedPtr& pGraph,
+                                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions) {
+            AdvectionTermSharedPtr p = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(pComm, pSession, pGraph, pBoundaryConditions);
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
 
-
-        /**
-         * Constructor.
-         * \param 
-         * 
-         */
-
-        LinearisedAdvection(
-                LibUtilities::CommSharedPtr                 pComm,
-                LibUtilities::SessionReaderSharedPtr        pSession,
-                SpatialDomains::MeshGraphSharedPtr          pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
-
-		virtual ~LinearisedAdvection();
-     
-		//Virtual function for the evaluation of the advective terms
-		virtual void v_DoAdvection(
-								   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-								   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-								   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-								   Array<OneD, NekDouble> &pWk);
-		
 	protected:
 		//Storage of the base flow
 		Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
  		int                                             m_nConvectiveFields;
 		Array<OneD, int>                                m_velocity;
+
+        LinearisedAdvection(
+                LibUtilities::CommSharedPtr&                 pComm,
+                LibUtilities::SessionReaderSharedPtr&        pSession,
+                SpatialDomains::MeshGraphSharedPtr&          pGraph,
+                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions);
+
+        virtual ~LinearisedAdvection();
+
+        virtual void v_InitObject();
 
         void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
 
@@ -117,6 +112,14 @@ namespace Nektar
                          int pVelocityComponent,
                          const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
                          Array<OneD, NekDouble> &pOutarray);
+
+	private:
+        //Virtual function for the evaluation of the advective terms
+        virtual void v_DoAdvection(
+                                   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
+                                   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+                                   Array<OneD, NekDouble> &pWk);
 
     };
     

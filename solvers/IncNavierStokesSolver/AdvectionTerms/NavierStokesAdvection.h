@@ -67,43 +67,37 @@ namespace Nektar
     class NavierStokesAdvection: public AdvectionTerm
 	
     {
-    public:           
+    public:
+        friend class MemoryManager<NavierStokesAdvection>;
 
-        /**
-         * Default constructor. 
-         * 
-         */ 
-        NavierStokesAdvection();
+        /// Creates an instance of this class
+        static AdvectionTermSharedPtr create(LibUtilities::CommSharedPtr& pComm,
+                                LibUtilities::SessionReaderSharedPtr& pSession,
+                                SpatialDomains::MeshGraphSharedPtr& pGraph,
+                                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions) {
+            AdvectionTermSharedPtr p = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(pComm, pSession, pGraph, pBoundaryConditions);
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
+        static std::string className2;
 
-
-        /**
-         * Constructor.
-         * \param 
-         * 
-         *
-         */
-        NavierStokesAdvection(
-                LibUtilities::CommSharedPtr                 pComm,
-                LibUtilities::SessionReaderSharedPtr        pSession,
-                SpatialDomains::MeshGraphSharedPtr          pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
-
-		
-		 ~NavierStokesAdvection();
-     		
-		//Virtual function for the evaluation of the advective terms
-		virtual void v_DoAdvection(
-								   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-								   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-								   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-								   Array<OneD, NekDouble> &pWk);
-   
 	protected:
 
-		int   m_nConvectiveFields;  /// Number of fields to be convected; 
-		
+		int   m_nConvectiveFields;  /// Number of fields to be convected;
+
         Array<OneD, int> m_velocity; ///< int which identifies which components of m_fields contains the velocity (u,v,w);
-	    		
+
+        NavierStokesAdvection(
+                LibUtilities::CommSharedPtr&                 pComm,
+                LibUtilities::SessionReaderSharedPtr&        pSession,
+                SpatialDomains::MeshGraphSharedPtr&          pGraph,
+                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions);
+
+
+        virtual ~NavierStokesAdvection();
+
         //Function for the evaluation of the linearised advective terms
         void ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
                          Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
@@ -111,6 +105,13 @@ namespace Nektar
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,
                          Array<OneD, NekDouble> &pWk);
+	private:
+        //Virtual function for the evaluation of the advective terms
+        virtual void v_DoAdvection(
+                                   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
+                                   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+                                   Array<OneD, NekDouble> &pWk);
 
 	};
     

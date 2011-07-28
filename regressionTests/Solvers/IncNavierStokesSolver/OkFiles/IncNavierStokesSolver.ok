@@ -79,16 +79,16 @@ L 2 error (variable p) : 1.46727e-12
 L inf error (variable p) : 1.63434e-12
 ----------------------------------------
 Test_ChanFlow_LinNS_m8.xml
-L 2 error (variable u) : 2.90166e-14
-L inf error (variable u) : 3.72979e-13
-L 2 error (variable v) : 2.01282e-14
-L inf error (variable v) : 1.65667e-13
+L 2 error (variable u) : 2.92945e-14
+L inf error (variable u) : 3.50442e-13
+L 2 error (variable v) : 2.02965e-14
+L inf error (variable v) : 1.76745e-13
 ----------------------------------------
 ChanStability.xml
-L 2 error (variable u) : 0.0229821
+L 2 error (variable u) : 0.0324847
 L inf error (variable u) : 0
-L 2 error (variable v) : 0.0140814
+L 2 error (variable v) : 0.0199038
 L inf error (variable v) : 0
-L 2 error (variable p) : 0.0106637
+L 2 error (variable p) : 0.0122251
 L inf error (variable p) : 0
 ----------------------------------------

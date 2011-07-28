@@ -1237,11 +1237,12 @@ namespace Nektar
                        {
                            ASSERTL0(false,"Dynamics cast failed");
                        }
+                       int var = 0; // need to use zero for variable as may be more base flows than variables
                        for(i = 0 ; i < m_base.num_elements(); i++)
                        {
                            m_base[i] = MemoryManager<MultiRegions
                             ::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
-                                                             *m_boundaryConditions,i);
+                                           *m_boundaryConditions,var);
                        }
                        break;
                    }
@@ -1253,11 +1254,12 @@ namespace Nektar
                          {
                                ASSERTL0(false,"Dynamics cast failed");
                          }
+                         int var = 0;
                          for(i = 0 ; i < m_base.num_elements(); i++)
                          {
                                  m_base[i] = MemoryManager<MultiRegions
                                  ::DisContField2D>::AllocateSharedPtr(m_comm,*mesh2D,
-                                                             *m_boundaryConditions,i);
+                                            *m_boundaryConditions,var);
                          }
                          break;
                     }
@@ -1283,11 +1285,13 @@ namespace Nektar
     	    {
     	       for(int i=0; i<FieldDef.size(); ++i)
     	       {
+#if 0 // turned off so it can be used in DiffusionReaction solver where need to read in advection field from file. 
     	    	  bool flag = FieldDef[i]->m_fields[j]
     	             ==m_boundaryConditions->GetVariable(j);
     	             ASSERTL1(flag, (std::string("Order of ") +pInfile
-    	             	     + std::string("  data and that defined in "
-    	             	     	     "m_boundaryconditions differs")).c_str());   
+    	             	     + std::string("  variables and that defined in "
+                                           "m_boundaryconditions differs")).c_str()); 
+#endif  
     	          m_base[j]->ExtractDataToCoeffs(FieldDef[i]
     	            	    , FieldData[i], FieldDef[i]->m_fields[j]);
     	       }
@@ -2023,7 +2027,8 @@ namespace Nektar
     {
         m_historyList.clear();
         Array<OneD, NekDouble> gloCoord(3,0.0);
-        for (int i = 0; i < m_historyPoints->GetNumHistoryPoints(); ++i) {
+        for (int i = 0; i < m_historyPoints->GetNumHistoryPoints(); ++i) 
+        {
             SpatialDomains::VertexComponentSharedPtr vtx = m_historyPoints->GetHistoryPoint(i);
             vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
 

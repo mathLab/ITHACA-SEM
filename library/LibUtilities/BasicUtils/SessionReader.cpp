@@ -804,7 +804,7 @@ namespace Nektar
             return (size1 < size2) ? -1 : 1;
         }
 
-        bool SessionReader::SubstituteExpressions(std::string& pExpr)
+        void SessionReader::SubstituteExpressions(std::string& pExpr)
         {
             ExpressionMap::iterator exprIter;
             for (exprIter = m_expressions.begin(); exprIter != m_expressions.end(); ++exprIter)

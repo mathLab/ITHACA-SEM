@@ -126,7 +126,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void SetTag(const std::string& pName, const std::string& pValue);
             LIB_UTILITIES_EXPORT const std::string GetTag(const std::string& pName);
 
-            LIB_UTILITIES_EXPORT bool SubstituteExpressions(std::string &expr);
+            LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
         private:
             std::string                 m_filename;

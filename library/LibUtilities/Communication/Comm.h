@@ -37,6 +37,7 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -52,7 +53,7 @@ namespace Nektar
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory< std::string, Comm, int, char** > CommFactory;
 
-        CommFactory& GetCommFactory();
+        LIB_UTILITIES_EXPORT CommFactory& GetCommFactory();
 
 		/// Type of operation to perform in AllReduce.
         enum ReduceOperator
@@ -65,63 +66,63 @@ namespace Nektar
         /// Base communications class
         class Comm
         {
-        public:
-            Comm(int narg, char* arg[]);
-            virtual ~Comm();
+            public:
+                LIB_UTILITIES_EXPORT Comm(int narg, char* arg[]);
+                LIB_UTILITIES_EXPORT virtual ~Comm();
 
-            inline void Finalise();
+                LIB_UTILITIES_EXPORT inline void Finalise();
 
-            /// Returns number of processes
-            inline int GetSize();
-            inline int GetRank();
+                /// Returns number of processes
+                LIB_UTILITIES_EXPORT inline int GetSize();
+                LIB_UTILITIES_EXPORT inline int GetRank();
 
-            /// Block execution until all processes reach this point
-            inline void Block();
-            inline void Send(int pProc, Array<OneD, NekDouble>& pData);
-            inline void Send(int pProc, Array<OneD, int>& pData);
-            inline void Recv(int pProc, Array<OneD, NekDouble>& pData);
-            inline void Recv(int pProc, Array<OneD, int>& pData);
-            inline void SendRecv(int pSendProc,
-                                 Array<OneD, NekDouble>& pSendData,
-                                 int pRecvProc,
-                                 Array<OneD, NekDouble>& pRecvData);
-            inline void SendRecv(int pSendProc,
-                                 Array<OneD, int>& pSendData,
-                                 int pRecvProc,
-                                 Array<OneD, int>& pRecvData);
-            inline void AllReduce(NekDouble& pData, enum ReduceOperator pOp);
-            inline void AllReduce(int& pData, enum ReduceOperator pOp);
-            inline void AllReduce(Array<OneD, NekDouble>& pData,
-                                     enum ReduceOperator pOp);
-            inline void AllReduce(Array<OneD, int      >& pData,
-                                     enum ReduceOperator pOp);
+                /// Block execution until all processes reach this point
+                LIB_UTILITIES_EXPORT inline void Block();
+                LIB_UTILITIES_EXPORT inline void Send(int pProc, Array<OneD, NekDouble>& pData);
+                LIB_UTILITIES_EXPORT inline void Send(int pProc, Array<OneD, int>& pData);
+                LIB_UTILITIES_EXPORT inline void Recv(int pProc, Array<OneD, NekDouble>& pData);
+                LIB_UTILITIES_EXPORT inline void Recv(int pProc, Array<OneD, int>& pData);
+                LIB_UTILITIES_EXPORT inline void SendRecv(int pSendProc,
+                                     Array<OneD, NekDouble>& pSendData,
+                                     int pRecvProc,
+                                     Array<OneD, NekDouble>& pRecvData);
+                LIB_UTILITIES_EXPORT inline void SendRecv(int pSendProc,
+                                     Array<OneD, int>& pSendData,
+                                     int pRecvProc,
+                                     Array<OneD, int>& pRecvData);
+                LIB_UTILITIES_EXPORT inline void AllReduce(NekDouble& pData, enum ReduceOperator pOp);
+                LIB_UTILITIES_EXPORT inline void AllReduce(int& pData, enum ReduceOperator pOp);
+                LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, NekDouble>& pData,
+                                         enum ReduceOperator pOp);
+                LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, int      >& pData,
+                                         enum ReduceOperator pOp);
 
-        protected:
-            int m_size;     ///< Number of processes
+            protected:
+                int m_size;     ///< Number of processes
 
-            virtual void v_Finalise() = 0;
-            virtual int  v_GetRank() = 0;
-            virtual void v_Block() = 0;
-            virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData) = 0;
-            virtual void v_Send(int pProc, Array<OneD, int>& pData) = 0;
-            virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData) = 0;
-            virtual void v_Recv(int pProc, Array<OneD, int>& pData) = 0;
-            virtual void v_SendRecv(int pSendProc,
-                                    Array<OneD, NekDouble>& pSendData,
-                                    int pRecvProc,
-                                    Array<OneD, NekDouble>& pRecvData) = 0;
-            virtual void v_SendRecv(int pSendProc,
-                                    Array<OneD, int>& pSendData,
-                                    int pRecvProc,
-                                    Array<OneD, int>& pRecvData) = 0;
-            virtual void v_AllReduce(NekDouble& pData,
-                                     enum ReduceOperator pOp) = 0;
-            virtual void v_AllReduce(int& pData,
-                                     enum ReduceOperator pOp) = 0;
-            virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
-                                     enum ReduceOperator pOp) = 0;
-            virtual void v_AllReduce(Array<OneD, int      >& pData,
-                                     enum ReduceOperator pOp) = 0;
+                virtual void v_Finalise() = 0;
+                virtual int  v_GetRank() = 0;
+                virtual void v_Block() = 0;
+                virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData) = 0;
+                virtual void v_Send(int pProc, Array<OneD, int>& pData) = 0;
+                virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData) = 0;
+                virtual void v_Recv(int pProc, Array<OneD, int>& pData) = 0;
+                virtual void v_SendRecv(int pSendProc,
+                                        Array<OneD, NekDouble>& pSendData,
+                                        int pRecvProc,
+                                        Array<OneD, NekDouble>& pRecvData) = 0;
+                virtual void v_SendRecv(int pSendProc,
+                                        Array<OneD, int>& pSendData,
+                                        int pRecvProc,
+                                        Array<OneD, int>& pRecvData) = 0;
+                virtual void v_AllReduce(NekDouble& pData,
+                                         enum ReduceOperator pOp) = 0;
+                virtual void v_AllReduce(int& pData,
+                                         enum ReduceOperator pOp) = 0;
+                virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
+                                         enum ReduceOperator pOp) = 0;
+                virtual void v_AllReduce(Array<OneD, int      >& pData,
+                                         enum ReduceOperator pOp) = 0;
         };
 
 

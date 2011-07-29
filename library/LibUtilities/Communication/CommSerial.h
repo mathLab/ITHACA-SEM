@@ -39,6 +39,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -55,40 +56,40 @@ namespace Nektar
         {
         public:
             /// Creates an instance of this class
-            static CommSharedPtr create(int narg, char* arg[])
+            LIB_UTILITIES_EXPORT static CommSharedPtr create(int narg, char* arg[])
             {
                 return MemoryManager<CommSerial>::AllocateSharedPtr(narg,arg);
             }
 
             /// Name of class
-            static std::string className;
+            LIB_UTILITIES_EXPORT static std::string className;
 
-            CommSerial(int argc, char* argv[]);
-            virtual ~CommSerial();
+            LIB_UTILITIES_EXPORT CommSerial(int argc, char* argv[]);
+            LIB_UTILITIES_EXPORT virtual ~CommSerial();
 
         protected:
-            virtual void v_Finalise();
-            virtual int  v_GetRank();
-            virtual void v_Block();
-            virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
-            virtual void v_Send(int pProc, Array<OneD, int>& pData);
-            virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData);
-            virtual void v_Recv(int pProc, Array<OneD, int>& pData);
-            virtual void v_SendRecv(int pSendProc,
+            LIB_UTILITIES_EXPORT virtual void v_Finalise();
+            LIB_UTILITIES_EXPORT virtual int  v_GetRank();
+            LIB_UTILITIES_EXPORT virtual void v_Block();
+            LIB_UTILITIES_EXPORT virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
+            LIB_UTILITIES_EXPORT virtual void v_Send(int pProc, Array<OneD, int>& pData);
+            LIB_UTILITIES_EXPORT virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData);
+            LIB_UTILITIES_EXPORT virtual void v_Recv(int pProc, Array<OneD, int>& pData);
+            LIB_UTILITIES_EXPORT virtual void v_SendRecv(int pSendProc,
                                     Array<OneD, NekDouble>& pSendData,
                                     int pRecvProc,
                                     Array<OneD, NekDouble>& pRecvData);
-            virtual void v_SendRecv(int pSendProc,
+            LIB_UTILITIES_EXPORT virtual void v_SendRecv(int pSendProc,
                                     Array<OneD, int>& pSendData,
                                     int pRecvProc,
                                     Array<OneD, int>& pRecvData);
-            virtual void v_AllReduce(NekDouble& pData,
+            LIB_UTILITIES_EXPORT virtual void v_AllReduce(NekDouble& pData,
                                      enum ReduceOperator pOp);
-            virtual void v_AllReduce(int& pData,
+            LIB_UTILITIES_EXPORT virtual void v_AllReduce(int& pData,
                                      enum ReduceOperator pOp);
-            virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
+            LIB_UTILITIES_EXPORT virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
                                      enum ReduceOperator pOp);
-            virtual void v_AllReduce(Array<OneD, int      >& pData,
+            LIB_UTILITIES_EXPORT virtual void v_AllReduce(Array<OneD, int      >& pData,
                                      enum ReduceOperator pOp);
         };
 

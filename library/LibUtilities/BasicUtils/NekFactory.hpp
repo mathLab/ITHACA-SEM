@@ -402,7 +402,6 @@ namespace Nektar
 
     protected:
         TMapFactory * getMapFactory() {
-            static TMapFactory mMapFactory;
             return &mMapFactory;
         }
 

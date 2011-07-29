@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 {
     void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
 		SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
 		LibUtilities::CommSharedPtr comm);  
     void OrderVertices(int nedges,SpatialDomains::MeshGraphSharedPtr graphShPt,
@@ -51,6 +52,7 @@ int main(int argc, char *argv[])
    
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
+    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
     SpatialDomains::MeshGraph graph;
     SpatialDomains::MeshGraphSharedPtr graphShPt = graph.Read(meshfile);
     //---------------------------------------------- 
@@ -59,8 +61,7 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraph *meshptr = graphShPt.get();
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-                                        ::AllocateSharedPtr(meshptr);
-    boundaryConditions->Read(meshfile);
+                                        ::AllocateSharedPtr(vSession,meshptr);
     //----------------------------------------------
      
     // Import field file.
@@ -87,7 +88,7 @@ int main(int argc, char *argv[])
             nfields = fielddef[0]->m_fields.size();       	    
   //  }
  
-    SetFields(graphShPt,boundaryConditions,fields,nfields,vComm);
+    SetFields(graphShPt,boundaryConditions,vSession,fields,nfields,vComm);
 
     //----------------------------------------------   
      
@@ -280,6 +281,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 	// Define Expansion       		
 	void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
 		SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
 		LibUtilities::CommSharedPtr comm)
 	{
@@ -306,17 +308,17 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 		
 		enum HomogeneousType HomogeneousType = eNotHomogeneous;
 		
-		if(boundaryConditions->SolverInfoExists("HOMOGENEOUS"))
+		if(session->DefinesSolverInfo("HOMOGENEOUS"))
 		{
-			std::string HomoStr = boundaryConditions->GetSolverInfo("HOMOGENEOUS");
+			std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
 			//m_spacedim          = 3;
 			
 			if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
 			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
 				HomogeneousType = eHomogeneous1D;
-				npointsZ        = boundaryConditions->GetParameter("HomModesZ");
-				LhomZ           = boundaryConditions->GetParameter("LZ");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 1;
 			}
 			
@@ -324,10 +326,10 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
 			{
 				HomogeneousType = eHomogeneous2D;
-				npointsY        = boundaryConditions->GetParameter("HomModesY");
-				LhomY           = boundaryConditions->GetParameter("LY");
-				npointsZ        = boundaryConditions->GetParameter("HomModesZ");
-				LhomZ           = boundaryConditions->GetParameter("LZ");
+				npointsY        = session->GetParameter("HomModesY");
+				LhomY           = session->GetParameter("LY");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 2;
 			}
 			
@@ -335,16 +337,16 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
 				HomogeneousType = eHomogeneous3D;
-				npointsX        = boundaryConditions->GetParameter("HomModesX");
-				LhomX           = boundaryConditions->GetParameter("LX");
-				npointsY        = boundaryConditions->GetParameter("HomModesY");
-				LhomY           = boundaryConditions->GetParameter("LY");
-				npointsZ        = boundaryConditions->GetParameter("HomModesZ");
-				LhomZ           = boundaryConditions->GetParameter("LZ");
+				npointsX        = session->GetParameter("HomModesX");
+				LhomX           = session->GetParameter("LX");
+				npointsY        = session->GetParameter("HomModesY");
+				LhomY           = session->GetParameter("LY");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 3;
 			}
 			
-			if(boundaryConditions->SolverInfoExists("USEFFT"))
+			if(session->DefinesSolverInfo("USEFFT"))
 			{
 				useFFT = true;
 			}

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -22,7 +23,8 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
-		SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+        SpatialDomains::BoundaryConditionsSharedPtr& boundaryConditions,
+		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
 		LibUtilities::CommSharedPtr comm);   	    
     void Manipulate(int region, int coordim, Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
@@ -42,9 +44,12 @@ int main(int argc, char *argv[])
     LibUtilities::CommSharedPtr vComm
             = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
     //----------------------------------------------
-   
-    // Read in mesh from input file
     string meshfile(argv[argc-2]);
+   
+    LibUtilities::SessionReaderSharedPtr vSession
+            = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
+    // Read in mesh from input file
     SpatialDomains::MeshGraph graph;
     SpatialDomains::MeshGraphSharedPtr graphShPt = graph.Read(meshfile);
     //----------------------------------------------
@@ -53,8 +58,7 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraph *meshptr = graphShPt.get();
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-                                        ::AllocateSharedPtr(meshptr);
-    boundaryConditions->Read(meshfile);
+                                        ::AllocateSharedPtr(vSession, meshptr);
     //----------------------------------------------
      
     // Import field file.
@@ -84,7 +88,7 @@ int main(int argc, char *argv[])
     //fielddef[0]->m_fields.size() can counts also pressure be careful!!!
     nfields= fielddef[0]->m_fields.size();
 cout<<"nfields"<<nfields<<endl;     
-    SetFields(graphShPt,boundaryConditions,fields,nfields,vComm);
+    SetFields(graphShPt,boundaryConditions,vSession,fields,nfields,vComm);
     //----------------------------------------------   
      
     // Copy data from file:fill fields with the fielddata
@@ -174,7 +178,8 @@ cout<<"nfields"<<nfields<<endl;
 				
 	// Define Expansion       		
 	void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
-		SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+	    SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
 		LibUtilities::CommSharedPtr comm)
 	{
@@ -201,17 +206,17 @@ cout<<"nfields"<<nfields<<endl;
 		
 		enum HomogeneousType HomogeneousType = eNotHomogeneous;
 		
-		if(boundaryConditions->SolverInfoExists("HOMOGENEOUS"))
+		if(session->DefinesSolverInfo("HOMOGENEOUS"))
 		{
-			std::string HomoStr = boundaryConditions->GetSolverInfo("HOMOGENEOUS");
+			std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
 			//m_spacedim          = 3;
 			
 			if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
 			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
 				HomogeneousType = eHomogeneous1D;
-				npointsZ        = boundaryConditions->GetParameter("HomModesZ");
-				LhomZ           = boundaryConditions->GetParameter("LZ");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 1;
 			}
 			
@@ -219,10 +224,10 @@ cout<<"nfields"<<nfields<<endl;
 			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
 			{
 				HomogeneousType = eHomogeneous2D;
-				npointsY        = boundaryConditions->GetParameter("HomModesY");
-				LhomY           = boundaryConditions->GetParameter("LY");
-				npointsZ        = boundaryConditions->GetParameter("HomModesZ");
-				LhomZ           = boundaryConditions->GetParameter("LZ");
+				npointsY        = session->GetParameter("HomModesY");
+				LhomY           = session->GetParameter("LY");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 2;
 			}
 			
@@ -230,16 +235,16 @@ cout<<"nfields"<<nfields<<endl;
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
 				HomogeneousType = eHomogeneous3D;
-				npointsX        = boundaryConditions->GetParameter("HomModesX");
-				LhomX           = boundaryConditions->GetParameter("LX");
-				npointsY        = boundaryConditions->GetParameter("HomModesY");
-				LhomY           = boundaryConditions->GetParameter("LY");
-				npointsZ        = boundaryConditions->GetParameter("HomModesZ");
-				LhomZ           = boundaryConditions->GetParameter("LZ");
+				npointsX        = session->GetParameter("HomModesX");
+				LhomX           = session->GetParameter("LX");
+				npointsY        = session->GetParameter("HomModesY");
+				LhomY           = session->GetParameter("LY");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 3;
 			}
 			
-			if(boundaryConditions->SolverInfoExists("USEFFT"))
+			if(session->DefinesSolverInfo("USEFFT"))
 			{
 				useFFT = true;
 			}

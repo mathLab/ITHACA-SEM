@@ -120,35 +120,9 @@ namespace Nektar
 	ASSERTL0(false,"No Continuous Galerkin implemented for compressible flow solver.");
       }
 
-    if(m_boundaryConditions->CheckForParameter("Gamma") == true)
-      {
-	m_gamma = m_boundaryConditions->GetParameter("Gamma");
-      }
-    else
-      {
-	m_gamma = 1.4;
-	cout << "Gamma not set. Default value: " << m_gamma << endl;;
-      }
-
-    if(m_boundaryConditions->CheckForParameter("GasConstant") == true)
-      {
-	m_GasConstant = m_boundaryConditions->GetParameter("GasConstant");
-      }
-    else
-      {
-	cout << "Default Gas Constant: R = 287.058 J/K/Kg" << endl;
-	m_GasConstant = 287.058;
-      }
-
-    if(m_boundaryConditions->CheckForParameter("CFLParameter") == true)
-      {
-	m_cfl =  m_boundaryConditions->GetParameter("CFLParameter");
-      }
-    else
-      {
-	m_cfl = 0.0;
-      }
-
+    m_session->LoadParameter("Gamma",m_gamma,1.4);
+    m_session->LoadParameter("GasConstant",m_GasConstant,287.058);
+    m_session->LoadParameter("CFLParameter",m_cfl,0.0);
     
     // Load generic input parameters
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);

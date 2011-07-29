@@ -98,20 +98,19 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph1D);
-    bcs.Read(meshfile);
+    SpatialDomains::BoundaryConditions bcs(vSession, &graph1D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
-    int nypoints = bcs.GetParameter("HomModesY");
-	int nzpoints = bcs.GetParameter("HomModesZ");
+    int nypoints = vSession->GetParameter("HomModesY");
+	int nzpoints = vSession->GetParameter("HomModesZ");
 	
-	NekDouble ly     = bcs.GetParameter("LY");
-    NekDouble lz     = bcs.GetParameter("LZ");
+	NekDouble ly     = vSession->GetParameter("LY");
+    NekDouble lz     = vSession->GetParameter("LZ");
 	
-	int FFT      = bcs.GetParameter("USEFFT");
+	int FFT      = vSession->GetParameter("USEFFT");
 	
 	bool useFFT = false;
 	if(FFT==1){useFFT = true;}
@@ -128,7 +127,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
+    lambda = vSession->GetParameter("Lambda");
 	
     const SpatialDomains::ExpansionMap &expansions = graph1D.GetExpansions();
 	

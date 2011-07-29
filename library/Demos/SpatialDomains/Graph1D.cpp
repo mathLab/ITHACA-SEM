@@ -22,6 +22,7 @@ int main(int argc, char *argv[]){
     //  cerr << "usage: Graph1D file" << endl;
     //  exit(1);
     //}
+    LibUtilities::SessionReaderSharedPtr vSession;
 
     //string in(argv[argc-1]);
 #ifdef PC

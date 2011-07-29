@@ -92,7 +92,7 @@ namespace Nektar
 
         /// Evaluates a function as specified in the session file.
         void EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                SpatialDomains::ConstUserDefinedEqnShPtr pEqn,
+                LibUtilities::EquationSharedPtr pEqn,
                 const NekDouble pTime = 0.0);
 
         /// Evaluates a function as specified in the session file.
@@ -252,7 +252,7 @@ namespace Nektar
 
         inline int GetNvariables();
 
-        inline const std::string &GetVariable(unsigned int i);
+        inline const std::string GetVariable(unsigned int i);
 
         inline int GetTraceTotPoints();
 
@@ -573,7 +573,7 @@ namespace Nektar
         return m_fields.num_elements();
     }
 
-    inline const std::string &EquationSystem::GetVariable(unsigned int i)
+    inline const std::string EquationSystem::GetVariable(unsigned int i)
     {
         return m_boundaryConditions->GetVariable(i);
     }

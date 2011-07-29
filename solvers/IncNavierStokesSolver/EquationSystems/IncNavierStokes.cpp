@@ -108,11 +108,7 @@ namespace Nektar
              break;
          case eUnsteadyNavierStokes:
          case eUnsteadyStokes:
-             
-             if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
-             {
-                 m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
-             }
+             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
              
              // check to see if any user defined boundary condition is
              // indeed implemented
@@ -138,14 +134,7 @@ namespace Nektar
              ASSERTL0(false,"Unknown or undefined equation type");
          }
          
-        if(m_boundaryConditions->CheckForParameter("Kinvis") == true)
-        {
-            m_kinvis = m_boundaryConditions->GetParameter("Kinvis");
-        }
-        else
-        {
-            ASSERTL0(false,"Kinvis is not specified");
-        }
+         m_session->LoadParameter("Kinvis", m_kinvis);
 
         if (m_equationType == eUnsteadyNavierStokes)
         {

@@ -6,6 +6,7 @@
 // Date:		July 27, 2007
 #include <LibUtilities/LibUtilities.h>
 #include "ExpressionEvaluator.h"
+#include <stdexcept>
 
 #ifdef _MSC_VER
 #include <boost/preprocessor/cat.hpp>  
@@ -39,9 +40,9 @@ namespace Nektar
         static void CheckMathOperationForErrors(string const& functionName)
         {
             if (errno == EDOM)
-                throw "Argument of " + functionName + " exceeds the range of the function.";
+                throw std::runtime_error("Argument of " + functionName + " exceeds the range of the function.");
             else if (errno == ERANGE)
-                throw "The result from " + functionName + " overflowed the double type.";
+                throw std::runtime_error("The result from " + functionName + " overflowed the double type.");
 
             errno = 0;
         }
@@ -339,7 +340,7 @@ namespace Nektar
 			if (parseInfo.full == false)
 			{
 				delete ParsedData;
-				throw string("Unable to fully parse function. Stopped just before: ") + string(parseInfo.stop, parseInfo.stop + 15);
+				throw std::runtime_error("Unable to fully parse function. Stopped just before: " + string(parseInfo.stop, parseInfo.stop + 15));
 				return;
 			}
 
@@ -376,7 +377,7 @@ namespace Nektar
                         exception += ", " + *it;
                 }
 
-                throw exception + ".";
+                throw std::runtime_error(exception + ".");
             }
         }
 
@@ -384,7 +385,7 @@ namespace Nektar
 		void ExpressionEvaluator::AddConstant(std::string const& name, double value)
         {
             if (find(*constants_p, name.c_str()))
-                throw "Cannot add specified constant because it is already added: " + name;
+                throw std::runtime_error("Cannot add specified constant because it is already added: " + name);
             else
                 constants_p->add(name.c_str(), value);
         }
@@ -395,7 +396,7 @@ namespace Nektar
             double* value = find(*constants_p, name.c_str());
             if (value == NULL)
             {
-                throw "Constant variable not found: " + name;
+                throw std::runtime_error("Constant variable not found: " + name);
                 return -1;
             }
 
@@ -455,7 +456,7 @@ namespace Nektar
             if (ParsedData == NULL)
             {
                 va_end(ap);
-                throw string("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
                 return -1;
             }
             else
@@ -493,7 +494,7 @@ namespace Nektar
             if (ParsedData == NULL)
             {
                 va_end(ap);
-                throw string("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
                 return rtn;
             }
             else
@@ -507,7 +508,7 @@ namespace Nektar
             vector<vector<double> const*>::size_type size = vectors.size();
             if (size != ParsedData->NumberVariables)
             {
-                throw string("The input vectors must all be the same length as the number of function variables.");
+                throw std::runtime_error("The input vectors must all be the same length as the number of function variables.");
                 return rtn;
             }
 
@@ -516,7 +517,7 @@ namespace Nektar
             {
                 if ((*it)->size() != entries)
                 {
-                    throw string("The input vectors must all be the same length.");
+                    throw std::runtime_error("The input vectors must all be the same length.");
                     return rtn;
                 }
             }
@@ -559,14 +560,14 @@ namespace Nektar
 			{
 				if (i->children.size() != 0)
 				{
-					throw "Illegal children under constant node: " + valueStr;
+					throw std::runtime_error("Illegal children under constant node: " + valueStr);
 					return NULL;
 				}
 
 				double* value = find(*constants_p, valueStr.c_str() );
 				if (value == NULL)
 				{
-					throw "Cannot find the value for the specified constant: " + valueStr;
+					throw std::runtime_error("Cannot find the value for the specified constant: " + valueStr);
 					return NULL;
 				}
 
@@ -579,7 +580,7 @@ namespace Nektar
 			{
 				if (i->children.size() != 0)
 				{
-					throw "Illegal children under number node: " + valueStr;
+					throw std::runtime_error("Illegal children under number node: " + valueStr);
 					return NULL;
 				}
 
@@ -593,7 +594,7 @@ namespace Nektar
 			{
 				if (i->children.size() != 0)
 				{
-					throw "Illegal children under variable node: " + valueStr;
+					throw std::runtime_error("Illegal children under variable node: " + valueStr);
 					return NULL;
 				}
 
@@ -601,7 +602,7 @@ namespace Nektar
 				if (ParsedData->VariableMap == NULL ||
 						(it = ParsedData->VariableMap->find(valueStr)) == ParsedData->VariableMap->end())
 				{
-					throw "Unknown variable parsed: " + valueStr;
+					throw std::runtime_error("Unknown variable parsed: " + valueStr);
 					return NULL;
 				}
 
@@ -615,7 +616,7 @@ namespace Nektar
 			{
 				if (i->children.size() != 0)
 				{
-					throw "Illegal children under parameter node: " + valueStr;
+					throw std::runtime_error("Illegal children under parameter node: " + valueStr);
 					return NULL;
 				}
 
@@ -629,12 +630,12 @@ namespace Nektar
 				func* funcptr = find(functions_p, valueStr.c_str());
 				if (funcptr == NULL)
 				{
-					throw "Invalid function specified: " + valueStr;
+					throw std::runtime_error("Invalid function specified: " + valueStr);
 					return NULL;
 				}
 				if (funcptr->size != i->children.size())
 				{
-					throw "Illegal number or arguments for math function: " + valueStr;
+					throw std::runtime_error("Illegal number or arguments for math function: " + valueStr);
 					return NULL;
 				}
 
@@ -709,12 +710,12 @@ namespace Nektar
 			{
 				if (*valueStr.begin() != '-')
 				{
-					throw "Illegal factor - it can only be '-' and it was: " + valueStr;
+					throw std::runtime_error("Illegal factor - it can only be '-' and it was: " + valueStr);
 					return NULL;
 				}
 				if (i->children.size() != 1)
 				{
-					throw "Illegal number of children under factor node: " + valueStr;
+					throw std::runtime_error("Illegal number of children under factor node: " + valueStr);
 					return NULL;
 				}
 
@@ -743,7 +744,7 @@ namespace Nektar
 			{
 				if (i->children.size() != 2)
 				{
-					throw "Too many arguments for mathematical operator: " + valueStr;
+					throw std::runtime_error("Too many arguments for mathematical operator: " + valueStr);
 					return NULL;
 				}
 
@@ -886,7 +887,7 @@ namespace Nektar
                     map<string, double>::iterator it;
                     if (ParametersMap == NULL || (it = ParametersMap->find(*n->StringValue)) == ParametersMap->end())
                     {
-                        throw "Illegal parameter specified: " + *n->StringValue;
+                        throw std::runtime_error("Illegal parameter specified: " + *n->StringValue);
                         return -1;
                     }
                     if (mode == Node::SAVE_PARAMETERS) n->DoubleValue = it->second;
@@ -940,7 +941,7 @@ namespace Nektar
                 return EvaluateExpression((*n->children)[0], mode) || EvaluateExpression((*n->children)[1], mode);
             }
 
-            throw string("Illegal expression was encountered.");
+            throw std::runtime_error("Illegal expression was encountered.");
             return -1;
         }
 

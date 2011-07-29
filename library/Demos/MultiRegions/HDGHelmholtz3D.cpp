@@ -80,13 +80,12 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // read the problem parameters from input file
     string bcfile(argv[2]);
-    SpatialDomains::BoundaryConditions bcs(&graph3D);
-    bcs.Read(bcfile);
+    SpatialDomains::BoundaryConditions bcs(vSession, &graph3D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
+    lambda = vSession->GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
     cout << "Solving 3D Helmholtz:"  << endl;
     cout << "         Lambda     : " << lambda << endl; 

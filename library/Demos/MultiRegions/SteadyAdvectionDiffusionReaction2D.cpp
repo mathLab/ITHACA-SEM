@@ -111,19 +111,18 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph2D);
-    bcs.Read(meshfile);
+    SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Get Advection Velocity
-    ax = bcs.GetParameter("Advection_x");
-    ay = bcs.GetParameter("Advection_y");
+    ax = vSession->GetParameter("Advection_x");
+    ay = vSession->GetParameter("Advection_y");
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
+    lambda = vSession->GetParameter("Lambda");
     cout << "            Lambda         : " << lambda << endl;
     const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0 

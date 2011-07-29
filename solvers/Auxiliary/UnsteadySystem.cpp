@@ -102,15 +102,7 @@ namespace Nektar
 
         // Load generic input parameters
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-		
-		if(m_boundaryConditions->CheckForParameter("CFL") == true)
-		{
-			m_cfl =  m_boundaryConditions->GetParameter("CFL");
-		}
-		else
-		{
-			m_cfl = 0.0;
-		}
+		m_session->LoadParameter("CFL", m_cfl, 0.0);
     }
 
 

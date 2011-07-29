@@ -29,8 +29,8 @@ namespace Nektar
         {
             m_velocity[i] = Array<OneD, NekDouble> (nq,0.0);
 
-            SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-                = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
+            LibUtilities::EquationSharedPtr ifunc
+                = m_session->GetFunction("AdvectionVelocity", velStr[i]);
 
             EvaluateFunction(m_velocity[i],ifunc);
         }

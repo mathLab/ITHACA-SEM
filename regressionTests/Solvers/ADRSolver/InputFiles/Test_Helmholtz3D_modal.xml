@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
-    <!-- Embed a 3-dimensional object in a 3-dimensional space-->
-    <!--DIM <= SPACE  this provides a method of optimizing code for a 3-D curve embedded in 3-d space.-->
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/nektar.xsd">
+
     <GEOMETRY DIM="3" SPACE="3">
-        <!-- Definitions that can be used below in this file. -->
+
         <VERTEX>
-            <!-- Always must have four values per entry. -->
             <V ID="0">0.000e+00 0.000e+00 0.000e+00</V>
             <V ID="1">1.000e+00 0.000e+00 0.000e+00</V>
             <V ID="2">0.000e+00 1.000e+00 0.000e+00</V>
@@ -34,8 +33,8 @@
             <V ID="25">5.000e-01 5.000e-01 1.000e+00</V>
             <V ID="26">5.000e-01 5.000e-01 5.000e-01</V>
         </VERTEX>
+
         <EDGE>
-            <!--Edges are vertex pairs -->
             <E ID="0">    0  8   </E>
             <E ID="1">    8  20   </E>
             <E ID="2">   20  10   </E>
@@ -91,8 +90,8 @@
             <E ID="52">    6  13   </E>
             <E ID="53">   14  6   </E>
         </EDGE>
+
         <FACE>
-            <!--Faces are sets of edges -->
             <Q ID="0">    0    1    2    3</Q>
             <Q ID="1">    0    4    5    6</Q>
             <Q ID="2">    1    7    8    4</Q>
@@ -130,10 +129,8 @@
             <Q ID="34">   50   28   53   51</Q>
             <Q ID="35">   45   52   53   29</Q>
         </FACE>
+
         <ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!--Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
             <H ID="0">    0     1     2     3     4     5 </H>
             <H ID="1">    5     6     7     8     9    10 </H>
             <H ID="2">   11     3    12    13    14    15 </H>
@@ -143,7 +140,7 @@
             <H ID="6">   29    23    30    31    12    32 </H>
             <H ID="7">   32    27    33    34    16    35 </H>
         </ELEMENT>
-        <!-- V - vertex, S - segment, E - edge, F - face -->
+
         <COMPOSITE>
             <C ID="0"> H[0-7] </C>
             <C ID="1"> F[0,11,20,29] </C>
@@ -153,20 +150,25 @@
             <C ID="5"> F[4,9,14,18] </C>
             <C ID="6"> F[10,19,28,35] </C>
         </COMPOSITE>
+
         <DOMAIN> C[0] </DOMAIN>
+
     </GEOMETRY>
+
     <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
         <E COMPOSITE="C[1]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
+
     <CONDITIONS>
+
         <PARAMETERS>
             <P> Lambda = 1 </P>
         </PARAMETERS>
 
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-            <I PROPERTY="Projection" VALUE="Continuous"/>
+            <I PROPERTY="Projection" VALUE="Continuous" />
         </SOLVERINFO>
 
         <VARIABLES>
@@ -190,5 +192,7 @@
         <FUNCTION NAME="ExactSolution">
             <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
         </FUNCTION>
+
     </CONDITIONS>
+
 </NEKTAR>

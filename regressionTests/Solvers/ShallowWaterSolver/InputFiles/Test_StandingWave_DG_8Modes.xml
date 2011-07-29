@@ -133,10 +133,13 @@
       <P> Gravity        = 9.81              </P>
       </PARAMETERS>
  
-     <USERDEFINEDEQNS>
-       <F LHS="d" VALUE="0.5" />
-       <F LHS="f" VALUE="0"   />
-    </USERDEFINEDEQNS>
+     <FUNCTION NAME="WaterDepth">
+         <E VAR="d" VALUE="0.5" />
+    </FUNCTION>
+
+    <FUNCTION NAME="Coriolis">
+       <E VAR="f" VALUE="0"   />
+    </FUNCTION>
    
      <VARIABLES>
       <V ID="0"> eta  </V> 

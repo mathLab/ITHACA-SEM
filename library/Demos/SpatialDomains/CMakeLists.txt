@@ -8,20 +8,20 @@ SET(LinkLibraries
     optimized tinyxml debug tinyxml
 )
 
-SET(SpatialDomains1DSource  Graph1D.cpp)
-ADD_NEKTAR_EXECUTABLE(Graph1D SpatialDomains1DSource)
-TARGET_LINK_LIBRARIES(Graph1D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(Graph1D)
+#SET(SpatialDomains1DSource  Graph1D.cpp)
+#ADD_NEKTAR_EXECUTABLE(Graph1D SpatialDomains1DSource)
+#TARGET_LINK_LIBRARIES(Graph1D ${LinkLibraries})
+#SET_LAPACK_LINK_LIBRARIES(Graph1D)
 
-SET(SpatialDomains2DSource  Graph2D.cpp)
-ADD_NEKTAR_EXECUTABLE(Graph2D SpatialDomains2DSource)
-TARGET_LINK_LIBRARIES(Graph2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(Graph2D)
+#SET(SpatialDomains2DSource  Graph2D.cpp)
+#ADD_NEKTAR_EXECUTABLE(Graph2D SpatialDomains2DSource)
+#TARGET_LINK_LIBRARIES(Graph2D ${LinkLibraries})
+#SET_LAPACK_LINK_LIBRARIES(Graph2D)
 
-SET(SpatialDomains3DSource  Graph3D.cpp)
-ADD_NEKTAR_EXECUTABLE(Graph3D SpatialDomains3DSource)
-TARGET_LINK_LIBRARIES(Graph3D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(Graph3D)
+#SET(SpatialDomains3DSource  Graph3D.cpp)
+#ADD_NEKTAR_EXECUTABLE(Graph3D SpatialDomains3DSource)
+#TARGET_LINK_LIBRARIES(Graph3D ${LinkLibraries})
+#SET_LAPACK_LINK_LIBRARIES(Graph3D)
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")

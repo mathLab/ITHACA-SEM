@@ -1793,7 +1793,7 @@ namespace Nektar
 
     int CoupledLinearNS::v_GetForceDimension()
     {
-        return m_boundaryConditions->GetNumVariables();
+        return m_session->GetVariables().size();
     }
 }
 

@@ -70,7 +70,7 @@ namespace Nektar
 
 
         LibUtilities::TimeIntegrationMethod intMethod;
-        std::string TimeIntStr = m_boundaryConditions->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+        std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
         int i;
         for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
         {
@@ -195,7 +195,7 @@ namespace Nektar
 
     Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
     {
-        int vVar = m_boundaryConditions->GetNumVariables();
+        int vVar = m_session->GetVariables().size();
         Array<OneD, bool> vChecks(vVar, false);
         vChecks[vVar-1] = true;
         return vChecks;
@@ -203,7 +203,7 @@ namespace Nektar
 
     int VelocityCorrectionScheme::v_GetForceDimension()
     {
-        return m_boundaryConditions->GetNumVariables() - 1;
+        return m_session->GetVariables().size() - 1;
     }
 
     void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 

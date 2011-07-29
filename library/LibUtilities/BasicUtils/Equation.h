@@ -65,8 +65,15 @@ namespace Nektar
             NekDouble Evaluate(NekDouble x=0, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
             {
                 m_evaluator.DefineFunction("x y z t", m_eqn.c_str());
-
-                return m_evaluator.Evaluate(x, y, z, t);
+                try
+                {
+                    return m_evaluator.Evaluate(x, y, z, t);
+                }
+                catch (const std::string& e)
+                {
+                    std::cout << "ERROR: " << e << std::endl;
+                    return 0;
+                }
             }
 
             static void SetConstParameters(const std::map<std::string, NekDouble> &constants)

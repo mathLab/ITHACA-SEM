@@ -214,7 +214,7 @@ namespace Nektar
 
         pGraph->Import(pInfile,FieldDef,FieldData);
 
-        int nvar = pBoundaryConditions->GetNumVariables();
+        int nvar = m_session->GetVariables().size();
 
         // copy FieldData into m_fields
         for(int j = 0; j < nvar; ++j)
@@ -251,7 +251,7 @@ namespace Nektar
 
         int nqtot      = pFields[0]->GetTotPoints();
 		 
-		nvariables=m_boundaryConditions->GetNumVariables();
+		nvariables=m_session->GetVariables().size();
 		// Assume all fields but last to be convected by velocity. 
 		m_nConvectiveFields=numfields-1;
 

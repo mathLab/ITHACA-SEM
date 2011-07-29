@@ -144,13 +144,12 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(&graph2D);
-        bcs.Read(meshfile);
+        SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
-        lambda = bcs.GetParameter("Lambda");
+        lambda = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 2D Helmholtz: " << endl;
@@ -198,6 +197,7 @@ int main(int argc, char *argv[])
         // Define forcing function for first variable defined in file
         fce = Array<OneD,NekDouble>(nq);
         LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
+        cout << ffunc->GetEquation() << endl;
         for(i = 0; i < nq; ++i)
         {
             fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);

@@ -371,8 +371,8 @@ namespace Nektar
     
     std::string depthStr[1] = {"d"};
     
-    SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-      = m_boundaryConditions->GetUserDefinedEqn(depthStr[0]);
+    LibUtilities::EquationSharedPtr ifunc
+      = m_session->GetFunction("WaterDepth", depthStr[0]);
 
     EvaluateFunction(m_depth,ifunc);
   }
@@ -383,8 +383,8 @@ namespace Nektar
     int nq = m_fields[0]->GetTotPoints();
     std::string coriolisStr[1] = {"f"};
         
-    SpatialDomains::ConstUserDefinedEqnShPtr ifunc 
-      = m_boundaryConditions->GetUserDefinedEqn(coriolisStr[0]);
+    LibUtilities::EquationSharedPtr ifunc
+      = m_session->GetFunction("Coriolis",coriolisStr[0]);
     
     EvaluateFunction(m_coriolis,ifunc);
   }

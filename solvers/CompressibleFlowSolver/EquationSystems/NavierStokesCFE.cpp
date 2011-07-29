@@ -41,216 +41,216 @@
 
 namespace Nektar
 {
-  string NavierStokesCFE::className = GetEquationSystemFactory().RegisterCreatorFunction("NavierStokesCFE", NavierStokesCFE::create, "NavierStokes equations in conservative variables.");
-  
-  NavierStokesCFE::NavierStokesCFE(
-          LibUtilities::CommSharedPtr& pComm,
-          LibUtilities::SessionReaderSharedPtr& pSession)
+    string NavierStokesCFE::className = GetEquationSystemFactory().RegisterCreatorFunction("NavierStokesCFE", NavierStokesCFE::create, "NavierStokes equations in conservative variables.");
+
+    NavierStokesCFE::NavierStokesCFE(
+            LibUtilities::CommSharedPtr& pComm,
+            LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleFlowSystem(pComm, pSession)
-  {
-  }
+    {
+    }
 
-  void NavierStokesCFE::v_InitObject()
-  {
-      CompressibleFlowSystem::v_InitObject();
+    void NavierStokesCFE::v_InitObject()
+    {
+        CompressibleFlowSystem::v_InitObject();
 
-    if(m_boundaryConditions->SolverInfoExists("PROBLEMTYPE"))
-      {
-	
-	std::string ProblemTypeStr = m_boundaryConditions->GetSolverInfo("PROBLEMTYPE");
-	int i;
-	for(i = 0; i < (int) SIZE_ProblemType; ++i)
-	  {
-	    if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
-	      {
-		m_problemType = (ProblemType)i;
-		break;
-	      }
-	  }
-      }
-    else
-      {
-	m_problemType = (ProblemType)0;
-      }
+        if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
+        {
+
+            std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
+            int i;
+            for(i = 0; i < (int) SIZE_ProblemType; ++i)
+            {
+                if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
+                {
+                    m_problemType = (ProblemType)i;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            m_problemType = (ProblemType)0;
+        }
+
+        if (m_explicitAdvection)
+        {
+            m_ode.DefineOdeRhs     (&NavierStokesCFE::DoOdeRhs,        this);
+            m_ode.DefineProjection (&NavierStokesCFE::DoOdeProjection, this);
+        }
+        else
+        {
+            ASSERTL0(false, "Implicit CFE not set up.");
+        }
+
+    }
+
+    NavierStokesCFE::~NavierStokesCFE()
+    {
+
+    }
+
+    void NavierStokesCFE::v_PrintSummary(std::ostream &out)
+    {
+        CompressibleFlowSystem::v_PrintSummary(out);
+        out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
+    }
+
+    void NavierStokesCFE::v_SetInitialConditions(NekDouble initialtime, bool dumpInitialConditions)
+    {
+        switch(m_problemType)
+        {
+        default:
+        {
+            EquationSystem::v_SetInitialConditions(initialtime,false);
+        }
+        break;
+        }
+
+        if(dumpInitialConditions)
+        {
+            // dump initial conditions to file
+            std::string outname = m_sessionName + "_initial.chk";
+            WriteFld(outname);
+        }
+    }
+
+    void NavierStokesCFE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+            const NekDouble time)
+    {
+        int i;
+        int ndim    = m_spacedim;
+        int nvariables = inarray.num_elements();
+        int ncoeffs    = GetNcoeffs();
+        int nq         = GetTotPoints();
+        int npoints = GetNpoints();
+
+        switch(m_projectionType)
+        {
+        case MultiRegions::eDiscontinuousGalerkin:
+        {
+            //-------------------------------------------------------
+            //inarray in physical space
+
+            Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
+            for (i = 0; i < nvariables; ++i)
+            {
+                modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
+            }
+            //-------------------------------------------------------
+
+
+            //-------------------------------------------------
+            // get the advection part
+            // input: physical space
+            // output: modal space
+
+            // straighforward DG
+            WeakDGAdvection(inarray, modarray, false, true);
+            //-------------------------------------------------
+
+
+            //-------------------------------------------------------
+            // negate the outarray since moving terms to the rhs
+            for(i = 0; i < nvariables; ++i)
+            {
+                Vmath::Neg(ncoeffs,modarray[i],1);
+                m_fields[i]->MultiplyByElmtInvMass(modarray[i],modarray[i]);
+                m_fields[i]->BwdTrans(modarray[i],outarray[i]);
+            }
+        }
+        break;
+        case MultiRegions::eGalerkin:
+            ASSERTL0(false,"Continouos scheme not implemented for NavierStokesCFE");
+            break;
+        default:
+            ASSERTL0(false,"Unknown projection scheme for the NavierStokesCFE");
+            break;
+        }
+    }
+
+    void NavierStokesCFE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+            const NekDouble time)
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+
+
+        switch(m_projectionType)
+        {
+        case MultiRegions::eDiscontinuousGalerkin:
+        {
+            // Just copy over array
+            int npoints = GetNpoints();
+
+            for(i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+            }
+            SetBoundaryConditions(outarray,time);
+        }
+        break;
+        case MultiRegions::eGalerkin:
+        {
+            ASSERTL0(false,"No Continuous Galerkin for NavierStokes equations");
+            break;
+        }
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
     
-    if (m_explicitAdvection)
-      {
-	m_ode.DefineOdeRhs     (&NavierStokesCFE::DoOdeRhs,        this);
-	m_ode.DefineProjection (&NavierStokesCFE::DoOdeProjection, this);
-      }
-    else
-      {
-	ASSERTL0(false, "Implicit CFE not set up.");
-      }
+    //----------------------------------------------------
+    void NavierStokesCFE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
+            NekDouble time)
+    {
     
-  }
-
-  NavierStokesCFE::~NavierStokesCFE()
-  {
+        int nvariables = m_fields.num_elements();
+        int nq         = inarray[0].num_elements();
+        int cnt = 0;
     
-  }
-
-  void NavierStokesCFE::v_PrintSummary(std::ostream &out)
-  {
-    CompressibleFlowSystem::v_PrintSummary(out);
-    out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
-  }
-
-  void NavierStokesCFE::v_SetInitialConditions(NekDouble initialtime, bool dumpInitialConditions)
-  {
-    switch(m_problemType)
-      {
-      default:
-	{
-	  EquationSystem::v_SetInitialConditions(initialtime,false);
-	}
-	break;
-      }
-
-    if(dumpInitialConditions)
-      {
-	// dump initial conditions to file
-	std::string outname = m_sessionName + "_initial.chk";
-	WriteFld(outname);
-      }
-  }
-
-  void NavierStokesCFE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-				 Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-				 const NekDouble time) 
-  {
-    int i;
-    int ndim    = m_spacedim;
-    int nvariables = inarray.num_elements();
-    int ncoeffs    = GetNcoeffs();
-    int nq         = GetTotPoints();
-    int npoints = GetNpoints();
-
-    switch(m_projectionType)
-      {
-      case MultiRegions::eDiscontinuousGalerkin:
-	{
-	  //-------------------------------------------------------
-	  //inarray in physical space
-	  
-	  Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
-	  for (i = 0; i < nvariables; ++i)
-	    {
-	      modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
-	    }
-	  //-------------------------------------------------------
-
-
-	  //-------------------------------------------------
-	  // get the advection part
-	  // input: physical space
-	  // output: modal space 
-	  
-	  // straighforward DG
-	  WeakDGAdvection(inarray, modarray, false, true);
-	  //-------------------------------------------------
-
-	  
-	  //-------------------------------------------------------
-	  // negate the outarray since moving terms to the rhs
-	  for(i = 0; i < nvariables; ++i)
-	    {
-	      Vmath::Neg(ncoeffs,modarray[i],1);
-	      m_fields[i]->MultiplyByElmtInvMass(modarray[i],modarray[i]);
-	      m_fields[i]->BwdTrans(modarray[i],outarray[i]);
-	    }
-	}
-	break;
-      case MultiRegions::eGalerkin:
-	ASSERTL0(false,"Continouos scheme not implemented for NavierStokesCFE");
-	break;
-      default:
-	ASSERTL0(false,"Unknown projection scheme for the NavierStokesCFE");
-	break;
-      }
-  }
- 
-  void NavierStokesCFE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-						    Array<OneD,       Array<OneD, NekDouble> >&outarray,
-						    const NekDouble time)
-  {
-    int i;
-    int nvariables = inarray.num_elements();
+        // loop over Boundary Regions
+        for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            // Wall Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
+            {
+                if (m_expdim == 2)
+                {
+                    WallBoundary2D(n,cnt,inarray);
+                }
+                else
+                {
+                    ASSERTL0(false,"1D, 3D not yet implemented");
+                }
+            }
     
+            // Symmetric Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Symmetry")
+            {
+                if (m_expdim == 2)
+                {
+                    SymmetryBoundary(n,cnt,inarray);
+                }
+                else
+                {
+                    ASSERTL0(false,"1D, 3D not yet implemented");
+                }
+            }
     
-    switch(m_projectionType)
-      {
-      case MultiRegions::eDiscontinuousGalerkin:
-	{
-	  // Just copy over array
-	  int npoints = GetNpoints();
-	  
-	  for(i = 0; i < nvariables; ++i)
-	    {
-	      Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
-	    }
-	   SetBoundaryConditions(outarray,time);
-	}
-	break;
-      case MultiRegions::eGalerkin:
-	{
-	  ASSERTL0(false,"No Continuous Galerkin for NavierStokes equations");
-	  break;
-	}
-      default:
-	ASSERTL0(false,"Unknown projection scheme");
-	break;
-      }
-  }
-
-  //----------------------------------------------------
-  void NavierStokesCFE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray, 
-							  NekDouble time)
-  {
+            // Time Dependent Boundary Condition (specified in meshfile)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->EvaluateBoundaryConditions(time);
+                }
+            }
     
-    int nvariables = m_fields.num_elements();
-    int nq         = inarray[0].num_elements();
-    int cnt = 0;
-  
-    // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-      {	
-	// Wall Boundary Condition
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
-	  {
-	    if (m_expdim == 2)
-	      {
-		WallBoundary2D(n,cnt,inarray);
-	      }
-	    else
- 	      {
- 		ASSERTL0(false,"1D, 3D not yet implemented");
- 	      }
-	  }
-	
-	// Symmetric Boundary Condition
- 	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Symmetry")
- 	  {
- 	    if (m_expdim == 2)
- 	      {
- 		SymmetryBoundary(n,cnt,inarray);
- 	      }
- 	    else
- 	      {
- 		ASSERTL0(false,"1D, 3D not yet implemented");
- 	      }
- 	  }
-
-	// Time Dependent Boundary Condition (specified in meshfile)
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
-	  {
-	    for (int i = 0; i < nvariables; ++i)
-	      {
-		m_fields[i]->EvaluateBoundaryConditions(time);
-	      }
-	  }
-	
-	cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
-      }
-  }
+            cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+        }
+    }
 }

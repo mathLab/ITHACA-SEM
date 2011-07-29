@@ -70,6 +70,6 @@ namespace Nektar
 
     Array<OneD, bool> Poisson::v_GetSystemSingularChecks()
     {
-        return Array<OneD, bool>(m_boundaryConditions->GetNumVariables(), true);
+        return Array<OneD, bool>(m_session->GetVariables().size(), true);
     }
 }

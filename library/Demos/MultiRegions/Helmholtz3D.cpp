@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
     {
         if (vComm->GetRank() == 0)
         {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
             SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
             vPartitioner->PartitionMesh(vComm->GetSize());
             vPartitioner->WritePartitions(vSession, meshfile);
@@ -107,13 +106,12 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(&graph3D);
-        bcs.Read(meshfile);
+        SpatialDomains::BoundaryConditions bcs(vSession, &graph3D);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
-        lambda = bcs.GetParameter("Lambda");
+        lambda = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph3D.GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 3D Helmholtz:"  << endl;

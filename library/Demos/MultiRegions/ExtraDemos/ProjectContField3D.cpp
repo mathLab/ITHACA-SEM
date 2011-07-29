@@ -19,11 +19,12 @@ int main(int argc, char *argv[])
 
     string meshfile(argv[1]);
 
+    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
+
     if (vComm->GetSize() > 1)
     {
         if (vComm->GetRank() == 0)
         {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
             SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
             vPartitioner->PartitionMesh(vComm->GetSize());
             vPartitioner->WritePartitions(vSession, meshfile);
@@ -56,8 +57,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // read the problem parameters from input file
     string bcfile(argv[2]);
-    SpatialDomains::BoundaryConditions bcs(&graph3D); 
-    bcs.Read(bcfile);
+    SpatialDomains::BoundaryConditions bcs(vSession,&graph3D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -101,8 +101,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define forcing function
     fce = Array<OneD,NekDouble>(nq);
-    SpatialDomains::ConstForcingFunctionShPtr ffunc 
-        = bcs.GetForcingFunction(bcs.GetVariable(0));
+    LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
     for(i = 0; i < nq; ++i)
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);

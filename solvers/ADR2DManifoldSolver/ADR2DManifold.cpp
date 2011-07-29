@@ -102,7 +102,7 @@ namespace Nektar
         LoadParameter("Angleofaxis",    m_Angleofaxis, 0.0);
 
         // Set up equation type enum using kEquationTypeStr
-        std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
+        std::string typeStr = m_session->GetSolverInfo("EQTYPE");
 
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
@@ -249,10 +249,7 @@ namespace Nektar
             UnsteadySetup:
             {
                 std::string Implicit = "Implicit";
-                if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
-                {
-                    m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
-                }
+                m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
 
                 // check that any user defined boundary condition is indeed implemented
                 for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -271,9 +268,9 @@ namespace Nektar
                 }
 
                 // Check for definition of Implicit/Explicit terms in solverinfo
-                if(m_boundaryConditions->SolverInfoExists("ADVECTIONADVANCEMENT"))
+                if(m_session->DefinesSolverInfo("ADVECTIONADVANCEMENT"))
                 {
-                    std::string AdvStr = m_boundaryConditions->GetSolverInfo("ADVECTIONADVANCEMENT");
+                    std::string AdvStr = m_session->GetSolverInfo("ADVECTIONADVANCEMENT");
 
                     if(NoCaseStringCompare(AdvStr,Implicit) == 0)
                     {
@@ -289,10 +286,9 @@ namespace Nektar
                     m_explicitAdvection = true;
                 }
 
-
-                if(m_boundaryConditions->SolverInfoExists("DIFFUSIONADVANCEMENT"))
+                if(m_session->DefinesSolverInfo("DIFFUSIONADVANCEMENT"))
                 {
-                    std::string AdvStr = m_boundaryConditions->GetSolverInfo("DIFFUSIONADVANCEMENT");
+                    std::string AdvStr = m_session->GetSolverInfo("DIFFUSIONADVANCEMENT");
 
                     if(NoCaseStringCompare(AdvStr,Implicit) == 0 )
                     {
@@ -313,9 +309,9 @@ namespace Nektar
                     m_explicitDiffusion = true;
                 }
 
-                if(m_boundaryConditions->SolverInfoExists("REACTIONADVANCEMENT"))
+                if(m_session->DefinesSolverInfo("REACTIONADVANCEMENT"))
                 {
-                    std::string AdvStr = m_boundaryConditions->GetSolverInfo("REACTIONADVANCEMENT");
+                    std::string AdvStr = m_session->GetSolverInfo("REACTIONADVANCEMENT");
 
                     if(NoCaseStringCompare(AdvStr,Implicit) == 0)
                     {
@@ -332,9 +328,9 @@ namespace Nektar
                 }
 
                 // check to see if time stepping has been reset
-                if(m_boundaryConditions->SolverInfoExists("TIMEINTEGRATIONMETHE"))
+                if(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHE"))
                 {
-                    std::string TimeIntStr = m_boundaryConditions->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+                    std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
                     int i;
                     for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
                     {
@@ -375,11 +371,11 @@ namespace Nektar
         // Get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
 
-        if(m_boundaryConditions->UserDefinedEqnExists(velStr[0]))
+        if(m_session->DefinesFunction("AdvectionVelocity"))
         {
             for(int i = 0 ; i < m_velocity.num_elements(); i++)
             {
-                SpatialDomains::ConstUserDefinedEqnShPtr ifunc = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
+                LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("AdvectionVelocity", velStr[i]);
                 for(int j = 0; j < nq; j++)
                 {
                     m_velocity[i][j] = ifunc->Evaluate(x0[j],x1[j],x2[j]);
@@ -1728,7 +1724,7 @@ namespace Nektar
     for(i = 0; i < nbnd; ++i)
       {
     // Evaluate boundary values g_D or g_N from input files
-    SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
+    LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("InitialConditions", i);
     npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
 
     Array<OneD,NekDouble> BDphysics(npoints);
@@ -1786,7 +1782,7 @@ namespace Nektar
     for(i = 0; i < nbnd; ++i)
       {
         // Evaluate boundary values g_D or g_N from input files
-        SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
+        LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("InitialConditions",i);
     npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
 
     Array<OneD,NekDouble> BDphysics(npoints);

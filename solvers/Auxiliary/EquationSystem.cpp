@@ -140,8 +140,7 @@ namespace Nektar
         // Also read and store the boundary conditions
         SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-            ::AllocateSharedPtr(meshptr);
-        m_boundaryConditions->Read(m_filename);
+            ::AllocateSharedPtr(m_session, meshptr);
 
         // Read and store history point data
         m_historyPoints = MemoryManager<SpatialDomains::History>
@@ -156,17 +155,17 @@ namespace Nektar
         m_useFFT          = false;
         m_HomogeneousType = eNotHomogeneous;
 
-        if(m_boundaryConditions->SolverInfoExists("HOMOGENEOUS"))
+        if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
         {
-            std::string HomoStr = m_boundaryConditions->GetSolverInfo("HOMOGENEOUS");
+            std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
             m_spacedim          = 3;
 
             if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
                (HomoStr == "1D")||(HomoStr == "Homo1D"))
             {
                 m_HomogeneousType = eHomogeneous1D;
-                m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
-                m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+                m_npointsZ        = m_session->GetParameter("HomModesZ");
+                m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 1;
             }
 
@@ -174,10 +173,10 @@ namespace Nektar
                (HomoStr == "2D")||(HomoStr == "Homo2D"))
             {
                 m_HomogeneousType = eHomogeneous2D;
-                m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
-                m_LhomY           = m_boundaryConditions->GetParameter("LY");
-                m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
-                m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+                m_npointsY        = m_session->GetParameter("HomModesY");
+                m_LhomY           = m_session->GetParameter("LY");
+                m_npointsZ        = m_session->GetParameter("HomModesZ");
+                m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 2;
             }
 
@@ -185,16 +184,16 @@ namespace Nektar
                (HomoStr == "3D")||(HomoStr == "Homo3D"))
             {
                 m_HomogeneousType = eHomogeneous3D;
-                m_npointsX        = m_boundaryConditions->GetParameter("HomModesX");
-                m_LhomX           = m_boundaryConditions->GetParameter("LX");
-                m_npointsY        = m_boundaryConditions->GetParameter("HomModesY");
-                m_LhomY           = m_boundaryConditions->GetParameter("LY");
-                m_npointsZ        = m_boundaryConditions->GetParameter("HomModesZ");
-                m_LhomZ           = m_boundaryConditions->GetParameter("LZ");
+                m_npointsX        = m_session->GetParameter("HomModesX");
+                m_LhomX           = m_session->GetParameter("LX");
+                m_npointsY        = m_session->GetParameter("HomModesY");
+                m_LhomY           = m_session->GetParameter("LY");
+                m_npointsZ        = m_session->GetParameter("HomModesZ");
+                m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 3;
             }
 
-            if(m_boundaryConditions->SolverInfoExists("USEFFT"))
+            if(m_session->DefinesSolverInfo("USEFFT"))
             {
                 m_useFFT = true;
             }
@@ -206,10 +205,10 @@ namespace Nektar
 
         // Options to determine type of projection from file or
         // directly from constructor
-        if(m_boundaryConditions->SolverInfoExists("PROJECTION"))
+        if(m_session->DefinesSolverInfo("PROJECTION"))
         {
             std::string ProjectStr
-                    = m_boundaryConditions->GetSolverInfo("PROJECTION");
+                    = m_session->GetSolverInfo("PROJECTION");
 
             if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
                (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
@@ -236,7 +235,7 @@ namespace Nektar
         m_checkIfSystemSingular = v_GetSystemSingularChecks();
 
         int i;
-        int nvariables = m_boundaryConditions->GetNumVariables();
+        int nvariables = m_session->GetVariables().size();
         bool DeclareCoeffPhysArrays = true;
 
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
@@ -607,9 +606,9 @@ namespace Nektar
      */
     void EquationSystem::LoadParameter(std::string name, int &var, int def)
     {
-        if(m_boundaryConditions->CheckForParameter(name) == true)
+        if(m_session->DefinesParameter(name))
         {
-            var = m_boundaryConditions->GetParameter(name);
+            var = m_session->GetParameter(name);
         }
         else
         {
@@ -623,9 +622,9 @@ namespace Nektar
      */
     void EquationSystem::LoadParameter(std::string name, NekDouble &var, NekDouble def)
     {
-        if(m_boundaryConditions->CheckForParameter(name) == true)
+        if(m_session->DefinesParameter(name))
         {
-            var = m_boundaryConditions->GetParameter(name);
+            var = m_session->GetParameter(name);
         }
         else
         {
@@ -641,7 +640,7 @@ namespace Nektar
      * @param   pEqn            The equation to evaluate.
      */
     void EquationSystem::EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                              SpatialDomains::ConstUserDefinedEqnShPtr pEqn,
+                              LibUtilities::EquationSharedPtr pEqn,
                               const NekDouble pTime)
     {
         int nq = m_fields[0]->GetNpoints();
@@ -690,11 +689,11 @@ namespace Nektar
         // discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
 
-        for(int k = 0; k < m_boundaryConditions->GetNumVariables(); ++k)
+        for(int k = 0; k < m_session->GetVariables().size(); ++k)
         {
             ASSERTL0(pArray[k].num_elements() == nq,
                      "Array size does not match field size.");
-            std::string vVar = m_boundaryConditions->GetVariable(k);
+            std::string vVar = m_session->GetVariable(k);
             ASSERTL0(m_session->DefinesFunction(pFunctionName, vVar),
                      "Variable '" + vVar + "' is not defined for function '"
                      + pFunctionName + "'.");
@@ -980,7 +979,7 @@ namespace Nektar
                  ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
                  break;
          }
-         SpatialDomains::ConstExactSolutionShPtr exSol = m_boundaryConditions->GetExactSolution(field);
+         LibUtilities::EquationSharedPtr exSol = m_session->GetFunction("ExactSolution",field);
          // evaluate exact solution
          Array<OneD,NekDouble> ErrorSol(ErrorNq);
          for(int i = 0; i < ErrorNq; ++i)
@@ -1104,50 +1103,50 @@ namespace Nektar
     
     void EquationSystem::InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base)
     {
-    	base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-    	int nq = m_fields[0]->GetNpoints();
+        base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        int nq = m_fields[0]->GetNpoints();
         std::string velStr[3] = {"Vx","Vy","Vz"};        
         if(m_session->DefinesSolverInfo("BaseFlowFile"))
         {
-        	std::string baseyn= m_session->GetSolverInfo("BaseFlowFile");
-        	//capitalise the string baseyn
-        	std::transform(baseyn.begin(), baseyn.end(), baseyn.begin()
-        		, ::toupper);
-        	if(baseyn=="YES")
-        	{
-        		SetUpBaseFields(m_graph);
-        		string basename = m_session->GetFilename();
-        		basename= (m_session->GetFilename()).substr(0
-        		, basename.find_last_of("."));
-        		ImportFldBase(basename + "-Base.fld",m_graph);
-        		cout<<"Base flow from file:  "<<basename<<"-Base.fld"<<endl;
-        		for(int i=0; i<m_spacedim; ++i)
-        		{
-        			base[i] = Array<OneD, NekDouble> (nq,0.0);
-        			Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);	
-        		}
-        	}
-        	else
+            std::string baseyn= m_session->GetSolverInfo("BaseFlowFile");
+            //capitalise the string baseyn
+            std::transform(baseyn.begin(), baseyn.end(), baseyn.begin()
+                    , ::toupper);
+            if(baseyn=="YES")
+            {
+                SetUpBaseFields(m_graph);
+                string basename = m_session->GetFilename();
+                basename= (m_session->GetFilename()).substr(0,
+                                                basename.find_last_of("."));
+                ImportFldBase(basename + "-Base.fld",m_graph);
+                cout<<"Base flow from file:  "<<basename<<"-Base.fld"<<endl;
+                for(int i=0; i<m_spacedim; ++i)
                 {
-                	for(int i = 0; i < m_spacedim; ++i)
-                	{	
-        		   base[i] = Array<OneD, NekDouble> (nq,0.0);
-        		   SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-        		   = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
-        		   EvaluateFunction(base[i],ifunc);
-        		}
-        	}
-	  }        
-	  else
-	  {
-        	for(int i = 0; i < m_spacedim; ++i)
-        	{	
-        		base[i] = Array<OneD, NekDouble> (nq,0.0);
-        		SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-        		= m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
-               		EvaluateFunction(base[i],ifunc);
-              	}
-           }
+                    base[i] = Array<OneD, NekDouble> (nq,0.0);
+                    Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < m_spacedim; ++i)
+                {
+                    base[i] = Array<OneD, NekDouble> (nq,0.0);
+                    LibUtilities::EquationSharedPtr ifunc
+                                = m_session->GetFunction("BaseFlow", velStr[i]);
+                    EvaluateFunction(base[i],ifunc);
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i < m_spacedim; ++i)
+            {
+                base[i] = Array<OneD, NekDouble> (nq,0.0);
+                LibUtilities::EquationSharedPtr ifunc
+                                = m_session->GetFunction("BaseFlow",velStr[i]);
+                EvaluateFunction(base[i],ifunc);
+            }
+        }
     }    	    
     
     void
@@ -2220,7 +2219,7 @@ namespace Nektar
 
     Array<OneD, bool> EquationSystem::v_GetSystemSingularChecks()
     {
-        return Array<OneD, bool>(m_boundaryConditions->GetNumVariables(), false);
+        return Array<OneD, bool>(m_session->GetVariables().size(), false);
     }
 
     int EquationSystem::v_GetForceDimension()

@@ -54,195 +54,35 @@ namespace Nektar
     {
 
         int i;
-
-        if(m_boundaryConditions->CheckForParameter("epsilon") == true)
-        {
-            m_epsilon = m_boundaryConditions->GetParameter("epsilon");
-        }
-        else
-        {
-            m_epsilon = 0.20;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("beta") == true)
-        {
-            m_beta = m_boundaryConditions->GetParameter("beta");
-        }
-        else
-        {
-            m_beta  = 0.77;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("Rogers_a") == true)
-        {
-            m_Rogers_a = m_boundaryConditions->GetParameter("Rogers_a");
-        }
-        else
-        {
-            m_Rogers_a  = 0.12;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("Rogers_b") == true)
-        {
-            m_Rogers_b = m_boundaryConditions->GetParameter("Rogers_b");
-        }
-        else
-        {
-            m_Rogers_b  = 0.011;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("Rogers_c1") == true)
-        {
-            m_Rogers_c1 = m_boundaryConditions->GetParameter("Rogers_c1");
-        }
-        else
-        {
-            m_Rogers_c1  = 0.175;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("Rogers_c2") == true)
-        {
-            m_Rogers_c2 = m_boundaryConditions->GetParameter("Rogers_c2");
-        }
-        else
-        {
-            m_Rogers_c2  = 0.03;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("Rogers_d") == true)
-        {
-            m_Rogers_d = m_boundaryConditions->GetParameter("Rogers_d");
-        }
-        else
-        {
-            m_Rogers_d  = 0.55;
-        }
+        m_session->LoadParameter("epsilon",   m_epsilon,   0.20);
+        m_session->LoadParameter("beta",      m_beta,      0.77);
+        m_session->LoadParameter("Rogers_a",  m_Rogers_a,  0.12);
+        m_session->LoadParameter("Rogers_b",  m_Rogers_b,  0.175);
+        m_session->LoadParameter("Rogers_c1", m_Rogers_c1, 0.175);
+        m_session->LoadParameter("Rogers_c1", m_Rogers_c2, 0.03);
+        m_session->LoadParameter("Rogers_d",  m_Rogers_d,  0.55);
 
         // initialwave type
         // 0 = plane wave propagation from the left
         // 1 = plane wave propagation from the bottom
         // 2 = A circular wave from the corner (topright)
         // 3 = Point initialization from the center
-
-        if(m_boundaryConditions->CheckForParameter("initialwavetype") == true)
-        {
-            m_initialwavetype = m_boundaryConditions->GetParameter("initialwavetype");
-        }
-        else
-        {
-            m_initialwavetype  = 0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("initeps") == true)
-        {
-            m_initeps = m_boundaryConditions->GetParameter("initeps");
-        }
-        else
-        {
-            m_initeps  = 1.0/32.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("secondwavetype") == true)
-        {
-            m_secondwavetype = m_boundaryConditions->GetParameter("secondwavetype");
-        }
-        else
-        {
-            m_secondwavetype  = -1;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("timedelay") == true)
-        {
-            m_timedelay = m_boundaryConditions->GetParameter("timedelay");
-        }
-        else
-        {
-            m_timedelay  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("duration") == true)
-        {
-            m_duration = m_boundaryConditions->GetParameter("duration");
-        }
-        else
-        {
-            m_duration  = 2.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("refractory") == true)
-        {
-            m_kr = m_boundaryConditions->GetParameter("refractory");
-        }
-        else
-        {
-            m_kr = 1.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("frequency1") == true)
-        {
-            m_frequency1 = m_boundaryConditions->GetParameter("frequency1");
-        }
-        else
-        {
-            m_frequency1  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("frequency2") == true)
-        {
-            m_frequency2 = m_boundaryConditions->GetParameter("frequency2");
-        }
-        else
-        {
-            m_frequency2  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("x1center") == true)
-        {
-            m_x1center = m_boundaryConditions->GetParameter("x1center");
-        }
-        else
-        {
-            m_x1center  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("y1center") == true)
-        {
-            m_y1center = m_boundaryConditions->GetParameter("y1center");
-        }
-        else
-        {
-            m_y1center  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("x2center") == true)
-        {
-            m_x2center = m_boundaryConditions->GetParameter("x2center");
-        }
-        else
-        {
-            m_x2center  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("y2center") == true)
-        {
-            m_y2center = m_boundaryConditions->GetParameter("y2center");
-        }
-        else
-        {
-            m_y2center  = 0.0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("diffrate") == true)
-        {
-            m_diffrate = m_boundaryConditions->GetParameter("diffrate");
-        }
-        else
-        {
-            m_diffrate  = 1.0;
-        }
+        m_session->LoadParameter("initialwavetype", m_initialwavetype, 0);
+        m_session->LoadParameter("initeps",         m_initeps,         1.0/32.0);
+        m_session->LoadParameter("secondwavetype",  m_secondwavetype,  -1);
+        m_session->LoadParameter("timedelay",       m_timedelay,       0.0);
+        m_session->LoadParameter("duration",        m_duration,        2.0);
+        m_session->LoadParameter("refractory",      m_kr,              1.0);
+        m_session->LoadParameter("frequency1",      m_frequency1,      0.0);
+        m_session->LoadParameter("frequency2",      m_frequency2,      0.0);
+        m_session->LoadParameter("x1center",        m_x1center,        0.0);
+        m_session->LoadParameter("y1center",        m_y1center,        0.0);
+        m_session->LoadParameter("x2center",        m_x2center,        0.0);
+        m_session->LoadParameter("y2center",        m_y2center,        0.0);
+        m_session->LoadParameter("diffrate",        m_diffrate,        1.0);
 
         // Set up equation type enum using kEquationTypeStr
-        std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
+        std::string typeStr = m_session->GetSolverInfo("EQTYPE");
 
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
@@ -256,10 +96,7 @@ namespace Nektar
         ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
  
 	std::string Implicit = "Implicit"; 
-	if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
-	  {
-	    m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
-	  }
+	m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0.0);
 	
 	// check that any user defined boundary condition is indeed implemented
 	for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -275,9 +112,9 @@ namespace Nektar
 	  }
 	
 	// Check for definition of Implicit/Explicit terms in solverinfo
-	if(m_boundaryConditions->SolverInfoExists("ADVECTIONADVANCEMENT"))
+	if(m_session->DefinesSolverInfo("ADVECTIONADVANCEMENT"))
 	  {
-	    std::string AdvStr = m_boundaryConditions->GetSolverInfo("ADVECTIONADVANCEMENT");
+	    std::string AdvStr = m_session->GetSolverInfo("ADVECTIONADVANCEMENT");
             
 	    if(NoCaseStringCompare(AdvStr,Implicit) == 0)
 	      {
@@ -294,9 +131,9 @@ namespace Nektar
 	  }
 	
         
-	if(m_boundaryConditions->SolverInfoExists("DIFFUSIONADVANCEMENT"))
+	if(m_session->DefinesSolverInfo("DIFFUSIONADVANCEMENT"))
 	  {
-	    std::string AdvStr = m_boundaryConditions->GetSolverInfo("DIFFUSIONADVANCEMENT");
+	    std::string AdvStr = m_session->GetSolverInfo("DIFFUSIONADVANCEMENT");
             
 	    if(NoCaseStringCompare(AdvStr,Implicit) == 0 )
 	      {
@@ -313,9 +150,9 @@ namespace Nektar
 	    m_explicitDiffusion = true;
 	  }
 	
-	if(m_boundaryConditions->SolverInfoExists("REACTIONADVANCEMENT"))
+	if(m_session->DefinesSolverInfo("REACTIONADVANCEMENT"))
 	  {
-	    std::string AdvStr = m_boundaryConditions->GetSolverInfo("REACTIONADVANCEMENT");
+	    std::string AdvStr = m_session->GetSolverInfo("REACTIONADVANCEMENT");
             
 	    if(NoCaseStringCompare(AdvStr,Implicit) == 0)
 	      {
@@ -335,9 +172,9 @@ namespace Nektar
 
 
 	// check to see if time stepping has been reset
-	if(m_boundaryConditions->SolverInfoExists("TIMEINTEGRATIONMETHOD"))
+	if(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
 	  {
-	    std::string TimeIntStr = m_boundaryConditions->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+	    std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
 	    int i;
 	    for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
 	      {
@@ -1385,7 +1222,7 @@ namespace Nektar
     for(i = 0; i < nbnd; ++i)
       {                 
 	// Evaluate boundary values g_D or g_N from input files
-	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
+    LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("InitialConditions",i);
 	npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
 	
 	Array<OneD,NekDouble> BDphysics(npoints);
@@ -1443,7 +1280,7 @@ namespace Nektar
     for(i = 0; i < nbnd; ++i)
       {                 
       	// Evaluate boundary values g_D or g_N from input files
-	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
+	LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("InitialConditions",i);
 	npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
 	
 	Array<OneD,NekDouble> BDphysics(npoints);

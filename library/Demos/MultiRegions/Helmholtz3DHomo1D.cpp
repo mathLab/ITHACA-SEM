@@ -98,15 +98,14 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph2D);
-    bcs.Read(meshfile);
+    SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
     int nplanes = 8;
-    NekDouble lz     = bcs.GetParameter("Lz");
+    NekDouble lz     = vSession->GetParameter("Lz");
 	bool useFFT = false;
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
@@ -116,7 +115,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
+    lambda = vSession->GetParameter("Lambda");
     const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0 
                             = expansions.begin()->second->m_basisKeyVector[0];

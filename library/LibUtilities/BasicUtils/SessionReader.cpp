@@ -166,6 +166,15 @@ namespace Nektar
             return paramMapIter->second;
         }
 
+        void SessionReader::LoadParameter(const std::string pName, int &pVar)
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ASSERTL0(paramMapIter != m_parameters.end(),
+                    "Required parameter '" + pName + "' not specified in session.");
+            pVar = paramMapIter->second;
+        }
+
         void SessionReader::LoadParameter(const std::string pName, int &pVar, int pDefault)
         {
             std::string vName = boost::to_upper_copy(pName);
@@ -178,6 +187,15 @@ namespace Nektar
             {
                 pVar  = pDefault;
             }
+        }
+
+        void SessionReader::LoadParameter(const std::string pName, NekDouble& pVar)
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ASSERTL0(paramMapIter != m_parameters.end(),
+                    "Required parameter '" + pName + "' not specified in session.");
+            pVar = paramMapIter->second;
         }
 
         void SessionReader::LoadParameter(const std::string pName, NekDouble& pVar, const NekDouble pDefault)
@@ -446,6 +464,7 @@ namespace Nektar
             {
                 TiXmlElement *parameter = parametersElement->FirstChildElement("P");
                 LibUtilities::ExpressionEvaluator expEvaluator;
+                ParameterMap caseSensitiveParameters;
 
                 // Multiple nodes will only occur if there is a comment in between
                 // definitions.
@@ -481,6 +500,7 @@ namespace Nektar
                             expEvaluator.DefineFunction("", rhs);
                             value =  expEvaluator.Evaluate();
                             expEvaluator.SetParameter(lhs, value);
+                            caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
 
@@ -490,8 +510,18 @@ namespace Nektar
                     parameter = parameter->NextSiblingElement();
                 }
 
-                // Set ourselves up for evaluation later.
-                //SpatialDomains::Equation::SetConstParameters(mParameters);
+                try
+                {
+                    // Set ourselves up for evaluation later.
+                    Equation::SetConstParameters(caseSensitiveParameters);
+                }
+                catch (const std::runtime_error& e)
+                {
+                    NEKERROR(ErrorUtil::ewarning, std::string(
+                            "Failed to add constants to expression evaluator. "
+                            "Ensure only one SessionReader per process. ")
+                            + e.what());
+                }
             }
         }
 
@@ -646,13 +676,13 @@ namespace Nektar
                 functionDef.m_type = eFunctionTypeNone;
 
                 // Initialise all variables to zero by default
-                for (VariableList::iterator varIter = m_variables.begin();
-                    varIter != m_variables.end(); ++varIter)
-                {
-                    EquationSharedPtr eqShPtr(
-                            MemoryManager<Equation>::AllocateSharedPtr("0.0"));
-                    functionDef.m_expressions[*varIter] = eqShPtr;
-                }
+//                for (VariableList::iterator varIter = m_variables.begin();
+//                    varIter != m_variables.end(); ++varIter)
+//                {
+//                    EquationSharedPtr eqShPtr(
+//                            MemoryManager<Equation>::AllocateSharedPtr("0.0"));
+//                    functionDef.m_expressions[*varIter] = eqShPtr;
+//                }
 
                 // Process all entries in the function block
                 while (variable)
@@ -688,19 +718,17 @@ namespace Nektar
                         // Check it has not already been defined
                         EquationMap::iterator fcnsIter
                                 = functionDef.m_expressions.find(variableStr);
-                        if (fcnsIter != functionDef.m_expressions.end())
-                        {
-                            // Add variable
-                            functionDef.m_expressions[variableStr]
-                                                      ->SetEquation(fcnStr);
-                        }
-                        else
-                        {
-                            NEKERROR(ErrorUtil::efatal,
-                                    (std::string("Error setting forcing "
-                                    "function for variable: ")
-                                    + variableStr).c_str());
-                        }
+
+                        ASSERTL0(fcnsIter == functionDef.m_expressions.end(),
+                                "Error setting expression '" + variableStr
+                                + "' in function '" + functionStr + "'. "
+                                "Expression has already been defined.");
+
+                        // Add variable
+                        functionDef.m_expressions[variableStr]
+                            = MemoryManager<Equation>::AllocateSharedPtr("0.0");
+                        functionDef.m_expressions[variableStr]
+                                                  ->SetEquation(fcnStr);
                     }
 
                     // Files are denoted by F
@@ -776,7 +804,7 @@ namespace Nektar
             return (size1 < size2) ? -1 : 1;
         }
 
-        void SessionReader::SubstituteExpressions(std::string& pExpr)
+        bool SessionReader::SubstituteExpressions(std::string& pExpr)
         {
             ExpressionMap::iterator exprIter;
             for (exprIter = m_expressions.begin(); exprIter != m_expressions.end(); ++exprIter)

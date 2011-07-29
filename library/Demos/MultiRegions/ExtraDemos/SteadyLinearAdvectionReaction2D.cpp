@@ -26,12 +26,12 @@ int main(int argc, char *argv[])
     LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
 
     string meshfile(argv[1]);
+    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
 
     if (vComm->GetSize() > 1)
     {
         if (vComm->GetRank() == 0)
         {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
             SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
             vPartitioner->PartitionMesh(vComm->GetSize());
             vPartitioner->WritePartitions(vSession, meshfile);
@@ -97,19 +97,18 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph2D); 
-    bcs.Read(meshfile);
+    SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Get Advection Velocity
-    ax = bcs.GetParameter("Advection_x");
-    ay = bcs.GetParameter("Advection_y");
+    ax = vSession->GetParameter("Advection_x");
+    ay = vSession->GetParameter("Advection_y");
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
+    lambda = vSession->GetParameter("Lambda");
     cout << "            Lambda         : " << lambda << endl;
     const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0
@@ -163,8 +162,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define forcing function for first variable defined in file 
     fce = Array<OneD,NekDouble>(nq);
-    SpatialDomains::ConstForcingFunctionShPtr ffunc 
-        = bcs.GetForcingFunction(bcs.GetVariable(0));
+    LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
     for(i = 0; i < nq; ++i) 
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
@@ -203,8 +201,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // See if there is an exact solution, if so 
     // evaluate and plot errors
-    SpatialDomains::ConstExactSolutionShPtr ex_sol =
-        bcs.GetExactSolution(bcs.GetVariable(0));
+    LibUtilities::EquationSharedPtr ex_sol = vSession->GetFunction("ExactSolution",0);
 
     if(ex_sol)
     {

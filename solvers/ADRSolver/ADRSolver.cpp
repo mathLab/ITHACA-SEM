@@ -47,11 +47,6 @@ int main(int argc, char *argv[])
     if(argc != 2)
     {
         cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        cout << "Drivers" << endl;
-        cout << "-------" << endl;
-        GetDriverFactory().PrintAvailableClasses();
-        cout << "EquationSystems" << endl;
-        cout << "---------------" << endl;
         GetEquationSystemFactory().PrintAvailableClasses();
         exit(1);
     }

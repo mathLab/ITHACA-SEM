@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <!-- Structure for adding an attribute ID to an element with content -->
+    <xs:complexType name="IDAttr">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="ID" type="xs:int" use="required" />
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!--  Structure for a boundary condition type -->
+    <xs:complexType name="BoundaryCondition">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="VAR" type="xs:string" use="required" />
+                <xs:attribute name="USERDEFINEDTYPE" type="xs:string" />
+                <xs:attribute name="VALUE" type="xs:string" use="required" />
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!-- Restrict an attribute to the values 0 and 1 -->
+    <xs:simpleType name="BinaryOption">
+        <xs:restriction base="xs:int">
+            <xs:enumeration value="0"/>
+            <xs:enumeration value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!--  Structure for defining Optimisation parameters -->
+    <xs:complexType name="OptimisationParameter">
+        <xs:sequence>
+            <xs:element name="DO_GLOBAL_MAT_OP">
+                <xs:complexType>
+                    <xs:attribute name="VALUE" type="BinaryOption" />
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="DO_BLOCK_MAT_OP">
+                <xs:complexType>
+                    <xs:attribute name="TRI" type="BinaryOption" />
+                    <xs:attribute name="QUAD" type="BinaryOption" />
+                    <xs:attribute name="TET" type="BinaryOption" />
+                    <xs:attribute name="PRI" type="BinaryOption" />
+                    <xs:attribute name="PYR" type="BinaryOption" />
+                    <xs:attribute name="HEX" type="BinaryOption" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Main NEKTAR XML definition -->
+	<xs:element name="NEKTAR">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="GEOMETRY">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="VERTEX">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="V" type="IDAttr" minOccurs="1" maxOccurs="unbounded" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="EDGE" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="E" type="IDAttr" minOccurs="1" maxOccurs="unbounded" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="FACE" minOccurs="0">
+								<xs:complexType>
+									<xs:choice minOccurs="1" maxOccurs="unbounded">
+										<xs:element name="T" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+                                        <xs:element name="Q" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+									</xs:choice>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="ELEMENT">
+								<xs:complexType>
+									<xs:choice minOccurs="1" maxOccurs="unbounded">
+										<xs:element name="S" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+										<xs:element name="T" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+										<xs:element name="Q" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+										<xs:element name="A" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+										<xs:element name="P" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+										<xs:element name="R" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+										<xs:element name="H" type="IDAttr" minOccurs="0" maxOccurs="unbounded" />
+									</xs:choice>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="COMPOSITE">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="C" type="IDAttr" minOccurs="1" maxOccurs="unbounded" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="DOMAIN" type="xs:string" />
+						</xs:sequence>
+						<xs:attribute name="DIM" type="xs:string" use="required"/>
+						<xs:attribute name="SPACE" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="EXPANSIONS">
+				    <xs:complexType>
+				        <xs:sequence>
+				            <xs:element name="E" maxOccurs="unbounded">
+				                <xs:complexType>
+				                    <xs:attribute name="COMPOSITE" type="xs:string" use="required"/>
+				                    <xs:attribute name="NUMMODES" type="xs:int" use="required"/>
+				                    <xs:attribute name="FIELDS" type="xs:string"/>
+				                    <xs:attribute name="TYPE" type="xs:string"/>
+				                </xs:complexType>
+				            </xs:element>
+				        </xs:sequence>
+				    </xs:complexType>
+				</xs:element>
+				<xs:element name="CONDITIONS">
+				    <xs:complexType>
+				        <xs:choice minOccurs="1" maxOccurs="unbounded">
+				            <xs:element name="SOLVERINFO" minOccurs="0">
+				                <xs:complexType>
+				                    <xs:sequence>
+				                        <xs:element name="I" maxOccurs="unbounded">
+				                            <xs:complexType>
+    		                                    <xs:attribute name="PROPERTY" type="xs:string"/>
+    		                                    <xs:attribute name="VALUE" type="xs:string"/>
+				                            </xs:complexType>
+				                        </xs:element>
+				                    </xs:sequence>
+				                </xs:complexType>
+				            </xs:element>
+				            <xs:element name="PARAMETERS" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="P" type="xs:string" maxOccurs="unbounded"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="VARIABLES">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="V" type="IDAttr" maxOccurs="unbounded" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="BOUNDARYREGIONS" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="B" type="IDAttr" maxOccurs="unbounded" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="BOUNDARYCONDITIONS" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="REGION" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="D" type="BoundaryCondition" minOccurs="0" />
+                                                    <xs:element name="N" type="BoundaryCondition" minOccurs="0" />
+                                                    <xs:element name="R" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:complexContent>
+                                                                <xs:extension base="BoundaryCondition">
+                                                                    <xs:attribute name="PRIMCOEFF" type="xs:string" />
+                                                                </xs:extension>
+                                                            </xs:complexContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="REF" type="xs:string" use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="FUNCTION" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="E" minOccurs="0" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:attribute name="VAR" type="xs:string" use="required"/>
+                                                <xs:attribute name="VALUE" type="xs:string" use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute name="NAME" type="xs:string" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+				        </xs:choice>
+				    </xs:complexType>
+				</xs:element>
+                <xs:element name="GLOBALOPTIMIZATIONPARAMETERS" minOccurs="0">
+                    <xs:complexType>
+                        <xs:choice minOccurs="0" maxOccurs="unbounded">
+                            <xs:element name="BwdTrans" type="OptimisationParameter" minOccurs="0" />
+                            <xs:element name="IProductWRTBase" type="OptimisationParameter" minOccurs="0" />
+                            <xs:element name="MassMatrixOp" type="OptimisationParameter" minOccurs="0" />
+                            <xs:element name="HelmholtzMatrixOp" type="OptimisationParameter" minOccurs="0" />
+                        </xs:choice>
+                    </xs:complexType>
+                </xs:element>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

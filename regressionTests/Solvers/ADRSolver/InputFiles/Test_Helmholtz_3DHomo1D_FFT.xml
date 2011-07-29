@@ -1,170 +1,117 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/nektar.xsd">
+
     <GEOMETRY DIM="2" SPACE="2">
-    
-    <!-- Definitions that can be used below in this file. -->
-    <DEF>
-      <D> A = 1.0 </D>
-      <D> B = 2.0 </D>
-      <D> C = 3.0 </D>
-    </DEF>
-    
-    <VERTEX>
-      <V ID="0">  0.0    0.0    0.0 </V>
-      <V ID="1">  1.0    0.0    0.0 </V>
-      <V ID="2">  1.0    1.0    0.0 </V>
-      <V ID="3">  0.0    1.0    0.0 </V>
-    </VERTEX>
-    <EDGE>
-      <E ID="0">   0  1   </E>
-      <E ID="1">   1  2   </E>
-      <E ID="2">   2  3   </E>
-      <E ID="3">   3  0   </E>
-    </EDGE>
-    <ELEMENT>
-      <Q ID="0">    0     1     2     3 </Q>
-    </ELEMENT>
-    <COMPOSITE>
-      <C ID="0"> Q[0]</C>
-      <C ID="1"> E[0]</C> //south
-      <C ID="2"> E[1]</C> //east
-      <C ID="3"> E[2]</C> //north
-      <C ID="4"> E[3]</C> //west
-    </COMPOSITE>
-    
- <DOMAIN> C[0] </DOMAIN>
-        
+
+        <VERTEX>
+            <V ID="0">  0.0    0.0    0.0 </V>
+            <V ID="1">  1.0    0.0    0.0 </V>
+            <V ID="2">  1.0    1.0    0.0 </V>
+            <V ID="3">  0.0    1.0    0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0">   0  1   </E>
+            <E ID="1">   1  2   </E>
+            <E ID="2">   2  3   </E>
+            <E ID="3">   3  0   </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0">    0     1     2     3 </Q>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0]</C>
+            <C ID="1"> E[0]</C>
+            <C ID="2"> E[1]</C>
+            <C ID="3"> E[2]</C>
+            <C ID="4"> E[3]</C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
     </GEOMETRY>
-    
+
     <EXPANSIONS>
-       <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
-    
+
     <CONDITIONS>
-    
-      <SOLVERINFO>
-        <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-        <I PROPERTY="Projection" VALUE="Continuous"/>
-        <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
-        <I PROPERTY="USEFFT" VALUE="FFTW"/>
-      </SOLVERINFO>
 
-    <PARAMETERS>
-      <P> Lambda    = 1.0 </P>
-      <P> HomModesZ = 4 </P>
-      <P> LZ        = 5 </P>
-    </PARAMETERS>
-        
-    <VARIABLES>
-      <V ID="0"> u </V> 
-    </VARIABLES>
-    
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
-    </BOUNDARYREGIONS>
-    
-    <BOUNDARYCONDITIONS>
-      <REGION REF="0">
-        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
-      </REGION>
-    </BOUNDARYCONDITIONS>
-    
-    <FUNCTION NAME="Forcing">
-      <E VAR="u" VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(LZ*LZ))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
-    </FUNCTION>
-    
-    <FUNCTION NAME="ExactSolution">
-       <E VAR ="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
-    </FUNCTION>
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+            <I PROPERTY="HOMOGENEOUS" VALUE="1D" />
+            <I PROPERTY="USEFFT" VALUE="FFTW" />
+        </SOLVERINFO>
 
-</CONDITIONS>
+        <PARAMETERS>
+            <P> Lambda    = 1.0 </P>
+            <P> HomModesZ = 4 </P>
+            <P> LZ        = 5 </P>
+        </PARAMETERS>
 
- <!-- Set the GLOBAL optimisation parameters below 
-    It is possible to specify the following 2 optimisation flags
-    for different operators:    
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
 
-        - DO_GLOBAL_MAT_OP
-          if TRUE (VALUE = 1), the globally assembled
-             system matrix will be used to evaluate the operator
-          if FALSE (VALUE = 0), the operator will be 
-             evaluated elementally
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
 
-        - DO_BLOCK_MAT_OP
-          if TRUE (VALUE = 1), the elemental evaluation
-             will be done using the elemental/local matrices
-             (which are all concatenated in a block matrix, 
-              hence the name)
-          if FALSE (VALUE = 0), the elemental evaluation
-             will be done using the sum-factorisation technique
-       
-    The optimal configuration of these parameters depends on
-    - the computer environment (i.e. processor, BLAS library, ...)
-    - the discretisation (the mesh-size but mainly the POLYNOMIAL ORDER)
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
 
-    To set these parameters use the following rules of thumb:
-    - The global matrix approach is the most efficient option
-      only for very low expansion order (P=1,P=2). Never set 
-      DO_GLOBAL_MAT_OP to true for an expansion order P>4 as it 
-      quickly becomes very expensive and you might run
-      out of memory.
-    - The most efficient way of elementally evaluating an
-      operator depends on the complexity of the operator
-      in the sum-factorisation approach.
-      # For simple operators (such as BwdTrans and IProductWRTBase)
-        set DO_BLOCK_MAT_OP to TRUE for low orders (e.g. P<=4)
-        set DO_BLOCK_MAT_OP to FALSE in the other case
-      # For more complex operators (such as MassMatrixOp)
-        set DO_BLOCK_MAT_OP to TRUE for low and intermediate orders (e.g. P<=8)
-        set DO_BLOCK_MAT_OP to FALSE in the other case
-      # For very complex operators (such as HelmholtzMatrixOp)
-        always set DO_BLOCK_MAT_OP to TRUE
-      In general, the break-even point between the elemental matrix approach 
-      and the sum-factorisation technique is higher for triangular meshes than
-      for quadrilateral meshes. That is why you for exmaple may want to set 
-      following flags for the IProductWRTBase operator:
-        (quadrilateral mesh) set DO_BLOCK_MAT_OP to TRUE if P<=4
-        (triangular mesh)    set DO_BLOCK_MAT_OP to TRUE if P<=6
+        <FUNCTION NAME="Forcing">
+            <E VAR="u"
+                VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(LZ*LZ))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+        </FUNCTION>
 
-    Also note that, as opposed to the ELEMENTAL optimisation parameters,
-    the GLOBAL parameters are problem dependent. In order to optimally set
-    these parameters below, ideally, a 'self-tuning' optimisation suite
-    which performs a series of test-runs based upon the mesh file above
-    is required.
-    -->
-  <GLOBALOPTIMIZATIONPARAMETERS>
-    
-    <BwdTrans>
-      <DO_GLOBAL_MAT_OP  VALUE="0" />
-      <DO_BLOCK_MAT_OP   VALUE="0" />
-    </BwdTrans>
-    
-    <IProductWRTBase>
-      <DO_GLOBAL_MAT_OP  VALUE="0" />
-      <DO_BLOCK_MAT_OP   VALUE="0" />
-    </IProductWRTBase>
-    
-    <MassMatrixOp>
-      <DO_GLOBAL_MAT_OP  VALUE="0" />
-      <DO_BLOCK_MAT_OP   VALUE="1" />
-    </MassMatrixOp>
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+        </FUNCTION>
 
-    <HelmholtzMatrixOp>
-      <DO_GLOBAL_MAT_OP  VALUE="0" />
-      <DO_BLOCK_MAT_OP   VALUE="1" />
-    </HelmholtzMatrixOp>
+    </CONDITIONS>
 
-  </GLOBALOPTIMIZATIONPARAMETERS>
+    <GLOBALOPTIMIZATIONPARAMETERS>
+
+        <BwdTrans>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="0" QUAD="0" />
+        </BwdTrans>
+
+        <IProductWRTBase>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="0" QUAD="0"/>
+        </IProductWRTBase>
+
+        <MassMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
+        </MassMatrixOp>
+
+        <HelmholtzMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
+        </HelmholtzMatrixOp>
+
+    </GLOBALOPTIMIZATIONPARAMETERS>
 
 </NEKTAR>

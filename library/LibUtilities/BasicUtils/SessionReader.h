@@ -97,8 +97,10 @@ namespace Nektar
 
             /// Check for and load an integer parameter
             /// Check for and load a double precision parameter
-            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, int &var, int def = 0);
-            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, NekDouble& var, const NekDouble def= 0.0);
+            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, int &var);
+            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, int &var, int def);
+            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, NekDouble& var);
+            LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, NekDouble& var, const NekDouble def);
             LIB_UTILITIES_EXPORT bool DefinesParameter(const std::string name);
 
             LIB_UTILITIES_EXPORT void LoadSolverInfo(const std::string name, std::string& var, const std::string def = "");
@@ -124,6 +126,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void SetTag(const std::string& pName, const std::string& pValue);
             LIB_UTILITIES_EXPORT const std::string GetTag(const std::string& pName);
 
+            LIB_UTILITIES_EXPORT bool SubstituteExpressions(std::string &expr);
+
         private:
             std::string                 m_filename;
             TiXmlDocument*              m_xmlDoc;
@@ -145,7 +149,6 @@ namespace Nektar
 
             /// Perform a case-insensitive string comparison.
             int NoCaseStringCompare(const std::string & s1, const std::string& s2);
-            void SubstituteExpressions(std::string &expr);
         };
 
         typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;

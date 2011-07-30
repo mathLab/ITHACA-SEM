@@ -16,7 +16,7 @@ SET(IncNavierStokesSolverSource
 
 IF (NEKTAR_USE_ARPACK)
     SET(IncNavierStokesSolverSource ${IncNavierStokesSolverSource}
-        ../Auxiliary/DriverArnoldi.cpp)
+        ../Auxiliary/DriverArpack.cpp)
 ENDIF (NEKTAR_USE_ARPACK)
 
 ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver 

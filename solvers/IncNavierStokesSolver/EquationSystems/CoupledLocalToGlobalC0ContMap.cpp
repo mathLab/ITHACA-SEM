@@ -559,7 +559,7 @@ namespace Nektar
                                     graphVertOffset[ReorderedGraphVertId[0][id]*nvel*nz_loc+j*nz_loc + n] *= -1; 
                                 }
                             }
-                            
+
                             id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetVid(1);
                             if(DirVertChk.count(id*nvel+j) == 0)
                             {

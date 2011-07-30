@@ -37,41 +37,34 @@
 #ifndef NEKTAR_SOLVERS_DRIVERMODIFIEDARNOLDI_H
 #define NEKTAR_SOLVERS_DRIVERMODIFIEDARNOLDI_H
 
-#include <Auxiliary/Driver.h>
+#include <Auxiliary/DriverArnoldi.hpp>
 
 namespace Nektar
 {
-    class DriverModifiedArnoldi: public Driver
+    class DriverModifiedArnoldi: public DriverArnoldi
     {
     public:
-		friend class MemoryManager<DriverModifiedArnoldi>;
-		
-		/// Creates an instance of this class
+        friend class MemoryManager<DriverModifiedArnoldi>;
+        
+        /// Creates an instance of this class
         static DriverSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-									  LibUtilities::SessionReaderSharedPtr& pSession) {
+                                      LibUtilities::SessionReaderSharedPtr& pSession) {
             DriverSharedPtr p = MemoryManager<DriverModifiedArnoldi>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
             return p;
-		}
-		
-		///Name of the class
-		static std::string className;
+        }
+	
+        ///Name of the class
+        static std::string className;
         
 	protected:
-		int m_kdim;
-		int m_nvec;
-		int m_nits;
-		NekDouble m_evtol;
-		NekDouble m_period;
-		bool m_VelCorrectionScheme;
-
-		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
-		Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
-
+        
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
+        
         /// Constructor
-		DriverModifiedArnoldi(
-		        LibUtilities::CommSharedPtr                 pComm,
-                LibUtilities::SessionReaderSharedPtr        pSession);
+        DriverModifiedArnoldi(LibUtilities::CommSharedPtr                 pComm,
+                              LibUtilities::SessionReaderSharedPtr        pSession);
 
         /// Destructor
         virtual ~DriverModifiedArnoldi();
@@ -83,7 +76,7 @@ namespace Nektar
         virtual void v_Execute();
 
     private:
-        void OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool VelCorrectionScheme);
+        void OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool TimeSteppingAlgorithm);
 
         /// Generates a new vector in the sequence by applying the linear operator.
         void EV_update(Array<OneD, NekDouble> &src,

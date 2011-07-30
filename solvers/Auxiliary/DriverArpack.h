@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AdvectionTerm.h
+// File DriverArpack.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,81 +29,54 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Driver class for the stability solver
+// Description: Driver class for the stability solver using Arpack
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_DRIVERARNOLDI_H
-#define NEKTAR_SOLVERS_DRIVERARNOLDI_H
+#ifndef NEKTAR_SOLVERS_DRIVERARPACK_H
+#define NEKTAR_SOLVERS_DRIVERARPACK_H
 
-#include <Auxiliary/Driver.h>
+#include <LibUtilities/LinearAlgebra/Arpack.hpp>
+
+#include <Auxiliary/DriverArnoldi.hpp>
 
 namespace Nektar
 {
     /// Base class for the development of solvers.
-    class DriverArnoldi: public Driver
+    class DriverArpack: public DriverArnoldi
     {
     public:
-        friend class MemoryManager<DriverArnoldi>;
+        friend class MemoryManager<DriverArpack>;
 		
         /// Creates an instance of this class
         static DriverSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-									  LibUtilities::SessionReaderSharedPtr& pSession) {
-            DriverSharedPtr p = MemoryManager<DriverArnoldi>::AllocateSharedPtr(pComm, pSession);
+                                      LibUtilities::SessionReaderSharedPtr& pSession) {
+            DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
             return p;
-		}
-		
-		///Name of the class
-		static std::string className;
+        }
         
-	protected:
-		int maxn;			//Maximum size of the problem
-        int maxnev;			//maximum number of eigenvalues requested
-        int maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
-		
-        int nfields;		//number of convected fields
-        int nq;				// Number of points in the mesh
-        int n;				// Number of points in eigenvalue calculation
-        NekDouble tol;		// determines the stopping criterion.
-        int       ido ;		//REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
-		int       info;     // do not set initial vector (info=0 random initial vector, info=1 read initial vector from session file)
-        int       nev;		// Number of eigenvalues to be evaluated
-        int       ncv;      // Length of the Arnoldi factorisation
-        int       lworkl;	// Size of work array
-		NekDouble period; //period
-		
-		Array<OneD, NekDouble> resid;
-        Array<OneD, NekDouble> v;
-        Array<OneD, NekDouble> workl;
-        Array<OneD, NekDouble> workd;
-        Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-		
-		int iparam[11];
-        int ipntr[14];
-
-		Array<OneD, int> ritzSelect;
-        Array<OneD, NekDouble> dr;
-        Array<OneD, NekDouble> di;
-        Array<OneD, NekDouble> workev;
-        Array<OneD, NekDouble> z;
-        double sigmar, sigmai;
-
+        ///Name of the class
+        static std::string className;
+                
+    protected:
+        int m_maxn;			//Maximum size of the problem
+        int m_maxnev;			//maximum number of eigenvalues requested
+        int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
+        
         /// Constructor
-        DriverArnoldi( LibUtilities::CommSharedPtr                 pComm,
-                        LibUtilities::SessionReaderSharedPtr        pSession);
-
+        DriverArpack( LibUtilities::CommSharedPtr                 pComm,
+                      LibUtilities::SessionReaderSharedPtr        pSession);
+        
         /// Destructor
-        virtual ~DriverArnoldi();
-
+        virtual ~DriverArpack();
+        
         /// Virtual function for initialisation implementation.
         virtual void v_InitObject();
 
         /// Virtual function for solve implementation.
         virtual void v_Execute();
-
-
-	};
+    };
 	
 } //end of namespace
 

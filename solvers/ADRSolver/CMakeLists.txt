@@ -18,7 +18,7 @@ SET(ADRSolverSource
 
 IF (NEKTAR_USE_ARPACK)
     SET(ADRSolverSource ${ADRSolverSource}
-               ../Auxiliary/DriverArnoldi.cpp)
+               ../Auxiliary/DriverArpack.cpp)
 ENDIF (NEKTAR_USE_ARPACK)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 

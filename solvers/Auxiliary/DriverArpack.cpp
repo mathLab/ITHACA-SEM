@@ -40,6 +40,7 @@ namespace Nektar
 {
     string DriverArpack::className = GetDriverFactory().RegisterCreatorFunction("Arpack", DriverArpack::create);
     
+    
     /**
      *
      */
@@ -68,6 +69,8 @@ namespace Nektar
                      "EquationSystem '" + vEquation + "' is not defined.\n"
                      "Ensure equation name is correct and module is compiled.\n");
             
+            m_session->SetTag("AdvectiveType","Linearised");
+                
             m_equ = Array<OneD, EquationSystemSharedPtr>(1);
             m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
         }
@@ -77,10 +80,6 @@ namespace Nektar
             ASSERTL0(e == -1, "No such class class defined.");
         }
 	
-        //Evaluation of the time period
-        NekDouble ts      = m_session->GetParameter("TimeStep");
-        NekDouble numstep = m_session->GetParameter("NumSteps");
-        m_period            = ts*numstep;
 	
         /// @todo This should be an independent Arnoldi call 
         m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_TimeSteppingAlgorithm, false);
@@ -92,12 +91,17 @@ namespace Nektar
 	
         if(m_TimeSteppingAlgorithm)
         {
+            //Evaluation of the time period
+            NekDouble ts      = m_session->GetParameter("TimeStep");
+            NekDouble numstep = m_session->GetParameter("NumSteps");
+            m_period          = ts*numstep;
+            
             m_nfields = m_equ[0]->UpdateFields().num_elements()-1;
         }
         else
         {
             m_nfields = m_equ[0]->UpdateFields().num_elements();
-        }            
+        }
 
         //Load values from session file if defined 
         
@@ -109,7 +113,29 @@ namespace Nektar
         m_session->LoadParameter("nits",  m_nits,  500);
         // determines the stopping criterion.
         m_session->LoadParameter("evtol", m_evtol, 1e-6); 
-		
+
+        bool IsProbType;
+        // Determine Arpack problem type LM (default), LR, LI
+        m_session->MatchSolverInfo("ArpackProblemType","LargestReal",
+                                   IsProbType,false);
+        if(IsProbType)
+        {
+            m_arpackProblemType = "LR";
+        }
+        else
+        {
+            m_session->MatchSolverInfo("ArpackProblemType","LargestImag",
+                                       IsProbType,false);
+            if(IsProbType)
+            {
+                m_arpackProblemType = "LI";
+            }
+            else
+            {
+                m_arpackProblemType = "LM";
+            }
+        }
+
         // Error alerts
         ASSERTL0(m_nvec <= m_maxnev,"NEV is greater than MAXNEV");
         ASSERTL0(m_kdim <= m_maxncv,"NEV is greater than MAXNEV");
@@ -119,6 +145,22 @@ namespace Nektar
         
         // Print session parameters
         cout << "\tArnoldi solver type    : Arpack" << endl;
+        if(m_arpackProblemType == "LM")
+        {
+            cout << "\tArpack problem type    : Largest Mag. eigenvalue" << endl;
+        }
+        else if (m_arpackProblemType ==  "LR")
+        {
+            cout << "\tArpack problem type    : Largest real eigenvalue" << endl;
+        }
+        else if(m_arpackProblemType ==  "LI")
+        {
+            cout << "\tArpack problem type    : Largest imag. eigenvalue" << endl;
+        }
+        else
+        {
+            ASSERTL0(false,"Unknown ArpackProbType");
+        }
         cout << "\tKrylov-space dimension : " << m_kdim << endl;
         cout << "\tNumber of vectors      : " << m_nvec << endl;
         cout << "\tMax iterations         : " << m_nits << endl;
@@ -163,11 +205,12 @@ namespace Nektar
         if(random)
         {
             cout << "\tInital vector       : random  " << endl;
-            info=0;
+            info = 0;
         }
         else
         {
             cout << "\tInital vector       : input file  " << endl;
+            info = 1;
             v_CopyFieldToArnoldiArray(resid);
         }
 
@@ -195,55 +238,26 @@ namespace Nektar
         while(ido != 99)//ido==-1 || ido==1 || ido==0)
         {
             //Routine for eigenvalue evaluation for non-symmetric operators
-            Arpack::Dnaupd( ido,        // reverse comm flag
-                            "I",       // B='I' for std eval problem
-                            n,          // problem size
-                            "LM",      // type of problem (Largest Mag)
-                            m_nvec,        // number of eigenvalues to compute
-                            m_evtol,        // stopping tolerance
-                            resid.get(),// array to store residuals
-                            m_kdim,        // number of Lanczos vectors to use
-                            v.get(),    // storage for lanczos vectors
-                            n,
-                            iparam,     // mode
-                            ipntr,
-                            workd.get(),
-                            workl.get(),
-                            lworkl,
-                            info);
-            
-            cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
-            
-            fprintf (pFile, "Iteration: %i\t \n", cycle);
+            Arpack::Dnaupd( ido, "I",       // B='I' for std eval problem
+                            n, m_arpackProblemType.c_str(),  m_nvec,
+                            m_evtol, &resid[0], m_kdim, 
+                            &v[0], n, iparam, ipntr, &workd[0],
+                            &workl[0], lworkl, info);
             
             //Plotting of real and imaginary part of the eigenvalues from workl
+            cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
             if(cycle >= m_kdim)
             {
+                fprintf (pFile, "Krylov spectrum at iteration: %i\t \n", cycle);
                 for(int k=0; k<=m_kdim-1; ++k)
-                {
-                    
-                    double real = workl[ipntr[5]-1+k];
-                    double imag = workl[ipntr[6]-1+k];
-                    
-                    if(m_TimeSteppingAlgorithm)
+                {                    
+                    // write m_nvec eigs to screen
+                    if(k < m_nvec)
                     {
-                        if(k < m_nvec)
-                        {
-                            fprintf (stdout, "EV: %i\t , Mag: %10.6lf\t, angle:  %10.6lf\t, growth:  %10.6le\t, Frequency:  %10.6le \n",k, sqrt(real*real+imag*imag), atan2(imag,real),log(sqrt(real*real+imag*imag))/m_period, atan2(imag,real)/m_period );
-                        }
-                        
-                        fprintf (pFile, "EV: %i\t , Mag: %10.6lf\t, angle:  %10.6lf\t, growth:  %10.6le\t, Frequency:  %10.6le \n",k, sqrt(real*real+imag*imag), atan2(imag,real),log(sqrt(real*real+imag*imag))/m_period, atan2(imag,real)/m_period );
+                        WriteEvs(stdout,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                     }
-                    else
-                    {
-                        NekDouble invmag = 1.0/(real*real + imag*imag);
-                        if(k < m_nvec)
-                        {
-                            fprintf (stdout, "EV: %i\t , Re: %10.6lf\t Imag:  %10.6lf\t inverse real:  %10.6le\t, inverse imag:  %10.6le\n",k, real, imag,-real*invmag, imag*invmag);
-                        }
-                        
-                        fprintf (pFile, "EV: %i\t  Re: %10.6lf\t Imag:  %10.6lf\t, inverse real:  %10.6le\t, inverse imag:  %10.6le\n",k, real, imag, -real*invmag, imag*invmag);
-                    }
+                    // write m_kdim eigs to screen
+                    WriteEvs(pFile,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                 }
             }
             
@@ -251,7 +265,6 @@ namespace Nektar
             
             if (ido == 99) break;
                         
-            
             ASSERTL0(ido == 1, "Unexpected reverse communication request.");
 
             //workd[inptr[0]-1] copied into operator fields
@@ -264,8 +277,6 @@ namespace Nektar
             
         }
 		
-        fclose (pFile);
-        
         cout<< "Converged in " << iparam[8] << " iterations" << endl;
 	
         ASSERTL0(info >= 0," Error with Dnaupd");
@@ -280,29 +291,20 @@ namespace Nektar
         sigmai     = 0.0;
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
-        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, "LM", m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, m_arpackProblemType.c_str(), m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
 		
         ASSERTL0(info == 0, " Error with Dneupd");
 	       	
         int nconv=iparam[4];	
         Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
+        cout << "Converged Eigenvalues: " << nconv << endl;
+        fprintf(pFile,"Converged Eigenvalues: %d\n:",nconv);
         for(int i= 0; i< nconv; ++i)
         {
-            if(m_TimeSteppingAlgorithm)
-            {
-                cout << "Eigenvalue n. " << i+1 << " Re= "
-                     << dr[i]<< "   Im=" << di[i]
-                     << " Growth= " << log(sqrt(dr[i]*dr[i]+di[i]*di[i]))/m_period
-                     << " Frequency=" <<atan2(di[i],dr[i])/m_period <<endl;
-            }
-            else
-            {
-                NekDouble invmag = 1.0/(dr[i]*dr[i]+di[i]*di[i]);
-                fprintf (stdout, "EV: %i\t , Re: %10.6lf\t Imag:  %10.6lf\t inverse real:  %10.6le\t, inverse imag:  %10.6le\n",i+1, dr[i], di[i],-dr[i]*invmag, di[i]*invmag);
-            }
+            WriteEvs(stdout,i,dr[i],di[i]);
+            WriteEvs(pFile,i,dr[i],di[i]);
             
-
             for (int k = 0; k < m_nfields; ++k)
             {
                 Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdatePhys()[0] , 1);
@@ -313,12 +315,26 @@ namespace Nektar
 
             m_equ[0]->WriteFld(file);
         }
+
+        fclose (pFile);
     };
+    
+    void DriverArpack::WriteEvs(FILE *fp, const int k,  const NekDouble real, const NekDouble imag)
+    {
+        if(m_TimeSteppingAlgorithm)
+        {
+            fprintf (fp, "EV: %i\t , Mag: %10.6lf\t, angle:  %10.6lf\t, growth:  %10.6le\t, Frequency:  %10.6le \n",k, sqrt(real*real+imag*imag), atan2(imag,real),log(sqrt(real*real+imag*imag))/m_period, atan2(imag,real)/m_period );
+        }
+        else
+        {
+            NekDouble invmag = 1.0/(real*real + imag*imag);
+            fprintf (fp, "EV: %i\t , Re: %10.6lf\t Imag:  %10.6lf\t inverse real:  %10.6le\t, inverse imag:  %10.6le\n",k, real, imag,-real*invmag, imag*invmag);
+        }
+    }
+
 }
 	
-	
-
-
+       
 
 /**
  * $Log $

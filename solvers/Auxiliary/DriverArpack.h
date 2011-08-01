@@ -57,12 +57,15 @@ namespace Nektar
         
         ///Name of the class
         static std::string className;
+
+
+        void WriteEvs(FILE *fp, const int k, const NekDouble real, const NekDouble imag);
                 
     protected:
         int m_maxn;			//Maximum size of the problem
         int m_maxnev;			//maximum number of eigenvalues requested
         int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
-        
+        std::string m_arpackProblemType;   //Arpack input for problem type
         /// Constructor
         DriverArpack( LibUtilities::SessionReaderSharedPtr        pSession);
         

@@ -580,7 +580,7 @@ namespace Nektar
      */
     EquationSystem::~EquationSystem()
     {
-
+        
     }
 
 

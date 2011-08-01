@@ -92,8 +92,9 @@ namespace Nektar
             
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_TimeSteppingAlgorithm, false);
 
-            m_nfields   = m_equ[0]->UpdateFields().num_elements();
             
+            m_nfields   = m_equ[0]->UpdateFields().num_elements();
+
             if(m_TimeSteppingAlgorithm)
             {
                 m_period = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");

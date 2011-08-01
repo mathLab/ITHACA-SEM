@@ -40,6 +40,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/SpatialDomains.hpp>
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
 {
@@ -49,11 +50,11 @@ namespace Nektar
         class MeshPartition
         {
         public:
-            MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession);
-            ~MeshPartition();
+            SPATIAL_DOMAINS_EXPORT MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession);
+            SPATIAL_DOMAINS_EXPORT ~MeshPartition();
 
-            void PartitionMesh(unsigned int pNumPartitions);
-            void WritePartitions(
+            SPATIAL_DOMAINS_EXPORT void PartitionMesh(unsigned int pNumPartitions);
+            SPATIAL_DOMAINS_EXPORT void WritePartitions(
 
                     LibUtilities::SessionReaderSharedPtr& pSession,
                     const std::string& pBaseFilename);
@@ -161,11 +162,11 @@ namespace Nektar
             BoostSubGraph              m_mesh;
             std::vector<BoostSubGraph> m_partitions;
 
-            void ReadMesh(LibUtilities::SessionReaderSharedPtr& pSession);
-            void CreateGraph(BoostSubGraph& pGraph);
-            void PartitionGraph(BoostSubGraph& pGraph,
+            SPATIAL_DOMAINS_EXPORT void ReadMesh(LibUtilities::SessionReaderSharedPtr& pSession);
+            SPATIAL_DOMAINS_EXPORT void CreateGraph(BoostSubGraph& pGraph);
+            SPATIAL_DOMAINS_EXPORT void PartitionGraph(BoostSubGraph& pGraph,
                                 std::vector<BoostSubGraph>& pPartitions);
-            void OutputPartition(LibUtilities::SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            SPATIAL_DOMAINS_EXPORT void OutputPartition(LibUtilities::SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

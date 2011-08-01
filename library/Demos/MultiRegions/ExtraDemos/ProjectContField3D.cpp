@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContField3D.h>
 
@@ -15,35 +14,19 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 { 
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
-
-    string meshfile(argv[1]);
-
-    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
+    LibUtilities::SessionReaderSharedPtr vSession
+                    = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     MultiRegions::ContField3DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     NekDouble  lambda;
+    std::string meshfile(vSession->GetFilename());
     
     if(argc != 3)
     {
-        fprintf(stderr,"Usage: ProjectContField3D  meshfile boundaryfile \n");
+        fprintf(stderr,"Usage: ProjectContField3D  meshfile \n");
         exit(1);
     }
 
@@ -72,7 +55,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vComm,graph3D,bcs);
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession->GetComm(),graph3D,bcs);
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -136,6 +119,8 @@ int main(int argc, char *argv[])
     cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
     cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
     //--------------------------------------------
+
+    vSession->Finalise();
 
     return 0;
 }

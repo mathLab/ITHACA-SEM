@@ -37,7 +37,6 @@
 #include <cstdlib>
 #include <cmath> 
 
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <FitzHughNagumoSolver/FitzHughNagumo.h>
 
@@ -48,32 +47,19 @@ int main(int argc, char *argv[])
     
     ASSERTL0(argc == 2,"\n \t Usage: FitzHughNagumoSolver  meshfile \n");
 
+    // Create session reader.
+    LibUtilities::SessionReaderSharedPtr session;
+    session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
     string filename(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
-    string vCommModule("Serial");
-    LibUtilities::CommSharedPtr vComm;
-    LibUtilities::SessionReaderSharedPtr session;
     
     time(&starttime);    
 
-    // Create session reader.
-    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
-
-    // Create communicator
-    if (session->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = session->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
-
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    FitzHughNagumo EAD(vComm, session);
+    FitzHughNagumo EAD(session);
     
     // Time integration function object for unsteady equations
     LibUtilities::TimeIntegrationSchemeOperators ode;
@@ -192,6 +178,8 @@ int main(int argc, char *argv[])
     {
         cout << "L2 Error (variable "<< EAD.GetVariable(i) <<"): " << EAD.L2Error(i) << endl;
     }
+
+    session->Finalise();
 }
 
 /**

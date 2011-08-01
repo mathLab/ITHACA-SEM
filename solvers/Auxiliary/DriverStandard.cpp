@@ -43,9 +43,8 @@ namespace Nektar
     /**
 	 *
      */
-    DriverStandard::DriverStandard(LibUtilities::CommSharedPtr                pComm,
-                                   LibUtilities::SessionReaderSharedPtr       pSession)
-        : Driver(pComm,pSession)
+    DriverStandard::DriverStandard(LibUtilities::SessionReaderSharedPtr pSession)
+        : Driver(pSession)
     {
     }
     

@@ -38,7 +38,6 @@
 #include <cmath>
 
 #include <Auxiliary/EquationSystem.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
@@ -50,37 +49,22 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    string filename(argv[1]);
+    // Create session reader.
+    LibUtilities::SessionReaderSharedPtr session;
+    session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
     time_t starttime, endtime;
     NekDouble CPUtime;
-    string vCommModule("Serial");
-
-    LibUtilities::CommSharedPtr vComm;
-    LibUtilities::SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
 
     // Record start time.
     time(&starttime);
 
-    // Create session reader.
-    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
-
-    // Create communicator
-    if (session->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = session->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
-
     // Create instance of module to solve the equation specified in the session.
     try
     {
         equ = GetEquationSystemFactory().CreateInstance(
-                                    session->GetSolverInfo("EQTYPE"), vComm, session);
+                session->GetSolverInfo("EQTYPE"), session->GetComm(), session);
     }
     catch (int e)
     {
@@ -91,7 +75,7 @@ int main(int argc, char *argv[])
     // solver.
     equ->PrintSummary(cout);
     equ->DoInitialise();
-   
+
     // Solve the problem.
     equ->DoSolve();
 
@@ -109,7 +93,9 @@ int main(int argc, char *argv[])
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-      cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,true) << endl;
-      cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,true) << endl;
+        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
     }
+
+    session->Finalise();
 }

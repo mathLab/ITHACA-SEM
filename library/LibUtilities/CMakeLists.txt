@@ -98,10 +98,12 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/mojo.hpp
+    ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
+    ./BasicUtils/ParseUtils.hpp
     ./BasicUtils/Timer.h
     ./BasicUtils/Timer.cpp
     ./BasicUtils/RawType.hpp
@@ -116,6 +118,7 @@ SET(BasicUtilsHeaders
 
 SET(BasicUtilsSources
     ./BasicUtils/Equation.cpp
+    ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
 )
 

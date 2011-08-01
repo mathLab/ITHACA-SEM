@@ -75,6 +75,7 @@ namespace Nektar
                 /// Returns number of processes
                 LIB_UTILITIES_EXPORT inline int GetSize();
                 LIB_UTILITIES_EXPORT inline int GetRank();
+                LIB_UTILITIES_EXPORT inline const std::string& GetType() const;
 
                 /// Block execution until all processes reach this point
                 LIB_UTILITIES_EXPORT inline void Block();
@@ -99,6 +100,7 @@ namespace Nektar
 
             protected:
                 int m_size;     ///< Number of processes
+                std::string m_type;
 
                 virtual void v_Finalise() = 0;
                 virtual int  v_GetRank() = 0;
@@ -148,6 +150,14 @@ namespace Nektar
         inline int Comm::GetRank()
         {
             return v_GetRank();
+        }
+
+        /**
+         *
+         */
+        inline const std::string& Comm::GetType() const
+        {
+            return m_type;
         }
 
         /**

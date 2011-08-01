@@ -82,8 +82,7 @@ namespace Nektar
          * Constructor.
          * /param 
          */
-        FitzHughNagumo( LibUtilities::CommSharedPtr& pComm,
-                        LibUtilities::SessionReaderSharedPtr& pSession);
+        FitzHughNagumo( LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

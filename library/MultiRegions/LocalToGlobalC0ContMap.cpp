@@ -1364,7 +1364,7 @@ namespace Nektar
                     break;
                 default:
                     {
-                        ASSERTL0(false,"Unrecognised solution type");
+                        ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[solnType]));
                     }
                 }
             }
@@ -1943,7 +1943,7 @@ namespace Nektar
                     break;
                 default:
                     {
-                        ASSERTL0(false,"Unrecognised solution type");
+                        ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[solnType]));
                     }
                 }
             }

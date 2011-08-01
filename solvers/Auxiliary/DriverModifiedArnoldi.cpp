@@ -47,9 +47,8 @@ namespace Nektar
 	 *
 	 */
 	DriverModifiedArnoldi::DriverModifiedArnoldi(
-	        LibUtilities::CommSharedPtr                pComm,
 			LibUtilities::SessionReaderSharedPtr        pSession)
-        : DriverArnoldi(pComm,pSession)
+        : DriverArnoldi(pSession)
 	{
 	}
 	

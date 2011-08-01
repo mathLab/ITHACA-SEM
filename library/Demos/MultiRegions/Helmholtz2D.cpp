@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace Nektar;
@@ -24,64 +23,22 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::SessionReaderSharedPtr vSession;
-    LibUtilities::CommSharedPtr vComm;
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    LibUtilities::CommSharedPtr vComm = vSession->GetComm();
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
-    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eNoSolnType;
-    string meshfile(argv[1]);
-    string vCommModule("Serial");
-
-    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-
-    if (vSession->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = vSession->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
-    if (vSession->DefinesSolverInfo("GlobalSysSoln"))
-    {
-        for (i = 0; i < MultiRegions::eSIZE_GlobalSysSolnType; ++i)
-        {
-            if (MultiRegions::GlobalSysSolnTypeMap[i]
-                    == vSession->GetSolverInfo("GlobalSysSoln"))
-            {
-                SolnType = (MultiRegions::GlobalSysSolnType)i;
-            }
-        }
-        ASSERTL0(SolnType != MultiRegions::eNoSolnType,
-                 "Unknown Solution type in session file.");
-    }
-    else
-    {
-        SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-    }
-
+    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
     if (vComm->GetSize() > 1)
     {
-        if (vComm->GetRank() == 0)
-        {
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-
-        // Force use of Iterative solver for parallel execution
         SolnType = MultiRegions::eIterativeFull;
     }
+    string meshfile(vSession->GetFilename());
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -153,7 +110,7 @@ int main(int argc, char *argv[])
         const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 2D Helmholtz: " << endl;
-        cout << "         Communication: " << vCommModule << endl;
+        cout << "         Communication: " << vComm->GetType() << endl;
         cout << "         Solver type  : " << MultiRegions::GlobalSysSolnTypeMap[SolnType] << endl;
         cout << "         Lambda       : " << lambda << endl;
         cout << "         No. modes    : " << bkey0.GetNumModes() << endl;

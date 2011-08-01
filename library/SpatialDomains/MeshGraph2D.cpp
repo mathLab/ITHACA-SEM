@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 namespace Nektar
 {

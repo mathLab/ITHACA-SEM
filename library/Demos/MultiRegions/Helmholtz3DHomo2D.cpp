@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
 using namespace Nektar;
@@ -13,38 +12,11 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::SessionReaderSharedPtr vSession;
-    LibUtilities::CommSharedPtr vComm;
-    string meshfile(argv[1]);
-    string vCommModule("Serial");
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-
-    if (vSession->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = vSession->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
+    LibUtilities::CommSharedPtr vComm = vSession->GetComm();
+    string meshfile(vSession->GetFilename());
 
     MultiRegions::ContField3DHomogeneous2DSharedPtr Exp, Fce;
     int     i, nq,  coordim;
@@ -53,6 +25,10 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     // default solution type multilevel statis condensation
     MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+    if (vComm->GetSize() > 1)
+    {
+        SolnType = MultiRegions::eIterativeFull;
+    }
 
     if( (argc != 2) && (argc != 3))
     {

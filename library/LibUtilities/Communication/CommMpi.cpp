@@ -61,6 +61,8 @@ namespace Nektar
 
             MPI_Comm_size( MPI_COMM_WORLD, &m_size );
             MPI_Comm_rank( MPI_COMM_WORLD, &m_rank );
+
+            m_type = "Parallel MPI";
         }
 
 

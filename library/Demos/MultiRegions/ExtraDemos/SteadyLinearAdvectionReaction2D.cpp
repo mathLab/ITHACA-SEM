@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField2D.h>
 
 using namespace Nektar;
@@ -23,24 +22,10 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    string meshfile(argv[1]);
-    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
+    string meshfile(vSession->GetFilename());
 
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
@@ -127,7 +112,7 @@ int main(int argc, char *argv[])
     // Define Expansion 
     int bc_val = 0;
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vComm,graph2D,bcs,bc_val,SolnType);
+        AllocateSharedPtr(vSession->GetComm(),graph2D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     Timing("Read files and define exp ..");
@@ -224,7 +209,10 @@ int main(int argc, char *argv[])
         //--------------------------------------------        
     }
     //----------------------------------------------        
-        return 0;
+
+    vSession->Finalise();
+
+    return 0;
 }
 
 

@@ -48,53 +48,64 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/MeshPartition.h>
 
 namespace Nektar
 {
     namespace LibUtilities
     {
-        SessionReader::SessionReader(std::string& pFilename)
-            : m_filename(pFilename)
+//        SessionReader::SessionReader(std::string& pFilename)
+//            : m_filename(pFilename)
+//        {
+//            // Create communicator
+//            CreateComm(0, 0, m_filename);
+//        }
+
+        SessionReader::SessionReader(int argc, char *argv[])
         {
-            m_xmlDoc = new TiXmlDocument(pFilename);
-            ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
+            ASSERTL0(argc > 1, "No filename argument specified.");
 
-            bool loadOkay = m_xmlDoc->LoadFile();
-            ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-                pFilename + ". Check XML standards compliance. Error on line: "
-                + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+            m_filename = argv[1];
 
-            TiXmlHandle docHandle(m_xmlDoc);
-
-            TiXmlNode* n = NULL;
-            TiXmlElement* e = NULL;
-
-            /// Look for all data in CONDITIONS block.
-            e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
-            ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
-
-            ReadParameters(e);
-            ReadSolverInfo(e);
-            ReadExpressions(e);
-            ReadVariables (e);
-            ReadFunctions (e);
-
-            e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-
-            ReadGeometricInfo(e);
+            // Create communicator
+            CreateComm(argc, argv, m_filename);
         }
 
         SessionReader::SessionReader(const SessionReader& pSrc)
         {
             m_filename = pSrc.m_filename;
+            m_sessionName = pSrc.m_sessionName;
             m_xmlDoc   = pSrc.m_xmlDoc;
             m_solverInfo = pSrc.m_solverInfo;
             m_parameters = pSrc.m_parameters;
+            m_geometricInfo = pSrc.m_geometricInfo;
+            m_expressions = pSrc.m_expressions;
+            m_functions = pSrc.m_functions;
+            m_variables = pSrc.m_variables;
+            m_tags = pSrc.m_tags;
         }
 
         SessionReader::~SessionReader()
         {
 
+        }
+
+        void SessionReader::InitSession()
+        {
+            // Read original XML file (no parsing).
+            m_xmlDoc = new TiXmlDocument(m_filename);
+            ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
+
+            bool loadOkay = m_xmlDoc->LoadFile();
+            ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+                    m_filename + ". Check XML standards compliance. Error on line: "
+                    + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+
+            // Partition mesh
+            PartitionMesh();
+
+            // Load the process-specific file and parse the conditions section.
+            LoadFile(m_filename);
         }
 
         TiXmlDocument& SessionReader::GetDocument()
@@ -139,9 +150,24 @@ namespace Nektar
             return true;
         }
 
-        const std::string& SessionReader::GetFilename()
+        const std::string& SessionReader::GetFilename() const
         {
             return m_filename;
+        }
+
+        const std::string& SessionReader::GetSessionName() const
+        {
+            return m_sessionName;
+        }
+
+        CommSharedPtr& SessionReader::GetComm()
+        {
+            return m_comm;
+        }
+
+        void SessionReader::Finalise()
+        {
+            m_comm->Finalise();
         }
 
         const std::string& SessionReader::GetSolverInfo(const std::string &pProperty)
@@ -421,8 +447,120 @@ namespace Nektar
             return vTagIterator->second;
         }
 
+        void SessionReader::LoadFile(std::string pFilename)
+        {
+            m_xmlDoc = new TiXmlDocument(pFilename);
+            ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
+
+            bool loadOkay = m_xmlDoc->LoadFile();
+            ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+                    pFilename + ". Check XML standards compliance. Error on line: "
+                    + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+
+//            for (unsigned int i = 0; i < pFilenames.size(); ++i)
+//            {
+//                TiXmlDocument vTempDoc (pFilenames[i]);
+//                bool loadOkay = vTempDoc.LoadFile();
+//                ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+//                    pFilenames[i] + ". Check XML standards compliance. Error on line: "
+//                    + boost::lexical_cast<std::string>(vTempDoc.Row()));
+//
+//                TiXmlHandle docHandle(&vTempDoc);
+//                TiXmlElement* vTempNektar;
+//                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
+//                ASSERTL0(e, "Unable to find NEKTAR tag in file.");
+//                TiXmlElement* p = vTempNektar->FirstChildElement();
+//
+//                while (p)
+//                {
+//                    TiXmlElement * q = new TiXmlElement(*p);
+//                    e->LinkEndChild(q);
+//                    p = p->NextSiblingElement();
+//                }
+//            }
+
+//            m_xmlDoc->LinkEndChild(e);
+
+            /// Look for all data in CONDITIONS block.
+            TiXmlHandle docHandle(m_xmlDoc);
+            TiXmlElement* e;
+            e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
+            ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
+
+            ReadParameters(e);
+            ReadSolverInfo(e);
+            ReadExpressions(e);
+            ReadVariables (e);
+            ReadFunctions (e);
+
+            e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+
+            ReadGeometricInfo(e);
+        }
+
+
+        void SessionReader::CreateComm(int argc, char* argv[], std::string pFilename)
+        {
+            if (argc == 0)
+            {
+                m_comm = GetCommFactory().CreateInstance("Serial", 0, 0);
+            }
+            else
+            {
+                TiXmlDocument* xmlDoc = new TiXmlDocument(pFilename);
+                ASSERTL0(xmlDoc, "Failed to create XML document object.");
+
+                bool loadOkay = xmlDoc->LoadFile();
+                ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+                        pFilename + ". Check XML standards compliance. Error on line: "
+                        + boost::lexical_cast<std::string>(xmlDoc->Row()));
+
+                TiXmlHandle docHandle(xmlDoc);
+                TiXmlElement* e;
+                e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
+                ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
+                ReadSolverInfo(e);
+
+                string vCommModule("Serial");
+                if (DefinesSolverInfo("Communication"))
+                {
+                    vCommModule = GetSolverInfo("Communication");
+                }
+                else if (GetCommFactory().ModuleExists("ParallelMPI"))
+                {
+                    vCommModule = "ParallelMPI";
+                }
+
+                m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
+            }
+        }
+
+        void SessionReader::PartitionMesh()
+        {
+            ASSERTL0(m_comm.get(), "Communication not initialised.");
+            if (m_comm->GetSize() > 1)
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    SessionReaderSharedPtr vSession = GetSharedThisPtr();
+                    MeshPartitionSharedPtr vPartitioner = MemoryManager<MeshPartition>::AllocateSharedPtr(vSession);
+                    vPartitioner->PartitionMesh(m_comm->GetSize());
+                    vPartitioner->WritePartitions(vSession);
+                }
+
+                m_comm->Block();
+
+                m_filename = m_filename + "." + boost::lexical_cast<std::string>(m_comm->GetRank());
+
+                // Force solution type
+                SetTag("SolnType", "IterativeFull");
+            }
+        }
+
         void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
         {
+            m_solverInfo.clear();
+
             TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");
 
             if (solverInfoElement)
@@ -457,6 +595,8 @@ namespace Nektar
 
         void SessionReader::ReadParameters(TiXmlElement *conditions)
         {
+            m_parameters.clear();
+
             TiXmlElement *parametersElement = conditions->FirstChildElement("PARAMETERS");
 
             // See if we have parameters defined.  They are optional so we go on if not.
@@ -517,16 +657,18 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    NEKERROR(ErrorUtil::ewarning, std::string(
-                            "Failed to add constants to expression evaluator. "
-                            "Ensure only one SessionReader per process. ")
-                            + e.what());
+//                    NEKERROR(ErrorUtil::ewarning, std::string(
+//                            "Failed to add constants to expression evaluator. "
+//                            "Ensure only one SessionReader per process. ")
+//                            + e.what());
                 }
             }
         }
 
         void SessionReader::ReadGeometricInfo(TiXmlElement *geometry)
         {
+            m_geometricInfo.clear();
+
             TiXmlElement *geometricInfoElement = geometry->FirstChildElement("GEOMINFO");
 
             if (geometricInfoElement)
@@ -561,6 +703,8 @@ namespace Nektar
 
         void SessionReader::ReadExpressions(TiXmlElement *conditions)
         {
+            m_expressions.clear();
+
             TiXmlElement *expressionsElement = conditions->FirstChildElement("EXPRESSIONS");
 
             if (expressionsElement)
@@ -600,6 +744,8 @@ namespace Nektar
 
         void SessionReader::ReadVariables(TiXmlElement *conditions)
         {
+            m_variables.clear();
+
             TiXmlElement *variablesElement = conditions->FirstChildElement("VARIABLES");
 
             int varIndex = 0;   // Current index, should be zero-based.
@@ -652,6 +798,8 @@ namespace Nektar
 
         void SessionReader::ReadFunctions(TiXmlElement *conditions)
         {
+            m_functions.clear();
+
             // Scan through conditions section looking for functions.
             TiXmlElement *function = conditions->FirstChildElement("FUNCTION");
             while (function)

@@ -38,7 +38,6 @@
 #include <cmath>
 
 #include <Auxiliary/Driver.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
@@ -51,42 +50,24 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    string filename(argv[1]);
-    string vCommModule("Serial");
-    string vDriverModule("Standard");
-
-    LibUtilities::CommSharedPtr vComm;
     LibUtilities::SessionReaderSharedPtr session;
+    string vDriverModule;
     DriverSharedPtr drv;
 
     try
     {
         // Create session reader.
-        session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
-
-        // Create communicator
-        if (session->DefinesSolverInfo("Communication"))
-        {
-            vCommModule = session->GetSolverInfo("Communication");
-        }
-        else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-        {
-            vCommModule = "ParallelMPI";
-        }
-        vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
         // Create driver
-        if (session->DefinesSolverInfo("Driver"))
-        {
-            vDriverModule = session->GetSolverInfo("Driver");
-        }
-        drv = GetDriverFactory().CreateInstance(vDriverModule, vComm, session);
+        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
 
         // Execute driver
         drv->Execute();
 
         // Finalise communications
-        vComm->Finalise();
+        session->Finalise();
     }
     catch (const std::runtime_error& e)
     {

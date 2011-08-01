@@ -38,7 +38,7 @@
 #include <boost/foreach.hpp>
 
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 // Use the stl version, primarily for string.
 #ifndef TIXML_USE_STL

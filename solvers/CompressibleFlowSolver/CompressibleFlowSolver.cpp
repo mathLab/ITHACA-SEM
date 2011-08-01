@@ -38,81 +38,68 @@
 #include <cmath> 
 
 #include <Auxiliary/EquationSystem.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-  if(argc != 2)
+    if(argc != 2)
     {
-      cout << "\n \t Usage: ShallowWaterSolver  sessionfile \n" << endl;
-      exit(1);
+        cout << "\n \t Usage: ShallowWaterSolver  sessionfile \n" << endl;
+        exit(1);
     }
-  
-  string filename(argv[1]);
-  time_t starttime, endtime;
-  NekDouble CPUtime;
-  string vCommModule("Serial");
-  
-  LibUtilities::CommSharedPtr vComm;
-  LibUtilities::SessionReaderSharedPtr session;
-  EquationSystemSharedPtr equ;
-  
-  // Record start time.
-  time(&starttime);
-  
-  // Create session reader.
-  session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(filename);
 
-  // Create communicator
-  if (session->DefinesSolverInfo("Communication"))
-  {
-      vCommModule = session->GetSolverInfo("Communication");
-  }
-  else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-  {
-      vCommModule = "ParallelMPI";
-  }
-  vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule, argc, argv);
-  
-  // Create instance of module to solve the equation specified in the session.
-  try
-    {
-      equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("EQTYPE"), vComm, session);
-    }
-  catch (int e)
-    {
-      ASSERTL0(e == -1, "No such solver class defined.");
-    }
-  
-  // Print a summary of solver and problem parameters and initialise the
-  // solver.
-  equ->PrintSummary(cout);
-  equ->DoInitialise();
-  
-  // Solve the problem.
-  equ->DoSolve();
-  
-  // Record end time.
-  time(&endtime);
-  CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
-  
-  // Write output to .fld file
-  equ->Output();
-  
-  // Evaluate and output computation time and solution accuracy.
-  // The specific format of the error output is essential for the
-  // regression tests to work.
-  cout << "-------------------------------------------" << endl;
-  cout << "Total Computation Time = " << CPUtime << " hr." << endl;
-  for(int i = 0; i < equ->GetNvariables(); ++i)
-    {
-      // Get Exact solution
-      Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
-      equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+    // Create session reader.
+    LibUtilities::SessionReaderSharedPtr session;
+    session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-      cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
-      cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+    time_t starttime, endtime;
+    NekDouble CPUtime;
+
+    EquationSystemSharedPtr equ;
+
+    // Record start time.
+    time(&starttime);
+
+    // Create instance of module to solve the equation specified in the session.
+    try
+    {
+        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("EQTYPE"), session->GetComm(), session);
     }
+    catch (int e)
+    {
+        ASSERTL0(e == -1, "No such solver class defined.");
+    }
+
+    // Print a summary of solver and problem parameters and initialise the
+    // solver.
+    equ->PrintSummary(cout);
+    equ->DoInitialise();
+
+    // Solve the problem.
+    equ->DoSolve();
+
+    // Record end time.
+    time(&endtime);
+    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+
+    // Write output to .fld file
+    equ->Output();
+
+    // Evaluate and output computation time and solution accuracy.
+    // The specific format of the error output is essential for the
+    // regression tests to work.
+    cout << "-------------------------------------------" << endl;
+    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+    for(int i = 0; i < equ->GetNvariables(); ++i)
+    {
+        // Get Exact solution
+        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
+        equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+
+        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
+        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+    }
+
+    session->Finalise();
 }

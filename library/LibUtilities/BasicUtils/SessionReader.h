@@ -39,9 +39,12 @@
 #include <map>
 #include <string>
 
+#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+
+#include <boost/enable_shared_from_this.hpp>
 
 class TiXmlElement;
 class TiXmlDocument;
@@ -79,21 +82,30 @@ namespace Nektar
         };
         typedef std::map<std::string, FunctionDefinition > FunctionMap;
 
+        class SessionReader;
+        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
-        class SessionReader
+        class SessionReader: public boost::enable_shared_from_this<SessionReader>
         {
         public:
-            LIB_UTILITIES_EXPORT SessionReader(std::string& pFilename);
+            friend class MemoryManager<SessionReader>;
+            static SessionReaderSharedPtr CreateInstance(int argc, char *argv[])
+            {
+                SessionReaderSharedPtr p = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(argc, argv);
+                p->InitSession();
+                return p;
+            }
+
             LIB_UTILITIES_EXPORT SessionReader(const SessionReader& pSrc);
             LIB_UTILITIES_EXPORT ~SessionReader();
 
             LIB_UTILITIES_EXPORT TiXmlDocument& GetDocument();
             LIB_UTILITIES_EXPORT TiXmlElement* GetElement(const std::string& pPath);
             LIB_UTILITIES_EXPORT bool DefinesElement(const std::string& pPath);
-            LIB_UTILITIES_EXPORT const std::string& GetFilename();
-            LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(const std::string &pProperty);
-
-            LIB_UTILITIES_EXPORT NekDouble GetParameter(std::string pName);
+            LIB_UTILITIES_EXPORT const std::string& GetFilename() const;
+            LIB_UTILITIES_EXPORT const std::string& GetSessionName() const;
+            LIB_UTILITIES_EXPORT CommSharedPtr& GetComm();
+            LIB_UTILITIES_EXPORT void Finalise();
 
             /// Check for and load an integer parameter
             /// Check for and load a double precision parameter
@@ -101,10 +113,12 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, int &var, int def);
             LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, NekDouble& var);
             LIB_UTILITIES_EXPORT void LoadParameter(const std::string name, NekDouble& var, const NekDouble def);
+            LIB_UTILITIES_EXPORT NekDouble GetParameter(std::string pName);
             LIB_UTILITIES_EXPORT bool DefinesParameter(const std::string name);
 
             LIB_UTILITIES_EXPORT void LoadSolverInfo(const std::string name, std::string& var, const std::string def = "");
             LIB_UTILITIES_EXPORT void MatchSolverInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
+            LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(const std::string &pProperty);
             LIB_UTILITIES_EXPORT bool DefinesSolverInfo(const std::string name);
 
             LIB_UTILITIES_EXPORT void LoadGeometricInfo(const std::string name, std::string& var, const std::string def = "");
@@ -128,8 +142,17 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
+            /// Returns a shared pointer to the current object.
+            boost::shared_ptr<SessionReader> GetSharedThisPtr()
+            {
+                return shared_from_this();
+            }
+
+
         private:
+            CommSharedPtr               m_comm;
             std::string                 m_filename;
+            std::string                 m_sessionName;
             TiXmlDocument*              m_xmlDoc;
 
             SolverInfoMap               m_solverInfo;
@@ -139,6 +162,14 @@ namespace Nektar
             FunctionMap                 m_functions;
             VariableList                m_variables;
             TagMap                      m_tags;
+
+//            LIB_UTILITIES_EXPORT SessionReader(std::string& pFilename);
+            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[]);
+            LIB_UTILITIES_EXPORT void InitSession();
+
+            void LoadFile(std::string pFilenames);
+            void CreateComm(int argc, char* argv[], std::string pFilename);
+            void PartitionMesh();
 
             void ReadParameters(TiXmlElement *conditions);
             void ReadSolverInfo(TiXmlElement *conditions);
@@ -150,8 +181,6 @@ namespace Nektar
             /// Perform a case-insensitive string comparison.
             int NoCaseStringCompare(const std::string & s1, const std::string& s2);
         };
-
-        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
     }
 }
 

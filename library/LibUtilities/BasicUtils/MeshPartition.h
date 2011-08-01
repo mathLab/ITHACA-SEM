@@ -33,31 +33,27 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_SPATIALDOMAINS_MESHPARTITION_H
-#define NEKTAR_SPATIALDOMAINS_MESHPARTITION_H
+#ifndef NEKTAR_LIBUTILITIES_BASICUTILS_MESHPARTITION_H
+#define NEKTAR_LIBUTILITIES_BASICUTILS_MESHPARTITION_H
 
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <SpatialDomains/SpatialDomains.hpp>
-#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
 {
-    namespace SpatialDomains
+    namespace LibUtilities
     {
 
         class MeshPartition
         {
         public:
-            SPATIAL_DOMAINS_EXPORT MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession);
-            SPATIAL_DOMAINS_EXPORT ~MeshPartition();
+            LIB_UTILITIES_EXPORT MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT ~MeshPartition();
 
-            SPATIAL_DOMAINS_EXPORT void PartitionMesh(unsigned int pNumPartitions);
-            SPATIAL_DOMAINS_EXPORT void WritePartitions(
-
-                    LibUtilities::SessionReaderSharedPtr& pSession,
-                    const std::string& pBaseFilename);
+            LIB_UTILITIES_EXPORT void PartitionMesh(unsigned int pNumPartitions);
+            LIB_UTILITIES_EXPORT void WritePartitions(
+                    LibUtilities::SessionReaderSharedPtr& pSession);
 
         private:
             struct MeshEntity
@@ -153,20 +149,20 @@ namespace Nektar
             int                        m_dim;
 
             std::map<int, MeshVertex>  m_meshVertices;
-            std::map<int, MeshEntity>    m_meshEdges;
-            std::map<int, MeshEntity>    m_meshFaces;
-            std::map<int, MeshEntity> m_meshElements;
-            std::map<int, MeshEntity> m_meshComposites;
-            std::vector<unsigned int>           m_domain;
+            std::map<int, MeshEntity>  m_meshEdges;
+            std::map<int, MeshEntity>  m_meshFaces;
+            std::map<int, MeshEntity>  m_meshElements;
+            std::map<int, MeshEntity>  m_meshComposites;
+            std::vector<unsigned int>  m_domain;
 
             BoostSubGraph              m_mesh;
             std::vector<BoostSubGraph> m_partitions;
 
-            SPATIAL_DOMAINS_EXPORT void ReadMesh(LibUtilities::SessionReaderSharedPtr& pSession);
-            SPATIAL_DOMAINS_EXPORT void CreateGraph(BoostSubGraph& pGraph);
-            SPATIAL_DOMAINS_EXPORT void PartitionGraph(BoostSubGraph& pGraph,
+            void ReadMesh(LibUtilities::SessionReaderSharedPtr& pSession);
+            void CreateGraph(BoostSubGraph& pGraph);
+            void PartitionGraph(BoostSubGraph& pGraph,
                                 std::vector<BoostSubGraph>& pPartitions);
-            SPATIAL_DOMAINS_EXPORT void OutputPartition(LibUtilities::SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            void OutputPartition(LibUtilities::SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

@@ -37,8 +37,8 @@
 #include <SpatialDomains/pchSpatialDomains.h>
 
 #include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <SpatialDomains/Conditions.h>
-#include <SpatialDomains/ParseUtils.hpp>
 #include <cctype>
 #include <algorithm>
 #include <string>

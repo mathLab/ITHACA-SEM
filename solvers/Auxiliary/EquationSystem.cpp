@@ -37,7 +37,6 @@
 using std::string;
 
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <SpatialDomains/MeshPartition.h>
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -112,22 +111,6 @@ namespace Nektar
                     ASSERTL0(false, "Unknown GlobalSysSolve type in session file.");
                 }
             }
-        }
-
-        if (m_comm->GetSize() > 1)
-        {
-            if (m_comm->GetRank() == 0)
-            {
-                SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(m_session);
-                vPartitioner->PartitionMesh(m_comm->GetSize());
-                vPartitioner->WritePartitions(m_session, m_filename);
-            }
-
-            m_comm->Block();
-
-            m_filename = m_filename + "." + boost::lexical_cast<std::string>(m_comm->GetRank());
-            m_solnType = MultiRegions::eIterativeFull;
-            m_sessionName = m_sessionName.substr(0,m_sessionName.find_last_of("."));
         }
 
         SpatialDomains::MeshGraph graph;

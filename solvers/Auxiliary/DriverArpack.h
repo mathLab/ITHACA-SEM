@@ -49,9 +49,8 @@ namespace Nektar
         friend class MemoryManager<DriverArpack>;
 		
         /// Creates an instance of this class
-        static DriverSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-                                      LibUtilities::SessionReaderSharedPtr& pSession) {
-            DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pComm, pSession);
+        static DriverSharedPtr create(LibUtilities::SessionReaderSharedPtr& pSession) {
+            DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -65,8 +64,7 @@ namespace Nektar
         int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
         
         /// Constructor
-        DriverArpack( LibUtilities::CommSharedPtr                 pComm,
-                      LibUtilities::SessionReaderSharedPtr        pSession);
+        DriverArpack( LibUtilities::SessionReaderSharedPtr        pSession);
         
         /// Destructor
         virtual ~DriverArpack();

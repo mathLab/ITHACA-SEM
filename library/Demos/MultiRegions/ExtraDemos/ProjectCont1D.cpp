@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField1D.h>
 #include <SpatialDomains/Conditions.h>
 
@@ -17,24 +16,8 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
-
-    string meshfile(argv[1]);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     MultiRegions::ContField1DSharedPtr Exp,Sol;
 
@@ -44,6 +27,7 @@ int main(int argc, char *argv[])
     char    *infile;
     Array<OneD,NekDouble> sol;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
+    std::string meshfile(vSession->GetFilename());
 
     if(argc != 2)
     {
@@ -56,9 +40,6 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraph1D graph1D;
     graph1D.ReadGeometry(meshfile);
     graph1D.ReadExpansions(meshfile);
-
-//    SpatialDomains::BoundaryConditions bcs(&graph1D);
-//    bcs.Read(in);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -76,7 +57,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::ContField1D>
-                                        ::AllocateSharedPtr(vComm,graph1D);
+                                        ::AllocateSharedPtr(vSession->GetComm(),graph1D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -148,6 +129,8 @@ int main(int argc, char *argv[])
     cout << "L infinity error: " << Exp->Linf(Sol->GetPhys()) << endl;
     cout << "L 2 error:        " << Exp->L2  (Sol->GetPhys()) << endl;
     //--------------------------------------------
+
+    vSession->Finalise();
 
     return 0;
 }

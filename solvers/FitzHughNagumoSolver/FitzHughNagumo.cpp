@@ -45,9 +45,8 @@ namespace Nektar
      * \param 
      * \param
      */
-    FitzHughNagumo::FitzHughNagumo( LibUtilities::CommSharedPtr& pComm,
-                                    LibUtilities::SessionReaderSharedPtr& pSession):
-        EquationSystem(pComm,pSession),
+    FitzHughNagumo::FitzHughNagumo( LibUtilities::SessionReaderSharedPtr& pSession):
+        EquationSystem(pSession->GetComm(),pSession),
         m_infosteps(10),
         m_explicitDiffusion(true),
         m_explicitReaction(true)

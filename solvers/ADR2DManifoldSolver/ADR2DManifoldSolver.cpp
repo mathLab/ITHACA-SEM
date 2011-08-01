@@ -37,10 +37,8 @@
 #include <cstdlib>
 #include <cmath> 
 
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <ADR2DManifoldSolver/ADR2DManifold.h>
-
 
 using namespace Nektar;
 
@@ -50,22 +48,17 @@ int main(int argc, char *argv[])
     
     ASSERTL0(argc == 2,"\n \t Usage: ADR2DManifoldSolver  meshfile \n");
 
-    LibUtilities::CommSharedPtr vComm;
     LibUtilities::SessionReaderSharedPtr session;
-    string fileNameString(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
    
-    // Create communicator
-    vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI", argc, argv);
-
     // Create session reader.
-    session = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(fileNameString);
+    session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     time(&starttime);
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    ADR2DManifold dom(vComm, session);
+    ADR2DManifold dom(session->GetComm(), session);
     
     // Time integration function object for unsteady equations
     LibUtilities::TimeIntegrationSchemeOperators ode;
@@ -206,6 +199,8 @@ int main(int argc, char *argv[])
         cout << "H1 Error: " << dom.USERDEFINEDError(i,1,initialwavetype) << endl;
         cout << "L2 Error: " << dom.USERDEFINEDError(i,2,initialwavetype) << endl << endl;
     }
+
+    session->Finalise();
  }
 
 /**

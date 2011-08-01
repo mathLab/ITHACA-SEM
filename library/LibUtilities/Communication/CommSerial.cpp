@@ -49,6 +49,7 @@ namespace Nektar
                 Comm(argc, argv)
         {
             m_size = 1;
+            m_type = "Serial";
         }
 
         CommSerial::~CommSerial()

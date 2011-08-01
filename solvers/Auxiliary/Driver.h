@@ -53,7 +53,6 @@ namespace Nektar
     /// the Driver class.
     typedef LibUtilities::NekFactory<
                 std::string, Driver,
-                LibUtilities::CommSharedPtr&,
                 LibUtilities::SessionReaderSharedPtr&
             > DriverFactory;
     DriverFactory& GetDriverFactory();
@@ -82,8 +81,7 @@ namespace Nektar
         Array<OneD, EquationSystemSharedPtr>        m_equ;
 	
         /// Initialises EquationSystem class members.
-        Driver( LibUtilities::CommSharedPtr pComm,
-                LibUtilities::SessionReaderSharedPtr pSession);
+        Driver(LibUtilities::SessionReaderSharedPtr pSession);
         
         virtual void v_InitObject() = 0;
         

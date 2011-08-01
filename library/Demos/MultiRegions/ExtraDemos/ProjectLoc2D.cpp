@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 
@@ -15,25 +14,9 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::CommSharedPtr vComm
-        = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
-
-    string meshfile(argv[1]);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    string meshfile(vSession->GetFilename());
 
     MultiRegions::ExpList2DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
@@ -61,7 +44,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     LibUtilities::BasisKey bkey1 = expansions.begin()->second->m_basisKeyVector[1];
     int nmodes = bkey0.GetNumModes();
-    if (vComm->GetRank() == 0)
+    if (vSession->GetComm()->GetRank() == 0)
     {
         cout << "Solving 2D Projection"  << endl;
         cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;
@@ -72,7 +55,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vComm,graph2D);
+    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession->GetComm(),graph2D);
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -154,28 +137,14 @@ int main(int argc, char *argv[])
     
     //--------------------------------------------
     // Calculate L_inf error 
-    if (vComm->GetRank() == 0)
+    if (vSession->GetComm()->GetRank() == 0)
     {
-        cout << "Rank 0:" << endl;
         cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
         cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
-        for (unsigned int i = 1; i < vComm->GetSize(); ++i)
-        {
-            Array<OneD, NekDouble> data(2);
-            vComm->Recv(i, data);
-            cout << "Rank " << i << ":" << endl;
-            cout << "L infinity error: " << data[0] << endl;
-            cout << "L 2 error:        " << data[1] << endl;
-        }
-    }
-    else
-    {
-        Array<OneD, NekDouble> data(2);
-        data[0] = Exp->Linf(Fce->GetPhys());
-        data[1] = Exp->L2  (Fce->GetPhys());
-        vComm->Send(0,data);
     }
     //--------------------------------------------
+
+    vSession->Finalise();
 
     return 0;
 }

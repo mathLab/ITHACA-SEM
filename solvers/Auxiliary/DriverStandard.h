@@ -49,9 +49,8 @@ namespace Nektar
         friend class MemoryManager<DriverStandard>;
 
 		/// Creates an instance of this class
-        static DriverSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-								      LibUtilities::SessionReaderSharedPtr& pSession) {
-            DriverSharedPtr p = MemoryManager<DriverStandard>::AllocateSharedPtr(pComm, pSession);
+        static DriverSharedPtr create(LibUtilities::SessionReaderSharedPtr& pSession) {
+            DriverSharedPtr p = MemoryManager<DriverStandard>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
 		}
@@ -61,8 +60,7 @@ namespace Nektar
 		
     protected:
         /// Constructor
-        DriverStandard( LibUtilities::CommSharedPtr                 pComm,
-						LibUtilities::SessionReaderSharedPtr        pSession);
+        DriverStandard(LibUtilities::SessionReaderSharedPtr pSession);
 
 		/// Destructor
 		virtual ~DriverStandard();

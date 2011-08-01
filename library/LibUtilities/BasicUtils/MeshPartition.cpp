@@ -46,17 +46,18 @@
 #include <tinyxml/tinyxml.h>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <SpatialDomains/ParseUtils.hpp>
-#include <SpatialDomains/MeshPartition.h>
 #include <LibUtilities/BasicUtils/Metis.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 
+#include <LibUtilities/BasicUtils/MeshPartition.h>
+
 namespace Nektar
 {
-    namespace SpatialDomains
+    namespace LibUtilities
     {
         MeshPartition::MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession)
         {
@@ -90,8 +91,7 @@ namespace Nektar
             }
         }
 
-        void MeshPartition::WritePartitions(LibUtilities::SessionReaderSharedPtr& pSession,
-                const std::string& pBaseFilename)
+        void MeshPartition::WritePartitions(LibUtilities::SessionReaderSharedPtr& pSession)
         {
             for (unsigned int i = 0; i < m_partitions.size(); ++i)
             {
@@ -106,7 +106,7 @@ namespace Nektar
 
                 vNew.LinkEndChild(vElmtNektar);
 
-                std::string vFilename = pBaseFilename + "." + boost::lexical_cast<std::string>(i);
+                std::string vFilename = pSession->GetFilename() + "." + boost::lexical_cast<std::string>(i);
                 vNew.SaveFile(vFilename.c_str());
             }
         }
@@ -446,9 +446,9 @@ namespace Nektar
                 x = new TiXmlElement("V");
                 x->SetAttribute("ID", vVertIt->first);
                 std::stringstream vCoords;
-                vCoords << setw(10) << vVertIt->second.x
-                        << setw(10) << vVertIt->second.y
-                        << setw(10) << vVertIt->second.z << " ";
+                vCoords << std::setw(10) << vVertIt->second.x
+                        << std::setw(10) << vVertIt->second.y
+                        << std::setw(10) << vVertIt->second.z << " ";
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);
                 vVertex->LinkEndChild(x);
@@ -461,8 +461,8 @@ namespace Nektar
                     x = new TiXmlElement("E");
                     x->SetAttribute("ID", vIt->first);
                     std::stringstream vVertices;
-                    vVertices << setw(10) << vIt->second.list[0]
-                            << setw(10) << vIt->second.list[1] << " ";
+                    vVertices << std::setw(10) << vIt->second.list[0]
+                            << std::setw(10) << vIt->second.list[1] << " ";
                     y = new TiXmlText(vVertices.str());
                     x->LinkEndChild(y);
                     vEdge->LinkEndChild(x);
@@ -473,14 +473,14 @@ namespace Nektar
             {
                 for (vIt = vFaces.begin(); vIt != vFaces.end(); vIt++)
                 {
-                    std:string vType("F");
+                    std::string vType("F");
                     vType[0] = vIt->second.type;
                     x = new TiXmlElement(vType);
                     x->SetAttribute("ID", vIt->first);
                     std::stringstream vListStr;
                     for (unsigned int i = 0; i < vIt->second.list.size(); ++i)
                     {
-                        vListStr << setw(10) << vIt->second.list[i];
+                        vListStr << std::setw(10) << vIt->second.list[i];
                     }
                     vListStr << " ";
                     y = new TiXmlText(vListStr.str());
@@ -498,7 +498,7 @@ namespace Nektar
                 std::stringstream vEdges;
                 for (unsigned i = 0; i < vIt->second.list.size(); ++i)
                 {
-                    vEdges << setw(10) << vIt->second.list[i];
+                    vEdges << std::setw(10) << vIt->second.list[i];
                 }
                 vEdges << " ";
                 y = new TiXmlText(vEdges.str());
@@ -595,7 +595,7 @@ namespace Nektar
                 TiXmlElement* vBndRegions    = vConditions->FirstChildElement("BOUNDARYREGIONS");
                 if (!vBndRegions)
                 {
-                    cout << "no boundary regions" << endl;
+                    std::cout << "no boundary regions" << std::endl;
                 }
                 TiXmlElement* vNewBndRegions = new TiXmlElement("BOUNDARYREGIONS");
                 TiXmlElement* vItem = vBndRegions->FirstChildElement();

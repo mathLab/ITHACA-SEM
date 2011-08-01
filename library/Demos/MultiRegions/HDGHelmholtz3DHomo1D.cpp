@@ -5,7 +5,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
 
 //#define TIMING
@@ -23,38 +22,11 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::SessionReaderSharedPtr vSession;
-    LibUtilities::CommSharedPtr vComm;
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    LibUtilities::CommSharedPtr vComm = vSession->GetComm();
     string meshfile(argv[1]);
-    string vCommModule("Serial");
-
-    vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-
-    if (vSession->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = vSession->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
 
     MultiRegions::DisContField3DHomogeneous1DSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2,DerExp3;

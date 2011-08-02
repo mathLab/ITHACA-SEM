@@ -143,33 +143,53 @@ namespace Nektar
 	
         m_equ[0]->PrintSummary(cout);
         
+        ArpackSummary(cout);
+        
+        m_equ[0]->DoInitialise();
+    }
+    
+    void DriverArpack::ArpackSummary(std::ostream &out)
+    {
         // Print session parameters
-        cout << "\tArnoldi solver type    : Arpack" << endl;
+        out << "\tArnoldi solver type    : Arpack" << endl;
         if(m_arpackProblemType == "LM")
         {
-            cout << "\tArpack problem type    : Largest Mag. eigenvalue" << endl;
+            out << "\tArpack problem type    : Largest Mag. eigenvalue" << endl;
         }
         else if (m_arpackProblemType ==  "LR")
         {
-            cout << "\tArpack problem type    : Largest real eigenvalue" << endl;
+            out << "\tArpack problem type    : Largest real eigenvalue" << endl;
         }
         else if(m_arpackProblemType ==  "LI")
         {
-            cout << "\tArpack problem type    : Largest imag. eigenvalue" << endl;
+            out << "\tArpack problem type    : Largest imag. eigenvalue" << endl;
         }
         else
         {
             ASSERTL0(false,"Unknown ArpackProbType");
         }
-        cout << "\tKrylov-space dimension : " << m_kdim << endl;
-        cout << "\tNumber of vectors      : " << m_nvec << endl;
-        cout << "\tMax iterations         : " << m_nits << endl;
-        cout << "\tEigenvalue tolerance   : " << m_evtol << endl;
-	cout << "=======================================================================" << endl;
-
-        m_equ[0]->DoInitialise();
+        if(m_session->DefinesSolverInfo("SingleMode"))
+        {
+            out << "\tSingle Fourier mode    : true " << endl;
+        }
+        else
+        {
+            out << "\tSingle Fourier mode    : false " << endl;
+        }
+        if(m_session->DefinesSolverInfo("BetaZero"))           
+        {
+            out << "\tBeta set to Zero       : true (overrides LHom)" << endl;
+        }
+        else
+        {
+            out << "\tBeta set to Zero       : false " << endl;
+        }
+        out << "\tKrylov-space dimension : " << m_kdim << endl;
+        out << "\tNumber of vectors      : " << m_nvec << endl;
+        out << "\tMax iterations         : " << m_nits << endl;
+        out << "\tEigenvalue tolerance   : " << m_evtol << endl;
+	out << "=======================================================================" << endl;
     }
-    
 
     void DriverArpack::v_Execute()
         

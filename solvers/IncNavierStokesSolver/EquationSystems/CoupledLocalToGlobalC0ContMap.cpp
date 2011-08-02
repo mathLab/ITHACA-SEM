@@ -50,7 +50,8 @@ namespace Nektar
                                       Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                       MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
-                                      const MultiRegions::GlobalSysSolnType solnType):
+                                      const MultiRegions::GlobalSysSolnType solnType,
+                                      bool CheckforSingularSys):
         LocalToGlobalC0ContMap(pComm)
     {
 
@@ -83,7 +84,15 @@ namespace Nektar
         Array<OneD, map<int,int> > ReorderedGraphVertId(2);
         MultiRegions::BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
         int staticCondLevel = 0;
-        bool IsSingular = (nz_loc == 1)? true:false;  // only singular on zeroth model 
+
+        if(CheckforSingularSys) //all singularity checking by setting flat to true
+        {
+            m_systemSingular = true;
+        }
+        else  // Turn off singular checking by setting flag to false
+        {
+            m_systemSingular = false;
+        }
         
         /**
          * STEP 1: Wrap boundary conditions vector in an array
@@ -145,8 +154,28 @@ namespace Nektar
                     }
                 }
                 else
-                { // if not all dirichlet then not singular
-                    IsSingular = false;
+                { 
+                    // Check to see that edge normals have non-zero
+                    // component in this direction since otherwise
+                    // also can be singular.
+                    for(k = 0; k < bndCondExp[j]->GetNumElmts(); ++k)
+                    {
+                        Array<OneD,Array<OneD,NekDouble> > locnorm;
+                        locnorm = bndCondExp[j]->GetExp(k)->GetMetricInfo()->GetNormal();
+                        
+                        for(int l = 0; l < locnorm[0].num_elements(); ++l)
+                        {
+                            if(fabs(locnorm[i][l]) > NekConstants::kNekZeroTol)
+                            {
+                                m_systemSingular = false;
+                                break;
+                            }
+                        }
+                        if(m_systemSingular == false)
+                        {
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -157,11 +186,23 @@ namespace Nektar
         int edgeId,vertId;
 
 
-        // special case of singular problem - need to fix one
-        // pressure dof to and dirichlet edge 
-        if(IsSingular)
+        // special case of singular problem - need to fix one pressure
+        // dof to a dirichlet edge. Since we attached pressure dof to
+        // last velocity component of edge need to make sure this
+        // component is Dirichlet
+        if(m_systemSingular)
         {
-            id = bndCondExp[0]->GetExp(0)->GetGeom1D()->GetEid(); 
+            id  = -1;
+            for(i = 0; i < bndConditionsVec[0].num_elements(); ++i)
+            {
+                if(bndConditionsVec[nvel-1][i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    id = bndCondExp[i]->GetExp(0)->GetGeom1D()->GetEid(); 
+                    break;
+                }
+            }
+            
+            ASSERTL0(id != -1," Did not find an edge to attach singular pressure degree of freedom");
 
             // determine element with this edge id. There may be a
             // more direct way of getting element from spatialDomains
@@ -318,8 +359,7 @@ namespace Nektar
                         // find edge in graph vert list
                         if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
                         {
-                            edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
-                        
+                            edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];   
 
                             if(EdgeIdToElmts[edgeId][0] != -1)
                             {
@@ -367,8 +407,10 @@ namespace Nektar
                                             // find edge in graph vert list
                                             if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset1+l) != 0)
                                             {
-                                                AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
-                        
+                                                if(AddMeanPressureToEdgeId[elmtid] == -1)
+                                                {
+                                                    AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
+                                                }
                                                 SetEdge = true;
                                                 break;
                                             }
@@ -384,7 +426,7 @@ namespace Nektar
                     // default edget value
                     if(SetEdge == false)
                     {
-                        if(elmtid == -1) // find a elmtid in patch 
+                        if(elmtid == -1) // find aN elmtid in patch 
                         {
                             for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
                             {
@@ -407,8 +449,10 @@ namespace Nektar
                                 }
                             }
                         }
-
-                        AddMeanPressureToEdgeId[elmtid] = defedge;
+                        if(AddMeanPressureToEdgeId[elmtid] == -1)
+                        {
+                            AddMeanPressureToEdgeId[elmtid] = defedge;
+                        }
                     }
                 }
             }
@@ -416,7 +460,7 @@ namespace Nektar
 
         // Set unset elmts to non-Dirichlet edges. 
         // special case of singular problem - need to fix one
-        // pressure dof to and dirichlet edge 
+        // pressure dof to a dirichlet edge 
         for(i = 0; i < nel; ++i)
         {
             eid = fields[0]->GetOffset_Elmt_Id(i);
@@ -461,7 +505,7 @@ namespace Nektar
             }
         }
 
-        if(IsSingular)
+        if(m_systemSingular)
         {
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs+nExtraDirichlet+nz_loc;
         }
@@ -582,6 +626,7 @@ namespace Nektar
             }
         }
         
+
         cnt = 0;
         // assemble accumulative list of full Dirichlet values. 
         for(i = 0; i < firstNonDirGraphVertId*nvel*nz_loc; ++i)
@@ -602,10 +647,9 @@ namespace Nektar
             }
         }
     
-        // cnt currently contains the number of global dir degrees of freedom. 
+        // Accumulate all interior degrees of freedom with positive
         m_numGlobalDirBndCoeffs = cnt;
 
-        // Accumulate all interior degrees of freedom with positive
         // offset values
         for(i = firstNonDirGraphVertId*nvel*nz_loc; i < graphVertOffset.num_elements(); ++i)
         {
@@ -644,7 +688,8 @@ namespace Nektar
         }
 
         m_numLocalCoeffs += m_numLocalBndCoeffs; 
-        
+
+
         m_localToGlobalMap    = Array<OneD, int>(m_numLocalCoeffs,-1);
         m_localToGlobalBndMap = Array<OneD, int>(m_numLocalBndCoeffs,-1);
         m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(nLocBndCondDofs,-1);
@@ -680,6 +725,7 @@ namespace Nektar
         int nv,velnbndry;
         Array<OneD, unsigned int> bmap;
         
+       
         // Loop over all the elements in the domain in shuffled
         // ordering (element type consistency)
         for(i = 0; i < nel; ++i)

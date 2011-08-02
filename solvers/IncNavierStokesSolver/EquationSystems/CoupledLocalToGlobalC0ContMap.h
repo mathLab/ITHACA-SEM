@@ -53,7 +53,7 @@ namespace Nektar
                                       Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                       MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
-                                      const MultiRegions::GlobalSysSolnType solnType);
+                                      const MultiRegions::GlobalSysSolnType solnType, bool CheeckForSingularSys=true);
     };
 
     typedef boost::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;

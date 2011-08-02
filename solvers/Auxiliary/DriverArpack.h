@@ -72,6 +72,9 @@ namespace Nektar
         /// Destructor
         virtual ~DriverArpack();
         
+
+        void ArpackSummary(std::ostream &out);
+
         /// Virtual function for initialisation implementation.
         virtual void v_InitObject();
 

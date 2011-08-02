@@ -142,8 +142,8 @@ namespace Nektar
     private:
         ///  Identify if a single mode is required for stability analysis. 
         bool m_singleMode; 
-        /// Id of the single mode 0 or 1.
-        int  m_singleModeID;
+        /// Id to identify when single mode is mean mode (i.e. beta=0);
+        bool m_zeroMode;
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

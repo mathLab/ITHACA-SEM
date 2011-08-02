@@ -127,12 +127,13 @@ namespace Nektar
 
         // Read and store history point data
         m_historyPoints = MemoryManager<SpatialDomains::History>
-                                        ::AllocateSharedPtr(meshptr);
+            ::AllocateSharedPtr(meshptr);
+
         m_historyPoints->Read(m_filename);
 
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
-
+        
         // Setting parameteres for homogenous problems
         m_HomoDirec       = 0;
         m_useFFT          = false;
@@ -2027,6 +2028,7 @@ namespace Nektar
      */
     void EquationSystem::WriteHistoryData (std::ostream &out)
     {
+        static int  init = 1;
         int numPoints = m_historyList.size();
         int numFields = m_fields.num_elements();
 
@@ -2035,10 +2037,41 @@ namespace Nektar
         Array<OneD, NekDouble> gloCoord(3,0.0);
         std::list<pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
 
+        if(init)
+        {
+
+            out << "# History data for variables (:";
+
+            for (int j = 0; j < m_fields.num_elements(); ++j)
+            {
+                out << m_boundaryConditions->GetVariable(j) <<",";
+            }
+
+            out << ") at points:" << endl;
+
+            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+            {
+                (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                
+                out << "# \t" << k; 
+                out.width(8);
+                out << gloCoord[0];
+                out.width(8);
+                out << gloCoord[1];
+                out.width(8);
+                out << gloCoord[2];
+                out << endl;
+            }
+            init = 0;
+        }
+
         // Pull out data values field by field
         for (int j = 0; j < m_fields.num_elements(); ++j)
         {
-            m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+            if(m_fields[j]->GetPhysState() == false)
+            {
+                m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+            }
             m_fields[j]->PutPhysInToElmtExp();
             for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
             {
@@ -2050,20 +2083,11 @@ namespace Nektar
         // Write data values point by point
         for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
         {
-            (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
             out.width(8);
             out << m_time;
-            out.width(8);
-            out << gloCoord[0];
-            out.width(8);
-            out << gloCoord[1];
-            out.width(8);
-            out << gloCoord[2];
             for (int j = 0; j < numFields; ++j)
             {
-                //m_fields[j]->PutPhysInToElmtExp();
                 out.width(14);
-                //out << m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
                 out << data[k*numFields+j];
             }
             out << endl;

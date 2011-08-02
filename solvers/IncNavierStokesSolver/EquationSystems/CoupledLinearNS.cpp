@@ -51,7 +51,7 @@ namespace Nektar
     CoupledLinearNS::CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
                                      LibUtilities::SessionReaderSharedPtr &pSession):
         m_singleMode(false),
-        m_singleModeID(0),
+        m_zeroMode(false),
         IncNavierStokes(pComm, pSession)
     {
     }
@@ -94,8 +94,6 @@ namespace Nektar
                 nz = 1;
             }
             
-            MultiRegions::GlobalSysSolnType solntype = MultiRegions::eDirectMultiLevelStaticCond; 
-            //MultiRegions::GlobalSysSolnType solntype = MultiRegions::eDirectStaticCond; 
             Array<OneD, MultiRegions::ExpListSharedPtr> velocity(m_velocity.num_elements());
             for(i =0 ; i < m_velocity.num_elements(); ++i)
             {
@@ -112,34 +110,23 @@ namespace Nektar
                 m_singleMode = true;
                 if(m_session->DefinesSolverInfo("BetaZero"))
                 {
-                    m_singleModeID = 0;
-
-                    // base mode
-                    int nz_loc = 2;
-                    m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
+                    m_zeroMode = true;
                 }
-                else
-                {
-                    m_singleModeID = 1;
 
-                    // base mode
-                    int nz_loc = 2;
-                    m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
-                }
+                int nz_loc = 2;
+                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,m_solnType,m_zeroMode);
             }
-            else
+            else 
             {
-                m_singleMode = false;
-                
                 // base mode
                 int nz_loc = 1;
-                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,solntype);
+                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,m_solnType);
                 
                 if(nz > 1)
                 {
                     nz_loc = 2;
                     // Assume all higher modes have the same boundary conditions and re-use mapping
-                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc,solntype);
+                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc,m_solnType);
                     for(i = 2; i < nz; ++i)
                     {
                         m_locToGloMap[i] = m_locToGloMap[1];
@@ -175,9 +162,8 @@ namespace Nektar
             
             ASSERTL1(m_npointsZ <=2,"Only expected a maxmimum of two planes in single mode linear NS solver");
             
-            if(m_singleModeID == 0)
+            if(m_zeroMode)
             {
-                // mean mode or 2D mode.
                 SetUpCoupledMatrix(lambda,Advfield,IsLinearNSEquation,0,m_mat[0],m_locToGloMap[0]);
             }
             else
@@ -391,7 +377,14 @@ namespace Nektar
         }
         else
         {
-            nz_loc = 1;
+            if(m_singleMode)
+            {
+                nz_loc = 2;
+            }
+            else
+            {
+                nz_loc = 1;
+            }
         }
         
         // Set up block matrix sizes - 
@@ -531,7 +524,7 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta =  2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), -beta, phys,1,deriv,1);
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
@@ -1334,7 +1327,7 @@ namespace Nektar
                                              m_forces[i]->UpdateCoeffs());
                 if(m_HomogeneousType == eHomogeneous1D)
                 {
-                    if(!m_singleMode)
+                    if(!m_singleMode) // Do not want to Fourier transoform in case of single mode stability analysis. 
                     {
                         m_forces[i]->HomogeneousFwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdateCoeffs());
                     }
@@ -1518,7 +1511,7 @@ namespace Nektar
         {
             if(m_singleMode)
             {
-                nz_loc = (m_singleModeID)? 2:1;
+                nz_loc = 2;
             }
             else
             {
@@ -1535,7 +1528,6 @@ namespace Nektar
             }
         }
         
-
         // Assemble f_bnd and f_int
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements

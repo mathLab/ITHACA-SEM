@@ -89,8 +89,8 @@ namespace Nektar
     void DriverStandard::v_Execute()
         
     {
-        m_equ[0]->DoInitialise();
         m_equ[0]->PrintSummary(cout);
+        m_equ[0]->DoInitialise();
         m_equ[0]->DoSolve();
         m_equ[0]->Output();
         

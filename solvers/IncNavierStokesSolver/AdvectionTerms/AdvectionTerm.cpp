@@ -77,15 +77,14 @@ namespace Nektar
         m_expdim   = m_graph->GetMeshDimension();
 
         // Save the basename of input file name for output details.
-		m_sessionName = m_session->GetFilename();
-		m_sessionName = m_sessionName.substr(0,
-											 m_sessionName.find_last_of("."));
-
+        m_sessionName = m_session->GetFilename();
+        m_sessionName = m_sessionName.substr(0, m_sessionName.find_last_of("."));
+        
         if(m_session->DefinesSolverInfo("PROJECTION"))
         {
             std::string ProjectStr
-            = m_session->GetSolverInfo("PROJECTION");
-
+                = m_session->GetSolverInfo("PROJECTION");
+            
             if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
                (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
             {
@@ -103,57 +102,47 @@ namespace Nektar
         else
         {
             cerr << "Projection type not specified in SOLVERINFO,"
-            "defaulting to continuous Galerkin" << endl;
+                "defaulting to continuous Galerkin" << endl;
             m_projectionType = MultiRegions::eGalerkin;
         }
-	}
-
-	AdvectionTerm::~AdvectionTerm()
-	{
-	}
-	
-    void AdvectionTerm::v_DoAdvection(
-                               Array<OneD, MultiRegions::ExpListSharedPtr > &m_fields,
-                               const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                               Array<OneD, Array<OneD, NekDouble> > &outarray,
-                               Array<OneD, NekDouble> &wk)
-    {
-        ASSERTL0(false,"This advection form is not defined in this class");
     }
-
-	int AdvectionTerm::NoCaseStringCompare(const string & s1, const string& s2)
+    
+    AdvectionTerm::~AdvectionTerm()
     {
-        //if (s1.size() < s2.size()) return -1;
-        //if (s1.size() > s2.size()) return 1;
-		
-        string::const_iterator it1=s1.begin();
-        string::const_iterator it2=s2.begin();
-		
-        //stop when either string's end has been reached
-        while ( (it1!=s1.end()) && (it2!=s2.end()) )
-        {
-            if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-            {
-                // return -1 to indicate smaller than, 1 otherwise
-                return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
-            }
-			
-            //proceed to the next character in each string
-            ++it1;
-            ++it2;
-        }
-		
-        size_t size1=s1.size();
-        size_t size2=s2.size();// cache lengths
-		
-        //return -1,0 or 1 according to strings' lengths
-        if (size1==size2)
-        {
-            return 0;
-        }
-		
-        return (size1 < size2) ? -1 : 1;
     }
-	
-	
+    
+    void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, const int nConvectiveFields, const Array<OneD, int> &vel_loc, 
+ const Array<OneD, const Array<OneD, NekDouble> > &pInarray, Array<OneD, Array<OneD, NekDouble> > &pOutarray,  Array<OneD, NekDouble> &pWk)
+    {
+        int i,j;
+        int VelDim           = vel_loc.num_elements();        
+        int nqtot            = pFields[0]->GetTotPoints();
+        Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
+        Array<OneD, NekDouble > Deriv;
+        
+        m_nConvectiveFields = nConvectiveFields;
+
+        for(i = 0; i < VelDim; ++i)
+        {
+            velocity[i] = pInarray[vel_loc[i]];
+        }
+        
+        // Set up Derivative work space;
+        if(pWk.num_elements())
+        {
+            ASSERTL0(pWk.num_elements() >= nqtot*VelDim,"Workspace is not sufficient");
+            Deriv = pWk;
+        }
+        else
+        {
+            Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
+        }
+        
+        for(i=0; i< m_nConvectiveFields; ++i)
+        {
+            v_ComputeAdvectionTerm(m_boundaryConditions, pFields,velocity,pInarray[i],pOutarray[i],i,Deriv);
+            Vmath::Neg(nqtot,pOutarray[i],1);
+        }
+    }
+    
 } //end of namespace

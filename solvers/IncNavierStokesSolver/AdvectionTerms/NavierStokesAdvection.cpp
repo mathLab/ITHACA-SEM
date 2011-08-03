@@ -41,7 +41,7 @@ namespace Nektar
 {
     string NavierStokesAdvection::className  = GetAdvectionTermFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);
     string NavierStokesAdvection::className2 = GetAdvectionTermFactory().RegisterCreatorFunction("NonConservative", NavierStokesAdvection::create);
-
+    
     /**
      * Constructor. Creates ...
      *
@@ -57,93 +57,31 @@ namespace Nektar
         AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
 	
     {
-
-	}
-	
-	NavierStokesAdvection::~NavierStokesAdvection()
-	{
-	}
-	
-	//Advection function
-	void NavierStokesAdvection:: v_DoAdvection(	Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-											    const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-												Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-											    Array<OneD, NekDouble> &pWk)
-	
-	{
-	    int i,j;
-	    int VelDim;
-	    int numfields = pFields.num_elements();
-	    std::string velids[] = {"u","v","w"};
-	    int nqtot      = pFields[0]->GetTotPoints();
-
-	    // Assume all fields but last to be convected by velocity. 
-	    m_nConvectiveFields=numfields-1;
-
-	    m_velocity = Array<OneD,int>(m_nConvectiveFields);
-
-	    for(i = 0; i <m_nConvectiveFields; ++i)
-	    {
-	        for(j = 0; j < numfields; ++j)
-	        {
-	            std::string var = m_boundaryConditions->GetVariable(j);
-	            if(NoCaseStringCompare(velids[i],var) == 0)
-	            {
-	                m_velocity[i] = j;
-	                break;
-	            }
-
-	            if(j == numfields)
-	            {
-	                std::string error = "Failed to find field: " + var;
-	                ASSERTL0(false,error.c_str());
-	            }
-	        }
-	    }
-
-	    VelDim     = m_velocity.num_elements();
-
-	    Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
-
-	    Array<OneD, NekDouble > Deriv;
-
-	    for(i = 0; i < VelDim; ++i)
-	    {
-	        velocity[i] = pInarray[m_velocity[i]];
-	    }
-
-	    // Set up Derivative work space;
-	    if(pWk.num_elements())
-	    {
-	        ASSERTL0(pWk.num_elements() > nqtot*VelDim,"Workspace is not sufficient");
-	        Deriv = pWk;
-	    }
-	    else
-	    {
-	        Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
-	    }
-
-	    for(i=0; i< m_nConvectiveFields; ++i)
-	    {
-	        ComputeAdvectionTerm(m_boundaryConditions, pFields,velocity,pInarray[i],pOutarray[i],Deriv);
-	        Vmath::Neg(nqtot,pOutarray[i],1);
-	    }
-	 }
-
-
-	//Evaluation of the advective terms
-    void NavierStokesAdvection::ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
-											Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-											const Array<OneD, Array<OneD, NekDouble> > &pV,
-											const Array<OneD, const NekDouble> &pU,
-										     Array<OneD, NekDouble> &pOutarray,
-											 Array<OneD, NekDouble> &pWk)
+        
+    }
+    
+    NavierStokesAdvection::~NavierStokesAdvection()
     {
-		// use dimension of Velocity vector to dictate dimension of operation
+    }
+    
+    //Advection function
+    
+    
+    //Evaluation of the advective terms
+    void NavierStokesAdvection::v_ComputeAdvectionTerm(
+            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
+            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const Array<OneD, Array<OneD, NekDouble> > &pV,
+            const Array<OneD, const NekDouble> &pU,
+            Array<OneD, NekDouble> &pOutarray,
+            int pVelocityComponent,
+            Array<OneD, NekDouble> &pWk)
+    {
+        // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = pV.num_elements();
 		
         // ToDo: here we should add a check that V has right dimension
-		
+	
         int nPointsTot = pFields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2;
 		
@@ -152,30 +90,28 @@ namespace Nektar
         // Evaluate V\cdot Grad(u)
         switch(ndim)
         {
-			case 1:
-				pFields[0]->PhysDeriv(pU,grad0);
-				Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
-				break;
-			case 2:
-				grad1 = Array<OneD, NekDouble> (nPointsTot);
-		        pFields[0]->PhysDeriv(pU,grad0,grad1);
-				Vmath::Vmul (nPointsTot,grad0,1,pV[0],1,pOutarray,1);
-			    Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
-				break;	 
-			case 3:
-				grad1 = Array<OneD, NekDouble> (nPointsTot);
-				grad2 = Array<OneD, NekDouble> (nPointsTot);
-				pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
-				Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
-				Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
-				Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
-				break;
-			default:
-				ASSERTL0(false,"dimension unknown");
+        case 1:
+            pFields[0]->PhysDeriv(pU,grad0);
+            Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
+            break;
+        case 2:
+            grad1 = Array<OneD, NekDouble> (nPointsTot);
+            pFields[0]->PhysDeriv(pU,grad0,grad1);
+            Vmath::Vmul (nPointsTot,grad0,1,pV[0],1,pOutarray,1);
+            Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
+            break;	 
+        case 3:
+            grad1 = Array<OneD, NekDouble> (nPointsTot);
+            grad2 = Array<OneD, NekDouble> (nPointsTot);
+            pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
+            Vmath::Vmul( nPointsTot,grad0,1,pV[0],1,pOutarray,1);
+            Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
+            Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
+            break;
+        default:
+            ASSERTL0(false,"dimension unknown");
         }
-	
-			
-	}
+    }
 
 } //end of namespace
 

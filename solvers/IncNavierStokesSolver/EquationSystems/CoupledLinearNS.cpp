@@ -1245,7 +1245,7 @@ namespace Nektar
                                             Array<OneD, Array<OneD, NekDouble> > &outarray,
                                             const NekDouble time)
     {
-        // evaluate convection terms
+        // evaluate convectioln terms
         EvaluateAdvectionTerms(inarray,outarray);
         int nqtot  =m_fields[0]->GetTotPoints(); 
         //add the force

@@ -272,34 +272,16 @@ namespace Nektar
         // Set up Derivative work space; 
         if(wk.num_elements())
         {
-            ASSERTL0(wk.num_elements() > nqtot*VelDim,"Workspace is not sufficient");            
+            ASSERTL0(wk.num_elements() >= nqtot*VelDim,"Workspace is not sufficient");            
             Deriv = wk;
         }
         else
         {
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
-
-        m_advObject->DoAdvection(m_fields,inarray,outarray,Deriv);
-
-//        switch(m_advectionForm)
-//        {
-//        case eConvective: case eNonConservative:
-//            {
-//                int i;
-//                for(i = 0; i < m_nConvectiveFields; ++i)
-//                {
-//                    AdvectionNonConservativeForm(velocity,inarray[i],outarray[i],Deriv);
-//                    Vmath::Neg(nqtot,outarray[i],1);
-//                }
-//            }
-//            break;
-//        default:
-//            ASSERTL0(false,"Advection form not known");
-//            break;
-//        }
-
-
+        
+        m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
+                                 m_velocity,inarray,outarray,Deriv);
     }
 	
     //time dependent boundary conditions updating

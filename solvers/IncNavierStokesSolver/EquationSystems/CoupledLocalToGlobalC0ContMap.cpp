@@ -316,7 +316,8 @@ namespace Nektar
 
             // determine a default edge to attach pressure modes to
             // which is part of the inner solve;
-            int defedge = -1;
+            int defedge = -1;ls
+
             vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(nlevels);
             for(i = 0; i < bndgraphs.size(); ++i)
             {
@@ -340,6 +341,45 @@ namespace Nektar
                     break;
                 }
             }
+
+            // reset singular edge to be defedge so that it is part of
+            // inner solve.
+            if(m_systemSingular)
+            {
+
+                
+                for(i = 0; i < bndgraphs.size(); ++i)
+                {
+                    int GlobIdOffset = bndgraphs[i]->GetIdOffset();
+                    
+                for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
+                {
+                    // find edge in graph vert list
+                    if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+                    {
+                        edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+                        if(defedge == -1)
+                        {
+                            defedge = edgeId;
+                            break;
+                        }
+                    }
+                }
+                if(defedge != -1)
+                {
+                    break;
+                }
+            }
+
+                for(i = 0; i < AddMeanPressureToEdgeId.size(); ++i)
+                {
+                    if(AddMeanPressureToEdgeId[i] != -1)
+                    {
+                        AddMeanPressureToEdgeId[i] = defedge;
+                        break;
+                    }
+            }
+
 
             for(int n = 1; n < nlevels; ++n)
             {

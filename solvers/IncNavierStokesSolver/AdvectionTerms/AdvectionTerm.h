@@ -83,31 +83,35 @@ namespace Nektar
 
         inline void InitObject();
 
-		/// Compute advection term
-		inline void DoAdvection(
-                               Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                               const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-                               Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-                               Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
-		
+        /// Compute advection term
+        void DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                         const int nConvectiveFields,
+                         const Array<OneD, int>  &vel_loc,
+                         const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
+                         Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+                         Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
+        
+
 	protected:
-		LibUtilities::CommSharedPtr                 m_comm;
-		/// Filename of session
-		LibUtilities::SessionReaderSharedPtr        m_session;
-		/// Name of the session
+        LibUtilities::CommSharedPtr                 m_comm;
+        /// Filename of session
+        LibUtilities::SessionReaderSharedPtr        m_session;
+        /// Name of the session
         std::string m_sessionName;
         /// Pointer to boundary conditions object.
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
         /// Pointer to mesh graph
         SpatialDomains::MeshGraphSharedPtr          m_graph;
-
+        
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
-
+        
         int m_spacedim;              ///< Spatial dimension (> expansion dim)
         int m_expdim;                ///< Dimension of the expansion
-		int nvariables;              ///< Number of variables
-
+        int nvariables;              ///< Number of variables
+        
+        int m_nConvectiveFields;     /// Number of fields to be convected;
+        
         /// Constructor
         AdvectionTerm(
                 LibUtilities::CommSharedPtr&                 pComm,
@@ -117,32 +121,27 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        //Virtual function for the evaluation of the advective term
-        virtual void v_DoAdvection(
-                                   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-                                   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-                                   Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
-		
-		
-		int NoCaseStringCompare(const string & s1, const string& s2) ;
-
-	};
+        virtual void v_ComputeAdvectionTerm(
+                                            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
+                                            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                                            const Array<OneD, Array<OneD, NekDouble> > &pV,
+                                            const Array<OneD, const NekDouble> &pU,
+                                            Array<OneD, NekDouble> &pOutarray,
+                                            int pVelocityComponent,
+                                            Array<OneD, NekDouble> &pWk)
+        {
+            ASSERTL0(false,"This function is not defined in parent class");
+        };
+	
+        int NoCaseStringCompare(const string & s1, const string& s2);
+        
+    };
     
     inline void AdvectionTerm::InitObject()
     {
         v_InitObject();
     }
 
-    inline void AdvectionTerm::DoAdvection(
-                           Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                           const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-                           Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-                           Array<OneD, NekDouble> &pWk)
-    {
-        v_DoAdvection(pFields, pInarray, pOutarray, pWk);
-    }
-	
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H

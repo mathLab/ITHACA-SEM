@@ -47,7 +47,7 @@
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/DisContField2D.h>
 
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
 
 //#define TIMING
 
@@ -60,8 +60,7 @@
 namespace Nektar
 {     
 
-
-    class AdjointAdvection: public AdvectionTerm
+    class AdjointAdvection: public LinearisedAdvection
     {
     public:
         friend class MemoryManager<AdjointAdvection>;
@@ -79,41 +78,27 @@ namespace Nektar
         static std::string className;
 
 	protected:
-		//Storage of the base flow
-		Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
- 		int                                             m_nConvectiveFields;
-		Array<OneD, int>                                m_velocity;
-
+        //Storage of the base flow
+        Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
+        
         AdjointAdvection(
-                LibUtilities::CommSharedPtr                 pComm,
-                LibUtilities::SessionReaderSharedPtr        pSession,
-                SpatialDomains::MeshGraphSharedPtr          pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
-
+                         LibUtilities::CommSharedPtr                 pComm,
+                         LibUtilities::SessionReaderSharedPtr        pSession,
+                         SpatialDomains::MeshGraphSharedPtr          pGraph,
+                         SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
+        
         virtual ~AdjointAdvection();
-
-        void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
-
-        /// Import Base flow
-        void ImportFldBase(std::string pInfile,
-                SpatialDomains::MeshGraphSharedPtr pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions);
+        
+	private:
 
         //Function for the evaluation of the adjoint advective terms
-        void ComputeAdvectionTerm(
+        virtual void v_ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
                          Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                         const Array<OneD, Array<OneD, NekDouble> > &pV,
+                         const Array<OneD, const NekDouble> &pU,
+                         Array<OneD, NekDouble> &pOutarray,
                          int pVelocityComponent,
-                         const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
-                         Array<OneD, NekDouble> &pOutarray);
-
-	private:
-        //Virtual function for the evaluation of the advective terms
-        virtual void v_DoAdvection(
-                                   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-                                   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-                                   Array<OneD, NekDouble> &pWk);
-
+                         Array<OneD, NekDouble> &pWk);
     };
     
     

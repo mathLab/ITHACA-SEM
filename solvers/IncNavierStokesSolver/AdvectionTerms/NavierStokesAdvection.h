@@ -82,13 +82,9 @@ namespace Nektar
         /// Name of class
         static std::string className;
         static std::string className2;
-
+        
 	protected:
-
-		int   m_nConvectiveFields;  /// Number of fields to be convected;
-
-        Array<OneD, int> m_velocity; ///< int which identifies which components of m_fields contains the velocity (u,v,w);
-
+        
         NavierStokesAdvection(
                 LibUtilities::CommSharedPtr&                 pComm,
                 LibUtilities::SessionReaderSharedPtr&        pSession,
@@ -98,20 +94,16 @@ namespace Nektar
 
         virtual ~NavierStokesAdvection();
 
+	private:
+
         //Function for the evaluation of the linearised advective terms
-        void ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
+        virtual void v_ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
                          Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, Array<OneD, NekDouble> > &pV,
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,
+                         int pVelocityComponent,
                          Array<OneD, NekDouble> &pWk);
-	private:
-        //Virtual function for the evaluation of the advective terms
-        virtual void v_DoAdvection(
-                                   Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
-                                   Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-                                   Array<OneD, NekDouble> &pWk);
 
 	};
     

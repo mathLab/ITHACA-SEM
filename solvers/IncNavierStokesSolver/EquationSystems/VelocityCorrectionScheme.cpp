@@ -211,7 +211,8 @@ namespace Nektar
                                                                     const NekDouble time)
     {
         // evaluate convection terms
-        m_advObject->DoAdvection(m_fields, inarray, outarray);
+        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
+                                 inarray, outarray);
 
         //add the force
         if(m_session->DefinesFunction("BodyForce"))

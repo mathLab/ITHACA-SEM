@@ -93,7 +93,7 @@ namespace Nektar
                 break;
             case 3:
                 {
-                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExp,  solnType);
+                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExp, solnType);
                 }
                 break;
             default:
@@ -102,18 +102,6 @@ namespace Nektar
                 }
             }
             
-            Nektar::Array<OneD, long> tmp(m_globalToUniversalMap.num_elements());
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                tmp[i] = m_globalToUniversalMap[i];
-            }
-            m_gsh = Gs::Init(tmp, pComm);
-            Gs::Unique(tmp, pComm);
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
-
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
         }
@@ -140,18 +128,6 @@ namespace Nektar
                                       bndCondExp,
                                       bndConditions,
                                       periodicVerticesId);
-
-            Nektar::Array<OneD, long> tmp(m_globalToUniversalMap.num_elements());
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                tmp[i] = m_globalToUniversalMap[i];
-            }
-            m_gsh = Gs::Init(tmp, pComm);
-            Gs::Unique(tmp, pComm);
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -183,20 +159,6 @@ namespace Nektar
                                       periodicEdgesId,
                                       checkIfSystemSingular);
 
-
-            Nektar::Array<OneD, long> tmp(m_globalToUniversalMap.num_elements());
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                tmp[i] = m_globalToUniversalMap[i];
-            }
-            m_gsh = Gs::Init(tmp, pComm);
-            Gs::Unique(tmp, pComm);
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
-
-
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
         }
@@ -226,18 +188,6 @@ namespace Nektar
                                       periodicVerticesId,
                                       periodicEdgesId,
                                       periodicFacesId);
-
-            Nektar::Array<OneD, long> tmp(m_globalToUniversalMap.num_elements());
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                tmp[i] = m_globalToUniversalMap[i];
-            }
-            m_gsh = Gs::Init(tmp, pComm);
-            Gs::Unique(tmp, pComm);
-            for (unsigned int i = 0; i < m_globalToUniversalMap.num_elements(); ++i)
-            {
-                m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -702,6 +652,11 @@ namespace Nektar
             }
             m_numGlobalCoeffs = globalId;
 
+
+            ASSERTL0(!(m_comm->GetSize() > 1 && solnType == eIterativeMultiLevelStaticCond),
+                     "Paralle Multi-Level Static Condensation not yet supported.");
+            SetUpUniversalC0ContMap(locExp);
+
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if( (solnType == eDirectMultiLevelStaticCond || solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
@@ -730,10 +685,6 @@ namespace Nektar
                     m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
-            }
-            else
-            {
-                SetUpUniversalC0ContMap(locExp);
             }
         }
 
@@ -771,6 +722,8 @@ namespace Nektar
 
             m_globalToUniversalMap = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
             m_globalToUniversalMapUnique = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
+            m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
+            m_globalToUniversalBndMapUnique = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
 
             // Loop over all the elements in the domain to gather mesh data
             for(i = 0; i < locExpVector.size(); ++i)
@@ -812,6 +765,7 @@ namespace Nektar
                     meshVertId   = (locExpansion->GetGeom())->GetVid(j);
                     vGlobalId    = m_localToGlobalMap[cnt+locExpansion->GetVertexMap(j)];
                     m_globalToUniversalMap[vGlobalId] = meshVertId + 1;
+                    m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
                     maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
                 }
 
@@ -835,6 +789,7 @@ namespace Nektar
                         vGlobalId = m_localToGlobalMap[cnt+edgeInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
                            = nVert + meshEdgeId * maxEdgeDof + k + 1;
+                        m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
                         maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
                     }
                 }
@@ -854,6 +809,8 @@ namespace Nektar
                         m_globalToUniversalMap[vGlobalId]
                            = nVert + nEdge*maxEdgeDof + meshFaceId * maxFaceDof
                                    + k + 1;
+                        m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
+
                         maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
                     }
                 }
@@ -866,6 +823,24 @@ namespace Nektar
             for (k = maxBndGlobalId + 1; k < m_globalToUniversalMap.num_elements(); ++k)
             {
                 m_globalToUniversalMap[k] = 0;
+            }
+
+            Nektar::Array<OneD, long> tmp(m_numGlobalCoeffs);
+            Nektar::Array<OneD, long> tmp2(m_numGlobalBndCoeffs, tmp);
+            for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
+            {
+                tmp[i] = m_globalToUniversalMap[i];
+            }
+            m_gsh = Gs::Init(tmp, m_comm);
+            m_bndGsh = Gs::Init(tmp2, m_comm);
+            Gs::Unique(tmp, m_comm);
+            for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
+            {
+                m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
+            }
+            for (unsigned int i = 0; i < m_numGlobalBndCoeffs; ++i)
+            {
+                m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
             }
         }
 

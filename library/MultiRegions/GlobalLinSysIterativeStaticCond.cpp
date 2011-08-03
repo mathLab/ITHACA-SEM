@@ -87,7 +87,8 @@ namespace Nektar
                      const boost::shared_ptr<ExpList> &pExpList,
                      const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap)
+                : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap),
+                  m_locToGloMap (pLocToGloMap)
         {
             ASSERTL1((pKey.GetGlobalSysSolnType()==eIterativeStaticCond)||
                      (pKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond),
@@ -122,7 +123,8 @@ namespace Nektar
                   m_schurCompl ( pSchurCompl ),
                   m_BinvD      ( pBinvD ),
                   m_C          ( pC ),
-                  m_invD       ( pInvD )
+                  m_invD       ( pInvD ),
+                  m_locToGloMap( pLocToGloMap )
         {
             // Construct this level
             Initialise(pLocToGloMap);
@@ -218,7 +220,8 @@ namespace Nektar
                 {
                     Array<OneD, NekDouble> offsetarray;
                     //Solve(F_HomBnd,V_GlobHomBnd);
-                    SolveLinearSystem(nGlobHomBndDofs, F+nDirBndDofs,offsetarray=out+nDirBndDofs);
+                    //SolveLinearSystem(nGlobHomBndDofs, F+nDirBndDofs,offsetarray=out+nDirBndDofs);
+                    SolveLinearSystem(nGlobBndDofs, F, out, nDirBndDofs);
                 }
                 else
                 {
@@ -658,9 +661,20 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            NekVector<NekDouble> in (pInput.num_elements(), pInput,  eWrapper);
-            NekVector<NekDouble> out(pOutput.num_elements(), pOutput, eWrapper);
-            out = (*m_gmat)*in;
+            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
+            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nNonDir = nGlobal - nDir;
+
+            //NekVector<NekDouble> in (nNonDir, pInput + nDir,  eWrapper);
+            //NekVector<NekDouble> out(nNonDir, pOutput + nDir, eWrapper);
+            //out = (*m_gmat)*in;
+            //m_locToGloMap->UniversalAssembleBnd(pOutput);
+            Array<OneD, NekDouble> vloc(nLocal, 0.0);
+            NekVector<NekDouble> loc(nLocal, vloc, eWrapper);
+            m_locToGloMap->GlobalToLocalBnd(pInput, vloc);
+            loc = (*m_schurCompl)*loc;
+            m_locToGloMap->AssembleBnd(vloc, pOutput);
         }
 
 
@@ -676,15 +690,28 @@ namespace Nektar
             ASSERTL1(!m_preconditioner.get(),
                      "Preconditioner has already been defined.");
 
+            int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int n = m_gmat->GetRows();
-            m_map = Array<OneD, int>(n, 1);
+            m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
             MatrixStorage storage = eDIAGONAL;
             m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(n, n, storage);
             DNekMat &M = (*m_preconditioner);
 
+            // Extract diagonal contributions
+            Array<OneD, NekDouble> vOutput(nGlobalBnd,0.0);
             for (unsigned int i = 0; i < n; ++i)
             {
-                M.SetValue(i,i,1.0/(*m_gmat)(i,i));
+                vOutput[nDirBnd + i] = (*m_gmat)(i,i);
+            }
+
+            // Assemble diagonal contributions across processes
+            m_locToGloMap->UniversalAssembleBnd(vOutput);
+
+            // Populate preconditioner matrix
+            for (unsigned int i = 0; i < n; ++i)
+            {
+                M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
             }
         }
     }

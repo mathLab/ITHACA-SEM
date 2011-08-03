@@ -122,6 +122,10 @@ namespace Nektar
             /// Retrieve the global indices of the local boundary modes.
             inline const Array<OneD,const int>&  GetLocalToGlobalBndMap();
 
+            inline const Array<OneD, const int>& GetGlobalToUniversalBndMap();
+
+            inline const Array<OneD, const int>& GetGlobalToUniversalBndMapUnique();
+
             /// Returns true if using a modal expansion requiring a change of
             /// sign of some modes.
             inline bool GetSignChange();            
@@ -289,6 +293,7 @@ namespace Nektar
             int m_bndSystemBandWidth;
 
             Gs::gs_data * m_gsh;
+            Gs::gs_data * m_bndGsh;
 
             /// The level of recursion in the case of multi-level static
             /// condensation.
@@ -493,6 +498,15 @@ namespace Nektar
             return m_localToGlobalBndSign;
         }
 
+        inline const Array<OneD, const int>& LocalToGlobalBaseMap::GetGlobalToUniversalBndMap()
+        {
+            return m_globalToUniversalBndMap;
+        }
+
+        inline const Array<OneD, const int>& LocalToGlobalBaseMap::GetGlobalToUniversalBndMapUnique()
+        {
+            return m_globalToUniversalBndMapUnique;
+        }
 
         inline NekDouble LocalToGlobalBaseMap::GetLocalToGlobalBndSign(
                     const int i) const
@@ -585,22 +599,7 @@ namespace Nektar
                     int offset) const
         {
             GlobalToLocalBnd(global.GetPtr(), loc.GetPtr(), offset);
-/*            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
-
-            // offset input data by length "offset" for Dirichlet boundary conditions.
-            Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
-            Vmath::Vcopy(global.GetDimension(), global.GetRawPtr(), 1, tmp.get() + offset, 1);
-
-            if(m_signChange)
-            {
-                Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-            }
-            else
-            {
-                Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-            }
-*/        }
+        }
 
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
@@ -608,18 +607,7 @@ namespace Nektar
                     NekVector<NekDouble>& loc) const
         {
             GlobalToLocalBnd(global.GetPtr(), loc.GetPtr());
-/*            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-
-            if(m_signChange)
-            {
-                Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-            }
-            else
-            {
-                Vmath::Gathr(m_numLocalBndCoeffs, global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-            }
-*/        }
+        }
 
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
@@ -694,7 +682,7 @@ namespace Nektar
             {
                 Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
-            UniversalAssemble(tmp);
+            UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get() + offset, 1, global.get(), 1);
         }
 
@@ -717,7 +705,21 @@ namespace Nektar
             {
                 Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), global.get());
             }
-            UniversalAssemble(global);
+            UniversalAssembleBnd(global);
+        }
+
+        inline const void LocalToGlobalBaseMap::UniversalAssembleBnd(
+                      Array<OneD,     NekDouble>& pGlobal) const
+        {
+            ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
+                    "Wrong size.");
+            Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
+        }
+
+        inline const void LocalToGlobalBaseMap::UniversalAssembleBnd(
+                      NekVector<      NekDouble>& pGlobal) const
+        {
+            UniversalAssembleBnd(pGlobal.GetPtr());
         }
 
         inline int LocalToGlobalBaseMap::GetBndSystemBandWidth() const

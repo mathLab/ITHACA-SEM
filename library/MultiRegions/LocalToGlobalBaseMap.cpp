@@ -104,7 +104,9 @@ namespace Nektar
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(
                     LocalToGlobalBaseMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph):
-            m_comm(oldLevelMap->GetComm())
+            m_comm(oldLevelMap->GetComm()),
+            m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
+            m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique())
         {
             int i;
             int j;

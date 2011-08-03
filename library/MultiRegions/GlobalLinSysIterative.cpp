@@ -96,8 +96,8 @@ namespace Nektar
             Array<OneD, NekDouble> r_new_A(nNonDir, 0.0);
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> in(nNonDir,pInput,eWrapper);
-            NekVector<NekDouble> out(nNonDir,pOutput,eWrapper);
+            NekVector<NekDouble> in(nNonDir,pInput + nDir,eWrapper);
+            NekVector<NekDouble> out(nNonDir,pOutput + nDir,eWrapper);
             NekVector<NekDouble> r(nNonDir,r_A,eWrapper);
             NekVector<NekDouble> r_new(nNonDir,r_new_A,eWrapper);
             NekVector<NekDouble> z(nNonDir,z_A,eWrapper);
@@ -122,7 +122,7 @@ namespace Nektar
             vExchange[0] = VDmath::Ddot2(vComm, nNonDir, r_A, r_A, m_map + nDir);
             if (vExchange[0] < NekConstants::kNekZeroTol)
             {
-                Vmath::Zero(nNonDir, pOutput, 1);
+                Vmath::Zero(nGlobal, pOutput, 1);
                 return;
             }
 

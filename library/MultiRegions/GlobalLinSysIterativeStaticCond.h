@@ -102,6 +102,9 @@ namespace Nektar
             /// Global matrix on which the iterative solver acts.
             DNekMatSharedPtr m_gmat;
 
+            // Local to global map.
+            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
+
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             virtual void v_Solve(

@@ -311,26 +311,6 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr elmt;
             StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
             
-            Array<OneD, const NekDouble> tmp_Tot;
-            Array<OneD, NekDouble> tmp_BC;
-            
-            int cnt = 0;
-            int exp_size, elmtID, boundaryID, offset, exp_dim, pos;
-            
-            for(int n = 0; n < m_bndConditions.num_elements(); ++n)
-            {
-                if(n == BndID)
-                {
-                    exp_size = m_bndCondExpansions[n]->GetExpSize();
-                    pos = 0;
-                    for(int i = 0; i < exp_size; i++)
-                    {
-                        elmtID = m_BCtoElmMap[cnt];
-                        boundaryID = m_BCtoEdgMap[cnt];
-                        
-                        exp_dim = m_bndCondExpansions[n]->GetExp(i)->GetTotPoints();
-                        offset = GetPhys_Offset(elmtID);
-			
 			Array<OneD, const NekDouble> tmp_Tot;
 			Array<OneD, NekDouble> tmp_BC;
 						
@@ -344,32 +324,24 @@ namespace Nektar
 				{
 					exp_size = m_bndCondExpansions[n]->GetExpSize();
 					exp_size_per_plane = exp_size/m_planes.num_elements();
-					
+								
 					for(int i = 0; i < exp_size_per_plane; i++)
 					{
 						if(n == BndID)
 						{
 							elmtID = m_BCtoElmMap[cnt];
 							boundaryID = m_BCtoEdgMap[cnt];
-						
 							exp_dim = m_bndCondExpansions[n]->GetExp(i+k*exp_size_per_plane)->GetTotPoints();
 							offset = GetPhys_Offset(elmtID);
-						
 							elmt = GetExp(elmtID);
-						
 							temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i+k*exp_size_per_plane));
-		
 							elmt->GetEdgePhysVals(boundaryID,temp_BC_exp,tmp_Tot = TotField + offset,tmp_BC = BndVals + pos);
-						
 							pos += exp_dim;
 						}
 						cnt++;
 					}
 				}
 			}
-                    }
-                }
-            }
         }
 	
         void DisContField3DHomogeneous1D::NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
@@ -380,8 +352,8 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr elmt;
             StdRegions::StdExpansion1DSharedPtr temp_BC_exp;
             
-            Array<OneD, const NekDouble> tmp_V1;
-            Array<OneD, const NekDouble> tmp_V2;
+            Array<OneD, NekDouble> tmp_V1;
+            Array<OneD, NekDouble> tmp_V2;
             Array<OneD, NekDouble> tmp_outarray;
             
             bool NegateNormals;

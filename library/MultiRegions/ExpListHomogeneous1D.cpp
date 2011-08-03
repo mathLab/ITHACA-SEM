@@ -644,26 +644,26 @@ namespace Nektar
 			}
 			else
 			{
-                            if(m_FourierSpace != eCoef)
-                            {
-                                HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+				if(m_FourierSpace != eCoef)
+				{
+					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
                                 
 			        for( int i=0 ; i<nF_pts/2 ; i++ )
 			        {
-                                    k = i;
-                                    Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
-                                }
+						k = i;
+						Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
+					}
 				
-                                HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
-                            }
-                            else
-                            {
-                                for( int i=0 ; i<nF_pts/2 ; i++ )
+					HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
+				}
+				else
+				{
+					for( int i=0 ; i<nF_pts/2 ; i++ )
 			        {
 						k = i;
 						Vmath::Smul(2*nP_pts,k,tmp1 = inarray + (i*2*nP_pts),1,tmp2 = out_d + (i*2*nP_pts),1);
-                                }
-                            }
+					}
+				}
 			}
 		}
         

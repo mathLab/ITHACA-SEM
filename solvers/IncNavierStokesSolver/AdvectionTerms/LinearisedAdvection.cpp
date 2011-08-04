@@ -338,7 +338,7 @@ namespace Nektar
             pFields[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
             pFields[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
             pFields[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
-            
+				cout << "Inside LINEARISED " << endl;
             switch (pVelocityComponent)
             {
                 //x-equation	

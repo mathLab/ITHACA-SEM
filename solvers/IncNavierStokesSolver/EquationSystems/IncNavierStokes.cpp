@@ -145,6 +145,16 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_comm, m_session, m_graph, m_boundaryConditions);
         }
+		
+		if (m_equationType == eSteadyLinearisedNS)
+        {
+            std::string vConvectiveType = "Linearised";
+            if (m_session->DefinesTag("AdvectiveType"))
+            {
+                vConvectiveType = m_session->GetTag("Linearised");
+            }
+            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_comm, m_session, m_graph, m_boundaryConditions);
+        }
     }
 
     IncNavierStokes::~IncNavierStokes(void)

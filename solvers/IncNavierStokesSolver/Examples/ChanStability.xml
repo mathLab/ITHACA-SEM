@@ -244,12 +244,12 @@
   <CONDITIONS>
       <SOLVERINFO>
           <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="AdvectionForm" VALUE="Linearised"/>
+      <I PROPERTY="EQTYPE" VALUE="SteadyLinearisedNS"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
-       <I PROPERTY="InitialVector" VALUE="Assigned"/>
-
+      <I PROPERTY="InitialVector" VALUE="Random"/>
+      <I PROPERTY="Driver" VALUE="Arpack"/>
+ 
 
     </SOLVERINFO>
 
@@ -296,6 +296,12 @@
       <FUNCTION NAME="Forcing">
      <E VAR="u" VALUE="0" />
      <E VAR="v" VALUE="0" />
+     <E VAR="p" VALUE="0" />
+   </FUNCTION>
+   
+         <FUNCTION NAME="InitialConditions">
+     <E VAR="u" VALUE="1" />
+     <E VAR="v" VALUE="1" />
      <E VAR="p" VALUE="0" />
    </FUNCTION>
 

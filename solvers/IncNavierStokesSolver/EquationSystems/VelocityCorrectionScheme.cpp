@@ -182,7 +182,7 @@ namespace Nektar
         {
         case eUnsteadyStokes: 
         case eUnsteadyNavierStokes:
-		case eSteadyLinearisedNS:
+		case eUnsteadyLinearisedNS:
             {   
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);

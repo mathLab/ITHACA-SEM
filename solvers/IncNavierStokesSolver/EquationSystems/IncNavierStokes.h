@@ -52,7 +52,8 @@ namespace Nektar
         eNoEquationType,
         eSteadyStokes,
         eSteadyOseen,
-        eSteadyLinearisedNS,
+        eUnsteadyLinearisedNS,
+		eSteadyLinearisedNS,
         eUnsteadyStokes,
         eUnsteadyNavierStokes,
         eEquationTypeSize
@@ -64,7 +65,8 @@ namespace Nektar
         "NoType",
         "SteadyStokes",
         "SteadyOseen",
-        "SteadyLinearisedNS",
+        "UnsteadyLinearisedNS",
+		"SteadyLinearisedNS",
         "UnsteadyStokes",
         "UnsteadyNavierStokes"
     };

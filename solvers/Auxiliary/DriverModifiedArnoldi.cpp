@@ -79,7 +79,8 @@ namespace Nektar
                          "EquationSystem '" + vEquation + "' is not defined.\n"
                          "Ensure equation name is correct and module is compiled.\n");
 
-                m_session->SetTag("AdvectiveType","Linearised");
+				//std::string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
+				//m_session->SetTag("AdvectiveType",vAdvectionForm);
                 
                 m_equ = Array<OneD, EquationSystemSharedPtr>(1);
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);

@@ -104,7 +104,7 @@ namespace Nektar
         {
         case eSteadyStokes: 
         case eSteadyOseen: 
-        case eSteadyLinearisedNS: 
+        case eUnsteadyLinearisedNS: 
             break;
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:
@@ -146,7 +146,7 @@ namespace Nektar
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_comm, m_session, m_graph, m_boundaryConditions);
         }
 		
-		if (m_equationType == eSteadyLinearisedNS)
+		if (m_equationType == eUnsteadyLinearisedNS)
         {
             std::string vConvectiveType = "Linearised";
             if (m_session->DefinesTag("AdvectiveType"))

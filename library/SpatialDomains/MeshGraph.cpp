@@ -187,9 +187,11 @@ namespace Nektar
                 int check = 0;
                 for(j=0; j< basis.size(); ++j)
                 {
-                    if(LibUtilities::BasisTypeMap[basis[j]]=="Modified_A" ||
-                        LibUtilities::BasisTypeMap[basis[j]]=="Modified_B")
+                    if( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
+                        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) )
+                    {
                         check++;
+                    }
                 }
 
                 if(check==basis.size())

@@ -74,7 +74,7 @@ namespace Nektar
 														   SpatialDomains::MeshGraphSharedPtr &graph1D,
 														   SpatialDomains::BoundaryConditions &bcs,
 														   const int bc_loc):
-            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,graph1D,bcs,bc_loc)
         {
             int i,j,n,nel;
             bool False = false;

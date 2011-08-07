@@ -114,8 +114,6 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo();
-
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
 
@@ -156,8 +154,6 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo();
-
             map<int,int> periodicEdges;
             vector<map<int,int> > periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
@@ -208,9 +204,6 @@ namespace Nektar
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-
-            ApplyGeomInfo();
-
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 map<int,int> periodicEdges;
@@ -266,11 +259,6 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
-
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
@@ -319,11 +307,6 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-            GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
-
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
@@ -375,8 +358,6 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-            ApplyGeomInfo();
-
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 map<int,int> periodicEdges;

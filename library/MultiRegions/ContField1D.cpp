@@ -113,8 +113,6 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo();
-
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
 
@@ -155,11 +153,6 @@ namespace Nektar
             m_contCoeffs(),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,
-                                               bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
                                 periodicVertices);
@@ -206,10 +199,6 @@ namespace Nektar
             m_contCoeffs(),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
@@ -255,11 +244,6 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
-
-            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
@@ -311,11 +295,6 @@ namespace Nektar
             m_contCoeffs(),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,
-                                               bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
                                 periodicVertices);
@@ -370,10 +349,6 @@ namespace Nektar
             m_contCoeffs(),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 

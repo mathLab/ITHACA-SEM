@@ -123,8 +123,6 @@ namespace Nektar
             m_globalBndMat
                         = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
-            //GenerateFieldBnd1D(bcs,bcs.GetVariable(bc_loc));
-
             m_traceMap = MemoryManager<LocalToGlobalDGMap>
                                         ::AllocateSharedPtr(pSession,graph1D,*this,
                                                             m_bndCondExpansions,
@@ -164,8 +162,6 @@ namespace Nektar
             m_globalBndMat
                         = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
-            //GenerateFieldBnd1D(bcs,variable);
-
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::
                 AllocateSharedPtr(pSession,graph1D,*this,
                                   m_bndCondExpansions,m_bndConditions);
@@ -204,8 +200,6 @@ namespace Nektar
 
             m_globalBndMat
                         = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            //GenerateFieldBnd1D(bcs,variable);
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::
                 AllocateSharedPtr(pSession,graph1D,*this,
@@ -272,108 +266,6 @@ namespace Nektar
                                            m_bndCondExpansions,
                                            m_bndConditions);
         }
-#if 0
-        void DisContField1D::GenerateFieldBnd1D(SpatialDomains::BoundaryConditions &bcs,   const std::string variable)
-        {
-            int i,nbnd;
-            int cnt=0;
-            MultiRegions::ExpList0DSharedPtr  p_exp;
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
-
-            nbnd = bregions.size();
-
-            // count the number of non-periodic boundary regions
-            for(int i = 0; i < nbnd; ++i)
-            {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
-                {
-                    for(j = 0; j < bregions[i]->size(); ++j)
-                    {
-                        cnt += (*bregions[i])[j]->size();
-                    }
-                }
-            }
-
-            m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
-            m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
-
-            // Set up matrix map
-            m_globalBndMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    for(j = 0; j < bregions[i]->size(); j++)
-                    {
-                        for(k = 0; k < ((*bregions[i])[j])->size(); k++)
-                        {
-
-                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
-                            {
-                                Array<OneD,NekDouble> coords(3,0.0);
-
-                                p_exp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
-                                vert->GetCoords(coords);
-                                p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)->m_DirichletCondition.Evaluate(coords[0],coords[1],coords[2]));
-
-                                m_bndCondExpansions[cnt] = p_exp;
-                                m_bndConditions[cnt++] = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"dynamic cast to a vertex failed");
-                            }
-                }
-            }
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-
-                if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
-                {
-                    if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[0])[0]))
-                    {
-                        Array<OneD,NekDouble> coords(3,0.0);
-
-                        p_exp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
-                        vert->GetCoords(coords);
-
-                        if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                        {
-                            p_exp->SetValue(boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)
-                                            ->m_NeumannCondition.Evaluate(coords[0],coords[1],coords[2]));
-                            m_bndCondExpansions[cnt] = p_exp;
-                            m_bndConditions[cnt++] = locBCond;
-                        }
-                        else if(locBCond->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                        {
-                            boost::shared_ptr<SpatialDomains::RobinBoundaryCondition> robinBC  =
-                                boost::static_pointer_cast<SpatialDomains::RobinBoundaryCondition>(locBCond);
-                            p_exp->SetValue(-robinBC->m_a.Evaluate(coords[0],coords[1],coords[2])/
-                                            robinBC->m_b.Evaluate(coords[0],coords[1],coords[2]));
-                            m_bndCondExpansions[cnt] = p_exp;
-                            m_bndConditions[cnt++] = locBCond;
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"This type of BC not implemented yet");
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a vertex failed");
-                    }
-                }
-            }
-        }
-#endif
 
 
         /**

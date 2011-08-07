@@ -79,6 +79,12 @@ namespace Nektar
         {
         }
 
+        MeshGraph::MeshGraph(LibUtilities::SessionReaderSharedPtr &pSession)
+            : m_session(pSession)
+        {
+
+        }
+
         boost::shared_ptr<MeshGraph> MeshGraph::Read(const std::string& infilename)
         {
             boost::shared_ptr<MeshGraph> returnval;

@@ -79,7 +79,7 @@ namespace Nektar
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
 													   bool useFFT,
-                                                       SpatialDomains::MeshGraph1D &graph1D):
+                                                       SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int n,j,nel;

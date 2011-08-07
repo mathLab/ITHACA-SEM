@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
-    // default solution type multilevel statis condensation
 
     if( (argc != 2) && (argc != 3))
     {
@@ -33,14 +32,12 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph1D graph1D;
-    graph1D.ReadGeometry(meshfile);
-    graph1D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, &graph1D);
+    SpatialDomains::BoundaryConditions bcs(vSession, graph1D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -71,7 +68,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
 	
-    const SpatialDomains::ExpansionMap &expansions = graph1D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
 	
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     

@@ -80,7 +80,7 @@ namespace Nektar
 														const NekDouble lhom_y,
 														const NekDouble lhom_z,
 														bool useFFT,
-														SpatialDomains::MeshGraph1D &graph1D);
+														SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,

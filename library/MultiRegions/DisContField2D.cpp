@@ -60,13 +60,13 @@ namespace Nektar
         }
 
         DisContField2D::DisContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        bool SetUpJustDG):
             ExpList2D(pSession,graph2D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -96,7 +96,7 @@ namespace Nektar
         // Copy type constructor which declares new boundary conditions
         // and re-uses mapping info and trace space if possible
         DisContField2D::DisContField2D(const DisContField2D &In,
-                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
                                        bool SetUpJustDG,
@@ -106,7 +106,7 @@ namespace Nektar
             // Set up boundary conditions for this variable.
             GenerateBoundaryConditionExpansion(graph2D,bcs,
                                                bcs.GetVariable(bc_loc));
-            m_graph2D=graph2D;
+
             if(DeclareCoeffPhysArrays)
             {
                 EvaluateBoundaryConditions();
@@ -246,7 +246,7 @@ namespace Nektar
 
 
         DisContField2D::DisContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
                                        bool SetUpJustDG,
@@ -258,12 +258,12 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph2D,bcs,
                                                bcs.GetVariable(bc_loc),
                                                DeclareCoeffPhysArrays);
-            m_graph2D=graph2D;          
+
             if(DeclareCoeffPhysArrays == true)
             {
                 EvaluateBoundaryConditions();
             }
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -349,7 +349,7 @@ namespace Nektar
         }
 
         DisContField2D::DisContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const std::string variable,
                                        bool SetUpJustDG,
@@ -361,9 +361,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
                                                DeclareCoeffPhysArrays);
-            m_graph2D=graph2D;            
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -443,7 +442,7 @@ namespace Nektar
 
 
         DisContField2D::DisContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        const std::string variable,
                                        bool SetUpJustDG,
                                        bool DeclareCoeffPhysArrays):
@@ -452,13 +451,12 @@ namespace Nektar
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            SpatialDomains::BoundaryConditions bcs(pSession, &graph2D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
                                                DeclareCoeffPhysArrays);
-            m_graph2D=graph2D;
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -540,17 +538,16 @@ namespace Nektar
         // Copy type constructor which declares new boundary conditions
         // and re-uses mapping info and trace space if possible
         DisContField2D::DisContField2D(const DisContField2D &In,
-                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        const std::string variable,
                                        bool SetUpJustDG,
                                        bool DeclareCoeffPhysArrays):
             ExpList2D(In,DeclareCoeffPhysArrays)
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, &graph2D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             // Set up boundary conditions for this variable.
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
 
-            m_graph2D=graph2D;
             if(DeclareCoeffPhysArrays)
             {
                 EvaluateBoundaryConditions();
@@ -653,7 +650,7 @@ namespace Nektar
         }
 
 
-        void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
+        void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                                                 SpatialDomains::BoundaryConditions &bcs,
                                                                 const std::string variable,
                                                                 bool DeclareCoeffPhysArrays)
@@ -721,12 +718,14 @@ namespace Nektar
          *                      edges is placed.
          */
         void DisContField2D::GetPeriodicEdges(
-                                              SpatialDomains::MeshGraph2D &graph2D,
+                                              SpatialDomains::MeshGraphSharedPtr &graph2D,
                                               SpatialDomains::BoundaryConditions &bcs,
                                               const std::string variable,
                                               vector<map<int,int> >& periodicVerts,
                                               map<int,int>& periodicEdges)
         {
+            ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D),
+                     "Expected a MeshGraph2D.");
             int i,j,k;
 
             SpatialDomains::BoundaryRegionCollection &bregions
@@ -814,10 +813,10 @@ namespace Nektar
                                     = segmentGeom1->GetEid();
 
                                 // Extract the periodic vertices
-                                element1 = graph2D
-                                    .GetElementsFromEdge(segmentGeom1);
-                                element2 = graph2D
-                                    .GetElementsFromEdge(segmentGeom2);
+                                element1 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)
+                                    ->GetElementsFromEdge(segmentGeom1);
+                                element2 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)
+                                    ->GetElementsFromEdge(segmentGeom2);
 
                                 ASSERTL0(element1->size()==1,
                                          "The periodic boundaries belong to "
@@ -1578,7 +1577,7 @@ namespace Nektar
                              std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
                              cout<<"boundary condition from file:"<<filebcs<<endl;
-                             m_graph2D.Import(filebcs,FieldDef, FieldData);
+                             m_graph->Import(filebcs,FieldDef, FieldData);
                              // copy FieldData into locExpList                                            
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
                                                  FieldDef[0]->m_fields[0]);                                       
@@ -1617,7 +1616,7 @@ namespace Nektar
                              std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
                              cout<<"boundary condition from file:"<<filebcs<<endl;
-                             m_graph2D.Import(filebcs,FieldDef, FieldData);
+                             m_graph->Import(filebcs,FieldDef, FieldData);
                              // copy FieldData into locExpList                                           
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
                                              FieldDef[0]->m_fields[0]);
@@ -1656,7 +1655,7 @@ namespace Nektar
                              std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
 
-                             m_graph2D.Import(filebcs,FieldDef, FieldData);
+                             m_graph->Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList                                       
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		

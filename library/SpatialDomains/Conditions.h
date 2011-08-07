@@ -167,7 +167,7 @@ namespace Nektar
         class BoundaryConditions
         {
         public:
-            SPATIAL_DOMAINS_EXPORT BoundaryConditions(LibUtilities::SessionReaderSharedPtr pSession, const MeshGraph *meshGraph);
+            SPATIAL_DOMAINS_EXPORT BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph);
             SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
 
             BoundaryRegionCollection &GetBoundaryRegions(void)
@@ -187,7 +187,7 @@ namespace Nektar
 
         protected:
             /// The mesh graph to use for referencing geometry info.
-            const MeshGraph                        *m_meshGraph;
+            MeshGraphSharedPtr                      m_meshGraph;
             LibUtilities::SessionReaderSharedPtr    m_session;
 
             BoundaryRegionCollection                m_boundaryRegions;

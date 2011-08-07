@@ -34,20 +34,18 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraph1D graph1D;
-        graph1D.ReadGeometry(meshfile);
-        graph1D.ReadExpansions(meshfile);
+        SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
         // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(vSession, &graph1D);
+        SpatialDomains::BoundaryConditions bcs(vSession, graph1D);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
         lambda = vSession->GetParameter("Lambda");
-        const SpatialDomains::CompositeMap domain = (graph1D.GetDomain());
+        const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
         cout << "Solving 1D Helmholtz: "  << endl;
         cout << "       Communication: " << vComm->GetType() << endl;
         cout << "       Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
@@ -131,7 +129,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph1D.Write(out, FieldDef, FieldData);
+        graph1D->Write(out, FieldDef, FieldData);
         //----------------------------------------------
 
         //----------------------------------------------

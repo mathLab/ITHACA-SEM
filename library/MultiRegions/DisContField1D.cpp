@@ -67,7 +67,7 @@ namespace Nektar
          */
         DisContField1D::DisContField1D(
                     LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const bool constructMap):
             ExpList1D(pSession,graph1D),
             m_bndCondExpansions(),
@@ -104,7 +104,7 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const int bc_loc):
             ExpList1D(pSession,graph1D),
@@ -114,7 +114,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
@@ -147,7 +147,7 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable):
             ExpList1D(pSession,graph1D),
@@ -156,7 +156,7 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
@@ -187,17 +187,17 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const std::string variable):
             ExpList1D(pSession,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            SpatialDomains::BoundaryConditions bcs(pSession, &graph1D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
@@ -225,7 +225,7 @@ namespace Nektar
          *                      boundary conditions to enforce.
          */
         void DisContField1D::GenerateBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraph1D &graph1D,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable)
         {
@@ -385,7 +385,7 @@ namespace Nektar
          *                      vertices is placed.
          */
         void DisContField1D::GetPeriodicVertices(
-                                const SpatialDomains::MeshGraph1D &graph1D,
+                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                       map<int,int>& periodicVertices)
@@ -488,7 +488,7 @@ namespace Nektar
          *                      conditions on the different boundary regions.
          */
         void DisContField1D::SetBoundaryConditionExpansion(
-                                const SpatialDomains::MeshGraph1D &graph1D,
+                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                 Array<OneD, MultiRegions::ExpListSharedPtr>

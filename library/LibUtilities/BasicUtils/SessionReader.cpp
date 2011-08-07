@@ -477,6 +477,25 @@ namespace Nektar
         /**
          *
          */
+        void SessionReader::LoadGeometricInfo(const std::string &pName, NekDouble &pVar,
+                                const NekDouble &pDefault) const
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            GeometricInfoMap::const_iterator geometricInfoMapIter = m_geometricInfo.find(vName);
+            if(geometricInfoMapIter != m_geometricInfo.end())
+            {
+                pVar = std::atoi(geometricInfoMapIter->second.c_str());
+            }
+            else
+            {
+                pVar  = pDefault;
+            }
+        }
+
+
+        /**
+         *
+         */
         void SessionReader::MatchGeometricInfo(const std::string &pName,
                                 const std::string &pTrueVal, bool &pVar,
                                 const bool &pDefault) const

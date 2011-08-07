@@ -32,14 +32,12 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph2D graph2D; 
-    graph2D.ReadGeometry(meshfile);
-    graph2D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
     LibUtilities::BasisKey bkey1

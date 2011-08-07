@@ -109,12 +109,12 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph2D &graph2D):
+                                 SpatialDomains::MeshGraphSharedPtr &graph2D):
             DisContField2D(pSession,graph2D,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
@@ -147,7 +147,7 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  bool DeclareCoeffPhysArrays,
@@ -156,7 +156,7 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             map<int,int> periodicEdges;
             vector<map<int,int> > periodicVertices;
@@ -199,7 +199,7 @@ namespace Nektar
          * @param   bc_loc
          */
         ContField2D::ContField2D(const ContField2D &In,
-                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  bool DeclareCoeffPhysArrays,
@@ -209,7 +209,7 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
 
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
@@ -258,7 +258,7 @@ namespace Nektar
          *                      variable the field should be constructed.
          */
         ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const bool CheckIfSingularSystem):
@@ -268,9 +268,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
 
-            m_graph2D=graph2D;            
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
@@ -312,19 +311,18 @@ namespace Nektar
          *                      variable the field should be constructed.
          */
         ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
                                  const std::string variable,
                                  const bool CheckIfSingularSystem):
             DisContField2D(pSession,graph2D,variable,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            SpatialDomains::BoundaryConditions bcs(pSession, &graph2D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
 
-            m_graph2D=graph2D;
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph2D);
+            ApplyGeomInfo();
 
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
@@ -368,7 +366,7 @@ namespace Nektar
          * @param   bc_loc
          */
         ContField2D::ContField2D(const ContField2D &In,
-                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
                                  const std::string variable,
                                  bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
@@ -376,8 +374,8 @@ namespace Nektar
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, &graph2D);
-            ApplyGeomInfo(graph2D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+            ApplyGeomInfo();
 
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {

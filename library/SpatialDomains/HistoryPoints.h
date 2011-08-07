@@ -54,7 +54,7 @@ namespace Nektar
         class History
         {
             public:
-                SPATIAL_DOMAINS_EXPORT History(const MeshGraph *meshGraph);
+                SPATIAL_DOMAINS_EXPORT History(const MeshGraphSharedPtr meshGraph);
                 SPATIAL_DOMAINS_EXPORT void Read(std::string &infilename);
                 SPATIAL_DOMAINS_EXPORT void Read(TiXmlDocument &doc);
 
@@ -68,7 +68,7 @@ namespace Nektar
                 VertexComponentVector       m_historyPoints;
 
                 /// The mesh graph to use for referencing geometry info.
-                const MeshGraph *m_meshGraph;
+                const MeshGraphSharedPtr    m_meshGraph;
         };
 
         typedef boost::shared_ptr<History> HistorySharedPtr;

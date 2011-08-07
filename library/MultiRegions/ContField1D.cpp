@@ -108,12 +108,12 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph1D &graph1D):
+                                 SpatialDomains::MeshGraphSharedPtr &graph1D):
             DisContField1D(pSession,graph1D,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
@@ -146,7 +146,7 @@ namespace Nektar
          * @param   bc_loc      ? (optional)
          */
         ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc):
             DisContField1D(pSession,graph1D,bcs,bc_loc),
@@ -158,7 +158,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
@@ -197,7 +197,7 @@ namespace Nektar
          *                      variable the field should be constructed.
          */
         ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable):
             DisContField1D(pSession,graph1D,bcs,variable),
@@ -208,7 +208,7 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
@@ -246,7 +246,7 @@ namespace Nektar
          *                      variable the field should be constructed.
          */
         ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  const std::string variable):
             DisContField1D(pSession,graph1D,variable),
             m_locToGloMap(),
@@ -254,11 +254,11 @@ namespace Nektar
             m_contCoeffs(),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            SpatialDomains::BoundaryConditions bcs(pSession, &graph1D);
+            SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
@@ -302,7 +302,7 @@ namespace Nektar
          */
         ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  const LibUtilities::BasisKey &Ba,
-                                 SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc):
             DisContField1D(pSession,graph1D,false),
@@ -314,7 +314,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
@@ -361,7 +361,7 @@ namespace Nektar
 
         ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  const LibUtilities::BasisKey &Ba,
-                                 SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable):
             DisContField1D(pSession,graph1D,false),
@@ -372,7 +372,7 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph1D);
+            ApplyGeomInfo();
 
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);

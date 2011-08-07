@@ -45,21 +45,19 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph3D graph3D;
-    graph3D.ReadGeometry(meshfile);
-    graph3D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
     string bcfile(argv[2]);
-    SpatialDomains::BoundaryConditions bcs(vSession, &graph3D);
+    SpatialDomains::BoundaryConditions bcs(vSession, graph3D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
-    const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
+    const SpatialDomains::ExpansionVector &expansions = graph3D->GetExpansions();
     cout << "Solving 3D Helmholtz:"  << endl;
     cout << "         Lambda     : " << lambda << endl; 
 #if 0 

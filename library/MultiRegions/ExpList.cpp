@@ -69,6 +69,7 @@ namespace Nektar
         ExpList::ExpList():
             m_session(),
             m_comm(),
+            m_graph(),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
@@ -91,9 +92,39 @@ namespace Nektar
          * populated by a derived class (namely one of MultiRegions#ExpList1D,
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
-        ExpList::ExpList(LibUtilities::SessionReaderSharedPtr &pSession):
+        ExpList::ExpList(
+                LibUtilities::SessionReaderSharedPtr &pSession):
             m_session(pSession),
             m_comm(pSession->GetComm()),
+            m_graph(),
+            m_ncoeffs(0),
+            m_npoints(0),
+            m_coeffs(),
+            m_phys(),
+            m_coeff_offset(),
+            m_phys_offset(),
+            m_offset_elmt_id(),
+            m_transState(eNotSet),
+            m_physState(false),
+            m_FourierSpace(eNotDef),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                                                        ::AllocateSharedPtr()),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+        {
+        }
+
+
+        /**
+         * Creates an empty expansion list. The expansion list will typically be
+         * populated by a derived class (namely one of MultiRegions#ExpList1D,
+         * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
+         */
+        ExpList::ExpList(
+                LibUtilities::SessionReaderSharedPtr &pSession,
+                SpatialDomains::MeshGraphSharedPtr &pGraph):
+            m_session(pSession),
+            m_comm(pSession->GetComm()),
+            m_graph(pGraph),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
@@ -118,6 +149,7 @@ namespace Nektar
         ExpList::ExpList(const ExpList &in, bool DeclareCoeffPhysArrays):
             m_session(in.m_session),
             m_comm(in.m_comm),
+            m_graph(in.m_graph),
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
             m_transState(eNotSet),
@@ -1322,23 +1354,14 @@ namespace Nektar
          * expansion.
          * @param   graph2D         Mesh
          */
-        void ExpList::ApplyGeomInfo(SpatialDomains::MeshGraph &graph)
+        void ExpList::ApplyGeomInfo()
         {
             std::string dir = "TangentX";
             Array<OneD,NekDouble> coords(2);
 
-            // Retrieve geometric info from session.
-            if(graph.CheckForGeomInfo("TangentDir"))
-            {
-                dir = graph.GetGeomInfo("TangentDir");
-            }
-            if (graph.CheckForGeomInfo("TangentCentreX")
-                    && graph.CheckForGeomInfo("TangentCentreY"))
-            {
-
-                coords[0] = atof(graph.GetGeomInfo("TangentCentreX").c_str());
-                coords[1] = atof(graph.GetGeomInfo("TangentCentreY").c_str());
-            }
+            m_session->LoadGeometricInfo("TangentDir",dir,"TangentX");
+            m_session->LoadGeometricInfo("TangentCentreX",coords[0],0.0);
+            m_session->LoadGeometricInfo("TangentCentreY",coords[1],0.0);
 
             // Apply geometric info to each expansion.
             for (int i = 0; i < m_exp->size(); ++i)
@@ -2465,7 +2488,7 @@ namespace Nektar
 
 		/**
          */
-        void ExpList::v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+        void ExpList::v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                          SpatialDomains::BoundaryConditions &bcs,
                                          const std::string variable,
                                          vector<map<int,int> > & periodicVertices,

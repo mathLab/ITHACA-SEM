@@ -37,14 +37,12 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::MeshGraph1D graph1D;
-    graph1D.ReadGeometry(meshfile);
-    graph1D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph1D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes(); 

@@ -101,9 +101,7 @@ namespace Nektar
          */
 
         // Obtain any periodic information and allocate default mapping array
-        SpatialDomains::MeshGraph2DSharedPtr graph2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D> (graph);
-
-        fields[0]->GetPeriodicEdges(*graph2D,
+        fields[0]->GetPeriodicEdges(graph,
                                     *boundaryConditions,
                                     boundaryConditions->GetVariable(0),
                                     periodicVertices,periodicEdges);

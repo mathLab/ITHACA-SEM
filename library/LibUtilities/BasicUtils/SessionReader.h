@@ -174,6 +174,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void LoadGeometricInfo(const std::string &name, std::string &var, const std::string &def = "") const;
             /// Checks for and loads a geometric info boolean property.
             LIB_UTILITIES_EXPORT void LoadGeometricInfo(const std::string &name, bool &var, const bool &def = false) const;
+            /// Checks for and loads a geometric info double-precision property.
+            LIB_UTILITIES_EXPORT void LoadGeometricInfo(const std::string &name, NekDouble &var, const NekDouble &def = 0.0) const;
             /// Check if the value of a geometric info string property matches.
             LIB_UTILITIES_EXPORT void MatchGeometricInfo(const std::string &name, const std::string &trueval, bool &var, const bool &def = false) const;
 

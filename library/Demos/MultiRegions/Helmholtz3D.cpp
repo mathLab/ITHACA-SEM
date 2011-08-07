@@ -34,20 +34,18 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraph3D graph3D;
-        graph3D.ReadGeometry(meshfile);
-        graph3D.ReadExpansions(meshfile);
+        SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
         // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(vSession, &graph3D);
+        SpatialDomains::BoundaryConditions bcs(vSession, graph3D);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
         lambda = vSession->GetParameter("Lambda");
-        const SpatialDomains::ExpansionMap &expansions = graph3D.GetExpansions();
+        const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 3D Helmholtz:"  << endl;
         cout << "         Lambda     : " << lambda << endl;
@@ -135,7 +133,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph3D.Write(out, FieldDef, FieldData);
+        graph3D->Write(out, FieldDef, FieldData);
         //-----------------------------------------------
 
         if(ex_sol)

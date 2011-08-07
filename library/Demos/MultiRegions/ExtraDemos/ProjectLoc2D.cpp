@@ -32,15 +32,12 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-//    string meshfile(argv[1]);
-    SpatialDomains::MeshGraph2D graph2D; 
-    graph2D.ReadGeometry(meshfile);
-    graph2D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     LibUtilities::BasisKey bkey1 = expansions.begin()->second->m_basisKeyVector[1];
     int nmodes = bkey0.GetNumModes();
@@ -131,7 +128,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph2D.Write(out, FieldDef, FieldData);
+    graph2D->Write(out, FieldDef, FieldData);
 
     //----------------------------------------------
     

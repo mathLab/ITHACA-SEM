@@ -65,12 +65,12 @@ namespace Nektar
             /// Construct a global continuous field based on an input mesh.
             MULTI_REGIONS_EXPORT ContField1D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph1D &graph1D);
+                        SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// Constructor.
             MULTI_REGIONS_EXPORT ContField1D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::MeshGraphSharedPtr &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0);
 
@@ -78,7 +78,7 @@ namespace Nektar
             /// boundary conditions.
             MULTI_REGIONS_EXPORT ContField1D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::MeshGraphSharedPtr &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable);
 
@@ -86,7 +86,7 @@ namespace Nektar
             /// boundary conditions.
             MULTI_REGIONS_EXPORT ContField1D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::MeshGraphSharedPtr &graph1D,
                         const std::string variable);
 
             /// Set up global continuous field based on an input mesh, basis
@@ -94,7 +94,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
                         const LibUtilities::BasisKey &Ba,
-                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::MeshGraphSharedPtr &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0);
 
@@ -103,7 +103,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
                         const LibUtilities::BasisKey &Ba,
-                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::MeshGraphSharedPtr &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable);
 

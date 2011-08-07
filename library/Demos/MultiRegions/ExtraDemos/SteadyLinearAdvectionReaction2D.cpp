@@ -34,8 +34,6 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     NekDouble  ax,ay;
     NekDouble   st, cps = (double)CLOCKS_PER_SEC;
-    // default solution type multilevel statis condensation
-    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 
     if((argc != 2)&&(argc != 3))
     {
@@ -44,45 +42,13 @@ int main(int argc, char *argv[])
     }
 
     //----------------------------------------------
-    // Load the solver type so we can test full solve, static
-    // condensation and the default multi-level statis condensation.
-    if( argc == 3 )
-    {
-        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
-        {
-            SolnType = MultiRegions::eDirectMultiLevelStaticCond; 
-            cout << "Solution Type: MultiLevel Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
-        {
-            SolnType = MultiRegions::eDirectStaticCond; 
-            cout << "Solution Type: Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
-        {
-            SolnType = MultiRegions::eDirectFullMatrix; 
-            cout << "Solution Type: Full Matrix" << endl;
-        }
-        else
-        {
-            cerr << "SolnType not recognised" <<endl;
-            exit(1);
-        }
-
-    }
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph2D graph2D; 
-
-    graph2D.ReadGeometry(meshfile);
-    graph2D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
+    SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -95,7 +61,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
     cout << "            Lambda         : " << lambda << endl;
-    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
     LibUtilities::BasisKey bkey1
@@ -112,7 +78,7 @@ int main(int argc, char *argv[])
     // Define Expansion 
     int bc_val = 0;
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vSession,graph2D,bcs,bc_val,SolnType);
+        AllocateSharedPtr(vSession,graph2D,bcs,bc_val);
     //----------------------------------------------
 
     Timing("Read files and define exp ..");

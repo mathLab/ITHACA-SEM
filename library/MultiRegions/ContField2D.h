@@ -66,14 +66,14 @@ namespace Nektar
             /// Construct a global continuous field based on an input mesh.
             MULTI_REGIONS_EXPORT ContField2D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph2D &graph2D
+                        SpatialDomains::MeshGraphSharedPtr &graph2D
                         );
 
             /// Construct a global continuous field based on an input mesh with
             /// boundary conditions.
             MULTI_REGIONS_EXPORT ContField2D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         bool DeclareCoeffPhysArrays = true,
@@ -83,7 +83,7 @@ namespace Nektar
             /// another field but using a separate input mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
-                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         bool DeclareCoeffPhysArrays = true,
@@ -93,7 +93,7 @@ namespace Nektar
             /// input mesh and boundary conditions.
             MULTI_REGIONS_EXPORT ContField2D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const bool CheckIfSingularSystem = false);
@@ -102,7 +102,7 @@ namespace Nektar
             /// input mesh and boundary conditions.
             MULTI_REGIONS_EXPORT ContField2D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string variable,
                         const bool CheckIfSingularSystem = false);
 
@@ -110,7 +110,7 @@ namespace Nektar
             /// another field but using a separate input mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
-                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string variable,
                         bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);

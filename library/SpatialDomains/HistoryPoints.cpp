@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        History::History(const MeshGraph *meshGraph) :
+        History::History(const MeshGraphSharedPtr meshGraph) :
             m_meshGraph(meshGraph)
         {
         }

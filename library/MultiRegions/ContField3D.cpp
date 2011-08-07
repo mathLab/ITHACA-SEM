@@ -67,12 +67,12 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         ContField3D::ContField3D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph3D &graph3D):
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D):
             DisContField3D(pSession,graph3D,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            ApplyGeomInfo(graph3D);
+            ApplyGeomInfo();
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
@@ -84,7 +84,7 @@ namespace Nektar
 
 
         ContField3D::ContField3D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph3D &graph3D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc):
                 DisContField3D(pSession,graph3D,bcs,bc_loc,false),
@@ -132,7 +132,7 @@ namespace Nektar
          * @param   bc_loc
          */
         ContField3D::ContField3D(const ContField3D &In,
-                                 SpatialDomains::MeshGraph3D &graph3D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc):
             DisContField3D(In),
@@ -165,7 +165,7 @@ namespace Nektar
 
 
         ContField3D::ContField3D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph3D &graph3D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable):
                 DisContField3D(pSession,graph3D,bcs,variable,false),
@@ -189,7 +189,7 @@ namespace Nektar
 
 
         ContField3D::ContField3D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraph3D &graph3D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  const std::string variable):
                 DisContField3D(pSession,graph3D,variable,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
@@ -198,7 +198,7 @@ namespace Nektar
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
-            SpatialDomains::BoundaryConditions bcs(pSession, &graph3D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
             GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
@@ -236,7 +236,7 @@ namespace Nektar
          * @param   bc_loc
          */
         ContField3D::ContField3D(const ContField3D &In,
-                                 SpatialDomains::MeshGraph3D &graph3D,
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  const std::string variable):
             DisContField3D(In),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
@@ -247,7 +247,7 @@ namespace Nektar
                 map<int,int> periodicFaces;
                 map<int,int> periodicEdges;
                 map<int,int> periodicVertices;
-                SpatialDomains::BoundaryConditions bcs(m_session, &graph3D);
+                SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
                 m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_ncoeffs,*this,

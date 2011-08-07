@@ -86,7 +86,7 @@ namespace Nektar
 																 const NekDouble lhom_y,
 																 const NekDouble lhom_z,
 																 bool useFFT,
-																 SpatialDomains::MeshGraph1D &graph1D,
+																 SpatialDomains::MeshGraphSharedPtr &graph1D,
 																 SpatialDomains::BoundaryConditions &bcs,
 																 const int bc_loc):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),

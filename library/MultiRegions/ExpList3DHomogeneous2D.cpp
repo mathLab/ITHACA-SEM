@@ -63,7 +63,7 @@ namespace Nektar
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
 													   bool useFFT,
-                                                       SpatialDomains::MeshGraph1D &graph1D):
+                                                       SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int n,j,nel;

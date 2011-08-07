@@ -43,20 +43,18 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph2D graph2D;
-    graph2D.ReadGeometry(meshfile);
-    graph2D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
+    SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
-    const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
     cout << "Solving 2D Helmholtz:"  << endl;
@@ -148,7 +146,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph2D.Write(out, FieldDef, FieldData);
+    graph2D->Write(out, FieldDef, FieldData);
 
     //-----------------------------------------------
 

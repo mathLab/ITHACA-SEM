@@ -63,14 +63,14 @@ namespace Nektar
             /// Constructs a 1D discontinuous field based on a mesh.
             MULTI_REGIONS_EXPORT DisContField1D(
                     LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const bool constructMap = true);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
                     LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const int bc_loc = 0);
 
@@ -78,7 +78,7 @@ namespace Nektar
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
                     LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable);
 
@@ -86,7 +86,7 @@ namespace Nektar
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
                     LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const std::string variable);
 
             /// Constructs a 1D discontinuous field based on an existing field.
@@ -131,13 +131,13 @@ namespace Nektar
 
             /// Discretises the boundary conditions.
             void GenerateBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraph1D &graph1D,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable);
 
             /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
-                                const SpatialDomains::MeshGraph1D &graph1D,
+                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                       map<int,int>& periodicVertices);
@@ -161,7 +161,7 @@ namespace Nektar
 
             /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
-                                const SpatialDomains::MeshGraph1D &graph1D,
+                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                 Array<OneD, MultiRegions::ExpListSharedPtr>

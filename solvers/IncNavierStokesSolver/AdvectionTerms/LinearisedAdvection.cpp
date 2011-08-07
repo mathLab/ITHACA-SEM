@@ -81,67 +81,43 @@ namespace Nektar
             {
             case 1:
 	        {
-                    SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-                    
-                    if( !(mesh1D = boost::dynamic_pointer_cast<
-                          SpatialDomains::MeshGraph1D>(mesh)) )
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                            ::AllocateSharedPtr(m_session,*mesh1D,
+                            ::AllocateSharedPtr(m_session,mesh,
                                                 m_session->GetVariable(i));
                     }
 	        }
                 break;
             case 2:
 	        {
-                    SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                    
-                    if(!(mesh2D = boost::dynamic_pointer_cast<
-                         SpatialDomains::MeshGraph2D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
                     i = 0;
                     MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
-                        ::AllocateSharedPtr(m_session,*mesh2D,
+                        ::AllocateSharedPtr(m_session,mesh,
                                             m_session->GetVariable(i));
                     m_base[0]=firstbase;
                     
                     for(i = 1 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::ContField2D>
-                            ::AllocateSharedPtr(*firstbase,*mesh2D,
+                            ::AllocateSharedPtr(*firstbase,mesh,
                                                 m_session->GetVariable(i));
                     }
 	        }
                 break;
             case 3:
 	        {
-	            SpatialDomains::MeshGraph3DSharedPtr mesh3D;
-                    
-                    if(!(mesh3D = boost::dynamic_pointer_cast<
-                         SpatialDomains::MeshGraph3D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
                     MultiRegions::ContField3DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField3D>
-                        ::AllocateSharedPtr(m_session,*mesh3D,
+                        ::AllocateSharedPtr(m_session,mesh,
                                             m_session->GetVariable(i));
                     m_base[0] = firstbase;
                     
                     for(i = 1 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::ContField3D>
-                            ::AllocateSharedPtr(*firstbase,*mesh3D,
+                            ::AllocateSharedPtr(*firstbase,mesh,
                                                 m_session->GetVariable(i));
                     }
 	        }
@@ -157,36 +133,20 @@ namespace Nektar
             {
             case 1:
                 {
-                    SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-                    
-                    if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
-                         ::MeshGraph1D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr(m_session,*mesh1D,
+                            ::DisContField1D>::AllocateSharedPtr(m_session,mesh,
                                                                  m_session->GetVariable(i));
                     }
                     break;
                 }
             case 2:
                 {
-                    SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                    
-                    if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
-                         ::MeshGraph2D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField2D>::AllocateSharedPtr(m_session, *mesh2D,
+                            ::DisContField2D>::AllocateSharedPtr(m_session, mesh,
                                                                  m_session->GetVariable(i));
                     }
                     break;

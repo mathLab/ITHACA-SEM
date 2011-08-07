@@ -50,6 +50,13 @@ namespace Nektar
         {
         }
 
+        MeshGraph2D::MeshGraph2D(LibUtilities::SessionReaderSharedPtr &pSession)
+            : MeshGraph(pSession)
+        {
+            ReadGeometry(pSession->GetDocument());
+            ReadExpansions(pSession->GetDocument());
+        }
+
         void MeshGraph2D::ReadGeometry(std::string &infilename)
         {
             TiXmlDocument doc(infilename);

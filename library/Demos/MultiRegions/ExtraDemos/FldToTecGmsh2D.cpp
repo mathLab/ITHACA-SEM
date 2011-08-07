@@ -26,10 +26,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
-    SpatialDomains::MeshGraph2D graph2D; 
-    graph2D.ReadGeometry(meshfile);
-    //graph2D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
     
     //----------------------------------------------
@@ -37,7 +34,7 @@ int main(int argc, char *argv[])
     string fieldfile(argv[argc-1]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graph2D.Import(fieldfile,fielddef,fielddata);
+    graph2D->Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -51,7 +48,7 @@ int main(int argc, char *argv[])
         }
         pointstype.push_back(ptype);
     }
-    graph2D.SetExpansions(fielddef,pointstype);
+    graph2D->SetExpansions(fielddef,pointstype);
     //----------------------------------------------
 
     //----------------------------------------------        

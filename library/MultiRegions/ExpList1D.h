@@ -80,20 +80,20 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(
                       LibUtilities::SessionReaderSharedPtr &pSession,
                       const LibUtilities::BasisKey &Ba,
-                      SpatialDomains::MeshGraph1D &graph1D);
+                      SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
             MULTI_REGIONS_EXPORT ExpList1D(
                       LibUtilities::SessionReaderSharedPtr &pSession,
-                      SpatialDomains::MeshGraph1D &graph1D,
+                      SpatialDomains::MeshGraphSharedPtr &graph1D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             MULTI_REGIONS_EXPORT ExpList1D(
                       const SpatialDomains::CompositeMap &domain,
-                      SpatialDomains::MeshGraph2D &graph2D,
+                      SpatialDomains::MeshGraphSharedPtr &graph2D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
@@ -102,7 +102,7 @@ namespace Nektar
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
-                      SpatialDomains::MeshGraph2D &graph2D,
+                      SpatialDomains::MeshGraphSharedPtr &graph2D,
                       const map<int,int> &periodicEdges,
                       bool DeclareCoeffPhysArrays = true);
 

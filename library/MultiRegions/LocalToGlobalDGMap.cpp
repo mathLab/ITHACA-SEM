@@ -60,7 +60,7 @@ namespace Nektar
          *
          */
         LocalToGlobalDGMap::LocalToGlobalDGMap( const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                const SpatialDomains::MeshGraph1D &graph1D,
+                                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                                 const ExpList &locExp,
                                                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond):
@@ -163,7 +163,7 @@ namespace Nektar
          *
          */
         LocalToGlobalDGMap::LocalToGlobalDGMap(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                               SpatialDomains::MeshGraph2D &graph2D,
+                                               SpatialDomains::MeshGraphSharedPtr &graph2D,
                                                const ExpList1DSharedPtr &trace,
                                                const ExpList &locExp,
                                                const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
@@ -317,7 +317,7 @@ namespace Nektar
                         // element counter-clockwise convention.
 
                         SpatialDomains::ElementEdgeVectorSharedPtr con_elmt
-                            = graph2D.GetElementsFromEdge(SegGeom);
+                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetElementsFromEdge(SegGeom);
 
                         if((boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>((*con_elmt)[0]->m_Element))->GetEorient((*con_elmt)[0]->m_EdgeIndx) == StdRegions::eForwards)
                         {

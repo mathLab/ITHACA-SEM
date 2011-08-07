@@ -30,12 +30,10 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> xc0,xc1,xc2; 
 
     // read in mesh
-    SpatialDomains::MeshGraph1D graph1D;
-    graph1D.ReadGeometry(meshfile);
-    graph1D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
 
     // Define Expansion
-    const SpatialDomains::ExpansionMap &expansions = graph1D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes();
 

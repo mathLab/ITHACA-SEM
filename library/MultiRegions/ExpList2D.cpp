@@ -95,8 +95,8 @@ namespace Nektar
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList2D::ExpList2D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraph2D &graph2D, bool DeclareCoeffPhysArrays, const std::string var):
-            ExpList(pSession)
+        ExpList2D::ExpList2D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraphSharedPtr &graph2D, bool DeclareCoeffPhysArrays, const std::string var):
+            ExpList(pSession,graph2D)
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -106,7 +106,7 @@ namespace Nektar
             SpatialDomains::Composite          comp;
 
             const SpatialDomains::ExpansionMap &expansions
-                                        = graph2D.GetExpansions(var);
+                                        = graph2D->GetExpansions(var);
 
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
@@ -210,7 +210,7 @@ namespace Nektar
                              LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::ExpansionMap &expansions,
                              bool DeclareCoeffPhysArrays):
-            ExpList(pSession)
+            ExpList()
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -333,9 +333,9 @@ namespace Nektar
                                const LibUtilities::BasisKey &TriBb,
                                const LibUtilities::BasisKey &QuadBa,
                                const LibUtilities::BasisKey &QuadBb,
-                               SpatialDomains::MeshGraph2D &graph2D,
+                               SpatialDomains::MeshGraphSharedPtr &graph2D,
                                const LibUtilities::PointsType TriNb):
-              ExpList(pSession)
+              ExpList(pSession,graph2D)
           {
               int i,elmtid=0;
               LocalRegions::TriExpSharedPtr tri;
@@ -343,7 +343,7 @@ namespace Nektar
               LocalRegions::QuadExpSharedPtr quad;
               SpatialDomains::Composite comp;
 
-              const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+              const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
               m_ncoeffs = 0;
               m_npoints = 0;
 
@@ -416,9 +416,12 @@ namespace Nektar
           */
          ExpList2D::ExpList2D(   LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::CompositeMap &domain,
-                                 SpatialDomains::MeshGraph3D &graph3D):
-             ExpList(pSession)
+                                 SpatialDomains::MeshGraphSharedPtr &graph3D):
+             ExpList(pSession,graph3D)
          {
+             ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),
+                     "Expected a MeshGraph3D object.");
+
              int i,j,elmtid=0;
              int nel = 0;
 
@@ -445,11 +448,11 @@ namespace Nektar
                                          SpatialDomains::TriGeom>((*compIt->second)[j]))
                      {
                          LibUtilities::BasisKey TriBa
-                                     = graph3D.GetFaceBasisKey(TriangleGeom,0);
+                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,0);
                          LibUtilities::BasisKey TriBb
-                                     = graph3D.GetFaceBasisKey(TriangleGeom,1);
+                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,1);
 
-                         if(graph3D.GetExpansions().begin()->second->m_basisKeyVector[0]
+                         if(graph3D->GetExpansions().begin()->second->m_basisKeyVector[0]
                                  .GetBasisType() == LibUtilities::eGLL_Lagrange)
                          {
                              ASSERTL0(false,"This method needs sorting");
@@ -480,9 +483,9 @@ namespace Nektar
                                          SpatialDomains::QuadGeom>((*compIt->second)[j]))
                      {
                          LibUtilities::BasisKey QuadBa
-                                 = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
+                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
                          LibUtilities::BasisKey QuadBb
-                                 = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
+                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
 
                          quad = MemoryManager<LocalRegions::QuadExp>
                              ::AllocateSharedPtr(QuadBa,QuadBb,

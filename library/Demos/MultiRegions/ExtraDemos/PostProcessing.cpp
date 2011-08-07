@@ -14,11 +14,7 @@ int main(int argc, char *argv[])
 	}
 	/************************* Mesh File ***********************/
 	// Read the mesh
-	string fileNameString(argv[1]);
-	SpatialDomains::MeshGraph1D mesh;
-	// Both the geometry and the expansion information should be read
-	mesh.ReadGeometry(fileNameString);
-	mesh.ReadExpansions(fileNameString);
+    SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
 
 	/***********************************************************/
 
@@ -26,7 +22,7 @@ int main(int argc, char *argv[])
         // This is the class which represents a multi-elemental expansion
 	// This object can be constructed based on the input mesh
         MultiRegions::ExpList1DSharedPtr u =
-            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,mesh);
+            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,graph1D);
 
 	/***********************************************************/
 	// Get the number of elements
@@ -67,7 +63,7 @@ int main(int argc, char *argv[])
 	LibUtilities::PointsKey  pKey(post_order+1,pType);
 	LibUtilities::BasisKey upost_bkey(base[0]->GetBasisType(),post_order,pKey);
 	MultiRegions::ExpList1DSharedPtr u_post =
-        MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,upost_bkey,mesh);
+        MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,upost_bkey,graph1D);
 
 	// The post-processing for the first element
 	// Step1: Define the element ID on which the post-processing is done

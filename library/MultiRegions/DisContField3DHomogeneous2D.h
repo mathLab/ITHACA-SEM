@@ -64,7 +64,7 @@ namespace Nektar
 															 const NekDouble lhom_y,
 															 const NekDouble lhom_z,
 															 bool useFFT,
-															 SpatialDomains::MeshGraph1D &graph1D,
+															 SpatialDomains::MeshGraphSharedPtr &graph1D,
 															 SpatialDomains::BoundaryConditions &bcs, 
 															 const int bc_loc = 0);
 

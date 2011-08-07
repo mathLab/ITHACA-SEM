@@ -47,7 +47,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        BoundaryConditions::BoundaryConditions(LibUtilities::SessionReaderSharedPtr pSession, const MeshGraph *meshGraph)
+        BoundaryConditions::BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph)
             : m_session(pSession),
               m_meshGraph(meshGraph)
         {

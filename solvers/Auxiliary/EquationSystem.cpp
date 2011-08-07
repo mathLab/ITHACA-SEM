@@ -96,21 +96,18 @@ namespace Nektar
         m_sessionName = m_sessionName.substr(0,
                                 m_sessionName.find_last_of("."));
 
-        SpatialDomains::MeshGraph graph;
-
         // Read the geometry and the expansion information
-        m_graph = graph.Read(m_filename);
+        m_graph = SpatialDomains::MeshGraph::Read(m_filename);
 
         m_UseContCoeff = false;
 
         // Also read and store the boundary conditions
-        SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-            ::AllocateSharedPtr(m_session, meshptr);
+            ::AllocateSharedPtr(m_session, m_graph);
 
         // Read and store history point data
         m_historyPoints = MemoryManager<SpatialDomains::History>
-            ::AllocateSharedPtr(meshptr);
+            ::AllocateSharedPtr(m_graph);
 
         m_historyPoints->Read(m_filename);
 
@@ -218,14 +215,6 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous2D)
                     {
-                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                        if(!(mesh1D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph1D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
                         const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
@@ -234,26 +223,17 @@ namespace Nektar
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i);
+                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_graph,*m_boundaryConditions,i);
                         }
                     }
                     else
                     {
-                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                        if( !(mesh1D = boost::dynamic_pointer_cast<
-                              SpatialDomains::MeshGraph1D>(m_graph)) )
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(m_session,*mesh1D,
+                                ::AllocateSharedPtr(m_session,m_graph,
                                                     *m_boundaryConditions,i);
                         }
-
                     }
 
                     break;
@@ -262,36 +242,20 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
-                        if(!(mesh2D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph2D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
 
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
-                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i);
+                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_graph,*m_boundaryConditions,i);
                         }
                     }
                     else
                     {
-                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
-                        if(!(mesh2D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph2D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField2D>
-                            ::AllocateSharedPtr(m_session,*mesh2D,
+                            ::AllocateSharedPtr(m_session,m_graph,
                                                 *m_boundaryConditions,i,
                                                 DeclareCoeffPhysArrays,
                                                 m_checkIfSystemSingular[0]);
@@ -303,7 +267,7 @@ namespace Nektar
                         {
                             m_fields[i] = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(*firstfield,
-                                                    *mesh2D,*m_boundaryConditions,i,
+                                                    m_graph,*m_boundaryConditions,i,
                                                     DeclareCoeffPhysArrays,
                                                     m_checkIfSystemSingular[i]);
                         }
@@ -319,18 +283,10 @@ namespace Nektar
                         }
                         else
                         {
-                            SpatialDomains::MeshGraph3DSharedPtr mesh3D;
-
-                            if(!(mesh3D = boost::dynamic_pointer_cast<
-                                 SpatialDomains::MeshGraph3D>(m_graph)))
-                            {
-                                ASSERTL0(false,"Dynamics cast failed");
-                            }
-
                             i = 0;
                             MultiRegions::ContField3DSharedPtr firstfield =
                                 MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(m_session,*mesh3D,
+                                ::AllocateSharedPtr(m_session,m_graph,
                                                     *m_boundaryConditions,i);
 
                             firstfield->ReadGlobalOptimizationParameters(m_filename);
@@ -340,7 +296,7 @@ namespace Nektar
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(*firstfield,
-                                                        *mesh3D,*m_boundaryConditions,i);
+                                                        m_graph,*m_boundaryConditions,i);
                         }
                         }
                         break;
@@ -358,14 +314,6 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous2D)
                     {
-                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                        if(!(mesh1D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph1D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
                         const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
@@ -374,23 +322,15 @@ namespace Nektar
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,*mesh1D,*m_boundaryConditions,i);
+                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_graph,*m_boundaryConditions,i);
                         }
                     }
                     else
                     {
-                        SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                        if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
-                             ::MeshGraph1D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions
-                                ::DisContField1D>::AllocateSharedPtr(m_session,*mesh1D,
+                                ::DisContField1D>::AllocateSharedPtr(m_session,m_graph,
                                                                      *m_boundaryConditions,i);
                         }
                     }
@@ -401,37 +341,21 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
-                        if(!(mesh2D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph2D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
 
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,*mesh2D,*m_boundaryConditions,i);
+                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_graph,*m_boundaryConditions,i);
                         }
                     }
                     else
                     {
-                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
-                        if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
-                             ::MeshGraph2D>(m_graph)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions
-                                ::DisContField2D>::AllocateSharedPtr(m_session,*mesh2D,
+                                ::DisContField2D>::AllocateSharedPtr(m_session,m_graph,
                                                                      *m_boundaryConditions,i);
                         }
                     }
@@ -908,9 +832,6 @@ namespace Nektar
       */
      Array<OneD,NekDouble> EquationSystem::ErrorExtraPoints(unsigned int field)
      {
-         SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-         mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(m_graph);
-
          int NumModes = GetNumExpModes();
 
          Array<OneD,NekDouble> L2INF(2);
@@ -925,7 +846,7 @@ namespace Nektar
          const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
 
          MultiRegions::ExpList2DSharedPtr ErrorExp =
-         MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session,BkeyT1,BkeyT2,BkeyQ1,BkeyQ2,*mesh2D);
+         MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session,BkeyT1,BkeyT2,BkeyQ1,BkeyQ2,m_graph);
 
          int ErrorCoordim = ErrorExp->GetCoordim(0);
          int ErrorNq      = ErrorExp->GetTotPoints();
@@ -1116,127 +1037,96 @@ namespace Nektar
         }
     }    	    
     
-    void
-    EquationSystem::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr
-    	    &mesh)
+    void EquationSystem::SetUpBaseFields(
+            SpatialDomains::MeshGraphSharedPtr &mesh)
     {
-    	   int i;
-       	   //NUM VARIABLES CAN BE DIFFERENT FROM THE DIMENSION OF THE BASE FLOW
-    	   m_base =Array<OneD, MultiRegions::ExpListSharedPtr> (m_spacedim);
-    	   if (m_projectionType = MultiRegions::eGalerkin)
-	   {
-	        switch (m_expdim)
-	        {
-	           case 1:
-	           {
-                       SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-                       if( !(mesh1D = boost::dynamic_pointer_cast<
-                        SpatialDomains::MeshGraph1D>(mesh)) )
-                       {
-                           ASSERTL0(false,"Dynamics cast failed");
-                       }
-                       for(i = 0 ; i < m_base.num_elements(); i++)
-                       {
-                           m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(m_session,*mesh1D,
-                                                    *m_boundaryConditions,i);
-                       }
-	           }
-                   break;
-                   case 2:
-	           {
-                       SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                       if(!(mesh2D = boost::dynamic_pointer_cast<
-                         SpatialDomains::MeshGraph2D>(mesh)))
-                       {
-                           ASSERTL0(false,"Dynamics cast failed");
-                       }
-                       i = 0;
-                       MultiRegions::ContField2DSharedPtr firstbase =
+        int i;
+        //NUM VARIABLES CAN BE DIFFERENT FROM THE DIMENSION OF THE BASE FLOW
+        m_base =Array<OneD, MultiRegions::ExpListSharedPtr> (m_spacedim);
+        if (m_projectionType = MultiRegions::eGalerkin)
+        {
+            switch (m_expdim)
+            {
+            case 1:
+            {
+                for(i = 0 ; i < m_base.num_elements(); i++)
+                {
+                    m_base[i] = MemoryManager<MultiRegions::ContField1D>
+                    ::AllocateSharedPtr(m_session,mesh,
+                            *m_boundaryConditions,i);
+                }
+            }
+            break;
+            case 2:
+            {
+                i = 0;
+                MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(m_session,*mesh2D,
-                                                    *m_boundaryConditions,i);
-                       m_base[0]=firstbase;
-                       for(i = 1 ; i < m_base.num_elements(); i++)
-                       {
-                            m_base[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*firstbase,*mesh2D,
-                                                    *m_boundaryConditions,i);
-                       }
-	           }
-                   break;
-	           case 3:
-	           {
-	               SpatialDomains::MeshGraph3DSharedPtr mesh3D;
-                       if(!(mesh3D = boost::dynamic_pointer_cast<
-                          SpatialDomains::MeshGraph3D>(mesh)))
-                       {
-                            ASSERTL0(false,"Dynamics cast failed");
-                       }
-                       MultiRegions::ContField3DSharedPtr firstbase =
-                            MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(m_session,*mesh3D,
-                                                    *m_boundaryConditions,i);
-                       m_base[0] = firstbase;
-                       for(i = 1 ; i < m_base.num_elements(); i++)
-                       {
-                           m_base[i] = MemoryManager<MultiRegions::ContField3D>
-                           ::AllocateSharedPtr(*firstbase,
-                                        *mesh3D,*m_boundaryConditions,i);
-                       }
-	           }
-                   break;
-                   default:
-                     ASSERTL0(false,"Expansion dimension not recognised");
-                   break;
-	       }
+                ::AllocateSharedPtr(m_session,m_graph,
+                        *m_boundaryConditions,i);
+                m_base[0]=firstbase;
+                for(i = 1 ; i < m_base.num_elements(); i++)
+                {
+                    m_base[i] = MemoryManager<MultiRegions::ContField2D>
+                    ::AllocateSharedPtr(*firstbase,m_graph,
+                            *m_boundaryConditions,i);
+                }
+            }
+            break;
+            case 3:
+            {
+                MultiRegions::ContField3DSharedPtr firstbase =
+                        MemoryManager<MultiRegions::ContField3D>
+                ::AllocateSharedPtr(m_session,m_graph,
+                        *m_boundaryConditions,i);
+                m_base[0] = firstbase;
+                for(i = 1 ; i < m_base.num_elements(); i++)
+                {
+                    m_base[i] = MemoryManager<MultiRegions::ContField3D>
+                    ::AllocateSharedPtr(*firstbase,
+                            m_graph,*m_boundaryConditions,i);
+                }
+            }
+            break;
+            default:
+                ASSERTL0(false,"Expansion dimension not recognised");
+                break;
+            }
         }
         else
-	{
-               switch(m_expdim)
-               {
-                   case 1:
-                   {
-                       SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-                       if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
-                         ::MeshGraph1D>(mesh)))
-                       {
-                           ASSERTL0(false,"Dynamics cast failed");
-                       }
-                       int var = 0; // need to use zero for variable as may be more base flows than variables
-                       for(i = 0 ; i < m_base.num_elements(); i++)
-                       {
-                           m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr(m_session,*mesh1D,
-                                           *m_boundaryConditions,var);
-                       }
-                       break;
-                   }
-                   case 2:
-                   {
-                         SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                         if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
-                         ::MeshGraph2D>(mesh)))
-                         {
-                               ASSERTL0(false,"Dynamics cast failed");
-                         }
-                         int var = 0;
-                         for(i = 0 ; i < m_base.num_elements(); i++)
-                         {
-                                 m_base[i] = MemoryManager<MultiRegions
-                                 ::DisContField2D>::AllocateSharedPtr(m_session,*mesh2D,
-                                            *m_boundaryConditions,var);
-                         }
-                         break;
-                    }
-                    case 3:
-                         ASSERTL0(false,"3 D not set up");
-                    default:
-                          ASSERTL0(false,"Expansion dimension not recognised");
-                    break;
-                    }
-	  }
-       }    	    
+        {
+            switch(m_expdim)
+            {
+            case 1:
+            {
+                int var = 0; // need to use zero for variable as may be more base flows than variables
+                for(i = 0 ; i < m_base.num_elements(); i++)
+                {
+                    m_base[i] = MemoryManager<MultiRegions
+                            ::DisContField1D>::AllocateSharedPtr(m_session,m_graph,
+                                    *m_boundaryConditions,var);
+                }
+                break;
+            }
+            case 2:
+            {
+                int var = 0;
+                for(i = 0 ; i < m_base.num_elements(); i++)
+                {
+                    m_base[i] = MemoryManager<MultiRegions
+                            ::DisContField2D>::AllocateSharedPtr(m_session,m_graph,
+                                    *m_boundaryConditions,var);
+                }
+                break;
+            }
+            case 3:
+                ASSERTL0(false,"3 D not set up");
+            default:
+                ASSERTL0(false,"Expansion dimension not recognised");
+                break;
+            }
+        }
+    }
  	
     //Import base flow from file and load in m_base    	
     void EquationSystem::ImportFldBase(std::string pInfile, 

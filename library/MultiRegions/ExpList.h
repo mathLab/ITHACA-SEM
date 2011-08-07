@@ -102,7 +102,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList();
 
             /// The default constructor.
-            ExpList(LibUtilities::SessionReaderSharedPtr &pSession);
+            MULTI_REGIONS_EXPORT ExpList(
+                    LibUtilities::SessionReaderSharedPtr &pSession);
+
+            /// The default constructor.
+            MULTI_REGIONS_EXPORT ExpList(
+                    LibUtilities::SessionReaderSharedPtr &pSession,
+                    SpatialDomains::MeshGraphSharedPtr &pGraph);
 
             /// The copy constructor.
             MULTI_REGIONS_EXPORT ExpList(const ExpList &in, bool DeclareCoeffPhysArrays = true);
@@ -366,7 +372,7 @@ namespace Nektar
                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
 
             /// Apply geometry information to each expansion.
-            MULTI_REGIONS_EXPORT void ApplyGeomInfo(SpatialDomains::MeshGraph &graph);
+            MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
             /// This function writes the spectral/hp element solution to the
             /// file \a out.
@@ -654,7 +660,7 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
-            void GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+            void GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                   SpatialDomains::BoundaryConditions &bcs,
                                   const std::string variable,
                                   vector<map<int,int> > & periodicVertices,
@@ -760,6 +766,9 @@ namespace Nektar
 
             /// Session
             LibUtilities::SessionReaderSharedPtr m_session;
+
+            /// Mesh associated with this expansion list.
+            SpatialDomains::MeshGraphSharedPtr m_graph;
 
             /// The total number of local degrees of freedom. #m_ncoeffs
             /// \f$=N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_l\f$
@@ -1134,7 +1143,7 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
 
 
-            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                             SpatialDomains::BoundaryConditions &bcs,
                                             const std::string variable,
                                             vector<map<int,int> > & periodicVertices,

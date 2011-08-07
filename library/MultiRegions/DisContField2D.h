@@ -59,11 +59,11 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT DisContField2D(
                            LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            bool SetUpJustDG = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            bool SetUpJustDG = false,
@@ -71,7 +71,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT DisContField2D(
                            LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            bool SetUpJustDG = true,
@@ -79,7 +79,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT DisContField2D(
                            LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            bool SetUpJustDG = true,
@@ -87,13 +87,13 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT DisContField2D(
                            LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string variable,
                            bool SetUpJustDG = true,
                            bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string variable,
                            bool SetUpJustDG = false,
                            bool DeclareCoeffPhysArrays = true);
@@ -242,12 +242,12 @@ namespace Nektar
 
             /// Generates a map of periodic edges in the mesh.
             void GetPeriodicEdges(
-                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         vector<map<int,int> > & periodicVertices,
                         map<int,int>& periodicEdges);
-	    SpatialDomains::MeshGraph2D m_graph2D;
+
         protected:        	
             /**
              * \brief An object which contains the discretised
@@ -288,7 +288,7 @@ namespace Nektar
              * \param variable An optional parameter to indicate for which variable
              * the boundary conditions should be discretised.
              */
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                                     SpatialDomains::BoundaryConditions &bcs,
                                                     const std::string variable,
                                                     bool DeclareCoeffPhysArrays = true);
@@ -390,7 +390,7 @@ namespace Nektar
                 return GetRobinBCInfo();
             }
 
-            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                             SpatialDomains::BoundaryConditions &bcs,
                                             const std::string variable,
                                             vector<map<int,int> > & periodicVertices,

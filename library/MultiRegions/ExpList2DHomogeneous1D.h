@@ -72,7 +72,7 @@ namespace Nektar
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lz,
 								   bool useFFT,
-                                   SpatialDomains::MeshGraph1D &graph1D);
+                                   SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
                                    LibUtilities::SessionReaderSharedPtr &pSession,

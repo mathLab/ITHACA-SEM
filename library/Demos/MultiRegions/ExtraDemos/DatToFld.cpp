@@ -20,10 +20,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
-    SpatialDomains::MeshGraph2D graph2D; 
-    graph2D.ReadGeometry(meshfile);
-    graph2D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
 
@@ -52,7 +49,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph2D.Write(out, FieldDef, FieldData);
+    graph2D->Write(out, FieldDef, FieldData);
     //-----------------------------------------------
     
     return 0;

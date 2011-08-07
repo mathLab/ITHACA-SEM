@@ -33,15 +33,12 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-//    string meshfile(argv[1]);
-    SpatialDomains::MeshGraph3D graph3D;
-    graph3D.ReadGeometry(meshfile);
-    graph3D.ReadExpansions(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph3D.GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
     LibUtilities::BasisKey bkey = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey.GetNumModes();
     if (vSession->GetComm()->GetRank() == 0)

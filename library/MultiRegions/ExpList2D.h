@@ -74,7 +74,7 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2D(
                       LibUtilities::SessionReaderSharedPtr &pSession,
-                      SpatialDomains::MeshGraph2D &graph2D,
+                      SpatialDomains::MeshGraphSharedPtr &graph2D,
                       bool DelcareCoeffPhysArrays = true, 
                       const std::string var = "DefaultVar");
 
@@ -92,7 +92,7 @@ namespace Nektar
                       const LibUtilities::BasisKey &TriBb,
                       const LibUtilities::BasisKey &QuadBa,
                       const LibUtilities::BasisKey &QuadBb,
-                      SpatialDomains::MeshGraph2D &graph2D,
+                      SpatialDomains::MeshGraphSharedPtr &graph2D,
                       const LibUtilities::PointsType
                       TriNb = LibUtilities::SIZE_PointsType);
 
@@ -102,7 +102,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList2D(  
                         LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::CompositeMap &domain,
-                        SpatialDomains::MeshGraph3D &graph3D);
+                        SpatialDomains::MeshGraphSharedPtr &graph3D);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList2D();

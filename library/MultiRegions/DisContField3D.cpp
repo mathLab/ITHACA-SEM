@@ -26,13 +26,13 @@ namespace Nektar
          * @todo Implement 3D trace space.
          */
         DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraph3D &graph3D,
+                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                                         bool SetUpJustDG) :
             ExpList3D(pSession,graph3D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            ApplyGeomInfo(graph3D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -66,7 +66,7 @@ namespace Nektar
          * @todo Implement 3D trace space.
          */
         DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraph3D &graph3D,
+                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                                         SpatialDomains::BoundaryConditions &bcs,
                                         const int bc_loc,
                                         bool SetUpJustDG) :
@@ -77,7 +77,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph3D,bcs,
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -110,7 +110,7 @@ namespace Nektar
          * @todo Implement 3D trace space.
          */
         DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraph3D &graph3D,
+                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                                         SpatialDomains::BoundaryConditions &bcs,
                                         const std::string variable,
                                         bool SetUpJustDG) :
@@ -120,7 +120,7 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -154,18 +154,18 @@ namespace Nektar
          * @todo Implement 3D trace space.
          */
         DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraph3D &graph3D,
+                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                                         const std::string variable,
                                         bool SetUpJustDG) :
             ExpList3D(pSession,graph3D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            SpatialDomains::BoundaryConditions bcs(pSession, &graph3D);
+            SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
 
             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
             EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
+            ApplyGeomInfo();
 
             if(SetUpJustDG)
             {
@@ -233,7 +233,7 @@ namespace Nektar
          * the boundary conditions should be discretised.
          */
         void DisContField3D::GenerateBoundaryConditionExpansion(
-                    SpatialDomains::MeshGraph3D &graph3D,
+                    SpatialDomains::MeshGraphSharedPtr &graph3D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable)
         {
@@ -277,7 +277,7 @@ namespace Nektar
          *                      conditions on the different boundary regions.
          */
         void DisContField3D::SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph3D &graph3D,
+                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         Array<OneD, ExpListSharedPtr> &bndCondExpansions,
@@ -355,7 +355,7 @@ namespace Nektar
          */
         //TODO: implement
         void DisContField3D::GetPeriodicFaces(
-                    SpatialDomains::MeshGraph3D &graph3D,
+                    SpatialDomains::MeshGraphSharedPtr &graph3D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
                     map<int,int>& periodicVertices,

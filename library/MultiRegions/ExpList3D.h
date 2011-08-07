@@ -70,14 +70,14 @@ namespace Nektar
                         const LibUtilities::BasisKey &HBa,
                         const LibUtilities::BasisKey &HBb,
                         const LibUtilities::BasisKey &HBc,
-                        SpatialDomains::MeshGraph3D &graph3D,
+                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                         const LibUtilities::PointsType TetNb
                                             = LibUtilities::SIZE_PointsType);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraph3D &graph3D);
+                        SpatialDomains::MeshGraphSharedPtr &graph3D);
 
             /// Sets up a list of local expansions based on an expansion vector
             ExpList3D(SpatialDomains::ExpansionMap &expansions);

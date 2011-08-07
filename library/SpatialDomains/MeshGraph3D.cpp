@@ -46,6 +46,13 @@ namespace Nektar
         {
         }
 
+        MeshGraph3D::MeshGraph3D(LibUtilities::SessionReaderSharedPtr &pSession)
+            : MeshGraph(pSession)
+        {
+            ReadGeometry(pSession->GetDocument());
+            ReadExpansions(pSession->GetDocument());
+        }
+
         MeshGraph3D::~MeshGraph3D()
         {
         }

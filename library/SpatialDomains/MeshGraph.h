@@ -39,6 +39,7 @@
 #include <cstdlib>
 #include <fstream>
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/InterfaceComponent.h>
 #include <SpatialDomains/SegGeom.h>
@@ -200,6 +201,7 @@ namespace Nektar
             public:
                 SPATIAL_DOMAINS_EXPORT MeshGraph();
                 SPATIAL_DOMAINS_EXPORT MeshGraph(unsigned int meshDimension, unsigned int spaceDimension);
+                SPATIAL_DOMAINS_EXPORT MeshGraph(LibUtilities::SessionReaderSharedPtr &pSession);
                 SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
@@ -330,6 +332,7 @@ namespace Nektar
                 const HexGeomMap& GetAllHexGeoms() const { return m_hexGeoms; }
 
             protected:
+                LibUtilities::SessionReaderSharedPtr  m_session;
                 VertexMap               m_vertSet;
                 InterfaceCompList       m_iComps;
 

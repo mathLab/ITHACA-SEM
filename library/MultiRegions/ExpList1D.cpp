@@ -97,15 +97,15 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,
                              const LibUtilities::BasisKey &Ba,
-                             SpatialDomains::MeshGraph1D &graph1D):
-            ExpList(pSession)
+                             SpatialDomains::MeshGraphSharedPtr &graph1D):
+            ExpList(pSession,graph1D)
         {
             int i, id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionMap &expansions
-                                                    = graph1D.GetExpansions();
+                                                    = graph1D->GetExpansions();
 
             // For each element in the mesh, create a segment expansion using
             // the supplied BasisKey and segment geometry.
@@ -160,8 +160,8 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraph1D &graph1D, bool DeclareCoeffPhysArrays):
-            ExpList(pSession)
+        ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraphSharedPtr &graph1D, bool DeclareCoeffPhysArrays):
+            ExpList(pSession,graph1D)
         {
             int i,id=0;
             LocalRegions::SegExpSharedPtr seg;
@@ -169,7 +169,7 @@ namespace Nektar
 
             // Retrieve the list of expansions
             const SpatialDomains::ExpansionMap &expansions
-                                                    = graph1D.GetExpansions();
+                                                    = graph1D->GetExpansions();
 
             // Process each expansion in the graph
             SpatialDomains::ExpansionMap::const_iterator expIt;
@@ -229,7 +229,7 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
-                             SpatialDomains::MeshGraph2D &graph2D,
+                             SpatialDomains::MeshGraphSharedPtr &graph2D,
                              bool DeclareCoeffPhysArrays):
             ExpList()
         {
@@ -254,7 +254,7 @@ namespace Nektar
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
-                                        = graph2D.GetEdgeBasisKey(SegmentGeom);
+                                        = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -309,7 +309,7 @@ namespace Nektar
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
                     const StdRegions::StdExpansionVector &locexp,
-                    SpatialDomains::MeshGraph2D &graph2D,
+                    SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const map<int,int> &periodicEdges,
                     bool DeclareCoeffPhysArrays):
             ExpList()

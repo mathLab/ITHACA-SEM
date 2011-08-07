@@ -78,7 +78,7 @@ namespace Nektar
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
                                    bool useFFT,
-                                   SpatialDomains::MeshGraph2D &graph2D,
+                                   SpatialDomains::MeshGraphSharedPtr &graph2D,
                                    const std::string var = "DefaultVar");
 
             /// Sets up a list of local expansions based on an mesh expansion
@@ -129,7 +129,7 @@ namespace Nektar
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
 
-            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
                                             SpatialDomains::BoundaryConditions &bcs,
                                             const std::string variable,
                                             vector<map<int,int> > & periodicVertices,

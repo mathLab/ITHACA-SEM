@@ -60,9 +60,9 @@ namespace Nektar
                              const LibUtilities::BasisKey &HBa,
                              const LibUtilities::BasisKey &HBb,
                              const LibUtilities::BasisKey &HBc,
-                             SpatialDomains::MeshGraph3D &graph3D,
+                             SpatialDomains::MeshGraphSharedPtr &graph3D,
                              const LibUtilities::PointsType TetNb):
-            ExpList(pSession)
+            ExpList(pSession,graph3D)
         {
 
             LocalRegions::TetExpSharedPtr tet;
@@ -70,7 +70,7 @@ namespace Nektar
             LocalRegions::PrismExpSharedPtr prism;
             LocalRegions::PyrExpSharedPtr pyramid;
 
-            const SpatialDomains::ExpansionMap &expansions = graph3D.GetExpansions();
+            const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
 
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
@@ -151,7 +151,7 @@ namespace Nektar
          * @param   graph3D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraph3D &graph3D):ExpList(pSession)
+        ExpList3D::ExpList3D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraphSharedPtr &graph3D):ExpList(pSession,graph3D)
         {
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
@@ -159,7 +159,7 @@ namespace Nektar
             LocalRegions::PyrExpSharedPtr pyramid;
 
             const SpatialDomains::ExpansionMap &expansions
-                                        = graph3D.GetExpansions();
+                                        = graph3D->GetExpansions();
 
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)

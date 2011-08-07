@@ -32,11 +32,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
-    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-    if (vSession->GetComm()->GetSize() > 1)
-    {
-        SolnType = MultiRegions::eIterativeFull;
-    }
     string meshfile(vSession->GetFilename());
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
@@ -45,68 +40,22 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    //----------------------------------------------
-    // Load the solver type so we can test full solve, static
-    // condensation and the default multi-level statis condensation.
-    if( argc >= 3 )
-    {
-        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
-        {
-            SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-            cout << "Solution Type: MultiLevel Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
-        {
-            SolnType = MultiRegions::eDirectStaticCond;
-            cout << "Solution Type: Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
-        {
-            SolnType = MultiRegions::eDirectFullMatrix;
-            cout << "Solution Type: Full Matrix" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"IterativeFull"))
-        {
-            SolnType = MultiRegions::eIterativeFull;
-            cout << "Solution Type: Iterative Full Matrix" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"IterativeMultiLevelStaticCond"))
-        {
-            SolnType = MultiRegions::eIterativeMultiLevelStaticCond;
-            cout << "Solution Type: Iterative Multi-level Static Cond" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"IterativeStaticCond"))
-        {
-            SolnType = MultiRegions::eIterativeStaticCond;
-            cout << "Solution Type: Iterative Static Cond" << endl;
-        }
-        else
-        {
-            cerr << "SolnType not recognised" <<endl;
-            exit(1);
-        }
-
-    }
-    //----------------------------------------------
-
     try
     {
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraph2D graph2D;
-        graph2D.ReadGeometry(meshfile);
-        graph2D.ReadExpansions(meshfile);
+        SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
         // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(vSession, &graph2D);
+        SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
         lambda = vSession->GetParameter("Lambda");
-        const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
+        const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 2D Helmholtz: " << endl;
         cout << "         Communication: " << vSession->GetComm()->GetType() << endl;
@@ -205,7 +154,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph2D.Write(out, FieldDef, FieldData);
+        graph2D->Write(out, FieldDef, FieldData);
 
         //-----------------------------------------------
 

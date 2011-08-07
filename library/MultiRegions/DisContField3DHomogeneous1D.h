@@ -62,7 +62,7 @@ namespace Nektar
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
 						   bool useFFT,
-                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::MeshGraphSharedPtr &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0);
 

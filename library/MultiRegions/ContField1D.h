@@ -64,47 +64,48 @@ namespace Nektar
 
             /// Construct a global continuous field based on an input mesh.
             MULTI_REGIONS_EXPORT ContField1D(
-                        LibUtilities::CommSharedPtr &pComm,
-                        SpatialDomains::MeshGraph1D &graph1D,
-                        const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
+                        LibUtilities::SessionReaderSharedPtr &pSession,
+                        SpatialDomains::MeshGraph1D &graph1D);
 
             /// Constructor.
             MULTI_REGIONS_EXPORT ContField1D(
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
+                        const int bc_loc = 0);
 
             /// Set up global continuous field based on an input mesh and
             /// boundary conditions.
             MULTI_REGIONS_EXPORT ContField1D(
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
+                        const std::string variable);
+
+            /// Set up global continuous field based on an input mesh and
+            /// boundary conditions.
+            MULTI_REGIONS_EXPORT ContField1D(
+                        LibUtilities::SessionReaderSharedPtr &pSession,
+                        SpatialDomains::MeshGraph1D &graph1D,
+                        const std::string variable);
 
             /// Set up global continuous field based on an input mesh, basis
             /// key and boundary conditions.
             MULTI_REGIONS_EXPORT ContField1D(
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         const LibUtilities::BasisKey &Ba,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
+                        const int bc_loc = 0);
 
             /// Set up global continuous field based on an input mesh, basis
             /// key and boundary conditions.
             MULTI_REGIONS_EXPORT ContField1D(
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         const LibUtilities::BasisKey &Ba,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
+                        const std::string variable);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField1D(const ContField1D &In);

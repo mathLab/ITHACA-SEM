@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::DisContField2D>::
-        AllocateSharedPtr(vComm,graph2D,bcs);
+        AllocateSharedPtr(vSession,graph2D,bcs);
     //----------------------------------------------
     Timing("Read files and define exp ..");
 

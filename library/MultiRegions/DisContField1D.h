@@ -62,28 +62,32 @@ namespace Nektar
 
             /// Constructs a 1D discontinuous field based on a mesh.
             MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::CommSharedPtr& pComm,
+                    LibUtilities::SessionReaderSharedPtr& pSession,
                     SpatialDomains::MeshGraph1D &graph1D,
-                    const GlobalSysSolnType solnType = eDirectStaticCond,
                     const bool constructMap = true);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::CommSharedPtr& pComm,
+                    LibUtilities::SessionReaderSharedPtr& pSession,
                     SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
-                    const int bc_loc = 0,
-                    const GlobalSysSolnType solnType = eDirectStaticCond);
+                    const int bc_loc = 0);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::CommSharedPtr& pComm,
+                    LibUtilities::SessionReaderSharedPtr& pSession,
                     SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable,
-                    const GlobalSysSolnType solnType = eDirectStaticCond);
+                    const std::string variable);
+
+            /// Constructs a 1D discontinuous field based on a mesh and boundary
+            /// conditions.
+            MULTI_REGIONS_EXPORT DisContField1D(
+                    LibUtilities::SessionReaderSharedPtr& pSession,
+                    SpatialDomains::MeshGraph1D &graph1D,
+                    const std::string variable);
 
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);

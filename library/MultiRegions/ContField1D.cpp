@@ -107,17 +107,16 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
-        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
-                                 SpatialDomains::MeshGraph1D &graph1D,
-                                 const GlobalSysSolnType solnType):
-            DisContField1D(pComm,graph1D,solnType,false),
+        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
+                                 SpatialDomains::MeshGraph1D &graph1D):
+            DisContField1D(pSession,graph1D,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph1D);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,solnType);
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
 
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -146,12 +145,11 @@ namespace Nektar
          * @param   bcs         Boundary conditions.
          * @param   bc_loc      ? (optional)
          */
-        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
-                                 const int bc_loc,
-                                 const GlobalSysSolnType solnType):
-            DisContField1D(pComm,graph1D,bcs,bc_loc,solnType),
+                                 const int bc_loc):
+            DisContField1D(pSession,graph1D,bcs,bc_loc),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -167,8 +165,7 @@ namespace Nektar
                                 periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
-                                    solnType,
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
                                     periodicVertices);
@@ -199,12 +196,11 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
-                                 const std::string variable,
-                                 const GlobalSysSolnType solnType):
-            DisContField1D(pComm,graph1D,bcs,variable,solnType),
+                                 const std::string variable):
+            DisContField1D(pSession,graph1D,bcs,variable),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -218,8 +214,7 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
-                                    solnType,
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
                                     periodicVertices);
@@ -227,6 +222,7 @@ namespace Nektar
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
+
 
         /**
          * Given a mesh \a graph1D, containing information about the domain and
@@ -243,41 +239,32 @@ namespace Nektar
          * by the argument \a bcs, by expressing them in terms of the
          * coefficient of the expansion on  the boundary.
          *
-         * @deprecated  Basis definition is now provided by the
-         * SpatialDomains#MeshGraph1D object making this constructor deprecated.
-         *
-         * @param   Ba          BasisKey for defining expansions.
          * @param   graph1D     A 1D mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
          * @param   bcs         The boundary conditions.
-         * @param   bc_loc      ? (optional)
-         * @param   solnType    Type of solution to use. By default Direct
-         *                      Static Condensation is used.
+         * @param   variable    An optional parameter to indicate for which
+         *                      variable the field should be constructed.
          */
-        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
-                                 const LibUtilities::BasisKey &Ba,
+        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  SpatialDomains::MeshGraph1D &graph1D,
-                                 SpatialDomains::BoundaryConditions &bcs,
-                                 const int bc_loc,
-                                 const GlobalSysSolnType solnType):
-            DisContField1D(pComm,graph1D,solnType,false),
+                                 const std::string variable):
+            DisContField1D(pSession,graph1D,variable),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,
-                                               bcs.GetVariable(bc_loc));
+            SpatialDomains::BoundaryConditions bcs(pSession, &graph1D);
+
+            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph1D);
 
             map<int,int> periodicVertices;
-            GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
-                                periodicVertices);
+            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
-                                    solnType,
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
                                     periodicVertices);
@@ -309,19 +296,75 @@ namespace Nektar
          * @param   graph1D     A 1D mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
          * @param   bcs         The boundary conditions.
+         * @param   bc_loc      ? (optional)
+         * @param   solnType    Type of solution to use. By default Direct
+         *                      Static Condensation is used.
+         */
+        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const LibUtilities::BasisKey &Ba,
+                                 SpatialDomains::MeshGraph1D &graph1D,
+                                 SpatialDomains::BoundaryConditions &bcs,
+                                 const int bc_loc):
+            DisContField1D(pSession,graph1D,false),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            GenerateBoundaryConditionExpansion(graph1D,bcs,
+                                               bcs.GetVariable(bc_loc));
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph1D);
+
+            map<int,int> periodicVertices;
+            GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
+                                periodicVertices);
+
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
+                                    m_bndCondExpansions,
+                                    m_bndConditions,
+                                    periodicVertices);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
+
+        /**
+         * Given a mesh \a graph1D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates
+         * memory for the arrays #m_coeffs and #m_phys. Furthermore, it
+         * constructs the mapping array (contained in #m_locToGloMap) for the
+         * transformation between local elemental level and global level, it
+         * calculates the total number global expansion coefficients
+         * \f$\hat{u}_n\f$ and allocates memory for the array #m_contCoeffs.
+         * The constructor also discretises the boundary conditions, specified
+         * by the argument \a bcs, by expressing them in terms of the
+         * coefficient of the expansion on  the boundary.
+         *
+         * @deprecated  Basis definition is now provided by the
+         * SpatialDomains#MeshGraph1D object making this constructor deprecated.
+         *
+         * @param   Ba          BasisKey for defining expansions.
+         * @param   graph1D     A 1D mesh, containing information about the
+         *                      domain and the spectral/hp element expansion.
+         * @param   bcs         The boundary conditions.
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          * @param   solnType    Type of solution to use. By default Direct
          *                      Static Condensation is used.
          */
 
-        ContField1D::ContField1D(LibUtilities::CommSharedPtr &pComm,
+        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  const LibUtilities::BasisKey &Ba,
                                  SpatialDomains::MeshGraph1D &graph1D,
                                  SpatialDomains::BoundaryConditions &bcs,
-                                 const std::string variable,
-                                 const GlobalSysSolnType solnType):
-            DisContField1D(pComm,graph1D,solnType,false),
+                                 const std::string variable):
+            DisContField1D(pSession,graph1D,false),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -335,8 +378,7 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_comm, m_ncoeffs,*this,
-                                                    solnType,
+                                ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                                     m_bndCondExpansions,
                                                     m_bndConditions,
                                                     periodicVertices);

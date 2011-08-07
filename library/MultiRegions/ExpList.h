@@ -36,6 +36,7 @@
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
@@ -101,7 +102,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList();
 
             /// The default constructor.
-            ExpList(LibUtilities::CommSharedPtr &pComm);
+            ExpList(LibUtilities::SessionReaderSharedPtr &pSession);
 
             /// The copy constructor.
             MULTI_REGIONS_EXPORT ExpList(const ExpList &in, bool DeclareCoeffPhysArrays = true);
@@ -626,7 +627,7 @@ namespace Nektar
 
             inline void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
- 	    inline void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+            inline void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
  	                
 
             inline void SetUpTangents();
@@ -756,6 +757,9 @@ namespace Nektar
 
             /// Communicator
             LibUtilities::CommSharedPtr m_comm;
+
+            /// Session
+            LibUtilities::SessionReaderSharedPtr m_session;
 
             /// The total number of local degrees of freedom. #m_ncoeffs
             /// \f$=N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_l\f$

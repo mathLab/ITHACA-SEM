@@ -108,17 +108,16 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
-        ContField2D::ContField2D(LibUtilities::CommSharedPtr &pComm,
-                                 SpatialDomains::MeshGraph2D &graph2D,
-                                 const GlobalSysSolnType solnType):
-            DisContField2D(pComm,graph2D,solnType,false),
+        ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
+                                 SpatialDomains::MeshGraph2D &graph2D):
+            DisContField2D(pSession,graph2D,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph2D);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,solnType);
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -147,14 +146,13 @@ namespace Nektar
          *                      with the boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        ContField2D::ContField2D(LibUtilities::CommSharedPtr &pComm,
+        ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
-                                 const GlobalSysSolnType solnType,
                                  bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
-            DisContField2D(pComm,graph2D,bcs,bc_loc,solnType,false,DeclareCoeffPhysArrays),
+            DisContField2D(pSession,graph2D,bcs,bc_loc,false,DeclareCoeffPhysArrays),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
@@ -166,8 +164,8 @@ namespace Nektar
                              periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
-                                    solnType, m_bndCondExpansions,
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
+                                    m_bndCondExpansions,
                                     m_bndConditions, periodicVertices,
                                     periodicEdges,
                                     CheckIfSingularSystem);
@@ -220,10 +218,8 @@ namespace Nektar
                 GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
                                  periodicVertices,periodicEdges);
 
-                GlobalSysSolnType solnType
-                                    = In.m_locToGloMap->GetGlobalSysSolnType();
                 m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                    ::AllocateSharedPtr(m_comm, m_ncoeffs,*this, solnType,
+                    ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
                                         periodicVertices,
@@ -261,18 +257,17 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField2D::ContField2D(LibUtilities::CommSharedPtr &pComm,
+        ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                  SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
-                                 const GlobalSysSolnType solnType,
                                  const bool CheckIfSingularSystem):
-            DisContField2D(pComm,graph2D,bcs,variable,solnType,false),
+            DisContField2D(pSession,graph2D,bcs,variable,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
-/******************************************************************************************************************/
+
             m_graph2D=graph2D;            
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph2D);
@@ -283,8 +278,7 @@ namespace Nektar
                              periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                ::AllocateSharedPtr(m_comm,m_ncoeffs,*this,
-                                    solnType,
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
                                     periodicVertices,
@@ -293,6 +287,120 @@ namespace Nektar
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);           
+        }
+
+
+        /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs. The constructor also
+         * discretises the boundary conditions, specified by the argument \a
+         * bcs, by expressing them in terms of the coefficient of the expansion
+         * on the boundary.
+         *
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   bcs         The boundary conditions.
+         * @param   variable    An optional parameter to indicate for which
+         *                      variable the field should be constructed.
+         */
+        ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
+                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 const std::string variable,
+                                 const bool CheckIfSingularSystem):
+            DisContField2D(pSession,graph2D,variable,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            SpatialDomains::BoundaryConditions bcs(pSession, &graph2D);
+            GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
+
+            m_graph2D=graph2D;
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph2D);
+
+            map<int,int> periodicEdges;
+            vector<map<int,int> >periodicVertices;
+            GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
+                             periodicEdges);
+
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
+                                    m_bndCondExpansions,
+                                    m_bndConditions,
+                                    periodicVertices,
+                                    periodicEdges,
+                                    CheckIfSingularSystem);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
+
+        /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs. The constructor also
+         * discretises the boundary conditions, specified by the argument \a
+         * bcs, by expressing them in terms of the coefficient of the expansion
+         * on the boundary.
+         *
+         * @param   In          Existing ContField2D object used to provide the
+         *                      local to global mapping information and
+         *                      global solution type.
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   bcs         The boundary conditions.
+         * @param   bc_loc
+         */
+        ContField2D::ContField2D(const ContField2D &In,
+                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 const std::string variable,
+                                 bool DeclareCoeffPhysArrays,
+                                 const bool CheckIfSingularSystem):
+            DisContField2D(In,graph2D,variable,false,DeclareCoeffPhysArrays),
+            m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            SpatialDomains::BoundaryConditions bcs(m_session, &graph2D);
+            ApplyGeomInfo(graph2D);
+
+            if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
+            {
+                map<int,int> periodicEdges;
+                vector<map<int,int> >periodicVertices;
+                GetPeriodicEdges(graph2D,bcs,variable,
+                                 periodicVertices,periodicEdges);
+
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                    ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
+                                        m_bndCondExpansions,
+                                        m_bndConditions,
+                                        periodicVertices,
+                                        periodicEdges,
+                                        CheckIfSingularSystem);
+            }
+            else
+            {
+                m_locToGloMap = In.m_locToGloMap;
+            }
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 

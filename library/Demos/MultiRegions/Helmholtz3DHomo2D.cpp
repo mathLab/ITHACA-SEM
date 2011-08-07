@@ -24,46 +24,12 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     // default solution type multilevel statis condensation
-    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-    if (vComm->GetSize() > 1)
-    {
-        SolnType = MultiRegions::eIterativeFull;
-    }
 
     if( (argc != 2) && (argc != 3))
     {
         fprintf(stderr,"Usage: Helmholtz3DHomo2D meshfile [SysSolnType]   \n");
         exit(1);
     }
-
-    //----------------------------------------------
-    // Load the solver type so we can test full solve, static
-    // condensation and the default multi-level statis condensation.
-    if( argc == 3 )
-    {
-        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
-        {
-            SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-            cout << "Solution Type: MultiLevel Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
-        {
-            SolnType = MultiRegions::eDirectStaticCond;
-            cout << "Solution Type: Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
-        {
-            SolnType = MultiRegions::eDirectFullMatrix;
-            cout << "Solution Type: Full Matrix" << endl;
-        }
-        else
-        {
-            cerr << "SolnType not recognised" <<endl;
-            exit(1);
-        }
-
-    }
-    //----------------------------------------------
 
     //----------------------------------------------
     // Read in mesh from input file
@@ -98,7 +64,7 @@ int main(int argc, char *argv[])
 	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,nzpoints,PkeyZ);
     
-	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vComm,BkeyY,BkeyZ,ly,lz,useFFT,graph1D,bcs,bc_val,SolnType);
+	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,graph1D,bcs,bc_val);
     //----------------------------------------------
 
     //----------------------------------------------

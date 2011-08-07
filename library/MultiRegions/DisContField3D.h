@@ -63,37 +63,35 @@ namespace Nektar
 
             /// Constructs a global discontinuous field based on an input mesh.
             MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::CommSharedPtr &pComm,
+                           LibUtilities::SessionReaderSharedPtr &pSession,
                            SpatialDomains::MeshGraph3D &graph3D,
-                           const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
 
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
             MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::CommSharedPtr &pComm,
+                           LibUtilities::SessionReaderSharedPtr &pSession,
                            SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc,
-                           const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
 
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
             MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::CommSharedPtr &pComm,
+                           LibUtilities::SessionReaderSharedPtr &pSession,
                            SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
-                           const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
 
-            /// Constructs a global discontinuous field based on an input mesh.
-/*            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
-                          SpatialDomains::BoundaryConditions &bcs,
-                          const GlobalSysSolnType solnType = eDirectStaticCond,
-                          const bool constructMap = true);
-*/
+            /// Constructs a global discontinuous field based on an input mesh
+            /// with boundary conditions.
+            MULTI_REGIONS_EXPORT DisContField3D(
+                           LibUtilities::SessionReaderSharedPtr &pSession,
+                           SpatialDomains::MeshGraph3D &graph3D,
+                           const std::string variable,
+                           bool SetUpJustDG = true);
 
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.

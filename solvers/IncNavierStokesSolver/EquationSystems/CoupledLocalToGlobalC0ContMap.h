@@ -47,13 +47,13 @@ namespace Nektar
     class CoupledLocalToGlobalC0ContMap: public MultiRegions::LocalToGlobalC0ContMap
     {
     public:
-        CoupledLocalToGlobalC0ContMap(const LibUtilities::CommSharedPtr &pComm,
+        CoupledLocalToGlobalC0ContMap(const LibUtilities::SessionReaderSharedPtr &pSession,
                                       SpatialDomains::MeshGraphSharedPtr &graph,
                                       SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
                                       Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                       MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
-                                      const MultiRegions::GlobalSysSolnType solnType, bool CheeckForSingularSys=true);
+                                      bool CheeckForSingularSys=true);
     };
 
     typedef boost::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;

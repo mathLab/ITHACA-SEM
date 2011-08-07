@@ -66,22 +66,21 @@ namespace Nektar
         }
 
         ContField3DHomogeneous1D::ContField3DHomogeneous1D(
-                                       LibUtilities::CommSharedPtr &pComm,
+                                       LibUtilities::SessionReaderSharedPtr &pSession,
                                        const LibUtilities::BasisKey &HomoBasis,
                                        const NekDouble lhom,
 									   bool useFFT,
                                        SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
-                                       const int bc_loc,
-                                       const GlobalSysSolnType solnType):
-            DisContField3DHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+                                       const int bc_loc):
+            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int i,j,n,nel;
             bool False = false;
             ContField2DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pComm,graph2D,bcs,bc_loc,solnType,False);
+            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pSession,graph2D,bcs,bc_loc,False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();

@@ -73,21 +73,21 @@ namespace Nektar
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2D(
-                      LibUtilities::CommSharedPtr &pComm,
+                      LibUtilities::SessionReaderSharedPtr &pSession,
                       SpatialDomains::MeshGraph2D &graph2D,
                       bool DelcareCoeffPhysArrays = true, 
                       const std::string var = "DefaultVar");
 
             /// Sets up a list of local expansions based on an expansion  Mapr
             MULTI_REGIONS_EXPORT ExpList2D(
-                      LibUtilities::CommSharedPtr &pComm,
+                      LibUtilities::SessionReaderSharedPtr &pSession,
                       const SpatialDomains::ExpansionMap &expansions,
                       bool DeclareCoeffPhysArrays = true);
             
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
             MULTI_REGIONS_EXPORT ExpList2D(
-                      LibUtilities::CommSharedPtr &pComm,
+                      LibUtilities::SessionReaderSharedPtr &pSession,
                       const LibUtilities::BasisKey &TriBa,
                       const LibUtilities::BasisKey &TriBb,
                       const LibUtilities::BasisKey &QuadBa,
@@ -100,7 +100,7 @@ namespace Nektar
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             MULTI_REGIONS_EXPORT ExpList2D(  
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::CompositeMap &domain,
                         SpatialDomains::MeshGraph3D &graph3D);
 

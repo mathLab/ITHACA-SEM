@@ -59,18 +59,14 @@ namespace Nektar
 
             /// Construct a global continuous field based on an input mesh.
             MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::CommSharedPtr &pComm,
-                        SpatialDomains::MeshGraph3D &graph3D,
-                        const GlobalSysSolnType solnType
-                                            = eDirectMultiLevelStaticCond);
+                        LibUtilities::SessionReaderSharedPtr &pSession,
+                        SpatialDomains::MeshGraph3D &graph3D);
 
             MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        const GlobalSysSolnType solnType
-                                            = eDirectMultiLevelStaticCond);
+                        const int bc_loc = 0);
 
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
@@ -78,17 +74,25 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In,
                         SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        const GlobalSysSolnType solnType
-                                            = eDirectMultiLevelStaticCond);
+                        const int bc_loc = 0);
 
             MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::CommSharedPtr &pComm,
+                        LibUtilities::SessionReaderSharedPtr &pSession,
                         SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        const GlobalSysSolnType solnType
-                                            = eDirectMultiLevelStaticCond);
+                        const std::string variable);
+
+            MULTI_REGIONS_EXPORT ContField3D(
+                        LibUtilities::SessionReaderSharedPtr &pSession,
+                        SpatialDomains::MeshGraph3D &graph3D,
+                        const std::string variable);
+
+            /// Construct a global continuous field with solution type based on
+            /// another field but using a separate input mesh and boundary
+            /// conditions.
+            MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In,
+                        SpatialDomains::MeshGraph3D &graph3D,
+                        const std::string variable);
 
             MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In);
 

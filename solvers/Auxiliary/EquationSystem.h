@@ -126,22 +126,22 @@ namespace Nektar
                 const NekDouble time);
 
         /// Compute the L2 error between fields and a given exact solution.
-        NekDouble L2Error(int field,
+        NekDouble L2Error(unsigned int field,
                           const Array<OneD,NekDouble> &exactsoln,
                           bool Normalised = false);
 
         /// Compute the L2 error of the fields
-        inline NekDouble L2Error(int field, bool Normalised = false)
+        inline NekDouble L2Error(unsigned int field, bool Normalised = false)
         {
             return L2Error(field,NullNekDouble1DArray,Normalised);
         }
 
         /// Compute the L_inf error between fields and a given exact solution.
-        NekDouble LinfError(int field,
+        NekDouble LinfError(unsigned int field,
                 const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
         ///Compute error (L2 and L_inf) over an larger set of quadrature points return [L2 Linf]
-        Array<OneD,NekDouble> ErrorExtraPoints(int field);
+        Array<OneD,NekDouble> ErrorExtraPoints(unsigned int field);
 
         /// Compute the inner product \f$ (\nabla \phi \cdot F) \f$.
         void WeakAdvectionGreensDivergenceForm(
@@ -338,8 +338,6 @@ namespace Nektar
         int m_spacedim;              ///< Spatial dimension (> expansion dim)
         int m_expdim;                ///< Dimension of the expansion
 
-        MultiRegions::GlobalSysSolnType m_solnType;
-
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
 
@@ -410,7 +408,7 @@ namespace Nektar
         virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
                             bool dumpInitialConditions = true);
 
-        virtual void v_EvaluateExactSolution(int field,
+        virtual void v_EvaluateExactSolution(unsigned int field,
                         Array<OneD, NekDouble> &outfield,
                         const NekDouble time);
 

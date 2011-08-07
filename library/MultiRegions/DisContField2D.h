@@ -58,9 +58,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField2D();
 
             MULTI_REGIONS_EXPORT DisContField2D(
-                           LibUtilities::CommSharedPtr &pComm,
+                           LibUtilities::SessionReaderSharedPtr &pSession,
                            SpatialDomains::MeshGraph2D &graph2D,
-                           const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
@@ -71,21 +70,32 @@ namespace Nektar
                            bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(
-                           LibUtilities::CommSharedPtr &pComm,
+                           LibUtilities::SessionReaderSharedPtr &pSession,
                            SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
-                           const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true,
                            bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(
-                           LibUtilities::CommSharedPtr &pComm,
+                           LibUtilities::SessionReaderSharedPtr &pSession,
                            SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
-                           const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true,
+                           bool DeclareCoeffPhysArrays = true);
+
+            MULTI_REGIONS_EXPORT DisContField2D(
+                           LibUtilities::SessionReaderSharedPtr &pSession,
+                           SpatialDomains::MeshGraph2D &graph2D,
+                           const std::string variable,
+                           bool SetUpJustDG = true,
+                           bool DeclareCoeffPhysArrays = true);
+
+            MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
+                           SpatialDomains::MeshGraph2D &graph2D,
+                           const std::string variable,
+                           bool SetUpJustDG = false,
                            bool DeclareCoeffPhysArrays = true);
 
 

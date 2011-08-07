@@ -106,34 +106,6 @@ int main(int argc, char *argv[])
 
     vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(bcfile);
 
-    if (vSession->DefinesSolverInfo("Communication"))
-    {
-        vCommModule = vSession->GetSolverInfo("Communication");
-    }
-    else if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
-    {
-        vCommModule = "ParallelMPI";
-    }
-
-    vComm = LibUtilities::GetCommFactory().CreateInstance(vCommModule,argc,argv);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-
-        // Force use of Iterative solver for parallel execution
-        SolnType = MultiRegions::eIterativeFull;
-    }
-
     string globoptfile;
 
     switch(optLevel)
@@ -196,7 +168,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::DisContField2D>::
-        AllocateSharedPtr(vComm,graph2D,bcs);
+        AllocateSharedPtr(vSession,graph2D,bcs);
     //----------------------------------------------
 
     //----------------------------------------------

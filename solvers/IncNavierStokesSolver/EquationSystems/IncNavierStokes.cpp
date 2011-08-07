@@ -143,7 +143,7 @@ namespace Nektar
             {
                 vConvectiveType = m_session->GetTag("AdvectiveType");
             }
-            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_comm, m_session, m_graph, m_boundaryConditions);
+            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
 		
 		if (m_equationType == eUnsteadyLinearisedNS)
@@ -153,7 +153,7 @@ namespace Nektar
             {
                 vConvectiveType = m_session->GetTag("Linearised");
             }
-            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_comm, m_session, m_graph, m_boundaryConditions);
+            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
     }
 

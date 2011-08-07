@@ -83,14 +83,14 @@ namespace Nektar
 
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
-                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_comm, Homo1DKey, m_LhomZ, m_useFFT, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT, pressure_exp);
 
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                
             }
             else
             {
-                m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_comm, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session, pressure_exp);
                 nz = 1;
             }
             
@@ -114,19 +114,19 @@ namespace Nektar
                 }
 
                 int nz_loc = 2;
-                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,m_solnType,m_zeroMode);
+                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,m_zeroMode);
             }
             else 
             {
                 // base mode
                 int nz_loc = 1;
-                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,m_solnType);
+                m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc);
                 
                 if(nz > 1)
                 {
                     nz_loc = 2;
                     // Assume all higher modes have the same boundary conditions and re-use mapping
-                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_comm,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc,m_solnType);
+                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc);
                     for(i = 2; i < nz; ++i)
                     {
                         m_locToGloMap[i] = m_locToGloMap[1];

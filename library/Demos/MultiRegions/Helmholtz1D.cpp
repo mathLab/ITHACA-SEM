@@ -22,11 +22,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
-    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-    if (vComm->GetSize() > 1)
-    {
-        SolnType = MultiRegions::eIterativeFull;
-    }
     string meshfile(vSession->GetFilename());
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
@@ -34,40 +29,6 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Usage: Helmholtz1D  meshfile \n");
         exit(1);
     }
-
-    //----------------------------------------------
-    // Load the solver type so we can test full solve, static
-    // condensation and the default multi-level statis condensation.
-    if( argc >= 3 )
-    {
-        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
-        {
-            SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-            cout << "Solution Type: MultiLevel Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
-        {
-            SolnType = MultiRegions::eDirectStaticCond;
-            cout << "Solution Type: Static Condensation" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
-        {
-            SolnType = MultiRegions::eDirectFullMatrix;
-            cout << "Solution Type: Full Matrix" << endl;
-        }
-        else if(!NoCaseStringCompare(argv[2],"IterativeCG"))
-        {
-            SolnType = MultiRegions::eIterativeFull;
-            cout << "Solution Type: Iterative Full Matrix" << endl;
-        }
-        else
-        {
-            cerr << "SolnType not recognised" <<endl;
-            exit(1);
-        }
-
-    }
-    //----------------------------------------------
 
     try
     {
@@ -89,7 +50,7 @@ int main(int argc, char *argv[])
         const SpatialDomains::CompositeMap domain = (graph1D.GetDomain());
         cout << "Solving 1D Helmholtz: "  << endl;
         cout << "       Communication: " << vComm->GetType() << endl;
-        cout << "       Solver type  : " << MultiRegions::GlobalSysSolnTypeMap[SolnType] << endl;
+        cout << "       Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
         cout << "       Lambda       : " << lambda << endl;
         //----------------------------------------------
 
@@ -97,7 +58,7 @@ int main(int argc, char *argv[])
         // Define Expansion
         int bc_loc = 0;
         Exp = MemoryManager<MultiRegions::ContField1D>::
-            AllocateSharedPtr(vComm,graph1D,bcs,bc_loc,SolnType);
+            AllocateSharedPtr(vSession,graph1D,bcs,bc_loc);
         //----------------------------------------------
 
         //----------------------------------------------

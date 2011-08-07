@@ -50,14 +50,12 @@ namespace Nektar
      */
     
     AdjointAdvection::AdjointAdvection(
-            LibUtilities::CommSharedPtr                 pComm,
             LibUtilities::SessionReaderSharedPtr        pSession,
-            SpatialDomains::MeshGraphSharedPtr          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions):
-        LinearisedAdvection(pComm, pSession, pGraph, pBoundaryConditions)
+            SpatialDomains::MeshGraphSharedPtr          pGraph):
+        LinearisedAdvection(pSession, pGraph)
     {
         SetUpBaseFields(pGraph);
-        ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph,pBoundaryConditions);
+        ImportFldBase(pSession->GetFilename().substr(0,pSession->GetFilename().find_last_of('.')) + ".bse",pGraph);
     }
     
     
@@ -68,7 +66,6 @@ namespace Nektar
 
     //Evaluation of the advective terms
     void AdjointAdvection::v_ComputeAdvectionTerm(
-            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
             Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
             const Array<OneD, const NekDouble> &pU,

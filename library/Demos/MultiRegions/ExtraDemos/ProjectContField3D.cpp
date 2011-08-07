@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession->GetComm(),graph3D,bcs);
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession,graph3D,bcs);
     //----------------------------------------------  
     
     //----------------------------------------------

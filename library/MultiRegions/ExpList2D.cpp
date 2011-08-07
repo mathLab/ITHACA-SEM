@@ -95,8 +95,8 @@ namespace Nektar
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList2D::ExpList2D(LibUtilities::CommSharedPtr &pComm,SpatialDomains::MeshGraph2D &graph2D, bool DeclareCoeffPhysArrays, const std::string var):
-            ExpList(pComm)
+        ExpList2D::ExpList2D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraph2D &graph2D, bool DeclareCoeffPhysArrays, const std::string var):
+            ExpList(pSession)
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -207,10 +207,10 @@ namespace Nektar
          *                      expansion.
          */
         ExpList2D::ExpList2D(
-                             LibUtilities::CommSharedPtr &pComm,
+                             LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::ExpansionMap &expansions,
                              bool DeclareCoeffPhysArrays):
-            ExpList(pComm)
+            ExpList(pSession)
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -328,14 +328,14 @@ namespace Nektar
           *                      and the spectral/hp element expansion.
           * @param   TriNb       The PointsType of possible nodal points
           */
-          ExpList2D::ExpList2D(LibUtilities::CommSharedPtr &pComm,
+          ExpList2D::ExpList2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                const LibUtilities::BasisKey &TriBa,
                                const LibUtilities::BasisKey &TriBb,
                                const LibUtilities::BasisKey &QuadBa,
                                const LibUtilities::BasisKey &QuadBb,
                                SpatialDomains::MeshGraph2D &graph2D,
                                const LibUtilities::PointsType TriNb):
-              ExpList(pComm)
+              ExpList(pSession)
           {
               int i,elmtid=0;
               LocalRegions::TriExpSharedPtr tri;
@@ -414,10 +414,10 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-         ExpList2D::ExpList2D(   LibUtilities::CommSharedPtr &pComm,
+         ExpList2D::ExpList2D(   LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::CompositeMap &domain,
                                  SpatialDomains::MeshGraph3D &graph3D):
-             ExpList(pComm)
+             ExpList(pSession)
          {
              int i,j,elmtid=0;
              int nel = 0;

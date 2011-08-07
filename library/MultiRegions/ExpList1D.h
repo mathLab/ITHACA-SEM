@@ -78,14 +78,14 @@ namespace Nektar
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      LibUtilities::CommSharedPtr &pComm,
+                      LibUtilities::SessionReaderSharedPtr &pSession,
                       const LibUtilities::BasisKey &Ba,
                       SpatialDomains::MeshGraph1D &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      LibUtilities::CommSharedPtr &pComm,
+                      LibUtilities::SessionReaderSharedPtr &pSession,
                       SpatialDomains::MeshGraph1D &graph1D,
                       bool DeclareCoeffPhysArrays = true);
 

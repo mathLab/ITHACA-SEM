@@ -270,7 +270,7 @@ namespace Nektar
         }
     }
 
-    void EulerCFE::v_EvaluateExactSolution(int field,
+    void EulerCFE::v_EvaluateExactSolution(unsigned int field,
             Array<OneD, NekDouble> &outfield,
             const NekDouble time)
     {

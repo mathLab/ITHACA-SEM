@@ -67,6 +67,7 @@ namespace Nektar
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
         ExpList::ExpList():
+            m_session(),
             m_comm(),
             m_ncoeffs(0),
             m_npoints(0),
@@ -90,8 +91,9 @@ namespace Nektar
          * populated by a derived class (namely one of MultiRegions#ExpList1D,
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
-        ExpList::ExpList(LibUtilities::CommSharedPtr &pComm):
-            m_comm(pComm),
+        ExpList::ExpList(LibUtilities::SessionReaderSharedPtr &pSession):
+            m_session(pSession),
+            m_comm(pSession->GetComm()),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
@@ -114,6 +116,7 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, bool DeclareCoeffPhysArrays):
+            m_session(in.m_session),
             m_comm(in.m_comm),
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),

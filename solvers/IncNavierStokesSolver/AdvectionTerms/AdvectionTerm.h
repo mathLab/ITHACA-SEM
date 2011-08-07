@@ -67,10 +67,8 @@ namespace Nektar
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory<
             std::string, AdvectionTerm,
-            LibUtilities::CommSharedPtr&,
             LibUtilities::SessionReaderSharedPtr&,
-            SpatialDomains::MeshGraphSharedPtr&,
-            SpatialDomains::BoundaryConditionsSharedPtr&
+            SpatialDomains::MeshGraphSharedPtr&
         > AdvectionTermFactory;
     AdvectionTermFactory& GetAdvectionTermFactory();
 
@@ -93,13 +91,9 @@ namespace Nektar
         
 
 	protected:
-        LibUtilities::CommSharedPtr                 m_comm;
-        /// Filename of session
         LibUtilities::SessionReaderSharedPtr        m_session;
         /// Name of the session
         std::string m_sessionName;
-        /// Pointer to boundary conditions object.
-        SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
         /// Pointer to mesh graph
         SpatialDomains::MeshGraphSharedPtr          m_graph;
         
@@ -114,16 +108,12 @@ namespace Nektar
         
         /// Constructor
         AdvectionTerm(
-                LibUtilities::CommSharedPtr&                 pComm,
                 LibUtilities::SessionReaderSharedPtr&        pSession,
-                SpatialDomains::MeshGraphSharedPtr&          pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions);
+                SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
         virtual void v_InitObject();
 
-        virtual void v_ComputeAdvectionTerm(
-                                            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
-                                            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+        virtual void v_ComputeAdvectionTerm(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                                             const Array<OneD, Array<OneD, NekDouble> > &pV,
                                             const Array<OneD, const NekDouble> &pU,
                                             Array<OneD, NekDouble> &pOutarray,

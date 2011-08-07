@@ -66,11 +66,10 @@ namespace Nektar
         friend class MemoryManager<AdjointAdvection>;
 
         /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(LibUtilities::CommSharedPtr& pComm,
+        static AdvectionTermSharedPtr create(
                                 LibUtilities::SessionReaderSharedPtr& pSession,
-                                SpatialDomains::MeshGraphSharedPtr& pGraph,
-                                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions) {
-            AdvectionTermSharedPtr p = MemoryManager<AdjointAdvection>::AllocateSharedPtr(pComm, pSession, pGraph, pBoundaryConditions);
+                                SpatialDomains::MeshGraphSharedPtr& pGraph) {
+            AdvectionTermSharedPtr p = MemoryManager<AdjointAdvection>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -82,17 +81,15 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
         
         AdjointAdvection(
-                         LibUtilities::CommSharedPtr                 pComm,
                          LibUtilities::SessionReaderSharedPtr        pSession,
-                         SpatialDomains::MeshGraphSharedPtr          pGraph,
-                         SpatialDomains::BoundaryConditionsSharedPtr pBoundaryConditions);
+                         SpatialDomains::MeshGraphSharedPtr          pGraph);
         
         virtual ~AdjointAdvection();
         
 	private:
 
         //Function for the evaluation of the adjoint advective terms
-        virtual void v_ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
+        virtual void v_ComputeAdvectionTerm(
                          Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, Array<OneD, NekDouble> > &pV,
                          const Array<OneD, const NekDouble> &pU,

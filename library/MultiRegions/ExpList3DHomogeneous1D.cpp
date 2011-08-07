@@ -46,33 +46,33 @@ namespace Nektar
         {
         }
 
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
                                                        bool useFFT):
-            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
                                                        bool useFFT,
                                                        SpatialDomains::MeshGraph2D &graph2D,
                                                        const std::string var):
-            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             GenExpList3DHomogeneous1D(graph2D.GetExpansions(var));            
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
                                                        bool useFFT,
                                                        const SpatialDomains::ExpansionMap  &expansions):                                                      
-            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             GenExpList3DHomogeneous1D(expansions);
         }
@@ -84,7 +84,7 @@ namespace Nektar
             ExpList2DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<ExpList2D>::AllocateSharedPtr(m_comm, expansions, False);
+            m_planes[0] = plane_zero = MemoryManager<ExpList2D>::AllocateSharedPtr(m_session, expansions, False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();

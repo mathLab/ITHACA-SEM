@@ -121,6 +121,9 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
                     const int pNumDir) = 0;
+
+            static std::string lookupIds[];
+            static std::string def;
         };
 
 

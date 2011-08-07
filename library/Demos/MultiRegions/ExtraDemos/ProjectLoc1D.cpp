@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes();
 
-    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession->GetComm(),bkey0,graph1D);
+    Exp = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,bkey0,graph1D);
 
     //----------------------------------------------
     // Define solution to be projected 

@@ -95,10 +95,10 @@ namespace Nektar
          *                      number of modes.
          * @param   graph1D     Domain and expansion definitions.
          */
-        ExpList1D::ExpList1D(LibUtilities::CommSharedPtr &pComm,
+        ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,
                              const LibUtilities::BasisKey &Ba,
                              SpatialDomains::MeshGraph1D &graph1D):
-            ExpList(pComm)
+            ExpList(pSession)
         {
             int i, id=0;
             LocalRegions::SegExpSharedPtr seg;
@@ -160,8 +160,8 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(LibUtilities::CommSharedPtr &pComm,SpatialDomains::MeshGraph1D &graph1D, bool DeclareCoeffPhysArrays):
-            ExpList(pComm)
+        ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraph1D &graph1D, bool DeclareCoeffPhysArrays):
+            ExpList(pSession)
         {
             int i,id=0;
             LocalRegions::SegExpSharedPtr seg;

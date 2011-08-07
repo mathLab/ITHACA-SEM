@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     // Define Expansion
     int bc_val = 0;
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vComm,graph2D,bcs,bc_val,SolnType);
+        AllocateSharedPtr(vSession,graph2D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     Timing("Read files and define exp ..");

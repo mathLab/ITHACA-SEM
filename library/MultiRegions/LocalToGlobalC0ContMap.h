@@ -60,23 +60,21 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(
-                                   const LibUtilities::CommSharedPtr &pComm);
+                                   const LibUtilities::SessionReaderSharedPtr &pSession);
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(
-                                   const LibUtilities::CommSharedPtr &pComm,
+                                   const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const int numLocalCoeffs,
-                                   const ExpList &locExp,
-                                   const GlobalSysSolnType solnType);
+                                   const ExpList &locExp);
 
             /// Constructor for the 1D expansion mappings with boundary
             /// conditions.
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(
-                                   const LibUtilities::CommSharedPtr &pComm,
+                                   const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const int numLocalCoeffs,
                                    const ExpList &locExp,
-                                   const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId);
@@ -84,10 +82,9 @@ namespace Nektar
             /// Constructor for the 2D expansion mappings with boundary
             /// conditions.
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(
-                                   const LibUtilities::CommSharedPtr &pComm,
+                                   const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const int numLocalCoeffs,
                                    const ExpList &locExp,
-                                   const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const vector<map<int,int> >& periodicVerticesId,
@@ -99,10 +96,9 @@ namespace Nektar
             /// Constructor for the 3D expansion mappings with boundary
             /// conditions.
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(
-                                   const LibUtilities::CommSharedPtr &pComm,
+                                   const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const int numLocalCoeffs,
                                    const ExpList &locExp,
-                                   const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId,
@@ -118,7 +114,6 @@ namespace Nektar
             */
             MULTI_REGIONS_EXPORT int SetUp2DGraphC0ContMap(
                                        const ExpList  &locExp,
-                                       const GlobalSysSolnType solnType,
                                        const Array<OneD, const MultiRegions::ExpListSharedPtr>  &bndCondExp,
                                        const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
                                        &bndConditions,
@@ -149,7 +144,6 @@ namespace Nektar
             /// Construct mappings for a one-dimensional scalar expansion.
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
-                                           const GlobalSysSolnType solnType,
                                            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
                                            NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
@@ -159,7 +153,6 @@ namespace Nektar
             /// Construct mappings for a two-dimensional scalar expansion.
             void SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
-                                           const GlobalSysSolnType solnType,
                                            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
                                                NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
@@ -171,7 +164,6 @@ namespace Nektar
             /// Construct mappings for a three-dimensional scalar expansion.
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
-                                           const GlobalSysSolnType solnType,
                                            const Array<OneD, const ExpListSharedPtr> &bndCondExp =
                                                NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =

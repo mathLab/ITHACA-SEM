@@ -103,7 +103,7 @@ namespace Nektar
     virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
 					bool dumpInitialConditions = true);
 
-    virtual void v_EvaluateExactSolution(int field,
+    virtual void v_EvaluateExactSolution(unsigned int field,
     					 Array<OneD, NekDouble> &outfield,
 					 const NekDouble time=0.0);
     

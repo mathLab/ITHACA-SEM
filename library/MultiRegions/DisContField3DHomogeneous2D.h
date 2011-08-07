@@ -51,14 +51,14 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                              const LibUtilities::BasisKey &HomoBasis_y,
 															 const LibUtilities::BasisKey &HomoBasis_z,
 															 const NekDouble lhom_y,
 															 const NekDouble lhom_z,
 															 bool useFFT);
 
-            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                              const LibUtilities::BasisKey &HomoBasis_y,
 															 const LibUtilities::BasisKey &HomoBasis_z,
 															 const NekDouble lhom_y,
@@ -66,8 +66,7 @@ namespace Nektar
 															 bool useFFT,
 															 SpatialDomains::MeshGraph1D &graph1D,
 															 SpatialDomains::BoundaryConditions &bcs, 
-															 const int bc_loc = 0,
-															 const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
+															 const int bc_loc = 0);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous2D(const DisContField3DHomogeneous2D &In,

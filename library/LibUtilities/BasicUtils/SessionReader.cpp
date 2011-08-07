@@ -54,13 +54,41 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-//        SessionReader::SessionReader(std::string& pFilename)
-//            : m_filename(pFilename)
-//        {
-//            // Create communicator
-//            CreateComm(0, 0, m_filename);
-//        }
+        /**
+         * This map of maps stores the list of valid string values for a number
+         * of solver information parameters. The top level map connects
+         * different parameter names to their list of possible values. The list
+         * of possible values is also a map, mapping a valid string to a
+         * corresponding enum value.
+         *
+         * This list is populated through the #RegisterEnumValue static member
+         * function which is called statically from various classes to register
+         * the valid values for solver info parameters associated with them. The
+         * map is therefore fully populated before the SessionReader class is
+         * instantiated and a file is read in and parsed.
+         */
+        EnumMapList SessionReader::m_enums;
 
+
+        /**
+         * List of default values for solver information parameters to be used
+         * in the case of them not being provided.
+         *
+         * This list is populated through the #RegisterDefaultSolverInfo static
+         * member variable which is called statically from various classes to
+         * register the default value for a given parameter.
+         */
+        SolverInfoMap SessionReader::m_solverInfoDefaults;
+
+
+        /**
+         * This constructor parses the command-line arguments given to the user
+         * application to set up any MPI communication, read supplied XML
+         * session files, and partition meshes where necessary.
+         *
+         * @param   argc        Number of command-line arguments
+         * @param   argv        Array of command-line arguments
+         */
         SessionReader::SessionReader(int argc, char *argv[])
         {
             ASSERTL0(argc > 1, "No filename argument specified.");
@@ -71,25 +99,22 @@ namespace Nektar
             CreateComm(argc, argv, m_filename);
         }
 
-        SessionReader::SessionReader(const SessionReader& pSrc)
-        {
-            m_filename = pSrc.m_filename;
-            m_sessionName = pSrc.m_sessionName;
-            m_xmlDoc   = pSrc.m_xmlDoc;
-            m_solverInfo = pSrc.m_solverInfo;
-            m_parameters = pSrc.m_parameters;
-            m_geometricInfo = pSrc.m_geometricInfo;
-            m_expressions = pSrc.m_expressions;
-            m_functions = pSrc.m_functions;
-            m_variables = pSrc.m_variables;
-            m_tags = pSrc.m_tags;
-        }
 
+        /**
+         *
+         */
         SessionReader::~SessionReader()
         {
 
         }
 
+
+        /**
+         * Performs the main initialisation of the object. The XML file provided
+         * on the command-line is loaded and any mesh partitioning is done. The
+         * resulting process-specific XML file (containing the process's
+         * geometry partition) is then reloaded and parsed.
+         */
         void SessionReader::InitSession()
         {
             // Read original XML file (no parsing).
@@ -108,11 +133,37 @@ namespace Nektar
             LoadFile(m_filename);
         }
 
+
+        /**
+         *
+         */
         TiXmlDocument& SessionReader::GetDocument()
         {
             return *m_xmlDoc;
         }
 
+
+        /**
+         * The single parameter specifies a path to the requested element in a
+         * similar format to the filesystem path. Given the following XML:
+         * @code
+         * <NEKTAR>
+         *   <CONDITIONS>
+         *     <PARAMETERS>
+         *     ...
+         *     </PARAMETERS>
+         *   </CONDITIONS>
+         * </NEKTAR>
+         * @endcode
+         * the PARAMETERS element would be retrieved by requesting the path:
+         * @code
+         * Nektar/Conditions/Parameters
+         * @endcode
+         * @note Paths are case-insensitive.
+         *
+         * @param   pPath       Path to requested element.
+         * @returns Direct pointer to requested XML Element.
+         */
         TiXmlElement* SessionReader::GetElement(const string& pPath)
         {
             std::string vPath = boost::to_upper_copy(pPath);
@@ -132,7 +183,11 @@ namespace Nektar
             return vReturn;
         }
 
-        bool SessionReader::DefinesElement(const std::string& pPath)
+
+        /**
+         *
+         */
+        bool SessionReader::DefinesElement(const std::string &pPath) const
         {
             std::string vPath = boost::to_upper_copy(pPath);
             std::vector<std::string> strs;
@@ -150,41 +205,69 @@ namespace Nektar
             return true;
         }
 
+
+        /**
+         *
+         */
         const std::string& SessionReader::GetFilename() const
         {
             return m_filename;
         }
 
+
+        /**
+         *
+         */
         const std::string& SessionReader::GetSessionName() const
         {
             return m_sessionName;
         }
 
+
+        /**
+         *
+         */
         CommSharedPtr& SessionReader::GetComm()
         {
             return m_comm;
         }
 
+
+        /**
+         * This routine finalises any parallel communication.
+         *
+         * @note This routine should be called at the very end of a users
+         * application.
+         */
         void SessionReader::Finalise()
         {
             m_comm->Finalise();
         }
 
-        const std::string& SessionReader::GetSolverInfo(const std::string &pProperty)
-        {
-            std::string vProperty = boost::to_upper_copy(pProperty);
-            SolverInfoMap::iterator slvIter = m_solverInfo.find(vProperty);
 
-            ASSERTL1(slvIter != m_solverInfo.end(),
-                (std::string("Unable to find requested property: ") + pProperty).c_str());
-
-            return slvIter->second;
-        }
-
-        NekDouble SessionReader::GetParameter(std::string pName)
+        /**
+         *
+         */
+        bool SessionReader::DefinesParameter(const std::string& pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
+            return (paramMapIter != m_parameters.end());
+        }
+
+
+        /**
+         * If the parameter is not defined, termination occurs. Therefore, the
+         * parameters existence should be tested for using #DefinesParameter
+         * before calling this function.
+         *
+         * @param   pName       The name of a floating-point parameter.
+         * @returns The value of the floating-point parameter.
+         */
+        const NekDouble& SessionReader::GetParameter(const std::string& pName) const
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
 
             ASSERTL0(paramMapIter != m_parameters.end(),
                 (std::string("Unable to find requested parameter: ") + pName).c_str());
@@ -192,19 +275,27 @@ namespace Nektar
             return paramMapIter->second;
         }
 
-        void SessionReader::LoadParameter(const std::string pName, int &pVar)
+
+        /**
+         *
+         */
+        void SessionReader::LoadParameter(const std::string &pName, int &pVar) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
             ASSERTL0(paramMapIter != m_parameters.end(),
                     "Required parameter '" + pName + "' not specified in session.");
             pVar = paramMapIter->second;
         }
 
-        void SessionReader::LoadParameter(const std::string pName, int &pVar, int pDefault)
+
+        /**
+         *
+         */
+        void SessionReader::LoadParameter(const std::string &pName, int &pVar, const int &pDefault) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
             if(paramMapIter != m_parameters.end())
             {
                 pVar = paramMapIter->second;
@@ -215,19 +306,27 @@ namespace Nektar
             }
         }
 
-        void SessionReader::LoadParameter(const std::string pName, NekDouble& pVar)
+
+        /**
+         *
+         */
+        void SessionReader::LoadParameter(const std::string &pName, NekDouble& pVar) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
             ASSERTL0(paramMapIter != m_parameters.end(),
                     "Required parameter '" + pName + "' not specified in session.");
             pVar = paramMapIter->second;
         }
 
-        void SessionReader::LoadParameter(const std::string pName, NekDouble& pVar, const NekDouble pDefault)
+
+        /**
+         *
+         */
+        void SessionReader::LoadParameter(const std::string &pName, NekDouble &pVar, const NekDouble &pDefault) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
+            ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
             if(paramMapIter != m_parameters.end())
             {
                 pVar = paramMapIter->second;
@@ -238,17 +337,40 @@ namespace Nektar
             }
         }
 
-        bool SessionReader::DefinesParameter(const std::string pName)
+
+        /**
+         *
+         */
+        bool SessionReader::DefinesSolverInfo(const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ParameterMap::iterator paramMapIter = m_parameters.find(vName);
-            return (paramMapIter != m_parameters.end());
+            SolverInfoMap::const_iterator solverInfoMapIter = m_solverInfo.find(vName);
+            return (solverInfoMapIter != m_solverInfo.end());
         }
 
-        void SessionReader::LoadSolverInfo(const std::string pName, std::string& pVar, const std::string pDefault)
+
+        /**
+         *
+         */
+        const std::string& SessionReader::GetSolverInfo(const std::string &pProperty) const
+        {
+            std::string vProperty = boost::to_upper_copy(pProperty);
+            SolverInfoMap::const_iterator slvIter = m_solverInfo.find(vProperty);
+
+            ASSERTL1(slvIter != m_solverInfo.end(),
+                (std::string("Unable to find requested property: ") + pProperty).c_str());
+
+            return slvIter->second;
+        }
+
+
+        /**
+         *
+         */
+        void SessionReader::LoadSolverInfo(const std::string &pName, std::string &pVar, const std::string &pDefault) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            SolverInfoMap::iterator solverInfoMapIter = m_solverInfo.find(vName);
+            SolverInfoMap::const_iterator solverInfoMapIter = m_solverInfo.find(vName);
             if(solverInfoMapIter != m_solverInfo.end())
             {
                 pVar = solverInfoMapIter->second;
@@ -259,10 +381,14 @@ namespace Nektar
             }
         }
 
-        void SessionReader::MatchSolverInfo(const std::string pName, const std::string pTrueVal, bool& pVar, const bool pDefault)
+
+        /**
+         *
+         */
+        void SessionReader::MatchSolverInfo(const std::string &pName, const std::string &pTrueVal, bool &pVar, const bool &pDefault) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            SolverInfoMap::iterator solverInfoMapIter = m_solverInfo.find(vName);
+            SolverInfoMap::const_iterator solverInfoMapIter = m_solverInfo.find(vName);
             if(solverInfoMapIter != m_solverInfo.end())
             {
                 pVar = (NoCaseStringCompare(solverInfoMapIter->second, pTrueVal) == 0);
@@ -273,18 +399,44 @@ namespace Nektar
             }
         }
 
-        bool SessionReader::DefinesSolverInfo(const std::string pName)
+
+        /**
+         *
+         */
+        bool SessionReader::MatchSolverInfo(const std::string &pName, const std::string &pTrueVal) const
         {
-            std::string vName = boost::to_upper_copy(pName);
-            SolverInfoMap::iterator solverInfoMapIter = m_solverInfo.find(vName);
-            return (solverInfoMapIter != m_solverInfo.end());
+            if (DefinesSolverInfo(pName))
+            {
+                std::string vName = boost::to_upper_copy(pName);
+                SolverInfoMap::const_iterator solverInfoMapIter = m_solverInfo.find(vName);
+                if(solverInfoMapIter != m_solverInfo.end())
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        void SessionReader::LoadGeometricInfo(const std::string pName,
-                                std::string& pVar, const std::string pDefault)
+
+        /**
+         *
+         */
+        bool SessionReader::DefinesGeometricInfo(const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(vName);
+            GeometricInfoMap::const_iterator geometricInfoMapIter = m_geometricInfo.find(vName);
+            return (geometricInfoMapIter != m_geometricInfo.end());
+        }
+
+
+        /**
+         *
+         */
+        void SessionReader::LoadGeometricInfo(const std::string &pName,
+                                std::string &pVar, const std::string &pDefault) const
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            GeometricInfoMap::const_iterator geometricInfoMapIter = m_geometricInfo.find(vName);
             if(geometricInfoMapIter != m_geometricInfo.end())
             {
                 pVar = geometricInfoMapIter->second;
@@ -295,15 +447,18 @@ namespace Nektar
             }
         }
 
-        void SessionReader::LoadGeometricInfo(const std::string pName, bool& pVar,
-                                const bool pDefault)
+
+        /**
+         *
+         */
+        void SessionReader::LoadGeometricInfo(const std::string &pName, bool &pVar,
+                                const bool &pDefault) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(vName);
+            GeometricInfoMap::const_iterator geometricInfoMapIter = m_geometricInfo.find(vName);
             if(geometricInfoMapIter != m_geometricInfo.end())
             {
-                std::string s = geometricInfoMapIter->second;
-                if (s == "TRUE")
+                if (geometricInfoMapIter->second == "TRUE")
                 {
                     pVar = true;
                 }
@@ -318,12 +473,16 @@ namespace Nektar
             }
         }
 
-        void SessionReader::MatchGeometricInfo(const std::string pName,
-                                const std::string pTrueVal, bool& pVar,
-                                const bool pDefault)
+
+        /**
+         *
+         */
+        void SessionReader::MatchGeometricInfo(const std::string &pName,
+                                const std::string &pTrueVal, bool &pVar,
+                                const bool &pDefault) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(vName);
+            GeometricInfoMap::const_iterator geometricInfoMapIter = m_geometricInfo.find(vName);
             if(geometricInfoMapIter != m_geometricInfo.end())
             {
                 pVar = (NoCaseStringCompare(geometricInfoMapIter->second, pTrueVal) == 0);
@@ -334,25 +493,65 @@ namespace Nektar
             }
         }
 
-        bool SessionReader::DefinesGeometricInfo(const std::string pName)
-        {
-            std::string vName = boost::to_upper_copy(pName);
-            GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(vName);
-            return (geometricInfoMapIter != m_geometricInfo.end());
-        }
 
-        std::string SessionReader::GetVariable(const unsigned int idx) const
+        /**
+         *
+         */
+        const std::string& SessionReader::GetVariable(const unsigned int &idx) const
         {
             ASSERTL0(idx < m_variables.size(), "Variable index out of range.");
             return m_variables[idx];
         }
 
+
+        /**
+         *
+         */
         std::vector<std::string> SessionReader::GetVariables() const
         {
             return m_variables;
         }
 
-        EquationSharedPtr SessionReader::GetFunction(const std::string& pName, const std::string& pVariable) const
+
+        /**
+         *
+         */
+        bool SessionReader::DefinesFunction(const std::string &pName) const
+        {
+            FunctionMap::const_iterator it1;
+            std::string vName = boost::to_upper_copy(pName);
+
+            if ((it1 = m_functions.find(vName)) != m_functions.end())
+            {
+                return true;
+            }
+            return false;
+        }
+
+
+        /**
+         *
+         */
+        bool SessionReader::DefinesFunction(const std::string &pName, const std::string &pVariable) const
+        {
+            FunctionMap::const_iterator it1;
+            EquationMap::const_iterator it2;
+            std::string vName = boost::to_upper_copy(pName);
+
+            if ((it1 = m_functions.find(vName)) != m_functions.end()
+                    && (it2 = it1->second.m_expressions.find(pVariable))
+                            != it1->second.m_expressions.end())
+            {
+                return true;
+            }
+            return false;
+        }
+
+
+        /**
+         *
+         */
+        EquationSharedPtr SessionReader::GetFunction(const std::string &pName, const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
             EquationMap::const_iterator it2;
@@ -368,13 +567,21 @@ namespace Nektar
             return it2->second;
         }
 
-        EquationSharedPtr SessionReader::GetFunction(const std::string& pName, unsigned int pVar) const
+
+        /**
+         *
+         */
+        EquationSharedPtr SessionReader::GetFunction(const std::string &pName, const unsigned int &pVar) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
             return GetFunction(pName, m_variables[pVar]);
         }
 
-        enum FunctionType SessionReader::GetFunctionType(const std::string& pName) const
+
+        /**
+         *
+         */
+        enum FunctionType SessionReader::GetFunctionType(const std::string &pName) const
         {
             FunctionMap::const_iterator it1;
             std::string vName = boost::to_upper_copy(pName);
@@ -386,7 +593,11 @@ namespace Nektar
             return it1->second.m_type;
         }
 
-        std::string SessionReader::GetFunctionFilename(const std::string& pName) const
+
+        /**
+         *
+         */
+        std::string SessionReader::GetFunctionFilename(const std::string &pName) const
         {
             FunctionMap::const_iterator it1;
             std::string vName = boost::to_upper_copy(pName);
@@ -398,56 +609,61 @@ namespace Nektar
             return it1->second.m_filename;
         }
 
-        bool SessionReader::DefinesFunction(const std::string& pName) const
-        {
-            FunctionMap::const_iterator it1;
-            std::string vName = boost::to_upper_copy(pName);
 
-            if ((it1 = m_functions.find(vName)) != m_functions.end())
-            {
-                return true;
-            }
-            return false;
-        }
-
-        bool SessionReader::DefinesFunction(const std::string& pName, const std::string& pVariable) const
-        {
-            FunctionMap::const_iterator it1;
-            EquationMap::const_iterator it2;
-            std::string vName = boost::to_upper_copy(pName);
-
-            if ((it1 = m_functions.find(vName)) != m_functions.end()
-                    && (it2 = it1->second.m_expressions.find(pVariable))
-                            != it1->second.m_expressions.end())
-            {
-                return true;
-            }
-            return false;
-        }
-
-        bool SessionReader::DefinesTag(const std::string& pName)
+        /**
+         *
+         */
+        bool SessionReader::DefinesTag(const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            TagMap::iterator vTagIterator = m_tags.find(vName);
+            TagMap::const_iterator vTagIterator = m_tags.find(vName);
             return (vTagIterator != m_tags.end());
         }
 
-        void SessionReader::SetTag(const std::string& pName, const std::string& pValue)
+
+        /**
+         *
+         */
+        void SessionReader::SetTag(const std::string &pName, const std::string &pValue)
         {
             std::string vName = boost::to_upper_copy(pName);
             m_tags[vName] = pValue;
         }
 
-        const std::string SessionReader::GetTag(const std::string& pName)
+
+        /**
+         *
+         */
+        const std::string &SessionReader::GetTag(const std::string& pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            TagMap::iterator vTagIterator = m_tags.find(vName);
+            TagMap::const_iterator vTagIterator = m_tags.find(vName);
             ASSERTL0(vTagIterator != m_tags.end(),
                      "Requested tag does not exist.");
             return vTagIterator->second;
         }
 
-        void SessionReader::LoadFile(std::string pFilename)
+
+        /**
+         *
+         */
+        void SessionReader::SubstituteExpressions(std::string& pExpr)
+        {
+            ExpressionMap::iterator exprIter;
+            for (exprIter = m_expressions.begin(); exprIter != m_expressions.end(); ++exprIter)
+            {
+                //boost::regex re("\b" + exprIter->first + "\b");
+                //boost::replace_all_regex(pExpr, re,
+                //        std::string("(") + exprIter->second + std::string(")"));
+                boost::replace_all(pExpr, exprIter->first, exprIter->second);
+            }
+        }
+
+
+        /**
+         *
+         */
+        void SessionReader::LoadFile(const std::string &pFilename)
         {
             m_xmlDoc = new TiXmlDocument(pFilename);
             ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
@@ -499,7 +715,10 @@ namespace Nektar
         }
 
 
-        void SessionReader::CreateComm(int argc, char* argv[], std::string pFilename)
+        /**
+         *
+         */
+        void SessionReader::CreateComm(int &argc, char* argv[], const std::string &pFilename)
         {
             if (argc == 0)
             {
@@ -532,9 +751,19 @@ namespace Nektar
                 }
 
                 m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
+
+                // If running in parallel change the default global sys soln type
+                if (m_comm->GetSize() > 1)
+                {
+                    m_solverInfoDefaults["GLOBALSYSSOLN"] = "IterativeStaticCond";
+                }
             }
         }
 
+
+        /**
+         *
+         */
         void SessionReader::PartitionMesh()
         {
             ASSERTL0(m_comm.get(), "Communication not initialised.");
@@ -557,42 +786,10 @@ namespace Nektar
             }
         }
 
-        void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
-        {
-            m_solverInfo.clear();
 
-            TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");
-
-            if (solverInfoElement)
-            {
-                TiXmlElement *solverInfo = solverInfoElement->FirstChildElement("I");
-
-                while (solverInfo)
-                {
-                    std::string solverProperty = solverInfo->Attribute("PROPERTY");
-                    ASSERTL0(!solverProperty.empty(), "Unable to find PROPERTY value.");
-
-                    // make sure that solver property is capitalised
-                    boost::to_upper(solverProperty);
-
-                    // check property has not already been defined
-                    SolverInfoMap::iterator solverInfoIter = m_solverInfo.find(solverProperty);
-                    ASSERTL0(solverInfoIter == m_solverInfo.end(),
-                             (std::string("SolverInfo value: ") + solverProperty
-                              + std::string(" already specified.")).c_str());
-
-                    // read the value
-                    std::string solverValue    = solverInfo->Attribute("VALUE");
-                    ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
-
-                    // Set Variable
-                    m_solverInfo[solverProperty] = solverValue;
-                    solverInfo = solverInfo->NextSiblingElement("I");
-                }
-            }
-        }
-
-
+        /**
+         *
+         */
         void SessionReader::ReadParameters(TiXmlElement *conditions)
         {
             m_parameters.clear();
@@ -657,14 +854,56 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-//                    NEKERROR(ErrorUtil::ewarning, std::string(
-//                            "Failed to add constants to expression evaluator. "
-//                            "Ensure only one SessionReader per process. ")
-//                            + e.what());
+                    // Attempted to set parameters more than once, but we let
+                    // this go.
                 }
             }
         }
 
+
+        /**
+         *
+         */
+        void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
+        {
+            m_solverInfo.clear();
+            m_solverInfo = m_solverInfoDefaults;
+
+            TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");
+
+            if (solverInfoElement)
+            {
+                TiXmlElement *solverInfo = solverInfoElement->FirstChildElement("I");
+
+                while (solverInfo)
+                {
+                    std::string solverProperty = solverInfo->Attribute("PROPERTY");
+                    ASSERTL0(!solverProperty.empty(), "Unable to find PROPERTY value.");
+
+                    // make sure that solver property is capitalised
+                    boost::to_upper(solverProperty);
+
+                    // check property has not already been defined
+//                    SolverInfoMap::iterator solverInfoIter = m_solverInfo.find(solverProperty);
+//                    ASSERTL0(solverInfoIter == m_solverInfo.end(),
+//                             (std::string("SolverInfo value: ") + solverProperty
+//                              + std::string(" already specified.")).c_str());
+
+                    // read the value
+                    std::string solverValue    = solverInfo->Attribute("VALUE");
+                    ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
+
+                    // Set Variable
+                    m_solverInfo[solverProperty] = solverValue;
+                    solverInfo = solverInfo->NextSiblingElement("I");
+                }
+            }
+        }
+
+
+        /**
+         *
+         */
         void SessionReader::ReadGeometricInfo(TiXmlElement *geometry)
         {
             m_geometricInfo.clear();
@@ -701,6 +940,9 @@ namespace Nektar
         }
 
 
+        /**
+         *
+         */
         void SessionReader::ReadExpressions(TiXmlElement *conditions)
         {
             m_expressions.clear();
@@ -742,6 +984,9 @@ namespace Nektar
         }
 
 
+        /**
+         *
+         */
         void SessionReader::ReadVariables(TiXmlElement *conditions)
         {
             m_variables.clear();
@@ -796,6 +1041,9 @@ namespace Nektar
         }
 
 
+        /**
+         *
+         */
         void SessionReader::ReadFunctions(TiXmlElement *conditions)
         {
             m_functions.clear();
@@ -822,15 +1070,6 @@ namespace Nektar
                 // Create new function structure with default type of none.
                 FunctionDefinition functionDef;
                 functionDef.m_type = eFunctionTypeNone;
-
-                // Initialise all variables to zero by default
-//                for (VariableList::iterator varIter = m_variables.begin();
-//                    varIter != m_variables.end(); ++varIter)
-//                {
-//                    EquationSharedPtr eqShPtr(
-//                            MemoryManager<Equation>::AllocateSharedPtr("0.0"));
-//                    functionDef.m_expressions[*varIter] = eqShPtr;
-//                }
 
                 // Process all entries in the function block
                 while (variable)
@@ -918,11 +1157,12 @@ namespace Nektar
             }
         }
 
-        int SessionReader::NoCaseStringCompare(const std::string & s1, const std::string& s2)
-        {
-            //if (s1.size() < s2.size()) return -1;
-            //if (s1.size() > s2.size()) return 1;
 
+        /**
+         *
+         */
+        int SessionReader::NoCaseStringCompare(const std::string & s1, const std::string& s2) const
+        {
             std::string::const_iterator it1=s1.begin();
             std::string::const_iterator it2=s2.begin();
 
@@ -950,18 +1190,6 @@ namespace Nektar
             }
 
             return (size1 < size2) ? -1 : 1;
-        }
-
-        void SessionReader::SubstituteExpressions(std::string& pExpr)
-        {
-            ExpressionMap::iterator exprIter;
-            for (exprIter = m_expressions.begin(); exprIter != m_expressions.end(); ++exprIter)
-            {
-                //boost::regex re("\b" + exprIter->first + "\b");
-                //boost::replace_all_regex(pExpr, re,
-                //        std::string("(") + exprIter->second + std::string(")"));
-                boost::replace_all(pExpr, exprIter->first, exprIter->second);
-            }
         }
     }
 }

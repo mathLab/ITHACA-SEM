@@ -65,7 +65,7 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous2D::ContField3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+        ContField3DHomogeneous2D::ContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                            const LibUtilities::BasisKey &HomoBasis_y,
 														   const LibUtilities::BasisKey &HomoBasis_z,
 														   const NekDouble lhom_y,
@@ -73,15 +73,14 @@ namespace Nektar
 														   bool useFFT,
 														   SpatialDomains::MeshGraph1D &graph1D,
 														   SpatialDomains::BoundaryConditions &bcs,
-														   const int bc_loc,
-														   const GlobalSysSolnType solnType):
-            DisContField3DHomogeneous2D(pComm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+														   const int bc_loc):
+            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int i,j,n,nel;
             bool False = false;
             ContField1DSharedPtr line_zero;
 
-            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pComm,graph1D,bcs,bc_loc,solnType); 
+            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -96,7 +95,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pComm,graph1D,bcs,bc_loc,solnType); 
+                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
                 
                 for(j = 0; j < nel; ++j)
                 {

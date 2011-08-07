@@ -3,8 +3,10 @@
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("Serial", argc, argv);
-	int i,j,e;
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    int i,j,e;
 	if (argc != 2)
 	{
 		fprintf(stderr,"Usage: Post-processor meshfile \n"); 
@@ -24,7 +26,7 @@ int main(int argc, char *argv[])
         // This is the class which represents a multi-elemental expansion
 	// This object can be constructed based on the input mesh
         MultiRegions::ExpList1DSharedPtr u =
-            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vComm,mesh);
+            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,mesh);
 
 	/***********************************************************/
 	// Get the number of elements
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
 	LibUtilities::PointsKey  pKey(post_order+1,pType);
 	LibUtilities::BasisKey upost_bkey(base[0]->GetBasisType(),post_order,pKey);
 	MultiRegions::ExpList1DSharedPtr u_post =
-        MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vComm,upost_bkey,mesh);
+        MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,upost_bkey,mesh);
 
 	// The post-processing for the first element
 	// Step1: Define the element ID on which the post-processing is done

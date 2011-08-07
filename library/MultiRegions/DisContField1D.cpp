@@ -66,11 +66,10 @@ namespace Nektar
          * @param   constructMap    ?
          */
         DisContField1D::DisContField1D(
-                    LibUtilities::CommSharedPtr &pComm,
+                    LibUtilities::SessionReaderSharedPtr &pSession,
                     SpatialDomains::MeshGraph1D &graph1D,
-                    const GlobalSysSolnType solnType,
                     const bool constructMap):
-            ExpList1D(pComm,graph1D),
+            ExpList1D(pSession,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -104,12 +103,11 @@ namespace Nektar
          *                      with the boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        DisContField1D::DisContField1D(LibUtilities::CommSharedPtr &pComm,
+        DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                     SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
-                    const int bc_loc,
-                    const GlobalSysSolnType solnType):
-            ExpList1D(pComm,graph1D),
+                    const int bc_loc):
+            ExpList1D(pSession,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -128,8 +126,7 @@ namespace Nektar
             //GenerateFieldBnd1D(bcs,bcs.GetVariable(bc_loc));
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>
-                                        ::AllocateSharedPtr(pComm,graph1D,*this,
-                                                            solnType,
+                                        ::AllocateSharedPtr(pSession,graph1D,*this,
                                                             m_bndCondExpansions,
                                                             m_bndConditions);
 
@@ -149,12 +146,11 @@ namespace Nektar
          *                      boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        DisContField1D::DisContField1D(LibUtilities::CommSharedPtr &pComm,
+        DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
                     SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable,
-                    const GlobalSysSolnType solnType):
-            ExpList1D(pComm,graph1D),
+                    const std::string variable):
+            ExpList1D(pSession,graph1D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -171,7 +167,48 @@ namespace Nektar
             //GenerateFieldBnd1D(bcs,variable);
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                AllocateSharedPtr(pComm,graph1D,*this,solnType,
+                AllocateSharedPtr(pSession,graph1D,*this,
+                                  m_bndCondExpansions,m_bndConditions);
+
+            m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
+        }
+
+
+        /**
+         * An expansion list for the boundary expansions is generated first for
+         * the field. These are subsequently evaluated for time zero. The trace
+         * map is then constructed.
+         * @param   graph1D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   bcs         Information about the enforced boundary
+         *                      conditions.
+         * @param   variable    The session variable associated with the
+         *                      boundary conditions to enforce.
+         * @param   solnType    Type of global system to use.
+         */
+        DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
+                    SpatialDomains::MeshGraph1D &graph1D,
+                    const std::string variable):
+            ExpList1D(pSession,graph1D),
+            m_bndCondExpansions(),
+            m_bndConditions()
+        {
+            SpatialDomains::BoundaryConditions bcs(pSession, &graph1D);
+
+            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph1D);
+
+            map<int,int> periodicVertices;
+            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
+
+            m_globalBndMat
+                        = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+
+            //GenerateFieldBnd1D(bcs,variable);
+
+            m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                AllocateSharedPtr(pSession,graph1D,*this,
                                   m_bndCondExpansions,m_bndConditions);
 
             m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());

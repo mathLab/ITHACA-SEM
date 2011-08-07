@@ -9,7 +9,8 @@ int main(int argc, char *argv[])
 {
     MultiRegions::ExpList2DSharedPtr Exp;
     int     i, nq,  coordim;
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("Serial", argc, argv);
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     if(argc != 3)
     {
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------        
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vComm,graph2D);
+    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graph2D);
     //----------------------------------------------  
 
     //---------------------------------------------

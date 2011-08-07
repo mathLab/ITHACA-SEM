@@ -47,13 +47,13 @@ namespace Nektar
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
-        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
 													   bool useFFT,
                                                        boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
                                                        Array<OneD, ExpListSharedPtr> &planes):
-            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int n,nel;
 
@@ -75,19 +75,19 @@ namespace Nektar
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
-        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(LibUtilities::CommSharedPtr &pComm,
+        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
 													   bool useFFT,
                                                        SpatialDomains::MeshGraph1D &graph1D):
-            ExpListHomogeneous1D(pComm,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int n,j,nel;
             bool False = false;
             ExpList1DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(m_comm,graph1D, False);
+            m_planes[0] = plane_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(m_session,graph1D, False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();

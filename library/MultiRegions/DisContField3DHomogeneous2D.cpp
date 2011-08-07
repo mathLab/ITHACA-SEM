@@ -49,13 +49,13 @@ namespace Nektar
         {
         }
 
-        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                                  const LibUtilities::BasisKey &HomoBasis_y,
 																 const LibUtilities::BasisKey &HomoBasis_z,
                                                                  const NekDouble lhom_y,
 																 const NekDouble lhom_z,
 																 bool useFFT):
-            ExpList3DHomogeneous2D(pComm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -80,7 +80,7 @@ namespace Nektar
             }
         }
 
-        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+        DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                                  const LibUtilities::BasisKey &HomoBasis_y,
 																 const LibUtilities::BasisKey &HomoBasis_z,
 																 const NekDouble lhom_y,
@@ -88,9 +88,8 @@ namespace Nektar
 																 bool useFFT,
 																 SpatialDomains::MeshGraph1D &graph1D,
 																 SpatialDomains::BoundaryConditions &bcs,
-																 const int bc_loc,
-																 const GlobalSysSolnType solnType):  
-            ExpList3DHomogeneous2D(pComm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
+																 const int bc_loc):
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -100,7 +99,7 @@ namespace Nektar
             DisContField1DSharedPtr line_zero;
 
             //  
-            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pComm,graph1D,bcs,bc_loc,solnType); 
+            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -115,7 +114,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pComm,graph1D,bcs,bc_loc,solnType); 
+                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -169,7 +168,7 @@ namespace Nektar
                     LinesBndCondExp[n] = m_lines[n]->UpdateBndCondExpansion(i);
                 }
                 
-                m_bndCondExpansions[i] = MemoryManager<ExpList1DHomogeneous2D>::AllocateSharedPtr(m_comm,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,m_useFFT,LinesBndCondExp);
+                m_bndCondExpansions[i] = MemoryManager<ExpList1DHomogeneous2D>::AllocateSharedPtr(m_session,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,m_useFFT,LinesBndCondExp);
                 
             }
             

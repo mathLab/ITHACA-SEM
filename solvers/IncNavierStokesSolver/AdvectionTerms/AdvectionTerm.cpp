@@ -59,14 +59,10 @@ namespace Nektar
      * \param
      */
     AdvectionTerm::AdvectionTerm(
-            LibUtilities::CommSharedPtr&                 pComm,
             LibUtilities::SessionReaderSharedPtr&        pSession,
-            SpatialDomains::MeshGraphSharedPtr&          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions)
-        : m_comm(pComm),
-          m_session(pSession),
-          m_graph(pGraph),
-          m_boundaryConditions(pBoundaryConditions)
+            SpatialDomains::MeshGraphSharedPtr&          pGraph)
+        : m_session(pSession),
+          m_graph(pGraph)
 	{
 	}
 
@@ -140,7 +136,7 @@ namespace Nektar
         
         for(i=0; i< m_nConvectiveFields; ++i)
         {
-            v_ComputeAdvectionTerm(m_boundaryConditions, pFields,velocity,pInarray[i],pOutarray[i],i,Deriv);
+            v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,Deriv);
             Vmath::Neg(nqtot,pOutarray[i],1);
         }
     }

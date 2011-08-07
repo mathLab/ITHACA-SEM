@@ -60,7 +60,7 @@ namespace Nektar
         	/// Default constructor.
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap();
             /// Constructor with a communicator
-            MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(const LibUtilities::CommSharedPtr &pComm);
+            MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(const LibUtilities::SessionReaderSharedPtr &pSession);
             /// Constructor for next level in multi-level static condensation.
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
@@ -233,6 +233,9 @@ namespace Nektar
             inline const GlobalSysSolnType  GetGlobalSysSolnType() const;
             
         protected:
+            /// Session object
+            LibUtilities::SessionReaderSharedPtr m_session;
+
             /// Communicator
             LibUtilities::CommSharedPtr m_comm;
 
@@ -249,7 +252,7 @@ namespace Nektar
 
             /// Total number of local coefficients
             /** This corresponds to the number of total number of coefficients
-             *  - For CG this correpsonds to the total of bnd + int DOFs
+             *  - For CG this corresponds to the total of bnd + int DOFs
              *  - For DG this corresponds to the number of bnd DOFs.
              *    This means that #m_numLocalCoeffs = #m_numLocalBndCoeffs
              *    This way, we can consider the trace-system solve as a
@@ -260,7 +263,7 @@ namespace Nektar
 
             /// Total number of global coefficients
             /** This corresponds to the number of total number of coefficients
-             *  - For CG this correpsonds to the total of bnd + int DOFs.
+             *  - For CG this corresponds to the total of bnd + int DOFs.
              *  - For DG this corresponds to the number of bnd DOFs.
              *    This means that #m_numGlobalCoeffs = #m_numGlobalBndCoeffs
              *    This way, we can consider the trace-system solve as a

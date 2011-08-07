@@ -68,7 +68,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D();
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+            MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                         const LibUtilities::BasisKey &HomoBasis_y,
 														const LibUtilities::BasisKey &HomoBasis_z,
 														const NekDouble ly,
@@ -76,7 +76,7 @@ namespace Nektar
 														bool useFFT,
 														SpatialDomains::MeshGraph1D &graph1D);
 
-            MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D(LibUtilities::CommSharedPtr &pComm,
+            MULTI_REGIONS_EXPORT ExpList1DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
                                                         const LibUtilities::BasisKey &HomoBasis_y,
 														const LibUtilities::BasisKey &HomoBasis_z,
 														const NekDouble lhom_y,

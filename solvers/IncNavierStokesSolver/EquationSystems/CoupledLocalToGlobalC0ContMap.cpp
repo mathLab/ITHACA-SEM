@@ -44,15 +44,14 @@ namespace Nektar
      * related to the Linearised Navier Stokes problem
      */
     CoupledLocalToGlobalC0ContMap::CoupledLocalToGlobalC0ContMap(
-                                      const LibUtilities::CommSharedPtr &pComm,
+                                      const LibUtilities::SessionReaderSharedPtr &pSession,
                                       SpatialDomains::MeshGraphSharedPtr &graph,
                                       SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
                                       Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                       MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
-                                      const MultiRegions::GlobalSysSolnType solnType,
                                       bool CheckforSingularSys):
-        LocalToGlobalC0ContMap(pComm)
+        LocalToGlobalC0ContMap(pSession)
     {
 
         int i,j,k,n;
@@ -263,7 +262,7 @@ namespace Nektar
         // This routine is not working when we apply a third velocity
         // component.
         
-        SetUp2DGraphC0ContMap(*fields[0],      solnType,
+        SetUp2DGraphC0ContMap(*fields[0],
                               bndCondExp,
                               bndConditionsVec,
                               periodicVertices,       periodicEdges,
@@ -279,7 +278,7 @@ namespace Nektar
         // determine which edge to add mean pressure dof based on
         // ensuring that at least one pressure dof from an internal
         // patch is associated with its boundary system
-        if((solnType == MultiRegions::eDirectMultiLevelStaticCond))
+        if(m_session->MatchSolverInfoAsEnum("GlobalSysSoln", MultiRegions::eDirectMultiLevelStaticCond))
         {
             // Should put this in a separate function!!
 
@@ -701,7 +700,6 @@ namespace Nektar
         m_localToGlobalSign    = Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
         m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
 
-        m_solnType = solnType;
         m_staticCondLevel = staticCondLevel;
         m_numPatches = nel;
         
@@ -865,7 +863,7 @@ namespace Nektar
 
         // Set up the local to global map for the next level when using
         // multi-level static condensation
-        if( (solnType == MultiRegions::eDirectMultiLevelStaticCond) )
+        if( m_session->MatchSolverInfoAsEnum("GlobalSysSoln", MultiRegions::eDirectMultiLevelStaticCond) )
         {
             if(staticCondLevel < (bottomUpGraph->GetNlevels()-1))
             {

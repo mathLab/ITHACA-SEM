@@ -1712,7 +1712,7 @@ namespace Nektar
                                              Array<OneD, NekDouble> &penaltyflux,
                                              NekDouble time)
   {
-    int i, j, e, npoints, id1, id2;
+    unsigned int i, j, e, npoints, id1, id2;
     int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
     int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
     int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
@@ -1769,7 +1769,7 @@ namespace Nektar
                                              NekDouble C11,
                                              NekDouble time)
   {
-    int i, j, e, npoints, id1, id2;
+    unsigned int i, j, e, npoints, id1, id2;
     int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
     int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
     int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
@@ -2115,7 +2115,7 @@ namespace Nektar
         }
     }
 
-    void ADR2DManifold::EvaluateUSERDEFINEDExactSolution(int field, Array<OneD, NekDouble> &outfield,
+    void ADR2DManifold::EvaluateUSERDEFINEDExactSolution(unsigned int field, Array<OneD, NekDouble> &outfield,
                                                          const NekDouble time, const int initialwavetype)
     {
         int nq = m_fields[field]->GetNpoints();

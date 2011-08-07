@@ -49,11 +49,9 @@ namespace Nektar
      */
 
     LinearisedAdvection::LinearisedAdvection(
-            LibUtilities::CommSharedPtr&                 pComm,
             LibUtilities::SessionReaderSharedPtr&        pSession,
-            SpatialDomains::MeshGraphSharedPtr&          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions):
-        AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
+            SpatialDomains::MeshGraphSharedPtr&          pGraph):
+        AdvectionTerm(pSession, pGraph)
 	{
 	}
 	
@@ -63,7 +61,7 @@ namespace Nektar
 	    AdvectionTerm::v_InitObject();
             
             SetUpBaseFields(m_graph);
-            ImportFldBase(m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + ".bse",m_graph,m_boundaryConditions);
+            ImportFldBase(m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + ".bse",m_graph);
 	}
 
     LinearisedAdvection::~LinearisedAdvection()
@@ -94,8 +92,8 @@ namespace Nektar
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                            ::AllocateSharedPtr(m_comm,*mesh1D,
-                                                *m_boundaryConditions,i);
+                            ::AllocateSharedPtr(m_session,*mesh1D,
+                                                m_session->GetVariable(i));
                     }
 	        }
                 break;
@@ -112,15 +110,15 @@ namespace Nektar
                     i = 0;
                     MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
-                        ::AllocateSharedPtr(m_comm,*mesh2D,
-                                            *m_boundaryConditions,i);
+                        ::AllocateSharedPtr(m_session,*mesh2D,
+                                            m_session->GetVariable(i));
                     m_base[0]=firstbase;
                     
                     for(i = 1 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::ContField2D>
                             ::AllocateSharedPtr(*firstbase,*mesh2D,
-                                                *m_boundaryConditions,i);
+                                                m_session->GetVariable(i));
                     }
 	        }
                 break;
@@ -136,15 +134,15 @@ namespace Nektar
                     
                     MultiRegions::ContField3DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField3D>
-                        ::AllocateSharedPtr(m_comm,*mesh3D,
-                                            *m_boundaryConditions,i);
+                        ::AllocateSharedPtr(m_session,*mesh3D,
+                                            m_session->GetVariable(i));
                     m_base[0] = firstbase;
                     
                     for(i = 1 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions::ContField3D>
-                            ::AllocateSharedPtr(*firstbase,
-                                                *mesh3D,*m_boundaryConditions,i);
+                            ::AllocateSharedPtr(*firstbase,*mesh3D,
+                                                m_session->GetVariable(i));
                     }
 	        }
                 break;
@@ -170,8 +168,8 @@ namespace Nektar
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr(m_comm,*mesh1D,
-                                                                 *m_boundaryConditions,i);
+                            ::DisContField1D>::AllocateSharedPtr(m_session,*mesh1D,
+                                                                 m_session->GetVariable(i));
                     }
                     break;
                 }
@@ -188,8 +186,8 @@ namespace Nektar
                     for(i = 0 ; i < m_base.num_elements(); i++)
                     {
                         m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField2D>::AllocateSharedPtr(m_comm, *mesh2D,
-                                                                 *m_boundaryConditions,i);
+                            ::DisContField2D>::AllocateSharedPtr(m_session, *mesh2D,
+                                                                 m_session->GetVariable(i));
                     }
                     break;
                 }
@@ -210,8 +208,7 @@ namespace Nektar
      * @param   infile          Filename to read.
      */
     void LinearisedAdvection::ImportFldBase(std::string pInfile,
-            SpatialDomains::MeshGraphSharedPtr pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions)
+            SpatialDomains::MeshGraphSharedPtr pGraph)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
@@ -226,7 +223,7 @@ namespace Nektar
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 bool flag = FieldDef[i]->m_fields[j]
-                    == pBoundaryConditions->GetVariable(j);
+                    == m_session->GetVariable(j);
                 ASSERTL1(flag, (std::string("Order of ") + pInfile
                                 + std::string(" data and that defined in "
                                               "m_boundaryconditions differs")).c_str());
@@ -242,7 +239,6 @@ namespace Nektar
    
     //Evaluation of the advective terms
     void LinearisedAdvection::v_ComputeAdvectionTerm(
-            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
             Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
             const Array<OneD, const NekDouble> &pU,

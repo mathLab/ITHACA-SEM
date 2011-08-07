@@ -72,11 +72,10 @@ namespace Nektar
         friend class MemoryManager<LinearisedAdvection>;
 
         /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(LibUtilities::CommSharedPtr& pComm,
+        static AdvectionTermSharedPtr create(
                                 LibUtilities::SessionReaderSharedPtr& pSession,
-                                SpatialDomains::MeshGraphSharedPtr& pGraph,
-                                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions) {
-            AdvectionTermSharedPtr p = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(pComm, pSession, pGraph, pBoundaryConditions);
+                                SpatialDomains::MeshGraphSharedPtr& pGraph) {
+            AdvectionTermSharedPtr p = MemoryManager<LinearisedAdvection>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
         }
@@ -88,10 +87,8 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
 
         LinearisedAdvection(
-                LibUtilities::CommSharedPtr&                 pComm,
                 LibUtilities::SessionReaderSharedPtr&        pSession,
-                SpatialDomains::MeshGraphSharedPtr&          pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions);
+                SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
         virtual ~LinearisedAdvection();
 
@@ -101,13 +98,12 @@ namespace Nektar
 
         /// Import Base flow
         void ImportFldBase(std::string pInfile,
-                SpatialDomains::MeshGraphSharedPtr pGraph,
-                SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions);
+                SpatialDomains::MeshGraphSharedPtr pGraph);
 
 
     private:
         //Function for the evaluation of the linearised advective terms
-        virtual void v_ComputeAdvectionTerm(SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
+        virtual void v_ComputeAdvectionTerm(
                          Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, Array<OneD, NekDouble> > &pV,
                          const Array<OneD, const NekDouble> &pU,

@@ -35,11 +35,20 @@
 
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
-
+#include <LibUtilities/BasicUtils/SessionReader.h>
 namespace Nektar
 {
     namespace MultiRegions
     {
+        std::string lookupIds[5] = {
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectFull",MultiRegions::eDirectFullMatrix),
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectStaticCond",MultiRegions::eDirectStaticCond),
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectMultiLevelStaticCond",MultiRegions::eDirectMultiLevelStaticCond),
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeFull",MultiRegions::eIterativeFull),
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeStaticCond",MultiRegions::eIterativeStaticCond)
+        };
+        std::string def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("GlobalSysSoln","DirectMultiLevelStaticCond");
+
         /**
          * @class GlobalLinSys
          *

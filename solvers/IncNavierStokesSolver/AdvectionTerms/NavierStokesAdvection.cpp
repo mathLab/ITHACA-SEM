@@ -50,11 +50,9 @@ namespace Nektar
      */
 
     NavierStokesAdvection::NavierStokesAdvection(
-            LibUtilities::CommSharedPtr&                 pComm,
             LibUtilities::SessionReaderSharedPtr&        pSession,
-            SpatialDomains::MeshGraphSharedPtr&          pGraph,
-            SpatialDomains::BoundaryConditionsSharedPtr& pBoundaryConditions):
-        AdvectionTerm(pComm, pSession, pGraph, pBoundaryConditions)
+            SpatialDomains::MeshGraphSharedPtr&          pGraph):
+        AdvectionTerm(pSession, pGraph)
 	
     {
         
@@ -69,7 +67,6 @@ namespace Nektar
     
     //Evaluation of the advective terms
     void NavierStokesAdvection::v_ComputeAdvectionTerm(
-            SpatialDomains::BoundaryConditionsSharedPtr &pBoundaryConditions,
             Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const Array<OneD, Array<OneD, NekDouble> > &pV,
             const Array<OneD, const NekDouble> &pU,

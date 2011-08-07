@@ -25,11 +25,10 @@ namespace Nektar
         /**
          * @todo Implement 3D trace space.
          */
-        DisContField3D::DisContField3D( LibUtilities::CommSharedPtr &pComm,
+        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
                                         SpatialDomains::MeshGraph3D &graph3D,
-                                        const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
-            ExpList3D(pComm,graph3D),
+            ExpList3D(pSession,graph3D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -66,13 +65,12 @@ namespace Nektar
         /**
          * @todo Implement 3D trace space.
          */
-        DisContField3D::DisContField3D( LibUtilities::CommSharedPtr &pComm,
+        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
                                         SpatialDomains::MeshGraph3D &graph3D,
                                         SpatialDomains::BoundaryConditions &bcs,
                                         const int bc_loc,
-                                        const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
-            ExpList3D(pComm,graph3D),
+            ExpList3D(pSession,graph3D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -111,16 +109,60 @@ namespace Nektar
         /**
          * @todo Implement 3D trace space.
          */
-        DisContField3D::DisContField3D( LibUtilities::CommSharedPtr &pComm,
+        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
                                         SpatialDomains::MeshGraph3D &graph3D,
                                         SpatialDomains::BoundaryConditions &bcs,
                                         const std::string variable,
-                                        const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
-            ExpList3D(pComm,graph3D),
+            ExpList3D(pSession,graph3D),
             m_bndCondExpansions(),
             m_bndConditions()
         {
+            GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph3D);
+
+            if(SetUpJustDG)
+            {
+                // Set up matrix map
+                m_globalBndMat = MemoryManager<GlobalLinSysMap>
+                                                    ::AllocateSharedPtr();
+                map<int,int> periodicEdges;
+                map<int,int> periodicVertices;
+                map<int,int> periodicFaces;
+                GetPeriodicFaces(graph3D,bcs,variable,
+                                 periodicVertices,periodicEdges,periodicFaces);
+
+                ASSERTL0(false, "DisContField3D Constructor needs implementation.");
+
+                // Set up Trace space
+/*                bool UseGenSegExp = true;
+                m_trace = MemoryManager<ExpList1D>
+                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
+                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
+
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
+                                      m_bndCondExpansions,m_bndConditions,
+                                      periodicEdges);
+*/            }
+
+        }
+
+
+        /**
+         * @todo Implement 3D trace space.
+         */
+        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
+                                        SpatialDomains::MeshGraph3D &graph3D,
+                                        const std::string variable,
+                                        bool SetUpJustDG) :
+            ExpList3D(pSession,graph3D),
+            m_bndCondExpansions(),
+            m_bndConditions()
+        {
+            SpatialDomains::BoundaryConditions bcs(pSession, &graph3D);
+
             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph3D);
@@ -264,7 +306,7 @@ namespace Nektar
                                         == SpatialDomains::eDirichlet)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList2D>
-                                        ::AllocateSharedPtr(m_comm,*(bregions[i]),
+                                        ::AllocateSharedPtr(m_session,*(bregions[i]),
                                                             graph3D);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
@@ -281,7 +323,7 @@ namespace Nektar
                 case SpatialDomains::eRobin:
                     {
                         locExpList = MemoryManager<MultiRegions::ExpList2D>
-                            ::AllocateSharedPtr(m_comm,*(bregions[i]),
+                            ::AllocateSharedPtr(m_session,*(bregions[i]),
                                                 graph3D);
                         bndCondExpansions[cnt]  = locExpList;
                         bndConditions[cnt++]    = locBCond;

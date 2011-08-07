@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>::
-        AllocateSharedPtr(vComm,Bkey,lz,useFFT,graph2D,bcs);
+        AllocateSharedPtr(vSession,Bkey,lz,useFFT,graph2D,bcs);
     //----------------------------------------------
     Timing("Read files and define exp ..");
 

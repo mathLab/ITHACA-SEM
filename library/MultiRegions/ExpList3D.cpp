@@ -53,7 +53,7 @@ namespace Nektar
         }
 
 
-        ExpList3D::ExpList3D(LibUtilities::CommSharedPtr &pComm,
+        ExpList3D::ExpList3D(LibUtilities::SessionReaderSharedPtr &pSession,
                              const LibUtilities::BasisKey &TBa,
                              const LibUtilities::BasisKey &TBb,
                              const LibUtilities::BasisKey &TBc,
@@ -62,7 +62,7 @@ namespace Nektar
                              const LibUtilities::BasisKey &HBc,
                              SpatialDomains::MeshGraph3D &graph3D,
                              const LibUtilities::PointsType TetNb):
-            ExpList(pComm)
+            ExpList(pSession)
         {
 
             LocalRegions::TetExpSharedPtr tet;
@@ -151,7 +151,7 @@ namespace Nektar
          * @param   graph3D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(LibUtilities::CommSharedPtr &pComm,SpatialDomains::MeshGraph3D &graph3D):ExpList(pComm)
+        ExpList3D::ExpList3D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraph3D &graph3D):ExpList(pSession)
         {
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;

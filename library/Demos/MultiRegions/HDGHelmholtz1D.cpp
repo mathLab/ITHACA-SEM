@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::DisContField1D>::
-        AllocateSharedPtr(vComm,graph1D,bcs);
+        AllocateSharedPtr(vSession,graph1D,bcs);
     //----------------------------------------------
 
     //----------------------------------------------

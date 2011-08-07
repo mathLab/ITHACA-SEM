@@ -3,7 +3,6 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -11,24 +10,10 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    LibUtilities::CommSharedPtr vComm = LibUtilities::GetCommFactory().CreateInstance("ParallelMPI",argc,argv);
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    string meshfile(argv[1]);
-
-    if (vComm->GetSize() > 1)
-    {
-        if (vComm->GetRank() == 0)
-        {
-            LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-            SpatialDomains::MeshPartitionSharedPtr vPartitioner = MemoryManager<SpatialDomains::MeshPartition>::AllocateSharedPtr(vSession);
-            vPartitioner->PartitionMesh(vComm->GetSize());
-            vPartitioner->WritePartitions(vSession, meshfile);
-        }
-
-        vComm->Block();
-
-        meshfile = meshfile + "." + boost::lexical_cast<std::string>(vComm->GetRank());
-    }
+    string meshfile(vSession->GetFilename());
 
     MultiRegions::ContField2DSharedPtr Exp;
     int     i, nq,  coordim;
@@ -81,7 +66,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vComm,graph2D,bcs);
+        AllocateSharedPtr(vSession,graph2D,bcs);
     //----------------------------------------------
 
     //----------------------------------------------

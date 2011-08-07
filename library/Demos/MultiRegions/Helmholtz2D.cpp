@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    LibUtilities::CommSharedPtr vComm = vSession->GetComm();
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
@@ -34,7 +33,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
     MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
-    if (vComm->GetSize() > 1)
+    if (vSession->GetComm()->GetSize() > 1)
     {
         SolnType = MultiRegions::eIterativeFull;
     }
@@ -110,8 +109,8 @@ int main(int argc, char *argv[])
         const SpatialDomains::ExpansionMap &expansions = graph2D.GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 2D Helmholtz: " << endl;
-        cout << "         Communication: " << vComm->GetType() << endl;
-        cout << "         Solver type  : " << MultiRegions::GlobalSysSolnTypeMap[SolnType] << endl;
+        cout << "         Communication: " << vSession->GetComm()->GetType() << endl;
+        cout << "         Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
         cout << "         Lambda       : " << lambda << endl;
         cout << "         No. modes    : " << bkey0.GetNumModes() << endl;
         cout << endl;
@@ -119,9 +118,9 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Define Expansion
-        int bc_loc = 0;
+        std::string variable = "u";
         Exp = MemoryManager<MultiRegions::ContField2D>::
-            AllocateSharedPtr(vComm,graph2D,bcs,bc_loc,SolnType);
+            AllocateSharedPtr(vSession,graph2D,bcs,variable);
         Exp->ReadGlobalOptimizationParameters(meshfile);
         //----------------------------------------------
 
@@ -192,9 +191,9 @@ int main(int argc, char *argv[])
         string   out(strtok(argv[1],"."));
         string   endfile(".fld");
         out += endfile;
-        if (vComm->GetSize() > 1)
+        if (vSession->GetComm()->GetSize() > 1)
         {
-            out += "." + boost::lexical_cast<string>(vComm->GetRank());
+            out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
         }
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
@@ -232,7 +231,7 @@ int main(int argc, char *argv[])
             NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
             NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
             NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
-            if (vComm->GetRank() == 0)
+            if (vSession->GetComm()->GetRank() == 0)
             {
                 cout << "L infinity error: " << vLinfError << endl;
                 cout << "L 2 error:        " << vL2Error << endl;
@@ -249,7 +248,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    vComm->Finalise();
+    vSession->Finalise();
 
     return 0;
 }

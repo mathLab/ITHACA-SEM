@@ -161,7 +161,7 @@ namespace Nektar
 
         void SetUSERDEFINEDInitialConditions(const int Readfntype, bool SetRestingState = true, NekDouble initialtime=0.0);
 
-        void EvaluateUSERDEFINEDExactSolution(int field, Array<OneD, NekDouble> &outfield,
+        void EvaluateUSERDEFINEDExactSolution(unsigned int field, Array<OneD, NekDouble> &outfield,
                                               const NekDouble time, const int Readfntype);
 
         NekDouble USERDEFINEDError(int field, const int type, const int Readfntype = 0,

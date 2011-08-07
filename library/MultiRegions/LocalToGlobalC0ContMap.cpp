@@ -63,8 +63,8 @@ namespace Nektar
          *
          */
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
-                const LibUtilities::CommSharedPtr &pComm):
-            LocalToGlobalBaseMap(pComm)
+                const LibUtilities::SessionReaderSharedPtr &pSession):
+            LocalToGlobalBaseMap(pSession)
         {
         }
 
@@ -73,27 +73,26 @@ namespace Nektar
          *
          */
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
-                const LibUtilities::CommSharedPtr &pComm,
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
-                const ExpList &locExp,
-                const GlobalSysSolnType solnType):
-            LocalToGlobalBaseMap(pComm)
+                const ExpList &locExp):
+            LocalToGlobalBaseMap(pSession)
         {
             switch(locExp.GetExp(0)->GetShapeDimension())
             {
             case 1:
                 {
-                    SetUp1DExpansionC0ContMap(numLocalCoeffs, locExp, solnType);
+                    SetUp1DExpansionC0ContMap(numLocalCoeffs, locExp);
                 }
                 break;
             case 2:
                 {
-                    SetUp2DExpansionC0ContMap(numLocalCoeffs, locExp, solnType);
+                    SetUp2DExpansionC0ContMap(numLocalCoeffs, locExp);
                 }
                 break;
             case 3:
                 {
-                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExp, solnType);
+                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExp);
                 }
                 break;
             default:
@@ -111,20 +110,18 @@ namespace Nektar
          *
          */
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
-                const LibUtilities::CommSharedPtr &pComm,
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
                 const ExpList &locExp,
-                const GlobalSysSolnType solnType,
                 const Array<OneD, const ExpListSharedPtr>
                                                             &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                             &bndConditions,
                 const map<int,int>& periodicVerticesId):
-            LocalToGlobalBaseMap(pComm)
+            LocalToGlobalBaseMap(pSession)
         {
             SetUp1DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
-                                      solnType,
                                       bndCondExp,
                                       bndConditions,
                                       periodicVerticesId);
@@ -138,21 +135,19 @@ namespace Nektar
          *
          */
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
-                const LibUtilities::CommSharedPtr &pComm,
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
                 const ExpList &locExp,
-                const GlobalSysSolnType solnType,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                             &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
                 const bool checkIfSystemSingular) :
-            LocalToGlobalBaseMap(pComm)
+            LocalToGlobalBaseMap(pSession)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
-                                      solnType,
                                       bndCondExp,
                                       bndConditions,
                                       periodicVerticesId,
@@ -168,21 +163,19 @@ namespace Nektar
          *
          */
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
-                const LibUtilities::CommSharedPtr &pComm,
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
                 const ExpList &locExp,
-                const GlobalSysSolnType solnType,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
                 const map<int,int>& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
                 const map<int,int>& periodicFacesId):
-            LocalToGlobalBaseMap(pComm)
+            LocalToGlobalBaseMap(pSession)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
-                                      solnType,
                                       bndCondExp,
                                       bndConditions,
                                       periodicVerticesId,
@@ -222,7 +215,6 @@ namespace Nektar
         void LocalToGlobalC0ContMap::SetUp1DExpansionC0ContMap(
                 const int numLocalCoeffs,
                 const ExpList &locExp,
-                const GlobalSysSolnType solnType,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>
                                                                 &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
@@ -243,7 +235,6 @@ namespace Nektar
             int nbnd = bndCondExp.num_elements();
 
             m_staticCondLevel                = 0;
-            m_solnType                       = solnType;
             m_signChange                     = false;
             m_numPatches                     = locExpVector.size();
             m_numLocalCoeffs                 = numLocalCoeffs;
@@ -381,7 +372,6 @@ namespace Nektar
         void LocalToGlobalC0ContMap::SetUp2DExpansionC0ContMap(
                 const int numLocalCoeffs,
                 const ExpList &locExp,
-                const GlobalSysSolnType solnType,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
@@ -433,7 +423,7 @@ namespace Nektar
              * values
              */
             Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(1,bndConditions);
-            nGraphVerts = SetUp2DGraphC0ContMap(locExp,solnType,
+            nGraphVerts = SetUp2DGraphC0ContMap(locExp,
                                                 bndCondExp,bndConditionsVec,
                                                 periodicVerticesId,periodicEdgesId,
                                                 Dofs,
@@ -536,7 +526,6 @@ namespace Nektar
                 m_bndCondCoeffsToGlobalCoeffsSign = NullNekDouble1DArray;
             }
 
-            m_solnType = solnType;
             m_staticCondLevel = 0;
             m_numPatches =  locExpVector.size();
             m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
@@ -653,13 +642,14 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;
 
 
-            ASSERTL0(!(m_comm->GetSize() > 1 && solnType == eIterativeMultiLevelStaticCond),
-                     "Paralle Multi-Level Static Condensation not yet supported.");
+            ASSERTL0(!(m_comm->GetSize() > 1 && m_solnType == eIterativeMultiLevelStaticCond),
+                     "Parallel Multi-Level Static Condensation not yet supported.");
             SetUpUniversalC0ContMap(locExp);
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if( (solnType == eDirectMultiLevelStaticCond || solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
+            if ((m_solnType == eDirectMultiLevelStaticCond
+                    || m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
@@ -884,7 +874,6 @@ namespace Nektar
 
         int LocalToGlobalC0ContMap::SetUp2DGraphC0ContMap(
                 const ExpList  &locExp,
-                const GlobalSysSolnType solnType,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >  &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
@@ -1317,7 +1306,7 @@ namespace Nektar
 
             if(nGraphVerts)
             {
-                switch(solnType)
+                switch(m_solnType)
                 {
                 case eDirectFullMatrix:
                 case eIterativeFull:
@@ -1339,7 +1328,7 @@ namespace Nektar
                     break;
                 default:
                     {
-                        ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[solnType]));
+                        ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[m_solnType]));
                     }
                 }
             }
@@ -1410,7 +1399,6 @@ namespace Nektar
          */
         void LocalToGlobalC0ContMap::SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                                                const ExpList &locExp,
-                                                               const GlobalSysSolnType solnType,
                                                                const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                                const map<int,int>& periodicVerticesId,
@@ -1896,7 +1884,7 @@ namespace Nektar
 
             if(nGraphVerts)
             {
-                switch(solnType)
+                switch(m_solnType)
                 {
                 case eDirectFullMatrix:
                 case eIterativeFull:
@@ -1918,7 +1906,7 @@ namespace Nektar
                     break;
                 default:
                     {
-                        ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[solnType]));
+                        ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[m_solnType]));
                     }
                 }
             }
@@ -2010,7 +1998,6 @@ namespace Nektar
                 m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble>(nLocBndCondDofs,1.0);
             }
 
-            m_solnType = solnType;
             m_staticCondLevel = 0;
             m_numPatches =  locExpVector.size();
             m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
@@ -2180,7 +2167,7 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if( (solnType == eDirectMultiLevelStaticCond || solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
+            if( (m_solnType == eDirectMultiLevelStaticCond || m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {

@@ -59,13 +59,12 @@ namespace Nektar
         /**
          *
          */
-        LocalToGlobalDGMap::LocalToGlobalDGMap( const LibUtilities::CommSharedPtr &pComm,
+        LocalToGlobalDGMap::LocalToGlobalDGMap( const LibUtilities::SessionReaderSharedPtr &pSession,
                                                 const SpatialDomains::MeshGraph1D &graph1D,
                                                 const ExpList &locExp,
-                                                const GlobalSysSolnType solnType,
                                                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond):
-                LocalToGlobalBaseMap(pComm)
+                LocalToGlobalBaseMap(pSession)
         {
             int i,j;
             int cnt, vid, gid;
@@ -84,7 +83,6 @@ namespace Nektar
             m_localToGlobalBndMap   = Array<OneD, int>(m_numLocalBndCoeffs,-1);
             m_localToGlobalBndSign  = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
             m_signChange = true;
-            m_solnType = solnType;
             m_staticCondLevel = 0;
             m_numPatches = exp1D->size();
             m_numLocalBndCoeffsPerPatch =  Array<OneD, unsigned int>(m_numPatches);
@@ -164,15 +162,14 @@ namespace Nektar
         /**
          *
          */
-        LocalToGlobalDGMap::LocalToGlobalDGMap(const LibUtilities::CommSharedPtr &pComm,
+        LocalToGlobalDGMap::LocalToGlobalDGMap(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                SpatialDomains::MeshGraph2D &graph2D,
                                                const ExpList1DSharedPtr &trace,
                                                const ExpList &locExp,
-                                               const GlobalSysSolnType solnType,
                                                const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
                                                const map<int,int> &periodicEdges) :
-                LocalToGlobalBaseMap(pComm)
+                LocalToGlobalBaseMap(pSession)
         {
 
 
@@ -349,7 +346,6 @@ namespace Nektar
 
             // Set up integer mapping array and sign change for each
             // degree of freedom + initialise some more data members
-            m_solnType = solnType;
             m_staticCondLevel = 0;
             m_numPatches = nel;
             m_numLocalBndCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
@@ -449,7 +445,7 @@ namespace Nektar
 
             if(nGraphVerts)
             {
-                switch(solnType)
+                switch(m_solnType)
                 {
                 case eDirectFullMatrix:
                 case eIterativeFull:
@@ -589,7 +585,7 @@ namespace Nektar
 
             CalculateBndSystemBandWidth();
 
-            if( (solnType == eDirectMultiLevelStaticCond) && nGraphVerts )
+            if( m_solnType == eDirectMultiLevelStaticCond && nGraphVerts )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
@@ -633,8 +629,8 @@ namespace Nektar
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
-            m_gsh = Gs::Init(tmp, pComm);
-            Gs::Unique(tmp, pComm);
+            m_gsh = Gs::Init(tmp, m_comm);
+            Gs::Unique(tmp, m_comm);
             for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);

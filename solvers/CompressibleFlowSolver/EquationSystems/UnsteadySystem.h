@@ -141,7 +141,7 @@ namespace Nektar
 			       const Array<OneD,int> ExpOrder, 
 			       const Array<OneD,NekDouble> CFLDG, NekDouble timeCFL) = 0;
 
-    virtual void v_EvaluateExactSolution(int field,
+    virtual void v_EvaluateExactSolution(unsigned int field,
     					 Array<OneD, NekDouble> &outfield,
 					 const NekDouble time)
     {

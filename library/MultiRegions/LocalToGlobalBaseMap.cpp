@@ -78,7 +78,9 @@ namespace Nektar
          * Initialises an empty mapping.
          */
         LocalToGlobalBaseMap::LocalToGlobalBaseMap():
+            m_session(),
             m_comm(),
+            m_solnType(eNoSolnType),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
@@ -87,8 +89,10 @@ namespace Nektar
         {
         }
 
-        LocalToGlobalBaseMap::LocalToGlobalBaseMap(const LibUtilities::CommSharedPtr &pComm):
-            m_comm(pComm),
+        LocalToGlobalBaseMap::LocalToGlobalBaseMap(const LibUtilities::SessionReaderSharedPtr &pSession):
+            m_session(pSession),
+            m_comm(pSession->GetComm()),
+            m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
@@ -104,7 +108,9 @@ namespace Nektar
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(
                     LocalToGlobalBaseMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph):
+            m_session(oldLevelMap->m_session),
             m_comm(oldLevelMap->GetComm()),
+            m_solnType(oldLevelMap->m_solnType),
             m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique())
         {

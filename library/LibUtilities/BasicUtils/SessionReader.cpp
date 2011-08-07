@@ -55,6 +55,44 @@ namespace Nektar
     namespace LibUtilities
     {
         /**
+         * @class SessionReader
+         *
+         * This class provides an interface to Nektar++-specific content in a
+         * supplied XML document. It also initialises a Nektar++ session
+         * including setting up communication for parallel execution and where
+         * necessary partitioning the supplied mesh for running across multiple
+         * processes.
+         *
+         * A session should be initialised at the beginning of a user's
+         * application by passing the command-line arguments. This not only
+         * allows the SessionReader to extract the name of the XML document to
+         * load containing Nektar++ session information, but also supplies the
+         * MPI arguments necessary for setting up parallel communication. The
+         * SessionReader should be initialised using the #CreateInstance
+         * function:
+         * @code
+         * LibUtilities::SessionReaderSharedPtr vSession
+         *          = LibUtilities::SessionReader::CreateInstance(argc, argv);
+         * @endcode
+         * The instance \c vSession can now be passed to other key Nektar++
+         * components during their construction.
+         * @note At the end of the user application, it is important to call the
+         * #Finalise routine in order to finalise any MPI communication and
+         * correctly free resources.
+         *
+         * The SessionReader class provides streamlined, validated access to
+         * session parameters, solver information and functions defined within a
+         * Nektar++ XML document. The available routines and their usage is
+         * documented below.
+         *
+         * In the case of solver information properties, the classes to which
+         * these parameters are pertinent may register with the SessionReader
+         * class the set of valid values for a given property. Such values may
+         * also be associated with an enumeration value for more transparent use
+         * of the property values in code.
+         */
+
+        /**
          * This map of maps stores the list of valid string values for a number
          * of solver information parameters. The top level map connects
          * different parameter names to their list of possible values. The list

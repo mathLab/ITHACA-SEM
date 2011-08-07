@@ -211,17 +211,28 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
         private:
+            /// Communication object.
             CommSharedPtr               m_comm;
+            /// Filename of the loaded XML document.
             std::string                 m_filename;
+            /// Session name of the loaded XML document (filename minus ext).
             std::string                 m_sessionName;
+            /// Pointer to the loaded XML document.
             TiXmlDocument*              m_xmlDoc;
 
-            SolverInfoMap               m_solverInfo;
+            /// Parameters.
             ParameterMap                m_parameters;
+            /// Solver information properties.
+            SolverInfoMap               m_solverInfo;
+            /// Geometric information properties.
             GeometricInfoMap            m_geometricInfo;
+            /// Expressions.
             ExpressionMap               m_expressions;
+            /// Functions.
             FunctionMap                 m_functions;
+            /// Variables.
             VariableList                m_variables;
+            /// Custom tags.
             TagMap                      m_tags;
 
             /// String to enumeration map for Solver Info parameters.
@@ -291,7 +302,27 @@ namespace Nektar
 
 
         /**
+         * A set of valid values for a given solver info property may be
+         * registered using this function. It must be called statically during
+         * the initialisation of a static variable. For example:
+         * @code
+         * std::string GlobalLinSys::lookupIds[2] = {
+         *     LibUtilities::SessionReader::RegisterEnumValue(
+         *                                  "GlobalSysSoln",
+         *                                  "DirectFull",
+         *                                  MultiRegions::eDirectFullMatrix),
+         *     LibUtilities::SessionReader::RegisterEnumValue(
+         *                                  "GlobalSysSoln",
+         *                                  "DirectStaticCond",
+         *                                  MultiRegions::eDirectStaticCond)
+         * }
+         * @endcode
          *
+         * @param   pEnum       The name of the property.
+         * @param   pString     A valid value for the property.
+         * @param   pEnumValue  An enumeration value corresponding to this
+         *                      value.
+         * @returns The value for the property provided by #pString.
          */
         inline std::string SessionReader::RegisterEnumValue(std::string pEnum, std::string pString, int pEnumValue)
         {
@@ -307,7 +338,18 @@ namespace Nektar
 
 
         /**
+         * A default value for a given solver info property may be registered
+         * using this function. The property will take this value until it is
+         * overwritten by a value specified in the XML document, or specified
+         * as a command-line argument. Usage has the form:
+         * @code
+         * std::string GlobalLinSys::def
+         *      = LibUtilities::SessionReader::RegisterDefaultSolverInfo("GlobalSysSoln","DirectMultiLevelStaticCond");
+         * @endcode
          *
+         * @param   pName       The name of the property.
+         * @param   pValue      The default value of the property.
+         * @returns The default value of the property provided by #pValue.
          */
         inline std::string SessionReader::RegisterDefaultSolverInfo(const std::string &pName, const std::string &pValue)
         {
@@ -318,7 +360,8 @@ namespace Nektar
 
 
         /**
-         *
+         * This allows a member function to pass a shared pointer to itself
+         * during a call to another function.
          */
         inline boost::shared_ptr<SessionReader> SessionReader::GetSharedThisPtr()
         {

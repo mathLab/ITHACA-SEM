@@ -148,7 +148,7 @@ main(int argc, char *argv[]){
     
         cout << "  </VERTEX>\n" << endl;
 
-        cout << "  <EDGES>" << endl;
+        cout << "  <EDGE>" << endl;
         int cnt = 0;
         for(j = 0; j < ny-1; ++j)
         {
@@ -173,11 +173,11 @@ main(int argc, char *argv[]){
             cout << j*nx+i <<"  " <<  j*nx + i+1 ;
             cout << "  </E>" << endl; 
         }
-        cout << "  </EDGES>\n" << endl;
+        cout << "  </EDGE>\n" << endl;
 
 
 
-        cout << "  <ELEMENTS>" << endl;
+        cout << "  <ELEMENT>" << endl;
         cnt = 0;
         for(j = 0; j < ny-1; ++j)
         {
@@ -189,13 +189,11 @@ main(int argc, char *argv[]){
                 cout << "  </Q>" << endl; 
             }
         }
-        cout << "  </ELEMENTS>\n" << endl;
-
-        cout << "</GEOMETRY>\n" << endl;
+        cout << "  </ELEMENT>\n" << endl;
 
 
         cout << "<COMPOSITE>" << endl;
-        cout << "<C ID=\"0\"> Q[0-" << (nx-1)*(ny-1) << "] </C>" << endl;
+        cout << "<C ID=\"0\"> Q[0-" << (nx-1)*(ny-1)-1 << "] </C>" << endl;
 
         cout << "<C ID=\"1\"> E[";
         for(i = 0; i < nx-1; ++i)
@@ -243,8 +241,10 @@ main(int argc, char *argv[]){
 
 
         cout << "</COMPOSITE>\n" << endl;
+
              
         cout << "<DOMAIN> C[0] </DOMAIN>\n" << endl;
+        cout << "</GEOMETRY>\n" << endl;
 
         cout << "</NEKTAR>" << endl;
 
@@ -274,7 +274,7 @@ void  PrintConditions(void)
     
     cout << "<VARIABLES>" << endl;
     cout << "  <V ID=\"0\"> u </V>" << endl; 
-    cout << "<VARIABLES>\n" << endl;
+    cout << "</VARIABLES>\n" << endl;
     
     cout << "<BOUNDARYREGIONS>" << endl;
     cout << "<B ID=\"0\"> C[1] </B>" << endl;
@@ -300,5 +300,7 @@ void  PrintConditions(void)
     cout << "     <D VAR=\"u\" VALUE=\"0\" />"  << endl;
     cout << "  </REGION>" << endl;
     cout << "</BOUNDARYCONDITIONS>" << endl;
+
+    cout << "</CONDITIONS>" << endl;
 }
 

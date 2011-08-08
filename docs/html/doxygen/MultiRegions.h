@@ -36,9 +36,9 @@ namespace MultiRegions {
  * - \f$\hat{u}_n^e\f$ is the \f$n^{th}\f$ local expansion coefficient
  * - within the element \f$e\f$.
  *
- * These types of expansion are represented by the classes
+ * These types of expansion are represented by the classes ExpList0D, 
  * ExpList1D, ExpList2D and ExpList3D, depending on the dimension of the
- * problem.
+ * problem.(ExpList0D is used just to deal with boundary conditions for 1D expansions)
  *
  * <b>A multi-elemental discontinuous global expansion.</b><BR>
  * The expansions are represented by the classes
@@ -122,6 +122,23 @@ namespace MultiRegions {
  * in Nektar++ can be found \ref pageConnectivity "here".
 
  * \image html MultiRegions.png
+ 
+ * <b> Quasi-3D approach.</b><BR>
+ * The Quasi-3D approach is an extension of the 1D and the 2D spectral/hp element method.
+ * This technique permits to study 3D problems combining the spectral/hp element method with a
+ * spectral method.
+ * In the Quasi-3D approach with 1 homogenous direction, the third dimension (z-axis) is expandend
+ * with an harmonic expansion (a Fourier series). In each quadrature point of the Fourier discretisation
+ * we can find a 2D plane discretised with a 2D spectral/hp elements expasions.
+ * In the case with 2 homogeneous directions a plane is discretised with a 2D Fourier expansion (y-z palne). In each
+ * one of the quadrature point of this harmonic expansion there is a 1D spectral/hp element discretisation.
+ * The homogenous classes derive directly form ExpList, and they are ExpListHomogeneous1D and ExpListHomogeneous2D.
+ * This classes are used to represent the collections of 2D (or 1D) spectral/hp element problems which are located
+ * in the Fourier expansions quatradure points to create a 3D problem.
+ * As describer above, we can find the find the continuos or discontinuos case, depending on the spectral/hp element approach.
+ * ExpList2DHomogenenous1D and ExpList2DHomogeneous1D are used to manage boundary conditions.
+ *
+ * \image html Quasi3d.png
 **/
 }
 }

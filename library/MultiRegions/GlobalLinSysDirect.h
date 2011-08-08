@@ -63,7 +63,7 @@ namespace Nektar
                 MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
                 
                 
-		    protected:
+        protected:
                 /// Basic linear system object.
                 DNekLinSysSharedPtr m_linSys;
 

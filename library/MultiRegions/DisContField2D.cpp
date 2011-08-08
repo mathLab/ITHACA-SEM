@@ -696,8 +696,8 @@ namespace Nektar
                     }
 
                     m_bndCondExpansions[cnt]  = locExpList;
-                    m_bndConditions[cnt++]    = locBCond;
-                    string type =m_bndConditions[i]->GetUserDefined().GetEquation();                  
+                    m_bndConditions[cnt]    = locBCond;
+                    string type =m_bndConditions[cnt++]->GetUserDefined().GetEquation();                  
             	    if((type== "I")||(type=="CalcBC"))
                     {    
                   	  locExpList->SetUpPhysTangents(*m_exp);                  	  

@@ -151,8 +151,8 @@ namespace Nektar
             /// Returns the value of the specified solver info property.
             LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(const std::string &pProperty) const;
             /// Returns the value of the specified solver info property.
-            LIB_UTILITIES_EXPORT template<typename T>
-                                 inline const T GetSolverInfoAsEnum(const std::string &pName) const;
+            template<typename T>
+            inline const T GetSolverInfoAsEnum(const std::string &pName) const;
             /// Check for and load a solver info property.
             LIB_UTILITIES_EXPORT void LoadSolverInfo(const std::string &name, std::string& var, const std::string &def = "") const;
             /// Check if the value of a solver info property matches.
@@ -160,8 +160,8 @@ namespace Nektar
             /// Check if the value of a solver info property matches.
             LIB_UTILITIES_EXPORT bool MatchSolverInfo(const std::string &name, const std::string &trueval) const;
             /// Check if the value of a solver info property matches.
-            LIB_UTILITIES_EXPORT template<typename T>
-                                 inline const bool MatchSolverInfoAsEnum(const std::string& name, const T &trueval) const;
+            template<typename T>
+            inline const bool MatchSolverInfoAsEnum(const std::string& name, const T &trueval) const;
             /// Registers an enumeration value.
             LIB_UTILITIES_EXPORT inline static std::string RegisterEnumValue(std::string pEnum, std::string pString, int pEnumValue);
             /// Registers the default string value of a solver info property.
@@ -236,8 +236,8 @@ namespace Nektar
             TagMap                      m_tags;
 
             /// String to enumeration map for Solver Info parameters.
-            static EnumMapList          m_enums;
-            static SolverInfoMap        m_solverInfoDefaults;
+            LIB_UTILITIES_EXPORT static EnumMapList          m_enums;
+            LIB_UTILITIES_EXPORT static SolverInfoMap        m_solverInfoDefaults;
 
             /// Main constructor
             SessionReader(int argc, char *argv[]);

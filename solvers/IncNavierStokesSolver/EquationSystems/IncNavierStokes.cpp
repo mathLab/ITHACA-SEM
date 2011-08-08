@@ -104,7 +104,7 @@ namespace Nektar
         {
         case eSteadyStokes: 
         case eSteadyOseen: 
-        case eUnsteadyLinearisedNS: 
+        case eSteadyLinearisedNS: 
             break;
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:

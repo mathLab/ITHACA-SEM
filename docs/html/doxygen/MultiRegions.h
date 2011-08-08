@@ -38,7 +38,7 @@ namespace MultiRegions {
  *
  * These types of expansion are represented by the classes ExpList0D, 
  * ExpList1D, ExpList2D and ExpList3D, depending on the dimension of the
- * problem.(ExpList0D is used just to deal with boundary conditions for 1D expansions)
+ * problem (ExpList0D is used just to deal with boundary conditions for 1D expansions).
  *
  * <b>A multi-elemental discontinuous global expansion.</b><BR>
  * The expansions are represented by the classes
@@ -136,7 +136,8 @@ namespace MultiRegions {
  * This classes are used to represent the collections of 2D (or 1D) spectral/hp element problems which are located
  * in the Fourier expansions quatradure points to create a 3D problem.
  * As describer above, we can find the find the continuos or discontinuos case, depending on the spectral/hp element approach.
- * ExpList2DHomogenenous1D and ExpList2DHomogeneous1D are used to manage boundary conditions.
+ *  ExpList2DHomogeneous1D and ExpList1DHomogeneous2D are used to manage boundary conditions.
+ * A description of the Quasi-3D approach usage can be found in @ref pageXML.
  *
  * \image html Quasi3d.png
 **/

@@ -289,5 +289,87 @@ namespace Nektar
  * where the field data is specified. The expansion order used to generate the
  * .rst file must be the same as that for the simulation. The filename must be
  * specified relative to the location of the .xml file.
+ *
+ * \subsection subsectionQuasi3D Quasi-3D approach
+ * To generate a Quasi-3D appraoch with Nektar++ we only need to create a 2D or a 1D
+ * mesh, as reported above, and then specify the parameters to extend the problem to a 3D case.
+ * For a 2D spectral/hp element problem, we have a 2D mesh and along with the parameters we need to define
+ * the problem (i.e. equation type, boundary conditions, etc.). The only thing we need to do, to extend it to a Quasi-3D approach,
+ * is to specify some additional parameters which characterise the harmonic expansion in the third direction.
+ * First we need to specify in the solver information section that that the problem will be extended to have one homogeneouns dimension;
+ * here an example
+ * @code
+ * <SOLVERINFO>
+ *   <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme"/>
+ *   <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+ *   <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+ *   <I PROPERTY="Projection" VALUE="Galerkin"/>
+ *   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+ *   <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
+ * </SOLVERINFO>
+ * @endcode
+ * then we need to specify the parameters which define the 1D harmonic expanson along the z-axis, namely the 
+ * homogeneous length (LZ) and the number of modes in the homogeneous direction (HomModesZ). HomModesZ corresponds
+ * also to the number of quadrature points in the homogenous direction, hence on the number of 2D planes discretized
+ * with a specral/hp element method.
+ * @code
+ * <PARAMETERS>
+ *   <P> TimeStep      = 0.001   </P>
+ *   <P> NumSteps      = 1000    </P>
+ *   <P> IO_CheckSteps = 100     </P>
+ *   <P> IO_InfoSteps  = 10      </P>
+ *   <P> Kinvis        = 0.025   </P>
+ *   <P> HomModesZ     = 4       </P>
+ *   <P> LZ            = 1.0     </P>
+ * </PARAMETERS>
+ * @endcode
+ * In case we want to create a Quasi-3D approach starting form a 1D spectral/hp element mesh, the procedure is the same, 
+ * but we need to specify the parameters for two harmonic directions (in Y and Z direction).
+ * For Example,
+ * @code
+ * <SOLVERINFO>
+ *   <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
+ *   <I PROPERTY="Projection" VALUE="Continuous"/>
+ *   <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
+ *   <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+ *   <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
+ *   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+ * </SOLVERINFO>
+ * @endcode
+ * @code
+ * <PARAMETERS>
+ *   <P> TimeStep      = 0.001 </P>
+ *   <P> NumSteps      = 200   </P>
+ *   <P> IO_CheckSteps = 200   </P>
+ *   <P> IO_InfoSteps  = 10    </P>
+ *   <P> wavefreq      = PI    </P>
+ *   <P> epsilon       = 1.0   </P>
+ *   <P> Lambda        = 1.0   </P>
+ *   <P> HomModesY     = 10    </P>
+ *   <P> LY            = 6.5   </P>
+ *   <P> HomModesZ     = 6     </P>
+ *   <P> LZ            = 2.0   </P>
+ * </PARAMETERS>
+ * @endcode
+ * By default the opeartions associated with the harmonic expansions are performed with the Matix-Vector-Multiplication (MVM) defined inside the code.
+ * The Fast Fourier Transofrm (FFT) can be used to speed up the operations (if the FFTW library has been compiled in ThirdParty, see the compilation instructions).
+ * To use the FFT routines we need just to insert a flag in the solver information as below:
+ * @code
+ * <SOLVERINFO>
+ *   <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
+ *   <I PROPERTY="Projection" VALUE="Continuous"/>
+ *   <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
+ *   <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+ *   <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
+ *   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+ *   <I PROPERTY="USEFFT" VALUE="FFTW"/>
+ * </SOLVERINFO>
+ * @endcode
+ * The number of homogenenous modes has to be even.
+ * The Quasi-3D apporach can be created starting from a 2D mesh and adding one homogenous expansion or
+ * starting form a 1D mesh and adding two homogeneous expansions. Not other options available.
+ * In case of a 1D homogeneous extension, the homogeneous direction will be the z-axis.
+ * In case of a 2D homogeneous extension, the homogeneous directions will be the y-axis and the z-axis.
+ *
  */
 }

@@ -18,14 +18,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    LibUtilities::CommSharedPtr vComm
-            = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-1]);
-    SpatialDomains::MeshGraph graph;
-    SpatialDomains::MeshGraphSharedPtr graphShPt = graph.Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -37,49 +36,25 @@ int main(int argc, char *argv[])
     {
     case 1:
         {
-            SpatialDomains::MeshGraph1DSharedPtr mesh;
-
-            if(!(mesh = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph1D>(graphShPt)))
-            {
-                ASSERTL0(false,"Dynamics cast failed");
-            }
-
             MultiRegions::ExpList1DSharedPtr Exp1D;
             Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                                                    ::AllocateSharedPtr(vComm,*mesh);
+                                                    ::AllocateSharedPtr(vSession,graphShPt);
             Exp[0] = Exp1D;
         }
         break;
     case 2:
         {
-            SpatialDomains::MeshGraph2DSharedPtr mesh;
-
-            if(!(mesh = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph2D>(graphShPt)))
-            {
-                ASSERTL0(false,"Dynamics cast failed");
-            }
-
             MultiRegions::ExpList2DSharedPtr Exp2D;
             Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                                                    ::AllocateSharedPtr(vComm,*mesh);
+                                                    ::AllocateSharedPtr(vSession,graphShPt);
             Exp[0] =  Exp2D;
         }
         break;
     case 3:
         {
-            SpatialDomains::MeshGraph3DSharedPtr mesh;
-
-            if(!(mesh = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph3D>(graphShPt)))
-            {
-                ASSERTL0(false,"Dynamics cast failed");
-            }
-
             MultiRegions::ExpList3DSharedPtr Exp3D;
             Exp3D = MemoryManager<MultiRegions::ExpList3D>
-                                                    ::AllocateSharedPtr(vComm,*mesh);
+                                                    ::AllocateSharedPtr(vSession,graphShPt);
             Exp[0] =  Exp3D;
         }
         break;

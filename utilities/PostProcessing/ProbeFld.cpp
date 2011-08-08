@@ -26,14 +26,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    LibUtilities::CommSharedPtr vComm
-            = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[1]);
-    SpatialDomains::MeshGraph graph;
-    SpatialDomains::MeshGraphSharedPtr graphShPt = graph.Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -71,14 +70,6 @@ int main(int argc, char *argv[])
     {
     case 1:
         {
-            SpatialDomains::MeshGraph1DSharedPtr mesh;
-
-            if(!(mesh = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph1D>(graphShPt)))
-            {
-                ASSERTL0(false,"Dynamic cast failed");
-            }
-
             ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"NumHomogeneousDir is only set up for 1 or 2");
 
             if(fielddef[0]->m_numHomogeneousDir == 1)
@@ -93,7 +84,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vComm,Bkey,ly,useFFT,*mesh);
+                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,ly,useFFT,graphShPt);
                 Exp[0] = Exp2DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -119,7 +110,7 @@ int main(int argc, char *argv[])
 				NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 				NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
 				
-                Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vComm,BkeyY,BkeyZ,ly,lz,useFFT,*mesh);
+                Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,graphShPt);
                 Exp[0] = Exp3DH2;
 				
                 for(i = 1; i < nfields; ++i)
@@ -131,7 +122,7 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList1DSharedPtr Exp1D;
                 Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                                                        ::AllocateSharedPtr(vComm,*mesh);
+                                                        ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] = Exp1D;
                 for(i = 1; i < nfields; ++i)
                 {
@@ -143,14 +134,6 @@ int main(int argc, char *argv[])
         break;
     case 2:
         {
-            SpatialDomains::MeshGraph2DSharedPtr mesh;
-
-            if(!(mesh = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph2D>(graphShPt)))
-            {
-                ASSERTL0(false,"Dynamic cast failed");
-            }
-
             ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
             if(fielddef[0]->m_numHomogeneousDir == 1)
@@ -166,7 +149,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vComm,Bkey,lz,useFFT,*mesh);
+                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,graphShPt);
                 Exp[0] = Exp3DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -178,7 +161,7 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList2DSharedPtr Exp2D;
                 Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                                                        ::AllocateSharedPtr(vComm,*mesh);
+                                                        ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] =  Exp2D;
 
                 for(i = 1; i < nfields; ++i)

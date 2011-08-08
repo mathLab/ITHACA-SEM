@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
     void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
 		SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
 		LibUtilities::SessionReaderSharedPtr &session,
-		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
-		LibUtilities::CommSharedPtr comm);  
+		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
     void OrderVertices(int nedges,SpatialDomains::MeshGraphSharedPtr graphShPt,
     	    MultiRegions::ExpListSharedPtr & bndfield, 
         	Array<OneD, int>& Vids, int v1,int v2 , NekDouble x_connect,
@@ -46,22 +45,19 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    LibUtilities::CommSharedPtr vComm
-            = LibUtilities::GetCommFactory().CreateInstance("Serial",argc,argv);
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv);
     //----------------------------------------------
    
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
-    LibUtilities::SessionReaderSharedPtr vSession = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(meshfile);
-    SpatialDomains::MeshGraph graph;
-    SpatialDomains::MeshGraphSharedPtr graphShPt = graph.Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //---------------------------------------------- 
     
     // Also read and store the boundary conditions
-    SpatialDomains::MeshGraph *meshptr = graphShPt.get();
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-                                        ::AllocateSharedPtr(vSession,meshptr);
+                                        ::AllocateSharedPtr(vSession,graphShPt);
     //----------------------------------------------
      
     // Import field file.
@@ -88,7 +84,7 @@ int main(int argc, char *argv[])
             nfields = fielddef[0]->m_fields.size();       	    
   //  }
  
-    SetFields(graphShPt,boundaryConditions,vSession,fields,nfields,vComm);
+    SetFields(graphShPt,boundaryConditions,vSession,fields,nfields);
 
     //----------------------------------------------   
      
@@ -282,8 +278,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 	void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
 		SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
 		LibUtilities::SessionReaderSharedPtr &session,
-		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
-		LibUtilities::CommSharedPtr comm)
+		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
 	{
 			
 		// Setting parameteres for homogenous problems
@@ -361,14 +356,6 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
                 {
 					if(HomogeneousType == eHomogeneous2D)
 					{
-						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						
-						if(!(mesh1D = boost::dynamic_pointer_cast<
-							 SpatialDomains::MeshGraph1D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
 						const LibUtilities::PointsKey PkeyY(npointsY,LibUtilities::eFourierEvenlySpaced);
 						const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,npointsY,PkeyY);
 						const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
@@ -377,23 +364,15 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 						for(i = 0 ; i < Exp.num_elements(); i++)
 						{
 							Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(comm,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,*mesh1D,*boundaryConditions,i);
+							::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,mesh,*boundaryConditions,i);
 						}
 					}
 					else 
 					{
-						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-						
-						if( !(mesh1D = boost::dynamic_pointer_cast<
-							  SpatialDomains::MeshGraph1D>(mesh)) )
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
-						
 						for(i = 0 ; i < Exp.num_elements(); i++)
 						{
 							Exp[i] = MemoryManager<MultiRegions::ContField1D>
-							::AllocateSharedPtr(comm,*mesh1D,
+							::AllocateSharedPtr(session,mesh,
                                                 *boundaryConditions,i);
 						}
 						
@@ -405,32 +384,17 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
                 {                	
                     if(HomogeneousType == eHomogeneous1D)
                     {
-                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-			
-                        if(!(mesh2D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph2D>(mesh)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
-			
                         const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
                         
                         for(i = 0 ; i < Exp.num_elements(); i++)
                         {
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(comm,BkeyZ,LhomZ,useFFT,*mesh2D,*boundaryConditions,i);
+                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,mesh,*boundaryConditions,i);
                         }
                     }
                     else
                     {                	    
-                        SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-			
-                        if(!(mesh2D = boost::dynamic_pointer_cast<
-                             SpatialDomains::MeshGraph2D>(mesh)))
-                        {
-                            ASSERTL0(false,"Dynamics cast failed");
-                        }
 /*
 			i=0;
 			MultiRegions::ContField2DSharedPtr firstfield =
@@ -441,8 +405,8 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
                         for(i = 0 ; i < Exp.num_elements(); i++)
                         {                          	
                             Exp[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(comm,
-                                                    *mesh2D,*boundaryConditions,i);                                
+                                ::AllocateSharedPtr(session,
+                                                    mesh,*boundaryConditions,i);
                         }                        
                     }
                    
@@ -456,13 +420,6 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 					}
 					else
 					{
-						SpatialDomains::MeshGraph3DSharedPtr mesh3D;
-
-						if(!(mesh3D = boost::dynamic_pointer_cast<
-										SpatialDomains::MeshGraph3D>(mesh)))
-						{
-							ASSERTL0(false,"Dynamics cast failed");
-						}
 /*						
 						i=0;
 						MultiRegions::ContField3DSharedPtr firstfield =
@@ -473,8 +430,8 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 						for(i = 0 ; i < Exp.num_elements(); i++)
 						{
 							Exp[i] = MemoryManager<MultiRegions::ContField3D>
-											::AllocateSharedPtr(comm,
-												*mesh3D,*boundaryConditions,i);
+											::AllocateSharedPtr(session,
+												mesh,*boundaryConditions,i);
 						}
 					}
                     break;

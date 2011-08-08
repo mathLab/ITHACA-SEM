@@ -109,6 +109,24 @@ namespace Nektar
                      Array<OneD, NekDouble> &test,
                      const int dim);
 
+        void EV_post(Array<OneD, Array<OneD, NekDouble> > &Tseq,
+                     Array<OneD, Array<OneD, NekDouble> > &Kseq,
+                     const int ntot,
+                     const int kdim,
+                     const int nvec,
+                     Array<OneD, NekDouble> &zvec,
+                     Array<OneD, NekDouble> &wr,
+                     Array<OneD, NekDouble> &wi,
+                     const int icon);
+
+        void EV_big(Array<OneD, Array<OneD, NekDouble> > &bvecs,
+                    Array<OneD, Array<OneD, NekDouble> > &evecs,
+                    const int ntot,
+                    const int kdim,
+                    const int nvec,
+                    Array<OneD, NekDouble> &zvec,
+                    Array<OneD, NekDouble> &wr,
+                    Array<OneD, NekDouble> &wi);
     };
 	
 } //end of namespace

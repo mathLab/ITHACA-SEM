@@ -80,7 +80,7 @@ namespace Nektar
                          "Ensure equation name is correct and module is compiled.\n");
 
 				//std::string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
-				//m_session->SetTag("AdvectiveType",vAdvectionForm);
+				m_session->SetTag("AdvectiveType","Linearised");
                 
                 m_equ = Array<OneD, EquationSystemSharedPtr>(1);
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);

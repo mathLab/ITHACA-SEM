@@ -70,7 +70,7 @@ namespace Nektar
                      "Ensure equation name is correct and module is compiled.\n");
             
 		//	std:: string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
-        //    m_session->SetTag("AdvectiveType","Linearised");
+             m_session->SetTag("AdvectiveType","Linearised");
                 
             m_equ = Array<OneD, EquationSystemSharedPtr>(1);
             m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
@@ -173,7 +173,7 @@ namespace Nektar
         if(m_session->DefinesSolverInfo("SingleMode"))
         {
             out << "\tSingle Fourier mode    : true " << endl;
-            ASSERTL0(m_session->DefinedsSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
+            ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
         }
         else
         {

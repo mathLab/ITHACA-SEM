@@ -65,6 +65,9 @@ namespace Nektar
         int m_maxn;			//Maximum size of the problem
         int m_maxnev;			//maximum number of eigenvalues requested
         int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
+
+        NekDouble m_realShift;
+
         std::string m_arpackProblemType;   //Arpack input for problem type
         /// Constructor
         DriverArpack( LibUtilities::SessionReaderSharedPtr        pSession);

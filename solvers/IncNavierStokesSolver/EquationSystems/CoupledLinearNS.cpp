@@ -81,6 +81,7 @@ namespace Nektar
             if(m_HomogeneousType == eHomogeneous1D)
             {
 
+                ASSERTL0(nvel > 2,"Expect to have three at least three components of velocity variables");
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
                 m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT, pressure_exp);
@@ -1188,7 +1189,7 @@ namespace Nektar
                 SetInitialConditions(0.0);
             }
         case eSteadyStokes:
-            SetUpCoupledMatrix();
+            SetUpCoupledMatrix(0.0);
             break;
         case eSteadyOseen:
             {
@@ -1232,7 +1233,7 @@ namespace Nektar
                 }
                 EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
 
-                SetUpCoupledMatrix(0.0,AdvField,true);
+                SetUpCoupledMatrix(m_lambda,AdvField,true);
             }
             break;
         case eNoEquationType:

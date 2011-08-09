@@ -90,6 +90,9 @@ namespace Nektar
         /// Check for and load a double precision parameter
         void LoadParameter(std::string name, NekDouble &var, NekDouble def= 0.0);
 
+        /// Set parameter m_lambda
+        inline void SetLambda(NekDouble lambda);
+
         /// Evaluates a function as specified in the session file.
         void EvaluateFunction(Array<OneD, NekDouble>& pArray,
                 LibUtilities::EquationSharedPtr pEqn,
@@ -333,6 +336,7 @@ namespace Nektar
         NekDouble m_time;            ///< Continous time
         NekDouble m_fintime;         ///< time to be taken during the simulation
         NekDouble m_timestep;        ///< Time step size
+        NekDouble m_lambda;          ///< Lambda constant in real system if one required
         int m_steps;                 ///< Number of steps to take
         int m_checksteps;            ///< Number of steps between checkpoints
         int m_spacedim;              ///< Spatial dimension (> expansion dim)
@@ -514,6 +518,11 @@ namespace Nektar
         out << "=======================================================================" << endl;
     }
 
+
+    inline void EquationSystem::SetLambda(NekDouble lambda)
+    {
+        m_lambda = lambda;
+    }
 
     inline void EquationSystem::SetInitialConditions(NekDouble initialtime,
                               bool dumpInitialConditions)

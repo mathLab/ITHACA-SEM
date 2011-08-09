@@ -79,7 +79,8 @@ namespace Nektar
     EquationSystem::EquationSystem( LibUtilities::CommSharedPtr& pComm,
                                     LibUtilities::SessionReaderSharedPtr& pSession)
         : m_comm (pComm),
-          m_session (pSession)
+          m_session (pSession),
+          m_lambda (0)
     {
     }
 

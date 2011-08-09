@@ -339,6 +339,47 @@ namespace Nektar
                 }
             }
 
+#if 0 
+            // reset singular edge to be defedge so that it is part of
+            // inner solve.
+            if(m_systemSingular)
+            {
+
+                for(i = 0; i < bndgraphs.size(); ++i)
+                {
+                    int GlobIdOffset = bndgraphs[i]->GetIdOffset();
+
+
+                    
+                for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
+                {
+                    // find edge in graph vert list
+                    if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+                    {
+                        edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+                        if(defedge == -1)
+                        {
+                            defedge = edgeId;
+                            break;
+                        }
+                    }
+                }
+                if(defedge != -1)
+                {
+                    break;
+                }
+            }
+
+                for(i = 0; i < AddMeanPressureToEdgeId.size(); ++i)
+                {
+                    if(AddMeanPressureToEdgeId[i] != -1)
+                    {
+                        AddMeanPressureToEdgeId[i] = defedge;
+                        break;
+                    }
+            }
+
+#endif
 
             for(int n = 1; n < nlevels; ++n)
             {

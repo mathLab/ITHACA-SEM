@@ -54,6 +54,20 @@ namespace Nektar
     {
     }
     
+    // Arpack problem type character string mappings
+    int ArpackProbLen = 6;
+    std::string ArpackProbTypes[] = 
+        {
+            "LargestReal",  "SmallestReal",
+            "LargestImag",  "SmallestImag",
+            "LargestMag",   "SmallestMag"
+        };
+    std::string ArpackProbTypesTrans[] = 
+        { "LR", "SR",
+          "LI", "SI",
+          "LM", "SM"
+        };
+    
     void DriverArpack::v_InitObject()
     {
         try
@@ -115,28 +129,25 @@ namespace Nektar
         m_session->LoadParameter("nits",  m_nits,  500);
         // determines the stopping criterion.
         m_session->LoadParameter("evtol", m_evtol, 1e-6); 
-
+        
+        m_session->LoadParameter("realShift", m_realShift, 0.0);
+        
+        m_equ[0]->SetLambda(m_realShift);
+                
         bool IsProbType;
-        // Determine Arpack problem type LM (default), LR, LI
-        m_session->MatchSolverInfo("ArpackProblemType","LargestReal",
-                                   IsProbType,false);
-        if(IsProbType)
-        {
-            m_arpackProblemType = "LR";
-        }
-        else
-        {
-            m_session->MatchSolverInfo("ArpackProblemType","LargestImag",
-                                       IsProbType,false);
+        int i;
+        for(i = 0; i < ArpackProbLen; ++i)
+        {        
+            m_session->MatchSolverInfo("ArpackProblemType",ArpackProbTypes[i].c_str(), IsProbType,false);
             if(IsProbType)
             {
-                m_arpackProblemType = "LI";
-            }
-            else
-            {
-                m_arpackProblemType = "LM";
+                m_arpackProblemType = ArpackProbTypesTrans[i];                
+                break;
             }
         }
+
+        ASSERTL0(i  < ArpackProbLen,"Cannot determine the Arpack Problem Type defiend in ArpackProblemType")
+
 
         // Error alerts
         ASSERTL0(m_nvec <= m_maxnev,"NEV is greater than MAXNEV");
@@ -154,22 +165,16 @@ namespace Nektar
     {
         // Print session parameters
         out << "\tArnoldi solver type    : Arpack" << endl;
-        if(m_arpackProblemType == "LM")
+
+        out << "\tArpack problem type    : ";
+        for(int i = 0; i < ArpackProbLen; ++i)
         {
-            out << "\tArpack problem type    : Largest Mag. eigenvalue" << endl;
+            if(m_arpackProblemType == ArpackProbTypesTrans[i])
+            {
+                out << ArpackProbTypes[i] << endl;
+            }
         }
-        else if (m_arpackProblemType ==  "LR")
-        {
-            out << "\tArpack problem type    : Largest real eigenvalue" << endl;
-        }
-        else if(m_arpackProblemType ==  "LI")
-        {
-            out << "\tArpack problem type    : Largest imag. eigenvalue" << endl;
-        }
-        else
-        {
-            ASSERTL0(false,"Unknown ArpackProbType");
-        }
+
         if(m_session->DefinesSolverInfo("SingleMode"))
         {
             out << "\tSingle Fourier mode    : true " << endl;
@@ -187,6 +192,7 @@ namespace Nektar
         {
             out << "\tBeta set to Zero       : false " << endl;
         }
+        out << "\tReal Shift             : " << m_realShift << endl;
         out << "\tKrylov-space dimension : " << m_kdim << endl;
         out << "\tNumber of vectors      : " << m_nvec << endl;
         out << "\tMax iterations         : " << m_nits << endl;
@@ -244,7 +250,14 @@ namespace Nektar
         iparam[3] = 1;      // blocksize to be used for recurrence
         iparam[4] = 0;      // number of converged ritz eigenvalues
         iparam[5] = 0;      // (deprecated)
-        iparam[6] = 1;      // computation mode 1=> matrix-vector prod
+        if(fabs(m_realShift) > NekConstants::kNekZeroTol) // use shift if m_realShift > 1e-12
+        {
+            iparam[6] = 3;
+        }
+        else
+        {
+            iparam[6] = 1;      // computation mode 1=> matrix-vector prod
+        }
         iparam[7] = 0;      // (for shift-invert)
         iparam[8] = 0;      // number of MV operations
         iparam[9] = 0;      // number of BV operations
@@ -310,7 +323,7 @@ namespace Nektar
         workev     = Array<OneD, NekDouble> (3*m_kdim);
         z          = Array<OneD, NekDouble> (n*(m_nvec+1));
         
-        sigmar     = 0.0; 
+        sigmar     = m_realShift; 
         sigmai     = 0.0;
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors

@@ -106,7 +106,7 @@ namespace Nektar
              * parallel communication, it also calls the main initialisation
              * of the object.
              */
-            static SessionReaderSharedPtr CreateInstance(int argc, char *argv[])
+            LIB_UTILITIES_EXPORT static SessionReaderSharedPtr CreateInstance(int argc, char *argv[])
             {
                 SessionReaderSharedPtr p = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(argc, argv);
                 p->InitSession();
@@ -240,35 +240,35 @@ namespace Nektar
             LIB_UTILITIES_EXPORT static SolverInfoMap        m_solverInfoDefaults;
 
             /// Main constructor
-            SessionReader(int argc, char *argv[]);
-            void InitSession();
+            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[]);
+            LIB_UTILITIES_EXPORT void InitSession();
 
             /// Returns a shared pointer to the current object.
             inline boost::shared_ptr<SessionReader> GetSharedThisPtr();
 
             /// Loads and parses the specified file.
-            void LoadFile(const std::string &pFilename);
+            LIB_UTILITIES_EXPORT void LoadFile(const std::string &pFilename);
             /// Loads the given XML document and instantiates an appropriate
             /// communication object.
-            void CreateComm(int &argc, char* argv[], const std::string &pFilename);
+            LIB_UTILITIES_EXPORT void CreateComm(int &argc, char* argv[], const std::string &pFilename);
             /// Partitions the mesh when running in parallel.
-            void PartitionMesh();
+            LIB_UTILITIES_EXPORT void PartitionMesh();
 
             /// Reads the PARAMETERS section of the XML document.
-            void ReadParameters(TiXmlElement *conditions);
+            LIB_UTILITIES_EXPORT void ReadParameters(TiXmlElement *conditions);
             /// Reads the SOLVERINFO section of the XML document.
-            void ReadSolverInfo(TiXmlElement *conditions);
+            LIB_UTILITIES_EXPORT void ReadSolverInfo(TiXmlElement *conditions);
             /// Reads the GEOMETRICINFO section of the XML document.
-            void ReadGeometricInfo(TiXmlElement *geometry);
+            LIB_UTILITIES_EXPORT void ReadGeometricInfo(TiXmlElement *geometry);
             /// Reads the EXPRESSIONS section of the XML document.
-            void ReadExpressions(TiXmlElement *conditions);
+            LIB_UTILITIES_EXPORT void ReadExpressions(TiXmlElement *conditions);
             /// Reads the VARIABLES section of the XML document.
-            void ReadVariables(TiXmlElement *conditions);
+            LIB_UTILITIES_EXPORT void ReadVariables(TiXmlElement *conditions);
             /// Reads the FUNCTIONS section of the XML document.
-            void ReadFunctions(TiXmlElement *conditions);
+            LIB_UTILITIES_EXPORT void ReadFunctions(TiXmlElement *conditions);
 
             /// Perform a case-insensitive string comparison.
-            int NoCaseStringCompare(const std::string &s1, const std::string &s2) const;
+            LIB_UTILITIES_EXPORT int NoCaseStringCompare(const std::string &s1, const std::string &s2) const;
         };
 
 

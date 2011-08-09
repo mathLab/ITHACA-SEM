@@ -177,53 +177,53 @@ namespace Nektar
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
 
-            virtual int v_GetLocalToGlobalMap(const int i) const;
+            MULTI_REGIONS_EXPORT virtual int v_GetLocalToGlobalMap(const int i) const;
 
-            virtual int v_GetGlobalToUniversalMap(const int i) const;
+            MULTI_REGIONS_EXPORT virtual int v_GetGlobalToUniversalMap(const int i) const;
 
-            virtual int v_GetGlobalToUniversalMapUnique(const int i) const;
+            MULTI_REGIONS_EXPORT virtual int v_GetGlobalToUniversalMapUnique(const int i) const;
 
-            virtual const Array<OneD,const int>&  v_GetLocalToGlobalMap();
+            MULTI_REGIONS_EXPORT virtual const Array<OneD,const int>&  v_GetLocalToGlobalMap();
 
-            virtual const Array<OneD, const int>& v_GetGlobalToUniversalMap();
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetGlobalToUniversalMap();
 
-            virtual const Array<OneD, const int>& v_GetGlobalToUniversalMapUnique();
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetGlobalToUniversalMapUnique();
 
-            virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
+            MULTI_REGIONS_EXPORT virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
 
-            virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
 
-            virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
                     const NekVector<const NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
                     const NekVector<const NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
                     const NekVector<const NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            virtual const int v_GetFullSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
 
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;

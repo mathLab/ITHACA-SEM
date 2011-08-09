@@ -1280,6 +1280,10 @@ namespace Nektar
             ASSERTL0(false, "Cannot find element for this point.");
         }
 
+        /** @todo need a smarter search here that first just looks at bounding 
+        /* vertices - suggest first seeing if point is within 10% of
+        /* region defined by vertices. The do point search. 
+        **/
         int ExpList::GetExpIndex(
                     const Array<OneD, const NekDouble> &gloCoord)
         {

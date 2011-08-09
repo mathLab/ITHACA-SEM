@@ -244,7 +244,8 @@
   <CONDITIONS>
       <SOLVERINFO>
           <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyLinearisedNS"/>
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+      <I PROPERTY="AdvectionForm" VALUE="Linearised"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
        <I PROPERTY="InitialVector" VALUE="Random"/>

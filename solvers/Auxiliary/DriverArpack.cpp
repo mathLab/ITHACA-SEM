@@ -101,6 +101,7 @@ namespace Nektar
         }
         else
         {
+            ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
             m_nfields = m_equ[0]->UpdateFields().num_elements();
         }
 
@@ -172,6 +173,7 @@ namespace Nektar
         if(m_session->DefinesSolverInfo("SingleMode"))
         {
             out << "\tSingle Fourier mode    : true " << endl;
+            ASSERTL0(m_session->DefinedsSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
         }
         else
         {

@@ -35,7 +35,7 @@ namespace Nektar {
  * - @subpage pageVelocityCorrectionScheme - a splitting scheme for the incompressible Navier-Stokes equations.
  * - @subpage pageCoupledSolver - a direct solution of the Navier-Stokes equations (coupled solver).
  
- The Incommpressible Navier-Stokes Equations solver contain other features:
+ The Incommpressible Navier-Stokes Equations solver contains other features:
  * - @subpage pageAdvection - a collection of methods to deal with the advection term calculation inside the equations.
  * - @subpage pageStability - stability analysis of the Navier-Stokes equations.
 

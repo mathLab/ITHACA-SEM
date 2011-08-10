@@ -138,7 +138,11 @@ namespace Nektar
  * geometric composites. Expansion entries specify the number of modes, the
  * basis type and have the form
  * @code
- * <E COMPOSITE="C[0]" NUMMODES="5" TYPE="MODIFIED" />
+ * <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
+ * @endcode
+ * or, if we have more then one variable
+ * @code
+ * <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,p" TYPE="MODIFIED" />
  * @endcode
  *
  * \section sectionXMLConditions XML Conditions definition
@@ -262,26 +266,27 @@ namespace Nektar
  * identifier (Region 0 and Region 2).
  *
  *
- * \subsection subsectionXmlConditionsUserDefined User-defined Equations
- * These define spatially-dependent analytic expressions for use in solvers.
- * For example,
+ * Boundary conditions can also be loaded from file, here an example from the Incompressible Navier-Stokes cases,
  * @code
- *   <USERDEFINEDEQNS>
- *     <F LHS="Vx" VALUE="1" />
- *     <F LHS="Vy" VALUE="1" />
- *   </USERDEFINEDEQNS>
+ *<REGION REF="1">
+ *  <D VAR="u" VALUE="FILE:Test_ChanFlow2D_bcsfromfiles_u_1.bc" />
+ *  <D VAR="v" VALUE="0" />
+ *  <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" /> 
+ </REGION>
  * @endcode
  *
+ *
  * \subsection subsectionXmlConditionsAnalytic Analytic functions
+ * 
  * Finally, multi-variable functions such as initial conditions and analytic
  * solutions may be specified for use in, or comparison with, simulations.
- * These may be specified using expressions or imported from a file using the
- * Nektar++ FLD file format.
+ * These may be specified using expressions (<E) or imported from a file (<F) using the
+ * Nektar++ FLD file format
  * @code
  *   <FUNCTION NAME="ExactSolution">
  *     <E VAR="u" VALUE="sin(PI*x-advx*t))*cos(PI*(y-advy*t))" />
  *   </FUNCTION>
- *   <FUNCTION NAME="InitialConditions>
+ *   <FUNCTION NAME="InitialConditions">
  *     <F FILE="session.rst" />
  *   </FUNCTION>
  * @endcode
@@ -289,6 +294,28 @@ namespace Nektar
  * where the field data is specified. The expansion order used to generate the
  * .rst file must be the same as that for the simulation. The filename must be
  * specified relative to the location of the .xml file.
+ *
+ * Other examples of this input features can be the insertion of a forcing term,
+ * @code
+ * <FUNCTION NAME="BodyForce">
+ *   <E VAR="u" VALUE="0" />
+ *   <E VAR="v" VALUE="0" />
+ * </FUNCTION> 
+ * @endcode
+ * @code
+ *  <FUNCTION NAME="Forcing">
+ *    <E VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+ *  </FUNCTION>
+ * @endcode
+ *
+ * or of a linear advection term
+ * @code
+ * <FUNCTION NAME="AdvectionVelocity">
+ *   <E VAR="Vx" VALUE="1.0" />
+ *   <E VAR="Vy" VALUE="1.0" />
+ *   <E VAR="Vz" VALUE="1.0" />
+ * </FUNCTION>
+ * @endcode
  *
  * \subsection subsectionQuasi3D Quasi-3D approach
  * To generate a Quasi-3D appraoch with Nektar++ we only need to create a 2D or a 1D

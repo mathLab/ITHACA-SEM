@@ -8,13 +8,13 @@ namespace Nektar {
  solver and briefly explain the options of the solver specified in the input file. 
  After these introductory explanations, we will present some numerical results 
  in order to demonstrate the capabilities and the accuracy of the solver.
- - @ref sectionFormulation
- - @ref sectionRunning1example
- - @ref sectionInputOptions
- - @ref sectionResult
- - @ref sectionRef
+ - @ref sectionFormulation_cuopled
+ - @ref sectionRunning1example_cuopled
+ - @ref sectionInputOptions_cuopled
+ - @ref sectionResult_cuopled
+ - @ref sectionRef_cuopled
  
- \section sectionFormulation Formulation
+ \section sectionFormulation_cuopled Formulation
  
  We consider the weak form of the Stokes problem for the velocity field \f$\boldsymbol{v}=[u,v]^{T}\f$ and the pressure field \f$p\f$:
  \f[
@@ -74,7 +74,7 @@ namespace Nektar {
  \f$(\nabla\phi,\nu\nabla\boldsymbol{v})-\lambda(\phi,\boldsymbol{v})\f$ where \f$\lambda\f$ depends on the time integration scheme. The second modification requires
  the explicit discretisation of the non-linear terms in a similar manner to the splitting scheme and this term is then introduced as the forcing term \f$\boldsymbol{f}\f$.
  
-\section sectionRunning1example Running a first example
+\section sectionRunning1example_cuopled Running a first example
  
  The folder <code>Nektar++/regressionTests/Solvers/IncNavierStokesSolver/InputFiles</code> contains several <code>*.xml</code> files.
  These are input files for the Navier-Stokes solver specifying the geometry (i.e. the mesh and 
@@ -105,14 +105,64 @@ namespace Nektar {
  
  \image html CoupChanFlow.png "Channel Flow (u-velocity component)"
  
+\section sectionInputOptions_cuopled Input Options
  
+ A detailed descriptions of the input file for Nektar++ can be found in @ref pageXML. 
+ For what concern the incompressible Navier-Stokes solver a typical set is:
+ @code
+ <SOLVERINFO>
+   <I PROPERTY="SolverType"  VALUE="CoupledLinearisedNS"/>
+   <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+   <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+   <I PROPERTY="Projection" VALUE="Galerkin"/>
+   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"/>
+ </SOLVERINFO>
+ @endcode
+ 
+ @code
+ <PARAMETERS>
+   <P> TimeStep      = 0.001 <P>
+   <P> NumSteps      = 100   <P>
+   <P> IO_CheckSteps = 10    <P>
+   <P> IO_InfoSteps  = 10    <P>
+   <P> Kinvis        = 1.0   <P>
+ </PARAMETERS>
+ @endcode
+ 
+ Futher options can be specified in the input file, as for the Steady Oseen Flow:
+ @code 
+ <SOLVERINFO>
+   <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS"/>
+   <I PROPERTY="EQTYPE" VALUE="SteadyOseen"/>
+   <I PROPERTY="Projection" VALUE="Galerkin"/>
+ </SOLVERINFO>
+ @endcode
+ 
+ @code
+ <PARAMETERS>
+   <P> Kinvis   = 0.025            </P>
+   <P> LAMBDA   = 0.9637405441957 </P>
+ </PARAMETERS>
+ @endcode
 
-\section sectionInputOptions Input Options
+ @code
+ <FUNCTION NAME="AdvectionField">
+   <E VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+   <E VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
+ </FUNCTION>
+ @endcode
+
+\section sectionResult_cuopled Numerical Results
  
-\section sectionResult Numerical Results
+ \image html Oseen.png "Steady Oseen Flow (u-velocity component)"
  
-\section sectionRef References
  
+\section sectionRef_cuopled References
+ [1] S.J. Sherwin and M. Ainsworth: <i>Unsteady Navier-Stokes Solvers Using Hybrid Spectral/hp Element Methods</i>, Conference Paper, 2000.<br />
+ [2] R. Stenberg and M. Suri: <i>Mixed hp finite element methods for problems in elasticity and Stokes flows</i>, Numer. Math, 72, 367-389, 1996.<br />
+ [3] M. Ainsworth and S.J. Sherwin: <i>Domain decomposition preconditioners for p and hp finite element approximation of the Stokes equations</i>, Comput. Methods Appl. Mech. Engrg., 175, 243-266, 1999. <br />
+ [4] P. La Tallec and A. Patra: <i>Non-overlapping domain decomposition methods for adaptive hp approximations of the Stokes problem with discontiunous pressure field</i>, Comput. Methods Appl. Mech. Engrg., 145, 361-379, 1997.<br />
+ [5] G. E. Karniadakis, M. Israeli, and S. A. Orszag: <i>High-order splitting methodsfor the incompressible Navier-Stokes equations</i>, J. Comput. Phys., 97, 414-443, 1991.<br />
 */	
 	
 }

@@ -53,7 +53,7 @@
       <E VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
    </FUNCTION>
    
-   <FUNCTION NAME="AdvectionField">
+   <FUNCTION NAME="AdvectionVelocity">
      <E VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
      <E VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
    </FUNCTION>

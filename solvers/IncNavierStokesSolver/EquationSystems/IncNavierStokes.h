@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
 #include <Auxiliary/EquationSystem.h>
+#include <Auxiliary/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>

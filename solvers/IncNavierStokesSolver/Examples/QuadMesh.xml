@@ -9,10 +9,10 @@
   <CONDITIONS>
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+      <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
       <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+      <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-     <I PROPERTY="SOLVERTYPE" VALUE="VelocityCorrectionScheme"/>
-
     </SOLVERINFO>
 
     <PARAMETERS>

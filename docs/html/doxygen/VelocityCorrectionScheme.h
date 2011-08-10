@@ -110,7 +110,7 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  of the input file can be found in @ref pageXML. 
   
  Now, lets try to run the <code>QuadMesh.xml</code> example that can be found in 
- <code>Nektar++/solvers/IncNavierStokesSolver</code>:
+ <code>Nektar++/solvers/IncNavierStokesSolver/Examples</code>:
 
  - Copy the input file, <code>QuadMesh.xml</code> to the directory where the solver is compiled, e.g. 
    <code>Nektar++/solvers/IncNavierStokesSolver/build/IncNavierStokesSolver</code>.

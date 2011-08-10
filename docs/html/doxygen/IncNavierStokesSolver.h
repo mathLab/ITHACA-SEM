@@ -39,10 +39,10 @@ namespace Nektar {
  * - @subpage pageAdvection - a collection of methods to deal with the advection term calculation inside the equations.
  * - @subpage pageStability - stability analysis of the Navier-Stokes equations.
 
- [1] S.J. Sherwin and M. Ainsworth: <i>Unsteady Navier-Stokes Solvers Using Hybrid Spectral/hp Element Methods</i>, Conference Paper, 2000<br />
- [2] R. Stenberg and M. Suri: <i>Mixed hp finite element methods for problems in elasticity and Stokes flows</i>, Numer. Math, 72, 367-389, 1996.
- [3] M. Ainsworth and S.J. Sherwin: <i>Domain decomposition preconditioners for p and hp finite element approximation of the Stokes equations</i>, Comput. Methods Appl. Mech. Engrg., 175, 243-266, 1999 <br />
- [4] P. La Tallec and A. Patra: <i>Non-overlapping domain decomposition methods for adaptive hp approximations of the Stokes problem with discontiunous pressure field</i>, Comput. Methods Appl. Mech. Engrg., 145, 361-379, 1997.
- [5] G. E. Karniadakis, M. Israeli, and S. A. Orszag: <i>High-order splitting methodsfor the incompressible Navier-Stokes equations</i>, J. Comput. Phys., 97, 414-443, 1991.
+ [1] S.J. Sherwin and M. Ainsworth: <i>Unsteady Navier-Stokes Solvers Using Hybrid Spectral/hp Element Methods</i>, Conference Paper, 2000.<br />
+ [2] R. Stenberg and M. Suri: <i>Mixed hp finite element methods for problems in elasticity and Stokes flows</i>, Numer. Math, 72, 367-389, 1996.<br />
+ [3] M. Ainsworth and S.J. Sherwin: <i>Domain decomposition preconditioners for p and hp finite element approximation of the Stokes equations</i>, Comput. Methods Appl. Mech. Engrg., 175, 243-266, 1999. <br />
+ [4] P. La Tallec and A. Patra: <i>Non-overlapping domain decomposition methods for adaptive hp approximations of the Stokes problem with discontiunous pressure field</i>, Comput. Methods Appl. Mech. Engrg., 145, 361-379, 1997.<br />
+ [5] G. E. Karniadakis, M. Israeli, and S. A. Orszag: <i>High-order splitting methodsfor the incompressible Navier-Stokes equations</i>, J. Comput. Phys., 97, 414-443, 1991.<br />
  */	
 }

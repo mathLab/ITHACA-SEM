@@ -3,11 +3,11 @@ namespace Nektar {
 * \page pageVelocityCorrectionScheme Velocity Correction Scheme
  
  Here, we will explain how to use the incompressible Navier-Stokes solver of Nektar++ using a splitting method (Velocity Correction Scheme). 
- Its source code is located at <code>Nektar++/solvers/IncNavierStokesSolver</code>.
+ Its source code is located at <code>Nektar++/solvers/IncNavierStokesSolver/EquationSystems</code>.
  We will start by showing the formulation and demonstrating how to run a first example with the incompressible Navier-Stokes 
  solver and briefly explain the options of the solver specified in the input file. 
  These explanations will be based on the example file <code>QuadMesh.xml</code> 
- that can be found in <code>Nektar++/solvers/IncNavierStokesSolver</code>. 
+ that can be found in <code>Nektar++/solvers/IncNavierStokesSolver/Examples</code>. 
  The  <code>QuadMesh.xml</code> example file describes a channel flow in x-direction.
  After these introductory explanations, we will present some numerical results 
  in order to demonstrate the capabilities and the accuracy of the solver.
@@ -103,7 +103,8 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  
  \section sectionRunning1example Running a first example
  
- The folder <code>Nektar++/solvers/IncNavierStokesSolver</code> contains several <code>*.xml</code> files. 
+ The folder <code>Nektar++/solvers/IncNavierStokesSolver/Examples</code> contains several <code>*.xml</code> files.
+ (Further examples can be found in <code>Nektar++/regressionTests/Solvers/IncNavierStokesSolver/InputFiles</code>)
  These are input files for the Navier-Stokes solver specifying the geometry (i.e. the mesh and 
  the spectal/hp expansion), the parameters and boundary conditions. Further details on the structure 
  of the input file can be found in @ref pageXML. 
@@ -142,19 +143,21 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  For what concern the incompressible Navier-Stokes solver a typical set is:
  @code
  <SOLVERINFO>      
- <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes">
- <I PROPERTY="AdvectionForm" VALUE="Convective">
- <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2">
+   <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+   <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
+   <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+   <I PROPERTY="Projection" VALUE="Galerkin"/>
+   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
  </SOLVERINFO>
  @endcode
  
  @code
  <PARAMETERS>
- <P> TimeStep      = 0.001 <P>
- <P> NumSteps      = 100   <P>
- <P> IO_CheckSteps = 10    <P>
- <P> IO_InfoSteps  = 10    <P>
- <P> Kinvis        = 1.0   <P>
+   <P> TimeStep      = 0.001 <P>
+   <P> NumSteps      = 100   <P>
+   <P> IO_CheckSteps = 10    <P>
+   <P> IO_InfoSteps  = 10    <P>
+   <P> Kinvis        = 1.0   <P>
  </PARAMETERS>
  @endcode
  
@@ -171,17 +174,17 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  
  @code
  <VARIABLES>
- <V ID="0"> u </V> 
- <V ID="1"> v </V> 
- <V ID="2"> p </V> 
+   <V ID="0"> u </V> 
+   <V ID="1"> v </V> 
+   <V ID="2"> p </V> 
  </VARIABLES>
  @endcode
  
  @code
  <BOUNDARYREGIONS>
- <B ID="0"> C[1] </B>
- <B ID="1"> C[2] </B>
- <B ID="2"> C[3] </B>
+   <B ID="0"> C[1] </B>
+   <B ID="1"> C[2] </B>
+   <B ID="2"> C[3] </B>
  </BOUNDARYREGIONS>
  @endcode
  
@@ -213,14 +216,25 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  For example, see the  <code>Test_TaylorVor_dt1.xml</code> file in the folder  
  <code>Nektar++/regressionTests/Solvers/IncNavierStokesSolver/InputFiles/</code> describing a Taylor Decaying Vortex.
  
+ In case of a forcing term, the term can be specified as all the others Analitic functions
+ @code
+ <FUNCTION NAME="BodyForce">
+   <E VAR="u" VALUE="0" />
+   <E VAR="v" VALUE="0" />
+   <E VAR="p" VALUE="0" />
+ </FUNCTION>
+ @endcode
+ 
+ For the set of the initial conditions, exact solutions, special bounary conditons and the Quasi-3D approach see @ref pageXML.
+ 
  \section sectionResult Numerical Results
  
- \subsection subsectionKovasznay Kovasznay Flow
+ \subsection subsectionKovasznay Kovasznay Flow 2D
  
  To investigate the convergence rate of the Navier-Stokes solver, 
  we compare the computed solution with the analytical solution for a Kovasznay flow. 
  The input file <code>Test_KovFlow.xml</code> for this flow configuration can be found at 
- <code>Nektar++/solvers/IncNavierStokesSolver/build/IncNavierStokesSolver</code>.
+ <code>Nektar++/solvers/IncNavierStokesSolver/Examples</code>.
  In 1948, Kovasznay solved the problem of steady, laminar flow behind a two-dimensional grid. 
  The exact solution to the Navier-Stokes equations is given by:
  \f[
@@ -252,7 +266,7 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  \image html kov_dt0001.png "Convergence rate in the L2-norm"
  
  
- \subsection subsectionTaylor Taylor Decaying Vortex
+ \subsection subsectionTaylor Taylor Decaying Vortex 2D
  
  To evaluate the time accuracy of the Navier-Stokes solver, we compute a Taylor decaying vortex described by the equations
  
@@ -280,7 +294,7 @@ IMEXOrder1,IMEXOrder2</code> or <code class="source">IMEXOrder3</code>. For more
  \image html DecVort_v.png 
  \image html DecVort_w.png 
  
- \subsection subsectionShedding Flow Past a Cylinder
+ \subsection subsectionShedding Flow Past a Cylinder 2D
  
  As an illustrative example to demonstrate the capability of the solver to solve more complex fluid dynamics problems, 
  we compute the two-dimensional flow past a circular cylinder in a free stream. 

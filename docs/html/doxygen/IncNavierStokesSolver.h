@@ -36,7 +36,6 @@ namespace Nektar {
  * - @subpage pageCoupledSolver - a direct solution of the Navier-Stokes equations (coupled solver).
  
  The Incommpressible Navier-Stokes Equations solver contains other features:
- * - @subpage pageAdvection - a collection of methods to deal with the advection term calculation inside the equations.
  * - @subpage pageStability - stability analysis of the Navier-Stokes equations.
 
  [1] S.J. Sherwin and M. Ainsworth: <i>Unsteady Navier-Stokes Solvers Using Hybrid Spectral/hp Element Methods</i>, Conference Paper, 2000.<br />

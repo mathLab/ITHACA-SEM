@@ -86,7 +86,7 @@ namespace Nektar
             int nElements = 0;
             int nBoundaryElements = 0;
             int elm_type = 0;
-
+            vector<vector<NodeSharedPtr> > elementList;
             fstream mshFile(pFilename.c_str());
 
             if (!mshFile.is_open())
@@ -172,6 +172,7 @@ namespace Nektar
                             nodeList.push_back(m_node[node]);
                         }
 
+                        elementList.push_back(nodeList);
                         // Create element
                         ElementSharedPtr E = GetElementFactory().CreateInstance(elm_type,nodeList,tags);
 
@@ -193,6 +194,45 @@ namespace Nektar
                             nBoundaryElements++;
                         }
                     }
+                }
+                if (word == "<CURVES")
+                {
+                    string tag = s.str();
+                    int start = tag.find_first_of('=');
+                    int end = tag.find_first_of('>');
+                    int nCurves = atoi(tag.substr(start+1,end).c_str());
+
+                    int i = 0;
+                    while (i < nCurves)
+                    {
+                        getline(mshFile, line);
+                        if (line.length() < 18)
+                        {
+                            continue;
+                        }
+                        stringstream st(line);
+                        string tmp;
+                        int id = 0, elmt = 0, side = 0, radius = 0, num_tag = 0, num_nodes = 0;
+                        int nodeId = nVertices;
+                        st >> id >> elmt >> side >> tmp >> radius;
+                        id--;
+                        elmt--;
+
+                        // First, let's make the element second order
+                        if (elementList[elmt].size() == 4)
+                        {
+                            for (int j = 0; j < 4; ++j)
+                            {
+                                NodeSharedPtr n1 = elementList[elmt][j];
+                                NodeSharedPtr n2 = elementList[elmt][(j+1)%4];
+                                //double x = elementList
+                                //m_node.push_back(boost::shared_ptr<Node>(new Node(nodeId++, x, y, z)));
+                                //elementList[elmt].push_back();
+                            }
+                        }
+                        ++i;
+                    }
+
                     cout << "Expansion dimension is " << m_expDim << endl;
                     cout << "Space dimension is " << m_spaceDim << endl;
                     cout << "Read " << m_node.size() << " nodes" << endl;

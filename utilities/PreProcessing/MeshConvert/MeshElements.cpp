@@ -155,7 +155,7 @@ namespace Nektar
             };
         Line::Line(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
                 : Element() {
-            m_tag = "E";
+            m_tag = "S";
             m_dim = 1;
             m_taglist = pTagList;
             int n = 0;

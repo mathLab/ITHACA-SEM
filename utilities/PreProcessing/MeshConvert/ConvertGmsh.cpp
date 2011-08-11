@@ -80,6 +80,7 @@ namespace Nektar
         void ConvertGmsh::ReadFile(const string pFilename)
         {
             m_expDim = 0;
+            m_spaceDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
@@ -118,11 +119,15 @@ namespace Nektar
                         double x = 0, y = 0, z = 0;
                         st >> id >> x >> y >> z;
 
-                        if ((y * y) > 0.000001 && m_spaceDim != 3)
+                        if ((x * x) > 0.000001 && m_spaceDim < 1)
+                        {
+                            m_spaceDim = 1;
+                        }
+                        if ((y * y) > 0.000001 && m_spaceDim < 2)
                         {
                             m_spaceDim = 2;
                         }
-                        if ((z * z) > 0.000001)
+                        if ((z * z) > 0.000001 && m_spaceDim < 3)
                         {
                             m_spaceDim = 3;
                         }

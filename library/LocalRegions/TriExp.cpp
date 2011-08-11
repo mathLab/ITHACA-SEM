@@ -748,7 +748,9 @@ namespace Nektar
         ///////////////////////////////
 
         /**
-           \brief Calculate the deritive of the physical points
+           \brief Calculate the derivative of the physical points
+           If the tangent system is defined, this routine will return
+           derivatives in the direction of tangent vectors.
         **/
         void TriExp::PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &out_d0,

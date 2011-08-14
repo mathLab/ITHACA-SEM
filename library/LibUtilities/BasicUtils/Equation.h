@@ -39,6 +39,7 @@
 #include <string>
 #include <LibUtilities/Interpreter/ExpressionEvaluator.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 namespace Nektar
 {
@@ -64,10 +65,14 @@ namespace Nektar
 
             NekDouble Evaluate(NekDouble x=0, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
             {
-                m_evaluator.DefineFunction("x y z t", m_eqn.c_str());
                 try
                 {
+                    m_evaluator.DefineFunction("x y z t", m_eqn.c_str());
                     return m_evaluator.Evaluate(x, y, z, t);
+                }
+                catch (const std::runtime_error& e)
+                {
+                    ASSERTL0(false, std::string("ERROR: ") + e.what());
                 }
                 catch (const std::string& e)
                 {

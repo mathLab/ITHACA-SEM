@@ -240,7 +240,7 @@ namespace Nektar
         {
             cout << "\tInital vector       : input file  " << endl;
             info = 1;
-            v_CopyFieldToArnoldiArray(resid);
+            CopyFieldToArnoldiArray(resid);
         }
 
 	
@@ -304,12 +304,12 @@ namespace Nektar
             ASSERTL0(ido == 1, "Unexpected reverse communication request.");
 
             //workd[inptr[0]-1] copied into operator fields
-            v_CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
+            CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
             m_equ[0]->DoSolve();
 
             // operated fields are copied into workd[inptr[1]-1] 
-            v_CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
+            CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
             
         }
 		

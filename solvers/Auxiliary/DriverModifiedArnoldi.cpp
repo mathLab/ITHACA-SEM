@@ -155,7 +155,7 @@ namespace Nektar
         m_equ[0]->DoInitialise();
 
         // Copy starting vector into second sequence element (temporary).
-        v_CopyFieldToArnoldiArray(Kseq[1]);
+        CopyFieldToArnoldiArray(Kseq[1]);
 
         // Perform one iteration to enforce boundary conditions.
         // Set this as the initial value in the sequence.
@@ -288,12 +288,12 @@ namespace Nektar
                                           Array<OneD, NekDouble> &tgt)
     {
         // Copy starting vector into first sequence element.
-        v_CopyArnoldiArrayToField(src);
+        CopyArnoldiArrayToField(src);
 
         m_equ[0]->DoSolve();
 
         // Copy starting vector into first sequence element.
-        v_CopyFieldToArnoldiArray(tgt);
+        CopyFieldToArnoldiArray(tgt);
     }
 	
 	

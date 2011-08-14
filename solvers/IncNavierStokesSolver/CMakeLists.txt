@@ -1,6 +1,7 @@
 SET(IncNavierStokesSolverSource 
        ../Auxiliary/Driver.cpp
        ../Auxiliary/DriverStandard.cpp
+       ../Auxiliary/DriverArnoldi.cpp
        ../Auxiliary/DriverModifiedArnoldi.cpp
        ../Auxiliary/EquationSystem.cpp
        ./EquationSystems/CoupledLinearNS.cpp

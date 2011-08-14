@@ -37,7 +37,7 @@
 #ifndef NEKTAR_SOLVERS_DRIVERMODIFIEDARNOLDI_H
 #define NEKTAR_SOLVERS_DRIVERMODIFIEDARNOLDI_H
 
-#include <Auxiliary/DriverArnoldi.hpp>
+#include <Auxiliary/DriverArnoldi.h>
 
 namespace Nektar
 {

@@ -59,65 +59,16 @@ namespace Nektar
         int m_nfields; 
 
         /// Constructor
-        DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession)
-        : Driver(pSession)
-        {
-        };
+        DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession);
         
-        //Destructor
-        virtual ~DriverArnoldi()
-        {
-        };        
+        /// Destructor
+        virtual ~DriverArnoldi();
 
-        /**
-         * Copy Arnoldi array to field variables which depend from
-         * either the m_fields or m_forces 
-         */
-        void v_CopyArnoldiArrayToField(Array<OneD, NekDouble> &array)
-        {
-            Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-            if(m_TimeSteppingAlgorithm)
-            {
-                fields = m_equ[0]->UpdateFields();
-            }
-            else
-            {
-                fields = m_equ[0]->UpdateForces();
-            }            
+        /// Copy Arnoldi storage to fields.
+        void CopyArnoldiArrayToField(Array<OneD, NekDouble> &array);
 
-            int nq = fields[0]->GetNpoints();
-            
-            for (int k = 0; k < m_nfields; ++k)
-            {
-                Vmath::Vcopy(nq, &array[k*nq], 1, &fields[k]->UpdatePhys()[0], 1);
-                fields[k]->SetPhysState(true);
-            }
-        };
-
-
-        /**
-         * Copy field variables which depend from either the m_fields
-         * or m_forces array the Arnoldi array
-         */
-        void v_CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
-        {
-            Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-            fields = m_equ[0]->UpdateFields();
-            int nq = fields[0]->GetNpoints();
-            
-            for (int k = 0; k < m_nfields; ++k)
-            {
-                if(!m_TimeSteppingAlgorithm)
-                {
-                    fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
-                }
-
-                Vmath::Vcopy(nq,  &fields[k]->GetPhys()[0], 1, &array[k*nq], 1);
-                fields[k]->SetPhysState(true);
-            }
-            
-        };
-
+        /// Copy fields to Arnoldi storage.
+        void CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array);
     };
 	
 } //end of namespace

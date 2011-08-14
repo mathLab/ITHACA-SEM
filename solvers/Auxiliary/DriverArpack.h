@@ -38,7 +38,7 @@
 
 #include <LibUtilities/LinearAlgebra/Arpack.hpp>
 
-#include <Auxiliary/DriverArnoldi.hpp>
+#include <Auxiliary/DriverArnoldi.h>
 
 namespace Nektar
 {

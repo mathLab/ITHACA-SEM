@@ -93,18 +93,17 @@ namespace Nektar
             
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_TimeSteppingAlgorithm, false);
 
-            
-            m_nfields   = m_equ[0]->UpdateFields().num_elements();
-
             if(m_TimeSteppingAlgorithm)
             {
-                m_period = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
+                m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
+                m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
             }
             else
             {
-                m_period = 1.0;
+                m_period  = 1.0;
                 ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
-                m_forces = m_equ[0]->UpdateForces();
+                m_forces  = m_equ[0]->UpdateForces();
+                m_nfields = m_equ[0]->UpdateFields().num_elements();
             }
             
             m_session->LoadParameter("kdim",  m_kdim,  8);
@@ -167,9 +166,10 @@ namespace Nektar
         alpha[0] = std::sqrt(alpha[0]);
         Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
 
-    // Fill initial krylov sequence
+        // Fill initial krylov sequence
         NekDouble resid0;
-        for (int i = 1; !converged && i <= m_kdim; ++i)
+        int i;
+        for (i = 1; !converged && i <= m_kdim; ++i)
         {
             // Compute next vector
             EV_update(Kseq[i-1], Kseq[i]);
@@ -190,43 +190,46 @@ namespace Nektar
             
             // Test for convergence.
             converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0);
+            converged = max (converged, 0);
             cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
         }
 
         // Continue with full sequence
-        int i;
-        for (i = m_kdim + 1; !converged && i <= m_nits; ++i)
+        if (!converged)
         {
-            // Shift all the vectors in the sequence.
-            // First vector is removed.
-            NekDouble invnorm = 1.0/sqrt(Blas::Ddot(ntot,Kseq[1],1,Kseq[1],1));
-            for (int j = 1; j <= m_kdim; ++j)
+            for (i = m_kdim + 1; !converged && i <= m_nits; ++i)
             {
-                alpha[j-1] = alpha[j];
-                Vmath::Smul(ntot,invnorm,Kseq[j],1,Kseq[j],1);
-                Vmath::Vcopy(ntot, Kseq[j], 1, Kseq[j-1], 1);
-            }
-            
-            // Compute next vector
-            EV_update(Kseq[m_kdim - 1], Kseq[m_kdim]);
-            
-            // Compute new scale factor
-            alpha[m_kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1));
-            alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
-            Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1, Kseq[m_kdim], 1);
-            
-            // Copy Krylov sequence into temporary storage
-            for (int k = 0; k < m_kdim + 1; ++k)
-            {
-                Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
-            }
-            
-            // Generate Hessenberg matrix and compute eigenvalues of it
-            EV_small(Tseq, ntot, alpha, m_kdim, zvec, wr, wi, resnorm);
+                // Shift all the vectors in the sequence.
+                // First vector is removed.
+                //NekDouble invnorm = 1.0/sqrt(Blas::Ddot(ntot,Kseq[1],1,Kseq[1],1));
+                for (int j = 1; j <= m_kdim; ++j)
+                {
+                    alpha[j-1] = alpha[j];
+                    //Vmath::Smul(ntot,invnorm,Kseq[j],1,Kseq[j],1);
+                    Vmath::Vcopy(ntot, Kseq[j], 1, Kseq[j-1], 1);
+                }
 
-            // Test for convergence.
-            converged = EV_test(i,m_kdim,zvec,wr,wi,resnorm,m_nvec,evlout,resid0);
-            cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
+                // Compute next vector
+                EV_update(Kseq[m_kdim - 1], Kseq[m_kdim]);
+
+                // Compute new scale factor
+                alpha[m_kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1));
+                alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
+                Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1, Kseq[m_kdim], 1);
+
+                // Copy Krylov sequence into temporary storage
+                for (int k = 0; k < m_kdim + 1; ++k)
+                {
+                    Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+                }
+
+                // Generate Hessenberg matrix and compute eigenvalues of it
+                EV_small(Tseq, ntot, alpha, m_kdim, zvec, wr, wi, resnorm);
+
+                // Test for convergence.
+                converged = EV_test(i,m_kdim,zvec,wr,wi,resnorm,m_nvec,evlout,resid0);
+                cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
+            }
         }
 
         m_equ[0]->Output();
@@ -235,14 +238,14 @@ namespace Nektar
         // The specific format of the error output is essential for the
         // regression tests to work.
         // Evaluate L2 Error
-        for(int i = 0; i < m_equ[0]->GetNvariables(); ++i)
+        for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
         {
-            NekDouble vL2Error = m_equ[0]->L2Error(i,false);
-            NekDouble vLinfError = m_equ[0]->LinfError(i);
+            NekDouble vL2Error = m_equ[0]->L2Error(j,false);
+            NekDouble vLinfError = m_equ[0]->LinfError(j);
             if (m_comm->GetRank() == 0)
             {
-                cout << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
-                cout << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
+                cout << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
             }
         }
 
@@ -487,7 +490,7 @@ namespace Nektar
         if (icon == 0)
         {
             // Not converged, write final Krylov vector
-            ASSERTL0(false, "Not converged.");
+            ASSERTL0(false, "Convergence was not achieved within the prescribed number of iterations.");
         }
         else if (icon < 0)
         {
@@ -501,6 +504,7 @@ namespace Nektar
             int nq = m_equ[0]->UpdateFields()[0]->GetNpoints();
             Array<OneD, MultiRegions::ExpListSharedPtr> fields
                         = m_equ[0]->UpdateFields();
+
             for (int j = 0; j < icon; ++j)
             {
                 for (int i = 0; i < m_nfields; ++i)

@@ -79,6 +79,12 @@ namespace Nektar
         
         /// Equation system to solve
         Array<OneD, EquationSystemSharedPtr>        m_equ;
+		
+		///number of equations
+		int m_nequ;
+		
+		///Evolution Operator
+		std:: string m_EvolutionOperator; 
 	
         /// Initialises EquationSystem class members.
         Driver(LibUtilities::SessionReaderSharedPtr pSession);

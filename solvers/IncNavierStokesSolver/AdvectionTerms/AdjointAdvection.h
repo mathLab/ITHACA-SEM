@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File LinearisedAdvection.h
+// File AdjointAdvection.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -47,7 +47,12 @@
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/DisContField2D.h>
 
-#include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
+#include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/DisContField3DHomogeneous2D.h>
+
+#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 
 //#define TIMING
 
@@ -60,7 +65,8 @@
 namespace Nektar
 {     
 
-    class AdjointAdvection: public LinearisedAdvection
+
+    class AdjointAdvection: public AdvectionTerm
     {
     public:
         friend class MemoryManager<AdjointAdvection>;
@@ -79,16 +85,24 @@ namespace Nektar
 	protected:
         //Storage of the base flow
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
-        
-        AdjointAdvection(
-                         LibUtilities::SessionReaderSharedPtr        pSession,
-                         SpatialDomains::MeshGraphSharedPtr          pGraph);
-        
-        virtual ~AdjointAdvection();
-        
-	private:
 
-        //Function for the evaluation of the adjoint advective terms
+        AdjointAdvection(
+                LibUtilities::SessionReaderSharedPtr&        pSession,
+                SpatialDomains::MeshGraphSharedPtr&          pGraph);
+
+        virtual ~AdjointAdvection();
+
+        virtual void v_InitObject();
+
+        void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
+
+        /// Import Base flow
+        void ImportFldBase(std::string pInfile,
+                SpatialDomains::MeshGraphSharedPtr pGraph);
+
+
+    private:
+        //Function for the evaluation of the Adjoint advective terms
         virtual void v_ComputeAdvectionTerm(
                          Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, Array<OneD, NekDouble> > &pV,

@@ -59,7 +59,7 @@ namespace Nektar
     void DriverArnoldi::CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
     {
         Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-        fields = m_equ[0]->UpdateFields();
+        fields = m_equ[m_nequ-1]->UpdateFields();
         int nq = fields[0]->GetNpoints();
 
         for (int k = 0; k < m_nfields; ++k)

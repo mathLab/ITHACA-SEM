@@ -82,7 +82,8 @@ namespace Nektar
 				//std::string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
 				m_session->SetTag("AdvectiveType","Linearised");
                 
-                m_equ = Array<OneD, EquationSystemSharedPtr>(1);
+				m_nequ=1;
+                m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
                 m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
             }
             catch (int e)

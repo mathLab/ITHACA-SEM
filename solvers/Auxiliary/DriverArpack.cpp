@@ -67,6 +67,11 @@ namespace Nektar
           "LI", "SI",
           "LM", "SM"
         };
+	
+	int EvOpNumb = 3;
+	std::string EvolutionOperator[] = 
+	{ "Forward", "Adjoint", "TransientGrowth"
+	};
     
     void DriverArpack::v_InitObject()
     {
@@ -83,11 +88,57 @@ namespace Nektar
                      "EquationSystem '" + vEquation + "' is not defined.\n"
                      "Ensure equation name is correct and module is compiled.\n");
             
-		//	std:: string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
-             m_session->SetTag("AdvectiveType","Linearised");
+			bool EvOpType;
+			int i;
+			for(i = 0; i < EvOpNumb; ++i)
+			{        
+				m_session->MatchSolverInfo("EvolutionOperator",EvolutionOperator[i].c_str(), EvOpType,false);
+				if(EvOpType)
+				{
+					m_EvolutionOperator = EvolutionOperator[i];                
+					break;
+				}
+			}
+			
+			ASSERTL0(i  < EvOpNumb,"Cannot determine the Evolution Operator defiend in EvolutionOperator");
+			
+			if(m_EvolutionOperator=="Forward" || m_EvolutionOperator=="Adjoint")
+			{
+				m_nequ=1;
+			}
+			else {
+				m_nequ=2;
+			}
+			
+			
+			m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
+			
+			if (m_EvolutionOperator=="Forward")
+			{
+				m_session->SetTag("AdvectiveType","Linearised");
+				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+			}
+			
+			if(m_EvolutionOperator=="Adjoint")
+			{
+				m_session->SetTag("AdvectiveType","Adjoint");
+				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+			}
+			
+			if(m_EvolutionOperator=="TransientGrowth")
+			{
+				//forward timestepping
+				m_session->SetTag("AdvectiveType","Linearised");
+				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+				
+				//backward timestepping
+				m_session->SetTag("AdvectiveType","Adjoint");
+				m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+				
+				
+			}
                 
-            m_equ = Array<OneD, EquationSystemSharedPtr>(1);
-            m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+
         }
         catch (int e)
             
@@ -308,6 +359,18 @@ namespace Nektar
 
             m_equ[0]->DoSolve();
 
+			
+			if(m_EvolutionOperator=="TransientGrowth")
+			{
+				Array<OneD, MultiRegions::ExpListSharedPtr> fields;
+				fields = m_equ[0]->UpdateFields();
+				for (int k=0 ; k < m_nfields; ++k)
+				{
+					Vmath::Vcopy(nq,  &fields[k]->GetPhys()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdatePhys()[0], 1);
+				}				
+				m_equ[1]->DoSolve();
+			}
+				
             // operated fields are copied into workd[inptr[1]-1] 
             CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
             

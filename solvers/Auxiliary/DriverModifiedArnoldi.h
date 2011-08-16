@@ -58,9 +58,6 @@ namespace Nektar
         
 	protected:
         
-        Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
-        Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
-        
         /// Constructor
         DriverModifiedArnoldi(LibUtilities::SessionReaderSharedPtr pSession);
 
@@ -127,6 +124,8 @@ namespace Nektar
                     Array<OneD, NekDouble> &zvec,
                     Array<OneD, NekDouble> &wr,
                     Array<OneD, NekDouble> &wi);
+
+        static std::string driverLookupId;
     };
 	
 } //end of namespace

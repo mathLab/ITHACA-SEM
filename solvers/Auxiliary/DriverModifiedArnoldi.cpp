@@ -42,7 +42,8 @@ namespace Nektar
 
 {
 	string DriverModifiedArnoldi::className = GetDriverFactory().RegisterCreatorFunction("ModifiedArnoldi", DriverModifiedArnoldi::create);
- 
+	string DriverModifiedArnoldi::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","ModifiedArnoldi",0);
+
 	/**
 	 *
 	 */
@@ -66,103 +67,20 @@ namespace Nektar
 	 */
 	void DriverModifiedArnoldi::v_InitObject()
 	{
-            try
-            {
-                ASSERTL0(m_session->DefinesSolverInfo("EqType"),
-                     "EqType SolverInfo tag must be defined.");
-                std::string vEquation = m_session->GetSolverInfo("EqType");
-                if (m_session->DefinesSolverInfo("SolverType"))
-                {
-                    vEquation = m_session->GetSolverInfo("SolverType");
-                }
-                ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
-                         "EquationSystem '" + vEquation + "' is not defined.\n"
-                         "Ensure equation name is correct and module is compiled.\n");
+	    DriverArnoldi::v_InitObject();
 
-				//std::string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
-				//m_session->SetTag("AdvectiveType","Linearised");
-                
-				//m_nequ=1;
-                //m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
-                //m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-                int EvOpNumb = 3;
-                std::string EvolutionOperator[] =
-                { "Direct", "Adjoint", "TransientGrowth"
-                };
+        m_equ[0]->PrintSummary(cout);
 
-	            bool EvOpType;
-	            int i;
-	            for(i = 0; i < EvOpNumb; ++i)
-	            {
-	                m_session->MatchSolverInfo("EvolutionOperator",EvolutionOperator[i].c_str(), EvOpType,false);
-	                if(EvOpType)
-	                {
-	                    m_EvolutionOperator = EvolutionOperator[i];
-	                    break;
-	                }
-	            }
+        // Print session parameters
+        cout << "\tArnoldi solver type   : Modified Arnoldi" << endl;
+        cout << "\tEvolution operator    : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
+        cout << "\tKrylov-space dimension: " << m_kdim << endl;
+        cout << "\tNumber of vectors:      " << m_nvec << endl;
+        cout << "\tMax iterations:         " << m_nits << endl;
+        cout << "\tEigenvalue tolerance:   " << m_evtol << endl;
+        cout << "=======================================================================" << endl;
 
-	            ASSERTL0(i  < EvOpNumb,"Cannot determine the Evolution Operator defiend in EvolutionOperator");
-
-	            if(m_EvolutionOperator=="Direct" || m_EvolutionOperator=="Adjoint")
-	            {
-	                m_nequ=1;
-	            }
-	            else {
-	                m_nequ=2;
-	            }
-
-
-	            m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
-
-	            if (m_EvolutionOperator=="Direct")
-	            {
-	                m_session->SetTag("AdvectiveType","Linearised");
-	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-	            }
-
-	            if(m_EvolutionOperator=="Adjoint")
-	            {
-	                m_session->SetTag("AdvectiveType","Adjoint");
-	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-	            }
-
-	            if(m_EvolutionOperator=="TransientGrowth")
-	            {
-	                //forward timestepping
-	                m_session->SetTag("AdvectiveType","Linearised");
-	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-
-	                //backward timestepping
-	                m_session->SetTag("AdvectiveType","Adjoint");
-	                m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-	            }
-            }
-            catch (int e)
-            {
-                ASSERTL0(e == -1, "No such class class defined.");
-                cout << "An error occured during driver initialisation." << endl;
-            }
-            
-            m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_TimeSteppingAlgorithm, false);
-
-            if(m_TimeSteppingAlgorithm)
-            {
-                m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
-                m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
-            }
-            else
-            {
-                m_period  = 1.0;
-                ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
-                m_forces  = m_equ[0]->UpdateForces();
-                m_nfields = m_equ[0]->UpdateFields().num_elements();
-            }
-
-            m_session->LoadParameter("kdim",  m_kdim,  8);
-            m_session->LoadParameter("nvec",  m_nvec,  1);
-            m_session->LoadParameter("nits",  m_nits,  500);
-            m_session->LoadParameter("evtol", m_evtol, 1e-06);
+        m_equ[m_nequ - 1]->DoInitialise();
 	}
     
 
@@ -193,19 +111,6 @@ namespace Nektar
             Kseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
             Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
         }
-
-        m_equ[0]->PrintSummary(cout);
-
-        // Print session parameters
-        cout << "\tArnoldi solver type   : Modified Arnold" << endl;
-        cout <<"\tEvolution Operator:    " << m_EvolutionOperator <<endl;
-        cout << "\tKrylov-space dimension: " << m_kdim << endl;
-        cout << "\tNumber of vectors:      " << m_nvec << endl;
-        cout << "\tMax iterations:         " << m_nits << endl;
-        cout << "\tEigenvalue tolerance:   " << m_evtol << endl;
-        cout << "=======================================================================" << endl;
-
-        m_equ[m_nequ - 1]->DoInitialise();
 
         // Copy starting vector into second sequence element (temporary).
         CopyFieldToArnoldiArray(Kseq[1]);
@@ -348,7 +253,7 @@ namespace Nektar
         CopyArnoldiArrayToField(src);
         m_equ[0]->DoSolve();
 
-        if(m_EvolutionOperator=="TransientGrowth")
+        if(m_EvolutionOperator == eTransientGrowth)
         {
             Array<OneD, MultiRegions::ExpListSharedPtr> fields;
             fields = m_equ[0]->UpdateFields();

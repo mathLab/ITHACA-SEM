@@ -945,20 +945,23 @@ namespace Nektar
                     ASSERTL0(!solverProperty.empty(), "Unable to find PROPERTY value.");
 
                     // make sure that solver property is capitalised
-                    boost::to_upper(solverProperty);
-
-                    // check property has not already been defined
-//                    SolverInfoMap::iterator solverInfoIter = m_solverInfo.find(solverProperty);
-//                    ASSERTL0(solverInfoIter == m_solverInfo.end(),
-//                             (std::string("SolverInfo value: ") + solverProperty
-//                              + std::string(" already specified.")).c_str());
+                    std::string solverPropertyUpper = boost::to_upper_copy(solverProperty);
 
                     // read the value
                     std::string solverValue    = solverInfo->Attribute("VALUE");
                     ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
 
+                    EnumMapList::const_iterator propIt = m_enums.find(solverPropertyUpper);
+                    if (propIt != m_enums.end())
+                    {
+                        EnumMap::const_iterator valIt = propIt->second.find(solverValue);
+                        ASSERTL0(valIt != propIt->second.end(),
+                                "Value '" + solverValue + "' is not valid for property '"
+                               + solverProperty + "'.");
+                    }
+
                     // Set Variable
-                    m_solverInfo[solverProperty] = solverValue;
+                    m_solverInfo[solverPropertyUpper] = solverValue;
                     solverInfo = solverInfo->NextSiblingElement("I");
                 }
             }

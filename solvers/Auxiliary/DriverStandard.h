@@ -71,6 +71,7 @@ namespace Nektar
 		/// Virtual function for solve implementation.
         virtual void v_Execute();
 		
+        static std::string driverLookupId;
 	};
 	
 } //end of namespace

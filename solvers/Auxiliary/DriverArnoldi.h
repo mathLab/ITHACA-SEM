@@ -58,6 +58,9 @@ namespace Nektar
         
         int       m_nfields;
 
+        //Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
+        //Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
+
         /// Constructor
         DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession);
         
@@ -69,6 +72,8 @@ namespace Nektar
 
         /// Copy fields to Arnoldi storage.
         void CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array);
+
+        virtual void v_InitObject();
     };
 	
 } //end of namespace

@@ -39,7 +39,7 @@ namespace Nektar
 
 {
     string DriverArpack::className = GetDriverFactory().RegisterCreatorFunction("Arpack", DriverArpack::create);
-    
+    string DriverArpack::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","Arpack",0);
     
     /**
      *
@@ -75,112 +75,13 @@ namespace Nektar
     
     void DriverArpack::v_InitObject()
     {
-        try
-        {
-            ASSERTL0(m_session->DefinesSolverInfo("EqType"),
-                     "EqType SolverInfo tag must be defined.");
-            std::string vEquation = m_session->GetSolverInfo("EqType");
-            if (m_session->DefinesSolverInfo("SolverType"))
-            {
-                vEquation = m_session->GetSolverInfo("SolverType");
-            }
-            ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
-                     "EquationSystem '" + vEquation + "' is not defined.\n"
-                     "Ensure equation name is correct and module is compiled.\n");
-            
-			bool EvOpType;
-			int i;
-			for(i = 0; i < EvOpNumb; ++i)
-			{        
-				m_session->MatchSolverInfo("EvolutionOperator",EvolutionOperator[i].c_str(), EvOpType,false);
-				if(EvOpType)
-				{
-					m_EvolutionOperator = EvolutionOperator[i];                
-					break;
-				}
-			}
-			
-			ASSERTL0(i  < EvOpNumb,"Cannot determine the Evolution Operator defiend in EvolutionOperator");
-			
-			if(m_EvolutionOperator=="Direct" || m_EvolutionOperator=="Adjoint")
-			{
-				m_nequ=1;
-			}
-			else {
-				m_nequ=2;
-			}
-			
-			
-			m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
-			
-			if (m_EvolutionOperator=="Direct")
-			{
-				m_session->SetTag("AdvectiveType","Linearised");
-				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-			}
-			
-			if(m_EvolutionOperator=="Adjoint")
-			{
-				m_session->SetTag("AdvectiveType","Adjoint");
-				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-			}
-			
-			if(m_EvolutionOperator=="TransientGrowth")
-			{
-				//forward timestepping
-				m_session->SetTag("AdvectiveType","Linearised");
-				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-				
-				//backward timestepping
-				m_session->SetTag("AdvectiveType","Adjoint");
-				m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-				
-				
-			}
-                
-
-        }
-        catch (int e)
-            
-        {
-            ASSERTL0(e == -1, "No such class class defined.");
-        }
-	
-	
-        /// @todo This should be an independent Arnoldi call 
-        m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_TimeSteppingAlgorithm, false);
+        DriverArnoldi::v_InitObject();
         
         //Initialisation of Arnoldi parameters
         m_maxn   = 1000000; // Maximum size of the problem
         m_maxnev = 12;      // maximum number of eigenvalues requested
         m_maxncv = 200;     // Largest number of basis vector used in Implicitly Restarted Arnoldi		
 	
-        if(m_TimeSteppingAlgorithm)
-        {
-            //Evaluation of the time period
-            NekDouble ts      = m_session->GetParameter("TimeStep");
-            NekDouble numstep = m_session->GetParameter("NumSteps");
-            m_period          = ts*numstep;
-            
-            m_nfields = m_equ[0]->UpdateFields().num_elements()-1;
-        }
-        else
-        {
-            ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
-            m_nfields = m_equ[0]->UpdateFields().num_elements();
-        }
-
-        //Load values from session file if defined 
-        
-        // Length of the Arnoldi factorisation
-        m_session->LoadParameter("kdim",  m_kdim, 16);
-        // Number of eigenvalues to be evaluated 
-        m_session->LoadParameter("nvec",  m_nvec,  2);
-        // maximum number of iterations. 
-        m_session->LoadParameter("nits",  m_nits,  500);
-        // determines the stopping criterion.
-        m_session->LoadParameter("evtol", m_evtol, 1e-6); 
-        
         m_session->LoadParameter("realShift", m_realShift, 0.0);
         
         m_equ[0]->SetLambda(m_realShift);
@@ -209,7 +110,7 @@ namespace Nektar
         
         ArpackSummary(cout);
         
-        m_equ[0]->DoInitialise();
+        m_equ[m_nequ - 1]->DoInitialise();
     }
     
     void DriverArpack::ArpackSummary(std::ostream &out)
@@ -244,12 +145,12 @@ namespace Nektar
             out << "\tBeta set to Zero       : false " << endl;
         }
         out << "\tReal Shift             : " << m_realShift << endl;
-        out << "\Evolution Operator      : " << m_EvolutionOperator <<endl;
+        out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
         out << "\tKrylov-space dimension : " << m_kdim << endl;
         out << "\tNumber of vectors      : " << m_nvec << endl;
         out << "\tMax iterations         : " << m_nits << endl;
         out << "\tEigenvalue tolerance   : " << m_evtol << endl;
-	out << "=======================================================================" << endl;
+        out << "=======================================================================" << endl;
     }
 
     void DriverArpack::v_Execute()
@@ -361,7 +262,7 @@ namespace Nektar
             m_equ[0]->DoSolve();
 
 			
-			if(m_EvolutionOperator=="TransientGrowth")
+			if(m_EvolutionOperator == eTransientGrowth)
 			{
 				Array<OneD, MultiRegions::ExpListSharedPtr> fields;
 				fields = m_equ[0]->UpdateFields();
@@ -371,7 +272,7 @@ namespace Nektar
 				}				
 				m_equ[1]->DoSolve();
 			}
-				
+
             // operated fields are copied into workd[inptr[1]-1] 
             CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
             

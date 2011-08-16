@@ -57,6 +57,14 @@ namespace Nektar
             > DriverFactory;
     DriverFactory& GetDriverFactory();
 	
+    enum EvolutionOperatorType
+    {
+        eNonlinear,
+        eDirect,
+        eAdjoint,
+        eTransientGrowth
+    };
+
     /// Base class for the development of solvers.
     class Driver
     {
@@ -84,15 +92,18 @@ namespace Nektar
 		int m_nequ;
 		
 		///Evolution Operator
-		std:: string m_EvolutionOperator; 
+		enum EvolutionOperatorType m_EvolutionOperator;
 	
         /// Initialises EquationSystem class members.
         Driver(LibUtilities::SessionReaderSharedPtr pSession);
         
-        virtual void v_InitObject() = 0;
+        virtual void v_InitObject();
         
 		/// Virtual function for solve implementation.
         virtual void v_Execute() = 0;
+
+        static std::string evolutionOperatorLookupIds[];
+        static std::string evolutionOperatorDef;
 	};
 
 

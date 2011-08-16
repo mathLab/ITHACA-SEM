@@ -37,7 +37,15 @@
 
 namespace Nektar
 {
-	
+    std::string Driver::evolutionOperatorLookupIds[4] = {
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Nonlinear"      ,eNonlinear),
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Direct"         ,eDirect),
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Adjoint"        ,eAdjoint),
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth)
+    };
+    std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
+
+
 	DriverFactory& GetDriverFactory()
     {
         typedef Loki::SingletonHolder<DriverFactory,
@@ -45,16 +53,14 @@ namespace Nektar
             Loki::NoDestroy > Type;
         return Type::Instance();
     }
-	
-	
+
 
     /**
      *
      */
     Driver::Driver(LibUtilities::SessionReaderSharedPtr pSession)
-	: m_comm(pSession->GetComm()),
-	  m_session(pSession)
-
+	        : m_comm(pSession->GetComm()),
+	          m_session(pSession)
 	{
 
 	}
@@ -64,6 +70,70 @@ namespace Nektar
 	{
 	}
 	
+
+    /**
+     *
+     */
+    void Driver::v_InitObject()
+    {
+        try
+        {
+            // Retrieve the equation system to solve.
+            ASSERTL0(m_session->DefinesSolverInfo("EqType"),
+                 "EqType SolverInfo tag must be defined.");
+            std::string vEquation = m_session->GetSolverInfo("EqType");
+            if (m_session->DefinesSolverInfo("SolverType"))
+            {
+                vEquation = m_session->GetSolverInfo("SolverType");
+            }
+
+            // Check such a module exists for this equation.
+            ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
+                     "EquationSystem '" + vEquation + "' is not defined.\n"
+                     "Ensure equation name is correct and module is compiled.\n");
+
+            // Retrieve the type of evolution operator to use
+            /// @todo At the moment this is Navier-Stokes specific - generalise?
+            m_EvolutionOperator = m_session->GetSolverInfoAsEnum<EvolutionOperatorType>("EvolutionOperator");
+
+            m_nequ = (m_EvolutionOperator == eTransientGrowth ? 2 : 1);
+            m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
+
+            // Set the AdvectiveType tag and create EquationSystem objects.
+            switch (m_EvolutionOperator)
+            {
+            case eNonlinear:
+                m_session->SetTag("AdvectiveType","Convective");
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                break;
+            case eDirect:
+                m_session->SetTag("AdvectiveType","Linearised");
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                break;
+            case eAdjoint:
+                m_session->SetTag("AdvectiveType","Adjoint");
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                break;
+            case eTransientGrowth:
+                //forward timestepping
+                m_session->SetTag("AdvectiveType","Linearised");
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+
+                //backward timestepping
+                m_session->SetTag("AdvectiveType","Adjoint");
+                m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                break;
+            default:
+                ASSERTL0(false, "Unrecognised evolution operator.");
+            }
+        }
+        catch (int e)
+        {
+            ASSERTL0(e == -1, "No such class class defined.");
+            cout << "An error occurred during driver initialisation." << endl;
+        }
+    }
+
 }	
 	
 

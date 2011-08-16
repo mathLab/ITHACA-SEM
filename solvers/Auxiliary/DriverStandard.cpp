@@ -39,6 +39,7 @@ namespace Nektar
 
 {
     string DriverStandard::className = GetDriverFactory().RegisterCreatorFunction("Standard", DriverStandard::create);
+    string DriverStandard::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","Standard",0);
 
     /**
 	 *
@@ -62,27 +63,7 @@ namespace Nektar
      */
     void DriverStandard::v_InitObject()
     {
-        try
-        {
-            ASSERTL0(m_session->DefinesSolverInfo("EqType"),
-                     "EqType SolverInfo tag must be defined.");
-            std::string vEquation = m_session->GetSolverInfo("EqType");
-            if (m_session->DefinesSolverInfo("SolverType"))
-            {
-                vEquation = m_session->GetSolverInfo("SolverType");
-            }
-            ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
-                     "Solver module '" + vEquation + "' is not defined.\n"
-                     "Ensure equation name is correct and module is compiled.\n");
-
-            m_equ = Array<OneD, EquationSystemSharedPtr>(1);
-            m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
-        }
-        catch (int e)
-        {
-            ASSERTL0(e == -1, "No such class class defined.");
-            cout << "An error occured during driver initialisation." << endl;
-        }
+        Driver::v_InitObject();
     }
     
     

@@ -288,11 +288,12 @@ namespace Nektar
         template<typename T>
         inline const T SessionReader::GetSolverInfoAsEnum(const std::string &pName) const
         {
-            ASSERTL0(DefinesSolverInfo(pName), "Solver info '" + pName + "' not defined.");
+            std::string vName = boost::to_upper_copy(pName);
+            ASSERTL0(DefinesSolverInfo(vName), "Solver info '" + pName + "' not defined.");
 
-            std::string vValue = GetSolverInfo(pName);
+            std::string vValue = GetSolverInfo(vName);
             EnumMapList::iterator x;
-            ASSERTL0((x = m_enums.find(pName)) != m_enums.end(),
+            ASSERTL0((x = m_enums.find(vName)) != m_enums.end(),
                     "Enum for SolverInfo property '" + pName + "' not found.");
             EnumMap::iterator y;
             ASSERTL0((y = x->second.find(vValue)) != x->second.end(),
@@ -326,11 +327,12 @@ namespace Nektar
          */
         inline std::string SessionReader::RegisterEnumValue(std::string pEnum, std::string pString, int pEnumValue)
         {
+            std::string vEnum = boost::to_upper_copy(pEnum);
             EnumMapList::iterator x;
-            if ((x = m_enums.find(pEnum)) == m_enums.end())
+            if ((x = m_enums.find(vEnum)) == m_enums.end())
             {
-                m_enums[pEnum] = EnumMap();
-                x = m_enums.find(pEnum);
+                m_enums[vEnum] = EnumMap();
+                x = m_enums.find(vEnum);
             }
             x->second[pString] = pEnumValue;
             return pString;

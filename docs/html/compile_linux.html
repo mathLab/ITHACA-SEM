@@ -7,22 +7,22 @@
       <!-- InstanceBeginEditable name="doctitle" -->
       <title>Nektar++ - Linux Compile Instructions</title>
       <!-- InstanceEndEditable -->
-<link rel="stylesheet" href="style.css">
+      <link rel="stylesheet" href="style.css">
       <!-- InstanceBeginEditable name="CSS_Style" -->
-<style type="text/css">
+      <style type="text/css">
         <!--
-#menu_CompileLinux {
-	font-weight: bold;
-}
--->
+        #menu_CompileLinux {
+	    font-weight: bold;
+        }
+        -->
       </style>
       <!-- InstanceEndEditable -->
       <!--[if IE]>
-    <style type="text/css"> 
-      .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
-      .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
-    </style>
-    <![endif]-->
+          <style type="text/css"> 
+            .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
+            .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
+          </style>
+      <![endif]-->
       <!-- InstanceParam name="LibraryMenu" type="boolean" value="false" -->
       <!-- InstanceParam name="CompileMenu" type="boolean" value="true" -->
     </head>
@@ -35,26 +35,26 @@
           </a>
         </h3>
 
-<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-<p><a href="compile.html" id="menu_Compile">Compilation Instructions</a>
-          <br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_unit_tests.html" id="menu_CompileUnitTests">Unit Tests</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_regression_tests.html" id="menu_CompileRegressionTests">Regression Tests</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_documentation.html" id="menu_CompileDocumentation">Documentation</a><br/>
-    </p>
-<p><a href="usage.html" id="menu_Usage">Example Usage</a></p>
-<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational
-Material</a></p>
-<p><a href="code/index.html" id="menu_Library">Documentation</a></p>
-<p><a href="team.html" id="menu_Team">Team Members</a></p>
-<p><a href="publications.html" id="menu_Publications">Publications</a></p>
-<p><a href="license.html" id="menu_License">License</a></p>
-<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-
+        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+        <p><a href="compile.html" id="menu_Compile">Compilation Instructions</a>
+        <br/>
+        &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
+        &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
+        &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
+        &nbsp;&nbsp;&nbsp;<a href="compile_unit_tests.html" id="menu_CompileUnitTests">Unit Tests</a><br/>
+        &nbsp;&nbsp;&nbsp;<a href="compile_regression_tests.html" id="menu_CompileRegressionTests">Regression Tests</a><br/>
+        &nbsp;&nbsp;&nbsp;<a href="compile_documentation.html" id="menu_CompileDocumentation">Documentation</a><br/>
+        </p>
+        <p><a href="usage.html" id="menu_Usage">Example Usage</a></p>
+        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational
+        Material</a></p>
+        <p><a href="code/index.html" id="menu_Library">Documentation</a></p>
+        <p><a href="team.html" id="menu_Team">Team Members</a></p>
+        <p><a href="publications.html" id="menu_Publications">Publications</a></p>
+        <p><a href="license.html" id="menu_License">License</a></p>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+        
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -98,409 +98,783 @@ Material</a></p>
               </a>
             </h3>
           </li>
-           <li>
-                <h3><a href="#Compiling_Regression_Tests"><small>Compiling the Regression Tests</small></a></h3>
-            </li>
+          <li>
+            <h3><a href="#Compiling_Regression_Tests"><small>Compiling the Regression Tests</small></a></h3>
+          </li>
         </ul>
-
-
-        <hr>
-          <!-- InstanceBeginEditable name="BodyText" -->
-          <h3 align="left">
-            <a name ="Setting_up_GCC" ></a>Setting up GCC
-          </h3>
-          <p align="left">
-          In order to compile Nektar++, you must have a newer version of GCC installed. GCC 4.1 
-          and newer will work, but 4.2 or newer is recommended. 
-          Below I will give instructions on how to check the GCC version number, 
-          and installing a new version if it is too old.
+        
+        
+        <hr />
+        <!-- InstanceBeginEditable name="BodyText" -->
+        <h3 align="left">
+          <a name ="Setting_up_GCC" ></a>Setting up GCC
+        </h3>
+        <p align="left">
+          In order to compile Nektar++, you must have a newer version of GCC
+          installed. GCC 4.1 and newer will work, but 4.2 or newer is
+          recommended.  Below I will give instructions on how to check the GCC
+          version number, and installing a new version if it is too old.
         </p>
-          <ol>
-            <li>
-              At the terminal, type 
-              <div class="code"><pre>gcc -v</pre></div>
-              If the last line says the version number is 4.1 or newer, skip to the next section; otherwise you may continue to read.
-            </li>
-            <li>You may either ask your system administrator to perform this upgrade for you (recommended), or install GCC in to your local account. If you choose the first option, wait for the new installation and then continue to the next section.</li>
-            <li>
-              First, go to <a href="http://gcc.gnu.org/mirrors.html" target="_blank">http://gcc.gnu.org/mirrors.html</a> and select a mirror. Download a 4.1 or later GCC release from the mirror you select (you probably want to select the newest version).
-            </li>
-            <li>
-              Go to <a href="http://gcc.gnu.org/install/" target="_blank">http://gcc.gnu.org/install/</a> and follow the instructions to install GCC. It is too complicated and error prone to cover everything here. Install at least the C, C++, and Fortran compilers. Once &quot;gcc -v&quot; outputs a version later than 4.1, you can continue to the next section.
-             <br>
-                  The general setup instructions are as follows. However, there might be dependencies that need to be installed.
-                  <div class="code" align="left"><pre>tar -xvjf &lt;filename&gt;.tar.bz2 <br />cd &lt;new_gcc_directory&gt; <br />mkdir MyObj<br />cd MyObj <br />../configure --prefix=&lt;install_path&gt; <br/> --enable-languages=c,c++,fortran <br />make <br />make install </pre></div> 
-                  Set your path: 
-		  <ul><li> for (T)CSH Shells
-		  <div class="code"><pre>setenv PATH &lt;install_path&gt;:$PATH</pre></div>
-		  </li>
-		 <li> for BASH Shells<div class="code"><pre>export PATH=&lt;install_path&gt;:$PATH</pre></div>
-		 </li>
-</ul>It may be useful to add this to your login script.
-                </li>
-          </ol>
-          <h3 align="left">
-            <a name="Organizing_the_ThirdParty_Source_Files"></a> Organizing the ThirdParty Source Files
-          </h3>
-          <p align="left">
-            <em>Nektar++</em> requires additional software to function. Many of
-            these libraries are included in a typical distribution and so not
-            all the library sources provided in the <em>ThirdParty</em>
-            directory may be needed. However, while unlikely, the version
-            provided by your distribution may not be compatible with the
-            current build of <em>Nektar++</em>. If you encounter problems, you
-            should first link to those versions distributed in the ThirdParty
-            distribution.</p>
-          <p align="left">
-            You will be given a <em>Nektar++</em> directory and a <em>ThirdParty</em> directory (includes needed libraries from other sources). These need to be organized into the correct directory hierarchy   for CMake to find all of the required files. I will indicate a directory by following its name with a forward slash.
-          </p>
-          <ol>
-            <li>
-              Put the <em>ThirdParty/</em> directory in <em>Nektar++/</em>. (This will mean <em>library/</em> and <em>ThirdParty/</em> are both sub-directories of the original <em>Nektar++/</em>.)
-            </li>
-            <li>
-              At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with 
-              <div class="code"><pre>unzip tinyxml_2_4_3.zip</pre></div>
-              This will create <em>tinyxml/</em>.
-            </li>
-            <li>
-              Extract the loki-0.1.3.tar.bz2 archive with 
-              <div class="code"><pre>tar -xjvf loki-0.1.3.tar.bz2</pre></div>
-              This will create <em>loki-0.1.3/</em>.
-            </li>
-            <li>
-              CMake is an open-source, cross-platform make file generator system.  We will use it to generate the needed makefiles to compile Nektar++.  We require version 2.8 or greater.  To check your currently installed version, type the following at the command line:
+        <ol>
+          <li>
+            At the terminal, type <div class="code"><pre>gcc -v</pre></div> If
+            the last line says the version number is 4.1 or newer, skip to the
+            next section; otherwise you may continue to read.
+          </li>
+          <li>
+            You may either ask your system administrator to perform this
+            upgrade for you (recommended), or install GCC in to your local
+            account. If you choose the first option, wait for the new
+            installation and then continue to the next section.
+          </li>
+          <li>
+            First, go to <a href="http://gcc.gnu.org/mirrors.html"
+            target="_blank">http://gcc.gnu.org/mirrors.html</a> and select a
+            mirror. Download a 4.1 or later GCC release from the mirror you
+            select (you probably want to select the newest version).
+          </li>
+          <li>
+            <p>
+              Go to <a href="http://gcc.gnu.org/install/"
+              target="_blank">http://gcc.gnu.org/install/</a> and follow the
+              instructions to install GCC. It is too complicated and error
+              prone to cover everything here. Install at least the C, C++, and
+              Fortran compilers. Once &quot;gcc -v&quot; outputs a version
+              later than 4.1, you can continue to the next section.
+            </p>
 
-	      <div class="code"><pre>ccmake --version</pre></div>
-
-              If you do not have CMake installed, or the version is too old, then you can build it from source. Note that the <em>ccmake</em> tool can only be built if the ncurses library is available on your system (commonly found in /lib on most distributions). If this is not available, the <em>cmake</em> tool can still be built, although its usage is somewhat more tedious.
-               <ol>
-                <li>
-                  In <em>ThirdParty/</em>, extract the cmake-2.8.0.tar.gz archive with 
-                  <div class="code"><pre>tar -xzvf cmake-2.8.0.tar.gz </pre></div>
-                </li>
-                <li>
-                  Change to the <em>cmake-2.8.0/</em> directory, and type 
-                  <div class="code"><pre>./configure </pre></div>
-                  After configuration is complete, type 
-                  <div class="code"><pre>make </pre></div>
-                </li>
-              </ol>
-            </li>
-            <li>
-              In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with 
-              <div class="code"><pre>tar -xjvf zlib-1.2.3.tar.bz2 </pre></div>
-              This will create <em>zlib-1.2.3/</em>.
-            </li>
-            <li>
-              The next step is to compile bjam, which will allow for the building and installation of Boost.
-              <ol>
-                <li>
-                  In <em>ThirdParty/</em>, extract the boost-jam-3.1.17.tgz archive with 
-                  <div class="code"><pre>tar -xzvf boost-jam-3.1.17.tgz</pre></div>
-                  This will create <em>boost-jam-3.1.17/</em>.
-                </li>
-                <li>
-                  Change to the <em>boost-jam-3.1.17/</em> directory and type 
-                  <div class="code"><pre>./build.sh </pre></div>
-                  to build the bjam executable.
-                </li>
-              </ol>
-            </li>
-            <li>
-              Next, extract and compile the correct libraries for <em>Boost</em>.
-              <ol>
-                <li>
-                  In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2 archive with 
-                  <div class="code"><pre>tar -xjvf boost_1_40_0.tar.bz2</pre></div>
-                  This will create <em>boost_1_40_0/</em>.
-                  
-                </li>
-                <li>
-                  You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell 
-                  Boost to use zlib and not bzip2. 
-                  <ul>
-                    <li>
-                      Bash or KSH Shells<br />
-                      Type               
-                      <div class="code"><pre>export ZLIB_SOURCE=../../../../zlib-1.2.3<br />export NO_BZIP2=0</pre></div>
-                    </li>
-                    <li>
-                      CSH or Tcsh Shells<br />
-                      Type 
-                      <div class="code"><pre>setenv ZLIB_SOURCE ../../../../zlib-1.2.3 <br />setenv NO_BZIP2 0 </pre></div>
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                  Change to the <em>boost_1_40_0/</em> directory, and type
-                  <div class="code"><pre>../boost-jam-3.1.17/bin.*/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --layout=versioned --toolset=gcc install</pre></div>
-                  This will place the compiled libraries and include files in the correct path.
-                  <ol>
-                    <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
-		    <li>A lengthy initial delay after you press enter is expected.</li>
-                  </ol>
-                </li>
-                <li>
-                    If you will be using Nektar++ as a component in an application that requires shared 
-                    libraries and you are using a 64 bit Linux, you will need to compile the boost libraries
-                    with the -fPIC flag.  To do this, add the following to the command line in the 
-                    previous step.
-                    <p>
-                    <div class="code"><pre>cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC</pre></div>
-                </li>
+            <p>
+              The general setup instructions are as follows. However, there
+              might be dependencies that need to be installed.
+            </p>
+            <div class="code" align="left"><pre>tar -xvjf &lt;filename&gt;.tar.bz2 <br />cd &lt;new_gcc_directory&gt; <br />mkdir MyObj<br />cd MyObj <br />../configure --prefix=&lt;install_path&gt; <br/> --enable-languages=c,c++,fortran <br />make <br />make install </pre></div>            <p>
+              Set your path:
+            </p>
+            <ul>
+              <li> 
+                for (T)CSH Shells
+                <div class="code"><pre>setenv PATH &lt;install_path&gt;:$PATH</pre></div>
               </li>
-          </ol>
-             <b>Note:</b> if Boost is provided with your distribution, it probably does not provide the <tt>libboost_zlib</tt> library since this is provided by <tt>libz.a</tt>. See the <em>Generating the GCC Makefiles with CMake</em> section for details on how to use this library instead.
+              <li> 
+                for BASH Shells
+                <div class="code"><pre>export PATH=&lt;install_path&gt;:$PATH</pre></div>
+              </li>
+            </ul>
+            <p>
+              It may be useful to add this to your login script.
+            </p>
+          </li>
+        </ol>
+
+
+
+        <h3 align="left">
+          <a name="Organizing_the_ThirdParty_Source_Files"></a> Organizing the ThirdParty Source Files
+        </h3>
+        <p align="left">
+          <em>Nektar++</em> requires additional software to function. Many of
+          these libraries are included in a typical distribution and so not
+          all the library sources provided in the <em>ThirdParty</em>
+          directory may be needed. However, while unlikely, the version
+          provided by your distribution may not be compatible with the current
+          build of <em>Nektar++</em>. If you encounter problems, you should
+          first link to those versions distributed in the ThirdParty
+          distribution.
+        </p>
+        <p align="left">
+          You will be given a <em>Nektar++</em> directory and a
+          <em>ThirdParty</em> directory (includes needed libraries from other
+          sources). These need to be organized into the correct directory
+          hierarchy for CMake to find all of the required files. I will
+          indicate a directory by following its name with a forward slash.
+        </p>
+        <ol>
+          <li>
+            Put the <em>ThirdParty/</em> directory in
+            <em>Nektar++/</em>. (This will mean <em>library/</em> and
+            <em>ThirdParty/</em> are both sub-directories of the original
+            <em>Nektar++/</em>.)
+          </li>
+          <li>
+            <p>
+              At the terminal in <em>ThirdParty/</em>, extract the
+              tinyxml_2_4_3.zip archive with
+            </p>
+            <div class="code"><pre>unzip tinyxml_2_4_3.zip</pre></div>
+            <p>
+              This will create <em>tinyxml/</em>.
+            </p>
+          </li>
+          <li>
+            <p>
+              Extract the loki-0.1.3.tar.bz2 archive with 
+            </p>
+            <div class="code"><pre>tar -xjvf loki-0.1.3.tar.bz2</pre></div> 
+            <p>
+              This will create <em>loki-0.1.3/</em>.
+            </p>
+          </li>
+          <li>
+            <p>
+              CMake is an open-source, cross-platform make file generator
+              system.  We will use it to generate the needed makefiles to
+              compile Nektar++.  We require version 2.8 or greater.  To check
+              your currently installed version, type the following at the
+              command line:
+            </p>
+            <div class="code"><pre>ccmake --version</pre></div>
+            <p>
+              If you do not have CMake installed, or the version is too old,
+              then you can build it from source. Note that the <em>ccmake</em>
+              tool can only be built if the ncurses library is available on
+              your system (commonly found in /lib on most distributions). If
+              this is not available, the <em>cmake</em> tool can still be
+              built, although its usage is somewhat more tedious.
+            </p>
+            <ol>
+              <li>
+                <p>
+                  In <em>ThirdParty/</em>, extract the cmake-2.8.0.tar.gz
+                  archive with 
+                </p>
+                <div class="code"><pre>tar -xzvf cmake-2.8.0.tar.gz </pre></div>
+              </li>
+              <li>
+                <p>
+                  Change to the <em>cmake-2.8.0/</em> directory, and type 
+                </p>
+                <div class="code"><pre>./configure </pre></div> 
+                <p>
+                  After configuration is complete, type
+                </p>
+                <div class="code"><pre>make </pre></div>
+              </li>
+            </ol>
+          </li>
+          <li>
+            <p>
+              In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive
+              with
+            </p>
+            <div class="code"><pre>tar -xjvf zlib-1.2.3.tar.bz2</pre></div> 
+            <p>
+              This will create <em>zlib-1.2.3/</em>.
+            </p>
+          </li>
+          <li>
+            The next step is to compile bjam, which will allow for the
+            building and installation of Boost.
+            <ol>
+              <li>
+                <p>
+                  In <em>ThirdParty/</em>, extract the boost-jam-3.1.17.tgz
+                  archive with
+                </p>
+                <div class="code"><pre>tar -xzvf boost-jam-3.1.17.tgz</pre></div>
+                <p>
+                  This will create <em>boost-jam-3.1.17/</em>.
+                </p>
+              </li>
+              <li>
+                <p>
+                  Change to the <em>boost-jam-3.1.17/</em> directory and type
+                </p>
+                <div class="code"><pre>./build.sh </pre></div> 
+                <p>
+                  to build the bjam executable.
+                </p>
+              </li>
+            </ol>
+          </li>
+          <li>
+            Next, extract and compile the correct libraries for
+            <em>Boost</em>.
+            <ol>
+              <li>
+                <p>
+                  In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2
+                  archive with 
+                </p>
+                <div class="code"><pre>tar -xjvf boost_1_40_0.tar.bz2</pre></div> 
+                <p>
+                  This will create <em>boost_1_40_0/</em>.
+                </p>
+              </li>
+              <li>
+                <p>
+                  You must set the ZLIB_SOURCE and NO_BZIP2 environment
+                  variables in order to tell Boost to use zlib and not bzip2.
+                </p>
+                <ul>
+                  <li>
+                    For Bash or KSH Shells type:
+                    <div class="code"><pre>export ZLIB_SOURCE=../../../../zlib-1.2.3<br />export NO_BZIP2=0</pre></div>
+                  </li>
+                  <li>
+                    For CSH or Tcsh Shells type:
+                    <div class="code"><pre>setenv ZLIB_SOURCE ../../../../zlib-1.2.3 <br />setenv NO_BZIP2 0 </pre></div>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <p>
+                  Change to the <em>boost_1_40_0/</em> directory, and type
+                </p>
+                <div class="code"><pre>../boost-jam-3.1.17/bin.*/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --layout=versioned --toolset=gcc install</pre></div>
+                <p>
+                  This will place the compiled libraries and include files in
+                  the correct path. Note that:
+                </p>
+                <ul>
+                  <li>
+                    The &quot;--with-libraries&quot; option compiles Boost
+                    with only the libraries required by Nektar++. This is just
+                    meant to save time. You can leave the flag off and it will
+                    compile all the libraries, if you wish.
+                  </li>
+                  <li>
+                    A lengthy initial delay after you press enter is expected.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <p>
+                  If you will be using Nektar++ as a component in an
+                  application that requires shared libraries and you are using
+                  a 64 bit Linux, you will need to compile the boost libraries
+                  with the -fPIC flag.  To do this, add the following to the
+                  command line in the previous step.
+                </p>
+                <div class="code"><pre>cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC</pre></div>
+              </li>
+            </ol>
+            <p>
+              <strong>Note:</strong> if Boost is provided with your
+              distribution, it probably does not provide the
+              <tt>libboost_zlib</tt> library since this is provided by
+              <tt>libz.a</tt>. See the <em>Generating the GCC Makefiles with
+              CMake</em> section for details on how to use this library
+              instead.
+            </p>
           </li>
 
           <li>
-            The following step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
+            The following step is to extract and compile the sparse matrix
+            library developed by <em>NIST</em>. (For more information about
+            this library, see <a
+            href="http://math.nist.gov/spblas/original.html"
+            target="_blank">http://math.nist.gov/spblas/original.html</a>)
             <ol>
               <li>
-                In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2 archive with 
-                <div class="code"><pre>tar -xjvf spblastk0.9b.tar.bz2</pre></div>
-                This will create the directory <em>spblastk0.9b/</em>.
+                <p>
+                  In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2
+                  archive with 
+                  </p>
+                  <div class="code"><pre>tar -xjvf spblastk0.9b.tar.bz2</pre></div> 
+                  <p>
+                    This will create the directory <em>spblastk0.9b/</em>.
+                  </p>
               </li>
               <li>
                 Change to the directory <em>spblastk0.9b/build/</em>
               </li>
               <li>
-                Compile the library using the previously installed <em>CMake</em>
+                <p>
+                  Compile the library using the previously installed <em>CMake</em>:
+                </p>
+                <ol>
+                  <li>
+                    <p>
+                      Generate the makefiles using the command
+                    </p>
+                    <div class="code"><pre>cmake ../</pre></div>
+                    <p>
+                      or if you compiled a local copy of cmake
+                    </p>
+                    <div class="code"><pre>../../cmake-2.8.0/bin/cmake ../</pre></div> 
+                  </li>
+                  <li>
+                    Build the library by typing
+                    <div class="code"><pre>make install</pre></div>
+                  </li>
+                </ol>
               </li>
-              <ol>
-                <li>Generate the makefiles using the command
-                <div class="code"><pre>cmake ../</pre></div>
-                or if you compiled a local copy of cmake
-                <div class="code"><pre>../../cmake-2.8.0/bin/cmake ../</pre></div> 
-                </li>
-                <li>Build the library by typing
-                <div class="code"><pre>make install</pre></div>
-                </li>
-              </ol>
-            </li>
-          </ol>
+            </ol>
           </li>
-
-
           <li>
-            The last step is to extract and compile the graph partitioning package <em>METIS</em>. As we use a modified version of the 
-            standard METIS distribution, you are required to link against this version rather than the standard version possibly
-            available on your system. (For more information about the original METIS library, see <a href="http://www.cs.umn.edu/~karypis/metis" 
-                                                                                                    target="_blank">http://www.cs.umn.edu/~karypis/metis</a>)
+            <p>
+              The next step is to extract and compile the graph partitioning
+              package <em>METIS</em>. As we use a modified version of the
+              standard METIS distribution, you are required to link against
+              this version rather than the standard version possibly available
+              on your system. (For more information about the original METIS
+              library, see <a href="http://www.cs.umn.edu/~karypis/metis"
+              target="_blank">http://www.cs.umn.edu/~karypis/metis</a>)
+            </p>
             <ol>
               <li>
-                In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with 
-                <div class="code"><pre>tar -xjvf  modmetis-4.0.tar.bz2</pre></div>
-                This will create the directory <em>modmetis-4.0/</em>.
+                <p>
+                  In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2
+                  archive with
+                </p>
+                <div class="code"><pre>tar -xjvf modmetis-4.0.tar.bz2</pre></div>
+                <p>
+                  This will create the directory <em>modmetis-4.0/</em>.
+                </p>
               </li>
               <li>
                 Change to the directory <em>modmetis-4.0/build/</em>
               </li>
               <li>
-                Compile the library using the previously installed <em>CMake</em>
+                <p>
+                  Compile the library using the previously installed
+                  <em>CMake</em>
+                </p>
+                <ol>
+                  <li>
+                    <p>
+                      Generate the makefiles using the command 
+                    </p>
+                    <div class="code"><pre>cmake ../</pre></div> 
+                    <p>
+                      or if you compiled a local copy of cmake: 
+                    </p>
+                    <div class="code"><pre>../../cmake-2.8.0/bin/cmake ../</pre></div>
+                  </li>
+                  <li>
+                    <p>
+                      Build the library by typing 
+                    </p>
+                    <div class="code"><pre>make install</pre></div>
+                  </li>
+                </ol>
               </li>
-              <ol>
-                <li>Generate the makefiles using the command
-                <div class="code"><pre>cmake ../</pre></div>
-                or if you compiled a local copy of cmake:
-                <div class="code"><pre>../../cmake-2.8.0/bin/cmake ../</pre></div>
-                </li>
-                <li>Build the library by typing 
-                <div class="code"><pre>make install</pre></div>
-                </li>
-              </ol>
-            </li>
+            </ol>
+          </li>
+          <li>
+            <p>
+              In case you want to use the quasi-3D approach in combination
+              with the FFT algorithm, you also need to compile the <a
+              href="http://www.fftw.org" target="_blank">FFTW library</a>. The
+              use of the FFT algorithm is suggested in case of a large number
+              of degrees of freedom in the homogeneous direction (10 or
+              more). By default the FFTW routines are not in use, and you must
+              compile the FFTW library and switch it on before building the
+              Nektar++ library.
+            </p>
+            <ol>
+              <li>
+                <p>
+                  In <em>ThirdParty/</em>, extract the fftw-3.2.2.tar.gz
+                  archive with 
+                </p>
+                <div class="code"><pre>tar -xzvf fftw-3.2.2.tar.gz</pre></div> 
+                <p>
+                  This will create the directory <em>fftw-3.2.2/</em>.
+                </p>
+              </li>
+              <li>
+                Change to the directory <em>fftw-3.2.2/</em>
+              </li>
+              <li>
+                <p>
+                  Run the automated configure script which will generate
+                  makefiles:
+                </p>
+                <div class="code"><pre>./configure --prefix=$PWD</pre></div>
+              </li>
+              <li>
+                <p>
+                  Build and install the library by typing
+                </p>
+                <div class="code"><pre>make install</pre></div> 
+              </li>
+            </ol>
+          </li>
+          <li>
+            <p>
+              If you wish to use the linear stability solvers, then <a
+              href="http://www.caam.rice.edu/software/ARPACK/">ARPACK</a> must
+              be installed, which allows us to solve large-scale eigenvalue
+              problems. By default the ARPACK routines are not in use, and you
+              need to compile the ARPACK library and switch it on before you
+              build the Nektar++ library.
+            </p>
+            <p>
+              <strong>Note:</strong> ARPACK is included in all major
+              distributions, and it is highly recommended to use a
+              pre-packaged version rather than follow the instructions below
+              for compilation. To compile ARPACK you will require the GNU
+              Fortran compiler <tt>gfortran</tt>.
+            </p>
+            <ol>
+              <li>
+                <p>
+                  In <em>ThirdParty/</em>, extract the arpack96.tar.gz archive
+                  with
+                </p>
+                <div class="code"><pre>tar -xzvf arpack96.tar.gz</pre></div> 
+                <p>
+                  This will create the directory <em>ARPACK/</em>.
+                </p>
+              </li>
+              <li>
+                Change to the directory <em>ARPACK/</em>
+              </li>
+              <li>
+                Edit the file <tt>ARmake.inc</tt>, and edit the following
+                variables:
+                <ul>
+                  <li>
+                    <tt>home</tt>: enter the <strong>absolute</strong> path to
+                    the <em>ARPACK/</em> directory.
+                  </li>
+                  <li>
+                    <tt>ARPACKLIB</tt>: change to <tt>$(home)/libarpack.a</tt>
+                  </li>
+                  <li>
+                    <tt>FC</tt>: change to <tt>gfortran</tt>
+                  </li>
+                  <li>
+                    <tt>FFLAGS</tt>: change to <tt>-O</tt>
+                  </li>
+                  <li>
+                    <tt>MAKE</tt>: if your <tt>make</tt> does not lie in
+                    <tt>/bin</tt> (usually it is in <tt>/usr/bin</tt>), change
+                    this accordingly.
+                  </li>
+                </ul>
+                <p>
+                  On most distributions this configuration lead to a
+                  successful compilation of ARPACK; however you may need to
+                  alter additional parameters depending on your installation.
+                </p>
+              </li>
+              <li>
+                <p>
+                  Compile ARPACK by running:
+                </p>
+                <div class="code"><pre>make lib</pre></div> 
+              </li>
+            </ol>
+          </li>
+        </ol>
 
-          </ol>
-          <h3>
-            <a name="Setting_up_BLAS"></a> Setting up BLAS
-          </h3>
-          <p>Nektar++ makes extensive use of BLAS. If you do not have at least one of the following BLAS implementations installed, please contact your system administrator and ask them to do so.</p>
-          <ul>
-	    <li>
-	    System supplied.  Most Linux distributions come with blas and
-          lapack, usually located in /usr/lib.
-	    </li>
-            <li>
-              AMD Core Math Library (ACML)
-              <ul>
-                <li>This is a BLAS implementation that allows for optimal use of AMD Opteron processors.</li>
-                <li>For GCC, you must use the GFORTRAN version of ACML since the other versions are for different Linux compilers.</li>
-                <li>If you are using ACML 4.0 and GCC 4.2 or higher, then you must use the OpenMP version (it doesn't matter if you use shared or static libraries). This problem has been resolved in ACML 4.1.0.</li>
-                <li>
-                  URL: <a href="http://developer.amd.com/tools/acml/Pages/default.aspx" target="_blank">http://developer.amd.com/tools/acml/Pages/default.aspx</a>
-                </li>
-              </ul>
-            </li>
-          </ul>
-          <h3>
-            <a name="Generating_the_GCC_Makefiles_with_CMake"></a> Generating the GCC Makefiles with CMake
-          </h3>
-          <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the appropriate project files required by Nektar++.</p>
-          <ol>
-            <li>
-              From the terminal, change to the directory <em>Nektar++/builds</em>. This is the directory where the Nektar++ will be built.
-            </li>
-            <li>
-              CMake can generate build areas for a variety of build systems, such as KDevelop, Eclipse, or CodeBlocks.  It can also generate Makefiles for use by make.  The instructions that follow assume that you are creating Makefiles.  
-              <ul>
-                <li>
-		  Enter the following to start CMake
 
-		  <div class="code"><pre>ccmake ../library/</pre></div>
+        <h3>
+          <a name="Setting_up_BLAS"></a> Setting up BLAS
+        </h3>
+        <p>
+          Nektar++ makes extensive use of BLAS. If you do not have at least
+          one of the following BLAS implementations installed, please contact
+          your system administrator and ask them to do so.
+        </p>
+        <ul>
+          <li>
+	    <strong>System supplied.</strong> Most Linux distributions come
+	    with blas and lapack, usually located in /usr/lib.
+          </li>
+          <li>
+            <strong>AMD Core Math Library (ACML)</strong>
+            <ul>
+              <li>
+                This is a BLAS implementation that allows for optimal use of
+                AMD Opteron processors.
+              </li>
+              <li>
+                For GCC, you must use the GFORTRAN version of ACML since the
+                other versions are for different Linux compilers.
+              </li>
+              <li>
+                If you are using ACML 4.0 and GCC 4.2 or higher, then you must
+                use the OpenMP version (it doesn't matter if you use shared or
+                static libraries). This problem has been resolved in ACML
+                4.1.0.
+              </li>
+              <li>
+                URL: <a href="http://developer.amd.com/tools/acml/Pages/default.aspx" target="_blank">http://developer.amd.com/tools/acml/Pages/default.aspx</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
 
-		  This command generates Makefiles.  If you wish to generate project files for different build platforms, add a command line flag -G with the build system you wish to use.  For example, to generate KDevelop project files, use the following command line:
 
-		  <div class="code"><pre>ccmake -G KDevelop3 ../library/</pre></div>
+        <h3>
+          <a name="Generating_the_GCC_Makefiles_with_CMake"></a> Generating the GCC Makefiles with CMake
+        </h3>
+        <p>
+          Now that all of the required libraries are setup in the correct
+          paths, we can use CMake to generate the appropriate project files
+          required by Nektar++.
+        </p>
+        <ol>
+          <li>
+            From the terminal, change to the directory
+            <em>Nektar++/builds</em>. This is the directory where the Nektar++
+            will be built.
+          </li>
+          <li>
+            CMake can generate build areas for a variety of build systems,
+            such as KDevelop, Eclipse, or CodeBlocks.  It can also generate
+            Makefiles for use by make.  The instructions that follow assume
+            that you are creating Makefiles.
+            <ul>
+              <li>
+                Enter the following to start CMake
 
-		  A full listing of options can be found by entering the following:
+                <div class="code"><pre>ccmake ../library/</pre></div>
+                
+                This command generates Makefiles.  If you wish to generate
+                project files for different build platforms, add a command
+                line flag -G with the build system you wish to use.  For
+                example, to generate KDevelop project files, use the following
+                command line:
 
-		  <div class="code"><pre>ccmake --help</pre></div>
-		</li>
-		<li>
-		  You will see a screen with the text "Empty Cache".  Press the 'c' key to continue.
-		</li>
-		<li>
-		  You will now see a collection of properties and values that will control how Nektar++ is built.
-		  <p>
-		  <br/>
-		  <img src="images/CcmakeLinux.png"/>
-              </ul>
-            </li>
-            <li>
-	      The following are some useful customization properties.  While most of these are optional, you set either the USE_SYSTEM_BLAS_LAPACK or USE_ACML properties before compiling.<p><p>
+                <div class="code"><pre>ccmake -G KDevelop3 ../library/</pre></div>
+                
+                A full listing of options can be found by entering the following:
+                
+                <div class="code"><pre>ccmake --help</pre></div>
+              </li>
+              <li>
+                You will see a screen with the text "Empty Cache".  Press the
+                'c' key to continue.
+              </li>
+              <li>
+                <p>
+                  You will now see a collection of properties and values that
+                  will control how Nektar++ is built.
+                </p>
+                <p>
+		  <img src="images/CcmakeLinux.png" alt="CcmakeLinux" title="CcmakeLinux" />
+                </p>
+              </li>
+            </ul>
+          </li>
+          <li>
+            The following are some useful customization properties.  While
+            most of these are optional, you set either the
+            USE_SYSTEM_BLAS_LAPACK or USE_ACML properties before
+            compiling.
+            <ul>
+              <li>
+                <strong>CMAKE_BUILD_TYPE</strong> <br /> This option sets the
+                appropriate GCC flags for the different build types: Debug,
+                Release, etc. For this tutorial, I'll choose Release, in order
+                to get full optimizations.
+              </li>
+              <li>
+                <strong>EXECUTABLE_OUTPUT_PATH</strong><br /> This is the path
+                GCC will put the generated executable files - it can be
+                anywhere you wish.
+              </li>
+              <li>
+                <strong>USE_SYSTEM_BLAS_LAPACK</strong><br /> Set this value
+                to <em><strong>ON</strong></em> if you are using the system
+                provided blas and lapack libraries.
+              </li>
+              <li>
+                <strong>USE_SYSTEM_ZLIB</strong><br /> Set this value to
+                <em><strong>ON</strong></em> if you are using a version of
+                Boost supplied with your distribution which does not provide
+                the <tt>libboost_zlib</tt> library. This will link to the
+                <tt>libz</tt> library instead, which is provided on most
+                systems.
+              </li>
+              <li>
+                <strong>USE_ACML</strong><br /> Set this value to
+                <strong>ON</strong> if you wish to use the AMD ACML library
+                for BLAS and LAPACK support.
+              </li>
+              <li>
+                <strong>NEKTAR_BUILD_UNIT_TESTS</strong><br /> Set to
+                <strong>ON</strong> to build the unit tests.  The unit tests
+                are executables that can be run after building Nektar++ to
+                verify the code compiled correctly and is executing basic
+                functionality correctly.
+              </li>
+            </ul>
+          </li>
+          <li>
+            At the end of all the questions, you might be prompted for the
+            path to the BLAS and LAPACK libraries from the package you
+            installed, if CMake couldn't find them in the default search
+            paths. Therefore, it might be useful to have this information
+            handy.
+          </li>
+          <li>
+            Note if the variable is asking for a library path (path to a *.so
+            file), or a directory path. Don't enter a directory path if it is
+            expecting a library.
+          </li>
+          <li>
+            If you make any changes to the property values, you will need to
+            press the 'c' key to apply those changes.  Once you have made all
+            of the changes you need, press the 'c' key repeatedly until the
+            option "Press [g] to generate and exit" appears.  Press the 'g'
+            key to generate your project files.
+          </li>
+        </ol>
 
-                  <strong>CMAKE_BUILD_TYPE</strong><br/>
-                    This option sets the appropriate GCC flags for the different build types: Debug, Release, etc. For this tutorial, I'll choose Release, in order to get full optimizations.
 
-		  <p><p>
-                  <strong>EXECUTABLE_OUTPUT_PATH</strong><br/>
-                    This is the path GCC will put the generated executable files - it can be anywhere you wish.
 
-                  <p><p>
-                  <strong>USE_SYSTEM_BLAS_LAPACK</strong><br/>
-                      Set this value to <em>
-                        <strong>ON</strong>
-                      </em> if you are using the system provided blas and lapack libraries.
-
-		  <p><p>
-                  <strong>USE_SYSTEM_ZLIB</strong><br/>
-                      Set this value to <em><strong>ON</strong></em> if you are using a version of Boost supplied with your distribution which does not provide the <tt>libboost_zlib</tt> library. This will link to the <tt>libz</tt> library instead, which is provided on most systems.
-
-		  <p><p>
-                  <strong>USE_ACML</strong><br/>
-                      Set this value to <strong>ON</strong> if you wish to use the AMD ACML library for 
-                      blas and lapack support.
-
-		  <p><p>
-		  <strong>NEKTAR_BUILD_UNIT_TESTS</strong><br/>
-		    Set to <strong>ON</strong> to build the unit tests.  The unit tests are executables that can be run after building Nektar++ to verify the code compiled correctly and is executing basic functionality correctly.
-
-                    <li>At the end of all the questions, you might be prompted for the path to the BLAS and LAPACK libraries from the package you installed, if CMake couldn't find them in the default search paths. Therefore, it might be useful to have this information handy.</li>
-                    <li>Note if the variable is asking for a library path (path to a *.so file), or a directory path. Don't enter a directory path if it is expecting a library.</li>
-		    <li>If you make any changes to the property values, you will need to press the 'c' key to apply those changes.  Once you have made all of the changes you need, press the 'c' key repeatedly until the option "Press [g] to generate and exit" appears.  Press the 'g' key to generate your project files.
-                  </ul>
-                </li>
-
-              </ul>
-            </li>
-          </ol>
-          <h3>
-            <a name="Compiling_the_library"></a> Compiling the library
-          </h3>
-          <p>Now that CMake has generated the appropriate project files you can build Nektar++.  If you generated Makefiles:
-          <ol>
-            <li>
+        <h3>
+          <a name="Compiling_the_library"></a> Compiling the library
+        </h3>
+        <p>
+          Now that CMake has generated the appropriate project files you can
+          build Nektar++.  If you generated Makefiles:
+        </p>
+        <ol>
+          <li>
+            <p>
               To compile the project, simply type 
-              <div class="code"><pre>make</pre></div>
+            </p>
+            <div class="code"><pre>make</pre></div>
+            <p>
               from the project directory (i.e. <em>Nektar++/builds/</em>).
-              <ul>
-                <li>If you have multiple processors/cores, it might be beneficial to use 
+            </p>
+            <ul>
+              <li>
+                <p>
+                  If you have multiple processors/cores, it might be
+                  beneficial to use
+                </p>
                 <div class="code"><pre>make -j &lt;num_procs/cores&gt</pre></div>
-                The &quot;-j&quot; options starts that many jobs, so all of the processors will be utilized, and it will compile faster</li>
-              </ul>
-            </li>
-            <li>Type 
+                <p>
+                  The &quot;-j&quot; options starts that many jobs, so all of
+                  the processors will be utilized, and it will compile faster
+                </p>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <p>
+              Type 
+            </p>
             <div class="code"><pre>make install</pre></div>
-            to put all of the compiled libraries into a dist directory that can then be used by the solvers and utilities.</li>
-            <li>The executable files will be located in the path you specified in the CMake utility.</li>
-          </ol>
+            <p>
+              to put all of the compiled libraries into a dist directory that
+              can then be used by the solvers and utilities.
+            </p>
+          </li>
+          <li>
+            The executable files will be located in the path you specified in
+            the CMake utility.
+          </li>
+        </ol>
 
-	  If you generated project files for another build system, open the project files in that system and build the Install project.
+        <p>
+          If you generated project files for another build system, open the
+          project files in that system and build the Install project.
+        </p>
+        
+        <h3>
+          <a name="Compiling_the_Solvers_and_Utilities"></a>Compiling the Solvers and Utilities
+        </h3>
+        <p>
+          To compile the solvers and the utilities you first need to have
+          compiled the library and typed "make install" to place all of the
+          Nektar++ and ThirdParty libraries into the dist directory under the
+          library builds directory (i.e. <em>Nektar++/Builds/dist</em>)
+        </p>
+        <p>
+          Once again we use CMake to generate the Makefiles that GCC requires,
+          or the project files that KDevelop requires.
+        </p>
 
-          <h3>
-            <a name="Compiling_the_Solvers_and_Utilities"></a>Compiling the Solvers and Utilities
-          </h3>
-          <br>
-            To compile the solvers and the utilities you first need to have
-            compiled the library and typed "make install" to place all of the
-            Nektar++ and ThirdParty libraries into the dist directory under the
-            library builds directory (i.e. <em>Nektar++/Builds/dist</em>)
-          </br>
-          <p>
-            Once again we use CMake to generate the Makefiles that GCC requires, or
-            the project files that KDevelop requires.
-          </p>
+        <ol>
+          <li>
+            <p>
+              From the terminal, change to the build directory of the solvers,
+              i.e. <em>Nektar++/solvers/builds</em> and run ccmake using
+              <em>Nektar++/solvers</em> as the source directory.
+            </p>
+            <div class="code"><pre>ccmake ../</pre></div>
+            <p>
+              Generate the project files in the same way you generated them
+              for the library and run
+            </p>
+            <div class="code"><pre>make install</pre></div>
+            <p>
+	      to compile the solvers and install them in the
+	      <em>Nektar++/solvers/builds/dist</em> directory.
+            </p>
+          </li>
+          <li>
+            <p>
+              From the terminal, change to the build directory of the
+              utilities, i.e. <em>Nektar++/utilities/builds</em> and run
+              ccmake using <em>Nektar++/utilities</em> as the source
+              directory.
+            </p>
+            <div class="code"><pre>ccmake ../</pre></div>
+            <p>
+	      Generate the project files in the same way you generated them
+	      for the library and run
+            </p>
+            <div class="code"><pre>make install</pre></div>
+	    <p>
+              to compile the utilities and install them in the
+              <em>Nektar++/utilities/builds/dist</em> directory.
+            </p>
+          </li>
+        </ol>
 
-          <ol>
-            <li>
-              From the terminal, change to the build directory of the solvers, i.e. <em>Nektar++/solvers/builds</em> and run ccmake using <em>Nektar++/solvers</em> as the source directory.
+        <h3>
+          <a name="Compiling_Regression_Tests"></a>Compiling the Regression Tests
+        </h3>
+        <p>
+          To compile the regression tests you first need to have compiled the
+          Nektar++ library and solvers. Once again, we use CMake to generate
+          the Makefiles that GCC requires.
+        </p>
 
-	      <div class="code"><pre>ccmake ../</pre></div>
+        <ol>
+          <li>
+            <p>
+              From the terminal, change to the build directory of the
+              regressionTests, i.e. <em>Nektar++/regressionTests/builds</em>
+              and run ccmake using <em>Nektar++/regressionTests</em> as the
+              source directory.
+            </p>
+            <div class="code"><pre>ccmake ../</pre></div>
+            <p>
+              Generate the project files in the same way you generated the
+              project files for Nektar++.
+            </p>
+          </li>
+          <li>
+            <p>
+	      Generate the project files in the same way you generated them
+	      for the library and run
+            </p>
+            <div class="code"><pre>make install</pre></div>
+	    <p>
+              to compile the utilities and install them in the
+              <em>Nektar++/utilities/builds/dist</em> directory.
+            </p>
+          </li>
+        </ol>
+        <strong>Note:</strong> If you are modifying the regression tests by
+        adding or removing tests you can generate a new master ".ok" file by
+        answering <strong>Yes</strong> to the <em> "Would you like to see
+        advanced options?"</em> in step 1 and setting the variable
+        <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for
+        example, generate the executable <em>StdRegionsDemoMakeOKFile</em>
+        which when executed will execute a series of demos and make the
+        updated .ok files.
 
-	      Generate the project files in the same way you generated them for the library and run
-	      <div class="code"><pre>make install</pre></div>
-	      to compile the solvers and install them in the <em>Nektar++/solvers/builds/dist</em> directory.
-            </ul>
-
-	    <li>
-              From the terminal, change to the build directory of the utilities, i.e. <em>Nektar++/utilities/builds</em> and run ccmake using <em>Nektar++/utilities</em> as the source directory.
-
-	      <div class="code"><pre>ccmake ../</pre></div>
-
-	      Generate the project files in the same way you generated them for the library and run
-	      <div class="code"><pre>make install</pre></div>
-	      to compile the utilities and install them in the <em>Nektar++/utilities/builds/dist</em> directory.
-            </ul>
-	  </ol>
-
-<h3><a name="Compiling_Regression_Tests"></a>Compiling the Regression Tests</h3>
-<br>
-To compile the regression tests you first need to have
-compiled the Nektar++ library and Solvers </br>
-
-<p>Once again we use CMake to generate the Makefiles that GCC requires</p>
-
-          <ol>
-            <li>
-              From the terminal, change to the build directory of the regressionTests, i.e. <em>Nektar++/regressionTests/builds</em> and run ccmake using <em>Nektar++/regressionTests</em> as the source directory.
-
-          <div class="code"><pre>ccmake ../</pre></div>
-
-          Generate the project files in the same way you generated the project files for Nektar++.
-            </ul>
-
-        <li>
-              From the terminal, change to the build directory of the regressionTests, i.e. <em>Nektar++/regressionTests/builds</em> and run ccmake using <em>Nektar++/regressionTests</em> as the source directory.
-
-          <div class="code"><pre>ccmake ../</pre></div>
-
-          Generate the project files in the same way you generated the project files for Nektar++.
-          <b>Note:</b> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by answering  <strong>Yes</strong> to the <em> "Would you like to see advanced options?"</em> in step 2 and setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files.
-            </ul>
-      </ol>
-
-          <h3>
-            <br>
-
-              The entire Nektar++ package should now have been succesfully compiled. Instructions on how to use Nektar++ are described on the <a href="usage.html" id="menu_Usage">usage</a> page.
-            </h3>
-          <!-- InstanceEndEditable -->
-          <p>
-            <br class="clearfloat" />
-          </p>
-        </div>
+        <h3>
+          The entire Nektar++ package should now have been succesfully
+          compiled. Instructions on how to use Nektar++ are described on the
+          <a href="usage.html" id="menu_Usage">usage</a> page.
+        </h3>
+        <!-- InstanceEndEditable -->
+        <p>
+          <br class="clearfloat" />
+        </p>
+      </div>
     </div>
   </body>
   <!-- InstanceEnd -->

@@ -97,6 +97,7 @@ namespace Nektar
     protected:
 
     private: 
+        int m_pressureCalls;
 
         Array<OneD, int> m_pressureBCtoElmtID;  // Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoTraceID; // Id of edge (2D) or face (3D) to which pressure boundary condition belongs

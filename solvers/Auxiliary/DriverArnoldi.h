@@ -56,7 +56,7 @@ namespace Nektar
         NekDouble m_period;/// Period of time stepping algorithm 
         bool      m_TimeSteppingAlgorithm; /// underlying operator is time stepping
         
-        int m_nfields; 
+        int       m_nfields;
 
         /// Constructor
         DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession);

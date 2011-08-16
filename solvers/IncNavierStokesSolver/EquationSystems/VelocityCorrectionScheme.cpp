@@ -62,6 +62,7 @@ namespace Nektar
         {
             m_nConvectiveFields = m_fields.num_elements()-1;
             m_pressure = m_fields[m_nConvectiveFields];
+            m_pressureCalls = 1;
         }
         else
         {
@@ -277,12 +278,11 @@ namespace Nektar
     
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
-        static int ncalls = 1; // Number of time this function has been called. 
         Array<OneD, NekDouble> tmp;
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
         int  n,cnt;
-        int  nint    = min(ncalls++,m_intSteps);
+        int  nint    = min(m_pressureCalls++,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
 
         PBndConds   = m_pressure->GetBndConditions();

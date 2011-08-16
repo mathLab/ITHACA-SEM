@@ -80,11 +80,63 @@ namespace Nektar
                          "Ensure equation name is correct and module is compiled.\n");
 
 				//std::string vAdvectionForm = m_session->GetSolverInfo("AdvectionForm");
-				m_session->SetTag("AdvectiveType","Linearised");
+				//m_session->SetTag("AdvectiveType","Linearised");
                 
-				m_nequ=1;
-                m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
-                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+				//m_nequ=1;
+                //m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
+                //m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                int EvOpNumb = 3;
+                std::string EvolutionOperator[] =
+                { "Forward", "Adjoint", "TransientGrowth"
+                };
+
+	            bool EvOpType;
+	            int i;
+	            for(i = 0; i < EvOpNumb; ++i)
+	            {
+	                m_session->MatchSolverInfo("EvolutionOperator",EvolutionOperator[i].c_str(), EvOpType,false);
+	                if(EvOpType)
+	                {
+	                    m_EvolutionOperator = EvolutionOperator[i];
+	                    break;
+	                }
+	            }
+
+	            ASSERTL0(i  < EvOpNumb,"Cannot determine the Evolution Operator defiend in EvolutionOperator");
+
+	            if(m_EvolutionOperator=="Forward" || m_EvolutionOperator=="Adjoint")
+	            {
+	                m_nequ=1;
+	            }
+	            else {
+	                m_nequ=2;
+	            }
+
+
+	            m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
+
+	            if (m_EvolutionOperator=="Forward")
+	            {
+	                m_session->SetTag("AdvectiveType","Linearised");
+	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+	            }
+
+	            if(m_EvolutionOperator=="Adjoint")
+	            {
+	                m_session->SetTag("AdvectiveType","Adjoint");
+	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+	            }
+
+	            if(m_EvolutionOperator=="TransientGrowth")
+	            {
+	                //forward timestepping
+	                m_session->SetTag("AdvectiveType","Linearised");
+	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+
+	                //backward timestepping
+	                m_session->SetTag("AdvectiveType","Adjoint");
+	                m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+	            }
             }
             catch (int e)
             {
@@ -106,7 +158,7 @@ namespace Nektar
                 m_forces  = m_equ[0]->UpdateForces();
                 m_nfields = m_equ[0]->UpdateFields().num_elements();
             }
-            
+
             m_session->LoadParameter("kdim",  m_kdim,  8);
             m_session->LoadParameter("nvec",  m_nvec,  1);
             m_session->LoadParameter("nits",  m_nits,  500);
@@ -152,7 +204,7 @@ namespace Nektar
         cout << "\tEigenvalue tolerance:   " << m_evtol << endl;
         cout << "=======================================================================" << endl;
 
-        m_equ[0]->DoInitialise();
+        m_equ[m_nequ - 1]->DoInitialise();
 
         // Copy starting vector into second sequence element (temporary).
         CopyFieldToArnoldiArray(Kseq[1]);
@@ -293,8 +345,21 @@ namespace Nektar
     {
         // Copy starting vector into first sequence element.
         CopyArnoldiArrayToField(src);
-
         m_equ[0]->DoSolve();
+
+        if(m_EvolutionOperator=="TransientGrowth")
+        {
+            Array<OneD, MultiRegions::ExpListSharedPtr> fields;
+            fields = m_equ[0]->UpdateFields();
+            int ntot = fields[0]->GetNpoints();
+            for (int k=0 ; k <= m_nfields; ++k)
+            {
+                Vmath::Vcopy(ntot,  &fields[k]->GetPhys()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdatePhys()[0], 1);
+                m_equ[1]->UpdateFields()[k]->SetPhysState(true);
+            }
+
+            m_equ[1]->DoSolve();
+        }
 
         // Copy starting vector into first sequence element.
         CopyFieldToArnoldiArray(tgt);

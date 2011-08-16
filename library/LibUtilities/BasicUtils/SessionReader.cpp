@@ -891,8 +891,15 @@ namespace Nektar
                         if (!lhs.empty() && !rhs.empty())
                         {
                             NekDouble value=0.0;
-                            expEvaluator.DefineFunction("", rhs);
-                            value =  expEvaluator.Evaluate();
+                            try
+                            {
+                                expEvaluator.DefineFunction("", rhs);
+                                value =  expEvaluator.Evaluate();
+                            }
+                            catch (const std::runtime_error &e)
+                            {
+                                ASSERTL0(false, "Error evaluating parameter expression '" + rhs + "'." );
+                            }
                             expEvaluator.SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);

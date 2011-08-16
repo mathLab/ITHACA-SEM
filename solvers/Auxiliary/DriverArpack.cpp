@@ -70,7 +70,7 @@ namespace Nektar
 	
 	int EvOpNumb = 3;
 	std::string EvolutionOperator[] = 
-	{ "Forward", "Adjoint", "TransientGrowth"
+	{ "Direct", "Adjoint", "TransientGrowth"
 	};
     
     void DriverArpack::v_InitObject()
@@ -102,7 +102,7 @@ namespace Nektar
 			
 			ASSERTL0(i  < EvOpNumb,"Cannot determine the Evolution Operator defiend in EvolutionOperator");
 			
-			if(m_EvolutionOperator=="Forward" || m_EvolutionOperator=="Adjoint")
+			if(m_EvolutionOperator=="Direct" || m_EvolutionOperator=="Adjoint")
 			{
 				m_nequ=1;
 			}
@@ -113,7 +113,7 @@ namespace Nektar
 			
 			m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
 			
-			if (m_EvolutionOperator=="Forward")
+			if (m_EvolutionOperator=="Direct")
 			{
 				m_session->SetTag("AdvectiveType","Linearised");
 				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
@@ -244,6 +244,7 @@ namespace Nektar
             out << "\tBeta set to Zero       : false " << endl;
         }
         out << "\tReal Shift             : " << m_realShift << endl;
+        out << "\Evolution Operator      : " << m_EvolutionOperator <<endl;
         out << "\tKrylov-space dimension : " << m_kdim << endl;
         out << "\tNumber of vectors      : " << m_nvec << endl;
         out << "\tMax iterations         : " << m_nits << endl;

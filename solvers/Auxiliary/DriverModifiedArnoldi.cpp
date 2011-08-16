@@ -87,7 +87,7 @@ namespace Nektar
                 //m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
                 int EvOpNumb = 3;
                 std::string EvolutionOperator[] =
-                { "Forward", "Adjoint", "TransientGrowth"
+                { "Direct", "Adjoint", "TransientGrowth"
                 };
 
 	            bool EvOpType;
@@ -104,7 +104,7 @@ namespace Nektar
 
 	            ASSERTL0(i  < EvOpNumb,"Cannot determine the Evolution Operator defiend in EvolutionOperator");
 
-	            if(m_EvolutionOperator=="Forward" || m_EvolutionOperator=="Adjoint")
+	            if(m_EvolutionOperator=="Direct" || m_EvolutionOperator=="Adjoint")
 	            {
 	                m_nequ=1;
 	            }
@@ -115,7 +115,7 @@ namespace Nektar
 
 	            m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
 
-	            if (m_EvolutionOperator=="Forward")
+	            if (m_EvolutionOperator=="Direct")
 	            {
 	                m_session->SetTag("AdvectiveType","Linearised");
 	                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
@@ -198,6 +198,7 @@ namespace Nektar
 
         // Print session parameters
         cout << "\tArnoldi solver type   : Modified Arnold" << endl;
+        cout <<"\tEvolution Operator:    " << m_EvolutionOperator <<endl;
         cout << "\tKrylov-space dimension: " << m_kdim << endl;
         cout << "\tNumber of vectors:      " << m_nvec << endl;
         cout << "\tMax iterations:         " << m_nits << endl;

@@ -251,9 +251,6 @@
       <I PROPERTY="Driver" VALUE="Arpack"/>
       <I PROPERTY="InitialVector" VALUE="Random"/>
       <I PROPERTY="ArpackProblemType" VALUE="LargestImag"/>
-
- 
-
     </SOLVERINFO>
 
     <PARAMETERS>

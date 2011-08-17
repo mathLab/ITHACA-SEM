@@ -72,12 +72,11 @@ namespace Nektar
         {
             m_period  = 1.0;
             ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
-            //m_forces  = m_equ[0]->UpdateForces();
             m_nfields = m_equ[0]->UpdateFields().num_elements();
         }
 
-        m_session->LoadParameter("kdim",  m_kdim,  8);
-        m_session->LoadParameter("nvec",  m_nvec,  1);
+        m_session->LoadParameter("kdim",  m_kdim,  16);
+        m_session->LoadParameter("nvec",  m_nvec,  2);
         m_session->LoadParameter("nits",  m_nits,  500);
         m_session->LoadParameter("evtol", m_evtol, 1e-06);
     }

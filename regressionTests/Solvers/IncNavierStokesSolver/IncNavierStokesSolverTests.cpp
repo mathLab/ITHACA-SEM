@@ -109,9 +109,6 @@ int main(int argc, char* argv[])
 	//Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
 	Execute("IncNavierStokesSolver","bfs_tg.xml","Transient Growth (Modified Arnoldi): Backward-facing step");
 
-	//Test Modified Arnoldi direct stability  (CoupledSolver)
-	Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
-
     #ifdef NEKTAR_USING_ARPACK
     //same stability tests with Arpack
 	Execute("IncNavierStokesSolver","ChanStability_Ar.xml","Linear stability (Arpack): Channel");

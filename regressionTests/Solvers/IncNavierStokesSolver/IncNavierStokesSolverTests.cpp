@@ -98,11 +98,29 @@ int main(int argc, char* argv[])
 
 
     //Test Coupled LinearNS unsteady Channel Flow
-    Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady channel flow with coupled solve , P=8");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady channel flow with coupled solver , P=8");
 
-    //Test Modified Arnoldi stability (VelCorrectionScheme)
+    //Test Modified Arnoldi direct stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability.xml","Linear stability (Mod. Arnoldi): Channel");
+	
+	//Test Modified Arnoldi adjoint stability (VelCorrectionScheme)
+    Execute("IncNavierStokesSolver","ChanStability_adj.xml","Adjoint stability (Mod. Arnoldi): Channel");
+	
+	//Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
+	Execute("IncNavierStokesSolver","bfs_tg.xml","Transient Growth (Modified Arnoldi): Backward-facing step");
 
+	//Test Modified Arnoldi direct stability  (CoupledSolver)
+	Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
+
+    #ifdef NEKTAR_USING_ARPACK
+    //same stability tests with Arpack
+	Execute("IncNavierStokesSolver","ChanStability_Ar.xml","Linear stability (Arpack): Channel");
+	Execute("IncNavierStokesSolver","ChanStability_adj_Ar.xml","Adjoint stability (Arpack): Channel");
+	Execute("IncNavierStokesSolver","bfs_tg-Ar.xml","Transient Growth (Arpack): Backward-facing step");
+
+	//Test Modified Arnoldi direct stability  (CoupledSolver)
+	Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
+	#endif
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;

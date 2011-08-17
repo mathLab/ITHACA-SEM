@@ -243,28 +243,27 @@
     
   <CONDITIONS>
       <SOLVERINFO>
-          <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
+      <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-            <I PROPERTY="EvolutionOperator" VALUE="Forward"/>
-
+      <I PROPERTY="EvolutionOperator" VALUE="Adjoint"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
-      <I PROPERTY="InitialVector" VALUE="Random"/>
-      <I PROPERTY="Driver" VALUE="Arpack"/>
-            <I PROPERTY="ArpackProblemType" VALUE="LargestMag"/>
+      <I PROPERTY="Driver" VALUE="ModifiedArnoldi"/>
 
- 
 
     </SOLVERINFO>
 
     <PARAMETERS>
-      <P> TimeStep      = 0.002 </P>
-      <P> NumSteps      = 500    </P>
-      <P> IO_CheckSteps = 1000  </P>
-      <P> IO_InfoSteps  = 20    </P>
-      <P> Re            = 7500     </P>
-      <P> Kinvis        = 1.0/Re     </P>
-      <P> kdim          = 20       </P>
+      <P> TimeStep      = 0.002  </P>
+      <P> NumSteps      = 70     </P>
+      <P> IO_CheckSteps = 1000   </P>
+      <P> IO_InfoSteps  = 20     </P>
+      <P> Re            = 7500   </P>
+      <P> Kinvis        = 1.0/Re </P>
+      <P> kdim          = 16      </P> 
+      <P> nvec           =2      </P> 
+      <P> evtol           =1e-6      </P> 
+
     </PARAMETERS>
 
     <VARIABLES>
@@ -303,10 +302,8 @@
      <E VAR="p" VALUE="0" />
    </FUNCTION>
    
-         <FUNCTION NAME="InitialConditions">
-     <E VAR="u" VALUE="1" />
-     <E VAR="v" VALUE="1" />
-     <E VAR="p" VALUE="0" />
+    <FUNCTION NAME="InitialConditions">
+    <F FILE="ChanStability_adj.rst" />
    </FUNCTION>
 
     <FUNCTION NAME="ExactSolution">

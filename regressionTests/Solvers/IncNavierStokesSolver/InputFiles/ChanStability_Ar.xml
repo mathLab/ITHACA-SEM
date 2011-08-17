@@ -248,8 +248,9 @@
       <I PROPERTY="EvolutionOperator" VALUE="Direct"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
-      <I PROPERTY="InitialVector" VALUE="Random"/>
-      <I PROPERTY="Driver" VALUE="ModifiedArnoldi"/>
+      <I PROPERTY="Driver" VALUE="Arpack"/>
+            <I PROPERTY="ArpackProblemType" VALUE="LargestMag"/>
+
  
     </SOLVERINFO>
 
@@ -298,7 +299,7 @@
     </BOUNDARYCONDITIONS>
 
     <FUNCTION NAME="InitialConditions">
-     <F FILE="ChanStability.rst"  />
+     <F FILE="ChanStability_Ar.rst"  />
     </FUNCTION>
    
       <FUNCTION NAME="Forcing">

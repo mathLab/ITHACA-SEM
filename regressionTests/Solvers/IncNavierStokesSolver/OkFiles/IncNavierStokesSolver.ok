@@ -92,3 +92,49 @@ L inf error (variable v) : 0
 L 2 error (variable p) : 0.0128606
 L inf error (variable p) : 0
 ----------------------------------------
+ChanStability_adj.xml
+L 2 error (variable u) : 2.58924
+L inf error (variable u) : 1
+L 2 error (variable v) : 0.00308098
+L inf error (variable v) : 0.00260438
+L 2 error (variable p) : 0.00512602
+L inf error (variable p) : 0.00482604
+----------------------------------------
+ChanStability_Ar.xml
+L 2 error (variable u) : 0.0362369
+L inf error (variable u) : 0
+L 2 error (variable v) : 0.031285
+L inf error (variable v) : 0
+L 2 error (variable p) : 0.00117656
+L inf error (variable p) : 0
+----------------------------------------
+ChanStability_adj_Ar.xml
+L 2 error (variable u) : 2.58912
+L inf error (variable u) : 1
+L 2 error (variable v) : 0.00217744
+L inf error (variable v) : 0.00184176
+L 2 error (variable p) : 0.00235038
+L inf error (variable p) : 0.00172909
+----------------------------------------
+bfs_tg-Ar.xml
+L 2 error (variable u) : 0.0462421
+L inf error (variable u) : 0
+L 2 error (variable v) : 0.0170456
+L inf error (variable v) : 0
+L 2 error (variable p) : 6.38558
+L inf error (variable p) : 0
+----------------------------------------
+bfs_tg.xml
+L 2 error (variable u) : 0.0125104
+L inf error (variable u) : 0
+L 2 error (variable v) : 0.0130245
+L inf error (variable v) : 0
+L 2 error (variable p) : 0.0342959
+L inf error (variable p) : 0
+----------------------------------------
+ChanStability_Coupled.xml
+L 2 error (variable u) : 2.58912
+L inf error (variable u) : 1
+L 2 error (variable v) : 0.014797
+L inf error (variable v) : 0.00794261
+

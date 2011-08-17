@@ -301,6 +301,8 @@ namespace Nektar
         
         cout << "Converged Eigenvalues: " << nconv << endl;
         fprintf(pFile,"Converged Eigenvalues: %d\n:",nconv);
+		
+
         for(int i= 0; i< nconv; ++i)
         {
             WriteEvs(stdout,i,dr[i],di[i]);
@@ -318,6 +320,18 @@ namespace Nektar
         }
 
         fclose (pFile);
+		
+		for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
+        {
+            NekDouble vL2Error = m_equ[0]->L2Error(j,false);
+            NekDouble vLinfError = m_equ[0]->LinfError(j);
+            if (m_comm->GetRank() == 0)
+            {
+                cout << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
+            }
+			
+		}
     };
     
     void DriverArpack::WriteEvs(FILE *fp, const int k,  const NekDouble real, const NekDouble imag)

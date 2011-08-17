@@ -238,20 +238,19 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
     
   <CONDITIONS>
       <SOLVERINFO>
-          <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-            <I PROPERTY="EvolutionOperator" VALUE="Forward"/>
-
+      <I PROPERTY="SolverType"  VALUE="CoupledLinearisedNS"/>
+      <I PROPERTY="EQTYPE" VALUE="SteadyLinearisedNS"/>
+      <I PROPERTY="EvolutionOperator" VALUE="Direct" />
       <I PROPERTY="Projection" VALUE="Galerkin"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
-      <I PROPERTY="InitialVector" VALUE="Random"/>
+      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"/>
       <I PROPERTY="Driver" VALUE="Arpack"/>
-            <I PROPERTY="ArpackProblemType" VALUE="LargestMag"/>
+      <I PROPERTY="InitialVector" VALUE="Random"/>
+      <I PROPERTY="ArpackProblemType" VALUE="LargestImag"/>
 
  
 
@@ -264,13 +263,12 @@
       <P> IO_InfoSteps  = 20    </P>
       <P> Re            = 7500     </P>
       <P> Kinvis        = 1.0/Re     </P>
-      <P> kdim          = 20       </P>
+      <P> kdim          = 16       </P>
     </PARAMETERS>
 
     <VARIABLES>
       <V ID="0"> u </V> 
       <V ID="1"> v </V> 
-      <V ID="2"> p </V> 
     </VARIABLES>
     
     <BOUNDARYREGIONS>
@@ -283,36 +281,32 @@
       <REGION REF="0">
         <D VAR="u" VALUE="0" />
         <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>  // High Order Pressure BC
       </REGION>
+      
       <REGION REF="1">
         <P VAR="u" VALUE="[2]" />
         <P VAR="v" VALUE="[2]" />
-        <P VAR="p" VALUE="[2]" />  // High Order Pressure BC
       </REGION>
+
       <REGION REF="2">
         <P VAR="u" VALUE="[1]" />
         <P VAR="v" VALUE="[1]" />
-        <P VAR="p" VALUE="[1]" />
       </REGION>
     </BOUNDARYCONDITIONS>
     
-      <FUNCTION NAME="Forcing">
-     <E VAR="u" VALUE="0" />
-     <E VAR="v" VALUE="0" />
-     <E VAR="p" VALUE="0" />
-   </FUNCTION>
+    <FUNCTION NAME="BodyForce">
+      <E VAR="u" VALUE="cos(y)" />
+      <E VAR="v" VALUE="sin(y)" />
+    </FUNCTION>
    
-         <FUNCTION NAME="InitialConditions">
-     <E VAR="u" VALUE="1" />
-     <E VAR="v" VALUE="1" />
-     <E VAR="p" VALUE="0" />
-   </FUNCTION>
+    <FUNCTION NAME="AdvectionVelocity">
+      <E VAR="u" VALUE="1-y*y" />
+      <E VAR="v" VALUE="0" />
+    </FUNCTION>
 
     <FUNCTION NAME="ExactSolution">
       <E VAR="u" VALUE="-y*y+1" />
       <E VAR="v" VALUE="0" />
-      <E VAR="p" VALUE="-2*Kinvis*(x-1)" />
     </FUNCTION>
     
   </CONDITIONS>

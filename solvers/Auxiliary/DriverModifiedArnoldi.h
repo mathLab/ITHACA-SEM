@@ -71,8 +71,6 @@ namespace Nektar
         virtual void v_Execute();
 
     private:
-        void OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool TimeSteppingAlgorithm);
-
         /// Generates a new vector in the sequence by applying the linear operator.
         void EV_update(Array<OneD, NekDouble> &src,
                        Array<OneD, NekDouble> &tgt);

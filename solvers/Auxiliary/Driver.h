@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Driver class for the stability solver
+// Description: Base class for Drivers.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -104,6 +104,7 @@ namespace Nektar
 
         static std::string evolutionOperatorLookupIds[];
         static std::string evolutionOperatorDef;
+        static std::string driverDefault;
 	};
 
 

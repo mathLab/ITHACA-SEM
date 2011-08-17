@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IncNavierStokesSolver.cpp
+// File Driver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Main Driver for the Stability Solver
+// Description: Base class for Drivers
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth)
     };
     std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
-
+    std::string Driver::driverDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Driver","Standard");
 
 	DriverFactory& GetDriverFactory()
     {
@@ -136,7 +136,3 @@ namespace Nektar
 
 }	
 	
-
-/**
- * $Log $
-**/

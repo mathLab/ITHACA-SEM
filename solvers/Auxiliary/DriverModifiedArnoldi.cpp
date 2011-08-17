@@ -216,35 +216,9 @@ namespace Nektar
 	}
     
     
-    void DriverModifiedArnoldi::OutputEv(FILE* pFile, const int nev, Array<OneD, NekDouble> &workl, int* ipntr, NekDouble period, bool TimeSteppingAlgorithm)
-    {
-        int k;
-	
-        //Plotting of real and imaginary part of the
-        //eigenvalues from workl
-        for(int k=0; k<=nev-1; ++k)
-        {                
-            double r = workl[ipntr[5]-1+k];
-            double i = workl[ipntr[6]-1+k];
-            double res;
-            
-            if(TimeSteppingAlgorithm)
-            {
-                cout << k << ": Mag " << sqrt(r*r+i*i) << ", angle " << atan2(i,r) << " growth " << log(sqrt(r*r+i*i))/period << 
-                    " Frequency " << atan2(i,r)/period << endl;
-                
-                fprintf (pFile, "EV: %i\t , Mag: %f\t, angle:  %f\t, growth:  %f\t, Frequency:  %f\t \n",k, sqrt(r*r+i*i), atan2(i,r),log(sqrt(r*r+i*i))/period, atan2(i,r)/period );
-            }
-            else
-            {
-                NekDouble invmag = 1.0/(r*r + i*i);
-                cout << k << ": Re " << sqrt(r*r+i*i) << ", Imag " << atan2(i,r) << " inverse real " << -r*invmag <<  " inverse imag " << i*invmag << endl;
-		
-                fprintf (pFile, "EV: %i\t , Re: %f\t, Imag:  %f\t, inverse real:  %f\t, inverse imag:  %f\t \n",k, sqrt(r*r+i*i), atan2(i,r),-r*invmag, i*invmag);
-            }
-        }
-    }
-    
+	/**
+	 *
+	 */
     void DriverModifiedArnoldi::EV_update(
                                           Array<OneD, NekDouble> &src,
                                           Array<OneD, NekDouble> &tgt)
@@ -544,11 +518,3 @@ namespace Nektar
         }
     }
 }
-	
-	
-
-
-
-/**
- * $Log $
-**/

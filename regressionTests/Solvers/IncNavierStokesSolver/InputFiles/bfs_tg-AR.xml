@@ -1737,7 +1737,7 @@
     </BOUNDARYCONDITIONS>
 
     <FUNCTION NAME="InitialConditions">
-        <F FILE="bfs_tg-Ar.rst" />
+        <F FILE="bfs_tg-AR.rst" />
  
     </FUNCTION>
 

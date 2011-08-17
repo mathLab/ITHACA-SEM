@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File DriverArnoldi.hpp
+// File DriverArnoldi.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -46,8 +46,6 @@ namespace Nektar
     public:
         friend class MemoryManager<DriverArnoldi>;
 		
-
-
     protected:
         int       m_kdim; /// Dimension of Krylov subspace
         int       m_nvec; /// Number of vectors to test 
@@ -57,9 +55,6 @@ namespace Nektar
         bool      m_TimeSteppingAlgorithm; /// underlying operator is time stepping
         
         int       m_nfields;
-
-        //Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
-        //Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
 
         /// Constructor
         DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession);

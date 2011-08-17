@@ -68,7 +68,7 @@ namespace Nektar
 
         NekDouble m_realShift;
 
-        std::string m_arpackProblemType;   //Arpack input for problem type
+//        std::string m_arpackProblemType;   //Arpack input for problem type
         /// Constructor
         DriverArpack( LibUtilities::SessionReaderSharedPtr        pSession);
         
@@ -84,7 +84,12 @@ namespace Nektar
         /// Virtual function for solve implementation.
         virtual void v_Execute();
 
+        static std::string arpackProblemTypeLookupIds[];
+        static std::string arpackProblemTypeDefault;
         static std::string driverLookupId;
+
+    private:
+        static std::string ArpackProblemTypeTrans[];
     };
 	
 } //end of namespace

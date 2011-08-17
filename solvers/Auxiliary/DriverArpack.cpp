@@ -38,9 +38,23 @@
 namespace Nektar
 
 {
-    string DriverArpack::className = GetDriverFactory().RegisterCreatorFunction("Arpack", DriverArpack::create);
-    string DriverArpack::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","Arpack",0);
-    
+    std::string DriverArpack::arpackProblemTypeLookupIds[6] = {
+            LibUtilities::SessionReader::RegisterEnumValue("ArpackProblemType","LargestReal"    ,0),
+            LibUtilities::SessionReader::RegisterEnumValue("ArpackProblemType","SmallestReal"   ,1),
+            LibUtilities::SessionReader::RegisterEnumValue("ArpackProblemType","LargestImag"    ,2),
+            LibUtilities::SessionReader::RegisterEnumValue("ArpackProblemType","SmallestImag"   ,3),
+            LibUtilities::SessionReader::RegisterEnumValue("ArpackProblemType","LargestMag"     ,4),
+            LibUtilities::SessionReader::RegisterEnumValue("ArpackProblemType","SmallestMag"    ,5),
+    };
+    std::string DriverArpack::arpackProblemTypeDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("ArpackProblemType","LargestMag");
+    std::string DriverArpack::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","Arpack",0);
+
+    std::string DriverArpack::className = GetDriverFactory().RegisterCreatorFunction("Arpack", DriverArpack::create);
+
+    std::string DriverArpack::ArpackProblemTypeTrans[6] =
+            { "LR", "SR", "LI", "SI", "LM", "SM" };
+
+
     /**
      *
      */
@@ -49,30 +63,18 @@ namespace Nektar
     {
     }
     
-    //Destructor
+
+    /**
+     *
+     */
     DriverArpack::~DriverArpack()
     {
     }
     
-    // Arpack problem type character string mappings
-    int ArpackProbLen = 6;
-    std::string ArpackProbTypes[] = 
-        {
-            "LargestReal",  "SmallestReal",
-            "LargestImag",  "SmallestImag",
-            "LargestMag",   "SmallestMag"
-        };
-    std::string ArpackProbTypesTrans[] = 
-        { "LR", "SR",
-          "LI", "SI",
-          "LM", "SM"
-        };
-	
-	int EvOpNumb = 3;
-	std::string EvolutionOperator[] = 
-	{ "Direct", "Adjoint", "TransientGrowth"
-	};
-    
+
+    /**
+     *
+     */
     void DriverArpack::v_InitObject()
     {
         DriverArnoldi::v_InitObject();
@@ -86,21 +88,6 @@ namespace Nektar
         
         m_equ[0]->SetLambda(m_realShift);
                 
-        bool IsProbType;
-        int i;
-        for(i = 0; i < ArpackProbLen; ++i)
-        {        
-            m_session->MatchSolverInfo("ArpackProblemType",ArpackProbTypes[i].c_str(), IsProbType,false);
-            if(IsProbType)
-            {
-                m_arpackProblemType = ArpackProbTypesTrans[i];                
-                break;
-            }
-        }
-
-        ASSERTL0(i  < ArpackProbLen,"Cannot determine the Arpack Problem Type defiend in ArpackProblemType")
-
-
         // Error alerts
         ASSERTL0(m_nvec <= m_maxnev,"NEV is greater than MAXNEV");
         ASSERTL0(m_kdim <= m_maxncv,"NEV is greater than MAXNEV");
@@ -119,13 +106,7 @@ namespace Nektar
         out << "\tArnoldi solver type    : Arpack" << endl;
 
         out << "\tArpack problem type    : ";
-        for(int i = 0; i < ArpackProbLen; ++i)
-        {
-            if(m_arpackProblemType == ArpackProbTypesTrans[i])
-            {
-                out << ArpackProbTypes[i] << endl;
-            }
-        }
+        out << ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")] << endl;
 
         if(m_session->DefinesSolverInfo("SingleMode"))
         {
@@ -217,7 +198,8 @@ namespace Nektar
         iparam[10]= 0;      // number of reorthogonalisation steps
 
         int cycle = 0;
-		
+		const char* problem = ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")].c_str();
+
         FILE *pFile;
         std::string name = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.'))+".evl";
         pFile= fopen (name.c_str(), "w");
@@ -228,7 +210,7 @@ namespace Nektar
         {
             //Routine for eigenvalue evaluation for non-symmetric operators
             Arpack::Dnaupd( ido, "I",       // B='I' for std eval problem
-                            n, m_arpackProblemType.c_str(),  m_nvec,
+                            n, problem,  m_nvec,
                             m_evtol, &resid[0], m_kdim, 
                             &v[0], n, iparam, ipntr, &workd[0],
                             &workl[0], lworkl, info);
@@ -292,7 +274,7 @@ namespace Nektar
         sigmai     = 0.0;
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
-        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, m_arpackProblemType.c_str(), m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
 		
         ASSERTL0(info == 0, " Error with Dneupd");
 	       	
@@ -348,9 +330,3 @@ namespace Nektar
     }
 
 }
-	
-       
-
-/**
- * $Log $
-**/

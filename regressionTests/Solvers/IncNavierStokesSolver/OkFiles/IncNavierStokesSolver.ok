@@ -116,7 +116,7 @@ L inf error (variable v) : 0.00184176
 L 2 error (variable p) : 0.00235038
 L inf error (variable p) : 0.00172909
 ----------------------------------------
-bfs_tg-Ar.xml
+bfs_tg-AR.xml
 L 2 error (variable u) : 0.0462421
 L inf error (variable u) : 0
 L 2 error (variable v) : 0.0170456

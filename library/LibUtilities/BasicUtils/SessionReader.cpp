@@ -132,6 +132,7 @@ namespace Nektar
             ASSERTL0(argc > 1, "No filename argument specified.");
 
             m_filename = argv[1];
+            m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
 
             // Create communicator
             CreateComm(argc, argv, m_filename);
@@ -874,16 +875,33 @@ namespace Nektar
                     {
                         // Format is "paramName = value"
                         std::string line = node->ToText()->Value();
+                        std::string lhs;
+                        std::string rhs;
 
-                        /// Pull out lhs and rhs and eliminate any spaces.
-                        int beg=line.find_first_not_of(" ");
-                        int end=line.find_first_of("=");
-                        std::string lhs = line.substr(line.find_first_not_of(" "), end-beg-1);
-                        lhs = lhs.substr(0, lhs.find_last_not_of(" ")+1);
+                        try {
+                            /// Pull out lhs and rhs and eliminate any spaces.
+                            int beg = line.find_first_not_of(" ");
+                            int end = line.find_first_of("=");
+                            // Check for no parameter name
+                            if (beg == end) throw 1;
+                            // Check for no parameter value
+                            if (end != line.find_last_of("=")) throw 1;
+                            // Check for no equals sign
+                            if (end == std::string::npos) throw 1;
 
-                        std::string rhs = line.substr(line.find_last_of("=")+1);
-                        rhs = rhs.substr(rhs.find_first_not_of(" "));
-                        rhs = rhs.substr(0, rhs.find_last_not_of(" ")+1);
+                            lhs = line.substr(line.find_first_not_of(" "), end-beg);
+                            lhs = lhs.substr(0, lhs.find_last_not_of(" ")+1);
+
+                            rhs = line.substr(line.find_last_of("=")+1);
+                            rhs = rhs.substr(rhs.find_first_not_of(" "));
+                            rhs = rhs.substr(0, rhs.find_last_not_of(" ")+1);
+                        }
+                        catch (...)
+                        {
+                            ASSERTL0(false, "Syntax error. "
+                                    "File: '" + m_filename + "', line: "
+                                    + boost::lexical_cast<string>(node->Row()));
+                        }
 
                         /// We want the list of parameters to have their RHS evaluated,
                         /// so we use the expression evaluator to do the dirty work.
@@ -903,7 +921,6 @@ namespace Nektar
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
-
                         }
                     }
 

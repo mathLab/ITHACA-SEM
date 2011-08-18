@@ -122,6 +122,8 @@ namespace Nektar
         
         NekDouble     m_kinvis;        ///< Kinematic viscosity
         int           m_infosteps;     ///< dump info to stdout at steps time
+        int           m_energysteps;   ///< dump energy to file at steps time
+        int           m_historysteps;  ///< dump history to file at steps time
         EquationType  m_equationType;  ///< equation type;
 
         // Time integration classes

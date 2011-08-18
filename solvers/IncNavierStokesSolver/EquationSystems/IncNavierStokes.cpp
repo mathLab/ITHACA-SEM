@@ -111,7 +111,9 @@ namespace Nektar
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-            
+            m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
+            m_session->LoadParameter("IO_HistorySteps", m_historysteps, 0);
+
             // check to see if any user defined boundary condition is
             // indeed implemented
             
@@ -172,16 +174,6 @@ namespace Nektar
         
         int n_fields = m_fields.num_elements();
 	
-        //if(m_HomogeneousType != eNotHomogeneous) //Homogeneous case semi-phys integration
-        //{
-        //    for(i = 0; i < n_fields; ++i)
-        //    {
-        //        m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
-        //        m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
-        //        m_fields[i]->SetPhysState(false);
-        //    }
-        //}
-	
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
@@ -195,9 +187,20 @@ namespace Nektar
         LibUtilities::TimeIntegrationSolutionSharedPtr 
             IntegrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
         
-        std::string   outname = m_session->GetFilename();
-        outname = (m_session->GetFilename()).substr(0, outname.find_last_of(".")) + ".his";
-        std::ofstream hisFile (outname.c_str());
+        std::string   hisname = m_session->GetSessionName() + ".his";
+        std::string   mdlname = m_session->GetSessionName() + ".mdl";
+        std::ofstream hisFile;
+        std::ofstream mdlFile;
+
+        if (m_historysteps)
+        {
+            hisFile.open(hisname.c_str());
+        }
+
+        if (m_energysteps)
+        {
+            mdlFile.open(mdlname.c_str());
+        }
 
         //Time advance
         for(n = 0; n < nsteps; ++n)
@@ -207,63 +210,61 @@ namespace Nektar
             
             m_time += m_timestep;
        		
-            if(!((n+1)%m_infosteps))
+            // Write out current time step
+            if(m_infosteps && !((n+1)%m_infosteps))
             {
                 cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+            }
+
+            // Write out history data to file
+            if(m_historysteps && !((n+1)%m_historysteps))
+            {
                 WriteHistoryData(hisFile);
             }
-            
-            // dump data in m_fields->m_coeffs to file. 
-            if(n&&(!((n+1)%m_checksteps)))
+
+            // Write out energy data to file
+            if(m_energysteps && !((n+1)%m_energysteps))
             {
-                //if(m_HomogeneousType != eNotHomogeneous)
-                //{
-                //    for(i = 0; i < n_fields; ++i)
-                //    {
-                //        m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
-                //        m_fields[i]->SetPhysState(false);
-                //    }
-                //    
-                //    Checkpoint_Output(nchk++);
-                //    
-                //    for(i = 0; i < n_fields; ++i)
-                //    {
-                //        m_fields[i]->SetFourierSpace(MultiRegions::eCoef);
-                //        m_fields[i]->SetPhysState(false);
-                //    }
-                //}
-                //else 
-                //{
-                    for(i = 0; i < m_nConvectiveFields; ++i)
-                    {
-                        m_fields[i]->SetPhys(fields[i]);
-                        m_fields[i]->SetPhysState(true);
-                    }
-                    Checkpoint_Output(nchk++);
-                    
-                //}
+                NekDouble energy = 0.0;
+                for(i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[i]->SetPhys(fields[i]);
+                    m_fields[i]->SetPhysState(true);
+                    NekDouble norm = L2Error(i, true);
+                    energy += norm*norm;
+                }
+                mdlFile << m_time << "   " << 0.5*energy << endl;
+            }
+
+            // dump data in m_fields->m_coeffs to file. 
+            if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+            {
+                for(i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[i]->SetPhys(fields[i]);
+                    m_fields[i]->SetPhysState(true);
+                }
+                Checkpoint_Output(nchk++);
             }
         }
         
-        //updating physical space
-        //if(m_HomogeneousType != eNotHomogeneous)
-        //{
-        //    for(i = 0; i < n_fields; ++i)
-        //    {
-        //        m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
-        //        m_fields[i]->SetPhysState(false);
-        //    }			
-        //}
-        //else 
-        //{
-            for(i = 0; i < m_nConvectiveFields; ++i)
-            {
-                m_fields[i]->SetPhys(fields[i]);
-                m_fields[i]->SetPhysState(true);
-            }
-        //}
+        for(i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_fields[i]->SetPhys(fields[i]);
+            m_fields[i]->SetPhysState(true);
+        }
+
+        if (m_historysteps)
+        {
+            hisFile.close();
+        }
+        if (m_energysteps)
+        {
+            mdlFile.close();
+        }
     }
     
+
     // Evaluation -N(V) for all fields except pressure using m_velocity
     void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                                  Array<OneD, Array<OneD, NekDouble> > &outarray, 

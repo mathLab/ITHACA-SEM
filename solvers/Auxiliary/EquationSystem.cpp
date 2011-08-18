@@ -111,6 +111,12 @@ namespace Nektar
             ::AllocateSharedPtr(m_graph);
 
         m_historyPoints->Read(m_filename);
+        if (m_historyPoints->GetNumHistoryPoints() > 0
+                && !m_session->DefinesParameter("IO_HistorySteps"))
+        {
+            cout << "Warning: Must set IO_HistorySteps parameter to enable "
+                    "output of history points." << endl;
+        }
 
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
@@ -1913,7 +1919,6 @@ namespace Nektar
 
         if(init)
         {
-
             out << "# History data for variables (:";
 
             for (int j = 0; j < m_fields.num_elements(); ++j)

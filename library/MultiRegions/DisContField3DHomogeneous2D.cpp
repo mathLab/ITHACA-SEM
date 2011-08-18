@@ -277,6 +277,48 @@ namespace Nektar
 		{
 			return UpdateBndConditions();
 		}
+		
+		void DisContField3DHomogeneous2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
+        {
+            
+            if(m_BCtoElmMap.num_elements() == 0)
+            {
+                Array<OneD, int> ElmtID_tmp;
+                Array<OneD, int> EdgeID_tmp;
+				
+                m_lines[0]->GetBoundaryToElmtMap(ElmtID_tmp,EdgeID_tmp);
+                int nel_per_lines = m_lines[0]->GetExpSize();
+                int nlines = m_lines.num_elements();
+				
+                int MapSize = ElmtID_tmp.num_elements();
+				
+                ElmtID = Array<OneD, int>(nlines*MapSize);
+                EdgeID = Array<OneD, int>(nlines*MapSize);
+                for(int i = 0; i < nlines; i++)
+                {
+                    for(int j = 0; j < MapSize; j++)
+                    {
+                        ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_lines;
+                        EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+                    }
+                }
+                m_BCtoElmMap = Array<OneD, int>(nlines*MapSize);
+                m_BCtoEdgMap = Array<OneD, int>(nlines*MapSize);
+				
+                Vmath::Vcopy(nlines*MapSize,ElmtID,1,m_BCtoElmMap,1);
+                Vmath::Vcopy(nlines*MapSize,EdgeID,1,m_BCtoEdgMap,1);
+            }
+            else 
+            {
+                int MapSize = m_BCtoElmMap.num_elements();
+				
+                ElmtID = Array<OneD, int>(MapSize);
+                EdgeID = Array<OneD, int>(MapSize);
+				
+                Vmath::Vcopy(MapSize,m_BCtoElmMap,1,ElmtID,1);
+                Vmath::Vcopy(MapSize,m_BCtoEdgMap,1,EdgeID,1);
+            }			
+        }
 
 
     } // end of namespace

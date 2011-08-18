@@ -107,8 +107,12 @@ namespace Nektar
     {
     }
     
-    void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, const int nConvectiveFields, const Array<OneD, int> &vel_loc, 
- const Array<OneD, const Array<OneD, NekDouble> > &pInarray, Array<OneD, Array<OneD, NekDouble> > &pOutarray,  Array<OneD, NekDouble> &pWk)
+    void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, 
+									const int nConvectiveFields, 
+									const Array<OneD, int> &vel_loc, 
+									const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
+									Array<OneD, Array<OneD, NekDouble> > &pOutarray,  
+									Array<OneD, NekDouble> &pWk)
     {
         int i,j;
         int VelDim           = vel_loc.num_elements();        

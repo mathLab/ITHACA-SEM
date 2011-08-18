@@ -361,6 +361,7 @@ namespace Nektar
 				{
 					m_fields[i]->HomogeneousBwdTrans(fields[i],m_fields[i]->UpdatePhys());
 					m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
+					m_fields[i]->SetPhysState(false);
 				}
 				else 
 				{
@@ -427,6 +428,7 @@ namespace Nektar
 				{
 					m_fields[i]->HomogeneousBwdTrans(fields[i],m_fields[i]->UpdatePhys());
 					m_fields[i]->SetFourierSpace(MultiRegions::ePhys);
+					m_fields[i]->SetPhysState(false);
 				}
 				else 
 				{

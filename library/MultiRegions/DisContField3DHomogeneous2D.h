@@ -91,12 +91,29 @@ namespace Nektar
 			inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 			
 			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
+			
+			/// \brief Set up a list of element ids and edge ids the link to the
+            /// boundary conditions
+            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,Array<OneD,int> &EdgeID);
+			
+			/// Storage space for the boundary to element and boundary to trace map.
+            /// This member variable is really allocated just in case a boundary expansion
+            /// recasting is required at the solver level. Otherwise is the 2 vectors are not filled up.
+            /// If is needed all the funcitons whihc require to use this map do not have to recalculate it anymore.
+            Array<OneD, int> m_BCtoElmMap;
+            Array<OneD, int> m_BCtoEdgMap;
             
         protected:
            
             Array<OneD,MultiRegions::ExpListSharedPtr>          m_bndCondExpansions;
 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
+			
+			virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
+                                                Array<OneD,int> &EdgeID)
+            {
+                GetBoundaryToElmtMap(ElmtID,EdgeID);
+            }
 
         private:
             // virtual functions

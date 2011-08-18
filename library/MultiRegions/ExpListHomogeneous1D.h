@@ -163,8 +163,7 @@ namespace Nektar
 
             virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs);
 
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
-                v_GetFieldDefinitions(void);
+            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
 
             virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
 

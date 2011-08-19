@@ -61,7 +61,13 @@ namespace Nektar
 	    AdvectionTerm::v_InitObject();
             
             SetUpBaseFields(m_graph);
-            ImportFldBase(m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + ".bse",m_graph);
+            ASSERTL0(m_session->DefinesFunction("BaseFlow"),
+                    "Base flow must be defined for linearised forms.");
+            ASSERTL0(m_session->GetFunctionType("BaseFlow")
+                                    == LibUtilities::eFunctionTypeFile,
+                    "Base flow must be provided in a file.");
+            string file = m_session->GetFunctionFilename("BaseFlow");
+            ImportFldBase(file,m_graph);
 	}
 
     LinearisedAdvection::~LinearisedAdvection()

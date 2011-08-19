@@ -307,6 +307,10 @@
     <FUNCTION NAME="InitialConditions">
     <F FILE="ChanStability_adj_Ar.rst" />
    </FUNCTION>
+   
+     <FUNCTION NAME="BaseFlow">
+    <F FILE="ChanStability_adj_Ar.bse" />
+   </FUNCTION>
 
     <FUNCTION NAME="ExactSolution">
       <E VAR="u" VALUE="-y*y+1" />

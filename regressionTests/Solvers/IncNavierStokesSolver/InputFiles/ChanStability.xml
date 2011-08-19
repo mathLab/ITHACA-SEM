@@ -301,6 +301,10 @@
      <F FILE="ChanStability.rst"  />
     </FUNCTION>
    
+       <FUNCTION NAME="BaseFlow">
+     <F FILE="ChanStability.bse"  />
+    </FUNCTION>
+    
       <FUNCTION NAME="Forcing">
      <E VAR="u" VALUE="0" />
      <E VAR="v" VALUE="0" />

@@ -261,6 +261,7 @@
       <P> Re            = 7500     </P>
       <P> Kinvis        = 1.0/Re     </P>
       <P> kdim          = 16       </P>
+      <P> nev           =2  </P>
     </PARAMETERS>
 
     <VARIABLES>

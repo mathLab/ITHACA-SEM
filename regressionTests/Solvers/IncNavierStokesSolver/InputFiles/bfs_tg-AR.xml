@@ -1736,9 +1736,12 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
+    <FUNCTION NAME="BaseFlow">
+        <F FILE="bfs_tg-AR.bse" />
+    </FUNCTION>
+
     <FUNCTION NAME="InitialConditions">
         <F FILE="bfs_tg-AR.rst" />
- 
     </FUNCTION>
 
     </CONDITIONS>

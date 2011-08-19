@@ -306,6 +306,10 @@
     <F FILE="ChanStability_adj.rst" />
    </FUNCTION>
 
+    <FUNCTION NAME="BaseFlow">
+    <F FILE="ChanStability_adj.bse" />
+   </FUNCTION>
+   
     <FUNCTION NAME="ExactSolution">
       <E VAR="u" VALUE="-y*y+1" />
       <E VAR="v" VALUE="0" />

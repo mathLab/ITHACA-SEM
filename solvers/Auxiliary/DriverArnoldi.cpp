@@ -43,6 +43,7 @@ namespace Nektar
     DriverArnoldi::DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession)
             : Driver(pSession)
     {
+        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
     };
 
 

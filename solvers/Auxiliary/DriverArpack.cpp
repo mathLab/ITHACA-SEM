@@ -71,7 +71,6 @@ namespace Nektar
     {
     }
     
-
     /**
      *
      */
@@ -217,7 +216,7 @@ namespace Nektar
             
             //Plotting of real and imaginary part of the eigenvalues from workl
             cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
-            if(cycle >= m_kdim)
+            if(!(cycle%m_kdim))
             {
                 fprintf (pFile, "Krylov spectrum at iteration: %i\t \n", cycle);
                 for(int k=0; k<=m_kdim-1; ++k)
@@ -242,8 +241,11 @@ namespace Nektar
             CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
             m_equ[0]->DoSolve();
+            if(!(cycle%m_infosteps))
+            {
+                m_equ[0]->Output();
+            }
 
-			
 			if(m_EvolutionOperator == eTransientGrowth)
 			{
 				Array<OneD, MultiRegions::ExpListSharedPtr> fields;
@@ -313,9 +315,9 @@ namespace Nektar
                 cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
             }
 			
-		}
-    };
-    
+        }
+    }
+
     void DriverArpack::WriteEvs(FILE *fp, const int k,  const NekDouble real, const NekDouble imag)
     {
         if(m_TimeSteppingAlgorithm)
@@ -328,5 +330,4 @@ namespace Nektar
             fprintf (fp, "EV: %i\t , Re: %10.6lf\t Imag:  %10.6lf\t inverse real:  %10.6le\t, inverse imag:  %10.6le\n",k, real, imag,-real*invmag, imag*invmag);
         }
     }
-
 }

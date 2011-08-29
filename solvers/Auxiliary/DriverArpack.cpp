@@ -215,14 +215,16 @@ namespace Nektar
                             &workl[0], lworkl, info);
             
             //Plotting of real and imaginary part of the eigenvalues from workl
-            cout << "Iteration " << cycle << ", output: " << info << ", ido=" << ido << endl;
-            if(!(cycle%m_kdim))
+            cout << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush;
+
+            if(!((cycle-1)%m_kdim)&&(cycle> m_kdim))
             {
+                cout << endl;
                 fprintf (pFile, "Krylov spectrum at iteration: %i\t \n", cycle);
                 for(int k=0; k<=m_kdim-1; ++k)
                 {                    
                     // write m_nvec eigs to screen
-                    if(k < m_nvec)
+                    if(m_kdim-1-k < m_nvec)
                     {
                         WriteEvs(stdout,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                     }
@@ -243,26 +245,27 @@ namespace Nektar
             m_equ[0]->DoSolve();
             if(!(cycle%m_infosteps))
             {
+                cout << endl;
                 m_equ[0]->Output();
             }
 
-			if(m_EvolutionOperator == eTransientGrowth)
-			{
-				Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-				fields = m_equ[0]->UpdateFields();
-				for (int k=0 ; k < m_nfields; ++k)
-				{
-					Vmath::Vcopy(nq,  &fields[k]->GetPhys()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdatePhys()[0], 1);
-				}				
-				m_equ[1]->DoSolve();
-			}
-
+            if(m_EvolutionOperator == eTransientGrowth)
+            {
+                Array<OneD, MultiRegions::ExpListSharedPtr> fields;
+                fields = m_equ[0]->UpdateFields();
+                for (int k=0 ; k < m_nfields; ++k)
+                {
+                    Vmath::Vcopy(nq,  &fields[k]->GetPhys()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdatePhys()[0], 1);
+                }				
+                m_equ[1]->DoSolve();
+            }
+            
             // operated fields are copied into workd[inptr[1]-1] 
             CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
             
         }
 		
-        cout<< "Converged in " << iparam[8] << " iterations" << endl;
+        cout<< endl << "Converged in " << iparam[8] << " iterations" << endl;
 	
         ASSERTL0(info >= 0," Error with Dnaupd");
 	

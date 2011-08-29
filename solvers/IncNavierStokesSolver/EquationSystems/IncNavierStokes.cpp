@@ -58,7 +58,7 @@ namespace Nektar
     void IncNavierStokes::v_InitObject()
     {
         EquationSystem::v_InitObject();
-
+        
         int i,j,expdim;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
@@ -66,8 +66,6 @@ namespace Nektar
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
         
-        ASSERTL0(numfields >= m_spacedim,std::string("Expect the number of fields to be at least ") + boost::lexical_cast<std::string>(m_spacedim));
-
         for(i = 0; i < m_spacedim; ++i)
         {
             for(j = 0; j < numfields; ++j)

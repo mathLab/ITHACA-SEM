@@ -719,26 +719,7 @@ namespace Nektar
 
                             locExp->IProductWRTBase(tmpphys,coeffs);
 
-                            // imaginary contribution
-#if 1 
-                            for(nv = 0; nv < nvel; ++nv)
-                            {
-                                for(j = 0; j < nbmap; ++j)
-                                {
-                                    (*Ah)(j+(2*nv+1)*nbmap,i+2*nv*nbmap) +=
-                                        coeffs[bmap[j]];
-                                }
-                                
-                                for(j = 0; j < nimap; ++j)
-                                {
-                                    (*C)(i+2*nv*nbmap,j+(2*nv+1)*nimap) += 
-                                        coeffs[imap[j]];
-                                }
-                            }
-#endif
 
-#if 1
-                            Vmath::Neg(ncoeffs,coeffs,1);
                             // real contribution
                             for(nv = 0; nv < nvel; ++nv)
                             {
@@ -754,7 +735,23 @@ namespace Nektar
                                         coeffs[imap[j]];
                                 }
                             }
-#endif                        
+
+                            Vmath::Neg(ncoeffs,coeffs,1);
+                            // imaginary contribution
+                            for(nv = 0; nv < nvel; ++nv)
+                            {
+                                for(j = 0; j < nbmap; ++j)
+                                {
+                                    (*Ah)(j+(2*nv+1)*nbmap,i+2*nv*nbmap) +=
+                                        coeffs[bmap[j]];
+                                }
+                                
+                                for(j = 0; j < nimap; ++j)
+                                {
+                                    (*C)(i+2*nv*nbmap,j+(2*nv+1)*nimap) += 
+                                        coeffs[imap[j]];
+                                }
+                            }
                         }
                         else
                         {
@@ -868,25 +865,7 @@ namespace Nektar
                             Vmath::Vmul(npoints, Advtmp = Advfield[k] + phys_offset,1,deriv,1,tmpphys,1);
                             locExp->IProductWRTBase(tmpphys,coeffs);
                             
-
-#if 1
-                            for(nv = 0; nv < nvel; ++nv)
-                            {
-                                for(j = 0; j < nbmap; ++j)
-                                {
-                                    (*B)(j+(2*nv+1)*nbmap,i+2*nv*nimap) += 
-                                        coeffs[bmap[j]];
-                                }
-                                
-                                for(j = 0; j < nimap; ++j)
-                                {
-                                    (*D)(j+(2*nv+1)*nimap,i+2*nv*nimap) += 
-                                        coeffs[imap[j]];
-                                }
-                            }
-#endif
-#if 1
-                            Vmath::Neg(ncoeffs,coeffs,1);
+                            // Real Components
                             for(nv = 0; nv < nvel; ++nv)
                             {
                                 for(j = 0; j < nbmap; ++j)
@@ -901,7 +880,23 @@ namespace Nektar
                                          coeffs[imap[j]];
                                 }
                             }
-#endif
+                            Vmath::Neg(ncoeffs,coeffs,1);
+                            // Imaginary 
+                            for(nv = 0; nv < nvel; ++nv)
+                            {
+                                for(j = 0; j < nbmap; ++j)
+                                {
+                                    (*B)(j+(2*nv+1)*nbmap,i+2*nv*nimap) += 
+                                        coeffs[bmap[j]];
+                                }
+                                
+                                for(j = 0; j < nimap; ++j)
+                                {
+                                    (*D)(j+(2*nv+1)*nimap,i+2*nv*nimap) += 
+                                        coeffs[imap[j]];
+                                }
+                            }
+
                         }
                         else
                         {

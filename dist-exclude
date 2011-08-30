@@ -8,6 +8,7 @@ library/Demos/StdRegions/ExtraDemos
 library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver
 solvers/FitzHughNagumoSolver
+solvers/CardiacEPSolver
 docs/*.doc
 docs/arch
 docs/emacs

@@ -85,7 +85,9 @@ namespace Nektar
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
-            m_bndSystemBandWidth(0)
+            m_bndSystemBandWidth(0),
+            m_gsh(0),
+            m_bndGsh(0)
         {
         }
 
@@ -97,7 +99,9 @@ namespace Nektar
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
-            m_bndSystemBandWidth(0)
+            m_bndSystemBandWidth(0),
+            m_gsh(0),
+            m_bndGsh(0)
         {
         }
 
@@ -112,7 +116,9 @@ namespace Nektar
             m_comm(oldLevelMap->GetComm()),
             m_solnType(oldLevelMap->m_solnType),
             m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
-            m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique())
+            m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
+            m_gsh(oldLevelMap->m_gsh),
+            m_bndGsh(oldLevelMap->m_bndGsh)
         {
             int i;
             int j;

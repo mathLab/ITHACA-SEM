@@ -884,8 +884,9 @@ namespace Nektar
                 LaplacianMatrixOp(inarray,lap,mkeylap);
 
                 v_IProductWRTBase(tmp_adv, outarray);
-                // (grad u, grad v) - u.grad v + lambda*u
-                Vmath::Vsub(m_ncoeffs,lap,1,outarray,1,outarray,1);
+                // Lap v - u.grad v + lambda*u 
+                // => (grad u, grad v) + u.grad v - lambda*u
+                Vmath::Vadd(m_ncoeffs,lap,1,outarray,1,outarray,1);
             }
             else
             {

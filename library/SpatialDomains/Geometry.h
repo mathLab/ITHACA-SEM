@@ -150,6 +150,11 @@ namespace Nektar
                     return v_GetNumVerts();
                 }
 
+                inline StdRegions::EdgeOrientation GetEorient(const int i) const
+                {
+                    return v_GetEorient(i);
+                }
+
                 inline int GetNumEdges() const
                 {
                     return v_GetNumEdges();
@@ -212,6 +217,13 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
                     return 0;
+                }
+
+                virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        "This function is not valid for this geometry.");
+                    return StdRegions::eForwards;
                 }
 
                 virtual int v_GetNumEdges() const

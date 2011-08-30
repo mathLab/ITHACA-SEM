@@ -158,11 +158,6 @@ namespace Nektar
                 return v_GetVertex(i);
             }
 
-            inline StdRegions::EdgeOrientation GetEorient(const int i) const
-            {
-                return v_GetEorient(i);
-            }
-
             inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
             {
                 return v_GetCartesianEorient(i);
@@ -301,7 +296,7 @@ namespace Nektar
                 SegGeomSharedPtr returnval;
                 return returnval;
             }
-                
+
             virtual const VertexComponentSharedPtr v_GetVertex(int i) const
             {
                 NEKERROR(ErrorUtil::efatal,

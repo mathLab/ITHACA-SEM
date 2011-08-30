@@ -762,6 +762,7 @@ namespace Nektar
                 // Loop over all edges of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
+                    edgeOrient = (locExpansion->GetGeom())->GetEorient(j);
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
                     dof = locExpansion->GetEdgeNcoeffs(j)-2;
                     if (nDim == 2)

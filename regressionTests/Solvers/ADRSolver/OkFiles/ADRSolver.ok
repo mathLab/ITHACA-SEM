@@ -5,8 +5,8 @@ L 2 error (variable u) : 0.00888037
 L inf error (variable u) : 0.0101781
 ----------------------------------------
 Test_SteadyAdvDiffReact2D_modal.xml
-L 2 error (variable u) : 0.000366734
-L inf error (variable u) : 0.000510484
+L 2 error (variable u) : 0.000367073
+L inf error (variable u) : 0.000514567
 ----------------------------------------
 Test_Helmholtz2D_nodal.xml
 L 2 error (variable u) : 0.00194795
@@ -129,8 +129,8 @@ L 2 error (variable u) : 2.00743e-06
 L inf error (variable u) : 6.32758e-06
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml
-L 2 error (variable u) : 9.8505e-10
-L inf error (variable u) : 4.267e-09
+L 2 error (variable u) : 9.45857e-10
+L inf error (variable u) : 2.41474e-09
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_FFT.xml
 L 2 error (variable u) : 9.94957e-10

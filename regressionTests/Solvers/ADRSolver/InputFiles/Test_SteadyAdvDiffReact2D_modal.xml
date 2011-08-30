@@ -266,7 +266,7 @@
 
         <FUNCTION NAME="Forcing">
             <E VAR="u"
-                VALUE="PI*cos(PI*x)*sin(PI*y) + PI*sin(PI*x)*cos(PI*y) - (2*PI*PI+Lambda)*sin(PI*x)*sin(PI*y)" />
+                VALUE="-PI*cos(PI*x)*sin(PI*y) - PI*sin(PI*x)*cos(PI*y) - (2*PI*PI-Lambda)*sin(PI*x)*sin(PI*y)" />
         </FUNCTION>
 
         <FUNCTION NAME="BaseFlow">

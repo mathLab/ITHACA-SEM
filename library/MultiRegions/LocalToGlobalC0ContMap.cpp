@@ -447,7 +447,7 @@ namespace Nektar
                     {
                         nLocDirBndCondDofs += bndSegExp->GetNcoeffs();
                     }
-                    if( bndCondExp[i]->GetExp(j)==bndCondExp[(bndCondExp.num_elements()-1)]->GetExp(bndCondExp[i]->GetExpSize()-1)
+                    if( bndCondExp[i]->GetExp(j)==bndCondExp[bndCondExp.num_elements()-1]->GetExp(bndCondExp[bndCondExp.num_elements()-1]->GetExpSize()-1)
                             && i==(bndCondExp.num_elements()-1)
                             && nLocDirBndCondDofs ==0
                             && checkIfSystemSingular==true)

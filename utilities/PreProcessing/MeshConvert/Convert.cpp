@@ -114,7 +114,6 @@ namespace Nektar
             if (m_expDim >= 2)
             {
                 int edgecnt = 0;
-                int small, large;
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
 
                 for( int i = 0; i < m_edge.size(); ++i )
@@ -135,7 +134,6 @@ namespace Nektar
         {
             if (m_expDim == 3)
             {
-                int small, large;
                 TiXmlElement* verTag = new TiXmlElement( "FACE" );
 
                 for( int i = 0; i < m_face.size(); ++i )

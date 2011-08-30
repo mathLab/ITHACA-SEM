@@ -27,7 +27,8 @@ using namespace std;
 
 void  PrintConditions(void);
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
     vector<double> xc,yc; 
     double         x,y;
     int            nx = 0, ny = 0;

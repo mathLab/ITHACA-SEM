@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
     <GEOMETRY DIM="2" SPACE="2">
         <VERTEX>
             <V ID="0">3.142e+00 1.000e+00 0.000e+00</V>
@@ -65,7 +66,7 @@
             <V ID="60">-3.142e+00 -5.000e-01 0.000e+00</V>
             <V ID="61">-3.142e+00 -8.000e-01 0.000e+00</V>
             <V ID="62">-3.142e+00 -1.000e+00 0.000e+00</V>
-                    </VERTEX>
+        </VERTEX>
         <EDGE>
             <E ID="0">    0  1   </E>
             <E ID="1">    1  2   </E>
@@ -229,93 +230,88 @@
             <Q ID="47">  107   108   109    95 </Q>
         </ELEMENT>
         <COMPOSITE>
-            
             <C ID="0"> Q[0-47] </C>
-            <C ID="1"> E[17,31,44,57,70,83,96,109,0,19,32,45,58,71,84,97] </C> //wall
-            <C ID="2"> E[3,6,9,12,15,18] </C>//inflow 
-            <C ID="3"> E[98,100,102,104,106,108] </C> //outflow
+            <C ID="1"> E[17,31,44,57,70,83,96,109,0,19,32,45,58,71,84,97] </C>  <!-- Wall -->
+            <C ID="2"> E[3,6,9,12,15,18] </C>   <!-- Inflow -->
+            <C ID="3"> E[98,100,102,104,106,108] </C>   <!-- Outflow -->
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
-    
-  <CONDITIONS>
-      <SOLVERINFO>
-      <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="EvolutionOperator" VALUE="Adjoint"/>
-      <I PROPERTY="Projection" VALUE="Galerkin"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"/>
-      <I PROPERTY="Driver" VALUE="ModifiedArnoldi"/>
 
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="EvolutionOperator" VALUE="Adjoint" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3" />
+            <I PROPERTY="Driver" VALUE="ModifiedArnoldi" />
+        </SOLVERINFO>
 
-    </SOLVERINFO>
+        <PARAMETERS>
+            <P> TimeStep      = 0.002  </P>
+            <P> NumSteps      = 70     </P>
+            <P> IO_CheckSteps = 1000   </P>
+            <P> IO_InfoSteps  = 20     </P>
+            <P> Re            = 7500   </P>
+            <P> Kinvis        = 1.0/Re </P>
+            <P> kdim          = 16      </P>
+            <P> nvec           =2      </P>
+            <P> evtol           =1e-6      </P>
 
-    <PARAMETERS>
-      <P> TimeStep      = 0.002  </P>
-      <P> NumSteps      = 70     </P>
-      <P> IO_CheckSteps = 1000   </P>
-      <P> IO_InfoSteps  = 20     </P>
-      <P> Re            = 7500   </P>
-      <P> Kinvis        = 1.0/Re </P>
-      <P> kdim          = 16      </P> 
-      <P> nvec           =2      </P> 
-      <P> evtol           =1e-6      </P> 
+        </PARAMETERS>
 
-    </PARAMETERS>
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
 
-    <VARIABLES>
-      <V ID="0"> u </V> 
-      <V ID="1"> v </V> 
-      <V ID="2"> p </V> 
-    </VARIABLES>
-    
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-    </BOUNDARYREGIONS>
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+        </BOUNDARYREGIONS>
 
-    <BOUNDARYCONDITIONS>
-      <REGION REF="0">
-        <D VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>  // High Order Pressure BC
-      </REGION>
-      <REGION REF="1">
-        <P VAR="u" VALUE="[2]" />
-        <P VAR="v" VALUE="[2]" />
-        <P VAR="p" VALUE="[2]" />  // High Order Pressure BC
-      </REGION>
-      <REGION REF="2">
-        <P VAR="u" VALUE="[1]" />
-        <P VAR="v" VALUE="[1]" />
-        <P VAR="p" VALUE="[1]" />
-      </REGION>
-    </BOUNDARYCONDITIONS>
-    
-      <FUNCTION NAME="Forcing">
-     <E VAR="u" VALUE="0" />
-     <E VAR="v" VALUE="0" />
-     <E VAR="p" VALUE="0" />
-   </FUNCTION>
-   
-    <FUNCTION NAME="InitialConditions">
-    <F FILE="ChanStability_adj.rst" />
-   </FUNCTION>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <P VAR="u" VALUE="[2]" />
+                <P VAR="v" VALUE="[2]" />
+                <P VAR="p" VALUE="[2]" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="u" VALUE="[1]" />
+                <P VAR="v" VALUE="[1]" />
+                <P VAR="p" VALUE="[1]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
 
-    <FUNCTION NAME="BaseFlow">
-    <F FILE="ChanStability_adj.bse" />
-   </FUNCTION>
-   
-    <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="-y*y+1" />
-      <E VAR="v" VALUE="0" />
-      <E VAR="p" VALUE="-2*Kinvis*(x-1)" />
-    </FUNCTION>
-    
-  </CONDITIONS>
+        <FUNCTION NAME="InitialConditions">
+            <F FILE="ChanStability_adj.rst" />
+        </FUNCTION>
+
+        <FUNCTION NAME="BaseFlow">
+            <F FILE="ChanStability_adj.bse" />
+        </FUNCTION>
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="-y*y+1" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="-2*Kinvis*(x-1)" />
+        </FUNCTION>
+
+    </CONDITIONS>
 
 </NEKTAR>

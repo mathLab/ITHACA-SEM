@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
-    <!-- Embed a 3-dimensional object in a 3-dimensional space-->
-    <!--DIM <= SPACE  this provides a method of optimizing code for a 3-D curve embedded in 3-d space.-->
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
     <GEOMETRY DIM="2" SPACE="2">
-        <!-- Definitions that can be used below in this file. -->
+
         <VERTEX>
-            <!-- Always must have four values per entry. -->
             <V ID="0">  -1.571e+00 1.571e+00 0.000e+00</V>
             <V ID="1">  -7.854e-01 1.571e+00 0.000e+00</V>
             <V ID="2">   0.000e+00 1.571e+00 0.000e+00</V>
@@ -32,8 +32,8 @@
             <V ID="23">  7.854e-01 -1.571e+00 0.000e+00</V>
             <V ID="24">  1.571e+00 -1.571e+00 0.000e+00</V>
         </VERTEX>
+
         <EDGE>
-            <!--Edges are vertex pairs -->
             <E ID="0">   0  1   </E>
             <E ID="1">   1  2   </E>
             <E ID="2">   2  3   </E>
@@ -75,10 +75,8 @@
             <E ID="38">    19 14   </E>
             <E ID="39">    24 19   </E>
         </EDGE>
+
         <ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
             <Q ID="0">    0     20     4     24 </Q>
             <Q ID="1">    1     24     5     28 </Q>
             <Q ID="2">    2     28     6     32 </Q>
@@ -96,89 +94,91 @@
             <Q ID="14">   14    31    18     35 </Q>
             <Q ID="15">   15    35    19     39 </Q>
         </ELEMENT>
-        <!-- V - vertex, S - segment, E - edge, F - face -->
+
         <COMPOSITE>
-            <C ID="0"> Q[0-15]</C>           // Domain (square)
-            <C ID="1"> E[0,1,2,3]</C>        // North edge
-            <C ID="2"> E[36,37,38,39]</C>    // East  edge
-            <C ID="3"> E[16,17,18,19]</C>    // South edge
-            <C ID="4"> E[20,21,22,23]</C>    // West  edge
+            <C ID="0"> Q[0-15]</C>           <!-- Domain (square) -->
+            <C ID="1"> E[0,1,2,3]</C>        <!-- North edge -->
+            <C ID="2"> E[36,37,38,39]</C>    <!-- East edge -->
+            <C ID="3"> E[16,17,18,19]</C>    <!-- South edge -->
+            <C ID="4"> E[20,21,22,23]</C>    <!-- West edge -->
         </COMPOSITE>
-        
- <DOMAIN> C[0] </DOMAIN>
-        
+
+        <DOMAIN> C[0] </DOMAIN>
+
     </GEOMETRY>
-    
+
     <EXPANSIONS>
-       <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v,p" TYPE="MODIFIED" />
     </EXPANSIONS>
-    
+
     <CONDITIONS>
-    
-      <SOLVERINFO>
-        <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
-        <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-        <I PROPERTY="AdvectionForm" VALUE="Convective"/>
-        <I PROPERTY="Projection" VALUE="Galerkin"/>
-        <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-      </SOLVERINFO>
 
-    <PARAMETERS>
-      <P> TimeStep      = 0.001               </P>
-      <P> NumSteps      = 500                 </P>
-      <P> IO_CheckSteps = 500                 </P>
-      <P> IO_InfoSteps  = 500                 </P>
-      <P> Kinvis        = 1                   </P>
-    </PARAMETERS>
-        
-    <VARIABLES>
-      <V ID="0"> u </V> 
-      <V ID="1"> v </V> 
-      <V ID="2"> p </V>
-    </VARIABLES>
-    
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
-    </BOUNDARYREGIONS>
-    
-    <BOUNDARYCONDITIONS>
-         <REGION REF="0">
-            <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-            <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-            <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
-         </REGION>
-         <REGION REF="1">
-            <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-            <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-            <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
-         </REGION>
-         <REGION REF="2">
-            <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-            <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-            <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
-         </REGION>
-         <REGION REF="3">
-            <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-            <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-            <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
-         </REGION>
-    </BOUNDARYCONDITIONS>
-    
-    <FUNCTION NAME="InitialConditions">
-        <E VAR="u" VALUE="-cos(x)*sin(y)" />
-        <E VAR="v" VALUE="sin(x)*cos(y)" />
-        <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))" />
-    </FUNCTION>
-   
-    <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-      <E VAR="v" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-      <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
-    </FUNCTION>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+        </SOLVERINFO>
 
-</CONDITIONS>
+        <PARAMETERS>
+            <P> TimeStep      = 0.001               </P>
+            <P> NumSteps      = 500                 </P>
+            <P> IO_CheckSteps = 500                 </P>
+            <P> IO_InfoSteps  = 500                 </P>
+            <P> Kinvis        = 1                   </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+                <D VAR="p" USERDEFINEDTYPE="TimeDependent"
+                    VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+                <D VAR="p" USERDEFINEDTYPE="TimeDependent"
+                    VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="-cos(x)*sin(y)" />
+            <E VAR="v" VALUE="sin(x)*cos(y)" />
+            <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+            <E VAR="v" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+            <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
+        </FUNCTION>
+
+    </CONDITIONS>
 
 </NEKTAR>

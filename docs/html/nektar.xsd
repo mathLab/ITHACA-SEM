@@ -99,6 +99,24 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+                            <xs:element name="CURVED" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="E" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:string">
+                                                        <xs:attribute name="ID" type="xs:string" use="required"/>
+                                                        <xs:attribute name="EDGEID" type="xs:integer" use="required"/>
+                                                        <xs:attribute name="TYPE" type="xs:string" use="required"/>
+                                                        <xs:attribute name="NUMPOINTS" type="xs:string" use="required"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
 							<xs:element name="DOMAIN" type="xs:string" />
 						</xs:sequence>
 						<xs:attribute name="DIM" type="xs:string" use="required"/>
@@ -160,19 +178,20 @@
                                     <xs:sequence>
                                         <xs:element name="REGION" maxOccurs="unbounded">
                                             <xs:complexType>
-                                                <xs:sequence>
-                                                    <xs:element name="D" type="BoundaryCondition" minOccurs="0" />
-                                                    <xs:element name="N" type="BoundaryCondition" minOccurs="0" />
-                                                    <xs:element name="R" minOccurs="0">
+                                                <xs:choice maxOccurs="unbounded">
+                                                    <xs:element name="D" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded"/>
+                                                    <xs:element name="N" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded"/>
+                                                    <xs:element name="R" minOccurs="0" maxOccurs="unbounded">
                                                         <xs:complexType>
                                                             <xs:complexContent>
                                                                 <xs:extension base="BoundaryCondition">
-                                                                    <xs:attribute name="PRIMCOEFF" type="xs:string" />
+                                                                    <xs:attribute name="PRIMCOEFF" type="xs:string" use="required"/>
                                                                 </xs:extension>
                                                             </xs:complexContent>
                                                         </xs:complexType>
                                                     </xs:element>
-                                                </xs:sequence>
+                                                    <xs:element name="P" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded" />
+                                                </xs:choice>
                                                 <xs:attribute name="REF" type="xs:string" use="required"/>
                                             </xs:complexType>
                                         </xs:element>
@@ -181,20 +200,32 @@
                             </xs:element>
                             <xs:element name="FUNCTION" minOccurs="0" maxOccurs="unbounded">
                                 <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="E" minOccurs="0" maxOccurs="unbounded">
+                                    <xs:choice>
+                                        <xs:element name="E" minOccurs="1" maxOccurs="unbounded">
                                             <xs:complexType>
                                                 <xs:attribute name="VAR" type="xs:string" use="required"/>
                                                 <xs:attribute name="VALUE" type="xs:string" use="required"/>
                                             </xs:complexType>
                                         </xs:element>
-                                    </xs:sequence>
+                                        <xs:element name="F" minOccurs="1" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:attribute name="FILE" type="xs:string" use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:choice>
                                     <xs:attribute name="NAME" type="xs:string" use="required"/>
                                 </xs:complexType>
                             </xs:element>
 				        </xs:choice>
 				    </xs:complexType>
 				</xs:element>
+                <xs:element name="HISTORY" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="H" type="IDAttr" minOccurs="1" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
                 <xs:element name="GLOBALOPTIMIZATIONPARAMETERS" minOccurs="0">
                     <xs:complexType>
                         <xs:choice minOccurs="0" maxOccurs="unbounded">

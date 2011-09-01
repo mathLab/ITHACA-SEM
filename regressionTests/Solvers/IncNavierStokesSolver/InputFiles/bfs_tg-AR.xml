@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
     <GEOMETRY DIM="2" SPACE="2">
         <VERTEX>
             <V ID="0">3.000e+00 -1.000e+00 0.000e+00</V>
@@ -1679,70 +1680,69 @@
         <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />
         <E COMPOSITE="C[1]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />
     </EXPANSIONS>
-      <CONDITIONS>
-      
-    <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="EvolutionOperator" VALUE="TransientGrowth"/>
-      <I PROPERTY="Projection"    VALUE="Galerkin"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-      <I PROPERTY="SOLVERTYPE" VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="Driver" VALUE="Arpack"/>
-      <I PROPERTY="ArpackProblemType" VALUE="LargestMag"/>
-    </SOLVERINFO>
+    <CONDITIONS>
 
-    <PARAMETERS>
-        <P> FinalTime   = 0.1 </P>
-      <P> TimeStep      = 0.005     </P>
-      <P> NumSteps      = FinalTime/TimeStep       </P>
-      <P> IO_CheckSteps = 1/TimeStep       </P>
-      <P> IO_InfoSteps  = 1       </P>
-      <P> Re            = 500        </P>
-      <P> Kinvis        = 1.0/Re         </P>
-      <P> kdim          = 4 </P>
-      <P> nvec          = 1 </P>
-     <P> evtol   = 1e-4 </P>
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="EvolutionOperator" VALUE="TransientGrowth" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+            <I PROPERTY="SOLVERTYPE" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="Driver" VALUE="Arpack" />
+            <I PROPERTY="ArpackProblemType" VALUE="LargestMag" />
+        </SOLVERINFO>
 
-    </PARAMETERS>
+        <PARAMETERS>
+            <P> FinalTime   = 0.1 </P>
+            <P> TimeStep      = 0.005     </P>
+            <P> NumSteps      = FinalTime/TimeStep       </P>
+            <P> IO_CheckSteps = 1/TimeStep       </P>
+            <P> IO_InfoSteps  = 1       </P>
+            <P> Re            = 500        </P>
+            <P> Kinvis        = 1.0/Re         </P>
+            <P> kdim          = 4 </P>
+            <P> nvec          = 1 </P>
+            <P> evtol   = 1e-4 </P>
 
-    <VARIABLES>
-      <V ID="0"> u </V>
-      <V ID="1"> v </V>
-      <V ID="2"> p </V>
-    </VARIABLES>
+        </PARAMETERS>
 
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[2] </B>//wall
-      <B ID="1"> C[3] </B>//inlet
-      <B ID="2"> C[4] </B>//outlet
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
 
-    </BOUNDARYREGIONS>
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[2] </B>    <!-- Wall -->
+            <B ID="1"> C[3] </B>    <!-- Inlet -->
+            <B ID="2"> C[4] </B>    <!-- Outlet -->
+        </BOUNDARYREGIONS>
 
-    <BOUNDARYCONDITIONS>
-      <REGION REF="0">
-        <D VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>  // High Order Pressure BC
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />  // High Order Pressure BC
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
-      </REGION>
-    </BOUNDARYCONDITIONS>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
 
-    <FUNCTION NAME="BaseFlow">
-        <F FILE="bfs_tg-AR.bse" />
-    </FUNCTION>
+        <FUNCTION NAME="BaseFlow">
+            <F FILE="bfs_tg-AR.bse" />
+        </FUNCTION>
 
-    <FUNCTION NAME="InitialConditions">
-        <F FILE="bfs_tg-AR.rst" />
-    </FUNCTION>
+        <FUNCTION NAME="InitialConditions">
+            <F FILE="bfs_tg-AR.rst" />
+        </FUNCTION>
 
     </CONDITIONS>
 

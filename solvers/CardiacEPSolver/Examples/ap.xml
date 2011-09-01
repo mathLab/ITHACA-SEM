@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
-    <!-- Embed a 3-dimensional object in a 3-dimensional space-->
-    <!--DIM <= SPACE  this provides a method of optimizing code for a 3-D curve embedded in 3-d space.-->
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
     <GEOMETRY DIM="2" SPACE="2">
-        <!-- Definitions that can be used below in this file. -->
+
         <VERTEX>
-            <!-- Always must have four values per entry. -->
             <V ID="0">0.000e+00 0.000e+00 0.000e+00</V>
             <V ID="1">1.000e+01 0.000e+00 0.000e+00</V>
             <V ID="2">1.000e+01 1.000e+00 0.000e+00</V>
@@ -107,7 +106,6 @@
             <V ID="98">8.067e+00 6.966e-01 0.000e+00</V>
         </VERTEX>
         <EDGE>
-            <!--Edges are vertex pairs -->
             <E ID="0">   54  8   </E>
             <E ID="1">    8  9   </E>
             <E ID="2">    9  54   </E>
@@ -352,9 +350,6 @@
             <E ID="241">   89  67   </E>
         </EDGE>
         <ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
             <T ID="0">    0     1     2 </T>
             <T ID="1">    3     4     5 </T>
             <T ID="2">    6     7     8 </T>
@@ -500,53 +495,46 @@
             <T ID="142">   46   176   241 </T>
             <T ID="143">  241   180   172 </T>
         </ELEMENT>
-        <!-- V - vertex, S - segment, E - edge, F - face -->
         <COMPOSITE>
-            <C ID="0"> T[0-143]
-            </C>
-            <C ID="1"> E[1,4,19,28,34,40,45,48,55,66,69,81,85,98,100,106,113,125,137,153,165,177,187,197,212,215,219,220]
-            </C>
+            <C ID="0"> T[0-143] </C>
+            <C ID="1"> E[1,4,19,28,34,40,45,48,55,66,69,81,85,98,100,106,113,125,137,153,165,177,187,197,212,215,219,220] </C>
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
-        <!--<GEOMINFO>
-            <I PROPERTY="TangentDir" VALUE="LOCAL" />
-        </GEOMINFO>-->
     </GEOMETRY>
     <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v" TYPE="MODIFIED" />
     </EXPANSIONS>
     <CONDITIONS>
-        <!--Removed redundancy since we can specify any lefel of granularity in the ExpansionTypes section below-->
         <PARAMETERS>
-      <P> TimeStep       = 0.001            </P>
-      <P> NumSteps       = 100000            </P>
-      <P> FinTime        = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps  = 100              </P>
-      <P> IO_InfoSteps   = 10              </P>
-      <P> initialwavetype = 0 </P>
-      <P> duration = 1 </P>
-      <P> UseDirDeriv = 0 </P>
-      <P> k = 8.0  </P>
-      <P> a = 0.15 </P>
-      <P> eps = 0.002 </P>
-      <P> mu1 = 0.2 </P>
-      <P> mu2 = 0.3 </P>
+            <P> TimeStep       = 0.001            </P>
+            <P> NumSteps       = 100000            </P>
+            <P> FinTime        = TimeStep*NumSteps </P>
+            <P> IO_CheckSteps  = 100              </P>
+            <P> IO_InfoSteps   = 10              </P>
+            <P> initialwavetype = 0 </P>
+            <P> duration = 1 </P>
+            <P> UseDirDeriv = 0 </P>
+            <P> k = 8.0  </P>
+            <P> a = 0.15 </P>
+            <P> eps = 0.002 </P>
+            <P> mu1 = 0.2 </P>
+            <P> mu2 = 0.3 </P>
         </PARAMETERS>
-        <!--One of these for each dimension.  These are the vector components,  say, s = (u, v); comprised of two components in this example for a 3D           dimension.-->
-    <SOLVERINFO>
-        <I PROPERTY="EQTYPE" VALUE="Monodomain" />
-        <I PROPERTY="CellModel" VALUE="AlievPanfilov" />
-      <I PROPERTY="Projection" VALUE="Continuous"/>
-      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3"/>
-      <I PROPERTY="GlobalSysSolve" VALUE="DirectMultiLevelStaticCond" />
-    </SOLVERINFO>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Monodomain" />
+            <I PROPERTY="CellModel" VALUE="AlievPanfilov" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+            <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3" />
+            <I PROPERTY="GlobalSysSolve" VALUE="DirectMultiLevelStaticCond" />
+        </SOLVERINFO>
 
         <VARIABLES>
             <V ID="0"> u </V>
             <V ID="1"> v </V>
         </VARIABLES>
-        <!--These composites must be defined in the geometry file.-->
+
         <BOUNDARYREGIONS>
             <B ID="0"> C[1] </B>
         </BOUNDARYREGIONS>
@@ -562,17 +550,17 @@
             <E VAR="v" VALUE="0" />
         </FUNCTION>
 
-        <HISTORY>
-            <H ID="0"> 1 0.5 0 </H>
-            <H ID="1"> 2 0.5 0 </H>
-            <H ID="2"> 3 0.5 0 </H>
-            <H ID="3"> 4 0.5 0 </H>
-            <H ID="4"> 5 0.5 0 </H>
-            <H ID="5"> 6 0.5 0 </H>
-            <H ID="6"> 7 0.5 0 </H>
-            <H ID="7"> 8 0.5 0 </H>
-            <H ID="8"> 9 0.5 0 </H>
-        </HISTORY>
     </CONDITIONS>
+    <HISTORY>
+        <H ID="0"> 1 0.5 0 </H>
+        <H ID="1"> 2 0.5 0 </H>
+        <H ID="2"> 3 0.5 0 </H>
+        <H ID="3"> 4 0.5 0 </H>
+        <H ID="4"> 5 0.5 0 </H>
+        <H ID="5"> 6 0.5 0 </H>
+        <H ID="6"> 7 0.5 0 </H>
+        <H ID="7"> 8 0.5 0 </H>
+        <H ID="8"> 9 0.5 0 </H>
+    </HISTORY>
 </NEKTAR>
 

@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
-    <!-- Embed a 3-dimensional object in a 3-dimensional space-->
-    <!--DIM <= SPACE  this provides a method of optimizing code for a 3-D curve embedded in 3-d space.-->
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
     <GEOMETRY DIM="2" SPACE="2">
-        <!-- Definitions that can be used below in this file. -->
         <VERTEX>
-            <!-- Always must have four values per entry. -->
             <V ID="0">5.000e-01 0.000e+00 0.000e+00</V>
             <V ID="1">7.500e-01 0.000e+00 0.000e+00</V>
             <V ID="2">-7.500e-01 0.000e+00 0.000e+00</V>
@@ -617,7 +614,6 @@
             <V ID="608">-3.648e-01 -4.550e+00 0.000e+00</V>
         </VERTEX>
         <EDGE>
-            <!--Edges are vertex pairs -->
             <E ID="0">  455  69   </E>
             <E ID="1">   69  70   </E>
             <E ID="2">   70  455   </E>
@@ -2055,9 +2051,6 @@
             <E ID="1434">   15  28   </E>
         </EDGE>
         <ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
             <T ID="0">    0     1     2 </T>
             <T ID="1">    3     4     5 </T>
             <T ID="2">    6     7     8 </T>
@@ -2885,368 +2878,72 @@
             <Q ID="824"> 1422  1432  1433  1430 </Q>
             <Q ID="825"> 1423   236  1434  1432 </Q>
         </ELEMENT>
-        <!-- V - vertex, S - segment, E - edge, F - face -->
         <COMPOSITE>
-            <C ID="0"> T[0-495]
-            </C>
-            <C ID="1"> Q[0-329]
-            </C>
-            <C ID="2">
-            </C>
-            <C ID="3">
-            </C>
-            <C ID="4">
-            </C>
-            <C ID="5">
-            </C>
-            <C ID="6">
-            </C>
-            <C ID="7">
-            </C>
-            <C ID="8">
-            </C>
-            <C ID="9">
-            </C>
-            <C ID="10">
-            </C>
-            <C ID="11">
-            </C>
-            <C ID="12">
-            </C>
-            <C ID="13">
-            </C>
-            <C ID="14">
-            </C>
-            <C ID="15">
-            </C>
-            <C ID="16">
-            </C>
-            <C ID="17">
-            </C>
-            <C ID="18">
-            </C>
-            <C ID="19">
-            </C>
-            <C ID="20">
-            </C>
-            <C ID="21">
-            </C>
-            <C ID="22">
-            </C>
-            <C ID="23">
-            </C>
-            <C ID="24">
-            </C>
-            <C ID="25">
-            </C>
-            <C ID="26">
-            </C>
-            <C ID="27">
-            </C>
-            <C ID="28">
-            </C>
-            <C ID="29">
-            </C>
-            <C ID="30">
-            </C>
-            <C ID="31">
-            </C>
-            <C ID="32">
-            </C>
-            <C ID="33">
-            </C>
-            <C ID="34">
-            </C>
-            <C ID="35">
-            </C>
-            <C ID="36">
-            </C>
-            <C ID="37">
-            </C>
-            <C ID="38">
-            </C>
-            <C ID="39">
-            </C>
-            <C ID="40">
-            </C>
-            <C ID="41">
-            </C>
-            <C ID="42">
-            </C>
-            <C ID="43">
-            </C>
-            <C ID="44">
-            </C>
-            <C ID="45">
-            </C>
-            <C ID="46">
-            </C>
-            <C ID="47">
-            </C>
-            <C ID="48">
-            </C>
-            <C ID="49">
-            </C>
-            <C ID="50">
-            </C>
-            <C ID="51">
-            </C>
-            <C ID="52">
-            </C>
-            <C ID="53">
-            </C>
-            <C ID="54">
-            </C>
-            <C ID="55">
-            </C>
-            <C ID="56">
-            </C>
-            <C ID="57">
-            </C>
-            <C ID="58">
-            </C>
-            <C ID="59">
-            </C>
-            <C ID="60">
-            </C>
-            <C ID="61">
-            </C>
-            <C ID="62">
-            </C>
-            <C ID="63">
-            </C>
-            <C ID="64">
-            </C>
-            <C ID="65">
-            </C>
-            <C ID="66">
-            </C>
-            <C ID="67">
-            </C>
-            <C ID="68">
-            </C>
-            <C ID="69">
-            </C>
-            <C ID="70">
-            </C>
-            <C ID="71">
-            </C>
-            <C ID="72">
-            </C>
-            <C ID="73">
-            </C>
-            <C ID="74">
-            </C>
-            <C ID="75">
-            </C>
-            <C ID="76">
-            </C>
-            <C ID="77">
-            </C>
-            <C ID="78">
-            </C>
-            <C ID="79">
-            </C>
-            <C ID="80">
-            </C>
-            <C ID="81">
-            </C>
-            <C ID="82">
-            </C>
-            <C ID="83">
-            </C>
-            <C ID="84">
-            </C>
-            <C ID="85">
-            </C>
-            <C ID="86">
-            </C>
-            <C ID="87">
-            </C>
-            <C ID="88">
-            </C>
-            <C ID="89">
-            </C>
-            <C ID="90">
-            </C>
-            <C ID="91">
-            </C>
-            <C ID="92">
-            </C>
-            <C ID="93">
-            </C>
-            <C ID="94">
-            </C>
-            <C ID="95">
-            </C>
-            <C ID="96">
-            </C>
-            <C ID="97">
-            </C>
-            <C ID="98">
-            </C>
-            <C ID="99">
-            </C>
-            <C ID="100">
-            </C>
-            <C ID="101"> E[819,826,832,838,844,850,856,886,888,890,892,894,896,898,899,909,916,923,930,937,944,981,983,985,987,989,991,993]
-            </C>
-            <C ID="102"> E[284,291,326,330,340,349,367,372,455,488,493,610,635,686,731,787,796,797]
-            </C>
-            <C ID="103"> E[337,346,453,795]
-            </C>
-            <C ID="104"> E[235,239,282,288,313,317,1425,1427,1429,1431,1433,1434]
-            </C>
-            <C ID="105">
-            </C>
-            <C ID="106">
-            </C>
-            <C ID="107">
-            </C>
-            <C ID="108">
-            </C>
-            <C ID="109">
-            </C>
-            <C ID="110">
-            </C>
-            <C ID="111">
-            </C>
-            <C ID="112">
-            </C>
-            <C ID="113">
-            </C>
-            <C ID="114">
-            </C>
-            <C ID="115">
-            </C>
-            <C ID="116">
-            </C>
-            <C ID="117">
-            </C>
-            <C ID="118">
-            </C>
-            <C ID="119">
-            </C>
-            <C ID="120">
-            </C>
-            <C ID="121">
-            </C>
-            <C ID="122">
-            </C>
-            <C ID="123">
-            </C>
-            <C ID="124">
-            </C>
-            <C ID="125">
-            </C>
-            <C ID="126">
-            </C>
-            <C ID="127">
-            </C>
-            <C ID="128">
-            </C>
-            <C ID="129">
-            </C>
-            <C ID="130">
-            </C>
-            <C ID="131">
-            </C>
-            <C ID="132">
-            </C>
-            <C ID="133">
-            </C>
-            <C ID="134">
-            </C>
-            <C ID="135">
-            </C>
-            <C ID="136">
-            </C>
-            <C ID="137">
-            </C>
-            <C ID="138">
-            </C>
-            <C ID="139">
-            </C>
-            <C ID="140">
-            </C>
-            <C ID="141">
-            </C>
-            <C ID="142">
-            </C>
-            <C ID="143">
-            </C>
-            <C ID="144">
-            </C>
-            <C ID="145">
-            </C>
-            <C ID="146">
-            </C>
-            <C ID="147">
-            </C>
-            <C ID="148">
-            </C>
-            <C ID="149">
-            </C>
-            <C ID="150">
-            </C>
-            <C ID="151">
-            </C>
+            <C ID="0"> T[0-495] </C>
+            <C ID="1"> Q[0-329] </C>
+            <C ID="2"> E[819,826,832,838,844,850,856,886,888,890,892,894,896,898,899,909,916,923,930,937,944,981,983,985,987,989,991,993] </C>
+            <C ID="3"> E[284,291,326,330,340,349,367,372,455,488,493,610,635,686,731,787,796,797] </C>
+            <C ID="4"> E[337,346,453,795] </C>
+            <C ID="5"> E[235,239,282,288,313,317,1425,1427,1429,1431,1433,1434] </C>
         </COMPOSITE>
         <DOMAIN> C[0-1] </DOMAIN>
     </GEOMETRY>
-    <EXPANSIONS>Set the expansion here....</EXPANSIONS>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" />
+        <E COMPOSITE="C[1]" NUMMODES="7" TYPE="MODIFIED" />
+    </EXPANSIONS>
     <CONDITIONS>
 
-    <SOLVERINFO>
-      <I PROPERTY="ProjectionType" VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="AdvectionForm" VALUE="Convective"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
-    </SOLVERINFO>
+        <SOLVERINFO>
+            <I PROPERTY="ProjectionType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler" />
+        </SOLVERINFO>
 
-    <PARAMETERS>
-      <P> TimeStep      = 0.001 </P>
-      <P> NumSteps      = 10    </P>
-      <P> IO_CheckSteps = 10    </P>
-      <P> IO_InfoSteps  = 10    </P>
-      <P> Kinvis        = 1/100 </P>
-    </PARAMETERS>
-    
-    <VARIABLES>
-      <V ID="0"> u </V> 
-      <V ID="1"> v </V> 
-      <V ID="2"> p </V> 
-    </VARIABLES>
+        <PARAMETERS>
+            <P> TimeStep      = 0.001 </P>
+            <P> NumSteps      = 10    </P>
+            <P> IO_CheckSteps = 10    </P>
+            <P> IO_InfoSteps  = 10    </P>
+            <P> Kinvis        = 1/100 </P>
+        </PARAMETERS>
 
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[2] </B>
-      <B ID="1"> C[3,4] </B>
-      <B ID="2"> C[5] </B>
-    </BOUNDARYREGIONS>
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
 
-    <BOUNDARYCONDITIONS>
-      <REGION REF="0">
-        <D VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>  // High Order Pressure BC
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u" VALUE="1.0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />  // High Order Pressure BC
-      </REGION>
-      <REGION REF="2">
-        <N VAR="u" VALUE="0" />
-        <N VAR="v" VALUE="0" />
-        <D VAR="p" VALUE="0" />
-      </REGION>
-    </BOUNDARYCONDITIONS>
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[2] </B>
+            <B ID="1"> C[3,4] </B>
+            <B ID="2"> C[5] </B>
+        </BOUNDARYREGIONS>
 
-   <FUNCTION NAME="InitialConditions">
-     <E VAR="u" VALUE="0" />
-     <E VAR="v" VALUE="0" />
-     <E VAR="p" VALUE="0" />
-   </FUNCTION>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="1.0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+                <D VAR="p" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
 
     </CONDITIONS>
 </NEKTAR>

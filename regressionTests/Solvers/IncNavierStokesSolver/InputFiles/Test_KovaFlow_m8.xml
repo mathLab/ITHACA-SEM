@@ -1,73 +1,75 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
 
-  <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
-  </EXPANSIONS>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
-  <CONDITIONS>
-    <SOLVERINFO>
-      <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="AdvectionForm" VALUE="Convective"/>
-      <I PROPERTY="Projection" VALUE="Galerkin"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"/>
-    </SOLVERINFO>
-    
-    <PARAMETERS>
-      <P> TimeStep      = 0.001        </P>
-      <P> NumSteps      = 100       </P>
-      <P> IO_CheckSteps = 100       </P>
-      <P> IO_InfoSteps  = 100       </P>
-      <P> Kinvis        = 0.025        </P>
-    </PARAMETERS>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
 
-    <VARIABLES>
-      <V ID="0"> u </V> 
-      <V ID="1"> v </V> 
-      <V ID="2"> p </V> 
-    </VARIABLES>
-    
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-    </BOUNDARYREGIONS>
-    
-    <BOUNDARYCONDITIONS>
-      <REGION REF="0">
-        <D VAR="u" VALUE="1-1.619099729265964*cos(2*PI*y)" />
-        <D VAR="v" VALUE="-0.248344108585656*sin(2*PI*y)" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u" VALUE="1-0.381463333531742*cos(2*PI*y)" />
-        <D VAR="v" VALUE="-0.058510399212408*sin(2*PI*y)" />
-        <D VAR="p" VALUE="0.427242862585425"/>
-      </REGION>
-      <REGION REF="2">
-        <N VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" VALUE="0" />
-       </REGION>
-    </BOUNDARYCONDITIONS>
-    
-    <FUNCTION NAME="InitialConditions">
-      <F FILE="Test_KovaFlow_m8.rst"/>
-   </FUNCTION>
-   
-   <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
-      <E VAR="v" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
-      <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
-   </FUNCTION>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+        </SOLVERINFO>
 
-</CONDITIONS>
+        <PARAMETERS>
+            <P> TimeStep      = 0.001        </P>
+            <P> NumSteps      = 100       </P>
+            <P> IO_CheckSteps = 100       </P>
+            <P> IO_InfoSteps  = 100       </P>
+            <P> Kinvis        = 0.025        </P>
+        </PARAMETERS>
 
-<GEOMETRY DIM="2" SPACE="2">
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
 
-<VERTEX>
-            <!-- Always must have four values per entry. -->
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1-1.619099729265964*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-0.248344108585656*sin(2*PI*y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="1-0.381463333531742*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-0.058510399212408*sin(2*PI*y)" />
+                <D VAR="p" VALUE="0.427242862585425" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <F FILE="Test_KovaFlow_m8.rst" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
+            <E VAR="v"
+                VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
+            <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
             <V ID="0">-5.000e-01 -5.000e-01 0.000e+00</V>
             <V ID="1">-5.000e-01 1.500e+00 0.000e+00</V>
             <V ID="2">1.000e+00 1.500e+00 0.000e+00</V>
@@ -88,10 +90,9 @@
             <V ID="17">8.097e-13 1.000e+00 0.000e+00</V>
             <V ID="18">5.551e-17 5.000e-01 0.000e+00</V>
             <V ID="19">-8.095e-13 4.626e-13 0.000e+00</V>
-</VERTEX>
+        </VERTEX>
 
-<EDGE>
-            <!--Edges are vertex pairs -->
+        <EDGE>
             <E ID="0">    2  12   </E>
             <E ID="1">   12  14   </E>
             <E ID="2">   14  11   </E>
@@ -123,12 +124,9 @@
             <E ID="28">    6  19   </E>
             <E ID="29">    6  0   </E>
             <E ID="30">    0  7   </E>
-</EDGE>
+        </EDGE>
 
-<ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+        <ELEMENT>
             <Q ID="0">    0     1     2     3 </Q>
             <Q ID="1">    2     4     5     6 </Q>
             <Q ID="2">    5     7     8     9 </Q>
@@ -141,17 +139,17 @@
             <Q ID="9">   24    25    26    16 </Q>
             <Q ID="10">   26    27    28    18 </Q>
             <Q ID="11">   28    29    30    20 </Q>
-</ELEMENT>
+        </ELEMENT>
 
-<COMPOSITE>
-            <C ID="0"> Q[0-11]             </C>  //domain
-            <C ID="1"> E[23,25,27,29]      </C>  //inflow
-            <C ID="2"> E[3,6,9,12]         </C>  //outflow
-            <C ID="3"> E[0,11,13,21,22,30] </C>  //walls
-</COMPOSITE>
-        
-<DOMAIN> C[0] </DOMAIN>
-        
-</GEOMETRY>
-    
+        <COMPOSITE>
+            <C ID="0"> Q[0-11]             </C>     <!-- Domain -->
+            <C ID="1"> E[23,25,27,29]      </C>     <!-- Inflow -->
+            <C ID="2"> E[3,6,9,12]         </C>     <!-- Outflow -->
+            <C ID="3"> E[0,11,13,21,22,30] </C>     <!-- Walls -->
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
 </NEKTAR>

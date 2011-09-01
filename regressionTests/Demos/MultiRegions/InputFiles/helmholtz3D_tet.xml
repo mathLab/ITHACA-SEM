@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
     <GEOMETRY DIM="3" SPACE="3">
-        <!-- Definitions that can be used below in this file. -->
+
         <VERTEX>
-            <!-- Always must have four values per entry. -->
             <V ID="0">0.000e+00 0.000e+00 0.000e+00</V>
             <V ID="1">1.000e+00 0.000e+00 0.000e+00</V>
             <V ID="2">0.000e+00 1.000e+00 0.000e+00</V>
@@ -32,8 +33,8 @@
             <V ID="25">5.000e-01 5.000e-01 1.000e+00</V>
             <V ID="26">5.000e-01 5.000e-01 5.000e-01</V>
         </VERTEX>
+
         <EDGE>
-            <!--Edges are vertex pairs -->
             <E ID="0">   21  20   </E>
             <E ID="1">   20  8   </E>
             <E ID="2">    8  21   </E>
@@ -133,8 +134,8 @@
             <E ID="96">   18  14   </E>
             <E ID="97">   14  6   </E>
         </EDGE>
+
         <FACE>
-            <!--Faces are sets of edges -->
             <T ID="0">    0    1    2</T>
             <T ID="1">    0    3    4</T>
             <T ID="2">    1    5    3</T>
@@ -256,10 +257,8 @@
             <T ID="118">   43   90   97</T>
             <T ID="119">   95   42   96</T>
         </FACE>
+
         <ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!--Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
             <A ID="0">    0     1     2     3 </A>
             <A ID="1">    4     5     6     7 </A>
             <A ID="2">    7     1     8     9 </A>
@@ -309,7 +308,7 @@
             <A ID="46">  116   105   117   118 </A>
             <A ID="47">  115    45   116   119 </A>
         </ELEMENT>
-        <!-- V - vertex, S - segment, E - edge, F - face -->
+
         <COMPOSITE>
             <C ID="0"> A[0-47] </C>
             <C ID="1"> F[22,2,51,35,85,67,110,96] </C>
@@ -321,10 +320,13 @@
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
+
     <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
+
     <CONDITIONS>
+
         <PARAMETERS>
             <P> Lambda = 1 </P>
         </PARAMETERS>

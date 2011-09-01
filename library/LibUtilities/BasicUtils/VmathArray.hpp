@@ -53,7 +53,13 @@ using namespace Nektar;
             Fill(n,alpha,&x[0],incx);
         }
         
-        
+        template<class T>  void FillWhiteNoise( int n, const T eps, Array<OneD, T> &x, const int incx)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Out of bounds");
+
+            FillWhiteNoise(n,eps,&x[0],incx);
+        }
+
         /// \brief Multiply vector z = x*y
         template<class T>  void Vmul( int n, const Array<OneD, const T> &x, const int incx, const Array<OneD, const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {

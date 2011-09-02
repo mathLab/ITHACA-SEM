@@ -441,10 +441,21 @@ namespace Nektar
             switch(m_expdim)
             {
                 case 1:
-                    m_forces[0] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr
-                                 (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
-                    Vmath::Zero(nq,(m_forces[0]->UpdatePhys()),1);
+					if(m_HomogeneousType == eHomogeneous2D)
+					{
+						bool DeclarePlaneSetCoeffsPhys = true;
+                        for(int i = 0 ; i < m_forces.num_elements(); i++)
+                        {
+                            m_forces[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous2D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
+                        }
+					}
+					else 
+					{
+						m_forces[0] = MemoryManager<MultiRegions
+						::DisContField1D>::AllocateSharedPtr
+						(*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
+						Vmath::Zero(nq,(m_forces[0]->UpdatePhys()),1);
+					}
                     break;
                 case 2:
                     if(m_HomogeneousType == eHomogeneous1D)

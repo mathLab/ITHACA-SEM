@@ -112,9 +112,28 @@ namespace Nektar
             Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
         }
 
+		
         // Copy starting vector into second sequence element (temporary).
-        CopyFieldToArnoldiArray(Kseq[1]);
+         if(m_session->DefinesFunction("InitialConditions"))
+		 {
+			cout << "\tInital vector       : input file  " << endl;
+			CopyFieldToArnoldiArray(Kseq[1]);
+		 }
+		 else 
+		 {
+			cout << "\tInital vector       : random  " << endl;
+			double eps=1;
 
+			 /*
+			 for (int k = 0; k < m_nfields; ++k)
+			 {
+				 Vmath::FillWhiteNoise(nq, eps, &Kseq[1][0] + k*nq, 1);
+			 } 
+			 */
+			 Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
+			
+		}
+		
         // Perform one iteration to enforce boundary conditions.
         // Set this as the initial value in the sequence.
         EV_update(Kseq[1], Kseq[0]);
@@ -126,7 +145,7 @@ namespace Nektar
         Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
 
         // Fill initial krylov sequence
-        NekDouble resid0;
+		NekDouble resid0;
         int i;
         for (i = 1; !converged && i <= m_kdim; ++i)
         {
@@ -150,7 +169,7 @@ namespace Nektar
             // Test for convergence.
             converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0);
             converged = max (converged, 0);
-            cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
+            cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
         }
 
         // Continue with full sequence
@@ -187,7 +206,7 @@ namespace Nektar
 
                 // Test for convergence.
                 converged = EV_test(i,m_kdim,zvec,wr,wi,resnorm,m_nvec,evlout,resid0);
-                cout << "Iteration: " <<  i <<  " (residual : " << resid0 << ")" <<endl;
+				cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
             }
         }
 
@@ -333,6 +352,7 @@ namespace Nektar
         if (resid[nvec-1] < m_evtol) idone = nvec;
 	
         evlout << "-- Iteration = " << itrn << ", H(k+1, k) = " << resnorm << endl;
+		
         evlout.precision(4);
         evlout.setf(ios::scientific, ios::floatfield);
         if(m_TimeSteppingAlgorithm)
@@ -379,7 +399,7 @@ namespace Nektar
             
         }
 	
-        resid0 = resid[0];
+        resid0 = resid[nvec-1];
         return idone;
     }
     
@@ -459,7 +479,7 @@ namespace Nektar
                     fields[i]->SetPhysState(true);
                 }
 
-                std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + ".eig_" + boost::lexical_cast<std::string>(j);
+                std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(j);
 
                 m_equ[0]->WriteFld(file);
             }

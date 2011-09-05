@@ -162,19 +162,20 @@ namespace Nektar
 
         ASSERTL0(n <= m_maxn,  "N is greater than   MAXN");
 
-        m_session->MatchSolverInfo("InitialVector","Random",random,false);
 
-        if(random)
-        {
-            cout << "\tInital vector       : random  " << endl;
-            info = 0;
-        }
-        else
-        {
-            cout << "\tInital vector       : input file  " << endl;
-            info = 1;
-            CopyFieldToArnoldiArray(resid);
-        }
+			if(m_session->DefinesFunction("InitialConditions"))
+			{
+				
+				cout << "\tInital vector       : input file  " << endl;
+				info = 1;
+				CopyFieldToArnoldiArray(resid);
+				
+			}
+			else
+			{
+				cout << "\tInital vector       : random  " << endl;
+				info = 0;
+			}
 
 	
         iparam[0] = 1;      // strategy for shift-invert
@@ -215,7 +216,7 @@ namespace Nektar
                             &workl[0], lworkl, info);
             
             //Plotting of real and imaginary part of the eigenvalues from workl
-            cout << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush;
+            cout << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush <<endl;
 
             if(!((cycle-1)%m_kdim)&&(cycle> m_kdim))
             {
@@ -243,6 +244,7 @@ namespace Nektar
             CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
             m_equ[0]->DoSolve();
+
             if(!(cycle%m_infosteps))
             {
                 cout << endl;

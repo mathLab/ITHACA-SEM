@@ -138,7 +138,6 @@ namespace Nektar
             SetCoeffPhys();
         }
 
-
         /**
          * Given a mesh \a graph3D, containing information about the domain and
          * the spectral/hp element expansion, this constructor fills the list

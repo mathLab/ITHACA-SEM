@@ -117,7 +117,7 @@ namespace Nektar
 								                Array<OneD, NekDouble> &out_d1, 
 								                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
 			
-			MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
+			MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
 								                const Array<OneD, const NekDouble> &inarray,
 								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 			

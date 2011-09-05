@@ -72,7 +72,8 @@ namespace Nektar
 									   bool useFFT,
                                        SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
-                                       const int bc_loc):
+                                       const int bc_loc,
+									   const bool CheckIfSingularSystem):
             DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,graph2D,bcs,bc_loc)
         {
             int i,j,n,nel;
@@ -80,7 +81,7 @@ namespace Nektar
             ContField2DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pSession,graph2D,bcs,bc_loc,False);
+            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pSession,graph2D,bcs,bc_loc,False,CheckIfSingularSystem);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();

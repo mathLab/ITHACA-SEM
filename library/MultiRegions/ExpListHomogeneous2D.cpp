@@ -782,12 +782,11 @@ namespace Nektar
             v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
         }
 		
-		void ExpListHomogeneous2D::PhysDeriv(const int dir,
+		void ExpListHomogeneous2D::PhysDeriv(Direction edir,
 											 const Array<OneD, const NekDouble> &inarray,
 											 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
 		{
-			//convert int into enum
-			MultiRegions::Direction edir =(MultiRegions::Direction)dir;			
+			//convert int into enum			
 			v_PhysDeriv(edir,inarray,out_d,UseContCoeffs);
 		}
 

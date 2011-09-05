@@ -58,7 +58,8 @@ namespace Nektar
 						   bool useFFT,
                            SpatialDomains::MeshGraphSharedPtr &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
-                           const int bc_loc = 0);
+                           const int bc_loc = 0,
+						   const bool CheckIfSingularSystem = false);
             
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);

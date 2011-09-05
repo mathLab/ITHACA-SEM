@@ -66,6 +66,11 @@ namespace Nektar
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
+			eFourier,
+			eChebyshev,
+			eFourierChebyshev,
+			eChebyshevFourier,
+			eFourierModified,
             eExpansionTypeSize
         };
 
@@ -77,7 +82,12 @@ namespace Nektar
             "MODIFIED",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
-            "GLL_LAGRANGE_SEM"
+            "GLL_LAGRANGE_SEM",
+			"FOURIER",
+			"CHEBYSHEV",
+			"FOURIER-CHEBYSHEV",
+			"CHEBYSHEV-FOURIER",
+			"FOURIER-MODIFIED"
         };
 
         typedef boost::shared_ptr< InterfaceComponent > SharedInterfaceCompPtr;

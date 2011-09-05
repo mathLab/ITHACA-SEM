@@ -910,7 +910,9 @@ namespace Nektar
             
             switch(type)
             {
+					
             case eModified:
+			{
                 switch (shape)
                 {
                 case eSegment:
@@ -965,64 +967,68 @@ namespace Nektar
                     }
                     break;
                 default:
+				{
                     ASSERTL0(false,"Expansion not defined in switch  for this shape");
-                    break;
+				}
+				break;
                 }
-                break;
-                
-            case eGLL_Lagrange:
+			}
+			break;
+            
+			case eGLL_Lagrange:
             {
                 
                 switch(shape)
                 {
-                case eSegment:
+					case eSegment:
                     {
                         const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
                         LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
                         returnval.push_back(bkey);
-            }
+					}
                     break;
-                case eQuadrilateral:
-                {
-                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
-                break;
-                case eTriangle: // define with corrects points key
-                    // and change to Ortho on
-                    // construction
-                {
-
-                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    case eQuadrilateral:
+					{
+						const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+						LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+						returnval.push_back(bkey);
+						returnval.push_back(bkey);
+					}
+					break;
+					case eTriangle: // define with corrects points key
+						            // and change to Ortho on
+                                    // construction
+					{
+						const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+						LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+						returnval.push_back(bkey);
                     
-                    returnval.push_back(bkey);
-                    
-                    const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
-                    
-                    returnval.push_back(bkey1);
-                }
-                break;
-                default:
-                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+						const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+						LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+						returnval.push_back(bkey1);
+					}
+					break;
+                    default:
+					{
+						ASSERTL0(false,"Expansion not defined in switch  for this shape");
+					}
                     break;
                 }
             }
             break;
-            case eOrthogonal:
+            
+			case eOrthogonal:
+			{
                 switch (shape)
                 {
                 case eSegment:
-                    {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+				{
+					const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+					LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
                         
-                        returnval.push_back(bkey);
-                    }
-                    break;
+					returnval.push_back(bkey);
+				}
+				break;
                 case eTriangle:
                 {
                     const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
@@ -1062,11 +1068,15 @@ namespace Nektar
                 }
                 break;
                 default:
+				{
                     ASSERTL0(false,"Expansion not defined in switch  for this shape");
-                    break;
+				}
+				break;
                 }
-                break;
-            case eGLL_Lagrange_SEM:
+			}
+			break;
+            
+			case eGLL_Lagrange_SEM:
             {
                 switch (shape)
                 {
@@ -1098,17 +1108,296 @@ namespace Nektar
                 }
                 break;
                 default:
+				{
                     ASSERTL0(false,"Expansion not defined in switch  for this shape");
-                    break;
+				}
+				break;
                 }
             }
             break;
+			
+			case eFourier:
+			{
+				switch (shape)
+				{
+					case eSegment:
+					{
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						returnval.push_back(bkey);
+					}
+					break;
+					case eQuadrilateral:
+					{
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						returnval.push_back(bkey);
+						returnval.push_back(bkey);
+					}
+					break;
+					case eHexahedron:
+                    {
+                        const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+					break;
+					default:
+					{
+						ASSERTL0(false,"Expansion not defined in switch  for this shape");
+					}
+					break;
+				}
+			}
+			break;
+			
+			case eChebyshev:
+			{
+				switch (shape)
+				{
+					case eSegment:
+					{
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,order,pkey);
+						returnval.push_back(bkey);
+					}
+					break;
+					case eQuadrilateral:
+					{
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,order,pkey);
+						returnval.push_back(bkey);
+						returnval.push_back(bkey);
+					}
+					break;
+					case eHexahedron:
+                    {
+                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+					break;
+					default:
+					{
+						ASSERTL0(false,"Expansion not defined in switch  for this shape");
+					}
+					break;
+				}
+			}
+			break;
+					
+			case eFourierChebyshev:
+			{
+				switch (shape)
+				{
+					case eQuadrilateral:
+					{
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						returnval.push_back(bkey);
+						
+						const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,order,pkey1);
+						returnval.push_back(bkey1);
+					}
+					break;
+					default:
+					{
+						ASSERTL0(false,"Expansion not defined in switch  for this shape");
+					}
+					break;
+				}
+			}
+			break;
+			
+			case eChebyshevFourier:
+			{
+				switch (shape)
+				{
+					case eQuadrilateral:
+					{
+						const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,order,pkey1);
+						returnval.push_back(bkey1);
+						
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						returnval.push_back(bkey);
+					}
+					break;
+					default:
+					{
+						ASSERTL0(false,"Expansion not defined in switch  for this shape");
+					}
+					break;
+				}
+			}
+			break;
+					
+			case eFourierModified:
+			{
+				switch (shape)
+				{
+					case eQuadrilateral:
+					{
+						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						returnval.push_back(bkey);
+						
+						const LibUtilities::PointsKey pkey1(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_A,order,pkey1);
+						returnval.push_back(bkey1);
+					}
+					break;
+					default:
+					{
+						ASSERTL0(false,"Expansion not defined in switch  for this shape");
+					}
+					break;
+				}
+			}
+			break;
+					
             default:
-                break;
-            }
+			{
+				ASSERTL0(false,"Expansion type not defined");
+			}
+			break;
+            
+			}
             
             return returnval;
         }
+		
+		LibUtilities::BasisKeyVector DefineBasisKeyFromExpansionTypeHomo(GeometrySharedPtr in,
+																		 ExpansionType type_x,
+																		 ExpansionType type_y,
+																		 ExpansionType type_z,
+																		 const int order_x,
+																		 const int order_y,
+																		 const int order_z)
+        {
+            LibUtilities::BasisKeyVector returnval;
+            
+            GeomShapeType shape = in->GetGeomShapeType();
+			
+			switch (shape)
+			{
+                case eSegment:
+				{
+					ASSERTL0(false,"Homogeneous expansion not defined for this shape");
+				}
+				break;
+					
+                case eQuadrilateral:
+				{
+					ASSERTL0(false,"Homogeneous expansion not defined for this shape");
+				}
+				break;
+					
+                case eHexahedron:
+				{
+					switch(type_x)
+					{
+						case eFourier:
+						{
+							const LibUtilities::PointsKey pkey1(order_x,LibUtilities::eFourierEvenlySpaced);
+							LibUtilities::BasisKey bkey1(LibUtilities::eFourier,order_x,pkey1);
+							returnval.push_back(bkey1);
+						}
+							break;
+							
+						case eChebyshev:
+						{
+							const LibUtilities::PointsKey pkey1(order_x,LibUtilities::eGaussGaussChebyshev);
+							LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,order_x,pkey1);
+							returnval.push_back(bkey1);
+						}
+							break;
+							
+						default:
+						{
+							ASSERTL0(false,"Homogeneous expansion can be of Fourier or Chebyshev type only");
+						}
+							break;
+					}
+				
+				
+					switch(type_y)
+					{
+						case eFourier:
+						{
+							const LibUtilities::PointsKey pkey2(order_y,LibUtilities::eFourierEvenlySpaced);
+							LibUtilities::BasisKey bkey2(LibUtilities::eFourier,order_y,pkey2);
+							returnval.push_back(bkey2);
+						}
+							break;
+							
+						case eChebyshev:
+						{
+							const LibUtilities::PointsKey pkey2(order_y,LibUtilities::eGaussGaussChebyshev);
+							LibUtilities::BasisKey bkey2(LibUtilities::eChebyshev,order_y,pkey2);
+							returnval.push_back(bkey2);
+						}
+							break;
+							
+						default:
+						{
+							ASSERTL0(false,"Homogeneous expansion can be of Fourier or Chebyshev type only");
+						}
+							break;
+					}
+					
+					switch(type_z)
+					{
+						case eFourier:
+						{
+							const LibUtilities::PointsKey pkey3(order_z,LibUtilities::eFourierEvenlySpaced);
+							LibUtilities::BasisKey bkey3(LibUtilities::eFourier,order_z,pkey3);
+							returnval.push_back(bkey3);
+						}
+							break;
+							
+						case eChebyshev:
+						{
+							const LibUtilities::PointsKey pkey3(order_z,LibUtilities::eGaussGaussChebyshev);
+							LibUtilities::BasisKey bkey3(LibUtilities::eChebyshev,order_z,pkey3);
+							returnval.push_back(bkey3);
+						}
+							break;
+							
+						default:
+						{
+							ASSERTL0(false,"Homogeneous expansion can be of Fourier or Chebyshev type only");
+						}
+							break;
+					}
+				}
+				break;
+					
+                case eTriangle:
+				{
+					ASSERTL0(false,"Homogeneous expansion not defined for this shape");
+				}
+				break;
+					
+                case eTetrahedron:
+				{
+					ASSERTL0(false,"Homogeneous expansion not defined for this shape");
+				}
+				break;
+					
+                default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+				break;
+			}
+			
+			return returnval;
+		}
 
         ExpansionMapShPtr MeshGraph::SetUpExpansionMap(void)
         {
@@ -1389,6 +1678,178 @@ namespace Nektar
                         }
 
                         expansion = expansion->NextSiblingElement("E");
+                    }
+                }
+				else if(expType == "H")
+                {
+                    int i;
+                    ExpansionMapShPtr expansionMap;
+					
+                    while (expansion)
+                    {
+						
+                        const char *fStr = expansion->Attribute("FIELDS");
+                        std::vector<std::string> fieldStrings; 
+                        
+                        if(fStr) // extract other fields. 
+                        {
+                            std::string fieldStr = fStr;
+                            bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldStrings);
+                            ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
+                        }
+                        
+                        // check to see if m_expasionVectorShPtrMap has
+                        // already been intiailised and if not intiailse
+                        // vector.
+                        if(m_expansionMapShPtrMap.count("DefaultVar") == 0) // no previous definitions
+                        {
+                            expansionMap = SetUpExpansionMap();
+                            
+                            m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
+                            
+                            // make sure all fields in this search point
+                            // to same expansion vector;
+                            for(i = 0; i < fieldStrings.size(); ++i)
+                            {
+                                m_expansionMapShPtrMap[fieldStrings[i]] = expansionMap;
+                            }
+                        }
+                        else // default variable is defined
+                        {
+                            
+                            if(fieldStrings.size()) // fields are defined
+                            {
+                                //see if field exists
+                                if(m_expansionMapShPtrMap.count(fieldStrings[0]))
+                                {
+                                    expansionMap = m_expansionMapShPtrMap.find(fieldStrings[0])->second;
+                                }
+                                else
+                                {
+                                    expansionMap = SetUpExpansionMap();
+                                    // make sure all fields in this search point
+                                    // to same expansion vector;
+                                    for(i = 0; i < fieldStrings.size(); ++i)
+                                    {
+                                        if(m_expansionMapShPtrMap.count(fieldStrings[i]) == 0)
+                                        {
+                                            m_expansionMapShPtrMap[fieldStrings[i]] = expansionMap;
+                                        }
+                                        else
+                                        {
+                                            ASSERTL0(false,"Expansion vector for this field is already  setup");
+                                        }
+                                    }
+                                }
+                            }
+                            else // use default variable list 
+                            {
+                                expansionMap = m_expansionMapShPtrMap.find("DefaultVar")->second;
+                            }
+                            
+                        }
+                        
+                        /// Mandatory components...optional are to follow later.
+                        std::string compositeStr = expansion->Attribute("COMPOSITE");
+                        ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
+                        int beg = compositeStr.find_first_of("[");
+                        int end = compositeStr.find_first_of("]");
+                        std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
+                        
+                        CompositeMap compositeVector;
+                        GetCompositeList(compositeListStr, compositeVector);
+						
+                        bool          useExpansionType = false;
+                        ExpansionType expansion_type_x, expansion_type_y, expansion_type_z;
+                        int           expansion_order_x, expansion_order_y, expansion_order_z;
+						
+                        LibUtilities::BasisKeyVector basiskeyvec;
+						
+                        const char * tStr_x = expansion->Attribute("TYPE-X");
+						
+                        if(tStr_x) // use type string to define expansion
+                        {
+                            std::string typeStr = tStr_x;
+                            const std::string* begStr = kExpansionTypeStr;
+                            const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
+                            const std::string* expStr = std::find(begStr, endStr, typeStr);
+							
+                            ASSERTL0(expStr != endStr, "Invalid expansion type.");
+                            expansion_type_x = (ExpansionType)(expStr - begStr);
+							
+                            const char *nStr = expansion->Attribute("NUMMODES-X");
+                            ASSERTL0(nStr,"NUMMODES-X was not defined in EXPANSION section of input");
+                            std::string nummodesStr = nStr;
+							
+                            LibUtilities::Equation nummodesEqn(nummodesStr);
+							
+                            expansion_order_x = (int) nummodesEqn.Evaluate();
+                        }
+						
+						const char * tStr_y = expansion->Attribute("TYPE-Y");
+						
+						if(tStr_y) // use type string to define expansion
+                        {
+                            std::string typeStr = tStr_y;
+                            const std::string* begStr = kExpansionTypeStr;
+                            const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
+                            const std::string* expStr = std::find(begStr, endStr, typeStr);
+							
+                            ASSERTL0(expStr != endStr, "Invalid expansion type.");
+                            expansion_type_y = (ExpansionType)(expStr - begStr);
+							
+                            const char *nStr = expansion->Attribute("NUMMODES-Y");
+                            ASSERTL0(nStr,"NUMMODES-Y was not defined in EXPANSION section of input");
+                            std::string nummodesStr = nStr;
+							
+                            LibUtilities::Equation nummodesEqn(nummodesStr);
+							
+                            expansion_order_y = (int) nummodesEqn.Evaluate();
+                        }
+						
+						const char * tStr_z = expansion->Attribute("TYPE-Z");
+						
+						if(tStr_z) // use type string to define expansion
+                        {
+                            std::string typeStr = tStr_z;
+                            const std::string* begStr = kExpansionTypeStr;
+                            const std::string* endStr = kExpansionTypeStr+eExpansionTypeSize;
+                            const std::string* expStr = std::find(begStr, endStr, typeStr);
+							
+                            ASSERTL0(expStr != endStr, "Invalid expansion type.");
+                            expansion_type_z = (ExpansionType)(expStr - begStr);
+							
+                            const char *nStr = expansion->Attribute("NUMMODES-Z");
+                            ASSERTL0(nStr,"NUMMODES-Z was not defined in EXPANSION section of input");
+                            std::string nummodesStr = nStr;
+							
+                            LibUtilities::Equation nummodesEqn(nummodesStr);
+							
+                            expansion_order_z = (int) nummodesEqn.Evaluate();
+                        }
+						
+                        CompositeMapIter compVecIter;
+                        for (compVecIter = compositeVector.begin(); compVecIter != compositeVector.end(); ++compVecIter)
+                        {
+                            GeometryVectorIter geomVecIter;
+                            for (geomVecIter = (compVecIter->second)->begin(); geomVecIter != (compVecIter->second)->end(); ++geomVecIter)
+                            {
+                                ExpansionMapIter expVecIter;
+                                for (expVecIter = expansionMap->begin(); expVecIter != expansionMap->end(); ++expVecIter)
+                                {
+										
+									(expVecIter->second)->m_basisKeyVector = DefineBasisKeyFromExpansionTypeHomo(*geomVecIter,
+																												 expansion_type_x,
+																												 expansion_type_y,
+																												 expansion_type_z,
+																												 expansion_order_x,
+																												 expansion_order_y,
+																												 expansion_order_z);
+                                }
+                            }
+                        }
+						
+						expansion = expansion->NextSiblingElement("H");
                     }
                 }
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition

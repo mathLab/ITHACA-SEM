@@ -137,6 +137,8 @@ namespace Nektar
 
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            ReadGlobalOptimizationParameters();
         }
 
 
@@ -212,6 +214,7 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
 
+            ReadGlobalOptimizationParameters();
         }
 
 
@@ -915,12 +918,23 @@ namespace Nektar
             SetUpPhysNormals(locexp);
         }
 
-	void ExpList1D::v_SetUpPhysTangents(
-				const StdRegions::StdExpansionVector &locexp)
-	{
-	    SetUpPhysTangents(locexp);
-	}
-	
+        void ExpList1D::v_SetUpPhysTangents(
+                    const StdRegions::StdExpansionVector &locexp)
+        {
+            SetUpPhysTangents(locexp);
+        }
+
+        void ExpList1D::v_ReadGlobalOptimizationParameters()
+        {
+//            Array<OneD, int> NumShape(1,0);
+//            NumShape[0] = GetExpSize();
+//
+//            int one = 1;
+//            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+//                ::AllocateSharedPtr(m_session,one,NumShape);
+        }
+
+
         /**
          * Writes out the header for a <PIECE> VTK XML segment describing the
          * geometric information which comprises this element. This includes

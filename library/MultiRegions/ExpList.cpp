@@ -2416,14 +2416,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-/**********************************************************************************/
-	void ExpList::v_SetUpPhysTangents(
-				const StdRegions::StdExpansionVector &kocexp)
-	{
-	    ASSERTL0(false, 
-	    	      "This method is not defined or valid for this class type");
-	}
-		/**
+
+        void ExpList::v_SetUpPhysTangents(
+                    const StdRegions::StdExpansionVector &kocexp)
+        {
+            ASSERTL0(false,
+                      "This method is not defined or valid for this class type");
+        }
+
+        /**
          */
         void ExpList::v_SetUpTangents()
         {
@@ -2443,7 +2444,7 @@ namespace Nektar
 
 		/**
          */
-        void ExpList::v_ReadGlobalOptimizationParameters(const std::string &infilename)
+        void ExpList::v_ReadGlobalOptimizationParameters()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

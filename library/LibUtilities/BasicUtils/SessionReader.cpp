@@ -133,6 +133,7 @@ namespace Nektar
 
             m_filename = argv[1];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
+            m_xmlDoc = 0;
 
             // Create communicator
             CreateComm(argc, argv, m_filename);
@@ -178,6 +179,7 @@ namespace Nektar
          */
         TiXmlDocument& SessionReader::GetDocument()
         {
+            ASSERTL1(m_xmlDoc, "XML Document not defined.");
             return *m_xmlDoc;
         }
 

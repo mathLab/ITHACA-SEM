@@ -36,6 +36,7 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <StdRegions/StdRegions.hpp>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 
@@ -79,7 +80,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalOptParam(const int nel);
             
             /// Read optimisation parameters from a given file.
-            MULTI_REGIONS_EXPORT GlobalOptParam(const std::string& fileName, const int dim, Array<OneD, const int> &NumShapeElements);
+            MULTI_REGIONS_EXPORT GlobalOptParam(const LibUtilities::SessionReaderSharedPtr& pSession, const int dim, Array<OneD, const int> &NumShapeElements);
 
             /// For a given matrix type, determines if the operation should
             /// be done globally.

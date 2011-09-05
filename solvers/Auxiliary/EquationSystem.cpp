@@ -267,8 +267,6 @@ namespace Nektar
                                                 DeclareCoeffPhysArrays,
                                                 m_checkIfSystemSingular[0]);
 
-                        firstfield->ReadGlobalOptimizationParameters(m_filename);
-
                         m_fields[0] = firstfield;
                         for(i = 1 ; i < m_fields.num_elements(); i++)
                         {
@@ -295,8 +293,6 @@ namespace Nektar
                                 MemoryManager<MultiRegions::ContField3D>
                                 ::AllocateSharedPtr(m_session,m_graph,
                                                     *m_boundaryConditions,i);
-
-                            firstfield->ReadGlobalOptimizationParameters(m_filename);
 
                             m_fields[0] = firstfield;
                             for(i = 1 ; i < m_fields.num_elements(); i++)

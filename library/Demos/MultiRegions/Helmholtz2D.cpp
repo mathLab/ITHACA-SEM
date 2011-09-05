@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
-    string meshfile(vSession->GetFilename());
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -70,7 +69,6 @@ int main(int argc, char *argv[])
         std::string variable = "u";
         Exp = MemoryManager<MultiRegions::ContField2D>::
             AllocateSharedPtr(vSession,graph2D,bcs,variable);
-        Exp->ReadGlobalOptimizationParameters(meshfile);
         //----------------------------------------------
 
         Timing("Read files and define exp ..");
@@ -137,9 +135,7 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(strtok(argv[1],"."));
-        string   endfile(".fld");
-        out += endfile;
+        string   out(vSession->GetSessionName() + ".fld");
         if (vSession->GetComm()->GetSize() > 1)
         {
             out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
@@ -155,7 +151,6 @@ int main(int argc, char *argv[])
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
         graph2D->Write(out, FieldDef, FieldData);
-
         //-----------------------------------------------
 
         //----------------------------------------------

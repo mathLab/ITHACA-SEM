@@ -99,8 +99,7 @@ namespace Nektar
             LocalRegions::TetExpVector    m_tet;
 */
 
-            virtual void v_ReadGlobalOptimizationParameters(
-                                const std::string &infilename);
+            virtual void v_ReadGlobalOptimizationParameters();
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 

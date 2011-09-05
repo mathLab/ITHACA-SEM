@@ -159,6 +159,8 @@ namespace Nektar
             ///  m_phys.
             void SetCoeffPhysOffsets(void);
 
+            virtual void v_ReadGlobalOptimizationParameters();
+
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);

@@ -48,7 +48,7 @@ namespace Nektar
 		ExpList()
         {
         }
-		
+
         /**
          * Creates an identical copy of another ExpList0D object.
          */

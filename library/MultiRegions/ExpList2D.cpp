@@ -189,6 +189,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
              }
+
+            ReadGlobalOptimizationParameters();
          }
 
 
@@ -210,7 +212,7 @@ namespace Nektar
                              LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::ExpansionMap &expansions,
                              bool DeclareCoeffPhysArrays):
-            ExpList()
+            ExpList(pSession)
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -300,6 +302,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
              }
+
+            ReadGlobalOptimizationParameters();
          }
 
 
@@ -400,6 +404,8 @@ namespace Nektar
              SetCoeffPhysOffsets();
              m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
              m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+             ReadGlobalOptimizationParameters();
           }
 
 
@@ -515,7 +521,10 @@ namespace Nektar
             SetCoeffPhysOffsets();
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
-        }
+
+            ReadGlobalOptimizationParameters();
+
+         }
 
 
         /**
@@ -599,7 +608,7 @@ namespace Nektar
         }
 
 
-        void ExpList2D::v_ReadGlobalOptimizationParameters(const std::string &infilename)
+        void ExpList2D::v_ReadGlobalOptimizationParameters()
         {
             Array<OneD, int> NumShape(2,0);
 
@@ -617,7 +626,7 @@ namespace Nektar
 
             int two = 2;
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(infilename,two,NumShape);
+                ::AllocateSharedPtr(m_session,two,NumShape);
         }
 
         void ExpList2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)

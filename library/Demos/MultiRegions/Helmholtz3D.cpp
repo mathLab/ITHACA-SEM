@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
-    string meshfile(vSession->GetFilename());
 
     if(argc < 2)
     {
@@ -58,7 +57,6 @@ int main(int argc, char *argv[])
         int bc_val=0;
         Exp = MemoryManager<MultiRegions::ContField3D>
                         ::AllocateSharedPtr(vSession,graph3D,bcs,bc_val);
-        Exp->ReadGlobalOptimizationParameters(meshfile);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -116,9 +114,7 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(strtok(argv[1],"."));
-        string   endfile(".fld");
-        out += endfile;
+        string   out(vSession->GetSessionName() + ".fld");
         if (vComm->GetSize() > 1)
         {
             out += "." + boost::lexical_cast<string>(vComm->GetRank());

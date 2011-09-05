@@ -67,14 +67,13 @@ namespace Nektar
          * Read global optimisation parameters from a file and set up flags.
          * @param   fileName    File to read parameters from.
          */
-        GlobalOptParam::GlobalOptParam(const std::string& fileName, const int dim,
+        GlobalOptParam::GlobalOptParam(const LibUtilities::SessionReaderSharedPtr& pSession, const int dim,
                                          Array<OneD, const int> &NumShapeElements):
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false)
         {
             int i;
             int numShapes = 0;
-            TiXmlDocument doc(fileName);
-            bool loadOkay = doc.LoadFile();
+            TiXmlDocument& doc = pSession->GetDocument();
 
             m_shapeNumElements = NumShapeElements;
 
@@ -106,9 +105,6 @@ namespace Nektar
                 m_doBlockMatOp[i] = Array<OneD, bool> (numShapes,false);
             }
 
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
-                                fileName).c_str());
-
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master
                         = docHandle.FirstChildElement("NEKTAR").Element();
@@ -131,9 +127,11 @@ namespace Nektar
             if (source)
             {
                 std::string sourceFile = source->Attribute("FILE");
-                loadOkay = doc.LoadFile(sourceFile);
+                TiXmlDocument docSource;
+                bool loadOkay = docSource.LoadFile(sourceFile);
                 ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                                                 sourceFile).c_str());
+                TiXmlHandle docSourceHandle(&docSource);
                 master = docHandle.FirstChildElement("NEKTAR").Element();
                 ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
 

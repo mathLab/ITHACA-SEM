@@ -124,8 +124,7 @@ namespace Nektar
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
 
-            virtual void v_ReadGlobalOptimizationParameters(
-                                const std::string &infilename);
+            virtual void v_ReadGlobalOptimizationParameters();
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 

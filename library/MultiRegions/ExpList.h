@@ -643,13 +643,6 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir = 0, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector);
 
-            /// load global optimisation parameters
-            void ReadGlobalOptimizationParameters(
-                                                  const std::string &infilename)
-            {
-                v_ReadGlobalOptimizationParameters(infilename);
-            }
-
             const NekOptimize::GlobalOptParamSharedPtr &GetGlobalOptParam(void)
             {
                 return m_globalOptParam;
@@ -908,6 +901,11 @@ namespace Nektar
                                                                const GlobalLinSysKey     &mkey,
                                                                const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
+            void ReadGlobalOptimizationParameters()
+            {
+                v_ReadGlobalOptimizationParameters();
+            }
+
             // Virtual prototypes
 
             virtual int v_GetNumElmts(void)
@@ -1022,7 +1020,7 @@ namespace Nektar
                                     Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
-  	    virtual void v_SetUpPhysTangents(
+            virtual void v_SetUpPhysTangents(
 		                	    const StdRegions::StdExpansionVector &locexp);
 	    
             virtual void v_FwdTrans(
@@ -1095,8 +1093,7 @@ namespace Nektar
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
 
-            virtual void v_ReadGlobalOptimizationParameters(
-                                                            const std::string &infilename);
+            virtual void v_ReadGlobalOptimizationParameters();
 
             virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
                 v_GetFieldDefinitions(void);

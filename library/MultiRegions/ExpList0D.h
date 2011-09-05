@@ -75,7 +75,7 @@ namespace Nektar
 			
 			/// The defualt constructor.
             MULTI_REGIONS_EXPORT ExpList0D();
-			
+
             /// The copy constructor.
             MULTI_REGIONS_EXPORT ExpList0D(const ExpList0D &In, bool DeclareCoeffPhysArrays);
 
@@ -90,7 +90,7 @@ namespace Nektar
         protected:
 
         private:
-		
+
 			virtual void v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
 			
 			virtual void v_GetCoord(Array<OneD,NekDouble> &coords);

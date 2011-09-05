@@ -136,6 +136,8 @@ namespace Nektar
                 ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
+
+            ReadGlobalOptimizationParameters();
         }
 
         /**
@@ -250,6 +252,7 @@ namespace Nektar
                 ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
+            ReadGlobalOptimizationParameters();
         }
 
         /**
@@ -402,7 +405,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
-        void ExpList3D::v_ReadGlobalOptimizationParameters(const std::string &infilename)
+        void ExpList3D::v_ReadGlobalOptimizationParameters()
         {
             Array<OneD, int> NumShape(4,0);
 
@@ -419,7 +422,7 @@ namespace Nektar
 
             int three = 3;
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(infilename,three,NumShape);
+                ::AllocateSharedPtr(m_session,three,NumShape);
         }
 
         void ExpList3D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)

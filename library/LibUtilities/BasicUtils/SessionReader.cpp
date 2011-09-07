@@ -133,7 +133,7 @@ namespace Nektar
 
             m_filename = argv[1];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            m_xmlDoc = 0;
+            m_xmlDoc = MergeDoc(argc, argv);
 
             // Create communicator
             CreateComm(argc, argv, m_filename);
@@ -157,20 +157,11 @@ namespace Nektar
          */
         void SessionReader::InitSession()
         {
-            // Read original XML file (no parsing).
-            m_xmlDoc = new TiXmlDocument(m_filename);
-            ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
-
-            bool loadOkay = m_xmlDoc->LoadFile();
-            ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-                    m_filename + ". Check XML standards compliance. Error on line: "
-                    + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
-
             // Partition mesh
             PartitionMesh();
 
-            // Load the process-specific file and parse the conditions section.
-            LoadFile(m_filename);
+            // Parse the XML data in #m_xmlDoc
+            ParseDocument();
         }
 
 
@@ -723,46 +714,67 @@ namespace Nektar
         /**
          *
          */
-        void SessionReader::LoadFile(const std::string &pFilename)
+        TiXmlDocument *SessionReader::MergeDoc(int argc, char *argv[])
         {
-            m_xmlDoc = new TiXmlDocument(pFilename);
-            ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
-
-            bool loadOkay = m_xmlDoc->LoadFile();
+            // Read the first document
+            TiXmlDocument *vMainDoc = new TiXmlDocument(argv[1]);
+            ASSERTL0(vMainDoc, "Failed to create XML document object.");
+            bool loadOkay = vMainDoc->LoadFile();
             ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-                    pFilename + ". Check XML standards compliance. Error on line: "
-                    + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+                    argv[1] + ". Check XML standards compliance. Error on line: "
+                    + boost::lexical_cast<std::string>(vMainDoc->Row()));
+            TiXmlHandle vMainHandle(vMainDoc);
+            TiXmlElement* vMainNektar = vMainHandle.FirstChildElement("NEKTAR").Element();
 
-//            for (unsigned int i = 0; i < pFilenames.size(); ++i)
-//            {
-//                TiXmlDocument vTempDoc (pFilenames[i]);
-//                bool loadOkay = vTempDoc.LoadFile();
-//                ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-//                    pFilenames[i] + ". Check XML standards compliance. Error on line: "
-//                    + boost::lexical_cast<std::string>(vTempDoc.Row()));
-//
-//                TiXmlHandle docHandle(&vTempDoc);
-//                TiXmlElement* vTempNektar;
-//                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
-//                ASSERTL0(e, "Unable to find NEKTAR tag in file.");
-//                TiXmlElement* p = vTempNektar->FirstChildElement();
-//
-//                while (p)
-//                {
-//                    TiXmlElement * q = new TiXmlElement(*p);
-//                    e->LinkEndChild(q);
-//                    p = p->NextSiblingElement();
-//                }
-//            }
+            // Read all subsequent XML documents.
+            // For each element within the NEKTAR tag, use it to replace the
+            // version already present in the loaded XML data.
+            for (int i = 2; i < argc; ++i)
+            {
+                TiXmlDocument vTempDoc (argv[i]);
+                loadOkay = vTempDoc.LoadFile();
+                ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+                    argv[i] + ". Check XML standards compliance. Error on line: "
+                    + boost::lexical_cast<std::string>(vTempDoc.Row()));
 
-//            m_xmlDoc->LinkEndChild(e);
+                TiXmlHandle docHandle(&vTempDoc);
+                TiXmlElement* vTempNektar;
+                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
+                ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
+                TiXmlElement* p = vTempNektar->FirstChildElement();
 
-            /// Look for all data in CONDITIONS block.
+                while (p)
+                {
+                    TiXmlElement * vMainEntry = vMainNektar->FirstChildElement(p->Value());
+                    TiXmlElement * q = new TiXmlElement(*p);
+                    if (vMainEntry)
+                    {
+                        vMainNektar->RemoveChild(vMainEntry);
+                    }
+                    vMainNektar->LinkEndChild(q);
+                    p = p->NextSiblingElement();
+                }
+            }
+
+            return vMainDoc;
+        }
+
+
+        /**
+         *
+         */
+        void SessionReader::ParseDocument()
+        {
+            // Check we actually have a document loaded.
+            ASSERTL0(m_xmlDoc, "No XML document loaded.");
+
+            // Look for all data in CONDITIONS block.
             TiXmlHandle docHandle(m_xmlDoc);
             TiXmlElement* e;
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
             ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
 
+            // Read the various sections of the document
             ReadParameters(e);
             ReadSolverInfo(e);
             ReadExpressions(e);
@@ -786,14 +798,7 @@ namespace Nektar
             }
             else
             {
-                TiXmlDocument* xmlDoc = new TiXmlDocument(pFilename);
-                ASSERTL0(xmlDoc, "Failed to create XML document object.");
-
-                bool loadOkay = xmlDoc->LoadFile();
-                ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-                        pFilename + ". Check XML standards compliance.");
-
-                TiXmlHandle docHandle(xmlDoc);
+                TiXmlHandle docHandle(m_xmlDoc);
                 TiXmlElement* e;
                 e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
                 ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
@@ -840,8 +845,14 @@ namespace Nektar
 
                 m_filename = m_filename + "." + boost::lexical_cast<std::string>(m_comm->GetRank());
 
-                // Force solution type
-                SetTag("SolnType", "IterativeFull");
+                delete m_xmlDoc;
+                m_xmlDoc = new TiXmlDocument(m_filename);
+                ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
+
+                bool loadOkay = m_xmlDoc->LoadFile();
+                ASSERTL0(loadOkay, std::string("Unable to load file: ") +
+                        m_filename + ". Check XML standards compliance. Error on line: "
+                        + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
             }
         }
 

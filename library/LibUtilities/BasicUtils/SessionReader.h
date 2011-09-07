@@ -246,8 +246,10 @@ namespace Nektar
             /// Returns a shared pointer to the current object.
             inline boost::shared_ptr<SessionReader> GetSharedThisPtr();
 
+            /// Creates an XML document from a list of input files.
+            LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(int argc, char *argv[]);
             /// Loads and parses the specified file.
-            LIB_UTILITIES_EXPORT void LoadFile(const std::string &pFilename);
+            LIB_UTILITIES_EXPORT void ParseDocument();
             /// Loads the given XML document and instantiates an appropriate
             /// communication object.
             LIB_UTILITIES_EXPORT void CreateComm(int &argc, char* argv[], const std::string &pFilename);

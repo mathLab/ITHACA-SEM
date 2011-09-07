@@ -23,31 +23,18 @@
  * [1] Butcher, J.C. (2006) <em>General linear methods</em>, Acta Numerica 15, 157-256 <BR>
  * [2] http://www.math.auckland.ac.nz/~butcher/conferences.html
  *
+ *
  * \section  sectionGeneralLinearMethods General linear methods
+ *
  * The standard initial value problem can written in the form
  * \f[
  * \frac{d\boldsymbol{y}}{dt}=\boldsymbol{f}(t,\boldsymbol{y}),\quad \boldsymbol{y}(t_0)=\boldsymbol{y}_0
  * \f]
- * where \f$\boldsymbol{y}=[y^0\quad y^1\quad  \cdots \quad y^{N-1}]^T\f$. <BR>
+ * where \f$\boldsymbol{y}\f$ is a vector containing the variable (or an array of array contianing the variables). <BR>
  * In the formulation of general linear methods, it is more convenient to consider the ODE in autonomous form, i.e.
  * \f[
  * \frac{d\boldsymbol{\hat{y}}}{dt}=\boldsymbol{\hat{f}}(\boldsymbol{\hat{y}}),\quad \boldsymbol{\hat{y}}(t_0)=
  * \boldsymbol{\hat{y}}_0.
- * \f]
- *
- * When the original problem is presented in non-autonomous form, it can be written as an
- * autonomous system in the following way:
- * \f[
- * \boldsymbol{\hat{y}}=
- * \left [ \begin{array}{c}
- * t \\
- * \boldsymbol{y}
- * \end{array}\right],\quad
- * \boldsymbol{\hat{f}}(\boldsymbol{\hat{y}})=
- * \left [ \begin{array}{c}
- * 1 \\
- * \boldsymbol{f}(\boldsymbol{\hat{y}})
- * \end{array}\right].
  * \f]
  *
  * \subsection subsectionGeneralLinearMethodsFomulation Formulation
@@ -69,20 +56,18 @@
  * \boldsymbol{F}_i = \boldsymbol{\hat{f}}(\boldsymbol{Y}_i).
  * \f}
  * The matrices \f$A=[a_{ij}]\f$, \f$U=[u_{ij}]\f$, \f$B=[b_{ij}]\f$, \f$V=[v_{ij}]\f$ are
- * characteristic of a specific method.
- * Furthermore, the following two quantities serve as input and output of step \f$n\f$:
- * - <b>output</b>: \f$\boldsymbol{\hat{y}}_{j}^{[n]}\f$ the new set of approximations.
- *    - \f$\boldsymbol{\hat{y}}_{0}^{[n]}\f$ refers to the approximation \f$\boldsymbol{\hat{y}}(t+n\Delta t)\f$.
- *      This is the solution were are looking for.
- *    - \f$\boldsymbol{\hat{y}}_{j}^{[n]}\f$ (\f$j=1,\ldots,r-1\f$) refers to the approximation at
- *       the current time-level of an auxiliary set of parameters inherent to the method.
- * - <b>input</b>: \f$\boldsymbol{\hat{y}}_{j}^{[n-1]}\f$ the set of approximations calculated at step \f$n-1\f$.
- *    - \f$\boldsymbol{\hat{y}}_{0}^{[n-1]}\f$ refers to the approximation of the solution at time
- *      level \f$n-1\f$ calculated during the step \f$n-1\f$.
- *    - \f$\boldsymbol{\hat{y}}_{j}^{[n-1]}\f$ (\f$j=1,\ldots,r-1\f$) refers to the approximation
- *      of the auxiliary parameters calculated during the step \f$n-1\f$.
+ * characteristic of a specific method. Each scheme can then be uniquely defined by a partioned 
+ * \f$(s+r)\times(s+r)\f$ matrix
+ * \f{displaymath}
+ * \left[ \begin{array}{cc}
+ * A & U\\
+ * B & V
+ * \end{array}\right]
+ * \f}
+ *
  *
  * \subsection subsectionGeneralLinearMethodsMatrixNotation Matrix notation
+ *
  * Adopting the notation:
  * \f{displaymath}
  * \boldsymbol{\hat{y}}^{[n-1]}=
@@ -121,17 +106,19 @@
  * \boldsymbol{\hat{y}}^{[n]}
  * \end{array}\right] =
  * \left[ \begin{array}{cc}
- * A\otimes I & U\otimes I \\
- * B\otimes I & V\otimes I
+ * A\otimes I_N & U\otimes I_N \\
+ * B\otimes I_N & V\otimes I_N
  * \end{array}\right]
  * \left[ \begin{array}{c}
  * \Delta t\boldsymbol{F}\\
  * \boldsymbol{\hat{y}}^{[n-1]}
  * \end{array}\right]
  * \f}
- * where \f$I\f$ is the identity matrix of dimension \f$N\times N\f$.
+ * where \f$I_N\f$ is the identity matrix of dimension \f$N\times N\f$.
+ *
  *
  * \subsection subsectionGeneralLinearMethodsEvaluation Evaluation of an General Linear Method
+ *
  * Although the General linear method is essentially presented for ODE's in its autonomous form, in
  * Nektar++ it will be used to solve ODE's formulated in non-autonomous form.
  * Given the ODE,
@@ -164,47 +151,23 @@
  *     \f$\boldsymbol{y}^{[n-1]}_0\f$ corresponds to the actual approximation at the new time level.
  *   - \f$t^{[n]}\f$ where \f$t^{[n]}_0\f$ is equal to the new time level \f$t+\Delta t\f$
  *
+ *
  * \section sectionGeneralLinearMethodsNektar General Linear Methods in Nektar++
- * In Nektar++, we do not use the standard General Linear Methods formulation. First of all as mentioned above,
+ *
+ * In Nektar++, we do not use the standard General Linear Methods formulation. As mentioned above,
  * we will use the non-autonomous form as the explicit treatment of the time variable \f$t\f$
- * allows for more flexibility. And secondly, we generalise the concept a General Linear Methods
- * in order to solve ODE's of the form:
- * \f[
- * \boldsymbol{m}(t,\frac{d\boldsymbol{y}}{dt})=\boldsymbol{l}(t,\boldsymbol{y})
- * \f]
- * This
- * - is a more natural formulation for ODE's originating from time-dependent PDE's
- * - allows for an easier treatment of strongly imposed essential boundary conditions for such PDE's
+ * allows for more flexibility. 
  *
- * \subsection sectionGeneralLinearMethodsNektarFormulation Formulation
- * Applied to the ODE above, the General Linear Method can now be formulated as
- * \f{eqnarray*}
- * \boldsymbol{m}(T_i,\boldsymbol{Y}_i) &=& \Delta t\sum_{j=0}^{s-1}a_{ij}\boldsymbol{F}_j+\sum_{j=0}^{r-1}u_{ij}\boldsymbol{y}_{j}^{[n-1]}, \qquad i=0,1,\ldots,s-1\\
- * T_i &=& \Delta t\sum_{j=0}^{s-1}a_{ij}+\sum_{j=0}^{r-1}u_{ij}
- * t_{j}^{[n-1]}, \qquad i=0,1,\ldots,s-1\\
- * \boldsymbol{F}_i &=& l(T_i,\boldsymbol{Y}_i), \qquad i=0,1,\ldots,s-1\\
- * \boldsymbol{y}_{i}^{[n]}&=&\Delta t\sum_{j=0}^{s-1}b_{ij}\boldsymbol{F}_j+
- * \sum_{j=0}^{r-1}v_{ij}\boldsymbol{y}_{j}^{[n-1]}, \qquad i=0,1,\ldots,r-1\\
- * t_{i}^{[n]}&=&\Delta t\sum_{j=0}^{s-1}b_{ij}+
- * \sum_{j=0}^{r-1}v_{ij}t_{j}^{[n-1]}, \qquad i=0,1,\ldots,r-1\\
- * \f}
- * It is very important to note that this has the following implications to the output vector (and similarly
- * for the input vector):
- * - <b>output</b>: \f$\boldsymbol{y}_{j}^{[n]}\f$ the new set of approximations.
- *    - \f$\boldsymbol{y}_{0}^{[n]}\f$ now refers to the approximation of \f$\boldsymbol{m}(t_n,\boldsymbol{y}(t_n))\f$.
- *      This is <i>NOT</i> the solution were are looking for.
- *    - \f$\boldsymbol{y}_{j}^{[n]}\f$ (\f$j=1,\ldots,r-1\f$) refers to the approximation at
- *       the current time-level of an auxiliary set of parameters inherent to the method. If this parameter
- *       in the original method represents the approximation at an earlier time level, say \f$\boldsymbol{y}(t_{n-2})\f$,
- *       it will now represent \f$\boldsymbol{m}(t_{n-2},\boldsymbol{y}(t_{n-2}))\f$ in the generalised formulation.
- *
- * This means that an extra step is required to calculate the actual approximation at the new time level. This can be done by solving
- * the the type system of below for \f$\boldsymbol{y}\f$:
- * \f[
- * \boldsymbol{m}(t,\boldsymbol{y}) = \boldsymbol{b}
- * \f]
- *
+ * For a detailed describtion of the formulation and a deeper insight of the numerical method see:
+ * <BR><BR>
+ * Peter E.J. Vos, Claes Eskilsson, Alessandro Bolis, Sehun Chun,Robert M. Kirby & Spencer J. Sherwin, (2011),<BR> 
+ * <em>A generic framework for time-stepping partial differential equations (PDEs): <BR>
+ * general linear methods, object-oriented implementation and application to fluid problems</em>, <BR>
+ * International Journal of Computational Fluid Dynamics, 25:3, 107-125
+ * <BR>
+ * 
  * \subsection sectionGeneralLinearMethodsNektarSchemes Type of Time Integration Schemes
+ *
  * Nektar++ contains various classes and methods which implement the concept of the General
  * Linear Methods. This toolbox is capable of numerically solving the generalised ODE using a broad range
  * of different time-stepping methods. We distinguish the following types of General Linear Methods:
@@ -212,9 +175,8 @@
  *   These types of methods are considered explicit from an ODE point of view. They are characterised by a lower
  *   triangular coefficient matrix \f$A\f$, i.e. \f$a_{ij} = 0\f$ for \f$j\geq i\f$. To avoid confusion, we
  *   make a further distinction:
- *   - <i>direct explicit method</i>: \f$\boldsymbol{m}(t,\frac{d\boldsymbol{y}}{dt})=\frac{d\boldsymbol{y}}{dt}\f$
- *     Only forward operators are required.
- *   - <i>indirect explicit method</i>: The inverse operator \f$\boldsymbol{m}^{-1}\f$ is required.
+ *   - <i>direct explicit method</i>: Only forward operators are required.
+ *   - <i>indirect explicit method</i>: The inverse operator is required.
  * - <b>Diagonally Implicit Methods</b><BR>
  *   Compared to the explicit methods, the coefficient matrix \f$A\f$ has now non-zero entries on the diagonal.
  *   This means that each stage value depend on the stage derivative at the same stage, requiring an implicit
@@ -222,7 +184,7 @@
  *   DIRK schemes.
  * - <b>IMEX schemes</b><BR>
  * These schemes support the concept of being able to split
- * right hand forcing term \f$ l(t,y)\f$ into an explicit and
+ * right hand forcing term into an explicit and
  * implicit component. This is useful in advection diffusion
  * type problems where the advection is handled explicity and
  * the diffusion is handled implicit.
@@ -245,19 +207,25 @@
  * \code
  * NekDouble timestepsize = 0.1;
  * NekDouble time         = 0.0;
- * Array<OneD, Array<OneD, NekDouble> >  y_t0;
- * Array<OneD, Array<OneD, NekDouble> >  y_0;
- * SomeClass object;
+ * 
+ * Array<OneD, Array<OneD, NekDouble> >  y;
+ * 
+ * LibUtilities::TimeIntegrationSchemeOperators ode;
+ *
+ * ode.DefineImplicitSolve (&function1, &object1);
+ * ode.DefineOdeRhs        (&function2, &object2);
+ *
  *
  * LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
  * LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
  *
- * int nInitSteps;
- * LibUtilities::TimeIntegrationSolutionSharedPtr y = IntScheme->InitializeScheme(timestepsize,time,nInitSteps,object,y_t0);
+ * LibUtilities::TimeIntegrationSolutionSharedPtr y_0;
  *
- * for(n = nInitSteps; n < nsteps; ++n)
+ * y_0 = IntScheme->InitializeScheme(timestepsize,y,time,ode);
+ *
+ * for(int n = 0; n < nsteps; ++n)
  * {
- *  y0 = IntScheme->ExplicitIntegration(m_timestep,object,y);
+ *  y = IntScheme->TimeIntegrate(timestep,y_0,ode);
  *  time += timestepsize;
  * }
  * \endcode
@@ -267,21 +235,28 @@
  * \code
  * NekDouble timestepsize = 0.1;
  * NekDouble time         = 0.0;
- * Array<OneD, Array<OneD, NekDouble> >  y_t0;
- * Array<OneD, Array<OneD, NekDouble> >  y_0;
- * Foo bar;
+ * Array<OneD, Array<OneD, NekDouble> >  y;
  * \endcode
- * The object <code>y_t0</code> should contain the solution at the initial time t0.
- * The object <code>y_0</code> will later be used to store the solution at every time level.
+ * The vector <code>y</code> will be used to store the solution at the end of each time-step.
  * It corresponds to the vector \f$\boldsymbol{y}^{[n]}_0\f$ defined above.
- * Both <code>y_t0</code> and <code>y_0</code> are Array of Arrays where the first dimension
+ * It is an Array of Arrays where the first dimension
  * corresponds to the number of variables (eg. u,v,w) and
  * the second dimension corresponds to the number length of the variables
- * (e.g. the number of modes).<BR>
- * The variable <code>bar</code> is the object of some class <code>Foo</code>. This class
- * Foo should have some a series of methods called representing the ODE. The user should make sure
- * his class contains a proper implementation of these necessary methods. For more information
- * about these methods, click \ref sectionGeneralLinearMethodsNektarSchemesRequiredMethods "here".
+ * (e.g. the number of modes or the number of physical points).<BR>
+ * \code
+ * LibUtilities::TimeIntegrationSchemeOperators ode;
+ *
+ * ode.DefineImplicitSolve (&function1, &object1);
+ * ode.DefineOdeRhs        (&function2, &object2);
+ * \endcode
+ * The variable <code>ode</code> is an object containig the methods. A class representing a PDE eqaution (or system of equations)
+ * should have some a series of functions representing the implicit/explicit part of the method, which represents the reduction of the PDE/s to a system of ODEs. 
+ * The user should make sure this class contains a proper implementation of these necessary methods. 
+ * <code>&function1</code> is a functor, i.e. a pointer
+ * to a function where the method is implemented. <code>&object1</code> is a pointer to the object, i.e. the class, where the function/method (<code>&function1</code>) is implemented.
+ * For more information about these methods, click \ref sectionGeneralLinearMethodsNektarSchemesRequiredMethods "here", were the hypotical class where the methods/functions
+ * are implemented is called <code>Foo</code>.
+ 
  * - <b>Loading the time integration scheme</b>
  * \code
  * LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
@@ -294,27 +269,28 @@
  * integration coefficients and know how to perform integration.
  * - <b>Initialising the time integration scheme</b>
  * \code
- * int nInitSteps;
- * LibUtilities::TimeIntegrationSolutionSharedPtr y = IntScheme->InitializeScheme(timestepsize,time,nInitSteps,bar,y_t0);
+ * LibUtilities::TimeIntegrationSolutionSharedPtr y_0;
+ *
+ * y_0 = IntScheme->InitializeScheme(timestepsize,y,time,ode);
  * \endcode
- * Given the initial solution and some additional parameters, this method constructs and returns an object <code>y</code> which is
+ * Given the initial solution (stored in <code>y</code>) and some additional parameters, this method constructs and returns an object <code>y_0</code> which is
  * the abstraction of the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$. This abstraction is done through the class
  * <code>TimeIntegrationSolution</code>. This initialisation is essential in case of multi-step schemes, where the vector
- * \f$\boldsymbol{y}^{[n]}\f$ consist of more than one entry. The object <code>y</code> can than later be passed to the actual
+ * \f$\boldsymbol{y}^{[n]}\f$ consist of more than one entry. The object <code>y_0</code> can than later be passed to the actual
  * integration method, as it contains all necessary input.
  * - <b>Perform the time integration</b>
  * \code
- * for(n = nInitSteps; n < nsteps; ++n)
+ * for(int n = 0; n < nsteps; ++n)
  * {
- *  y0 = IntScheme->ExplicitIntegration(m_timestep,object,y);
+ *  y = IntScheme->TimeIntegrate(timestep,y_0,ode);
  *  time += timestepsize;
- * }
+ * } 
  * \endcode
- * The actual explicit time integration can now be done by looping over the function call above.
- * This function updates the object <code>y</code> every time step to hold the vectors
+ * The actual time integration can now be done by looping over the functions call above.
+ * This function updates the object <code>y_0</code> every time step to hold the vectors
  * \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$ at every time level <code>n</code>. In addition, it also
  * returns the actual solution \f$\boldsymbol{y}^{[n]}_0\f$ (which in fact is also embedded in the
- * object <code>y</code>)
+ * object <code>y_0</code>)
  *
  *
  * \subsection sectionGeneralLinearMethodsNektarSchemesRequiredMethods Required Methods
@@ -326,61 +302,20 @@
  *                          Array<OneD,       Array<OneD, NekDouble> >& outarray,
  *                    const NekDouble time);
  *   \endcode
- *   This function should which evaluate the right hand side operator \f$\boldsymbol{l}(t,\boldsymbol{y})\f$
+ *   This function should which evaluate the explict part of the right hand side operator
  *   of the generalised ODE.
  *   - Input Parameters
  *     - <code>inarray</code>: the vector \f$\boldsymbol{y}\f$
  *     - <code>time</code>: the time \f$t\f$
  *   - Output Parameters
- *     - <code>outarray</code>: the result \f$\boldsymbol{l}(t,\boldsymbol{y})\f$
+ *     - <code>outarray</code>: the result of the right hand side operator
  *     .
  *   .
  *   Both <code>inarray</code> and <code>outarray</code> are Array of Arrays where the first dimension
  *   corresponds to the number of variables (eg. u,v,w) and
  *   the second dimension corresponds to the number length of the variables
  *   (e.g. the number of modes).
- * - <code>Foo::ODElhs</code>
- *   \code
- *   void Foo::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
- *                          Array<OneD,       Array<OneD, NekDouble> >& outarray,
- *                    const NekDouble time);
- *   \endcode
- *   This function should which evaluate the left hand side operator \f$\boldsymbol{m}(t,\boldsymbol{y})\f$
- *   of the generalised ODE.
- *   - Input Parameters
- *     - <code>inarray</code>: the vector \f$\boldsymbol{y}\f$
- *     - <code>time</code>: the time \f$t\f$
- *   - Output Parameters
- *     - <code>outarray</code>: the result \f$\boldsymbol{m}(t,\boldsymbol{y})\f$
- *     .
- *   .
- *   Both <code>inarray</code> and <code>outarray</code> are Array of Arrays where the first dimension
- *   corresponds to the number of variables (eg. u,v,w) and
- *   the second dimension corresponds to the number length of the variables
- *   (e.g. the number of modes).
- * - <code>Foo::ODElhsSolve</code>
- *   \code
- *   void Foo::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
- *                               Array<OneD,       Array<OneD, NekDouble> >& outarray,
- *                         const NekDouble time);
- *   \endcode
- *   This function should solve the system \f$\boldsymbol{m}(t,\boldsymbol{y}) = \boldsymbol{b}\f$
- *   for the unknown vector \f$\boldsymbol{y}\f$. For linear operators, this can be thought of
- *   as the inverse matrix operator, i.e.
- *   \f[
- *   \boldsymbol{y} = \boldsymbol{M}^{-1}\boldsymbol{b}
- *   \f]
- *   - Input Parameters
- *     - <code>inarray</code>: the vector \f$\boldsymbol{b}\f$
- *     - <code>time</code>: the time \f$t\f$
- *   - Output Parameters
- *     - <code>outarray</code>: the result \f$\boldsymbol{y}\f$
- *     .
- *   .
- *   Both <code>inarray</code> and <code>outarray</code> are Array of Arrays where the first dimension
- *   corresponds to the number of variables (eg. u,v,w) and
- *   the second dimension corresponds to the number length of the variables
- *   (e.g. the number of modes).
+ *
  * - <code>Foo::DoImplicitSolve</code>
  *   \code
  *   void Foo::DoImplicitSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
@@ -388,22 +323,8 @@
  *                          const NekDouble time,
  *                          const NekDouble lambda);
  *   \endcode
- *   This method will be needed for diagonally implicit methods. The stage values in these methods
- *   should be calculated through the relation:
- *   \f[
- *   \boldsymbol{m}(T_i,\boldsymbol{Y}_i) = \Delta t a_{ii} \boldsymbol{l}(T_i,\boldsymbol{Y}_i)+ \Delta t\sum_{j=0}^{i-1}a_{ij}\boldsymbol{l}(T_j,\boldsymbol{Y}_j)+\sum_{j=0}^{r-1}u_{ij}\boldsymbol{y}_{j}^{[n-1]}, \qquad i=0,1,\ldots,s-1
- *   \f]
- *   Moving the terms in \f$\boldsymbol{Y}_i\f$ to the left hand side of the equation, it can be appreciated
- *   that we need a method which can solve:
- *   \f[
- *   \boldsymbol{m}(t,\boldsymbol{y}) - \lambda \boldsymbol{l}(t,\boldsymbol{y}) = \boldsymbol{b}
- *   \f]
- *   for the unknown vector \f$\boldsymbol{y}\f$. <code>Foo::DoImplicitSolve</code> is the method
- *   designed to do this. For linear operators, this can be thought of
- *   as the inverse matrix operator, i.e.
- *   \f[
- *   \boldsymbol{y} = \left(\boldsymbol{M}-\lambda \boldsymbol{L}\right)^{-1}\boldsymbol{b}
- *   \f]
+ * This function should which evaluate the implict part of the right hand side operator
+ * of the generalised ODE.
  *   - Input Parameters
  *     - <code>inarray</code>: the vector \f$\boldsymbol{b}\f$
  *     - <code>time</code>: the time \f$t\f$
@@ -418,6 +339,7 @@
  *   (e.g. the number of modes).
  *
  * \subsection sectionGeneralLinearMethodsImplementationEssentialBC Strongly imposed essential boundary conditions.
+ 
  * Dirichlet boundary conditions can be strongly imposed by lifting the known Dirichlet solution.
  * This is equivalent to decompose the approximate solution \f$y\f$ into an known lifted function,
  * \f$y^{\mathcal{D}}\f$, which satisfies the Dirichlet boundary conditions, and an unknown
@@ -462,34 +384,10 @@
  * \boldsymbol{y}^{\mathcal{D}[n-1]}_j \\
  * \boldsymbol{y}^{\mathcal{H}[n-1]}_j \end{array} \right], \qquad i=0,1,\ldots,s-1
  * \f]
+ *
  * In order to calculate the stage values correctly, the \ref sectionGeneralLinearMethodsNektarSchemesRequiredMethods
  *  should now be implemented to do the following:
  *
- * - <code>Foo::ODElhsSolve</code>
- *   \code
- *   void Foo::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
- *                               Array<OneD,       Array<OneD, NekDouble> >& outarray,
- *                         const NekDouble time);
- *   \endcode
- *   This function should now solve the system:
- *   \f[
- *   \left[ \begin{array}{cc}
- *   \boldsymbol{M}^{\mathcal{DD}} & \boldsymbol{M}^{\mathcal{DH}} \\
- *   \boldsymbol{M}^{\mathcal{HD}} & \boldsymbol{M}^{\mathcal{HH}} \end{array} \right]
- *   \left[ \begin{array}{c}
- *   \boldsymbol{y}^{\mathcal{D}} \\
- *   \boldsymbol{y}^{\mathcal{H}} \end{array} \right]
- *   =
- *   \left[ \begin{array}{c}
- *   \boldsymbol{b}^{\mathcal{D}} \\
- *   \boldsymbol{b}^{\mathcal{H}} \end{array} \right]
- *   \f]
- *   for the unknown vector \f$\boldsymbol{y}\f$. This can be done in three steps:
- *   -# Set the known solution \f$\boldsymbol{y}^{\mathcal{D}}\f$
- *   -# Calculate the modified right hand side term:
- *      \f[  \boldsymbol{b}^{\mathcal{H}} - \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} \f]
- *   -# Solve the system below for the unknown \f$\boldsymbol{y}^{\mathcal{H}}\f$,
- *      \f[ \boldsymbol{M}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} = \boldsymbol{b}^{\mathcal{H}} - \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} \f]
  * - <code>Foo::DoOdeRhs</code>
  *   \code
  *   void Foo::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
@@ -515,31 +413,7 @@
  *   \f[ \boldsymbol{L}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} + \boldsymbol{L}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} \f]
  *   is required. However, sometimes it might be more convenient to use/implement routines for the
  *   <code>Foo::DoOdeRhs</code> method that also calculate \f$\boldsymbol{b}^{\mathcal{D}}\f$.
- * - <code>Foo::ODElhs</code>
- *   \code
- *   void Foo::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
- *                          Array<OneD,       Array<OneD, NekDouble> >& outarray,
- *                    const NekDouble time);
- *   \endcode
- *   This function should now evaluate the left hand side operator in order to calculate:
- *   \f[
- *   \left[ \begin{array}{c}
- *   \boldsymbol{b}^{\mathcal{D}} \\
- *   \boldsymbol{b}^{\mathcal{H}} \end{array} \right]
- *    =
- *   \left[ \begin{array}{cc}
- *   \boldsymbol{M}^{\mathcal{DD}} & \boldsymbol{M}^{\mathcal{DH}} \\
- *   \boldsymbol{M}^{\mathcal{HD}} & \boldsymbol{M}^{\mathcal{HH}} \end{array} \right]
- *   \left[ \begin{array}{c}
- *   \boldsymbol{y}^{\mathcal{D}} \\
- *   \boldsymbol{y}^{\mathcal{H}} \end{array} \right]
- *   \f]
- *   Note that only the homogeneous part \f$\boldsymbol{b}^{\mathcal{H}}\f$ will be used in the
- *   time stepping algorithms, as seen in the <code>Foo::ODElhsSolve</code> method. This means
- *   essentially, only the bottom part of the operation above, i.e.
- *   \f[ \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} + \boldsymbol{M}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} \f]
- *   is required. However, sometimes it might be more convenient to use/implement routines for the
- *   <code>Foo::ODElhs</code> method that also calculate \f$\boldsymbol{b}^{\mathcal{D}}\f$.
+ *
  * - <code>Foo::DoImplicitSolve</code>
  *   \code
  *   void Foo::DoImplicitSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
@@ -915,8 +789,8 @@
  * - Choose a name for the method and add it to the ::TimeIntegrationMethod enum list.
  * - Populate the switch statement in the TimeIntegrationScheme constructor
  *   with the coefficients of the new method.
- * - Populate the switch statement in the function TimeIntegrationScheme::InitializeScheme
- *   with a proper initialisation strategy for the method.
+ * - Use ( or modify) the function TimeIntegrationScheme::InitializeScheme
+ *   to select (or implement) a proper initialisation strategy for the method.
  * - Add documentation for the method (especially indicating what the auxiliary parameters
  *   of the input and output vectors of the multi-step method represent)
  */

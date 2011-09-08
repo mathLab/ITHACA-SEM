@@ -251,7 +251,7 @@ namespace Nektar
             {
             case 3:  n = 0; break;
             case 10: n = 1; break;
-            case 16: n = 2; break;
+            case 16: n = 1; break;
             }
             int order = n+1;
 

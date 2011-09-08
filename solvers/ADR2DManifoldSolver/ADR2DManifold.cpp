@@ -2103,7 +2103,10 @@ namespace Nektar
     
             default:
             {
-                SetInitialConditions(initialtime);
+                if (m_time == 0.0)
+                {
+                    SetInitialConditions(initialtime);
+                }
             }
         }
 

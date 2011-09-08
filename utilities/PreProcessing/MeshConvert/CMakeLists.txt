@@ -15,5 +15,5 @@ SET(MeshConvertSources
     ConvertSem.cpp
     Convert.cpp)
 
-ADD_UTILITIES_EXECUTABLE(MeshConvert ${MeshConvertSources} ${MeshConvertHeaders})
+ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 

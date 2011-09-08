@@ -7,6 +7,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(SOLVERS)
 
+IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+    SET(LIB_DIR "lib64")
+ENDIF()
+
 # Setup where CMake will look for modules.  You probably 
 # won't need to modify this.
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
@@ -48,7 +52,7 @@ IF( NEKTAR++_FOUND )
     ENDIF(NEKTAR_USE_MPI)
 ENDIF( NEKTAR++_FOUND )
 
-MACRO(ADD_SOLVER_EXECUTABLE name source)
+MACRO(ADD_SOLVER_EXECUTABLE name component source)
 
     ADD_EXECUTABLE(${name} ${source} ${ARGN})
 
@@ -66,7 +70,8 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
             ${Boost_IOSTREAMS_LIBRARY} 
 	    ${Boost_ZLIB_LIBRARY}  
             ${Boost_DATE_TIME_LIBRARY}      
-            optimized tinyxml debug tinyxml)
+            optimized tinyxml debug tinyxml
+			rt)
 
         SET_LAPACK_LINK_LIBRARIES(${name})
 
@@ -75,9 +80,11 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
         ENDIF(NEKTAR_USE_MPI)
     ENDIF( NEKTAR++_FOUND )
 
-    INSTALL(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+	#	INSTALL(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin COMPONENT ${component})
+	INSTALL(TARGETS ${name} 
+		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component} OPTIONAL)
 
-ENDMACRO(ADD_SOLVER_EXECUTABLE name source)
+ENDMACRO(ADD_SOLVER_EXECUTABLE name component source)
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")
@@ -86,3 +93,11 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
+
+SET(CPACK_COMPONENTS_ALL solvers)
+
+SET(CPACK_COMPONENT_SOLVERS_NAME "nektar++-solvers")
+SET(CPACK_COMPONENT_SOLVERS_DESCRIPTION "Solvers for Nektar++")
+#SET(CPACK_COMPONENT_SOLVERS_DEPENDS lib)
+
+INCLUDE(CPack)

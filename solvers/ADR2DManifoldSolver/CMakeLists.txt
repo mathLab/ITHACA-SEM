@@ -3,5 +3,5 @@ SET(ADR2DManifoldSolverSource
        ./ADR2DManifold.cpp
        ../Auxiliary/EquationSystem.cpp)
 
-ADD_SOLVER_EXECUTABLE(ADR2DManifoldSolver 
+ADD_SOLVER_EXECUTABLE(ADR2DManifoldSolver solvers-extra 
 			${ADR2DManifoldSolverSource})

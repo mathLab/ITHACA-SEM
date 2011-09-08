@@ -7,5 +7,5 @@ SET(CompressibleFlowSolverSource
        ../Auxiliary/EquationSystem.cpp
        ./EquationSystems/UnsteadySystem.cpp)
 
-ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver 
+ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})

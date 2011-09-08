@@ -3,5 +3,5 @@ SET(FitzHughNagumoSolverSource
        ./FitzHughNagumo.cpp
        ../Auxiliary/EquationSystem.cpp)
 
-ADD_SOLVER_EXECUTABLE(FitzHughNagumoSolver 
+ADD_SOLVER_EXECUTABLE(FitzHughNagumoSolver solvers-extra 
 			${FitzHughNagumoSolverSource})

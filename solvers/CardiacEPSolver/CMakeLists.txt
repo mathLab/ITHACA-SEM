@@ -9,5 +9,5 @@ SET(CardiacEPSolverSource
        ../Auxiliary/Driver.cpp
        ../Auxiliary/DriverStandard.cpp)
 
-ADD_SOLVER_EXECUTABLE(CardiacEPSolver 
+ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 
 			${CardiacEPSolverSource})

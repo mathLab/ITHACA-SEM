@@ -20,6 +20,6 @@ IF (NEKTAR_USE_ARPACK)
         ../Auxiliary/DriverArpack.cpp)
 ENDIF (NEKTAR_USE_ARPACK)
 
-ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver 
+ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver solvers 
 			${IncNavierStokesSolverSource})
                         

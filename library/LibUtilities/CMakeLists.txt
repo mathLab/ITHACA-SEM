@@ -264,19 +264,19 @@ SET(LibUtilityHeaders
 
 SET(LibUtilitySources
     ${BasicUtilsSources}
-	${FoundationSources}
-	${PolylibSources}
+    ${FoundationSources}
+    ${PolylibSources}
     ${CommunicationSources}
 	${LinearAlgebraSources}
 	${InterpreterSources}
 	${KernelSources}
-        ${TimeIntegrationSources}
+    ${TimeIntegrationSources}
   	${FFTSources}
 )
 
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
-ADD_NEKTAR_LIBRARY(LibUtilities ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
+ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
 TARGET_LINK_LIBRARIES(LibUtilities
 	${Boost_THREAD_LIBRARY}
@@ -288,16 +288,16 @@ SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
 SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
-INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst)
-INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/LinearAlgebra)
-INSTALL(FILES ${FoundationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Foundations)
-INSTALL(FILES ${InterpreterHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Interpreter)
-INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Polylib)
-INSTALL(FILES ${CommunicationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Communication)
-INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates)
-INSTALL(FILES ${BasicUtilsHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
-INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
-INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)
-INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration)
-INSTALL(FILES ${BaseHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities)
-INSTALL(FILES ${FFTHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/FFT)
+INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst COMPONENT dev)
+INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/LinearAlgebra COMPONENT dev)
+INSTALL(FILES ${FoundationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Foundations COMPONENT dev)
+INSTALL(FILES ${InterpreterHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Interpreter COMPONENT dev)
+INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Polylib COMPONENT dev)
+INSTALL(FILES ${CommunicationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Communication COMPONENT dev)
+INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
+INSTALL(FILES ${BasicUtilsHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils COMPONENT dev)
+INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory COMPONENT dev)
+INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel COMPONENT dev)
+INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration COMPONENT dev)
+INSTALL(FILES ${BaseHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev)
+INSTALL(FILES ${FFTHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/FFT COMPONENT dev)

@@ -105,7 +105,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     {
         std::cout << "TESTING: " << Demo << std::flush;
     }
-	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
+	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/bin/";
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/CompressibleFlowSolver/OkFiles/");
     int fail;
 

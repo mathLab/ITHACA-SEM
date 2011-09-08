@@ -4,6 +4,7 @@ builds/*
 nektar++-*
 ThirdParty
 templates
+library/CPackRPM.cmake
 library/Demos/StdRegions/ExtraDemos
 library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver

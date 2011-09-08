@@ -141,7 +141,11 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info, 
     {
         std::cout << "TESTING: " << Demo << std::flush;
     }
+#ifdef USE_PATH
     RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/",np);
+#else
+    RegressBase Test("",Demo,input,"Demos/MultiRegions/OkFiles/",np);
+#endif
     int fail;
 
     // Copy input file to current location

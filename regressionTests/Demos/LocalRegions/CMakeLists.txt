@@ -21,4 +21,9 @@ IF(REGRESSION_MAKE_OK_FILES_EXEC)
                         ${LocalRegionsDemoMakeOkFileSource})
 ENDIF(REGRESSION_MAKE_OK_FILES_EXEC)
 
-
+FILE(GLOB input_files "InputFiles/*.xml")
+INSTALL(FILES ${input_files} 
+		DESTINATION ${NEKTAR_SHARE_DIR}/test/Demos/LocalRegions/InputFiles COMPONENT test)
+FILE(GLOB ok_files "OkFiles/*.ok")
+INSTALL(FILES ${ok_files}
+		DESTINATION ${NEKTAR_SHARE_DIR}/test/Demos/LocalRegions/OkFiles COMPONENT test)

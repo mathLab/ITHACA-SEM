@@ -12,12 +12,12 @@ SET(LinkLibraries
 )
 
 SET(HelmholtzCont1DSource  Helmholtz1D.cpp)
-ADD_NEKTAR_EXECUTABLE(Helmholtz1D HelmholtzCont1DSource)
+ADD_NEKTAR_EXECUTABLE(Helmholtz1D demos HelmholtzCont1DSource)
 TARGET_LINK_LIBRARIES(Helmholtz1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz1D)
 
 SET(HelmholtzCont2DSource  Helmholtz2D.cpp)
-ADD_NEKTAR_EXECUTABLE(Helmholtz2D HelmholtzCont2DSource)
+ADD_NEKTAR_EXECUTABLE(Helmholtz2D demos HelmholtzCont2DSource)
 TARGET_LINK_LIBRARIES(Helmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz2D)
 
@@ -27,37 +27,37 @@ SET_LAPACK_LINK_LIBRARIES(Helmholtz2D)
 #SET_LAPACK_LINK_LIBRARIES(Helmholtz2DHomo1D)
 
 SET(HelmholtzCont3DSource  Helmholtz3D.cpp)
-ADD_NEKTAR_EXECUTABLE(Helmholtz3D HelmholtzCont3DSource)
+ADD_NEKTAR_EXECUTABLE(Helmholtz3D demos HelmholtzCont3DSource)
 TARGET_LINK_LIBRARIES(Helmholtz3D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz3D)
 
 SET(Helmholtz3DHomo1DSource  Helmholtz3DHomo1D.cpp)
-ADD_NEKTAR_EXECUTABLE(Helmholtz3DHomo1D Helmholtz3DHomo1DSource)
+ADD_NEKTAR_EXECUTABLE(Helmholtz3DHomo1D demos Helmholtz3DHomo1DSource)
 TARGET_LINK_LIBRARIES(Helmholtz3DHomo1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz3DHomo1D)
 
 SET(Helmholtz3DHomo2DSource  Helmholtz3DHomo2D.cpp)
-ADD_NEKTAR_EXECUTABLE(Helmholtz3DHomo2D Helmholtz3DHomo2DSource)
+ADD_NEKTAR_EXECUTABLE(Helmholtz3DHomo2D demos Helmholtz3DHomo2DSource)
 TARGET_LINK_LIBRARIES(Helmholtz3DHomo2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz3DHomo2D)
 
 SET(HDGHelmholtz1DSource  HDGHelmholtz1D.cpp)
-ADD_NEKTAR_EXECUTABLE(HDGHelmholtz1D HDGHelmholtz1DSource)
+ADD_NEKTAR_EXECUTABLE(HDGHelmholtz1D demos HDGHelmholtz1DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz1D)
 
 SET(HDGHelmholtz2DSource  HDGHelmholtz2D.cpp)
-ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D HDGHelmholtz2DSource)
+ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D demos HDGHelmholtz2DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 
 SET(HDGHelmholtz3DHomo1DSource  HDGHelmholtz3DHomo1D.cpp)
-ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3DHomo1D HDGHelmholtz3DHomo1DSource)
+ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3DHomo1D demos HDGHelmholtz3DHomo1DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz3DHomo1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz3DHomo1D)
 
 SET(SteadyAdvectionDiffusionReactionCont2DSource  SteadyAdvectionDiffusionReaction2D.cpp)
-ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D SteadyAdvectionDiffusionReactionCont2DSource)
+ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D demos SteadyAdvectionDiffusionReactionCont2DSource)
 TARGET_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D)
 

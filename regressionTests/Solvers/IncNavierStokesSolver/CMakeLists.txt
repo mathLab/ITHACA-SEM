@@ -21,4 +21,11 @@ IF(REGRESSION_MAKE_OK_FILES_EXEC)
                         ${IncNavierStokesSolverMakeOkFileSource})
 ENDIF(REGRESSION_MAKE_OK_FILES_EXEC)
 
+FILE(GLOB input_files "InputFiles/*.xml" "InputFiles/*.rst" "InputFiles/*.bse"
+						"InputFiles/*.bc")
+INSTALL(FILES ${input_files} 
+		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/IncNavierStokesSolver/InputFiles COMPONENT test)
+FILE(GLOB ok_files "OkFiles/*.ok")
+INSTALL(FILES ${ok_files}
+		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/IncNavierStokesSolver/OkFiles COMPONENT test)
 

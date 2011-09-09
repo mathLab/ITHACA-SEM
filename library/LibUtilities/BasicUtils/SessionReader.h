@@ -113,6 +113,23 @@ namespace Nektar
                 return p;
             }
 
+            /**
+             * @brief Creates an instance of the SessionReader class initialised
+             *        using a separate list of XML documents.
+             *
+             * This function should be used by an application to instantiate the
+             * session reader. It may be called after processing of command-line
+             * arguments. After instantiating the class and setting up any
+             * parallel communication, it also calls the main initialisation
+             * of the object.
+             */
+            LIB_UTILITIES_EXPORT static SessionReaderSharedPtr CreateInstance(int argc, char *argv[], std::vector<std::string> &pFilenames)
+            {
+                SessionReaderSharedPtr p = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(argc, argv, pFilenames);
+                p->InitSession();
+                return p;
+            }
+
             /// Destructor
             LIB_UTILITIES_EXPORT ~SessionReader();
 
@@ -241,13 +258,14 @@ namespace Nektar
 
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[]);
+            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[], std::vector<std::string> &pFilenames);
             LIB_UTILITIES_EXPORT void InitSession();
 
             /// Returns a shared pointer to the current object.
             inline boost::shared_ptr<SessionReader> GetSharedThisPtr();
 
             /// Creates an XML document from a list of input files.
-            LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(int argc, char *argv[]);
+            LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(std::vector<std::string> &pFilenames);
             /// Loads and parses the specified file.
             LIB_UTILITIES_EXPORT void ParseDocument();
             /// Loads the given XML document and instantiates an appropriate

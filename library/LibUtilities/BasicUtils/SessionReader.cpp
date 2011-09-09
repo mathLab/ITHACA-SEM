@@ -131,9 +131,28 @@ namespace Nektar
         {
             ASSERTL0(argc > 1, "No filename argument specified.");
 
-            m_filename = argv[1];
+            std::vector<std::string> vFilenames;
+            for (unsigned int i = 1; i < argc; ++i)
+            {
+                vFilenames.push_back(argv[i]);
+            }
+
+            m_filename = vFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            m_xmlDoc = MergeDoc(argc, argv);
+            m_xmlDoc = MergeDoc(vFilenames);
+
+            // Create communicator
+            CreateComm(argc, argv, m_filename);
+        }
+
+
+        SessionReader::SessionReader(int argc, char *argv[], std::vector<std::string> &pFilenames)
+        {
+            ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
+
+            m_filename = pFilenames[0];
+            m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
+            m_xmlDoc = MergeDoc(pFilenames);
 
             // Create communicator
             CreateComm(argc, argv, m_filename);
@@ -714,14 +733,16 @@ namespace Nektar
         /**
          *
          */
-        TiXmlDocument *SessionReader::MergeDoc(int argc, char *argv[])
+        TiXmlDocument *SessionReader::MergeDoc(std::vector<std::string> &pFilenames)
         {
+            ASSERTL0(pFilenames.size() > 0, "No filenames for merging.");
+
             // Read the first document
-            TiXmlDocument *vMainDoc = new TiXmlDocument(argv[1]);
+            TiXmlDocument *vMainDoc = new TiXmlDocument(pFilenames[0]);
             ASSERTL0(vMainDoc, "Failed to create XML document object.");
             bool loadOkay = vMainDoc->LoadFile();
             ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-                    argv[1] + ". Check XML standards compliance. Error on line: "
+                    pFilenames[0] + ". Check XML standards compliance. Error on line: "
                     + boost::lexical_cast<std::string>(vMainDoc->Row()));
             TiXmlHandle vMainHandle(vMainDoc);
             TiXmlElement* vMainNektar = vMainHandle.FirstChildElement("NEKTAR").Element();
@@ -729,12 +750,12 @@ namespace Nektar
             // Read all subsequent XML documents.
             // For each element within the NEKTAR tag, use it to replace the
             // version already present in the loaded XML data.
-            for (int i = 2; i < argc; ++i)
+            for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument vTempDoc (argv[i]);
+                TiXmlDocument vTempDoc (pFilenames[i]);
                 loadOkay = vTempDoc.LoadFile();
                 ASSERTL0(loadOkay, std::string("Unable to load file: ") +
-                    argv[i] + ". Check XML standards compliance. Error on line: "
+                    pFilenames[i] + ". Check XML standards compliance. Error on line: "
                     + boost::lexical_cast<std::string>(vTempDoc.Row()));
 
                 TiXmlHandle docHandle(&vTempDoc);

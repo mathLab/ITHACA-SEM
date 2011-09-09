@@ -1,6 +1,7 @@
 #include <sstream>
 #include <time.h>
 #include <sys/time.h>
+#include <iomanip>
 
 #include "boost/filesystem/path.hpp"
 #include <MultiRegions/ContField3D.h>
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce,sol;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
+    vector<string> vFilenames;
 
     if(argc != 7)
     {
@@ -137,28 +139,28 @@ int main(int argc, char *argv[])
         boost::filesystem::path("Geometry") /
         boost::filesystem::path(MeshFileDirectory.str()) /
         boost::filesystem::path(MeshFileName.str());
-    string MeshFile(MeshFilePath.file_string());
+    vFilenames.push_back(MeshFilePath.file_string());
 
     boost::filesystem::path BCfilePath = basePath /
         boost::filesystem::path("Timings") /
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Conditions") /
         boost::filesystem::path(BCfileName.str());
-    string BCfile(BCfilePath.file_string());
+    vFilenames.push_back(BCfilePath.file_string());
 
     boost::filesystem::path ExpansionsFilePath = basePath /
         boost::filesystem::path("Timings") /
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Expansions") /
         boost::filesystem::path(ExpansionsFileName.str());
-    string ExpansionsFile(ExpansionsFilePath.file_string());
+    vFilenames.push_back(ExpansionsFilePath.file_string());
 
     boost::filesystem::path GlobOptFilePath = basePath /
         boost::filesystem::path("Timings") /
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Optimisation") /
         boost::filesystem::path(GlobOptFileName.str());
-    string GlobOptFile(GlobOptFilePath.file_string());
+    vFilenames.push_back(GlobOptFilePath.file_string());
     //----------------------------------------------
 
     StdRegions::MatrixType type;
@@ -181,40 +183,30 @@ int main(int argc, char *argv[])
             cout << "Operator " << opToTest << " not defined." << endl;
     }
 
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(argc, argv, vFilenames);
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph3D graph3D;
-    graph3D.ReadGeometry(MeshFile);
-    graph3D.ReadExpansions(ExpansionsFile);
+    SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);;
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph3D);
-    bcs.Read(BCfile);
+    SpatialDomains::BoundaryConditions bcs(vSession, graph3D);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
+    lambda = vSession->GetParameter("Lambda");
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
     int bc_loc = 0;
-    MultiRegions::GlobalSysSolnType s = MultiRegions::eIterativeCG;
-    //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectMultiLevelStaticCond;
-    //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectStaticCond;
-    //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectFullMatrix;
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs, bc_loc, s);
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession, graph3D, bcs, bc_loc);
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
-
-    //----------------------------------------------
-    // load global optimisation parameters
-    Exp->ReadGlobalOptimizationParameters(GlobOptFile);
-    //----------------------------------------------
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
@@ -242,8 +234,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define forcing function for first variable defined in file
     fce = Array<OneD,NekDouble>(nq);
-    SpatialDomains::ConstForcingFunctionShPtr ffunc
-        = bcs.GetForcingFunction(bcs.GetVariable(0));
+    LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
     for(i = 0; i < nq; ++i)
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
@@ -265,8 +256,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // See if there is an exact solution, if so
         // evaluate and plot errors
-        SpatialDomains::ConstExactSolutionShPtr ex_sol =
-            bcs.GetExactSolution(bcs.GetVariable(0));
+        LibUtilities::EquationSharedPtr ex_sol = vSession->GetFunction("ExactSolution",0);
         //----------------------------------------------
         // evaluate exact solution
         sol = Array<OneD,NekDouble>(nq);
@@ -325,7 +315,7 @@ int main(int argc, char *argv[])
 
 
         MultiRegions::ExpList3DSharedPtr ErrorExp =
-            MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
+            MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(vSession,BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
 
         int ErrorCoordim = ErrorExp->GetCoordim(0);
         int ErrorNq      = ErrorExp->GetTotPoints();

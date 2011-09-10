@@ -100,14 +100,6 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT ~DisContField3D();
 
-            inline const
-                    Array<OneD,const MultiRegions::ExpListSharedPtr>&
-                    GetBndCondExpansions();
-
-            inline const
-                    Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-                    GetBndConditions();
-
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
             MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
@@ -169,34 +161,18 @@ namespace Nektar
 													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
 													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 
+            virtual const Array<OneD,const MultiRegions::ExpListSharedPtr> & v_GetBndCondExpansions();
 
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
-            {
-                return m_bndConditions;
-            }
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();
 
             virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                 Array<OneD,int> &FaceID);
 
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
-            {
-                return GetRobinBCInfo();
-            }
+            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };
 
         typedef boost::shared_ptr<DisContField3D>   DisContField3DSharedPtr;
 
-        inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
-            DisContField3D::GetBndCondExpansions()
-        {
-            return m_bndCondExpansions;
-        }
-
-        inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-            DisContField3D::GetBndConditions()
-        {
-            return m_bndConditions;
-        }
 
     } //end of namespace
 } //end of namespace

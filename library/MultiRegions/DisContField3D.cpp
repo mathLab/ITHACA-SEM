@@ -712,5 +712,21 @@ namespace Nektar
                 }
             }
         }
+
+        const Array<OneD,const MultiRegions::ExpListSharedPtr> & DisContField3D::v_GetBndCondExpansions()
+        {
+            return m_bndCondExpansions;
+        }
+
+        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& DisContField3D::v_GetBndConditions()
+        {
+            return m_bndConditions;
+        }
+
+        map<int, RobinBCInfoSharedPtr> DisContField3D::v_GetRobinBCInfo()
+        {
+            return GetRobinBCInfo();
+        }
+
     } // end of namespace
 } // end of namespace

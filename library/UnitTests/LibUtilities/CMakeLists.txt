@@ -22,7 +22,7 @@ SET(UnitTestHeaders
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests UnitTestSources UnitTestHeaders)
+ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests unit-test UnitTestSources UnitTestHeaders)
 
 #SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
 #SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)

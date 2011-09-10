@@ -47,7 +47,7 @@ SET(UnitTestHeaders
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_UNIT_TESTS)
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-ADD_NEKTAR_EXECUTABLE(UnitTests UnitTestSources UnitTestHeaders)
+ADD_NEKTAR_EXECUTABLE(UnitTests unit-test UnitTestSources UnitTestHeaders)
 
 TARGET_LINK_LIBRARIES(UnitTests
     optimized LibUtilities debug LibUtilities-g

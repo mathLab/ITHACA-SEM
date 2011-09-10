@@ -11,7 +11,7 @@ ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 SET(ProjectName LocalRegionsUnitTests)
-ADD_NEKTAR_EXECUTABLE(${ProjectName} Sources Headers)
+ADD_NEKTAR_EXECUTABLE(${ProjectName} unit-test Sources Headers)
 
 TARGET_LINK_LIBRARIES(${ProjectName}
     LibUtilities 

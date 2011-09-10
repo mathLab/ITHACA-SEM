@@ -117,7 +117,7 @@ namespace Nektar
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 0>::type::value == 0 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 1>::type::value == 1 ));
 
-            typedef boost::fusion::vector<const CountedObject<double>&, const CountedObject<double>&> ExpectedListType;            
+            typedef boost::fusion::vector2<const CountedObject<double>&, const CountedObject<double>&> ExpectedListType;
             BOOST_MPL_ASSERT(( boost::is_same<Expression::VectorType, ExpectedListType> ));
             
             CountedObject<double> lhs(3);
@@ -155,7 +155,7 @@ namespace Nektar
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 0>::type::value == 0 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 1>::type::value == 1 ));
 
-            typedef boost::fusion::vector<const Matrix&, const Vector&> ExpectedListType;            
+            typedef boost::fusion::vector2<const Matrix&, const Vector&> ExpectedListType;
             BOOST_MPL_ASSERT(( boost::is_same<Expression::VectorType, ExpectedListType> ));
             
             double m_buf[] = {1, 4, 2, 5, 3, 6};

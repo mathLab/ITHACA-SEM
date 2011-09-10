@@ -134,7 +134,11 @@ namespace Nektar
             std::vector<std::string> vFilenames;
             for (unsigned int i = 1; i < argc; ++i)
             {
-                vFilenames.push_back(argv[i]);
+                std::string vFile = argv[i];
+                if (vFile.substr(vFile.length() - 4, 4) == ".xml")
+                {
+                    vFilenames.push_back(vFile);
+                }
             }
 
             m_filename = vFilenames[0];

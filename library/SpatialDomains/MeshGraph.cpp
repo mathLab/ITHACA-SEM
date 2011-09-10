@@ -85,7 +85,7 @@ namespace Nektar
 
         }
 
-        boost::shared_ptr<MeshGraph> MeshGraph::Read(const std::string& infilename)
+        boost::shared_ptr<MeshGraph> MeshGraph::Read(const std::string& infilename, bool pReadExpansions)
         {
             boost::shared_ptr<MeshGraph> returnval;
 
@@ -120,7 +120,10 @@ namespace Nektar
             {
                 returnval->ReadGeometry(infilename);
                 returnval->ReadGeometryInfo(infilename);
-                returnval->ReadExpansions(infilename);
+                if (pReadExpansions)
+                {
+                    returnval->ReadExpansions(infilename);
+                }
             }
             return returnval;
         }

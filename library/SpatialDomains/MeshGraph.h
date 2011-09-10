@@ -215,7 +215,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
-                    const std::string& infilename);
+                    const std::string& infilename, bool pReadExpansions = true);
 
                 SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(const std::string& infilename);
                 SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(TiXmlDocument &doc);

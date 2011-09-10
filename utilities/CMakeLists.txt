@@ -51,14 +51,18 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
         # TODO - If your executable needs to link to any other libraries,  
         # add them here.
         TARGET_LINK_LIBRARIES(${name}
-	    ${NEKTAR++_LIBRARIES}
-	    ${Boost_THREAD_LIBRARY}
+	        ${NEKTAR++_LIBRARIES}
+	        ${Boost_THREAD_LIBRARY}
             ${Boost_IOSTREAMS_LIBRARY}
-	    ${Boost_ZLIB_LIBRARY}
+	        ${Boost_ZLIB_LIBRARY}
             ${Boost_DATE_TIME_LIBRARY}
             optimized tinyxml debug tinyxml
-			rt)
+        )
 
+        IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
+            TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
+        ENDIF()
+        
         SET_LAPACK_LINK_LIBRARIES(${name})
 
         IF (NEKTAR_USE_MPI)

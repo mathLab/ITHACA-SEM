@@ -87,6 +87,8 @@ namespace Nektar
 
             WriteXmlExpansions(root);
 
+            WriteXmlConditions(root);
+
             // Save the XML file.
             doc.SaveFile( pFilename );
         }
@@ -261,7 +263,7 @@ namespace Nektar
                     {
                         list += ",";
                     }
-                    list += boost::lexical_cast<std::string>(i);
+                    list += boost::lexical_cast<std::string>(m_composite[i]->id);
                 }
             }
             domain->LinkEndChild( new TiXmlText(" C[" + list + "] "));
@@ -277,8 +279,9 @@ namespace Nektar
                 if (m_composite[i]->items[0]->GetDim() == m_expDim)
                 {
                     TiXmlElement * exp = new TiXmlElement ( "E");
-                    exp->SetAttribute("COMPOSITE",
-                            "C[" + boost::lexical_cast<std::string>(i) + "]");
+                    exp->SetAttribute("COMPOSITE", "C["
+                        + boost::lexical_cast<std::string>(m_composite[i]->id)
+                        + "]");
                     exp->SetAttribute("NUMMODES",7);
                     exp->SetAttribute("FIELDS","u");
                     exp->SetAttribute("TYPE","MODIFIED");
@@ -287,6 +290,12 @@ namespace Nektar
             }
             pRoot->LinkEndChild(expansions);
 
+        }
+
+        void Convert::WriteXmlConditions(TiXmlElement * pRoot)
+        {
+            TiXmlElement * conditions = new TiXmlElement ("CONDITIONS");
+            pRoot->LinkEndChild(conditions);
         }
 
         int Convert::FindNodeIndex(const NodeSharedPtr pSrc)

@@ -111,6 +111,8 @@ namespace Nektar
             void WriteXmlDomain(TiXmlElement * pRoot);
             /// Writes the <EXPANSIONS> section of the XML file.
             void WriteXmlExpansions(TiXmlElement * pRoot);
+            /// Writes the <CONDITIONS> section of the XML file.
+            void WriteXmlConditions(TiXmlElement * pRoot);
         };
 
         typedef LibUtilities::NekFactory< std::string, Convert> ConvertFactory;

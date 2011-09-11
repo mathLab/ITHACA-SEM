@@ -42,8 +42,8 @@ namespace Nektar
     string UnsteadyAdvection::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyAdvection", UnsteadyAdvection::create, "Unsteady Advection equation.");
 
     UnsteadyAdvection::UnsteadyAdvection(
-            LibUtilities::CommSharedPtr& pComm,
-            LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::CommSharedPtr& pComm,
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm, pSession)
     {
     }

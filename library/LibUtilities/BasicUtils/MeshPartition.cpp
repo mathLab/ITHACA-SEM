@@ -59,7 +59,7 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        MeshPartition::MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession)
+        MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             ReadMesh(pSession);
         }
@@ -111,7 +111,7 @@ namespace Nektar
             }
         }
 
-        void MeshPartition::ReadMesh(LibUtilities::SessionReaderSharedPtr& pSession)
+        void MeshPartition::ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             TiXmlElement* x;
             TiXmlElement *vGeometry, *vSubElement, *vElements;

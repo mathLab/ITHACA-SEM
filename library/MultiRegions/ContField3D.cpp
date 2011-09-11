@@ -70,9 +70,9 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          * @param   variable    The variable associated with this field.
          */
-        ContField3D::ContField3D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                 const std::string variable):
+        ContField3D::ContField3D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                 const std::string &variable):
                 DisContField3D(pSession,graph3D,variable,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
@@ -118,8 +118,8 @@ namespace Nektar
          * @param   bc_loc
          */
         ContField3D::ContField3D(const ContField3D &In,
-                                 SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                 const std::string variable):
+                                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                 const std::string &variable):
             DisContField3D(In),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())

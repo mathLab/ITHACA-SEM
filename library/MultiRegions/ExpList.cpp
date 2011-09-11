@@ -93,7 +93,7 @@ namespace Nektar
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
         ExpList::ExpList(
-                LibUtilities::SessionReaderSharedPtr &pSession):
+                const LibUtilities::SessionReaderSharedPtr &pSession):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_graph(),
@@ -120,8 +120,8 @@ namespace Nektar
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
         ExpList::ExpList(
-                LibUtilities::SessionReaderSharedPtr &pSession,
-                SpatialDomains::MeshGraphSharedPtr &pGraph):
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &pGraph):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_graph(pGraph),
@@ -146,7 +146,7 @@ namespace Nektar
          * Copies an existing expansion list.
          * @param   in              Source expansion list.
          */
-        ExpList::ExpList(const ExpList &in, bool DeclareCoeffPhysArrays):
+        ExpList::ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays):
             m_session(in.m_session),
             m_comm(in.m_comm),
             m_graph(in.m_graph),
@@ -2493,14 +2493,26 @@ namespace Nektar
 
 		/**
          */
-        void ExpList::v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                         SpatialDomains::BoundaryConditions &bcs,
-                                         const std::string variable,
+        void ExpList::v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                         const SpatialDomains::BoundaryConditions &bcs,
+                                         const std::string &variable,
                                          vector<map<int,int> > & periodicVertices,
                                          map<int,int>& periodicEdges)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+        }
+
+        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
+                                                                             unsigned int index, const std::string& variable)
+        {
+            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(index);
+            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection.");
+            const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
+            SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
+            ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unalbe to locate condition map.");
+            const SpatialDomains::BoundaryConditionShPtr boundaryCondition = (*conditionMapIter).second;
+            return boundaryCondition;
         }
 
         ExpListSharedPtr &ExpList::v_GetPlane(int n)

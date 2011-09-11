@@ -74,7 +74,7 @@ namespace Nektar
         /**
          * Creates an identical copy of another ExpList1D object.
          */
-        ExpList1D::ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays):
+        ExpList1D::ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
         }
@@ -95,9 +95,9 @@ namespace Nektar
          *                      number of modes.
          * @param   graph1D     Domain and expansion definitions.
          */
-        ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                              const LibUtilities::BasisKey &Ba,
-                             SpatialDomains::MeshGraphSharedPtr &graph1D):
+                             const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpList(pSession,graph1D)
         {
             int i, id=0;
@@ -162,7 +162,9 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraphSharedPtr &graph1D, bool DeclareCoeffPhysArrays):
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const bool DeclareCoeffPhysArrays):
             ExpList(pSession,graph1D)
         {
             int i,id=0;
@@ -232,8 +234,8 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
-                             SpatialDomains::MeshGraphSharedPtr &graph2D,
-                             bool DeclareCoeffPhysArrays):
+                             const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                             const bool DeclareCoeffPhysArrays):
             ExpList()
         {
             int i,j,cnt,id=0;
@@ -312,9 +314,9 @@ namespace Nektar
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
                     const StdRegions::StdExpansionVector &locexp,
-                    SpatialDomains::MeshGraphSharedPtr &graph2D,
+                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const map<int,int> &periodicEdges,
-                    bool DeclareCoeffPhysArrays):
+                    const bool DeclareCoeffPhysArrays):
             ExpList()
         {
             int i,j,cnt,id, elmtid=0;

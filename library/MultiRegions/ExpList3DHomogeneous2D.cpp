@@ -46,24 +46,24 @@ namespace Nektar
         {
         }
 
-        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis_y,
 													   const LibUtilities::BasisKey &HomoBasis_z,
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
-													   bool useFFT):
+													   const bool useFFT):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
         }
 
         // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
-        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis_y,
 													   const LibUtilities::BasisKey &HomoBasis_z,
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
-													   bool useFFT,
-                                                       SpatialDomains::MeshGraphSharedPtr &graph1D):
+													   const bool useFFT,
+                                                       const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int n,j,nel;
@@ -106,7 +106,7 @@ namespace Nektar
         /**
          * @param   In          ExpList3DHomogeneous2D object to copy.
          */
-        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In, bool DeclareLinesSetCoeffPhys):
+        ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In, const bool DeclareLinesSetCoeffPhys):
             ExpListHomogeneous2D(In)
         {
             if(DeclareLinesSetCoeffPhys)

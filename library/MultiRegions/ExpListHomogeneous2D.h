@@ -79,12 +79,12 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT ExpListHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+            MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                       const LibUtilities::BasisKey &HomoBasis_y,
 													  const LibUtilities::BasisKey &HomoBasis_z,
 													  const NekDouble ly,
 													  const NekDouble lz,
-													  bool useFFT);
+													  const bool useFFT);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpListHomogeneous2D &In);

@@ -135,8 +135,8 @@ namespace Nektar
         /**
          * Constructor.
          */
-        IncNavierStokes(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+        IncNavierStokes(const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

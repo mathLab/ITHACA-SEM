@@ -59,8 +59,8 @@ namespace Nektar
      * \param
      */
     AdvectionTerm::AdvectionTerm(
-            LibUtilities::SessionReaderSharedPtr&        pSession,
-            SpatialDomains::MeshGraphSharedPtr&          pGraph)
+            const LibUtilities::SessionReaderSharedPtr&        pSession,
+            const SpatialDomains::MeshGraphSharedPtr&          pGraph)
         : m_session(pSession),
           m_graph(pGraph)
 	{

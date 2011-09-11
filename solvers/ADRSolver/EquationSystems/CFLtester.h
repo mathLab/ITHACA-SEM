@@ -47,8 +47,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession) {
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<CFLtester>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
             return p;
@@ -62,8 +62,8 @@ namespace Nektar
         
 		Array<OneD, Array<OneD, NekDouble> > m_velocity;
 
-        CFLtester(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+        CFLtester(const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,

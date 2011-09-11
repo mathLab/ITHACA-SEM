@@ -80,7 +80,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalOptParam(const int nel);
             
             /// Read optimisation parameters from a given file.
-            MULTI_REGIONS_EXPORT GlobalOptParam(const LibUtilities::SessionReaderSharedPtr& pSession, const int dim, Array<OneD, const int> &NumShapeElements);
+            MULTI_REGIONS_EXPORT GlobalOptParam(const LibUtilities::SessionReaderSharedPtr& pSession, const int dim, const Array<OneD, const int> &NumShapeElements);
 
             /// For a given matrix type, determines if the operation should
             /// be done globally.

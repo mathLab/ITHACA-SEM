@@ -49,14 +49,14 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT ContField3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                           const LibUtilities::BasisKey &HomoBasis_y,
 														  const LibUtilities::BasisKey &HomoBasis_z,
 														  const NekDouble lhom_y,
 														  const NekDouble lhom_z,
-														  bool useFFT,
-														  SpatialDomains::MeshGraphSharedPtr &graph1D,
-														  const std::string variable);
+														  const bool useFFT,
+														  const SpatialDomains::MeshGraphSharedPtr &graph1D,
+														  const std::string &variable);
             
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(const ContField3DHomogeneous2D &In);

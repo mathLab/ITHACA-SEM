@@ -46,8 +46,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession)
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<SteadyAdvectionDiffusion>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
@@ -64,8 +64,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
         SteadyAdvectionDiffusion(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
         virtual void v_PrintSummary(std::ostream &out);

@@ -48,8 +48,8 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous1D::ExpListHomogeneous1D(LibUtilities::SessionReaderSharedPtr
-                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, bool useFFT):
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
+                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT):
             ExpList(pSession),
             m_lhom(lhom),
 		    m_useFFT(useFFT),

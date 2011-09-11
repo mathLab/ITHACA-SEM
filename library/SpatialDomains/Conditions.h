@@ -170,12 +170,12 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph);
             SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
 
-            BoundaryRegionCollection &GetBoundaryRegions(void)
+            const BoundaryRegionCollection &GetBoundaryRegions(void) const
             {
                 return m_boundaryRegions;
             }
 
-            BoundaryConditionCollection &GetBoundaryConditions(void)
+            const BoundaryConditionCollection &GetBoundaryConditions(void) const
             {
                 return m_boundaryConditions;
             }

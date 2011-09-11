@@ -64,10 +64,10 @@ namespace Nektar
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
             MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraphSharedPtr &graph3D,
-                           const std::string variable,
-                           bool SetUpJustDG = true);
+                           const LibUtilities::SessionReaderSharedPtr &pSession,
+                           const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                           const std::string &variable,
+                           const bool SetUpJustDG = true);
 
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.
@@ -97,25 +97,25 @@ namespace Nektar
             /// This function discretises the boundary conditions by setting up
             /// a list of one-dimensional boundary expansions.
             void GenerateBoundaryConditionExpansion(
-                    SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable);
+                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                    const SpatialDomains::BoundaryConditions &bcs,
+                    const std::string &variable);
 
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
 
             /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
-                    SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    SpatialDomains::BoundaryConditions &bcs,
+                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                    const SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
                     Array<OneD, ExpListSharedPtr> &bndCondExpansions,
                     Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                     &bndConditions);
 
             /// Generates a map of periodic faces in the mesh.
-            void GetPeriodicFaces(SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                  SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string variable,
+            void GetPeriodicFaces(const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                  const SpatialDomains::BoundaryConditions &bcs,
+                                  const std::string &variable,
                                   map<int,int>& periodicVertices,
                                   map<int,int>& periodicEdges,
                                   map<int,int>& periodicFaces);

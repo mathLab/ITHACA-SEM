@@ -258,14 +258,14 @@ namespace Nektar
 
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[]);
-            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[], std::vector<std::string> &pFilenames);
+            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames);
             LIB_UTILITIES_EXPORT void InitSession();
 
             /// Returns a shared pointer to the current object.
             inline boost::shared_ptr<SessionReader> GetSharedThisPtr();
 
             /// Creates an XML document from a list of input files.
-            LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(std::vector<std::string> &pFilenames);
+            LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(const std::vector<std::string> &pFilenames) const;
             /// Loads and parses the specified file.
             LIB_UTILITIES_EXPORT void ParseDocument();
             /// Loads the given XML document and instantiates an appropriate

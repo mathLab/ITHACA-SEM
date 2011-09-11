@@ -58,7 +58,7 @@ namespace Nektar
     /**
      *
      */
-    DriverArpack::DriverArpack(LibUtilities::SessionReaderSharedPtr pSession)
+    DriverArpack::DriverArpack(const LibUtilities::SessionReaderSharedPtr pSession)
         : DriverArnoldi(pSession)
     {
     }

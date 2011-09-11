@@ -53,7 +53,7 @@ namespace Nektar
     /// the Driver class.
     typedef LibUtilities::NekFactory<
                 std::string, Driver,
-                LibUtilities::SessionReaderSharedPtr&
+                const LibUtilities::SessionReaderSharedPtr&
             > DriverFactory;
     DriverFactory& GetDriverFactory();
 	
@@ -95,7 +95,7 @@ namespace Nektar
 		enum EvolutionOperatorType m_EvolutionOperator;
 	
         /// Initialises EquationSystem class members.
-        Driver(LibUtilities::SessionReaderSharedPtr pSession);
+        Driver(const LibUtilities::SessionReaderSharedPtr pSession);
         
         virtual void v_InitObject();
         

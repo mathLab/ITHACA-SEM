@@ -65,14 +65,14 @@ namespace Nektar
         {
         }
 
-        ContField3DHomogeneous2D::ContField3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ContField3DHomogeneous2D::ContField3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                            const LibUtilities::BasisKey &HomoBasis_y,
 														   const LibUtilities::BasisKey &HomoBasis_z,
 														   const NekDouble lhom_y,
 														   const NekDouble lhom_z,
-														   bool useFFT,
-														   SpatialDomains::MeshGraphSharedPtr &graph1D,
-														   const std::string variable):
+														   const bool useFFT,
+														   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+														   const std::string &variable):
             DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int i,j,n,nel;

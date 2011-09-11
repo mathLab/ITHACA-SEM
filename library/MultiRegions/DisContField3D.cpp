@@ -25,10 +25,10 @@ namespace Nektar
         /**
          * @todo Implement 3D trace space.
          */
-        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                        const std::string variable,
-                                        bool SetUpJustDG) :
+        DisContField3D::DisContField3D( const LibUtilities::SessionReaderSharedPtr &pSession,
+                                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                        const std::string &variable,
+                                        const bool SetUpJustDG) :
             ExpList3D(pSession,graph3D),
             m_bndCondExpansions(),
             m_bndConditions()
@@ -105,24 +105,25 @@ namespace Nektar
          * the boundary conditions should be discretised.
          */
         void DisContField3D::GenerateBoundaryConditionExpansion(
-                    SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable)
+                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                    const SpatialDomains::BoundaryConditions &bcs,
+                    const std::string &variable)
         {
             int cnt1  = 0;
             int cnt2  = 0;
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            const SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
             int nbnd = bregions.size();
 
             // count the number of non-periodic boundary regions
             for(int i = 0; i < nbnd; ++i)
             {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
+                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     cnt1++;
-                    if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
+                    if( boundaryCondition->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
                     {
                         cnt2++;
                     }
@@ -186,8 +187,8 @@ namespace Nektar
          *                      conditions on the different boundary regions.
          */
         void DisContField3D::SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         Array<OneD, ExpListSharedPtr> &bndCondExpansions,
                         Array<OneD, SpatialDomains::BoundaryConditionShPtr>
@@ -196,9 +197,9 @@ namespace Nektar
             int i;
             int cnt  = 0;
 
-            SpatialDomains::BoundaryRegionCollection &bregions
+            const SpatialDomains::BoundaryRegionCollection &bregions
                                         = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
+            const SpatialDomains::BoundaryConditionCollection &bconditions
                                         = bcs.GetBoundaryConditions();
 
             MultiRegions::ExpList2DSharedPtr       locExpList;
@@ -210,7 +211,8 @@ namespace Nektar
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {
-                locBCond = (*(bconditions[i]))[variable];
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
+
                 if(locBCond->GetBoundaryConditionType()
                                         == SpatialDomains::eDirichlet)
                 {
@@ -224,7 +226,7 @@ namespace Nektar
             // then, list the other (non-periodic) boundaries
             for(i = 0; i < nbnd; ++i)
             {
-                locBCond = (*(bconditions[i]))[variable];
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
 
                 switch(locBCond->GetBoundaryConditionType())
                 {
@@ -264,18 +266,18 @@ namespace Nektar
          */
         //TODO: implement
         void DisContField3D::GetPeriodicFaces(
-                    SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable,
+                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                    const SpatialDomains::BoundaryConditions &bcs,
+                    const std::string &variable,
                     map<int,int>& periodicVertices,
                     map<int,int>& periodicEdges,
                     map<int,int>& periodicFaces)
         {
             int i,j,k;
 
-            SpatialDomains::BoundaryRegionCollection &bregions
+            const SpatialDomains::BoundaryRegionCollection &bregions
                                         = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
+            const SpatialDomains::BoundaryConditionCollection &bconditions
                                         = bcs.GetBoundaryConditions();
 
             int region1ID;
@@ -303,7 +305,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                locBCond = (*(bconditions[i]))[variable];
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
                 if(locBCond->GetBoundaryConditionType()
                                         == SpatialDomains::ePeriodic)
                 {

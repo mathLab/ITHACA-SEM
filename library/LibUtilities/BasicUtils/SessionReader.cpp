@@ -150,7 +150,7 @@ namespace Nektar
         }
 
 
-        SessionReader::SessionReader(int argc, char *argv[], std::vector<std::string> &pFilenames)
+        SessionReader::SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames)
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
@@ -737,7 +737,7 @@ namespace Nektar
         /**
          *
          */
-        TiXmlDocument *SessionReader::MergeDoc(std::vector<std::string> &pFilenames)
+        TiXmlDocument *SessionReader::MergeDoc(const std::vector<std::string> &pFilenames) const
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames for merging.");
 

@@ -67,8 +67,8 @@ namespace Nektar
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory<
             std::string, AdvectionTerm,
-            LibUtilities::SessionReaderSharedPtr&,
-            SpatialDomains::MeshGraphSharedPtr&
+            const LibUtilities::SessionReaderSharedPtr&,
+            const SpatialDomains::MeshGraphSharedPtr&
         > AdvectionTermFactory;
     AdvectionTermFactory& GetAdvectionTermFactory();
 
@@ -108,8 +108,8 @@ namespace Nektar
         
         /// Constructor
         AdvectionTerm(
-                LibUtilities::SessionReaderSharedPtr&        pSession,
-                SpatialDomains::MeshGraphSharedPtr&          pGraph);
+                const LibUtilities::SessionReaderSharedPtr&        pSession,
+                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
         virtual void v_InitObject();
 

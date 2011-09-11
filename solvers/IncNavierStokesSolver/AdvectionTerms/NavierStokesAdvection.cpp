@@ -50,8 +50,8 @@ namespace Nektar
      */
 
     NavierStokesAdvection::NavierStokesAdvection(
-            LibUtilities::SessionReaderSharedPtr&        pSession,
-            SpatialDomains::MeshGraphSharedPtr&          pGraph):
+            const LibUtilities::SessionReaderSharedPtr&        pSession,
+            const SpatialDomains::MeshGraphSharedPtr&          pGraph):
         AdvectionTerm(pSession, pGraph)
 	
     {

@@ -77,7 +77,7 @@ namespace Nektar
         /**
          * @param   In          ExpList2D object to copy.
          */
-        ExpList2D::ExpList2D(const ExpList2D &In, bool DeclareCoeffPhysArrays):
+        ExpList2D::ExpList2D(const ExpList2D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
         }
@@ -95,7 +95,10 @@ namespace Nektar
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList2D::ExpList2D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraphSharedPtr &graph2D, bool DeclareCoeffPhysArrays, const std::string var):
+        ExpList2D::ExpList2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const bool DeclareCoeffPhysArrays,
+                const std::string &var):
             ExpList(pSession,graph2D)
         {
             int i,elmtid=0;
@@ -209,9 +212,9 @@ namespace Nektar
          *                      expansion.
          */
         ExpList2D::ExpList2D(
-                             LibUtilities::SessionReaderSharedPtr &pSession,
+                             const LibUtilities::SessionReaderSharedPtr &pSession,
                              const SpatialDomains::ExpansionMap &expansions,
-                             bool DeclareCoeffPhysArrays):
+                             const bool DeclareCoeffPhysArrays):
             ExpList(pSession)
         {
             int i,elmtid=0;
@@ -332,12 +335,12 @@ namespace Nektar
           *                      and the spectral/hp element expansion.
           * @param   TriNb       The PointsType of possible nodal points
           */
-          ExpList2D::ExpList2D(LibUtilities::SessionReaderSharedPtr &pSession,
+          ExpList2D::ExpList2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                const LibUtilities::BasisKey &TriBa,
                                const LibUtilities::BasisKey &TriBb,
                                const LibUtilities::BasisKey &QuadBa,
                                const LibUtilities::BasisKey &QuadBb,
-                               SpatialDomains::MeshGraphSharedPtr &graph2D,
+                               const SpatialDomains::MeshGraphSharedPtr &graph2D,
                                const LibUtilities::PointsType TriNb):
               ExpList(pSession,graph2D)
           {
@@ -420,9 +423,9 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-         ExpList2D::ExpList2D(   LibUtilities::SessionReaderSharedPtr &pSession,
+         ExpList2D::ExpList2D(   const LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::CompositeMap &domain,
-                                 SpatialDomains::MeshGraphSharedPtr &graph3D):
+                                 const SpatialDomains::MeshGraphSharedPtr &graph3D):
              ExpList(pSession,graph3D)
          {
              ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),
@@ -624,9 +627,8 @@ namespace Nektar
                 }
             }
 
-            int two = 2;
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(m_session,two,NumShape);
+                ::AllocateSharedPtr(m_session,2,NumShape);
         }
 
         void ExpList2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)

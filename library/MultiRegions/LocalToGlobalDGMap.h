@@ -65,7 +65,7 @@ namespace Nektar
             /// Constructor for trace map for two-dimensional expansion.
             MULTI_REGIONS_EXPORT LocalToGlobalDGMap(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                      SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const ExpList1DSharedPtr &trace,
                 const ExpList &locExp,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>

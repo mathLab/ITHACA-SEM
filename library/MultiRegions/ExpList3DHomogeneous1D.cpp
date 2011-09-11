@@ -46,31 +46,31 @@ namespace Nektar
         {
         }
 
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-                                                       bool useFFT):
+                                                       const bool useFFT):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-                                                       bool useFFT,
-                                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                                       const std::string var):
+                                                       const bool useFFT,
+                                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                                       const std::string &var):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var));
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-                                                       bool useFFT,
+                                                       const bool useFFT,
                                                        const SpatialDomains::ExpansionMap  &expansions):                                                      
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {

@@ -69,30 +69,30 @@ namespace Nektar
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList2D(  const ExpList2D &In,
-                        bool DeclareCoeffPhysArrays = true);
+                        const bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2D(
-                      LibUtilities::SessionReaderSharedPtr &pSession,
-                      SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      bool DelcareCoeffPhysArrays = true, 
-                      const std::string var = "DefaultVar");
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                      const bool DelcareCoeffPhysArrays = true,
+                      const std::string &var = "DefaultVar");
 
             /// Sets up a list of local expansions based on an expansion  Mapr
             MULTI_REGIONS_EXPORT ExpList2D(
-                      LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
                       const SpatialDomains::ExpansionMap &expansions,
-                      bool DeclareCoeffPhysArrays = true);
+                      const bool DeclareCoeffPhysArrays = true);
             
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
             MULTI_REGIONS_EXPORT ExpList2D(
-                      LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
                       const LibUtilities::BasisKey &TriBa,
                       const LibUtilities::BasisKey &TriBb,
                       const LibUtilities::BasisKey &QuadBa,
                       const LibUtilities::BasisKey &QuadBb,
-                      SpatialDomains::MeshGraphSharedPtr &graph2D,
+                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
                       const LibUtilities::PointsType
                       TriNb = LibUtilities::SIZE_PointsType);
 
@@ -100,9 +100,9 @@ namespace Nektar
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             MULTI_REGIONS_EXPORT ExpList2D(  
-                        LibUtilities::SessionReaderSharedPtr &pSession,
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::CompositeMap &domain,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D);
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList2D();

@@ -113,9 +113,9 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField2D::ContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                 const std::string variable,
+        ContField2D::ContField2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                 const std::string &variable,
                                  const bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
             DisContField2D(pSession,graph2D,variable,false),
@@ -165,8 +165,8 @@ namespace Nektar
          * @param   bc_loc
          */
         ContField2D::ContField2D(const ContField2D &In,
-                                 SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                 const std::string variable,
+                                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                 const std::string &variable,
                                  bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
             DisContField2D(In,graph2D,variable,false,DeclareCoeffPhysArrays),

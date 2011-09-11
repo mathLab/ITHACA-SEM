@@ -12,8 +12,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession) {
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<UnsteadyInviscidBurger>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
             return p;
@@ -25,8 +25,8 @@ namespace Nektar
 
     protected:
         UnsteadyInviscidBurger(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         void DoOdeRhs(
                 const Array<OneD, const  Array<OneD, NekDouble> >&inarray,

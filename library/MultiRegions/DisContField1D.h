@@ -63,9 +63,9 @@ namespace Nektar
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    const std::string variable);
+                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                    const std::string &variable);
 
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
@@ -116,7 +116,7 @@ namespace Nektar
             /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
                                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                      SpatialDomains::BoundaryConditions &bcs,
+                                const SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                       map<int,int>& periodicVertices);
 
@@ -140,7 +140,7 @@ namespace Nektar
             /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
                                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                      SpatialDomains::BoundaryConditions &bcs,
+                                const SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                 Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             &bndCondExpansions,

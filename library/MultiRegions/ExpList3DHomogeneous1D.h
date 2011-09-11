@@ -67,32 +67,32 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D();
 
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
-                                   LibUtilities::SessionReaderSharedPtr &pSession,
+                                   const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
-                                   bool useFFT);
+                                   const bool useFFT);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
-                                   LibUtilities::SessionReaderSharedPtr &pSession,
+                                   const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
-                                   bool useFFT,
-                                   SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                   const std::string var = "DefaultVar");
+                                   const bool useFFT,
+                                   const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                   const std::string &var = "DefaultVar");
 
             /// Sets up a list of local expansions based on an mesh expansion
             MULTI_REGIONS_EXPORT  ExpList3DHomogeneous1D(
-                                    LibUtilities::SessionReaderSharedPtr &pSession,
+                                    const LibUtilities::SessionReaderSharedPtr &pSession,
                                     const LibUtilities::BasisKey &HomoBasis,
                                     const NekDouble lhom, 
-                                    bool useFFT, 
+                                    const bool useFFT,
                                     const SpatialDomains::ExpansionMap &expansions);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(
                                          const ExpList3DHomogeneous1D &In,
-                                         bool DeclarePlanesSetCoeffPhys = true);
+                                         const bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList3DHomogeneous1D();

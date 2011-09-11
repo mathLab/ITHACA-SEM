@@ -46,8 +46,8 @@ namespace Nektar
   string LinearSWE::className = GetEquationSystemFactory().RegisterCreatorFunction("LinearSWE", LinearSWE::create, "Linear shallow water equation in primitive variables.");
   
   LinearSWE::LinearSWE(
-          LibUtilities::CommSharedPtr& pComm,
-          LibUtilities::SessionReaderSharedPtr& pSession)
+          const LibUtilities::CommSharedPtr& pComm,
+          const LibUtilities::SessionReaderSharedPtr& pSession)
     : ShallowWaterSystem(pComm, pSession)
   {
   }

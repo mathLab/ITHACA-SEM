@@ -55,8 +55,8 @@ namespace Nektar
     public:           
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-                                LibUtilities::SessionReaderSharedPtr& pSession) {
+        static EquationSystemSharedPtr create(const LibUtilities::CommSharedPtr& pComm,
+                                const LibUtilities::SessionReaderSharedPtr& pSession) {
             EquationSystemSharedPtr p = MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
             return p;
@@ -71,8 +71,8 @@ namespace Nektar
          * 
          *
          */
-        VelocityCorrectionScheme(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+        VelocityCorrectionScheme(const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
         
         virtual ~VelocityCorrectionScheme();
 

@@ -79,7 +79,7 @@ namespace Nektar
         {
         }
 
-        MeshGraph::MeshGraph(LibUtilities::SessionReaderSharedPtr &pSession)
+        MeshGraph::MeshGraph(const LibUtilities::SessionReaderSharedPtr &pSession)
             : m_session(pSession)
         {
 

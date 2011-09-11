@@ -59,16 +59,16 @@ namespace Nektar
 
             /// Construct a global continuous field.
             MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string variable);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const std::string &variable);
 
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string variable);
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const std::string &variable);
 
             MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In);
 

@@ -47,7 +47,7 @@ namespace Nektar
         friend class MemoryManager<DriverModifiedArnoldi>;
         
         /// Creates an instance of this class
-        static DriverSharedPtr create(LibUtilities::SessionReaderSharedPtr& pSession) {
+        static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
             DriverSharedPtr p = MemoryManager<DriverModifiedArnoldi>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
@@ -59,7 +59,7 @@ namespace Nektar
 	protected:
         
         /// Constructor
-        DriverModifiedArnoldi(LibUtilities::SessionReaderSharedPtr pSession);
+        DriverModifiedArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
 
         /// Destructor
         virtual ~DriverModifiedArnoldi();

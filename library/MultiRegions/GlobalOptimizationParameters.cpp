@@ -68,7 +68,7 @@ namespace Nektar
          * @param   fileName    File to read parameters from.
          */
         GlobalOptParam::GlobalOptParam(const LibUtilities::SessionReaderSharedPtr& pSession, const int dim,
-                                         Array<OneD, const int> &NumShapeElements):
+                                         const Array<OneD, const int> &NumShapeElements):
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false)
         {
             int i;

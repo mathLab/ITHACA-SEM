@@ -58,20 +58,20 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField2D();
 
             MULTI_REGIONS_EXPORT DisContField2D(
-                           LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraphSharedPtr &graph2D,
-                           const std::string variable,
-                           bool SetUpJustDG = true,
-                           bool DeclareCoeffPhysArrays = true);
+                           const LibUtilities::SessionReaderSharedPtr &pSession,
+                           const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                           const std::string &variable,
+                           const bool SetUpJustDG = true,
+                           const bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
-                           SpatialDomains::MeshGraphSharedPtr &graph2D,
-                           const std::string variable,
-                           bool SetUpJustDG = false,
-                           bool DeclareCoeffPhysArrays = true);
+                           const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                           const std::string &variable,
+                           const bool SetUpJustDG = false,
+                           const bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
-                           bool DeclareCoeffPhysArrays = true);
+                           const bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT ~DisContField2D();
 
@@ -213,10 +213,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray);
 
             /// Generates a map of periodic edges in the mesh.
-            void GetPeriodicEdges(
-                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
+            MULTI_REGIONS_EXPORT void GetPeriodicEdges(
+                        const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                        const SpatialDomains::BoundaryConditions &bcs,
+                        const std::string &variable,
                         vector<map<int,int> > & periodicVertices,
                         map<int,int>& periodicEdges);
 
@@ -260,10 +260,10 @@ namespace Nektar
              * \param variable An optional parameter to indicate for which variable
              * the boundary conditions should be discretised.
              */
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                                    SpatialDomains::BoundaryConditions &bcs,
-                                                    const std::string variable,
-                                                    bool DeclareCoeffPhysArrays = true);
+            void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                                    const SpatialDomains::BoundaryConditions &bcs,
+                                                    const std::string &variable,
+                                                    const bool DeclareCoeffPhysArrays = true);
 
 
             virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
@@ -362,9 +362,9 @@ namespace Nektar
                 return GetRobinBCInfo();
             }
 
-            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                            SpatialDomains::BoundaryConditions &bcs,
-                                            const std::string variable,
+            virtual void v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                            const SpatialDomains::BoundaryConditions &bcs,
+                                            const std::string &variable,
                                             vector<map<int,int> > & periodicVertices,
                                             map<int,int>& periodicEdges)
             {

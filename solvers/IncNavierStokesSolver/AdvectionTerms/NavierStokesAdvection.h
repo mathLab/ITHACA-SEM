@@ -72,8 +72,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static AdvectionTermSharedPtr create(
-                                LibUtilities::SessionReaderSharedPtr& pSession,
-                                SpatialDomains::MeshGraphSharedPtr& pGraph) {
+                                const LibUtilities::SessionReaderSharedPtr& pSession,
+                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
             AdvectionTermSharedPtr p = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
@@ -85,8 +85,8 @@ namespace Nektar
 	protected:
         
         NavierStokesAdvection(
-                LibUtilities::SessionReaderSharedPtr&        pSession,
-                SpatialDomains::MeshGraphSharedPtr&          pGraph);
+                const LibUtilities::SessionReaderSharedPtr&        pSession,
+                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
 
         virtual ~NavierStokesAdvection();

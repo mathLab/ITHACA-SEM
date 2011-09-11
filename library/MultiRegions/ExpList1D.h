@@ -74,27 +74,27 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D();
 
             /// The copy constructor.
-            MULTI_REGIONS_EXPORT ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays = true);
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      LibUtilities::SessionReaderSharedPtr &pSession,
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
                       const LibUtilities::BasisKey &Ba,
-                      SpatialDomains::MeshGraphSharedPtr &graph1D);
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      LibUtilities::SessionReaderSharedPtr &pSession,
-                      SpatialDomains::MeshGraphSharedPtr &graph1D,
-                      bool DeclareCoeffPhysArrays = true);
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             MULTI_REGIONS_EXPORT ExpList1D(
                       const SpatialDomains::CompositeMap &domain,
-                      SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      bool DeclareCoeffPhysArrays = true);
+                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                      const bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
@@ -102,9 +102,9 @@ namespace Nektar
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
-                      SpatialDomains::MeshGraphSharedPtr &graph2D,
+                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
                       const map<int,int> &periodicEdges,
-                      bool DeclareCoeffPhysArrays = true);
+                      const bool DeclareCoeffPhysArrays = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList1D();

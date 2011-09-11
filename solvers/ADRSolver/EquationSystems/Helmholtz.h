@@ -46,8 +46,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession)
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<Helmholtz>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
@@ -61,8 +61,8 @@ namespace Nektar
         virtual ~Helmholtz();
 
     protected:
-        Helmholtz(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+        Helmholtz(const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
         virtual void v_PrintSummary(std::ostream &out);

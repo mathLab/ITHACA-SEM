@@ -73,8 +73,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static AdvectionTermSharedPtr create(
-                                LibUtilities::SessionReaderSharedPtr& pSession,
-                                SpatialDomains::MeshGraphSharedPtr& pGraph) {
+                                const LibUtilities::SessionReaderSharedPtr& pSession,
+                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
             AdvectionTermSharedPtr p = MemoryManager<AdjointAdvection>::AllocateSharedPtr(pSession, pGraph);
             p->InitObject();
             return p;
@@ -87,8 +87,8 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
 
         AdjointAdvection(
-                LibUtilities::SessionReaderSharedPtr&        pSession,
-                SpatialDomains::MeshGraphSharedPtr&          pGraph);
+                const LibUtilities::SessionReaderSharedPtr&        pSession,
+                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
         virtual ~AdjointAdvection();
 

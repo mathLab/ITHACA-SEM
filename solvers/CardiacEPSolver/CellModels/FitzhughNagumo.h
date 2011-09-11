@@ -45,7 +45,7 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static CellModelSharedPtr create(LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+        static CellModelSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
         {
             return MemoryManager<CellModelFitzHughNagumo>::AllocateSharedPtr(pSession, nq);
         }
@@ -53,7 +53,7 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
-        CellModelFitzHughNagumo(LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
+        CellModelFitzHughNagumo(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
         virtual ~CellModelFitzHughNagumo() {}
 
         virtual void Update(

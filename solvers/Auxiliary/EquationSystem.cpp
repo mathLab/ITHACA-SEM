@@ -76,8 +76,8 @@ namespace Nektar
      * instantiated directly.
      * @param   pSession        The session reader holding problem parameters.
      */
-    EquationSystem::EquationSystem( LibUtilities::CommSharedPtr& pComm,
-                                    LibUtilities::SessionReaderSharedPtr& pSession)
+    EquationSystem::EquationSystem( const LibUtilities::CommSharedPtr& pComm,
+                                    const LibUtilities::SessionReaderSharedPtr& pSession)
         : m_comm (pComm),
           m_session (pSession),
           m_lambda (0)

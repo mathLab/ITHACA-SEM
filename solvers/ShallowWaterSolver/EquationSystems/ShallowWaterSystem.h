@@ -89,8 +89,8 @@ namespace Nektar
 	
         /// Initialises UnsteadySystem class members.
         ShallowWaterSystem(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 

@@ -42,8 +42,8 @@ namespace Nektar
     string CFLtester::className = GetEquationSystemFactory().RegisterCreatorFunction("CFLtester", CFLtester::create, "Testing CFL restriction");
 
     CFLtester::CFLtester(
-            LibUtilities::CommSharedPtr& pComm,
-            LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::CommSharedPtr& pComm,
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm, pSession)
     {
     }

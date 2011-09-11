@@ -49,7 +49,7 @@ namespace Nektar
         {
         }
 
-        DisContField2D::DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays):
+        DisContField2D::DisContField2D(const DisContField2D &In, const bool DeclareCoeffPhysArrays):
             ExpList2D(In,DeclareCoeffPhysArrays),
             m_bndCondExpansions   (In.m_bndCondExpansions),
             m_bndConditions       (In.m_bndConditions),
@@ -60,11 +60,11 @@ namespace Nektar
         }
 
 
-        DisContField2D::DisContField2D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                       const std::string variable,
-                                       bool SetUpJustDG,
-                                       bool DeclareCoeffPhysArrays):
+        DisContField2D::DisContField2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                       const std::string &variable,
+                                       const bool SetUpJustDG,
+                                       const bool DeclareCoeffPhysArrays):
 
             ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays,variable),
             m_bndCondExpansions(),
@@ -162,10 +162,10 @@ namespace Nektar
         // Copy type constructor which declares new boundary conditions
         // and re-uses mapping info and trace space if possible
         DisContField2D::DisContField2D(const DisContField2D &In,
-                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                       const std::string variable,
-                                       bool SetUpJustDG,
-                                       bool DeclareCoeffPhysArrays):
+                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                       const std::string &variable,
+                                       const bool SetUpJustDG,
+                                       const bool DeclareCoeffPhysArrays):
             ExpList2D(In,DeclareCoeffPhysArrays)
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
@@ -310,22 +310,23 @@ namespace Nektar
         }
 
 
-        void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                                                SpatialDomains::BoundaryConditions &bcs,
-                                                                const std::string variable,
-                                                                bool DeclareCoeffPhysArrays)
+        void DisContField2D::GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                                                const SpatialDomains::BoundaryConditions &bcs,
+                                                                const std::string &variable,
+                                                                const bool DeclareCoeffPhysArrays)
         {
             int i,cnt  = 0;
             SpatialDomains::BoundaryConditionShPtr locBCond;
             MultiRegions::ExpList1DSharedPtr       locExpList;
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            const SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
             int nbnd = bregions.size();
             // count the number of non-periodic boundary regions
             for(i = 0; i < nbnd; ++i)
             {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
+                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     cnt++;
                 }              
@@ -339,7 +340,7 @@ namespace Nektar
             // list non-periodic boundaries
             for(i = 0; i < nbnd; ++i)
             {
-                locBCond = (*(bconditions[i]))[variable];
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
 
                 if(locBCond->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
@@ -378,9 +379,9 @@ namespace Nektar
          *                      edges is placed.
          */
         void DisContField2D::GetPeriodicEdges(
-                                              SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                              SpatialDomains::BoundaryConditions &bcs,
-                                              const std::string variable,
+                                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                              const SpatialDomains::BoundaryConditions &bcs,
+                                              const std::string &variable,
                                               vector<map<int,int> >& periodicVerts,
                                               map<int,int>& periodicEdges)
         {
@@ -388,9 +389,9 @@ namespace Nektar
                      "Expected a MeshGraph2D.");
             int i,j,k;
 
-            SpatialDomains::BoundaryRegionCollection &bregions
+            const SpatialDomains::BoundaryRegionCollection &bregions
                 = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
+            const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
 
             int region1ID;
@@ -420,7 +421,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                locBCond = (*(bconditions[i]))[variable];
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
                 if(locBCond->GetBoundaryConditionType()
                    == SpatialDomains::ePeriodic)
                 {

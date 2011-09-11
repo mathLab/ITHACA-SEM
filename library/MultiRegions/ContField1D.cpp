@@ -112,9 +112,9 @@ namespace Nektar
          * @param   variable    An optional parameter to indicate for which
          *                      variable the field should be constructed.
          */
-        ContField1D::ContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                                 SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                 const std::string variable):
+        ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                                 const std::string &variable):
             DisContField1D(pSession,graph1D,variable),
             m_locToGloMap(),
             m_contNcoeffs(0),

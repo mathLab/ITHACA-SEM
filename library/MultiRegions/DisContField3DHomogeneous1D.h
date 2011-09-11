@@ -53,21 +53,22 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D();
 
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
-                                        LibUtilities::SessionReaderSharedPtr &pSession,
+                                        const LibUtilities::SessionReaderSharedPtr &pSession,
                                         const LibUtilities::BasisKey &HomoBasis,
-                                        const NekDouble lhom, bool useFFT);
+                                        const NekDouble lhom,
+                                        const bool useFFT);
 
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
-                           LibUtilities::SessionReaderSharedPtr &pSession,
+                           const LibUtilities::SessionReaderSharedPtr &pSession,
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
-						   bool useFFT,
-                           SpatialDomains::MeshGraphSharedPtr &graph2D,
+						   const bool useFFT,
+                           const SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string &variable);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(const DisContField3DHomogeneous1D &In,
-                                        bool DeclarePlanesSetCoeffPhys = true);
+                                        const bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor. 
             MULTI_REGIONS_EXPORT ~DisContField3DHomogeneous1D();

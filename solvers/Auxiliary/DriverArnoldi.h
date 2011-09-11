@@ -59,7 +59,7 @@ namespace Nektar
         int       m_nfields;
 
         /// Constructor
-        DriverArnoldi(LibUtilities::SessionReaderSharedPtr pSession);
+        DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
 
         /// Destructor
         virtual ~DriverArnoldi();

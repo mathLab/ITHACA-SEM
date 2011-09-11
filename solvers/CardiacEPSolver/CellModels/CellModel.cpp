@@ -48,7 +48,7 @@ namespace Nektar
     /**
      * Cell model base class constructor.
      */
-    CellModel::CellModel(LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+    CellModel::CellModel(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
     {
         m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
                                           ::AllocateSharedPtr(nq);

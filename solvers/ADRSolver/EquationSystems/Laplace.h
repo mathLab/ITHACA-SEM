@@ -13,8 +13,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession)
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<Laplace>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
@@ -27,8 +27,8 @@ namespace Nektar
     protected:
         NekDouble m_lambda;
 
-        Laplace(LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+        Laplace(const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual ~Laplace();
 

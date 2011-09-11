@@ -49,17 +49,17 @@ namespace Nektar
         {
         }
 
-        DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                                  const LibUtilities::BasisKey &HomoBasis,
                                                                  const NekDouble lhom,
-																 bool useFFT):
+																 const bool useFFT):
             ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
         }
 
-        DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(const DisContField3DHomogeneous1D &In, bool DeclarePlanesSetCoeffPhys):
+        DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(const DisContField3DHomogeneous1D &In, const bool DeclarePlanesSetCoeffPhys):
             ExpList3DHomogeneous1D (In,false),
             m_bndCondExpansions    (In.m_bndCondExpansions),
             m_bndConditions        (In.m_bndConditions)
@@ -79,11 +79,11 @@ namespace Nektar
         }
 
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(
-                                       LibUtilities::SessionReaderSharedPtr &pSession,
+                                       const LibUtilities::SessionReaderSharedPtr &pSession,
                                        const LibUtilities::BasisKey &HomoBasis,
                                        const NekDouble lhom,
-									   bool useFFT,
-                                       SpatialDomains::MeshGraphSharedPtr &graph2D,
+									   const bool useFFT,
+                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        const std::string &variable):
             ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
@@ -137,8 +137,8 @@ namespace Nektar
             int i,j,n;
             // Setup an ExpList2DHomogeneous1D expansion for boundary
             // conditions and link to class declared in m_planes.
-            SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
+            const SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
             int nbnd = bregions.size();
             
@@ -146,7 +146,8 @@ namespace Nektar
             int cnt = 0;
             for(i = 0; i < nbnd; ++i)
             {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
+                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     cnt++;
                 }              
@@ -161,8 +162,9 @@ namespace Nektar
             
             cnt = 0;
             for(i = 0; i < nbnd; ++i)
-            { 
-                if((*(bconditions[i]))[variable]->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
+            {
+                SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
+                if(boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     
                     boost::shared_ptr<StdRegions::StdExpansionVector> exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();

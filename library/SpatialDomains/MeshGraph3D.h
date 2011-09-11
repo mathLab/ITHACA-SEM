@@ -57,7 +57,7 @@ namespace Nektar
         public:
 
             SPATIAL_DOMAINS_EXPORT MeshGraph3D();
-            SPATIAL_DOMAINS_EXPORT MeshGraph3D(LibUtilities::SessionReaderSharedPtr &pSession);
+            SPATIAL_DOMAINS_EXPORT MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession);
             SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph3D();
 
             SPATIAL_DOMAINS_EXPORT void ReadGeometry(const std::string &infilename);

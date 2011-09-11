@@ -103,15 +103,15 @@ namespace Nektar
 
             /// The default constructor.
             MULTI_REGIONS_EXPORT ExpList(
-                    LibUtilities::SessionReaderSharedPtr &pSession);
+                    const LibUtilities::SessionReaderSharedPtr &pSession);
 
             /// The default constructor.
             MULTI_REGIONS_EXPORT ExpList(
-                    LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraphSharedPtr &pGraph);
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const SpatialDomains::MeshGraphSharedPtr &pGraph);
 
             /// The copy constructor.
-            MULTI_REGIONS_EXPORT ExpList(const ExpList &in, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList();
@@ -653,9 +653,9 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
-            void GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                  SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string variable,
+            void GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                  const SpatialDomains::BoundaryConditions &bcs,
+                                  const std::string &variable,
                                   vector<map<int,int> > & periodicVertices,
                                   map<int,int>& periodicEdges)
             {
@@ -1126,6 +1126,12 @@ namespace Nektar
 
             virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 
+            // Utility function for a common case of retrieving a BoundaryCondition from a
+            // boundary condition collection.
+            MULTI_REGIONS_EXPORT
+            static SpatialDomains::BoundaryConditionShPtr GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
+                                                                               unsigned int index, const std::string& variable);
+
         private:
             virtual int v_GetContNcoeffs() const;
 
@@ -1140,9 +1146,9 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
 
 
-            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                            SpatialDomains::BoundaryConditions &bcs,
-                                            const std::string variable,
+            virtual void v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                            const SpatialDomains::BoundaryConditions &bcs,
+                                            const std::string &variable,
                                             vector<map<int,int> > & periodicVertices,
                                             map<int,int>& periodicEdges);
 

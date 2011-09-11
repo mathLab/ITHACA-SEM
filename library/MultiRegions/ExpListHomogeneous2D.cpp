@@ -50,12 +50,12 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous2D::ExpListHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpListHomogeneous2D::ExpListHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                    const LibUtilities::BasisKey &HomoBasis_y,
 												   const LibUtilities::BasisKey &HomoBasis_z, 
 												   const NekDouble lhom_y,
 												   const NekDouble lhom_z,
-												   bool useFFT):
+												   const bool useFFT):
             ExpList(pSession),
             m_lhom_y(lhom_y),
 		    m_lhom_z(lhom_z),

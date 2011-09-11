@@ -46,8 +46,8 @@ namespace Nektar
      * \param 
      * \param
      */
-    VelocityCorrectionScheme::VelocityCorrectionScheme(LibUtilities::CommSharedPtr& pComm,
-            LibUtilities::SessionReaderSharedPtr& pSession):
+    VelocityCorrectionScheme::VelocityCorrectionScheme(const LibUtilities::CommSharedPtr& pComm,
+            const LibUtilities::SessionReaderSharedPtr& pSession):
         IncNavierStokes(pComm,pSession)
     {
         

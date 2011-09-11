@@ -150,20 +150,20 @@ namespace Nektar
         struct FieldDefinitions
         {
             FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
-                             std::vector<unsigned int> &elementIDs,// vector[2]
-                             std::vector<LibUtilities::BasisType> &basis,
+                             const std::vector<unsigned int> &elementIDs,// vector[2]
+                             const std::vector<LibUtilities::BasisType> &basis,
                              bool uniOrder,
                              // UniOrder = vector[dimension] - MixOrder
                              //          = vector[element*dimension]
-                             std::vector<unsigned int> &numModes,
-                             std::vector<std::string>  &fields,
+                             const std::vector<unsigned int> &numModes,
+                             const std::vector<std::string>  &fields,
                              int NumHomoDir = 0,
-                             std::vector<NekDouble> &HomoLengths =
+                             const std::vector<NekDouble> &HomoLengths =
                              NullNekDoubleVector,
-                             std::vector<LibUtilities::PointsType> &points =
+                             const std::vector<LibUtilities::PointsType> &points =
                              NullPointsTypeVector,
                              bool pointsDef = false,
-                             std::vector<unsigned int> &numPoints =
+                             const std::vector<unsigned int> &numPoints =
                              NullUnsignedIntVector,
                              bool numPointsDef = false):
                 m_shapeType(shapeType),
@@ -211,7 +211,7 @@ namespace Nektar
             public:
                 SPATIAL_DOMAINS_EXPORT MeshGraph();
                 SPATIAL_DOMAINS_EXPORT MeshGraph(unsigned int meshDimension, unsigned int spaceDimension);
-                SPATIAL_DOMAINS_EXPORT MeshGraph(LibUtilities::SessionReaderSharedPtr &pSession);
+                SPATIAL_DOMAINS_EXPORT MeshGraph(const LibUtilities::SessionReaderSharedPtr &pSession);
                 SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(

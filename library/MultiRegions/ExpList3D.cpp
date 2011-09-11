@@ -53,14 +53,14 @@ namespace Nektar
         }
 
 
-        ExpList3D::ExpList3D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
                              const LibUtilities::BasisKey &TBa,
                              const LibUtilities::BasisKey &TBb,
                              const LibUtilities::BasisKey &TBc,
                              const LibUtilities::BasisKey &HBa,
                              const LibUtilities::BasisKey &HBb,
                              const LibUtilities::BasisKey &HBc,
-                             SpatialDomains::MeshGraphSharedPtr &graph3D,
+                             const SpatialDomains::MeshGraphSharedPtr &graph3D,
                              const LibUtilities::PointsType TetNb):
             ExpList(pSession,graph3D)
         {
@@ -152,7 +152,9 @@ namespace Nektar
          * @param   graph3D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(LibUtilities::SessionReaderSharedPtr &pSession,SpatialDomains::MeshGraphSharedPtr &graph3D):ExpList(pSession,graph3D)
+        ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph3D) :
+            ExpList(pSession,graph3D)
         {
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
@@ -269,7 +271,7 @@ namespace Nektar
          *                   information about the domain and the
          *                   spectral/hp element expansion.
          */
-        ExpList3D::ExpList3D(SpatialDomains::ExpansionMap &expansions):
+        ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions):
             ExpList()
         {
             LocalRegions::TetExpSharedPtr tet;
@@ -285,15 +287,19 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
+                SpatialDomains::ExpansionMap::const_iterator expmap = expansions.find(i);
+                ASSERTL1(expmap != expansions.end(), "Unable to find expansion.");
+                const SpatialDomains::ExpansionShPtr exp = expmap->second;
+
                 if(TetGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::TetGeom>(expansions[i]->m_geomShPtr))
+                        SpatialDomains::TetGeom>(exp->m_geomShPtr))
                 {
                     LibUtilities::BasisKey TetBa
-                                        = expansions[i]->m_basisKeyVector[0];
+                                        = exp->m_basisKeyVector[0];
                     LibUtilities::BasisKey TetBb
-                                        = expansions[i]->m_basisKeyVector[1];
+                                        = exp->m_basisKeyVector[1];
                     LibUtilities::BasisKey TetBc
-                                        = expansions[i]->m_basisKeyVector[2];
+                                        = exp->m_basisKeyVector[2];
 
                     if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
                     {
@@ -309,14 +315,14 @@ namespace Nektar
                     }
                 }
                 else if(PrismGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::PrismGeom>(expansions[i]->m_geomShPtr))
+                        SpatialDomains::PrismGeom>(exp->m_geomShPtr))
                 {
                     LibUtilities::BasisKey PrismBa
-                                        = expansions[i]->m_basisKeyVector[0];
+                                        = exp->m_basisKeyVector[0];
                     LibUtilities::BasisKey PrismBb
-                                        = expansions[i]->m_basisKeyVector[1];
+                                        = exp->m_basisKeyVector[1];
                     LibUtilities::BasisKey PrismBc
-                                        = expansions[i]->m_basisKeyVector[2];
+                                        = exp->m_basisKeyVector[2];
 
                     prism = MemoryManager<LocalRegions::PrismExp>
                                         ::AllocateSharedPtr(PrismBa,PrismBb,
@@ -324,14 +330,14 @@ namespace Nektar
                     (*m_exp).push_back(prism);
                 }
                 else if(PyrGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::PyrGeom>(expansions[i]->m_geomShPtr))
+                        SpatialDomains::PyrGeom>(exp->m_geomShPtr))
                 {
                     LibUtilities::BasisKey PyrBa
-                                        = expansions[i]->m_basisKeyVector[0];
+                                        = exp->m_basisKeyVector[0];
                     LibUtilities::BasisKey PyrBb
-                                        = expansions[i]->m_basisKeyVector[1];
+                                        = exp->m_basisKeyVector[1];
                     LibUtilities::BasisKey PyrBc
-                                        = expansions[i]->m_basisKeyVector[2];
+                                        = exp->m_basisKeyVector[2];
 
                     pyramid = MemoryManager<LocalRegions::PyrExp>
                                         ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
@@ -339,14 +345,14 @@ namespace Nektar
                     (*m_exp).push_back(pyramid);
                 }
                 else if(HexGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::HexGeom>(expansions[i]->m_geomShPtr))
+                        SpatialDomains::HexGeom>(exp->m_geomShPtr))
                 {
                     LibUtilities::BasisKey HexBa
-                                        = expansions[i]->m_basisKeyVector[0];
+                                        = exp->m_basisKeyVector[0];
                     LibUtilities::BasisKey HexBb
-                                        = expansions[i]->m_basisKeyVector[1];
+                                        = exp->m_basisKeyVector[1];
                     LibUtilities::BasisKey HexBc
-                                        = expansions[i]->m_basisKeyVector[2];
+                                        = exp->m_basisKeyVector[2];
 
                     hex = MemoryManager<LocalRegions::HexExp>
                                         ::AllocateSharedPtr(HexBa,HexBb,HexBc,

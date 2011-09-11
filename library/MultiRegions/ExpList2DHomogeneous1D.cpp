@@ -47,12 +47,12 @@ namespace Nektar
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
-        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-													   bool useFFT,
-                                                       boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
-                                                       Array<OneD, ExpListSharedPtr> &planes):
+													   const bool useFFT,
+                                                       const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
+                                                       const Array<OneD, ExpListSharedPtr> &planes):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int n,nel;
@@ -75,11 +75,11 @@ namespace Nektar
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
-        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-													   bool useFFT,
-                                                       SpatialDomains::MeshGraphSharedPtr &graph1D):
+													   const bool useFFT,
+                                                       const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int n,j,nel;

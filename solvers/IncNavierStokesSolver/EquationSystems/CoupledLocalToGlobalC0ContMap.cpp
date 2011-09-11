@@ -45,12 +45,12 @@ namespace Nektar
      */
     CoupledLocalToGlobalC0ContMap::CoupledLocalToGlobalC0ContMap(
                                       const LibUtilities::SessionReaderSharedPtr &pSession,
-                                      SpatialDomains::MeshGraphSharedPtr &graph,
-                                      SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
-                                      Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                      MultiRegions::ExpListSharedPtr &pressure,
+                                      const SpatialDomains::MeshGraphSharedPtr &graph,
+                                      const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+                                      const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                                      const MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
-                                      bool CheckforSingularSys):
+                                      const bool CheckforSingularSys):
         LocalToGlobalC0ContMap(pSession)
     {
 

@@ -51,8 +51,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession)
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<Monodomain>::AllocateSharedPtr(pComm,pSession);
             p->InitObject();
@@ -68,8 +68,8 @@ namespace Nektar
     protected:
         /// Constructor
         Monodomain(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+                const LibUtilities::CommSharedPtr& pComm,
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 

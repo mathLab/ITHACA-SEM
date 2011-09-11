@@ -167,7 +167,7 @@ namespace Nektar
             }
 
             NekMatrix(unsigned int numberOfBlockRows, unsigned int numberOfBlockColumns,
-                      unsigned int* rowsPerBlock, unsigned int* columnsPerBlock,
+                      const unsigned int* rowsPerBlock, const unsigned int* columnsPerBlock,
                       MatrixStorage type = eFULL) :
                 BaseType(std::accumulate(rowsPerBlock, rowsPerBlock + numberOfBlockRows, 0),
                          std::accumulate(columnsPerBlock, columnsPerBlock + numberOfBlockColumns, 0)),

@@ -47,7 +47,7 @@ namespace Nektar
         {
         }
 
-        MeshGraph1D::MeshGraph1D(LibUtilities::SessionReaderSharedPtr &pSession)
+        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession)
             : MeshGraph(pSession)
         {
             ReadGeometry(pSession->GetDocument());

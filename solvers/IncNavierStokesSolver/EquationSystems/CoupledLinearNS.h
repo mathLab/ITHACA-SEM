@@ -87,8 +87,8 @@ namespace Nektar
         friend class MemoryManager<CoupledLinearNS>;
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(LibUtilities::CommSharedPtr& pComm,
-                                LibUtilities::SessionReaderSharedPtr& pSession)
+        static EquationSystemSharedPtr create(const LibUtilities::CommSharedPtr& pComm,
+                                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             EquationSystemSharedPtr p = MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pComm, pSession);
             p->InitObject();
@@ -134,8 +134,8 @@ namespace Nektar
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         
     protected:
-        CoupledLinearNS(LibUtilities::CommSharedPtr& pComm,
-                        LibUtilities::SessionReaderSharedPtr &pSesssion);
+        CoupledLinearNS(const LibUtilities::CommSharedPtr& pComm,
+                        const LibUtilities::SessionReaderSharedPtr &pSesssion);
 
         virtual void v_InitObject();
         

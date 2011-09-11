@@ -49,7 +49,7 @@ namespace Nektar
         friend class MemoryManager<DriverArpack>;
 		
         /// Creates an instance of this class
-        static DriverSharedPtr create(LibUtilities::SessionReaderSharedPtr& pSession) {
+        static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
             DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
@@ -70,7 +70,7 @@ namespace Nektar
 
 //        std::string m_arpackProblemType;   //Arpack input for problem type
         /// Constructor
-        DriverArpack( LibUtilities::SessionReaderSharedPtr        pSession);
+        DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
         
         /// Destructor
         virtual ~DriverArpack();

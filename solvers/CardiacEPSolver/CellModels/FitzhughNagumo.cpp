@@ -51,7 +51,7 @@ namespace Nektar
                 "Phenomological model of squid nerve cell.");
 
     CellModelFitzHughNagumo::CellModelFitzHughNagumo(
-                    LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+                    const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
             : CellModel(pSession, nq)
     {
         pSession->LoadParameter("beta",          m_beta,         0.0);

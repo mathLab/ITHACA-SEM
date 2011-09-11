@@ -48,7 +48,7 @@ namespace Nektar
         class MeshPartition
         {
         public:
-            LIB_UTILITIES_EXPORT MeshPartition(LibUtilities::SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT ~MeshPartition();
 
             LIB_UTILITIES_EXPORT void PartitionMesh(unsigned int pNumPartitions);
@@ -158,7 +158,7 @@ namespace Nektar
             BoostSubGraph              m_mesh;
             std::vector<BoostSubGraph> m_partitions;
 
-            void ReadMesh(LibUtilities::SessionReaderSharedPtr& pSession);
+            void ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession);
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
                                 std::vector<BoostSubGraph>& pPartitions);

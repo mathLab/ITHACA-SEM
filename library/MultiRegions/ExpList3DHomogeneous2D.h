@@ -66,25 +66,25 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                         const LibUtilities::BasisKey &HomoBasis_y,
 														const LibUtilities::BasisKey &HomoBasis_z,
 														const NekDouble lhom_y,
 														const NekDouble lhom_z,
-														bool useFFT);
+														const bool useFFT);
 
             /// Sets up a list of local expansions based on an input mesh.
-            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(LibUtilities::SessionReaderSharedPtr &pSession,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                         const LibUtilities::BasisKey &HomoBasis_y,
 														const LibUtilities::BasisKey &HomoBasis_z,
 														const NekDouble lhom_y,
 														const NekDouble lhom_z,
-														bool useFFT,
-														SpatialDomains::MeshGraphSharedPtr &graph1D);
+														const bool useFFT,
+														const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In,
-                                   bool DeclareLinesSetCoeffPhys = true);
+                                   const bool DeclareLinesSetCoeffPhys = true);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList3DHomogeneous2D();

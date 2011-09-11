@@ -7,8 +7,8 @@ namespace Nektar
     string UnsteadyDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyDiffusion", UnsteadyDiffusion::create);
 
     UnsteadyDiffusion::UnsteadyDiffusion(
-            LibUtilities::CommSharedPtr& pComm,
-            LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::CommSharedPtr& pComm,
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pComm, pSession)
     {
     }

@@ -66,9 +66,9 @@ namespace Nektar
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.
             MULTI_REGIONS_EXPORT ContField2D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        const std::string variable,
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                        const std::string &variable,
                         const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 
@@ -76,8 +76,8 @@ namespace Nektar
             /// another field but using a separate input mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
-                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        const std::string variable,
+                        const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                        const std::string &variable,
                         const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 

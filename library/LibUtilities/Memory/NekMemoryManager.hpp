@@ -186,7 +186,7 @@ namespace Nektar
                 }
                 #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
                 template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
-                static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, Arg, & arg)) \
+                static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
                 { \
                     DataType* result = static_cast<DataType*>(GetMemoryPool().Allocate(sizeof(DataType))); \
                     \
@@ -219,7 +219,7 @@ namespace Nektar
 
                 #define ALLOCATE_METHOD_GENERATOR(z, i, methodName) \
                 template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
-                static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, Arg, & arg)) \
+                static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
                 { \
                     return new DataType(BOOST_PP_ENUM_PARAMS(i, arg)); \
                 }
@@ -263,7 +263,7 @@ namespace Nektar
             /// @endcode
             #define ALLOCATE_SHARED_PTR_METHOD_GENERATOR(z, i, methodName) \
             template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
-            static boost::shared_ptr<DataType> methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, Arg, & arg)) \
+            static boost::shared_ptr<DataType> methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, const Arg, & arg)) \
             { \
                 return AllocateSharedPtrD(DefaultCustomDeallocator(), BOOST_PP_ENUM_PARAMS(i, arg)); \
             }

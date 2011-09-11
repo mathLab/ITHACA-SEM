@@ -51,7 +51,7 @@ namespace Nektar
                 "Phenomological model of canine cardiac electrophysiology.");
 
     CellModelAlievPanfilov::CellModelAlievPanfilov(
-                    LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+                    const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
             : CellModel(pSession, nq)
     {
         pSession->LoadParameter("k",          m_k,         0.0);

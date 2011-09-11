@@ -60,28 +60,6 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT DisContField1D();
 
-            /// Constructs a 1D discontinuous field based on a mesh.
-            MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    const bool constructMap = true);
-
-            /// Constructs a 1D discontinuous field based on a mesh and boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const int bc_loc = 0);
-
-            /// Constructs a 1D discontinuous field based on a mesh and boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT DisContField1D(
-                    LibUtilities::SessionReaderSharedPtr& pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable);
-
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(

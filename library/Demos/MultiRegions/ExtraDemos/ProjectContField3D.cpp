@@ -36,12 +36,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    string bcfile(argv[2]);
-    SpatialDomains::BoundaryConditions bcs(vSession,graph3D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
     LibUtilities::BasisKey bkey
@@ -53,7 +47,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession,graph3D,bcs);
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------  
     
     //----------------------------------------------

@@ -45,11 +45,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Get Advection Velocity
     ax = vSession->GetParameter("Advection_x");
     ay = vSession->GetParameter("Advection_y");
@@ -74,9 +69,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    int bc_val = 0;
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vSession,graph2D,bcs,bc_val);
+        AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
     //----------------------------------------------
 
     Timing("Read files and define exp ..");

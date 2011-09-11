@@ -38,11 +38,6 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
-        // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(vSession, graph1D);
-        //----------------------------------------------
-
-        //----------------------------------------------
         // Print summary of solution details
         lambda = vSession->GetParameter("Lambda");
         const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
@@ -54,9 +49,8 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Define Expansion
-        int bc_loc = 0;
         Exp = MemoryManager<MultiRegions::ContField1D>::
-            AllocateSharedPtr(vSession,graph1D,bcs,bc_loc);
+            AllocateSharedPtr(vSession,graph1D,vSession->GetVariable(0));
         //----------------------------------------------
 
         //----------------------------------------------

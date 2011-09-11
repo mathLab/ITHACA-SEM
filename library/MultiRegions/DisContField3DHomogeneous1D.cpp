@@ -84,8 +84,7 @@ namespace Nektar
                                        const NekDouble lhom,
 									   bool useFFT,
                                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                       SpatialDomains::BoundaryConditions &bcs,
-                                       const int bc_loc):
+                                       const std::string &variable):
             ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
@@ -94,9 +93,10 @@ namespace Nektar
             bool True  = true; 
             bool False = false; 
             DisContField2DSharedPtr plane_zero;
+            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
             // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<DisContField2D>::AllocateSharedPtr(pSession,graph2D,bcs,bc_loc,True,False);
+            m_planes[0] = plane_zero = MemoryManager<DisContField2D>::AllocateSharedPtr(pSession,graph2D,variable,True,False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
@@ -108,7 +108,7 @@ namespace Nektar
 
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
-                m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,bcs,bc_loc,True,False);
+                m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,True,False);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -123,7 +123,7 @@ namespace Nektar
             
             SetCoeffPhys();
 
-            SetupBoundaryConditions(HomoBasis,lhom,bcs,bcs.GetVariable(bc_loc));
+            SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
         }
 
         DisContField3DHomogeneous1D::~DisContField3DHomogeneous1D()

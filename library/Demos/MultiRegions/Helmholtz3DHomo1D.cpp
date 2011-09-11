@@ -36,11 +36,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
     int nplanes = 8;
@@ -49,7 +44,7 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-        ::AllocateSharedPtr(vSession,Bkey,lz,useFFT,graph2D,bcs,bc_val);
+        ::AllocateSharedPtr(vSession,Bkey,lz,useFFT,graph2D,vSession->GetVariable(0));
     //----------------------------------------------
 
     //----------------------------------------------

@@ -61,30 +61,6 @@ namespace Nektar
             /// Default constructor
             MULTI_REGIONS_EXPORT DisContField3D();
 
-            /// Constructs a global discontinuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraphSharedPtr &graph3D,
-                           bool SetUpJustDG = true);
-
-            /// Constructs a global discontinuous field based on an input mesh
-            /// with boundary conditions.
-            MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraphSharedPtr &graph3D,
-                           SpatialDomains::BoundaryConditions &bcs,
-                           const int bc_loc,
-                           bool SetUpJustDG = true);
-
-            /// Constructs a global discontinuous field based on an input mesh
-            /// with boundary conditions.
-            MULTI_REGIONS_EXPORT DisContField3D(
-                           LibUtilities::SessionReaderSharedPtr &pSession,
-                           SpatialDomains::MeshGraphSharedPtr &graph3D,
-                           SpatialDomains::BoundaryConditions &bcs,
-                           const std::string variable,
-                           bool SetUpJustDG = true);
-
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
             MULTI_REGIONS_EXPORT DisContField3D(
@@ -99,11 +75,6 @@ namespace Nektar
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~DisContField3D();
-
-            /// \brief Set up a list of element ids and edge ids the link to the
-            /// boundary conditions
-            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-                                      Array<OneD,int> &FaceID);
 
         protected:
 
@@ -129,6 +100,8 @@ namespace Nektar
                     SpatialDomains::MeshGraphSharedPtr &graph3D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable);
+
+            bool SameTypeOfBoundaryConditions(const DisContField3D &In);
 
             /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
@@ -165,6 +138,8 @@ namespace Nektar
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();
 
+            /// \brief Set up a list of element ids and edge ids the link to the
+            /// boundary conditions
             virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                 Array<OneD,int> &FaceID);
 

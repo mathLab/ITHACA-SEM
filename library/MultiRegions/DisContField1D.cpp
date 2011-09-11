@@ -59,118 +59,6 @@ namespace Nektar
 
 
         /**
-         * @todo Implement this constructor.
-         * @param   graph1D     A mesh, containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   solnType    Type of global system to use.
-         * @param   constructMap    ?
-         */
-        DisContField1D::DisContField1D(
-                    LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    const bool constructMap):
-            ExpList1D(pSession,graph1D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-        }
-
-
-        /**
-         * Constructs a field as a copy of an existing field.
-         * @param   In          Existing DisContField1D object to copy.
-         */
-        DisContField1D::DisContField1D(const DisContField1D &In):
-            ExpList1D(In),
-            m_bndCondExpansions(In.m_bndCondExpansions),
-            m_bndConditions(In.m_bndConditions),
-            m_globalBndMat(In.m_globalBndMat),
-            m_trace(In.m_trace),
-            m_traceMap(In.m_traceMap)
-        {
-        }
-
-
-        /**
-         * An expansion list for the boundary expansions is generated first for
-         * the field. These are subsequently evaluated for time zero. The trace
-         * map is then constructed.
-         * @param   graph1D     A mesh, containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   bcs         Information about the enforced boundary
-         *                      conditions.
-         * @param   bc_loc      The index of the session variable associated
-         *                      with the boundary conditions to enforce.
-         * @param   solnType    Type of global system to use.
-         */
-        DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const int bc_loc):
-            ExpList1D(pSession,graph1D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,
-                                               bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
-            map<int,int> periodicVertices;
-            GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
-                                periodicVertices);
-
-            m_globalBndMat
-                        = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            m_traceMap = MemoryManager<LocalToGlobalDGMap>
-                                        ::AllocateSharedPtr(pSession,graph1D,*this,
-                                                            m_bndCondExpansions,
-                                                            m_bndConditions);
-
-            m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
-        }
-
-
-        /**
-         * An expansion list for the boundary expansions is generated first for
-         * the field. These are subsequently evaluated for time zero. The trace
-         * map is then constructed.
-         * @param   graph1D     A mesh, containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   bcs         Information about the enforced boundary
-         *                      conditions.
-         * @param   variable    The session variable associated with the
-         *                      boundary conditions to enforce.
-         * @param   solnType    Type of global system to use.
-         */
-        DisContField1D::DisContField1D(LibUtilities::SessionReaderSharedPtr &pSession,
-                    SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable):
-            ExpList1D(pSession,graph1D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
-            map<int,int> periodicVertices;
-            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
-
-            m_globalBndMat
-                        = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                AllocateSharedPtr(pSession,graph1D,*this,
-                                  m_bndCondExpansions,m_bndConditions);
-
-            m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
-        }
-
-
-        /**
          * An expansion list for the boundary expansions is generated first for
          * the field. These are subsequently evaluated for time zero. The trace
          * map is then constructed.
@@ -206,6 +94,29 @@ namespace Nektar
                                   m_bndCondExpansions,m_bndConditions);
 
             m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
+        }
+
+
+        /**
+         * Constructs a field as a copy of an existing field.
+         * @param   In          Existing DisContField1D object to copy.
+         */
+        DisContField1D::DisContField1D(const DisContField1D &In):
+            ExpList1D(In),
+            m_bndCondExpansions(In.m_bndCondExpansions),
+            m_bndConditions(In.m_bndConditions),
+            m_globalBndMat(In.m_globalBndMat),
+            m_trace(In.m_trace),
+            m_traceMap(In.m_traceMap)
+        {
+        }
+
+
+        /**
+         *
+         */
+        DisContField1D::~DisContField1D()
+        {
         }
 
 
@@ -476,14 +387,6 @@ namespace Nektar
                     break;
                 }
             }
-        }
-
-
-        /**
-         *
-         */
-        DisContField1D::~DisContField1D()
-        {
         }
 
 

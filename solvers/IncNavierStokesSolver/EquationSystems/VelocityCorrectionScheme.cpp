@@ -56,9 +56,8 @@ namespace Nektar
     void VelocityCorrectionScheme::v_InitObject()
     {
         IncNavierStokes::v_InitObject();
-
         // Set m_pressure to point to last field of m_fields; 
-        if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_fields.num_elements()-1),"p") == 0)
+        if(NoCaseStringCompare(m_session->GetVariable(m_fields.num_elements()-1),"p") == 0)
         {
             m_nConvectiveFields = m_fields.num_elements()-1;
             m_pressure = m_fields[m_nConvectiveFields];
@@ -68,7 +67,6 @@ namespace Nektar
         {
             ASSERTL0(false,"Need to set up pressure field definition");
         }
-
 
         LibUtilities::TimeIntegrationMethod intMethod;
         std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
@@ -134,7 +132,7 @@ namespace Nektar
         // Count number of HBC conditions
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
-        
+
         int n,cnt;
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
@@ -310,7 +308,7 @@ namespace Nektar
                 cnt += nq;
             }
         }
-        
+
         // Extrapolate to n+1
         Vmath::Smul(cnt,kHighOrderBCsExtrapolation[nint-1][nint-1],
                     m_pressureHBCs[nint-1],1,m_pressureHBCs[nlevels-1],1);

@@ -72,15 +72,15 @@ namespace Nektar
 														   const NekDouble lhom_z,
 														   bool useFFT,
 														   SpatialDomains::MeshGraphSharedPtr &graph1D,
-														   SpatialDomains::BoundaryConditions &bcs,
-														   const int bc_loc):
-            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,graph1D,bcs,bc_loc)
+														   const std::string variable):
+            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
             int i,j,n,nel;
             bool False = false;
             ContField1DSharedPtr line_zero;
+            SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
-            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
+            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -95,7 +95,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
+                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
                 
                 for(j = 0; j < nel; ++j)
                 {

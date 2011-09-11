@@ -71,17 +71,17 @@ namespace Nektar
                                        const NekDouble lhom,
 									   bool useFFT,
                                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                       SpatialDomains::BoundaryConditions &bcs,
-                                       const int bc_loc,
+                                       const std::string &variable,
 									   const bool CheckIfSingularSystem):
-            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,graph2D,bcs,bc_loc)
+            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
             int i,j,n,nel;
             bool False = false;
             ContField2DSharedPtr plane_zero;
+            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
             // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pSession,graph2D,bcs,bc_loc,False,CheckIfSingularSystem);
+            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pSession,graph2D,variable,False,CheckIfSingularSystem);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
@@ -93,7 +93,7 @@ namespace Nektar
 
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
-                m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,bcs,bc_loc,False); 
+                m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,False);
                 
                 for(j = 0; j < nel; ++j)
                 {
@@ -109,7 +109,7 @@ namespace Nektar
             
             SetCoeffPhys(); 
 
-            SetupBoundaryConditions(HomoBasis,lhom,bcs,bcs.GetVariable(bc_loc));
+            SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
         }
 
 

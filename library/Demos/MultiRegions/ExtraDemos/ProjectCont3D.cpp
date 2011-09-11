@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(vSession,graph3D);
+                                ::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------
 
     //----------------------------------------------

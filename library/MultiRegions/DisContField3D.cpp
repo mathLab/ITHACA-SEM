@@ -27,134 +27,6 @@ namespace Nektar
          */
         DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
                                         SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                        bool SetUpJustDG) :
-            ExpList3D(pSession,graph3D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            ApplyGeomInfo();
-
-            if(SetUpJustDG)
-            {
-                ASSERTL0(false, "DisContField3D Constructor needs trace implementation.");
-                // Set up matrix map
-                m_globalBndMat = MemoryManager<GlobalLinSysMap>
-                                                    ::AllocateSharedPtr();
-/*
-                map<int,int> periodicEdges;
-                map<int,int> periodicVertices;
-                map<int,int> periodicFaces;
-                GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),
-                                 periodicVertices,periodicEdges,periodicFaces);
-
-                // Set up Trace space
-                bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList1D>
-                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
-                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
-
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
-                                      m_bndCondExpansions,m_bndConditions,
-                                      periodicEdges);
-*/            }
-
-        }
-
-
-        /**
-         * @todo Implement 3D trace space.
-         */
-        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                        SpatialDomains::BoundaryConditions &bcs,
-                                        const int bc_loc,
-                                        bool SetUpJustDG) :
-            ExpList3D(pSession,graph3D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            GenerateBoundaryConditionExpansion(graph3D,bcs,
-                                               bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
-            if(SetUpJustDG)
-            {
-                ASSERTL0(false, "DisContField3D Constructor needs trace implementation.");
-                // Set up matrix map
-                m_globalBndMat = MemoryManager<GlobalLinSysMap>
-                                                    ::AllocateSharedPtr();
-                map<int,int> periodicEdges;
-                map<int,int> periodicVertices;
-                map<int,int> periodicFaces;
-                GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),
-                                 periodicVertices,periodicEdges,periodicFaces);
-
-/*                // Set up Trace space
-                bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList1D>
-                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
-                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
-
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
-                                      m_bndCondExpansions,m_bndConditions,
-                                      periodicEdges);
-*/            }
-
-        }
-
-
-        /**
-         * @todo Implement 3D trace space.
-         */
-        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                        SpatialDomains::BoundaryConditions &bcs,
-                                        const std::string variable,
-                                        bool SetUpJustDG) :
-            ExpList3D(pSession,graph3D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-
-            if(SetUpJustDG)
-            {
-                // Set up matrix map
-                m_globalBndMat = MemoryManager<GlobalLinSysMap>
-                                                    ::AllocateSharedPtr();
-                map<int,int> periodicEdges;
-                map<int,int> periodicVertices;
-                map<int,int> periodicFaces;
-                GetPeriodicFaces(graph3D,bcs,variable,
-                                 periodicVertices,periodicEdges,periodicFaces);
-
-                ASSERTL0(false, "DisContField3D Constructor needs implementation.");
-
-                // Set up Trace space
-/*                bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList1D>
-                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
-                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
-
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
-                                      m_bndCondExpansions,m_bndConditions,
-                                      periodicEdges);
-*/            }
-
-        }
-
-
-        /**
-         * @todo Implement 3D trace space.
-         */
-        DisContField3D::DisContField3D( LibUtilities::SessionReaderSharedPtr &pSession,
-                                        SpatialDomains::MeshGraphSharedPtr &graph3D,
                                         const std::string variable,
                                         bool SetUpJustDG) :
             ExpList3D(pSession,graph3D),
@@ -262,6 +134,43 @@ namespace Nektar
 
             SetBoundaryConditionExpansion(graph3D,bcs,variable,m_bndCondExpansions,m_bndConditions);
         }
+
+
+        /**
+         * For each boundary region, checks that the types and number of
+         * boundary expansions in that region match.
+         * @param   In          ContField2D to compare with.
+         * @returns True if boundary conditions match.
+         */
+        bool DisContField3D::SameTypeOfBoundaryConditions(const DisContField3D &In)
+        {
+            int i;
+            bool returnval = true;
+
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            {
+
+                // check to see if boundary condition type is the same
+                // and there are the same number of boundary
+                // conditions in the boundary definition.
+                if((m_bndConditions[i]->GetBoundaryConditionType()
+                    != In.m_bndConditions[i]->GetBoundaryConditionType())||
+                   (m_bndCondExpansions[i]->GetExpSize()
+                                    != In.m_bndCondExpansions[i]->GetExpSize()))
+                {
+                    returnval = false;
+                    break;
+                }
+            }
+
+            // Compare with all other processes. Return true only if all
+            // processes report having the same boundary conditions.
+            int vSame = (returnval?1:0);
+            m_comm->AllReduce(vSame, LibUtilities::ReduceMin);
+
+            return (vSame == 1);
+        }
+
 
 
         /**
@@ -491,9 +400,59 @@ namespace Nektar
         }
 
 
-        // Set up a list of element ids and edge ids that link to the
-        // boundary conditions
-        void DisContField3D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &FaceID)
+        /**
+         * Search through the edge expansions and identify which ones
+         * have Robin/Mixed type boundary conditions. If find a Robin
+         * boundary then store the edge id of the boundary condition
+         * and the array of points of the physical space boundary
+         * condition which are hold the boundary condition primitive
+         * variable coefficient at the quatrature points
+         *
+         * \return std map containing the robin boundary condition
+         * info using a key of the element id
+         *
+         * There is a next member to allow for more than one Robin
+         * boundary condition per element
+         */
+        map<int, RobinBCInfoSharedPtr> DisContField3D::GetRobinBCInfo(void)
+        {
+            int i,cnt;
+            map<int, RobinBCInfoSharedPtr> returnval;
+            Array<OneD, int> ElmtID,FaceID;
+            GetBoundaryToElmtMap(ElmtID,FaceID);
+
+            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                MultiRegions::ExpListSharedPtr locExpList;
+
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                {
+                    int e,elmtid;
+                    Array<OneD, NekDouble> Array_tmp;
+
+                    locExpList = m_bndCondExpansions[i];
+
+                    for(e = 0; e < locExpList->GetExpSize(); ++e)
+                    {
+                        RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(FaceID[cnt+e],Array_tmp = locExpList->GetPhys() + locExpList->GetPhys_Offset(e));
+                        elmtid = ElmtID[cnt+e];
+                        // make link list if necessary
+                        if(returnval.count(elmtid) != 0)
+                        {
+                            rInfo->next = returnval.find(elmtid)->second;
+                        }
+                        returnval[elmtid] = rInfo;
+                    }
+                }
+                cnt += m_bndCondExpansions[i]->GetExpSize();
+            }
+
+            return returnval;
+        }
+
+
+        void DisContField3D::v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
+                                                    Array<OneD,int> &FaceID)
         {
             map<int, int> FaceGID;
             int i,n,id;
@@ -550,63 +509,6 @@ namespace Nektar
             }
 
             ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
-        }
-
-        /**
-         * Search through the edge expansions and identify which ones
-         * have Robin/Mixed type boundary conditions. If find a Robin
-         * boundary then store the edge id of the boundary condition
-         * and the array of points of the physical space boundary
-         * condition which are hold the boundary condition primitive
-         * variable coefficient at the quatrature points
-         *
-         * \return std map containing the robin boundary condition
-         * info using a key of the element id
-         *
-         * There is a next member to allow for more than one Robin
-         * boundary condition per element
-         */
-        map<int, RobinBCInfoSharedPtr> DisContField3D::GetRobinBCInfo(void)
-        {
-            int i,cnt;
-            map<int, RobinBCInfoSharedPtr> returnval;
-            Array<OneD, int> ElmtID,FaceID;
-            GetBoundaryToElmtMap(ElmtID,FaceID);
-
-            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                MultiRegions::ExpListSharedPtr locExpList;
-
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                {
-                    int e,elmtid;
-                    Array<OneD, NekDouble> Array_tmp;
-
-                    locExpList = m_bndCondExpansions[i];
-
-                    for(e = 0; e < locExpList->GetExpSize(); ++e)
-                    {
-                        RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(FaceID[cnt+e],Array_tmp = locExpList->GetPhys() + locExpList->GetPhys_Offset(e));
-                        elmtid = ElmtID[cnt+e];
-                        // make link list if necessary
-                        if(returnval.count(elmtid) != 0)
-                        {
-                            rInfo->next = returnval.find(elmtid)->second;
-                        }
-                        returnval[elmtid] = rInfo;
-                    }
-                }
-                cnt += m_bndCondExpansions[i]->GetExpSize();
-            }
-
-            return returnval;
-        }
-
-
-        void DisContField3D::v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
-                                                    Array<OneD,int> &FaceID)
-        {
-            GetBoundaryToElmtMap(ElmtID,FaceID);
         }
 
 

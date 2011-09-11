@@ -364,7 +364,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 						for(i = 0 ; i < Exp.num_elements(); i++)
 						{
 							Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,mesh,*boundaryConditions,i);
+							::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,mesh,session->GetVariable(i));
 						}
 					}
 					else 
@@ -373,7 +373,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 						{
 							Exp[i] = MemoryManager<MultiRegions::ContField1D>
 							::AllocateSharedPtr(session,mesh,
-                                                *boundaryConditions,i);
+                                                session->GetVariable(i));
 						}
 						
 					}
@@ -390,7 +390,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
                         for(i = 0 ; i < Exp.num_elements(); i++)
                         {
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,mesh,*boundaryConditions,i);
+                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,mesh,session->GetVariable(i));
                         }
                     }
                     else
@@ -406,7 +406,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
                         {                          	
                             Exp[i] = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(session,
-                                                    mesh,*boundaryConditions,i);
+                                                    mesh,session->GetVariable(i));
                         }                        
                     }
                    
@@ -431,7 +431,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 						{
 							Exp[i] = MemoryManager<MultiRegions::ContField3D>
 											::AllocateSharedPtr(session,
-												mesh,*boundaryConditions,i);
+												mesh,session->GetVariable(i));
 						}
 					}
                     break;

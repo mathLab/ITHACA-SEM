@@ -47,11 +47,6 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
-        // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
-        //----------------------------------------------
-
-        //----------------------------------------------
         // Print summary of solution details
         lambda = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
@@ -66,9 +61,8 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Define Expansion
-        std::string variable = "u";
         Exp = MemoryManager<MultiRegions::ContField2D>::
-            AllocateSharedPtr(vSession,graph2D,bcs,variable);
+            AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
         //----------------------------------------------
 
         Timing("Read files and define exp ..");

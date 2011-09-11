@@ -63,8 +63,7 @@ namespace Nektar
                            const NekDouble lhom,
 						   bool useFFT,
                            SpatialDomains::MeshGraphSharedPtr &graph2D,
-                           SpatialDomains::BoundaryConditions &bcs, 
-                           const int bc_loc = 0);
+                           const std::string &variable);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(const DisContField3DHomogeneous1D &In,

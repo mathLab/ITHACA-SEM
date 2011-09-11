@@ -87,8 +87,7 @@ namespace Nektar
 																 const NekDouble lhom_z,
 																 bool useFFT,
 																 SpatialDomains::MeshGraphSharedPtr &graph1D,
-																 SpatialDomains::BoundaryConditions &bcs,
-																 const int bc_loc):
+																 const std::string variable):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
@@ -97,9 +96,10 @@ namespace Nektar
             bool True  = true; 
             bool False = false; 
             DisContField1DSharedPtr line_zero;
+            SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
             //  
-            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
+            m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -114,7 +114,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,bcs,bc_loc);
+                m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);

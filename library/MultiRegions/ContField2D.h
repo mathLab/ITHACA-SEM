@@ -63,47 +63,13 @@ namespace Nektar
             /// The default constructor.
             MULTI_REGIONS_EXPORT ContField2D();
 
-            /// Construct a global continuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT ContField2D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph2D
-                        );
-
-            /// Construct a global continuous field based on an input mesh with
-            /// boundary conditions.
-            MULTI_REGIONS_EXPORT ContField2D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        bool DeclareCoeffPhysArrays = true,
-                        const bool CheckIfSingularSystem = false);
-
-            /// Construct a global continuous field with solution type based on
-            /// another field but using a separate input mesh and boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
-                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        bool DeclareCoeffPhysArrays = true,
-                        const bool CheckIfSingularSystem = false);
-
-            /// This constructor sets up global continuous field based on an
-            /// input mesh and boundary conditions.
-            MULTI_REGIONS_EXPORT ContField2D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        const bool CheckIfSingularSystem = false);
-
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.
             MULTI_REGIONS_EXPORT ContField2D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
                         SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string variable,
+                        const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 
             /// Construct a global continuous field with solution type based on
@@ -112,7 +78,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
                         SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string variable,
-                        bool DeclareCoeffPhysArrays = true,
+                        const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 
             /// The copy constructor.

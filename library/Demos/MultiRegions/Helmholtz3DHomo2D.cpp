@@ -36,11 +36,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, graph1D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
     int nypoints = vSession->GetParameter("HomModesY");
@@ -61,7 +56,7 @@ int main(int argc, char *argv[])
 	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,nzpoints,PkeyZ);
     
-	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,graph1D,bcs,bc_val);
+	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,graph1D,vSession->GetVariable(0));
     //----------------------------------------------
 
     //----------------------------------------------

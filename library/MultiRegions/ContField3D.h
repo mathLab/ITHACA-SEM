@@ -57,31 +57,7 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT ContField3D();
 
-            /// Construct a global continuous field based on an input mesh.
-            MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D);
-
-            MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0);
-
-            /// Construct a global continuous field with solution type based on
-            /// another field but using a separate input mesh and boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0);
-
-            MULTI_REGIONS_EXPORT ContField3D(
-                        LibUtilities::SessionReaderSharedPtr &pSession,
-                        SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable);
-
+            /// Construct a global continuous field.
             MULTI_REGIONS_EXPORT ContField3D(
                         LibUtilities::SessionReaderSharedPtr &pSession,
                         SpatialDomains::MeshGraphSharedPtr &graph3D,
@@ -97,11 +73,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In);
 
             MULTI_REGIONS_EXPORT ~ContField3D();
-
-            /// Determines if another ContField2D shares the same boundary
-            /// conditions as this field.
-            MULTI_REGIONS_EXPORT bool SameTypeOfBoundaryConditions(const ContField3D &In);
-
 
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>& GetBndCondExpansions()
             {

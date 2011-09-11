@@ -48,11 +48,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Define Expansion
     lz      = vSession->GetParameter("Lz");
 	bool useFFT = false;
@@ -60,7 +55,7 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>::
-        AllocateSharedPtr(vSession,Bkey,lz,useFFT,graph2D,bcs);
+        AllocateSharedPtr(vSession,Bkey,lz,useFFT,graph2D,vSession->GetVariable(0));
     //----------------------------------------------
     Timing("Read files and define exp ..");
 

@@ -37,11 +37,6 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
-        // read the problem parameters from input file
-        SpatialDomains::BoundaryConditions bcs(vSession, graph3D);
-        //----------------------------------------------
-
-        //----------------------------------------------
         // Print summary of solution details
         lambda = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
@@ -54,9 +49,8 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Define Expansion
-        int bc_val=0;
         Exp = MemoryManager<MultiRegions::ContField3D>
-                        ::AllocateSharedPtr(vSession,graph3D,bcs,bc_val);
+                        ::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
         //----------------------------------------------
 
         //----------------------------------------------

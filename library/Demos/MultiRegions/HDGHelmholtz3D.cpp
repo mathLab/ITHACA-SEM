@@ -49,12 +49,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    string bcfile(argv[2]);
-    SpatialDomains::BoundaryConditions bcs(vSession, graph3D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph3D->GetExpansions();
@@ -75,7 +69,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::DisContField3D>::
-        AllocateSharedPtr(vSession,graph3D,bcs);
+        AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------
     Timing("Read files and define exp ..");
     

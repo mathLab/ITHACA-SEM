@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vSession,graph2D);
+    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
     //----------------------------------------------  
     
     //----------------------------------------------

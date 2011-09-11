@@ -57,8 +57,7 @@ namespace Nektar
                            const NekDouble lhom,
 						   bool useFFT,
                            SpatialDomains::MeshGraphSharedPtr &graph2D,
-                           SpatialDomains::BoundaryConditions &bcs, 
-                           const int bc_loc = 0,
+                           const std::string &variable,
 						   const bool CheckIfSingularSystem = false);
             
             /// Copy constructor.

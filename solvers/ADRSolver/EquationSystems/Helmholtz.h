@@ -29,9 +29,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Helmholtz solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_HELMHOLTZ_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_HELMHOLTZ_H
 
@@ -46,10 +47,9 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::CommSharedPtr& pComm,
                 const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            EquationSystemSharedPtr p = MemoryManager<Helmholtz>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<Helmholtz>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -61,8 +61,7 @@ namespace Nektar
         virtual ~Helmholtz();
 
     protected:
-        Helmholtz(const LibUtilities::CommSharedPtr& pComm,
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        Helmholtz(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
         virtual void v_PrintSummary(std::ostream &out);

@@ -104,24 +104,24 @@ namespace Nektar
             {
             case eNonlinear:
                 m_session->SetTag("AdvectiveType","Convective");
-                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                 break;
             case eDirect:
                 m_session->SetTag("AdvectiveType","Linearised");
-                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                 break;
             case eAdjoint:
                 m_session->SetTag("AdvectiveType","Adjoint");
-                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                 break;
             case eTransientGrowth:
                 //forward timestepping
                 m_session->SetTag("AdvectiveType","Linearised");
-                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
 
                 //backward timestepping
                 m_session->SetTag("AdvectiveType","Adjoint");
-                m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_comm, m_session);
+                m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                 break;
             default:
                 ASSERTL0(false, "Unrecognised evolution operator.");

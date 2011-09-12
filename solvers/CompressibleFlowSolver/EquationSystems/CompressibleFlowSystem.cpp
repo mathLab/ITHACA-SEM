@@ -46,9 +46,8 @@ namespace Nektar
   string CompressibleFlowSystem::className = GetEquationSystemFactory().RegisterCreatorFunction("CompressibleFlowSystem", CompressibleFlowSystem::create, "Auxiliary functions for the compressible flow system.");
   
   CompressibleFlowSystem::CompressibleFlowSystem(
-          const LibUtilities::CommSharedPtr& pComm,
           const LibUtilities::SessionReaderSharedPtr& pSession)
-    : UnsteadySystem(pComm, pSession)
+    : UnsteadySystem(pSession)
   {
 
   }

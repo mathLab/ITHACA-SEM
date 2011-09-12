@@ -29,9 +29,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Steady Advection Diffusion Reaction solve routines 
+// Description: Steady advection-diffusion-reaction solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.h>
 
 namespace Nektar
@@ -40,9 +41,8 @@ namespace Nektar
 
 
     SteadyAdvectionDiffusionReaction::SteadyAdvectionDiffusionReaction(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : SteadyAdvectionDiffusion(pComm, pSession)
+        : SteadyAdvectionDiffusion(pSession)
     {
     }
 

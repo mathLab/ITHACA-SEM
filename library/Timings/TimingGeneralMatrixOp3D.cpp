@@ -187,20 +187,14 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, graph3D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
-    int bc_loc=0;
     Exp = MemoryManager<MultiRegions::ContField3D>
-                    ::AllocateSharedPtr(vSession, graph3D,bcs,bc_loc);
+                    ::AllocateSharedPtr(vSession, graph3D, vSession->GetVariable(0));
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
 

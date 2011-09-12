@@ -59,9 +59,8 @@ namespace Nektar
      * Constructor. Creates ...
      */
     ADR2DManifold::ADR2DManifold(
-            LibUtilities::CommSharedPtr& pComm,
             LibUtilities::SessionReaderSharedPtr& pSession):
-        EquationSystem(pComm,pSession),
+        EquationSystem(pSession),
         m_infosteps(10),
         m_explicitDiffusion(true),
         m_explicitReaction(true)

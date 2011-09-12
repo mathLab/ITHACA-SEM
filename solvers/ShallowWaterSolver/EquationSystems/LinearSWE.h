@@ -54,10 +54,9 @@ namespace Nektar
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-        EquationSystemSharedPtr p = MemoryManager<LinearSWE>::AllocateSharedPtr(pComm, pSession);
+        EquationSystemSharedPtr p = MemoryManager<LinearSWE>::AllocateSharedPtr(pSession);
         p->InitObject();
         return p;
     }
@@ -67,9 +66,7 @@ namespace Nektar
     virtual ~LinearSWE();
 
   protected:
-    LinearSWE(
-            const LibUtilities::CommSharedPtr& pComm,
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+    LinearSWE(const LibUtilities::SessionReaderSharedPtr& pSession);
     
     virtual void v_InitObject();
     

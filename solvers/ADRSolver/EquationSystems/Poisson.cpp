@@ -32,6 +32,7 @@
 // Description: Poisson solve routines 
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <ADRSolver/EquationSystems/Poisson.h>
 
 namespace Nektar
@@ -40,9 +41,8 @@ namespace Nektar
     string Poisson::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusion", Poisson::create);
 
     Poisson::Poisson(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Laplace(pComm, pSession)
+        : Laplace(pSession)
     {
     }
 

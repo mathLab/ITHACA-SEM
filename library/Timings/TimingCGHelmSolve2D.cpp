@@ -156,11 +156,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(vSession, graph2D);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
     //----------------------------------------------
@@ -168,7 +163,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vSession,graph2D,bcs);
+        AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
     

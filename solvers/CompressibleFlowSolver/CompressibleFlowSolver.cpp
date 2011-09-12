@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     // Create instance of module to solve the equation specified in the session.
     try
     {
-        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("EQTYPE"), session->GetComm(), session);
+        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("EQTYPE"), session);
     }
     catch (int e)
     {

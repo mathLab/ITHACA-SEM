@@ -98,9 +98,7 @@ namespace Nektar
          *
          *
          */
-        ADR2DManifold(
-                LibUtilities::CommSharedPtr& pComm,
-                LibUtilities::SessionReaderSharedPtr& pSession);
+        ADR2DManifold(LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

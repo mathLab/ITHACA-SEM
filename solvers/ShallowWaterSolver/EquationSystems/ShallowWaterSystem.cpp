@@ -59,9 +59,8 @@ namespace Nektar
      * @param   pSession        Session object to read parameters from.
      */
     ShallowWaterSystem::ShallowWaterSystem(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pComm, pSession)
+        : EquationSystem(pSession)
     {
     }
 

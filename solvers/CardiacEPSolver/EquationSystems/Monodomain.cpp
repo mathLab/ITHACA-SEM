@@ -67,9 +67,8 @@ namespace Nektar
      *
      */
     Monodomain::Monodomain(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pComm, pSession)
+        : UnsteadySystem(pSession)
     {
     }
 

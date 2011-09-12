@@ -48,9 +48,8 @@ namespace Nektar
      * \param 
      * \param
      */
-    IncNavierStokes::IncNavierStokes(const LibUtilities::CommSharedPtr& pComm,
-            const LibUtilities::SessionReaderSharedPtr& pSession):
-        EquationSystem(pComm, pSession),
+    IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
+        EquationSystem(pSession),
         m_infosteps(10)
     {
     }

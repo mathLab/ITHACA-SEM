@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 //
 // File SteadAdvectionDiffusion.cpp
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Steady Advection Diffusion solve routines 
+// Description: Steady advection-diffusion solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <ADRSolver/EquationSystems/SteadyAdvectionDiffusion.h>
@@ -46,9 +46,8 @@ namespace Nektar
      */
 
     SteadyAdvectionDiffusion::SteadyAdvectionDiffusion(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pComm,pSession),
+        : EquationSystem(pSession),
           m_lambda(0.0)
     {
     }

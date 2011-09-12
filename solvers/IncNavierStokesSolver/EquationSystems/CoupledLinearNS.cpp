@@ -48,11 +48,10 @@ namespace Nektar
      * global mapping arrays and the basic memory definitions for
      * coupled matrix system
      */ 
-    CoupledLinearNS::CoupledLinearNS(const LibUtilities::CommSharedPtr& pComm,
-                                     const LibUtilities::SessionReaderSharedPtr &pSession):
+    CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
         m_singleMode(false),
         m_zeroMode(false),
-        IncNavierStokes(pComm, pSession)
+        IncNavierStokes(pSession)
     {
     }
 

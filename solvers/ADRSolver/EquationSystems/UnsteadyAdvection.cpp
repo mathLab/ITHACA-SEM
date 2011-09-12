@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Unsteady Advection  solve
+// Description: Unsteady advection solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +42,8 @@ namespace Nektar
     string UnsteadyAdvection::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyAdvection", UnsteadyAdvection::create, "Unsteady Advection equation.");
 
     UnsteadyAdvection::UnsteadyAdvection(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pComm, pSession)
+        : UnsteadySystem(pSession)
     {
     }
 

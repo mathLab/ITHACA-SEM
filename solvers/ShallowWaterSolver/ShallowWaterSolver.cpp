@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     try
     {
         equ = GetEquationSystemFactory().CreateInstance(
-                session->GetSolverInfo("EQTYPE"), session->GetComm(), session);
+                session->GetSolverInfo("EQTYPE"), session);
     }
     catch (int e)
     {

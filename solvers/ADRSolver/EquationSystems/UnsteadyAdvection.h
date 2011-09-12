@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Unsteady advection solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,9 +47,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::CommSharedPtr& pComm,
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -61,7 +60,7 @@ namespace Nektar
     protected:
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
 
-        UnsteadyAdvection(const LibUtilities::CommSharedPtr& pComm,
+        UnsteadyAdvection(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,

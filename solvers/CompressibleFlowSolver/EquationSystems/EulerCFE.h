@@ -67,10 +67,9 @@ namespace Nektar
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pComm, pSession);
+      EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pSession);
       p->InitObject();
       return p;
     }
@@ -84,8 +83,7 @@ namespace Nektar
     
   protected:
 
-    EulerCFE(const LibUtilities::CommSharedPtr& pComm,
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+    EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_InitObject();
 

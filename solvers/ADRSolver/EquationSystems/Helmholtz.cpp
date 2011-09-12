@@ -41,9 +41,8 @@ namespace Nektar
     string Helmholtz::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusionReaction", Helmholtz::create);
 
     Helmholtz::Helmholtz(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Poisson(pComm, pSession)
+        : Poisson(pSession)
     {
     }
 

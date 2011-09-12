@@ -29,9 +29,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Poisson solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_POISSON_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_POISSON_H
 
@@ -46,9 +47,8 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::CommSharedPtr& pComm,
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<Poisson>::AllocateSharedPtr(pComm, pSession);
+            EquationSystemSharedPtr p = MemoryManager<Poisson>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -59,8 +59,7 @@ namespace Nektar
         virtual ~Poisson();
 
     protected:
-        Poisson(const LibUtilities::CommSharedPtr& pComm,
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        Poisson(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 

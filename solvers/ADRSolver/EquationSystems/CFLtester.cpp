@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Unsteady Advection  solve
+// Description: CFL tester solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +42,8 @@ namespace Nektar
     string CFLtester::className = GetEquationSystemFactory().RegisterCreatorFunction("CFLtester", CFLtester::create, "Testing CFL restriction");
 
     CFLtester::CFLtester(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pComm, pSession)
+        : UnsteadySystem(pSession)
     {
     }
 

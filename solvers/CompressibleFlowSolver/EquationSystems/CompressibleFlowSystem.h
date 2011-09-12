@@ -52,10 +52,9 @@ namespace Nektar
 
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pComm, pSession);
+      return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);
     }
     /// Name of class
     static std::string className;
@@ -65,7 +64,6 @@ namespace Nektar
   protected:
 
     CompressibleFlowSystem(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_InitObject();

@@ -57,7 +57,6 @@ namespace Nektar
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory<
                 std::string, EquationSystem,
-                const LibUtilities::CommSharedPtr&,
                 const LibUtilities::SessionReaderSharedPtr&
             > EquationSystemFactory;
     EquationSystemFactory& GetEquationSystemFactory();
@@ -383,8 +382,7 @@ namespace Nektar
         int m_HomoDirec;   ///< number of homogenous directions
 
         /// Initialises EquationSystem class members.
-        EquationSystem( const LibUtilities::CommSharedPtr& pComm,
-                        const LibUtilities::SessionReaderSharedPtr& pSession);
+        EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Perform a case-insensitive string comparison.
         int NoCaseStringCompare(const string & s1, const string& s2) ;

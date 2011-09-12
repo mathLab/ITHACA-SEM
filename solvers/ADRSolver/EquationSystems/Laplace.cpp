@@ -40,9 +40,8 @@ namespace Nektar
     string Laplace::className = GetEquationSystemFactory().RegisterCreatorFunction("Laplace", Laplace::create);
 
     Laplace::Laplace(
-            const LibUtilities::CommSharedPtr& pComm,
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pComm, pSession),
+        : EquationSystem(pSession),
           m_lambda(0.0)
     {
     }

@@ -88,9 +88,7 @@ namespace Nektar
 	Array<OneD, NekDouble>                          m_coriolis;
 	
         /// Initialises UnsteadySystem class members.
-        ShallowWaterSystem(
-                const LibUtilities::CommSharedPtr& pComm,
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        ShallowWaterSystem(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 

@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     time(&starttime);
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    ADR2DManifold dom(session->GetComm(), session);
+    ADR2DManifold dom(session);
     
     // Time integration function object for unsteady equations
     LibUtilities::TimeIntegrationSchemeOperators ode;

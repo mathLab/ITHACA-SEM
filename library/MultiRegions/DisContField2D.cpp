@@ -74,7 +74,7 @@ namespace Nektar
 
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
                                                DeclareCoeffPhysArrays);
-            cout << "BndCondExp: " << m_bndCondExpansions.num_elements() << endl;
+
             if(DeclareCoeffPhysArrays)
             {
                 EvaluateBoundaryConditions();

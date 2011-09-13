@@ -129,9 +129,9 @@ namespace Nektar
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
 
-            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                            SpatialDomains::BoundaryConditions &bcs,
-                                            const std::string variable,
+            virtual void v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                                            const SpatialDomains::BoundaryConditions &bcs,
+                                            const std::string &variable,
                                             vector<map<int,int> > & periodicVertices,
                                             map<int,int>& periodicEdges)
                                             

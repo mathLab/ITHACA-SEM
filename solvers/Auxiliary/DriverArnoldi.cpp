@@ -99,16 +99,15 @@ namespace Nektar
             fields = m_equ[0]->UpdateForces();
         }
 
-        int nq = fields[0]->GetNpoints();
+        int nq = fields[0]->GetNcoeffs();
 
         for (int k = 0; k < m_nfields; ++k)
         {
-            Vmath::Vcopy(nq, &array[k*nq], 1, &fields[k]->UpdatePhys()[0], 1);
-            fields[k]->SetPhysState(true);
+            Vmath::Vcopy(nq, &array[k*nq], 1, &fields[k]->UpdateCoeffs()[0], 1);
+            fields[k]->SetPhysState(false);
         }
     };
-
-
+	
     /**
      * Copy field variables which depend from either the m_fields
      * or m_forces array the Arnoldi array
@@ -117,17 +116,41 @@ namespace Nektar
     {
         Array<OneD, MultiRegions::ExpListSharedPtr> fields;
         fields = m_equ[m_nequ-1]->UpdateFields();
-        int nq = fields[0]->GetNpoints();
-
         for (int k = 0; k < m_nfields; ++k)
         {
-            if(!m_TimeSteppingAlgorithm)
-            {
-                fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
-            }
+			int nq = fields[0]->GetNcoeffs();
+            Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1, &array[k*nq], 1);
+		    fields[k]->SetPhysState(false);
+			
+		}
+    };
+    
+	
+    /**
+     * Initialisation for the transient growth
+     */
+    void DriverArnoldi::CopyFwdToAdj()
+    {
 
-            Vmath::Vcopy(nq,  &fields[k]->GetPhys()[0], 1, &array[k*nq], 1);
-            fields[k]->SetPhysState(true);
-        }
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields;
+
+		if(m_TimeSteppingAlgorithm)
+		{
+     		 fields = m_equ[0]->UpdateFields();
+			int nq = fields[0]->GetNcoeffs();
+
+
+		for (int k=0 ; k < m_nfields; ++k)
+			{
+			Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
+				
+			}
+		}
+		else
+		{
+			ASSERTL0(false,"Transient Growth non available for Coupled Solver");
+
+		}
+
     };
 }

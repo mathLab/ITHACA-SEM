@@ -1166,6 +1166,22 @@ namespace Nektar
     {
 
     }
+	
+	/**
+     *
+     */
+	void EquationSystem::v_TransCoeffToPhys()
+    {
+		
+    }
+	
+	/**
+     *
+     */
+	void EquationSystem::v_TransPhysToCoeff()
+    {
+		
+    }
 
 
     /**

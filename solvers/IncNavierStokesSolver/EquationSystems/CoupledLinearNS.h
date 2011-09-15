@@ -167,7 +167,11 @@ namespace Nektar
         virtual void v_DoInitialise(void);
 
         virtual void v_DoSolve(void);
-        
+		
+		virtual void v_TransCoeffToPhys(void);
+		
+		virtual void v_TransPhysToCoeff(void);
+
         virtual void v_Output(void);
 
         virtual int v_GetForceDimension(void);

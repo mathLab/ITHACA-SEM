@@ -285,6 +285,35 @@ namespace Nektar
     /**
      *
      */
+
+    void UnsteadySystem::v_TransCoeffToPhys()
+    {
+		int nfields = m_fields.num_elements() - 1;
+		for (int k=0 ; k < nfields; ++k)
+		{
+			//Backward Transformation in physical space for time evolution
+			m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
+										     m_fields[k]->UpdatePhys());
+    }
+	
+	    /**
+		 *
+		 */
+		
+		void UnsteadySystem::v_TransPhysToCoeff()
+		{
+			int nfields = m_fields.num_elements() - 1;
+			for (int k=0 ; k < nfields; ++k)
+			{
+				//Forward Transformation in coefficient space for time evolution
+				m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
+												 m_fields[k]->UpdateCoeffs());
+			}
+		
+    /**
+     *
+     */
+	
     void UnsteadySystem::v_PrintSummary(std::ostream &out)
     {
         EquationSystem::v_PrintSummary(out);

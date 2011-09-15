@@ -77,6 +77,12 @@ namespace Nektar
         /// Solve the problem.
         inline void DoSolve();
 		
+		/// Transform from coefficient to physical space.
+        inline void TransCoeffToPhys();
+		
+		/// Transform from physical to coefficient space.
+        inline void TransPhysToCoeff();
+		
         /// Perform output operations after solve.
         inline void Output();
 
@@ -403,6 +409,12 @@ namespace Nektar
 
         /// Virtual function for solve implementation.
         virtual void v_DoSolve();
+		
+		/// Virtual function for transformation to physical space.
+        virtual void v_TransCoeffToPhys();
+		
+		/// Virtual function for transformation to coefficient space.
+        virtual void v_TransPhysToCoeff();
 
         /// Virtual function for printing summary information.
         virtual void v_PrintSummary(std::ostream &out);
@@ -479,6 +491,26 @@ namespace Nektar
 
 
     /**
+     * Performs the transformation from coefficient to physical space.
+     *
+     * Public interface routine to virtual function implementation.
+     */
+    inline void EquationSystem::TransCoeffToPhys(void)
+    {
+        v_TransCoeffToPhys();
+    }
+	/**
+     * Performs the transformation from physical to coefficient space.
+     *
+     * Public interface routine to virtual function implementation.
+     */
+    inline void EquationSystem::TransPhysToCoeff(void)
+    {
+        v_TransPhysToCoeff();
+    }
+	
+	
+	/**
      * Performs the actual solve.
      *
      * Public interface routine to virtual function implementation.

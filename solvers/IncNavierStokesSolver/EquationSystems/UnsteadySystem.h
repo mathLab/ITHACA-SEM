@@ -71,6 +71,13 @@ namespace Nektar
 
         /// Sets up initial conditions.
         virtual void v_DoInitialise();
+		
+		///Transform into physical space
+		virtual void v_TransCoeffToPhys();
+
+		///Transform into coefficient space
+		virtual void v_TransPhysToCoeff();
+
 
         /// Print a summary of time stepping parameters.
         virtual void v_PrintSummary(std::ostream &out);

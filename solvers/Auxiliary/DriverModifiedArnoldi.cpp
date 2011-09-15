@@ -81,15 +81,18 @@ namespace Nektar
         cout << "=======================================================================" << endl;
 
         m_equ[m_nequ - 1]->DoInitialise();
+		
+		//FwdTrans Initial conditions to be in Coefficient Space
+		m_equ[m_nequ-1] ->TransPhysToCoeff();
 	}
     
-
+	
 	/**
 	 *
 	 */
 	void DriverModifiedArnoldi::v_Execute()
 	{
-        int nq                  = m_equ[0]->UpdateFields()[0]->GetNpoints();
+        int nq                  = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
         int ntot                = m_nfields*nq;
         int converged           = 0;
         NekDouble resnorm       = 0.0;
@@ -122,15 +125,10 @@ namespace Nektar
 		 else 
 		 {
 			cout << "\tInital vector       : random  " << endl;
+			
 			double eps=1;
-
-			 /*
-			 for (int k = 0; k < m_nfields; ++k)
-			 {
-				 Vmath::FillWhiteNoise(nq, eps, &Kseq[1][0] + k*nq, 1);
-			 } 
-			 */
-			 Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
+			 
+			Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
 			
 		}
 		
@@ -167,7 +165,7 @@ namespace Nektar
             EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
             
             // Test for convergence.
-            converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0);
+            converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0); 
             converged = max (converged, 0);
             cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
         }
@@ -244,19 +242,22 @@ namespace Nektar
     {
         // Copy starting vector into first sequence element.
         CopyArnoldiArrayToField(src);
+		
+		m_equ[0]->TransCoeffToPhys();
+		
         m_equ[0]->DoSolve();
 
         if(m_EvolutionOperator == eTransientGrowth)
         {
             Array<OneD, MultiRegions::ExpListSharedPtr> fields;
             fields = m_equ[0]->UpdateFields();
-            int ntot = fields[0]->GetNpoints();
-            for (int k=0 ; k <= m_nfields; ++k)
-            {
-                Vmath::Vcopy(ntot,  &fields[k]->GetPhys()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdatePhys()[0], 1);
-                m_equ[1]->UpdateFields()[k]->SetPhysState(true);
-            }
+            int ntot = fields[0]->GetNcoeffs();
+		
+			//start Adjoint with latest fields of direct 
+            CopyFwdToAdj();
 
+			m_equ[1]->TransCoeffToPhys();
+			
             m_equ[1]->DoSolve();
         }
 
@@ -467,18 +468,20 @@ namespace Nektar
         {
             // Converged, write out eigenvectors
             EV_big(Tseq, Kseq, ntot, kdim, icon, zvec, wr, wi);
-            int nq = m_equ[0]->UpdateFields()[0]->GetNpoints();
+            int nq = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
             Array<OneD, MultiRegions::ExpListSharedPtr> fields
                         = m_equ[0]->UpdateFields();
 
             for (int j = 0; j < icon; ++j)
             {
-                for (int i = 0; i < m_nfields; ++i)
+				for (int i = 0; i < m_nfields; ++i)
                 {
-                    Vmath::Vcopy(nq, &Kseq[j][i*nq], 1, &fields[i]->UpdatePhys()[0], 1);
+                    Vmath::Vcopy(nq, &Kseq[j][i*nq], 1, &fields[i]->UpdateCoeffs()[0], 1);
+					fields[i]->BwdTrans_IterPerExp(fields[i]->GetCoeffs(),
+												   fields[i]->UpdatePhys());
                     fields[i]->SetPhysState(true);
                 }
-
+				
                 std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(j);
 
                 m_equ[0]->WriteFld(file);

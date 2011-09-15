@@ -128,7 +128,11 @@ namespace Nektar
         virtual void v_PrintSummary(std::ostream &out);
 
         virtual void v_DoSolve(void);
-
+		
+		virtual void v_TransCoeffToPhys(void);
+		
+		virtual void v_TransPhysToCoeff(void);
+		
         virtual void v_DoInitialise(void);
 
         virtual Array<OneD, bool> v_GetSystemSingularChecks();

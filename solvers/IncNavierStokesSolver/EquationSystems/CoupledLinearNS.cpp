@@ -1291,6 +1291,31 @@ namespace Nektar
         }
     }
     
+	
+	void CoupledLinearNS::v_TransCoeffToPhys(void)
+    {
+		int nfields = m_fields.num_elements();
+		for (int k=0 ; k < nfields; ++k)
+		{
+			//Backward Transformation in physical space for time evolution
+			m_forces[k]->BwdTrans_IterPerExp(m_forces[k]->GetCoeffs(),
+										     m_forces[k]->UpdatePhys());
+			
+		}
+	}
+	
+	void CoupledLinearNS::v_TransPhysToCoeff(void)
+    {
+		int nfields = m_fields.num_elements();
+		for (int k=0 ; k < nfields; ++k)
+		{
+			//Forward Transformation in physical space for time evolution
+			m_forces[k]->FwdTrans_IterPerExp(m_forces[k]->GetPhys(),
+										     m_forces[k]->UpdateCoeffs());
+			
+		}
+	}
+	
     void CoupledLinearNS::v_DoSolve(void)
     {
         switch(m_equationType)

@@ -193,6 +193,33 @@ namespace Nektar
         }
     }
 
+	
+	void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
+	{
+		int nfields = m_fields.num_elements() - 1;
+		for (int k=0 ; k < nfields; ++k)
+		{
+			//Backward Transformation in physical space for time evolution
+			m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
+										     m_fields[k]->UpdatePhys());
+			
+		}
+	}
+	
+	void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
+	{
+		int nfields = m_fields.num_elements() - 1;
+		for (int k=0 ; k < nfields; ++k)
+		{
+			//Forward Transformation in physical space for time evolution
+			m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
+										     m_fields[k]->UpdateCoeffs());
+			
+		}
+	}
+	
+	
+	
     Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
     {
         int vVar = m_session->GetVariables().size();

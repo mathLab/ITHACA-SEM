@@ -69,6 +69,9 @@ namespace Nektar
 
         /// Copy fields to Arnoldi storage.
         void CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array);
+		
+		///Copy the  forward field to the adjoint system in transient growth calculations
+		void CopyFwdToAdj();
 
         virtual void v_InitObject();
     };

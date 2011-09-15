@@ -97,6 +97,10 @@ namespace Nektar
         ArpackSummary(cout);
         
         m_equ[m_nequ - 1]->DoInitialise();
+		
+		//FwdTrans Initial conditions to be in Coefficient Space
+		m_equ[m_nequ-1] ->TransPhysToCoeff();
+
     }
     
     void DriverArpack::ArpackSummary(std::ostream &out)
@@ -139,7 +143,7 @@ namespace Nektar
         Array<OneD, NekDouble> tmpworkd;
         bool random;
 
-        int  nq     = m_equ[0]->UpdateFields()[0]->GetNpoints(); // Number of points in the mesh
+        int  nq     = m_equ[0]->UpdateFields()[0]->GetNcoeffs(); // Number of points in the mesh
         int  n      = m_nfields*nq;    // Number of points in eigenvalue calculation
         int lworkl  = 3*m_kdim*(m_kdim+2); // Size of work array
         int       ido ;		//REVERSE COMMUNICATION parameter. At the first call must be initialised at 0
@@ -243,6 +247,9 @@ namespace Nektar
             //workd[inptr[0]-1] copied into operator fields
             CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
+
+			m_equ[0]->TransCoeffToPhys();
+
             m_equ[0]->DoSolve();
 
             if(!(cycle%m_infosteps))
@@ -253,13 +260,12 @@ namespace Nektar
 
             if(m_EvolutionOperator == eTransientGrowth)
             {
-                Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-                fields = m_equ[0]->UpdateFields();
-                for (int k=0 ; k < m_nfields; ++k)
-                {
-                    Vmath::Vcopy(nq,  &fields[k]->GetPhys()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdatePhys()[0], 1);
-                }				
-                m_equ[1]->DoSolve();
+				//start Adjoint with latest fields of direct 
+				CopyFwdToAdj();
+				
+				m_equ[1]->TransCoeffToPhys();
+				
+				m_equ[1]->DoSolve();
             }
             
             // operated fields are copied into workd[inptr[1]-1] 
@@ -284,14 +290,13 @@ namespace Nektar
         Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
 		
         ASSERTL0(info == 0, " Error with Dneupd");
-	       	
-        int nconv=iparam[4];	
+		int nconv=iparam[4];	
         Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
         cout << "Converged Eigenvalues: " << nconv << endl;
         fprintf(pFile,"Converged Eigenvalues: %d\n:",nconv);
 		
-
+		
         for(int i= 0; i< nconv; ++i)
         {
             WriteEvs(stdout,i,dr[i],di[i]);
@@ -299,12 +304,20 @@ namespace Nektar
             
             for (int k = 0; k < m_nfields; ++k)
             {
-                Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdatePhys()[0] , 1);
-                fields[k]->SetPhysState(true);
+                Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);
+				
             }
-            
+			
+			
+			for (int k = 0; k < m_nfields; ++k)
+			{
+				//Backward transformation in the physical space for plotting eigenmodes
+				fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+				fields[k]->SetPhysState(true);
+			}
+			
             std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
-
+			
             m_equ[0]->WriteFld(file);
         }
 

@@ -168,6 +168,18 @@ namespace Nektar
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
+		
+		virtual void v_TransCoeffToPhys(void)
+        {
+            ASSERTL0(false,"This method is not defined in this class");
+        }
+		
+		virtual void v_TransPhysToCoeff(void)
+        {
+            ASSERTL0(false,"This method is not defined in this class");
+        }
+		
+				
 
     private: 
     };

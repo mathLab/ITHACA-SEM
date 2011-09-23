@@ -243,12 +243,11 @@ namespace Nektar
             if (ido == 99) break;
                         
             ASSERTL0(ido == 1, "Unexpected reverse communication request.");
-
+   
             //workd[inptr[0]-1] copied into operator fields
             CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
-
-			m_equ[0]->TransCoeffToPhys();
+	    m_equ[0]->TransCoeffToPhys();
 
             m_equ[0]->DoSolve();
 
@@ -267,12 +266,12 @@ namespace Nektar
 				
 				m_equ[1]->DoSolve();
             }
-            
+        
             // operated fields are copied into workd[inptr[1]-1] 
             CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
             
         }
-		
+
         cout<< endl << "Converged in " << iparam[8] << " iterations" << endl;
 	
         ASSERTL0(info >= 0," Error with Dnaupd");
@@ -287,7 +286,8 @@ namespace Nektar
         sigmai     = 0.0;
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
-        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, 
+        	problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
 		
         ASSERTL0(info == 0, " Error with Dneupd");
 		int nconv=iparam[4];	
@@ -322,8 +322,29 @@ namespace Nektar
         }
 
         fclose (pFile);
-		
-		for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
+        
+        if(m_EvolutionOperator != eTransientGrowth)
+        {
+              cout<<"Dump eigenvector: "<<nconv-1<<endl;
+              CopyArnoldiArrayToField(z);               
+              m_equ[0]->DoSolve(); 
+
+              for (int k = 0; k < m_nfields; ++k)
+              {
+        		Vmath::Vcopy(nq, &z[k*nq+(nconv-1)*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);				
+              }			
+			
+              for (int k = 0; k < m_nfields; ++k)
+              {
+        		//Backward transformation in the physical space for plotting eigenmodes
+        		fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+        		fields[k]->SetPhysState(true);
+              } 
+        	      	
+              m_equ[0]->Output();
+        }
+        
+	for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
         {
             NekDouble vL2Error = m_equ[0]->L2Error(j,false);
             NekDouble vLinfError = m_equ[0]->LinfError(j);

@@ -1062,6 +1062,11 @@ namespace Nektar
 	    {
 	    	v_PhysDeriv_s(inarray,out_ds);
 	    }
+            void PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+            	             Array<OneD, NekDouble>& out_dn)
+            {
+            	 v_PhysDeriv_n(inarray,out_dn);
+            }
             void PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
                                       const Array<OneD, const NekDouble>& direction,
                                       Array<OneD, NekDouble> &outarray)
@@ -1469,6 +1474,9 @@ namespace Nektar
 
 	    STD_REGIONS_EXPORT virtual void v_PhysDeriv_s (const Array<OneD, const NekDouble>& inarray,
 	    	    			Array<OneD, NekDouble> &out_ds);
+
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+            	                        Array<OneD, NekDouble>& out_dn);
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0);

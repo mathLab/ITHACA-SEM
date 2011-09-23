@@ -731,7 +731,7 @@ namespace Nektar
      NekDouble EquationSystem::L2Error(unsigned int field,
                                 const Array<OneD, NekDouble> &exactsoln,
                                 bool Normalised)
-     {
+     {    	     
          NekDouble L2error = -1.0;
 
          if(m_NumQuadPointsError == 0)

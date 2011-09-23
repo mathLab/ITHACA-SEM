@@ -175,6 +175,16 @@ namespace Nektar
 	   **/
            LOCAL_REGIONS_EXPORT void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray, 
             	    Array<OneD, NekDouble> &out_ds);
+
+	   /**
+	   *\brief Evaluate the derivative normal to a line: \f$ d/dn=\frac{spacedim}{||normal||}d/d{\xi}  \f$.
+	   * The derivative is calculated performing
+	   *the product \f$ du/d{s}=\nabla u \cdot normal \f$.
+	   *\param inarray function to derive
+	   *\param out_dn result of the derivative operation 
+	   **/     
+	   LOCAL_REGIONS_EXPORT void PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+	   	    Array<OneD, NekDouble>& out_dn);
             //----------------------------
             // Evaluations Methods
             //---------------------------
@@ -383,6 +393,12 @@ namespace Nektar
 	    {
 	        PhysDeriv_s(inarray, out_ds);
 	    }
+
+            virtual void v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+            	                       Array<OneD, NekDouble> &out_dn)
+            {
+            	PhysDeriv_n(inarray,out_dn);
+            }
 	    
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,

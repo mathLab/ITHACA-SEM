@@ -71,7 +71,8 @@ namespace Nektar
 	    eX,
 	    eY,
 	    eZ,
-	    eS
+	    eS,
+	    eN
 	};	   
 
     MultiRegions::Direction const DirCartesianMap[] =

@@ -153,6 +153,11 @@ namespace Nektar
 		{
 		    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class");
 		}
+		virtual void v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+		    Array<OneD, NekDouble>& out_dn)
+		{
+		    NEKERROR(ErrorUtil::efatal,"This function is not valid in this class");
+		}
                 virtual void  v_PhysDirectionalDeriv (const Array<OneD, const NekDouble> &inarray, 
                     const Array<OneD, const NekDouble>& direction,
                     Array<OneD, NekDouble> &out)

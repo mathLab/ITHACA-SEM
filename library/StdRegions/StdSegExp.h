@@ -158,6 +158,8 @@ namespace Nektar
  
 	    STD_REGIONS_EXPORT void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
 	    	    	   Array<OneD, NekDouble> &out_ds);
+            STD_REGIONS_EXPORT void PhysDeriv_n(const Array<OneD,const NekDouble>& inarray,
+            	    	   Array<OneD, NekDouble>& out_dn);
 	    
             void PhysDeriv(const int dir, 
                            const Array<OneD, const NekDouble>& inarray,

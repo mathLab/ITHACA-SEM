@@ -557,6 +557,15 @@ namespace Nektar
 	     		 (*m_exp)[i]->PhysDeriv_s(inarray+m_phys_offset[i],e_out_ds);
 		  }	      	  
 	      }
+	      else if(edir==MultiRegions::eN)
+	      {
+	      	   Array<OneD, NekDouble > e_out_dn;
+	      	   for(i=0; i<(*m_exp).size(); i++)
+	      	   {
+	      	   	  e_out_dn = out_d +m_phys_offset[i];
+	      	   	  (*m_exp)[i]->PhysDeriv_n(inarray+m_phys_offset[i],e_out_dn);
+	      	   }
+	      }
 	      else
 	      {
 	      	 // convert enum into int
@@ -1734,7 +1743,6 @@ namespace Nektar
          */
         NekDouble ExpList::v_L2(const Array<OneD, const NekDouble> &soln)
         {
-
             NekDouble err = 0.0,errl2;
             int    i;
 
@@ -1769,7 +1777,6 @@ namespace Nektar
          */
         NekDouble ExpList::v_L2(void)
         {
-
             NekDouble err = 0.0,errl2;
             int    i;
 
@@ -2418,7 +2425,7 @@ namespace Nektar
         }
 
         void ExpList::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &kocexp)
+                    const StdRegions::StdExpansionVector &locexp)
         {
             ASSERTL0(false,
                       "This method is not defined or valid for this class type");

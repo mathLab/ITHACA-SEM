@@ -112,7 +112,6 @@ namespace Nektar
                 {
                     m_zeroMode = true;
                 }
-
                 int nz_loc = 2;
                 m_locToGloMap[0] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure,nz_loc,m_zeroMode);
             }
@@ -1239,7 +1238,7 @@ namespace Nektar
     void CoupledLinearNS::EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                             Array<OneD, Array<OneD, NekDouble> > &outarray,
                                             const NekDouble time)
-    {
+    {  	    
         // evaluate convectioln terms
         EvaluateAdvectionTerms(inarray,outarray);
         int nqtot  =m_fields[0]->GetTotPoints(); 
@@ -1299,9 +1298,9 @@ namespace Nektar
 		{
 			//Backward Transformation in physical space for time evolution
 			m_forces[k]->BwdTrans_IterPerExp(m_forces[k]->GetCoeffs(),
-										     m_forces[k]->UpdatePhys());
-			
+										     m_forces[k]->UpdatePhys());			
 		}
+		
 	}
 	
 	void CoupledLinearNS::v_TransPhysToCoeff(void)
@@ -1778,8 +1777,7 @@ namespace Nektar
     }
 
     void CoupledLinearNS::v_Output(void)
-    {
-        
+    {    
         Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
         Array<OneD, std::string> variables(m_fields.num_elements()+1);
         int i;
@@ -1791,8 +1789,9 @@ namespace Nektar
         }
         
         fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());
-        
+
         // project pressure field to velocity space
+      
         m_pressure->BwdTrans(m_pressure->GetCoeffs(), m_pressure->UpdatePhys());
         
         m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
@@ -1800,6 +1799,7 @@ namespace Nektar
   
         std::string outname = m_sessionName + ".fld";
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
+     
     }
 
 

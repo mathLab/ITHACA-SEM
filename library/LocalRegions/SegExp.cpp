@@ -496,8 +496,52 @@ namespace Nektar
             }
 
         }        
-      
-        
+
+	void SegExp::PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+				Array<OneD, NekDouble>& out_dn)
+	{
+            int    nquad0 = m_base[0]->GetNumPoints();
+            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
+            int     coordim  = m_geom->GetCoordim();
+            Array<OneD, NekDouble> out_dn_tmp(nquad0,0.0);           
+            switch(coordim)
+            {
+            case 2:
+            	    
+            	    Array<OneD, NekDouble> inarray_d0(nquad0);            
+                    Array<OneD, NekDouble> inarray_d1(nquad0);
+                    
+                    SegExp::PhysDeriv(inarray,inarray_d0,inarray_d1);                    
+                    Array<OneD, Array<OneD, NekDouble> > normals;
+                    normals = Array<OneD, Array<OneD, NekDouble> >(coordim);
+cout<<"der_n"<<endl;
+                    for(int k=0; k<coordim; ++k)
+                    {
+                    	    normals[k]= Array<OneD, NekDouble>(nquad0); 
+                    }
+                    normals = GetMetricInfo()->GetNormal();  
+		    for(int i=0; i<nquad0; i++)
+		    {
+cout<<"nx= "<<normals[0][i]<<"  ny="<<normals[1][i]<<endl;
+		    }
+                    ASSERTL0(normals!=NullNekDoubleArrayofArray, 
+                    	    "normal vectors do not exist: check if a boundary region is defined as I ");
+                    // \nabla u \cdot normal
+                    Vmath::Vmul(nquad0,normals[0],1,inarray_d0,1,out_dn_tmp,1);                   
+                    Vmath::Vadd(nquad0,out_dn_tmp,1,out_dn,1,out_dn,1);              
+                    Vmath::Zero(nquad0,out_dn_tmp,1);                  
+                    Vmath::Vmul(nquad0,normals[1],1,inarray_d1,1,out_dn_tmp,1);
+                    Vmath::Vadd(nquad0,out_dn_tmp,1,out_dn,1,out_dn,1);
+
+                    for(int i=0; i<nquad0; i++)
+                    {
+cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
+		    }
+                    
+
+            }	
+		
+        }
         void SegExp::PhysDeriv(const int dir, 
                                const Array<OneD, const NekDouble>& inarray,
                                Array<OneD, NekDouble> &outarray)

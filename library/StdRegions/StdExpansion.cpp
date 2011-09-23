@@ -241,7 +241,7 @@ namespace Nektar
         }
 
         NekDouble StdExpansion::L2()
-        {
+        {       	
             NekDouble  val;
             int     ntot = GetTotPoints();
             Array<OneD, NekDouble> wsp(ntot);
@@ -1306,6 +1306,12 @@ namespace Nektar
 
 	    void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
 	    	    		Array<OneD, NekDouble> &out_ds)
+	    {
+	    	    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+	    	    	    "local expansions");
+	    }
+	    void StdExpansion::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+	    	    		Array<OneD, NekDouble>& out_dn)
 	    {
 	    	    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
 	    	    	    "local expansions");

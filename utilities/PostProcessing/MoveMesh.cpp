@@ -17,7 +17,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-
+#include </home/andrea/Nektar++/utilities/PreProcessing/MeshConvert/Convert.h>
 
 using namespace Nektar;
 
@@ -39,55 +39,64 @@ int main(int argc, char *argv[])
     
     
     int i,j;
-    if(argc != 3)
+    if(argc != 4)
     {
-        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  \n");
+        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  changefile\n");
         exit(1);
     }
-
+//ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
     LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+            = LibUtilities::SessionReader::CreateInstance(2, argv);
     //----------------------------------------------
    
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
+    string meshfile(argv[argc-3]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //---------------------------------------------- 
-    
+
     // Also read and store the boundary conditions
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                                         ::AllocateSharedPtr(vSession,graphShPt);
     //----------------------------------------------
-     
-    // Import field file.
-    string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
-    vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
-    //----------------------------------------------
- 
+
     // Define Expansion   
     Array<OneD, MultiRegions::ExpListSharedPtr> fields;   
     int nfields;  
-/*    
-    if(boundaryConditions->GetSolverInfo("SOLVERTYPE")=="CoupledLinearisedNS")
-    {
-            //pressure is subtracted
-            //nfields = fields.num_elements()-1;
-            nfields = fielddef[0]->m_fields.size()-1;            
-    }
-    else
-    {
-*/    
-    	    //fielddef[0]->m_fields.size() can count also pressure be careful!!       	    
-            nfields = fielddef[0]->m_fields.size();       	    
-  //  }
- 
+
+    //the mesh file should have 2 component: set output fields
+    //fields has to be of the SAME dimension of the mesh (that's why there is
+    //the changefile as an input)
+    nfields=2;          
     SetFields(graphShPt,boundaryConditions,vSession,fields,nfields);
+    //---------------------------------------------------------------
+
+    
+    // store name of the file to change
+    string changefile(argv[argc-1]);
+    //----------------------------------------------
+    
+    // Import field file.
+    string fieldfile(argv[argc-2]);
+    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<vector<NekDouble> > fielddata;
+    graphShPt->Import(fieldfile,fielddef,fielddata);
+    //----------------------------------------------      
+   
+//cout<<"dim st="<<fielddef[0]->m_fields.size()<<endl;
+    //fill a vector with the streak sol
+    Array<OneD, MultiRegions::ExpListSharedPtr> streak;      
+    SetFields(graphShPt, boundaryConditions, vSession, streak, 1);        
+    for(int i = 0; i < fielddata.size(); ++i)
+    {
+         streak[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
+    }    
+    streak[0]->BwdTrans(streak[0]->GetCoeffs(), streak[0]->UpdatePhys());    
+    //------------------------------------------------    
+           
 
     //----------------------------------------------   
-     
+/*     
     // Copy data from file:fill fields with the fielddata
     for(j = 0; j < nfields; ++j)
     {
@@ -98,14 +107,14 @@ int main(int argc, char *argv[])
         fields[j]->BwdTrans(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());
     }
     //----------------------------------------------    
-   
-    // determine the I regions
+*/  
+    // determine the I regions (2 regions expected)
     //hypothesis: the number of I regions is the same for all the variables
     //hypothesis: all the I regions have the same nq points
     int nIregions, lastIregion; 
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();    
     Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
-    
+   
     nIregions=0;
     int nbnd= bndConditions.num_elements();
     for(int r=0; r<nbnd; r++)
@@ -118,10 +127,9 @@ int main(int argc, char *argv[])
     	  }    	  
     } 
     ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""I"" specified");
-  
-    //set output fields
-    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions(); 
-    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldy= fields[1]->GetBndCondExpansions();        
+   
+    //set expansion along a layers
+    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions();        
     //--------------------------------------------------------
      
     //determine the points in the lower and upper curve...
@@ -205,21 +213,23 @@ int main(int argc, char *argv[])
       for(int j=0; j<nq; j++)
       {   
       	 //u is along y in this case..    NB:streak=u+y???
-         if(xold_up[i]== x[j]  &&  (fields[1]->GetPhys()[j]+y[j]) < 0.001  && y[j]>=yold_low[i] && y[j]<=yold_up[i])
+         if(xold_up[i]== x[j]  &&  (streak[0]->GetPhys()[j]+y[j]) < 0.001  && y[j]>=yold_low[i] && y[j]<=yold_up[i])
          {
-              //if(   (fields[1]->GetPhys()[j]+y[j])< abs(u_min))
+              //if(   (streak[0]->GetPhys()[j]+y[j])< abs(u_min))
               //{
       	      y_c[i] = y[j];
       	      x_c[i] = x[j];
       	      Deltaold[i]= yold_up[i] - y_c[i];    
-      	      //u_min= (fields[1]->GetPhys()[j]+y[j]);
+      	      //u_min= (streak[0]->GetPhys()[j]+y[j]);
       	      //}
       	      
          }         	          	 
       }
       if(Deltaold[i]==-200)
       {
+             cout<<i<<"x="<<x[i]<<endl;      	      
              ASSERTL0(false, "error: cannot find a point where u=0 for this value of x=");
+
       }
 cout<<"yold_up="<<yold_up[i]<<"  y_c="<<y_c[i]<<endl;   
 cout<<"Deltaold="<<Deltaold[i]<<endl;         
@@ -270,7 +280,8 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
     }
     
     //replace the vertices with the new ones
-    Replacevertices(meshfile, xnew , ynew);
+    Replacevertices(changefile, xnew , ynew);
+    //Replacevertices(meshfile, xnew , ynew);
           	       
 }
 				
@@ -287,6 +298,7 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
 		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
 		
+		bool DeclareCoeffPhysArrays = true;		
 		int npointsX;              ///< number of points in X direction (if homogeneous)
 		int npointsY;              ///< number of points in Y direction (if homogeneous)
 		int npointsZ;              ///< number of points in Z direction (if homogeneous)		
@@ -350,43 +362,44 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 	    int i;		
 	    int expdim   = mesh->GetMeshDimension();
 	    Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);	     
+        // Continuous Galerkin projection
+
             switch(expdim)
             {
                 case 1:
                 {
-					if(HomogeneousType == eHomogeneous2D)
-					{
-						const LibUtilities::PointsKey PkeyY(npointsY,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,npointsY,PkeyY);
-						const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < Exp.num_elements(); i++)
-						{
-							Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,mesh,session->GetVariable(i));
-						}
-					}
-					else 
-					{
-						for(i = 0 ; i < Exp.num_elements(); i++)
-						{
-							Exp[i] = MemoryManager<MultiRegions::ContField1D>
-							::AllocateSharedPtr(session,mesh,
-                                                session->GetVariable(i));
-						}
-						
-					}
-					
+                    if(HomogeneousType == eHomogeneous2D)
+                    {
+                        const LibUtilities::PointsKey PkeyY(npointsY,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,npointsY,PkeyY);
+                        const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
+                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
+
+                        for(i = 0 ; i < Exp.num_elements(); i++)
+                        {
+                            Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
+                                ::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,mesh,session->GetVariable(i));
+                        }
+                    }
+                    else
+                    {
+                    	    
+                        for(i = 0 ; i < Exp.num_elements(); i++)
+                        {
+                            Exp[i] = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(session,mesh,session->GetVariable(i));
+                        }
+                    }
+
                     break;
                 }
-                case 2:
-                {                	
+            case 2:
+                {
                     if(HomogeneousType == eHomogeneous1D)
                     {
                         const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
-                        
+
                         for(i = 0 ; i < Exp.num_elements(); i++)
                         {
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
@@ -394,54 +407,50 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
                         }
                     }
                     else
-                    {                	    
-/*
-			i=0;
-			MultiRegions::ContField2DSharedPtr firstfield =
-			     MemoryManager<MultiRegions::ContField2D>
-			     ::AllocateSharedPtr(comm,*mesh2D,*boundaryConditions,i);
-			Exp[0] = firstfield;
-*/	
-                        for(i = 0 ; i < Exp.num_elements(); i++)
-                        {                          	
+                    {
+                        i = 0;
+                        MultiRegions::ContField2DSharedPtr firstfield;
+                        firstfield = MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(session,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
+
+                        Exp[0] = firstfield;
+                        for(i = 1 ; i < Exp.num_elements(); i++)
+                        {
                             Exp[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(session,
-                                                    mesh,session->GetVariable(i));
-                        }                        
+                                ::AllocateSharedPtr(*firstfield,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
+                        }
                     }
-                   
+
                     break;
                 }
                 case 3:
-                {
-					if(HomogeneousType == eHomogeneous3D)
-					{
-					    ASSERTL0(false,"3D fully periodic problems not implemented yet");	
-					}
-					else
-					{
-/*						
-						i=0;
-						MultiRegions::ContField3DSharedPtr firstfield =
-						MemoryManager<MultiRegions::ContField3D>
-						::AllocateSharedPtr(comm,*mesh3D,*boundaryConditions,i);
-						Exp[0] = firstfield;
-*/						
-						for(i = 0 ; i < Exp.num_elements(); i++)
-						{
-							Exp[i] = MemoryManager<MultiRegions::ContField3D>
-											::AllocateSharedPtr(session,
-												mesh,session->GetVariable(i));
-						}
-					}
-                    break;
-                }
+                    {
+                        if(HomogeneousType == eHomogeneous3D)
+                        {
+                            ASSERTL0(false,"3D fully periodic problems not implemented yet");
+                        }
+                        else
+                        {
+                            i = 0;
+                            MultiRegions::ContField3DSharedPtr firstfield =
+                                MemoryManager<MultiRegions::ContField3D>
+                                ::AllocateSharedPtr(session,mesh,session->GetVariable(i));
+
+                            Exp[0] = firstfield;
+                            for(i = 1 ; i < Exp.num_elements(); i++)
+                            {
+                                Exp[i] = MemoryManager<MultiRegions::ContField3D>
+                                    ::AllocateSharedPtr(*firstfield,mesh,session->GetVariable(i));
+                            }
+                        }
+                        break;
+                    }
             default:
                 ASSERTL0(false,"Expansion dimension not recognised");
                 break;
-            }              
-        }        
-        
+            }
+        }
+  
         void OrderVertices(int nedges, SpatialDomains::MeshGraphSharedPtr graphShPt,
         	MultiRegions::ExpListSharedPtr & bndfield, 
         	Array<OneD, int>& Vids, int v1,int v2, NekDouble x_connect, int & lastedge, 
@@ -574,7 +583,8 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
         
         
         void Replacevertices(string filename, Array<OneD, NekDouble> newx, Array<OneD, NekDouble> newy)
-	{     	    
+	{     
+cout<<"OOOK"<<endl;		
 	    //load existing file
             string newfile;
 	    TiXmlDocument doc(filename); 
@@ -582,7 +592,9 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 	    
             // Save a new XML file.	          
             newfile = filename.substr(0, filename.find_last_of("."))+"_moved.xml";
-            doc.SaveFile( newfile );    
+ 
+            doc.SaveFile( newfile );   
+            
             //write the new vertices
 	    TiXmlDocument docnew(newfile);  
 	    bool loadOkaynew = docnew.LoadFile();
@@ -595,7 +607,6 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 	    TiXmlNode* nodenew = NULL;
 	    TiXmlElement* meshnew = NULL;
 	    TiXmlElement* masternew = NULL;    // Master tag within which all data is contained.
-
 
       
 	    masternew = docnew.FirstChildElement("NEKTAR");
@@ -610,10 +621,12 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
 	    TiXmlElement* elementnew = meshnew->FirstChildElement("VERTEX");
 	    ASSERTL0(elementnew, "Unable to find mesh VERTEX tag in file.");
 	    TiXmlElement *vertexnew = elementnew->FirstChildElement("V");
-
+ 
+      	    
 	    int indx;
 	    int err;
 	    int nextVertexNumber = -1;	
+	    
 	    while (vertexnew)
 	    {
 	    	   nextVertexNumber++;
@@ -639,18 +652,21 @@ cout<<"id="<<i<<"  x="<<xnew[i]<<"  y="<<ynew[i]<<endl;
        	           vertexnew->RemoveChild(vertexBody);
                    //write the new one   
 cout<<"writing.. v:"<<nextVertexNumber<<endl;	    	    	
-	    	 stringstream s;
-	    	 s << std::scientific << std::setprecision(3) <<  newx[nextVertexNumber] << "   "
-                  << newy[nextVertexNumber] << "   " << 0.0;
-                 vertexnew->LinkEndChild(new TiXmlText(s.str()));      
-                  //TiXmlNode *newvertexBody = vertexnew->FirstChild();
-                  //string newvertexbodystr= newvertexBody->SetValue(s.str());                     
-                  //vertexnew->ReplaceChild(vertexBody,new TiXmlText(newvertexbodystr));
+	    	   stringstream s;
+	    	   s << std::scientific << std::setprecision(3) <<  newx[nextVertexNumber] << "   "
+	    	   << newy[nextVertexNumber] << "   " << 0.0;
+	    	   vertexnew->LinkEndChild(new TiXmlText(s.str()));      
+	    	   //TiXmlNode *newvertexBody = vertexnew->FirstChild();
+	    	   //string newvertexbodystr= newvertexBody->SetValue(s.str());                     
+	    	   //vertexnew->ReplaceChild(vertexBody,new TiXmlText(newvertexbodystr));
 	    	 
-       	         vertexnew = vertexnew->NextSiblingElement("V");  
-       	    }	
-       	    meshnew->LinkEndChild(elementnew);
+	    	   vertexnew = vertexnew->NextSiblingElement("V");  
+       	   }	
+       	    //meshnew->LinkEndChild(elementnew);
+
+   	    
        	    docnew.SaveFile( newfile ); 
-       	    cout<<"new file:"<<newfile<<endl;
+       	    
+       	    cout<<"new file:  "<<newfile<<endl;
 	   
 	}

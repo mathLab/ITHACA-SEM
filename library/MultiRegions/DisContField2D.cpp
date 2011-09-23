@@ -314,7 +314,7 @@ namespace Nektar
                                                                 const SpatialDomains::BoundaryConditions &bcs,
                                                                 const std::string &variable,
                                                                 const bool DeclareCoeffPhysArrays)
-        {
+        {  	
             int i,cnt  = 0;
             SpatialDomains::BoundaryConditionShPtr locBCond;
             MultiRegions::ExpList1DSharedPtr       locExpList;
@@ -341,7 +341,6 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = GetBoundaryCondition(bconditions, i, variable);
-
                 if(locBCond->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
@@ -360,8 +359,9 @@ namespace Nektar
                     m_bndConditions[cnt]    = locBCond;
                     string type =m_bndConditions[cnt++]->GetUserDefined().GetEquation();                  
             	    if((type== "I")||(type=="CalcBC"))
-                    {    
-                  	  locExpList->SetUpPhysTangents(*m_exp);                  	  
+                    {                        	    
+                  	  locExpList->SetUpPhysTangents(*m_exp);               	  
+		          locExpList->SetUpPhysNormals(*m_exp);		                  	  
                     }                    
                 }
             }

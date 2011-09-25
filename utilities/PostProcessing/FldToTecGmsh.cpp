@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
-				Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,graphShPt);
+                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,graphShPt,fielddef[0]->m_fields[0]);
                 Exp[0] = Exp3DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
             else
             {
                 MultiRegions::ExpList2DSharedPtr Exp2D;
-                Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
+                Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt,true,fielddef[0]->m_fields[0]);
                 Exp[0] =  Exp2D;
 
                 for(i = 1; i < nfields; ++i)

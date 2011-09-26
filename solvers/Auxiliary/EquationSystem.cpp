@@ -1743,10 +1743,10 @@ namespace Nektar
             {
                 // Could do a search here to find correct variable
                 FieldDef[i]->m_fields.push_back(variables[j]);
+//cout<<"v="<<variables[j]<<endl;                
                 field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
-            }
+            }            
         }
-
         m_graph->Write(outname,FieldDef,FieldData);
 
     }

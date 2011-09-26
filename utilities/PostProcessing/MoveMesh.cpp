@@ -17,7 +17,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include </PreProcessing/MeshConvert/Convert.h>
+//#include </PreProcessing/MeshConvert/Convert.h>
 
 using namespace Nektar;
 

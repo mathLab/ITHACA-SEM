@@ -1799,7 +1799,6 @@ namespace Nektar
   
         std::string outname = m_sessionName + ".fld";
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
-     
     }
 
 

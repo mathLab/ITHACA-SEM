@@ -447,6 +447,53 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
+			case eRungeKutta2_ModifiedEuler:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 2;
+					
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+					
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 0.5);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 0.5);
+					
+                    m_A[0][1][0] = 0.5;
+                    
+                    m_B[0][0][1] = 1.0;
+                    
+					
+                    m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+				break;
+			case eRungeKutta2_ImprovedEuler:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 2;
+					
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+					
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.5);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+					
+                    m_A[0][1][0] = 1.0;
+			
+                    m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+				break;
             case eDIRKOrder2:
                 {
                     m_numsteps = 1;

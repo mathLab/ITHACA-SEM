@@ -74,7 +74,9 @@ namespace Nektar
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
             eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
 			eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
-            eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme
+            eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme 4th order explicit
+			eRungeKutta2_ModifiedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
+			eRungeKutta2_ImprovedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
             eForwardEuler,                    //!< Forward euler scheme
             eBackwardEuler,                   //!< Backward euler scheme
             eIMEXOrder1,                      //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
@@ -96,7 +98,9 @@ namespace Nektar
             "AdamsMoultonOrder1",           
             "AdamsMoultonOrder2",
 			"BDFImplicitOrder2",
-            "ClassicalRungeKutta4",           
+            "ClassicalRungeKutta4",
+			"RungeKutta2_ModifiedEuler",
+			"RungeKutta2_ImprovedEuler",
             "ForwardEuler",                    
             "BackwardEuler",                  
             "IMEXOrder1",

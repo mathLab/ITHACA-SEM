@@ -200,14 +200,11 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-            if(m_FourierSpace != eCoef)
-            {
-                HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
-            }
+			HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
 
             for(n = 0; n < nhom_modes; ++n)
             {
-                beta = 2*M_PI*(n/2)/m_lhom;
+				beta = 2*M_PI*(n/2)/m_lhom;
                 m_planes[n]->HelmSolve(fce + cnt,
                                        e_out = outarray + cnt1,
                                        lambda + beta*beta,UseContCoeffs,

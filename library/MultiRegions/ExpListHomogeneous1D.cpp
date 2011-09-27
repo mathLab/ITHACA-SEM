@@ -58,8 +58,13 @@ namespace Nektar
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
                      "Homogeneous Basis is a null basis");
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
-
+			
             int nzplanes = m_homogeneousBasis->GetNumPoints();
+			
+			const LibUtilities::PointsKey Ppad(2*nzplanes,LibUtilities::eFourierEvenlySpaced);
+			const LibUtilities::BasisKey  Bpad(LibUtilities::eFourier,2*nzplanes,Ppad);
+			
+			m_paddingBasis = LibUtilities::BasisManager()[Bpad];
 
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
             
@@ -104,6 +109,72 @@ namespace Nektar
             // Backwards trans
             Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
         }
+		
+		void ExpListHomogeneous1D::v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		{
+			
+			// outarray entering in physical space
+			// it must go out in physical space too
+			
+			int npoints  = outarray.num_elements(); // number of total physical points
+			int nplanes  = m_planes.num_elements(); // number of planes == number of Fourier modes = number of Fourrier coeff
+			int npencils = npoints/nplanes;         // number of pencils = numebr of physical points per plane
+			
+			Array<OneD, NekDouble> tmparray(npoints);
+			Array<OneD, NekDouble> tmp(npoints);
+			
+			/////////////////////////////////////////////////////////////////////////////
+			// Creating the padded Fourire system (2 times the original one)
+			// later we can use the 3/2 rules
+			
+			DNekMatSharedPtr    MatFwd;
+			
+			StdRegions::StdSegExp StdSeg(m_paddingBasis->GetBasisKey());
+			
+			StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,StdSeg.DetExpansionType(),StdSeg);
+			
+			MatFwd = StdSeg.GetStdMatrix(matkey);
+			
+			Array<OneD, NekDouble> physpad(2*nplanes,0.0);
+			Array<OneD, NekDouble> coefpad(2*nplanes,0.0);
+			
+			NekVector<const NekDouble> in (1,physpad,eWrapper);
+			NekVector<      NekDouble> out(1,coefpad,eWrapper);
+			
+			// Shuffle to have the nplanes Fourier points is a row,
+			// for each one of the 2D expansion physical point
+			
+			ShuffleIntoHomogeneous1DClosePacked(outarray,tmparray,false);
+			
+			for(int i = 0 ; i< npencils ; i++)
+			{
+				// copying the physical point of one fourier exapnsion in physpas
+				// which  is 2*nplanes long, the last nplanes entry are zero
+				
+				Vmath::Vcopy(nplanes,&(tmparray[i*nplanes]),1,&(physpad[0]),1);
+				
+				// trasforming the physpad vector in coefficient space using 
+				// the extended system for the padding
+				
+				out = (*MatFwd)*in;
+				
+				// copying the first half of the coefficient in temparray
+				// so we dump the extra coefficient
+				
+				Vmath::Vcopy(nplanes,&(coefpad[0]),1,&(tmparray[i*nplanes]),1);
+			}
+			
+			// reordering the degrees of freedom in the original fromat
+			
+			UnshuffleFromHomogeneous1DClosePacked(tmparray,tmp,false);
+			
+			// now we are in pysical space for the spectral element part and coefficient space
+			// for the Fourier part. We need to BwdTrans the Fourier part to have outarray in physical space
+			
+			HomogeneousBwdTrans(tmp,outarray,UseContCoeffs);
+			/////////////////////////////////////////////////
+			// outarray is in physical space and dealised
+		}
 
         void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
@@ -126,10 +197,8 @@ namespace Nektar
                     cnt1  += m_planes[n]->GetNcoeffs();
                 }
             }
-            if(m_FourierSpace != eCoef)
-            {
-                HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
-            }
+            
+            HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
         }
 
         void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -153,10 +222,7 @@ namespace Nektar
                 cnt1   += m_planes[n]->GetTotPoints();
             }
 			
-            if(m_FourierSpace != eCoef)
-            {
-                HomogeneousBwdTrans(outarray,outarray);
-            }
+			HomogeneousBwdTrans(outarray,outarray);
         }
 
 
@@ -584,9 +650,9 @@ namespace Nektar
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
 			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
 			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
-			NekDouble k;                           //wave number
 			
 			Array<OneD, NekDouble> temparray(nT_pts);
+			Array<OneD, NekDouble> outarray(nT_pts);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
 			Array<OneD, NekDouble> tmp3;
@@ -596,27 +662,16 @@ namespace Nektar
 				m_planes[i]->PhysDeriv( tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
 			}
 			
-			if(m_FourierSpace != eCoef)
+			StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
+			
+			ShuffleIntoHomogeneous1DClosePacked(inarray,temparray,false);
+			
+			for(int i = 0; i < nP_pts; i++)
 			{
-				HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
-				
-				for( int i=0 ; i<nF_pts/2 ; i++ )
-				{
-					k = i;
-					Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
-				}
-				
-				HomogeneousBwdTrans(temparray,out_d2,UseContCoeffs);
+				StdSeg.PhysDeriv(tmp1 = temparray + i*nF_pts, tmp2 = outarray + i*nF_pts);
 			}
-			else 
-			{
-				for( int i=0 ; i<nF_pts/2 ; i++ )
-				{
-					k = i;
-					Vmath::Smul(2*nP_pts,k,tmp1 = inarray + (i*2*nP_pts),1,tmp2 = out_d2 + (i*2*nP_pts),1);
-				}
-			}
-
+			
+			UnshuffleFromHomogeneous1DClosePacked(outarray,out_d2,false);
 		}
 		
 		void ExpListHomogeneous1D::v_PhysDeriv(Direction edir,
@@ -627,11 +682,11 @@ namespace Nektar
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
 			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
 			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
-			NekDouble k;                           //wave number
 			//convert enum into int
 			int dir= (int)edir;
 			
 			Array<OneD, NekDouble> temparray(nT_pts);
+			Array<OneD, NekDouble> outarray(nT_pts);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
             
@@ -644,26 +699,18 @@ namespace Nektar
 			}
 			else
 			{
-				if(m_FourierSpace != eCoef)
-				{
-					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
-                                
-			        for( int i=0 ; i<nF_pts/2 ; i++ )
-			        {
-						k = i;
-						Vmath::Smul(2*nP_pts,k,tmp1 = temparray + (i*2*nP_pts),1,tmp2 = temparray + (i*2*nP_pts),1);
-					}
+				Array<OneD, NekDouble> outarray(nT_pts);
 				
-					HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
-				}
-				else
+				StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
+				
+				ShuffleIntoHomogeneous1DClosePacked(inarray,temparray,false);
+				
+				for(int i = 0; i < nP_pts; i++)
 				{
-					for( int i=0 ; i<nF_pts/2 ; i++ )
-			        {
-						k = i;
-						Vmath::Smul(2*nP_pts,k,tmp1 = inarray + (i*2*nP_pts),1,tmp2 = out_d + (i*2*nP_pts),1);
-					}
+					StdSeg.PhysDeriv(tmp1 = temparray + i*nF_pts, tmp2 = outarray + i*nF_pts);
 				}
+				
+				UnshuffleFromHomogeneous1DClosePacked(outarray,out_d,false);
 			}
 		}
         

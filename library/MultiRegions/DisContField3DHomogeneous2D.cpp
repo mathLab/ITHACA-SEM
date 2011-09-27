@@ -160,7 +160,7 @@ namespace Nektar
 			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
 			
 			m_bndConditions = m_lines[0]->UpdateBndConditions();
-            
+
             for(i = 0; i < nbnd; ++i)
             {
                 for(n = 0; n < nlines; ++n)
@@ -229,11 +229,8 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-			if(m_FourierSpace != eCoef)
-			{
-				HomogeneousFwdTrans(inarray,fce);
-			}
-
+			HomogeneousFwdTrans(inarray,fce);
+			
             for(n = 0; n < nhom_modes_z; ++n)
             {
 				for(m = 0; m < nhom_modes_y; ++m)

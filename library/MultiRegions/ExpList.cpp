@@ -2226,6 +2226,12 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
 		}
 		
+		void ExpList::v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
 		
 		void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
 									const Array<OneD, NekDouble> &TotField, 

@@ -92,6 +92,8 @@ namespace Nektar
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+			
+			inline void Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous1DClosePacked(
                               const Array<OneD, const NekDouble> &inarray,
@@ -134,6 +136,7 @@ namespace Nektar
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
             LibUtilities::BasisSharedPtr    m_homogeneousBasis;
+			LibUtilities::BasisSharedPtr    m_paddingBasis;
             NekDouble                       m_lhom;  ///< Width of homogeneous direction
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
@@ -190,6 +193,8 @@ namespace Nektar
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
+			virtual void v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+			
 			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
 									 Array<OneD, NekDouble> &out_d0,
 									 Array<OneD, NekDouble> &out_d1, 
@@ -204,16 +209,6 @@ namespace Nektar
                 return GetPlane(n);
             }
 
-            virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
-            {
-                Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
-            }
-            
-            virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
-            {
-                Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
-            }
-
         private:
         };
 
@@ -226,6 +221,11 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
         }
+		
+		inline void ExpListHomogeneous1D::Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		{
+			v_Dealiasing(outarray,UseContCoeffs);
+		}
 
     } //end of namespace
 } //end of namespace

@@ -354,6 +354,8 @@ namespace Nektar
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs = false);
 			
+			inline void Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+			
 			inline void GetBCValues(Array<OneD, NekDouble> &BndVals, 
 									const Array<OneD, NekDouble> &TotField, 
 									int BndID);
@@ -740,16 +742,6 @@ namespace Nektar
                 return v_GetPlane(n);
             }
 
-            inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
-            {
-                v_Homogeneous1DFwdTrans(inarray,outarray,UseContCoeffs);
-            }
-
-            inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
-            {
-                v_Homogeneous1DBwdTrans(inarray,outarray,UseContCoeffs);
-            }
-
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
@@ -1078,6 +1070,8 @@ namespace Nektar
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
+			virtual void v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+			
 			virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
 									   const Array<OneD, NekDouble> &TotField, 
 									   int BndID);
@@ -1162,19 +1156,6 @@ namespace Nektar
             }
 
             virtual boost::shared_ptr<ExpList> &v_GetPlane(int n);
-
-            virtual void v_Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
-            {
-                ASSERTL0(false,
-                         "This method is not defined or valid for this class type");
-            }
-            
-            virtual void v_Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false)
-            {
-                ASSERTL0(false,
-                         "This method is not defined or valid for this class type");
-            }
-
         };
 
 
@@ -1573,6 +1554,14 @@ namespace Nektar
 												   bool UseContCoeffs)
 		{
 			v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		{
+			v_Dealiasing(outarray,UseContCoeffs);
 		}
 		
 		/**

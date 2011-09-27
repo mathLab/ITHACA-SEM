@@ -139,11 +139,8 @@ namespace Nektar
                     cnt1  += m_lines[n]->GetNcoeffs();
                 }
             }
-
-			if(m_FourierSpace != eCoef)
-			{
-				HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
-			}
+			
+			HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
         }
 
         void ExpListHomogeneous2D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -166,11 +163,8 @@ namespace Nektar
                 }
                 cnt1   += m_lines[n]->GetTotPoints();
             }
-			
-			if(m_FourierSpace != eCoef)
-			{
-				HomogeneousBwdTrans(outarray,outarray);
-			}
+
+			HomogeneousBwdTrans(outarray,outarray);
         }
 
 
@@ -248,8 +242,6 @@ namespace Nektar
 				Transpose(fft_out,fft_in,false);
 				
 				UnshuffleFromHomogeneous2DClosePacked(fft_in,outarray,false);
-				
-				
 			}
 			else 
 			{
@@ -642,58 +634,30 @@ namespace Nektar
 			int nyzlines      = m_lines.num_elements();   //number of Fourier points in the Fourier directions (nF_pts)
 			int npoints       = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line (nT_pts)
 			int n_points_line = npoints/nyzlines;         //number of points per line 
-			NekDouble ky,kz;                              //wave numbers in y & z direction
 			
 			Array<OneD, NekDouble> temparray(npoints);
 			Array<OneD, NekDouble> temparray1(npoints);
 			Array<OneD, NekDouble> temparray2(npoints);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
+			Array<OneD, NekDouble> tmp3;
 			
 			for( int i=0 ; i<nyzlines ; i++ )
 			{
 				m_lines[i]->PhysDeriv( tmp1 = inarray + i*n_points_line ,tmp2 = out_d0 + i*n_points_line);
 			}
 			
-			if(m_FourierSpace != eCoef)
+			StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
+			
+			ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
+			
+			for(int i = 0; i < n_points_line; i++)
 			{
-				HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
-			
-				for(int i=0 ; i<m_ny/2 ; i++)
-				{
-					ky = i;
-					for (int j=0 ; j<m_nz; j++)
-					{
-						Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray1+(i*2*n_points_line+j*m_ny*n_points_line),1);
-					}
-				}
-			
-				for( int i=0 ; i<m_nz/2 ; i++ )
-				{
-					kz = i;
-					Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray2 + (i*2*n_points_line*m_ny),1);
-				}
-			
-				HomogeneousBwdTrans(temparray1,out_d1,UseContCoeffs);
-				HomogeneousBwdTrans(temparray2,out_d2,UseContCoeffs);
+				StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
 			}
-			else 
-			{
-				for(int i=0 ; i<m_ny/2 ; i++)
-				{
-					ky = i;
-					for (int j=0 ; j<m_nz; j++)
-					{
-						Vmath::Smul(2*n_points_line,ky,tmp1= inarray + (i*2*n_points_line+j*m_ny*n_points_line),1,tmp2 = out_d1 + (i*2*n_points_line+j*m_ny*n_points_line),1);
-					}
-				}
-				
-				for( int i=0 ; i<m_nz/2 ; i++ )
-				{
-					kz = i;
-					Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = inarray + (i*2*n_points_line*m_ny),1,tmp2 = out_d2 + (i*2*n_points_line*m_ny),1);
-				}
-			}
+			
+			UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d1,false);
+			UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d2,false);
 
 		}
 		
@@ -705,13 +669,15 @@ namespace Nektar
 			int nyzlines      = m_lines.num_elements();   //number of Fourier points in the Fourier directions (nF_pts)
 			int npoints       = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line (nT_pts)
 			int n_points_line = npoints/nyzlines;         //number of points per line 
-			NekDouble ky,kz;                              //wave numbers in y & z direction
 			//convert enum into int
 			int dir = (int)edir;
 			
 			Array<OneD, NekDouble> temparray(npoints);
+			Array<OneD, NekDouble> temparray1(npoints);
+			Array<OneD, NekDouble> temparray2(npoints);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
+			Array<OneD, NekDouble> tmp3;
 			
 			if (dir < 1)
 			{
@@ -722,54 +688,23 @@ namespace Nektar
 			}
 			else
 			{
-				if(m_FourierSpace != eCoef)
-				{
-					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+				StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
 				
-					if(dir == 1)
-					{
-						for(int i=0 ; i<m_ny/2 ; i++)
-						{
-							ky = i;
-							for (int j=0 ; j<m_nz; j++)
-							{
-								Vmath::Smul(2*n_points_line,ky,tmp1=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=temparray+(i*2*n_points_line+j*m_ny*n_points_line),1);
-							}
-						}
-					}
-					else 
-					{
-						for( int i=0 ; i<m_nz/2 ; i++ )
-						{
-							kz = i;
-							Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = temparray + (i*2*n_points_line*m_ny),1,tmp2 = temparray + (i*2*n_points_line*m_ny),1);
-						}
-					}
-					HomogeneousBwdTrans(temparray,out_d,UseContCoeffs);
+				ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
+				
+				for(int i = 0; i < n_points_line; i++)
+				{
+					StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
+				}
+				
+				if (dir == 1)
+				{
+					UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d,false);
 				}
 				else 
 				{
-					if(dir == 1)
-					{
-						for(int i=0 ; i<m_ny/2 ; i++)
-						{
-							ky = i;
-							for (int j=0 ; j<m_nz; j++)
-							{
-								Vmath::Smul(2*n_points_line,ky,tmp1=inarray+(i*2*n_points_line+j*m_ny*n_points_line),1,tmp2=out_d+(i*2*n_points_line+j*m_ny*n_points_line),1);
-							}
-						}
-					}
-					else 
-					{
-						for( int i=0 ; i<m_nz/2 ; i++ )
-						{
-							kz = i;
-							Vmath::Smul(2*n_points_line*m_ny,kz,tmp1 = inarray + (i*2*n_points_line*m_ny),1,tmp2 = out_d + (i*2*n_points_line*m_ny),1);
-						}
-					}
+					UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d,false);
 				}
-
 			}
 		}
 		

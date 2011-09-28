@@ -37,7 +37,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <LibUtilities/Linearalgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <UnitTests/LibUtilities/ExpressionTemplates/CountedObjectExpression.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <ExpressionTemplates/Node.hpp>

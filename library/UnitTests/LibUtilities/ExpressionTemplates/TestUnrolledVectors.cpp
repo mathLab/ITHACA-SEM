@@ -50,6 +50,25 @@ namespace Nektar
 {
     namespace UnitTests
     {
+        BOOST_AUTO_TEST_CASE(Test2VectorUnrolled)
+        {
+            typedef NekVector<NekDouble> Vector;
+
+            double buf1[] = {1.0, 2.0, 3.0, 4.0};
+            double buf2[] = {5.0, 6.0, 7.0, 8.0};
+            
+            Vector v1(4, buf1);
+            Vector v2(4, buf2);
+            
+            Vector result = v1+v2;
+
+            double expectedResultBuf[] = {1.0 + 5.0,
+                2.0 + 6.0, 3.0 + 7.0, 4.0 + 8.0};
+            Vector expectedResult(4, expectedResultBuf);
+            
+            BOOST_CHECK_EQUAL(result, expectedResult);
+        }
+
         BOOST_AUTO_TEST_CASE(Test3VectorUnrolled)
         {
             typedef NekVector<NekDouble> Vector;
@@ -71,25 +90,48 @@ namespace Nektar
             BOOST_CHECK_EQUAL(result, expectedResult);
         }
 
-        BOOST_AUTO_TEST_CASE(Test3VectorUnrolledWithSubtraction)
+            BOOST_AUTO_TEST_CASE(Test4VectorUnrolled)
         {
             typedef NekVector<NekDouble> Vector;
 
             double buf1[] = {1.0, 2.0, 3.0, 4.0};
             double buf2[] = {5.0, 6.0, 7.0, 8.0};
             double buf3[] = {9.0, 10.0, 11.0, 12.0};
+            double buf4[] = {13.0, 14.0, 15.0, 16.0};
 
             Vector v1(4, buf1);
             Vector v2(4, buf2);
             Vector v3(4, buf3);
+            Vector v4(4, buf4);
 
-            Vector result = v1+v2-v3;
+            Vector result = v1+v2+v3+v4;
 
-            double expectedResultBuf[] = {1.0 + 5.0 - 9.0,
-                2.0 + 6.0 - 10.0, 3.0 + 7.0 - 11.0, 4.0 + 8.0 - 12.0};
+            double expectedResultBuf[] = {1.0 + 5.0 + 9.0+13.0,
+                2.0 + 6.0 + 10.0+14.0, 3.0 + 7.0 + 11.0+15.0, 4.0 + 8.0 + 12.0+16.0};
             Vector expectedResult(4, expectedResultBuf);
             
             BOOST_CHECK_EQUAL(result, expectedResult);
         }
+
+        //BOOST_AUTO_TEST_CASE(Test3VectorUnrolledWithSubtraction)
+        //{
+        //    typedef NekVector<NekDouble> Vector;
+
+        //    double buf1[] = {1.0, 2.0, 3.0, 4.0};
+        //    double buf2[] = {5.0, 6.0, 7.0, 8.0};
+        //    double buf3[] = {9.0, 10.0, 11.0, 12.0};
+
+        //    Vector v1(4, buf1);
+        //    Vector v2(4, buf2);
+        //    Vector v3(4, buf3);
+
+        //    Vector result = v1+v2-v3;
+
+        //    double expectedResultBuf[] = {1.0 + 5.0 - 9.0,
+        //        2.0 + 6.0 - 10.0, 3.0 + 7.0 - 11.0, 4.0 + 8.0 - 12.0};
+        //    Vector expectedResult(4, expectedResultBuf);
+        //    
+        //    BOOST_CHECK_EQUAL(result, expectedResult);
+        //}
     }
 }

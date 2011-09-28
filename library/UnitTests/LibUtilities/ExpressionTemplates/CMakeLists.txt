@@ -3,14 +3,21 @@ SET(TARGET_NAME ExpressionTemplateUnitTests)
 
 SET(Sources 
     main.cpp 
+    TestAliasing.cpp
+    TestAssociativeTransform.cpp
+    TestAssociativeTreeTransform.cpp
     TestComplicatedMatrixExpressions.cpp
+    TestCoupledLinearNSError.cpp
+    TestDotProduct.cpp
+    TestTemporaryCount.cpp
     TestTwoParameters.cpp 
     TestThreeParameters.cpp
     TestFourParameters.cpp 
     TestConstantConstantTree.cpp
-    TestAliasing.cpp
     TestMatrixBlasOptimizations.cpp
     TestMatrixBufferSize.cpp 
+    TestNode.cpp
+    TestRemoveUnecessaryTemporaries.cpp
     TestTraits.cpp
     TestUnrolledVectors.cpp
     ../../util.cpp
@@ -18,6 +25,7 @@ SET(Sources
 
 SET(Headers
     CountedObjectExpression.h
+    ExpressionTemplateObjects.h
 	../../util.h
 )
 

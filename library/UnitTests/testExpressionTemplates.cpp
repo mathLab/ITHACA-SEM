@@ -128,8 +128,8 @@
 //
 //            // Unary
 ////             NekMatrix<double> m1(3,3);
-////             Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> > m1_exp = 
-////                 Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, NegateOp> >(
+////             Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, expt::NegateOp> > m1_exp = 
+////                 Expression<UnaryExpressionPolicy<Expression<ConstantExpressionPolicy<NekMatrix<double> > >, expt::NegateOp> >(
 ////                 Expression<ConstantExpressionPolicy<NekMatrix<double> > >(m1));
 ////             BOOST_CHECK_EQUAL(m1.GetRows(), m1_exp.GetMetadata().Rows);
 ////             BOOST_CHECK_EQUAL(m1.GetColumns(), m1_exp.GetMetadata().Columns);
@@ -159,7 +159,7 @@
 // 
 //             typedef ConstantExpressionPolicy<NekMatrix<unsigned int> > LhsPolicy;
 //             typedef ConstantExpressionPolicy<NekMatrix<unsigned int> > RhsPolicy;
-//             typedef BinaryExpressionPolicy<LhsPolicy, AddOp, RhsPolicy> BinaryPolicy;
+//             typedef BinaryExpressionPolicy<LhsPolicy, expt::AddOp, RhsPolicy> BinaryPolicy;
 //             
 //             BinaryPolicy::DataType d(m1, m2);
 //             Expression<BinaryPolicy> bexp(d);

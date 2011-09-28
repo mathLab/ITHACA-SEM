@@ -27,69 +27,43 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
+#ifndef EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
+#define EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
 
 #include <ExpressionTemplates/Node.hpp>
 #include <ExpressionTemplates/Operators.hpp>
 #include <boost/type_traits.hpp>
 
-namespace Nektar
+namespace expt
 {
 
-    /// \brief A traits class to indicate if an expression is associative or not.
+    /// \brief Traits class indicating whether an operator is associative.
     ///
-    /// Given an expression T1 Op1 (R Op2 X), if AssociativeTraits inherits from 
-    /// boost::true_type then this expression can be rewritten as 
-    /// (T1 Op1 R) Op2 X, otherwise it can't be rewritten.
+    /// Given an expression T1 Op1 (T2 Op2 X), where T1 and T2 are data types
+    /// in an expression, Op1 and Op2 are the operators in the expression, and
+    /// X is an arbitrary expression, AssociativeTraits initicates whether
+    /// the expression can be rewritten using the associative property.  If
+    /// it can, then the expression T1 Op1 (T2 Op2 X) can be rewritten as
+    /// (T1 Op1 T2) Op2 X.
     ///
-    /// For example, the matrix expression M1 + (M2 + M3) can be rewritten as 
-    /// (M1 + M2) + M3.
-    template<typename T1, typename Op1, typename R, typename Op2>
+    /// This traits defaults to false.  The class should be specialized for
+    /// all combinations of operators and data types that are associative.
+    template<typename T1, typename Op1, typename T2, typename Op2>
     struct AssociativeTraits : public boost::false_type
     {
     };
 
     /// \brief Specialization indicating multiplication is usually associative.
     template<typename T1, typename T2>
-    struct AssociativeTraits<T1, MultiplyOp, T2, MultiplyOp> : public boost::true_type
+    struct AssociativeTraits<T1, expt::MultiplyOp, T2, expt::MultiplyOp> : public boost::true_type
     {
     };
 
     /// \brief Specialization indicating addition is usually associative.
     template<typename T1, typename T2>
-    struct AssociativeTraits<T1, AddOp, T2, AddOp> : public boost::true_type
-    {
-    };
-
-
-    template<typename NodeType>
-    struct TreeIsAssociative;// : public boost::false_type {};
-
-    template<typename L, typename RootOp, typename R1, typename ROp>
-    struct TreeIsAssociative<Node<L, RootOp, Node<R1, ROp, void> > > : public boost::true_type
-    {
-    };
-
-    template<typename L, typename RootOp, typename R1>
-    struct TreeIsAssociative<Node<L, RootOp, Node<R1, void, void> > > : public boost::true_type
-    {
-    };
-
-    template<typename L, typename RootOp, typename R1, typename ROp, typename R2>
-    struct TreeIsAssociative<Node<L, RootOp, Node<R1, ROp, R2> > > :
-        public boost::mpl::if_
-        <
-            boost::mpl::and_
-            <
-                AssociativeTraits<typename L::ResultType, RootOp, typename R1::ResultType, ROp>,
-                TreeIsAssociative<Node<R1, ROp, R2> >
-            >,
-            boost::true_type,
-            boost::false_type
-        >::type
+    struct AssociativeTraits<T1, expt::AddOp, T2, expt::AddOp> : public boost::true_type
     {
     };
 }
 
-#endif //NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
+#endif //EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP

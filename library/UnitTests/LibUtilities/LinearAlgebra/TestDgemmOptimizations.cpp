@@ -82,8 +82,8 @@ namespace Nektar
         NekMatrix<double> C(2, 2, cbuf);
         
         #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-        typedef Node<NekMatrix<double>, void, void> NodeType;
-        typedef Node<NodeType, MultiplyOp, NodeType> LhsType;
+        typedef expt::Node<NekMatrix<double>, void, void> NodeType;
+        typedef expt::Node<NodeType, expt::MultiplyOp, NodeType> LhsType;
         BOOST_MPL_ASSERT(( IsDgemmLeftSide<LhsType> ));
         BOOST_MPL_ASSERT(( IsDgemmRightSide<NodeType> ));
         #endif

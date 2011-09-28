@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
+#include <ExpressionTemplates/CommutativeTraits.hpp>
 
 namespace Nektar
 {
@@ -569,5 +570,17 @@ namespace Nektar
        return result;
     }
 }
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+namespace expt
+{
+    template<typename LhsDataType, typename LhsMatrixType,
+        typename RhsDataType, typename VectorType, typename VectorSpace>
+    struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
+        expt::MultiplyOp, Nektar::NekVector<RhsDataType, VectorType, VectorSpace> > : public boost::false_type
+    {
+    };
+}
+#endif
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_VECTOR_MULTIPLICATION_HPP

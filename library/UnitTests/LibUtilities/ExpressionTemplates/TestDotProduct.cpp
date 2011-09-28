@@ -27,6 +27,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
+// Description:
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -40,42 +42,24 @@
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <UnitTests/CountedObject.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
 {
-    
-    BOOST_AUTO_TEST_CASE(TestVectorUnrolling)
+
+
+    BOOST_AUTO_TEST_CASE(TestDotProduct)
     {
-        typedef expt::Node< NekVector<double> > ConstantNode;
-        BOOST_MPL_ASSERT(( expt::NodeCanUnroll<ConstantNode> ));
+        double v1_buf[] = {1.0, 2.0, 3.0};
+        double v2_buf[] = {4.0, 5.0, 6.0};
+        double v3_buf[] = {7.0, 8.0, 9.0};
 
-        typedef expt::Node< double > ConstantDoubleNode;
-        BOOST_MPL_ASSERT(( boost::mpl::not_<expt::NodeCanUnroll<ConstantDoubleNode> > ));
+        NekVector<double> v1(3, v1_buf);
+        NekVector<double> v2(3, v2_buf);
+        NekVector<double> v3(3, v3_buf);
 
-        typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> AddNode;
-        BOOST_MPL_ASSERT(( expt::NodeCanUnroll<AddNode> ));
-
-        typedef expt::Node<ConstantNode, expt::SubtractOp, ConstantNode> SubtractNode;
-        BOOST_MPL_ASSERT(( expt::NodeCanUnroll<SubtractNode> ));
-
-        typedef expt::Node<AddNode, expt::SubtractOp, AddNode> TwoLevelNode;
-        BOOST_MPL_ASSERT(( expt::NodeCanUnroll<TwoLevelNode> ));
-
-        typedef expt::Node<ConstantNode, expt::MultiplyOp, ConstantNode> MultiplyNode;
-        BOOST_MPL_ASSERT(( boost::mpl::not_<expt::NodeCanUnroll<MultiplyNode> > ));
+        double result = Dot(v1, v2+v3);
+        BOOST_CHECK_EQUAL(result, (7+4) + (8+5)*2 + (6+9)*3);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

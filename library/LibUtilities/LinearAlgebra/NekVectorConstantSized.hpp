@@ -143,7 +143,7 @@ namespace Nektar
             
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename L, typename Op, typename R>
-            NekVector(const Node<L, Op, R>& rhs) :
+            NekVector(const expt::Node<L, Op, R>& rhs) :
                 m_impl()
             {
 				#ifdef _DEBUG
@@ -154,13 +154,13 @@ namespace Nektar
 
                 /// TODO Make sure this works correctly with eWrapper
                 //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, VariableSizedVector, space> > ));
-                ExpressionEvaluator::Evaluate(rhs, *this);
+                expt::ExpressionEvaluator::Evaluate(rhs, *this);
             }
 #endif
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename L, typename Op, typename R>
-            NekVector<DataType, dim, space>& operator=(const Node<L, Op, R>& rhs)
+            NekVector<DataType, dim, space>& operator=(const expt::Node<L, Op, R>& rhs)
             {
 				rhs.Evaluate(*this);
 				return *this;
@@ -339,24 +339,24 @@ namespace Nektar
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename L, typename Op, typename R>
-            NekVector(const Node<L, Op, R>& rhs) :
+            NekVector(const expt::Node<L, Op, R>& rhs) :
                 BaseType()
             {
 				#ifdef _DEBUG
                 boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
-                    MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
 				ASSERTL0(sizes.get<0>() == dim::Value, "Data sizes are not equal.");
 				#endif
 
                 /// TODO Make sure this works correctly with eWrapper
                 //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, VariableSizedVector, space> > ));
-                ExpressionEvaluator::Evaluate(rhs, *this);
+                expt::ExpressionEvaluator::Evaluate(rhs, *this);
             }
 #endif
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename L, typename Op, typename R>
-            NekVector<DataType, dim, space>& operator=(const Node<L, Op, R>& rhs)
+            NekVector<DataType, dim, space>& operator=(const expt::Node<L, Op, R>& rhs)
             {
 				rhs.Evaluate(*this);
 				return *this;

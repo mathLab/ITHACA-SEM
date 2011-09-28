@@ -54,9 +54,9 @@ namespace Nektar
             typedef NekMatrix<NekDouble> Matrix;
             typedef NekVector<NekDouble> Vector;
 
-            typedef Node<Matrix> LhsNode;           
-            typedef Node<Vector> RhsNode;
-            typedef Node<LhsNode, MultiplyOp, RhsNode> Expression;
+            typedef expt::Node<Matrix> LhsNode;
+            typedef expt::Node<Vector> RhsNode;
+            typedef expt::Node<LhsNode, expt::MultiplyOp, RhsNode> Expression;
             typedef Expression::Indices Indices;
 
             double m_buf[] = {1, 4, 2, 5, 3, 6};
@@ -101,21 +101,21 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestConstantConstantTree)
         {
-            typedef Node<CountedObject<double> > LhsNode;
+            typedef expt::Node<CountedObject<double> > LhsNode;
             BOOST_MPL_ASSERT(( boost::is_same<LhsNode::ResultType, CountedObject<double> > ));
             BOOST_MPL_ASSERT(( boost::is_same<LhsNode::DataType, const CountedObject<double>&> ));
             
-            typedef Node<CountedObject<double> > RhsNode;
-            typedef Node<LhsNode, AddOp, RhsNode> Expression;
+            typedef expt::Node<CountedObject<double> > RhsNode;
+            typedef expt::Node<LhsNode, expt::AddOp, RhsNode> Expression;
             typedef Expression::Indices Indices;
 
-            typedef RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType TransformedNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType TransformedNodeType;
             BOOST_MPL_ASSERT(( boost::is_same<Expression, TransformedNodeType> ));
             
-            typedef RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndices TransformedIndices;
-            BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndices>::type::value == 2 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 0>::type::value == 0 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 1>::type::value == 1 ));
+            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+            BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 2 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 1>::type::value == 1 ));
 
 #if BOOST_VERSION < 104200
             typedef boost::fusion::vector<const CountedObject<double>&, const CountedObject<double>&> ExpectedListType;
@@ -143,21 +143,21 @@ namespace Nektar
             typedef NekMatrix<NekDouble> Matrix;
             typedef NekVector<NekDouble> Vector;
 
-            typedef Node<Matrix> LhsNode;
+            typedef expt::Node<Matrix> LhsNode;
             BOOST_MPL_ASSERT(( boost::is_same<LhsNode::ResultType, Matrix > ));
             BOOST_MPL_ASSERT(( boost::is_same<LhsNode::DataType, const Matrix&> ));
             
-            typedef Node<Vector> RhsNode;
-            typedef Node<LhsNode, MultiplyOp, RhsNode> Expression;
+            typedef expt::Node<Vector> RhsNode;
+            typedef expt::Node<LhsNode, expt::MultiplyOp, RhsNode> Expression;
             typedef Expression::Indices Indices;
 
-            typedef RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType TransformedNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType TransformedNodeType;
             BOOST_MPL_ASSERT(( boost::is_same<Expression, TransformedNodeType> ));
             
-            typedef RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndices TransformedIndices;
-            BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndices>::type::value == 2 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 0>::type::value == 0 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndices, 1>::type::value == 1 ));
+            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+            BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 2 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 1>::type::value == 1 ));
 
 #if BOOST_VERSION < 104200
             typedef boost::fusion::vector<const Matrix&, const Vector&> ExpectedListType;
@@ -199,14 +199,14 @@ namespace Nektar
         //Matrix result2 = (1.0)*(m1) + (2.0)*(m2) + (3.0)*(m3);
         
         //Matrix result3 = m1*m1 + m2*m2 + m3*m3;
-        typedef Node<Node<Matrix>, MultiplyOp, Node<Matrix> > T;
-        typedef Node<T, AddOp, T> Lhs;
+        typedef expt::Node<expt::Node<Matrix>, expt::MultiplyOp, expt::Node<Matrix> > T;
+        typedef expt::Node<T, expt::AddOp, T> Lhs;
         typedef T Rhs;
-        typedef Node<Lhs, AddOp, Rhs> ExpressionType;
+        typedef expt::Node<Lhs, expt::AddOp, Rhs> ExpressionType;
         ExpressionType e = m1*m1 + m2*m2 + m3*m3;
         typedef ExpressionType::Indices Indices;
 
-        //typedef RemoveUnecessaryTemporaries<ExpressionType, Indices>::TransformedNodeType TransformedNodeType;
-        typedef RemoveUnecessaryTemporaries<ExpressionType, Indices>::TransformedIndices TransformedIndices;
+        //typedef expt::RemoveUnecessaryTemporaries<ExpressionType, Indices>::TransformedNodeType TransformedNodeType;
+        typedef expt::RemoveUnecessaryTemporaries<ExpressionType, Indices>::TransformedIndicesType TransformedIndicesType;
     }
 }

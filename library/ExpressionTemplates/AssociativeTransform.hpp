@@ -27,36 +27,65 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
+#ifndef EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
+#define EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
+
+#include <ExpressionTemplates/CommutativeTransform.hpp>
+#include <ExpressionTemplates/Operators.hpp>
+#include <ExpressionTemplates/AssociativeTraits.hpp>
 
 #include <boost/utility/enable_if.hpp>
-#include "CommutativeTransform.hpp"
 #include <boost/typeof/typeof.hpp>
 #include <boost/mpl/and.hpp>
-#include "Operators.hpp"
 
-
-
-namespace Nektar
+namespace expt
 {
-
-    template<typename NodeType>
-    struct AssociativeTransform;
-
-    template<typename T1, typename RootOp,
-             typename R1, typename ROp, typename R2>
-    struct AssociativeTransform<Node<T1, RootOp, Node<R1, ROp, R2> > >
+    // Performs an associative transform on a node.  Note that, unlike the commutative
+    // transform, this transform does not need to adjust the indices.
+    template<typename NodeType, typename enabled = void>
+    struct AssociativeTransform
     {
-        typedef Node<Node<T1, RootOp, R1>, ROp, R2> TransformedNodeType;
+        typedef NodeType TransformedNodeType;
     };
 
-    
+    template<typename LhsNodeType, typename OpType, typename R1, typename ROp, typename R2>
+    struct AssociativeTransform< expt::Node<LhsNodeType, OpType, expt::Node<R1, ROp, R2> >,
+        typename boost::enable_if
+        <
+            expt::AssociativeTraits
+            <
+                typename LhsNodeType::ResultType,
+                OpType,
+                typename R1::ResultType,
+                ROp
+            >
+        >::type>
+    {
+        typedef expt::Node<expt::Node<LhsNodeType, OpType, R1>, ROp, R2> TransformedNodeType;
+    };
 
-    
+    template<typename NodeType, typename enabled = void>
+    struct InverseAssociativeTransform
+    {
+        typedef NodeType TransformedNodeType;
+    };
+
+    template<typename L1, typename LOp, typename L2, typename OpType, typename RhsNodeType>
+    struct InverseAssociativeTransform< expt::Node<expt::Node<L1, LOp, L2>, OpType, RhsNodeType >,
+        typename boost::enable_if
+        <
+            expt::AssociativeTraits
+            <
+                typename L1::ResultType,
+                LOp,
+                typename L2::ResultType,
+                OpType
+            >
+        >::type>
+    {
+        typedef expt::Node<L1, LOp, expt::Node<L2, OpType, RhsNodeType> > TransformedNodeType;
+    };
 }
 
-
-
-#endif //NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
+#endif //EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
 

@@ -28,12 +28,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_OPERATORS_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_OPERATORS_HPP
+#ifndef EXPRESSION_TEMPLATES_OPERATORS_HPP
+#define EXPRESSION_TEMPLATES_OPERATORS_HPP
 
 #include <boost/typeof/typeof.hpp>
 
-namespace Nektar
+namespace expt
 {
     struct AddOp 
     {
@@ -167,6 +167,21 @@ namespace Nektar
             return Subtract(accumulator, lhs, rhs);
         }
 
+    };
+
+    struct NegateOp
+    {
+        template<typename T>
+        struct ResultType
+        {
+            typedef T type;
+        };
+
+        template<typename T>
+        static void Op(T& accumulator)
+        {
+            NegateInPlace(accumulator);
+        }
     };
 }
 

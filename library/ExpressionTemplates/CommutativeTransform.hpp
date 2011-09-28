@@ -27,12 +27,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRANSFORM_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRANSFORM_HPP
+#ifndef EXPRESSION_TEMPLATES_COMMUTATIVE_TRANSFORM_HPP
+#define EXPRESSION_TEMPLATES_COMMUTATIVE_TRANSFORM_HPP
 
-#include "Node.hpp"
+#include <ExpressionTemplates/Node.hpp>
 
-namespace Nektar
+namespace expt
 {
     template<typename InputSequence, unsigned int start, unsigned int partition, unsigned int end>
     struct Swap
@@ -76,4 +76,4 @@ namespace Nektar
     };
 }
 
-#endif //NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRANSFORM_HPP
+#endif //EXPRESSION_TEMPLATES_COMMUTATIVE_TRANSFORM_HPP

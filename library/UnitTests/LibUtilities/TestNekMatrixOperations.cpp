@@ -53,7 +53,7 @@ namespace Nektar
     {
         public:
             template<typename LhsType, typename RhsType>
-            typename AddOp::ResultType<LhsType, RhsType>::type 
+            typename expt::AddOp::ResultType<LhsType, RhsType>::type 
             operator()(const LhsType& lhs, const RhsType& rhs) const
             {
                 return lhs + rhs;
@@ -64,7 +64,7 @@ namespace Nektar
     {
         public:
             template<typename LhsType, typename RhsType>
-            typename SubtractOp::ResultType<LhsType, RhsType>::type 
+            typename expt::SubtractOp::ResultType<LhsType, RhsType>::type 
             operator()(const LhsType& lhs, const RhsType& rhs) const
             {
                 return lhs - rhs;

@@ -42,6 +42,8 @@
 
 #include <boost/test/auto_unit_test.hpp>
 
+#include <math.h>
+
 namespace Nektar
 {
     namespace ExpressionTests

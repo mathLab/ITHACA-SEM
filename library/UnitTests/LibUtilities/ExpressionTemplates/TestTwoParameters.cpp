@@ -69,7 +69,7 @@
 //            NekMatrix<double> lhs(4, 4, lhs_buf);
 //            NekMatrix<double> rhs(4, 4, rhs_buf);
 //            Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, 
-//                                              AddOp,
+//                                              expt::AddOp,
 //                                              ConstantExpressionPolicy<NekMatrix<double> > > > expr = lhs + rhs;
 //            NekMatrix<double> result(expr);
 //        }

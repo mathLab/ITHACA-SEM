@@ -28,10 +28,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_NODE_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_NODE_HPP
+#ifndef EXPRESSION_TEMPLATES_NODE_HPP
+#define EXPRESSION_TEMPLATES_NODE_HPP
 
-#define FUSION_MAX_VECTOR_SIZE 20
+#define FUSION_MAX_VECTOR_SIZE 50
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/vector_c.hpp>
 #include <boost/mpl/insert_range.hpp>
@@ -47,7 +47,7 @@
 #include <iostream>
 #include <ExpressionTemplates/Operators.hpp>
 
-namespace Nektar
+namespace expt
 {
     // Creates a vector of constants from [0..n]
     template<typename T, template<int> class TypeConstructor, int n>
@@ -136,6 +136,8 @@ namespace Nektar
             VectorType m_data;        
     };
 
+    
+    
     // Constant Node
     // T1 is a normal c++ data type and should not be a node object.
     template<typename T>
@@ -163,6 +165,7 @@ namespace Nektar
             typedef boost::mpl::vector<DataType> MPLVectorType;
             typedef typename boost::fusion::result_of::as_vector<MPLVectorType>::type VectorType;
             typedef typename CreateVectorC<int, boost::mpl::int_, 1>::type Indices;
+            typedef void OpType;
             
         public:
             explicit Node(DataType value) :
@@ -187,6 +190,50 @@ namespace Nektar
             VectorType m_data;
     };
 
+    
+    template<typename NodeType, typename enabled = void>
+    struct TemporaryCount;
+    
+    template<typename T>
+    struct TemporaryCount<Node<T, void, void> >
+    {
+        static const unsigned int Value = 0;
+    };
+
+    template<typename T, typename OpType>
+    struct TemporaryCount< Node<T, OpType, void> >
+    {
+        static const unsigned int Value = TemporaryCount<T>::Value;
+    };
+
+    template<typename L, typename OpType, typename R1, typename ROp, typename R2>
+    struct TemporaryCount< Node<L, OpType, Node<R1, ROp, R2> >,
+        typename boost::enable_if
+        <
+            boost::mpl::or_
+            <
+                boost::is_same<ROp, void>,
+                boost::is_same<R2, void>
+            >
+        >::type>
+    {
+        static const unsigned int Value = TemporaryCount<L>::Value + TemporaryCount<Node<R1, ROp, R2> >::Value;
+    };
+
+    template<typename L, typename OpType, typename R1, typename ROp, typename R2>
+    struct TemporaryCount< Node<L, OpType, Node<R1, ROp, R2> >, 
+        typename boost::enable_if
+        <
+            boost::mpl::and_
+            <
+                boost::mpl::not_<boost::is_same<ROp, void> >,
+                boost::mpl::not_<boost::is_same<R2, void> >
+            >
+        >::type>
+    {
+        static const unsigned int Value = TemporaryCount<L>::Value + TemporaryCount<Node<R1, ROp, R2> >::Value + 1;
+    };
+
     template<typename L, typename Op, typename R>
     std::ostream& operator<<(std::ostream& os, const Node<L, Op, R>& exp)
     {
@@ -199,100 +246,101 @@ namespace Nektar
     {
         static const int i = 2;
         typedef T1 ResultType;
+        typedef typename Node<T1>::Indices Indices;
     };
 
 
     template<typename L1, typename LOp, typename L2, typename RhsData>
-    Node<Node<L1, LOp, L2>, SubtractOp, Node<RhsData> >
+    Node<Node<L1, LOp, L2>, expt::SubtractOp, Node<RhsData> >
     operator-(const Node<L1, LOp, L2>& lhsNode, const RhsData& rhs)
     {
         Node<RhsData> rhsNode(rhs);
-        return Node<Node<L1, LOp, L2>, SubtractOp, Node<RhsData> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::SubtractOp, Node<RhsData> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename RhsData>
-    Node<Node<L1, LOp, L2>, AddOp, Node<RhsData> >
+    Node<Node<L1, LOp, L2>, expt::AddOp, Node<RhsData> >
     operator+(const Node<L1, LOp, L2>& lhsNode, const RhsData& rhs)
     {
         Node<RhsData> rhsNode(rhs);
-        return Node<Node<L1, LOp, L2>, AddOp, Node<RhsData> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::AddOp, Node<RhsData> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename RhsData>
-    Node<Node<L1, LOp, L2>, MultiplyOp, Node<RhsData> >
+    Node<Node<L1, LOp, L2>, expt::MultiplyOp, Node<RhsData> >
     operator*(const Node<L1, LOp, L2>& lhsNode, const RhsData& rhs)
     {
         Node<RhsData> rhsNode(rhs);
-        return Node<Node<L1, LOp, L2>, MultiplyOp, Node<RhsData> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::MultiplyOp, Node<RhsData> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename RhsData>
-    Node<Node<L1, LOp, L2>, DivideOp, Node<RhsData> >
+    Node<Node<L1, LOp, L2>, expt::DivideOp, Node<RhsData> >
     operator/(const Node<L1, LOp, L2>& lhsNode, const RhsData& rhs)
     {
         Node<RhsData> rhsNode(rhs);
-        return Node<Node<L1, LOp, L2>, DivideOp, Node<RhsData> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::DivideOp, Node<RhsData> >(lhsNode, rhsNode);
     }
 
 
     template<typename LhsData, typename R1, typename ROp, typename R2>
-    Node<Node<LhsData>, SubtractOp, Node<R1, ROp, R2> >
+    Node<Node<LhsData>, expt::SubtractOp, Node<R1, ROp, R2> >
     operator-(const LhsData& lhsData, const Node<R1, ROp, R2>& rhsNode)
     {
         Node<LhsData> lhsNode(lhsData);
-        return Node<Node<LhsData>, SubtractOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<LhsData>, expt::SubtractOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename LhsData, typename R1, typename ROp, typename R2>
-    Node<Node<LhsData>, AddOp, Node<R1, ROp, R2> >
+    Node<Node<LhsData>, expt::AddOp, Node<R1, ROp, R2> >
     operator+(const LhsData& lhsData, const Node<R1, ROp, R2>& rhsNode)
     {
         Node<LhsData> lhsNode(lhsData);
-        return Node<Node<LhsData>, AddOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<LhsData>, expt::AddOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename LhsData, typename R1, typename ROp, typename R2>
-    Node<Node<LhsData>, MultiplyOp, Node<R1, ROp, R2> >
+    Node<Node<LhsData>, expt::MultiplyOp, Node<R1, ROp, R2> >
     operator*(const LhsData& lhsData, const Node<R1, ROp, R2>& rhsNode)
     {
         Node<LhsData> lhsNode(lhsData);
-        return Node<Node<LhsData>, MultiplyOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<LhsData>, expt::MultiplyOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename LhsData, typename R1, typename ROp, typename R2>
-    Node<Node<LhsData>, DivideOp, Node<R1, ROp, R2> >
+    Node<Node<LhsData>, expt::DivideOp, Node<R1, ROp, R2> >
     operator/(const LhsData& lhsData, const Node<R1, ROp, R2>& rhsNode)
     {
         Node<LhsData> lhsNode(lhsData);
-        return Node<Node<LhsData>, DivideOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<LhsData>, expt::DivideOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename R1, typename ROp, typename R2>
-    Node<Node<L1, LOp, L2>, AddOp, Node<R1, ROp, R2> >
+    Node<Node<L1, LOp, L2>, expt::AddOp, Node<R1, ROp, R2> >
     operator+(const Node<L1, LOp, L2>& lhsNode, const Node<R1, ROp, R2>& rhsNode)
     {
-        return Node<Node<L1, LOp, L2>, AddOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::AddOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename R1, typename ROp, typename R2>
-    Node<Node<L1, LOp, L2>, SubtractOp, Node<R1, ROp, R2> >
+    Node<Node<L1, LOp, L2>, expt::SubtractOp, Node<R1, ROp, R2> >
     operator-(const Node<L1, LOp, L2>& lhsNode, const Node<R1, ROp, R2>& rhsNode)
     {
-        return Node<Node<L1, LOp, L2>, SubtractOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::SubtractOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename R1, typename ROp, typename R2>
-    Node<Node<L1, LOp, L2>, MultiplyOp, Node<R1, ROp, R2> >
+    Node<Node<L1, LOp, L2>, expt::MultiplyOp, Node<R1, ROp, R2> >
     operator*(const Node<L1, LOp, L2>& lhsNode, const Node<R1, ROp, R2>& rhsNode)
     {
-        return Node<Node<L1, LOp, L2>, MultiplyOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::MultiplyOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename L1, typename LOp, typename L2, typename R1, typename ROp, typename R2>
-    Node<Node<L1, LOp, L2>, DivideOp, Node<R1, ROp, R2> >
+    Node<Node<L1, LOp, L2>, expt::DivideOp, Node<R1, ROp, R2> >
     operator/(const Node<L1, LOp, L2>& lhsNode, const Node<R1, ROp, R2>& rhsNode)
     {
-        return Node<Node<L1, LOp, L2>, DivideOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
+        return Node<Node<L1, LOp, L2>, expt::DivideOp, Node<R1, ROp, R2> >(lhsNode, rhsNode);
     }
 
     template<typename Op, typename L, typename R>
@@ -304,4 +352,4 @@ namespace Nektar
     }
 }
 
-#endif //NEKTAR_EXPRESSION_TEMPLATES_NODE_HPP
+#endif //EXPRESSION_TEMPLATES_NODE_HPP

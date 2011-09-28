@@ -166,29 +166,29 @@
 //            ConstantBinarySpecialization0_Parameter p2(20);
 //            
 //            typedef BinaryExpressionPolicy<ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter>,
-//                                           MultiplyOp,
+//                                           expt::MultiplyOp,
 //                                           ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter> > RhsExpressionType;
 //            typedef ConstantExpressionPolicy<ConstantBinarySpecialization0_Parameter> LhsExpressionType;
 //            
-//            //BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, ConstantBinarySpecialization0_Result, AddOp, BinaryNullOp>::ClassNum == 1 ));
+//            //BOOST_STATIC_ASSERT(( BinaryExpressionEvaluator<LhsExpressionType, RhsExpressionType, ConstantBinarySpecialization0_Result, expt::AddOp, BinaryNullOp>::ClassNum == 1 ));
 //             
-////            Expression<BinaryExpressionPolicy<LhsExpressionType, AddOp, RhsExpressionType> > exp =
+////            Expression<BinaryExpressionPolicy<LhsExpressionType, expt::AddOp, RhsExpressionType> > exp =
 ////                p0 + (p1*p2);
 ////
 ////            ConstantBinarySpecialization0_Result r;
 ////            Assign(r, exp);
 ////            BOOST_CHECK_EQUAL(r.m_value, 8+2*20);
 //        }
-////          Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Bar>, ConstantExpressionPolicy<Bar>,AddOp > > 
+////          Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Bar>, ConstantExpressionPolicy<Bar>,expt::AddOp > > 
 ////          operator+(const Bar& lhs, const Bar& rhs) 
 ////          { 
-////              return CreateBinaryExpression<AddOp>(lhs, rhs); 
+////              return CreateBinaryExpression<expt::AddOp>(lhs, rhs); 
 ////          }
 ////          
-////          Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Foo>, ConstantExpressionPolicy<Bar>,AddOp > > 
+////          Expression<BinaryExpressionPolicy<ConstantExpressionPolicy<Foo>, ConstantExpressionPolicy<Bar>,expt::AddOp > > 
 ////          operator+(const Foo& lhs, const Bar& rhs) 
 ////          { 
-////              return CreateBinaryExpression<AddOp>(lhs, rhs); 
+////              return CreateBinaryExpression<expt::AddOp>(lhs, rhs); 
 ////          }
 //        
 //        BOOST_AUTO_TEST_CASE(TestLhsBinaryRhsConstantSpecialization1)
@@ -212,8 +212,8 @@
 //             NekMatrix<double> middle(4, 4, middle_buf);
 // 
 //             Expression<BinaryExpressionPolicy<
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
-//                                               ConstantExpressionPolicy<NekMatrix<double> > >, AddOp,
+//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, expt::AddOp,
+//                                               ConstantExpressionPolicy<NekMatrix<double> > >, expt::AddOp,
 //                                               ConstantExpressionPolicy<NekMatrix<double> >
 //                                               > > expr = (lhs + middle) + rhs;
 //             NekMatrix<double> result(expr);
@@ -263,8 +263,8 @@
 //             NekMatrix<double> middle(4, 4, middle_buf);
 // 
 //             Expression<BinaryExpressionPolicy<
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
-//                                               ConstantExpressionPolicy<NekMatrix<double> > >, AddOp,
+//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, expt::AddOp,
+//                                               ConstantExpressionPolicy<NekMatrix<double> > >, expt::AddOp,
 //                                               ConstantExpressionPolicy<NekMatrix<double> >
 //                                               > > expr = (lhs + middle) + rhs;
 //             NekMatrix<double> result(expr);
@@ -298,8 +298,8 @@
 //             NekMatrix<double> middle(4, 4, middle_buf);
 // 
 //             Expression<BinaryExpressionPolicy<
-//                        ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp, 
+//                        ConstantExpressionPolicy<NekMatrix<double> >, expt::AddOp,
+//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, expt::AddOp, 
 //                                               ConstantExpressionPolicy<NekMatrix<double> > >
 //                                               > > expr = lhs + (middle + rhs);
 //             NekMatrix<double> result(expr);
@@ -333,8 +333,8 @@
 //             NekMatrix<double> middle(4, 4, middle_buf);
 // 
 //             Expression<BinaryExpressionPolicy<
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
-//                                               ConstantExpressionPolicy<NekMatrix<double> > >, SubtractOp,
+//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, expt::AddOp,
+//                                               ConstantExpressionPolicy<NekMatrix<double> > >, expt::SubtractOp,
 //                                               ConstantExpressionPolicy<NekMatrix<double> >
 //                                               > > expr = (lhs + middle) - rhs;
 //             NekMatrix<double> result(expr);
@@ -368,8 +368,8 @@
 //             NekMatrix<double> middle(4, 4, middle_buf);
 //
 //             Expression<BinaryExpressionPolicy<
-//                        ConstantExpressionPolicy<NekMatrix<double> >, SubtractOp,
-//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, AddOp,
+//                        ConstantExpressionPolicy<NekMatrix<double> >, expt::SubtractOp,
+//                        BinaryExpressionPolicy<ConstantExpressionPolicy<NekMatrix<double> >, expt::AddOp,
 //                                               ConstantExpressionPolicy<NekMatrix<double> > >
 //                                               > > expr = lhs - (middle + rhs);
 //             NekMatrix<double> result(lhs - (middle+rhs));

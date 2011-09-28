@@ -596,10 +596,10 @@ namespace Nektar
             DNekScalMat InvMass(3.0, InvMassInner);
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            typedef Node<DNekScalMat> MatrixNode;
-            typedef Node<MatrixNode, MultiplyOp, MatrixNode> MatMultNode;
-            typedef Node<MatMultNode, MultiplyOp, MatrixNode> RhsNode;
-            typedef Node<MatrixNode, AddOp, RhsNode> Expression;
+            typedef expt::Node<DNekScalMat> MatrixNode;
+            typedef expt::Node<MatrixNode, expt::MultiplyOp, MatrixNode> MatMultNode;
+            typedef expt::Node<MatMultNode, expt::MultiplyOp, MatrixNode> RhsNode;
+            typedef expt::Node<MatrixNode, expt::AddOp, RhsNode> Expression;
 
             BOOST_MPL_ASSERT(( boost::mpl::not_<IsDgemmLeftSide<MatrixNode> > ));
             #endif

@@ -27,19 +27,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
+#ifndef EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
+#define EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
-#include "Node.hpp"
-#include "RemoveAllUnecessaryTemporaries.hpp"
-#include <boost/version.hpp>
+#include <ExpressionTemplates/Node.hpp>
+#include <ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp>
+
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
 #include <boost/fusion/include/accumulate.hpp>
 
 
-namespace Nektar
+namespace expt
 {
     template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
     struct CreateFromTree
@@ -51,14 +51,7 @@ namespace Nektar
         }
     };
 
-    // Evaluate node - all temporaries that can be avoided have been.
-    // Here are the rules.
-    //
-    // Constant Node.
-    // The only time we evaluate a constant node on its own is when going down the 
-    // left side of the evaluation, so we just assign it.  
-    //
-    // Unary Node
+
     template<typename NodeType, typename IndicesType, unsigned int index>
     struct EvaluateNode;
     
@@ -80,6 +73,16 @@ namespace Nektar
     };
     
 
+    template<typename NodeType, typename OpType, typename IndicesType, unsigned int index>
+    struct EvaluateNode<Node<NodeType, OpType, void>, IndicesType, index>
+    {
+        template<typename ResultType, typename ArgumentVectorType>
+        static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
+        {
+            EvaluateNode<NodeType, IndicesType, index>::Evaluate(accumulator, args);
+            OpType::Op(accumulator);
+        }
+    };
 
     //////////////////////////////////////////////////////////////////
     // Binary Nodes
@@ -272,28 +275,42 @@ namespace Nektar
         }
 
         template<typename Expression>
+        static typename Expression::ResultType Evaluate(const Expression& expression)
+        {
+            typedef typename Expression::Indices Indices;
+
+            // Perform the optimizations on the parse three.
+            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType OptimizedParseTree;
+            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+
+            typename Expression::ResultType result = CreateFromTree<typename Expression::ResultType, OptimizedParseTree, TransformedIndicesType, 0>::Apply(expression.GetData());
+            EvaluateNode<OptimizedParseTree, TransformedIndicesType, 0>::Evaluate(result, expression.GetData());
+            return result;
+        }
+
+        template<typename Expression>
         static void Evaluate(const Expression& expression, typename Expression::ResultType& accum)
         {
             typedef typename Expression::Indices Indices;
 
             // Perform the optimizations on the parse three.
             typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType OptimizedParseTree;
-            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndices TransformedIndices;
+            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
 
             if( ContainsAlias(expression, accum) )
             {
-                typename Expression::ResultType temp = CreateFromTree<typename Expression::ResultType, OptimizedParseTree, TransformedIndices, 0>::Apply(expression.GetData());
-                EvaluateNode<OptimizedParseTree, TransformedIndices, 0>::Evaluate(temp, expression.GetData());
+                typename Expression::ResultType temp = CreateFromTree<typename Expression::ResultType, OptimizedParseTree, TransformedIndicesType, 0>::Apply(expression.GetData());
+                EvaluateNode<OptimizedParseTree, TransformedIndicesType, 0>::Evaluate(temp, expression.GetData());
                 accum = temp;
             }
             else
             {
-                EvaluateNode<OptimizedParseTree, TransformedIndices, 0>::Evaluate(accum, expression.GetData());
+                EvaluateNode<OptimizedParseTree, TransformedIndicesType, 0>::Evaluate(accum, expression.GetData());
             }
         } 
     };
 }
 
 #endif
-#endif //NEKTAR_EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
+#endif //EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
 

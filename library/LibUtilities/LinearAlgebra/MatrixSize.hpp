@@ -50,7 +50,7 @@ namespace Nektar
 
     /// \brief Specialization for a constant matrix node.
     template<typename T, typename Indices, unsigned int index>
-    struct MatrixSize<Node<T, void, void>, Indices, index>
+    struct MatrixSize<expt::Node<T, void, void>, Indices, index>
     {
         static const unsigned int MappedIndex = boost::mpl::at_c<Indices, index>::type::value;
 
@@ -125,6 +125,26 @@ namespace Nektar
     };
 
 
+    template<typename ChildType,
+             typename Op,
+             typename Indices, unsigned int index>
+    struct MatrixSize<expt::Node<ChildType, Op, void>, Indices, index>
+    {
+        template<typename ArgumentVectorType>
+        static boost::tuple<unsigned int, unsigned int, unsigned int>
+        GetRequiredSize(const ArgumentVectorType& args)
+        {
+            return MatrixSize<ChildType, Indices, index>::GetRequiredSize(args);
+        }
+        
+        template<typename ArgumentVectorType>
+        static unsigned int
+        GetRequiredRows(const ArgumentVectorType& args)
+        {
+            boost::tuple<unsigned int, unsigned int, unsigned int> values = GetRequiredSize(args);
+            return values.get<0>();
+        }
+    };
 
     
     /// \brief Calculates the size of the given matrix expression, as well as the 
@@ -167,8 +187,8 @@ namespace Nektar
     template<typename L, typename Op, typename R, typename Indices, unsigned int index>
     struct BinaryMatrixSizeEvaluator<L, void, void, Op, R, void, void, Indices, index>
     {
-        typedef Node<L, void, void> LeftNodeType;
-        typedef Node<R, void, void> RightNodeType;
+        typedef expt::Node<L, void, void> LeftNodeType;
+        typedef expt::Node<R, void, void> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -182,10 +202,10 @@ namespace Nektar
  
     /// \brief Matrix sizes for two constant children with multiplication.
     template<typename L, typename R, typename Indices, unsigned int index>
-    struct BinaryMatrixSizeEvaluator<L, void, void, MultiplyOp, R, void, void, Indices, index>
+    struct BinaryMatrixSizeEvaluator<L, void, void, expt::MultiplyOp, R, void, void, Indices, index>
     {
-        typedef Node<L, void, void> LeftNodeType;
-        typedef Node<R, void, void> RightNodeType;
+        typedef expt::Node<L, void, void> LeftNodeType;
+        typedef expt::Node<R, void, void> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -207,10 +227,10 @@ namespace Nektar
     };
 
     template<typename R, typename Indices, unsigned int index>
-    struct BinaryMatrixSizeEvaluator<NekDouble, void, void, MultiplyOp, R, void, void, Indices, index>
+    struct BinaryMatrixSizeEvaluator<NekDouble, void, void, expt::MultiplyOp, R, void, void, Indices, index>
     {
-        typedef Node<NekDouble, void, void> LeftNodeType;
-        typedef Node<R, void, void> RightNodeType;
+        typedef expt::Node<NekDouble, void, void> LeftNodeType;
+        typedef expt::Node<R, void, void> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -223,10 +243,10 @@ namespace Nektar
     };
 
     template<typename L, typename Indices, unsigned int index>
-    struct BinaryMatrixSizeEvaluator<L, void, void, MultiplyOp, NekDouble, void, void, Indices, index>
+    struct BinaryMatrixSizeEvaluator<L, void, void, expt::MultiplyOp, NekDouble, void, void, Indices, index>
     {
-        typedef Node<L, void, void> LeftNodeType;
-        typedef Node<NekDouble, void, void> RightNodeType;
+        typedef expt::Node<L, void, void> LeftNodeType;
+        typedef expt::Node<NekDouble, void, void> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -250,7 +270,7 @@ namespace Nektar
             >
         >::type >
     {
-        typedef Node<L1, LOp, L2> LeftNodeType;
+        typedef expt::Node<L1, LOp, L2> LeftNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -273,8 +293,8 @@ namespace Nektar
             >
         >::type >
     {
-        typedef Node<R, void, void> RightNodeType;
-        typedef Node<L1, LOp, L2> LeftNodeType;
+        typedef expt::Node<R, void, void> RightNodeType;
+        typedef expt::Node<L1, LOp, L2> LeftNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -295,7 +315,7 @@ namespace Nektar
             >
         >::type >
     {
-        typedef Node<R1, ROp, R2> RightNodeType;
+        typedef expt::Node<R1, ROp, R2> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -318,8 +338,8 @@ namespace Nektar
             >
         >::type >
     {
-        typedef Node<L, void, void> LeftNodeType;
-        typedef Node<R1, ROp, R2> RightNodeType;
+        typedef expt::Node<L, void, void> LeftNodeType;
+        typedef expt::Node<R1, ROp, R2> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -344,8 +364,8 @@ namespace Nektar
             >
         >::type >
     {
-        typedef Node<L1, LOp, L2> LeftNodeType;
-        typedef Node<R1, ROp, R2> RightNodeType;
+        typedef expt::Node<L1, LOp, L2> LeftNodeType;
+        typedef expt::Node<R1, ROp, R2> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -359,7 +379,7 @@ namespace Nektar
 
     template<typename L1, typename LOp, typename L2, 
              typename R1, typename ROp, typename R2, typename Indices, unsigned int index>
-    struct BinaryMatrixSizeEvaluator<L1, LOp, L2, MultiplyOp, R1, ROp, R2, Indices, index, 
+    struct BinaryMatrixSizeEvaluator<L1, LOp, L2, expt::MultiplyOp, R1, ROp, R2, Indices, index,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -371,8 +391,8 @@ namespace Nektar
             >
         >::type >
     {
-        typedef Node<L1, LOp, L2> LeftNodeType;
-        typedef Node<R1, ROp, R2> RightNodeType;
+        typedef expt::Node<L1, LOp, L2> LeftNodeType;
+        typedef expt::Node<R1, ROp, R2> RightNodeType;
         
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>
@@ -386,7 +406,7 @@ namespace Nektar
              typename Op,
              typename R1, typename ROp, typename R2,
              typename Indices, unsigned int index>
-    struct MatrixSize<Node<Node<L1, LOp, L2>, Op, Node<R1, ROp, R2> >, Indices, index>
+    struct MatrixSize<expt::Node<expt::Node<L1, LOp, L2>, Op, expt::Node<R1, ROp, R2> >, Indices, index>
     {
         template<typename ArgumentVectorType>
         static boost::tuple<unsigned int, unsigned int, unsigned int>

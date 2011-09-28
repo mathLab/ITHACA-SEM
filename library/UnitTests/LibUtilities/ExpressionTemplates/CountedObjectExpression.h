@@ -44,15 +44,15 @@ BOOST_TYPEOF_REGISTER_TEMPLATE(Nektar::CountedObject, 1);
 namespace Nektar
 {
     template<typename T>
-    Node<Node<CountedObject<T> >, AddOp, Node<CountedObject<T> > >
+    expt::Node<expt::Node<CountedObject<T> >, expt::AddOp, expt::Node<CountedObject<T> > >
     operator+(const CountedObject<T>& lhs, const CountedObject<T>& rhs)
     {
-        typedef Node<CountedObject<T> > lhs_type;
-        typedef Node<CountedObject<T> > rhs_type;
+        typedef expt::Node<CountedObject<T> > lhs_type;
+        typedef expt::Node<CountedObject<T> > rhs_type;
         
         lhs_type lhs_node(lhs);
         rhs_type rhs_node(rhs);
-        return Node<lhs_type, AddOp, rhs_type>(lhs_node, rhs_node);
+        return expt::Node<lhs_type, expt::AddOp, rhs_type>(lhs_node, rhs_node);
     }
 
     template<typename T>

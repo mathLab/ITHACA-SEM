@@ -106,12 +106,15 @@ namespace Nektar
         os <<  "]" << std::endl;
         return os;
     }
+}
 
 
     
     #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+namespace expt
+{
         //template<typename T, typename R>
-        //struct CommutativeTraits<T, MultiplyOp, R,
+//    struct CommutativeTraits<T, expt::MultiplyOp, R,
         //    typename boost::enable_if
         //    <
         //        boost::mpl::and_
@@ -126,11 +129,23 @@ namespace Nektar
 
         template<typename LhsDataType, typename LhsMatrixType,
             typename RhsDataType, typename RhsMatrixType>
-        struct CommutativeTraitsSpecialization<NekMatrix<LhsDataType, LhsMatrixType> ,
-            MultiplyOp, NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
+        struct CommutativeTraits<NekMatrix<LhsDataType, LhsMatrixType> ,
+            expt::MultiplyOp, NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
         {
         };
+
+//    template<typename LhsDataType, typename LhsMatrixType,
+//        typename RhsDataType, typename RhsMatrixType>
+//    struct CommutativeTraitsSpecialization<NekMatrix<LhsDataType, LhsMatrixType> ,
+//        expt::MultiplyOp, NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
+//    {
+//    };
+}
+
     #endif
+
+namespace Nektar
+{
 //     
 //     // Now define general purpose operators.
 //     

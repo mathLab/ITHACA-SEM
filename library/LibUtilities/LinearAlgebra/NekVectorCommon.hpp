@@ -41,6 +41,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorTypeTraits.hpp>
+#include <ExpressionTemplates/ExpressionTemplates.hpp>
 
 namespace Nektar
 {
@@ -119,6 +120,16 @@ namespace Nektar
         return temp;
     }
 
+    template<typename DataType, typename dim, typename space>
+    void NegateInPlace(NekVector<DataType, dim, space>& v) 
+    {
+        DataType* data = v.GetRawPtr();
+        for(unsigned int i=0; i < v.GetDimension(); ++i)
+        {
+            data[i] = -data[i];
+        }
+    }
+
     //template<typename DataType, typename dim, typename space>
     //void PlusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
     //{
@@ -186,6 +197,22 @@ namespace Nektar
 
         return result;
     }
+
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
+    template<typename DataType, typename dim, typename space,
+             typename L, typename Op, typename R>
+    DataType Dot(const NekVector<const DataType, dim, space>& lhs,
+                 const expt::Node<L, Op, R>& expr)
+    {
+        // Evalaute the expression first, expression templates don't chain past
+        // this point since the return value is a scalar.
+        typename expt::Node<L, Op, R>::ResultType rhs = expt::ExpressionEvaluator::Evaluate(expr);
+
+        return Dot(lhs, rhs);
+    }
+#endif
+
 
     template<typename DataType, typename dim, typename space>
     void Normalize(NekVector<DataType, dim, space>& v)

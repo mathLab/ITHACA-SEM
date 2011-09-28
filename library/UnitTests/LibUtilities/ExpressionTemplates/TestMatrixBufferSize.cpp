@@ -61,10 +61,10 @@ namespace Nektar
         double buf3[] = {1, 2, 3, 4, 5};
         
         typedef NekMatrix<double> Matrix;
-        typedef Node<Matrix> MatrixNode;
-        typedef Node<MatrixNode, MultiplyOp, MatrixNode> LhsTree;
+        typedef expt::Node<Matrix> MatrixNode;
+        typedef expt::Node<MatrixNode, expt::MultiplyOp, MatrixNode> LhsTree;
         typedef MatrixNode RhsTree;
-        typedef Node<LhsTree, MultiplyOp, RhsTree> Expression;
+        typedef expt::Node<LhsTree, expt::MultiplyOp, RhsTree> Expression;
         typedef Expression::Indices Indices;
         
         NekMatrix<double> m1(2, 3, buf1);

@@ -392,7 +392,7 @@ namespace Nektar
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
-                NekMatrix(const Node<L, Op, R>& rhs) :
+                NekMatrix(const expt::Node<L, Op, R>& rhs) :
                     BaseType(0, 0),
                     m_wrapperType(eCopy),
                     m_storagePolicy(eFULL),
@@ -400,7 +400,7 @@ namespace Nektar
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
                 {
                     boost::tuple<unsigned int, unsigned int, unsigned int> sizes  =
-                            MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                            MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
                             
                     unsigned int rows = sizes.get<0>();
                     unsigned int columns = sizes.get<1>();
@@ -409,7 +409,7 @@ namespace Nektar
                     m_data = Array<OneD, DataType>(bufferCapacity);
                     this->Resize(rows, columns);
 
-                    ExpressionEvaluator::Evaluate(rhs, *this);
+                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
                     this->RemoveExcessCapacity();
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -986,12 +986,12 @@ namespace Nektar
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
-                NekMatrix(const Node<L, Op, R>& rhs) :
+                NekMatrix(const expt::Node<L, Op, R>& rhs) :
                     BaseType(0, 0),
                     m_tempSpace()
                 {
                     boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
-                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                        MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
                     unsigned int rows = sizes.get<0>();
                     unsigned int columns = sizes.get<1>();
                     unsigned int bufferSize = sizes.get<2>();
@@ -1000,7 +1000,7 @@ namespace Nektar
 
                     this->Resize(rows, columns);
                     //this->GetData() = Array<OneD, DataType>(this());
-                    ExpressionEvaluator::Evaluate(rhs, *this);
+                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
                     
                     this->RemoveExcessCapacity();
                     
@@ -1030,10 +1030,10 @@ namespace Nektar
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
-                ThisType& operator=(const Node<L, Op, R>& rhs)
+                ThisType& operator=(const expt::Node<L, Op, R>& rhs)
                 {
 					if( this->GetWrapperType() == eWrapper || 
-                        ExpressionEvaluator::ContainsAlias(rhs, *this) )
+                        expt::ExpressionEvaluator::ContainsAlias(rhs, *this) )
 					{
 						// Assignment into a wrapped matrix can't change the matrix size (the matrix 
 						// can be wrapping a portion of a larger array that can't be resized).
@@ -1051,7 +1051,7 @@ namespace Nektar
                         // If the matrix is not wrapped, then we are free to resize as necessary.
 
 						boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
-                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                        MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
 						unsigned int rows = sizes.get<0>();
 						unsigned int columns = sizes.get<1>();
 						unsigned int bufferSize = sizes.get<2>();
@@ -1068,7 +1068,7 @@ namespace Nektar
 
                         this->SetTransposeFlag('N');
 
-                        ExpressionEvaluator::Evaluate(rhs, *this);
+                        expt::ExpressionEvaluator::Evaluate(rhs, *this);
                         this->RemoveExcessCapacity();
 					}
 
@@ -1384,13 +1384,15 @@ namespace Nektar
         result.Transpose();
         return result;
     }
+}
     
     #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-
+namespace expt
+{
         template<typename DataType>
-        struct IsAlias<NekMatrix<DataType, StandardMatrixTag>, NekMatrix<DataType, StandardMatrixTag> >
+    struct IsAlias<Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>, Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag> >
         {
-            static bool Apply(const NekMatrix<DataType, StandardMatrixTag>& lhs, const NekMatrix<DataType, StandardMatrixTag>& rhs)
+        static bool Apply(const Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>& lhs, const Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>& rhs)
             {
                 return lhs.GetPtr().Overlaps(rhs.GetPtr());
             }
@@ -1400,21 +1402,22 @@ namespace Nektar
         struct CreateFromTree<NekMatrix<DataType, StandardMatrixTag>, NodeType, Indices, StartIndex>
         {
             template<typename ArgVectorType>
-            static NekMatrix<DataType, StandardMatrixTag> Apply(const ArgVectorType& tree)
+        static Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag> Apply(const ArgVectorType& tree)
             {
                 boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
-                    MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
+                Nektar::MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
 
                 unsigned int rows = sizes.get<0>();
                 unsigned int columns = sizes.get<1>();
                 unsigned int bufferSize = sizes.get<2>();
 
-                return NekMatrix<DataType, StandardMatrixTag>(rows, columns,
+            return Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>(rows, columns,
                      eFULL, std::numeric_limits<unsigned int>::max(),
                      std::numeric_limits<unsigned int>::max(), bufferSize);
             }
         };
-    #endif
 }
+    #endif
+
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP

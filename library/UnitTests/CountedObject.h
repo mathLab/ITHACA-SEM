@@ -83,19 +83,19 @@ namespace Nektar
 
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename L, typename Op, typename R>
-            CountedObject(const Node<L, Op, R>& rhs) :
+            CountedObject(const expt::Node<L, Op, R>& rhs) :
                 value(0)
             {
                 ++numberOfExpressionConstructions;
-                ExpressionEvaluator::Evaluate(rhs, *this);
+                expt::ExpressionEvaluator::Evaluate(rhs, *this);
             }
 
             template<typename L, typename Op, typename R>
-            CountedObject<DerivedType> operator=(const Node<L, Op, R>& rhs)
+            CountedObject<DerivedType> operator=(const expt::Node<L, Op, R>& rhs)
             {
                 ++numberOfExpressionAssignments;
                 value = 0;
-                ExpressionEvaluator::Evaluate(rhs, *this);
+                expt::ExpressionEvaluator::Evaluate(rhs, *this);
                 return *this;
             }
             #endif

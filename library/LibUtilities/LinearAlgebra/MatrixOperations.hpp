@@ -793,9 +793,14 @@ namespace Nektar
         Dgemm(result, alpha, A, B, beta, C);
     }
 
+}
+
+
     #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+namespace expt
+{
     template<typename L, typename R, typename IndicesType, unsigned int index>
-    struct BinaryBinaryEvaluateNodeOverride<L, AddOp, R, IndicesType, index,
+    struct BinaryBinaryEvaluateNodeOverride<L, expt::AddOp, R, IndicesType, index,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -816,18 +821,21 @@ namespace Nektar
                 IsDgemmRightSide<R>::template GetValues<IndicesType, index + L::TotalCount>::GetC(args) );
         }
     };  
+}
     #endif
 
+namespace Nektar
+{
     // TODO - This case also catches chained multipliation, which we don't want.
     // But we do want it to catch a*A*B.
     //template<typename L, typename R, typename IndicesType, unsigned int index>
-    //struct BinaryBinaryEvaluateNodeOverride<L, MultiplyOp, R, IndicesType, index,
+    //struct BinaryBinaryEvaluateNodeOverride<L, expt::MultiplyOp, R, IndicesType, index,
     //    typename boost::enable_if
     //    <
-    //        IsDgemmLeftSide<Node<L, MultiplyOp, R> >
+    //        IsDgemmLeftSide<Node<L, expt::MultiplyOp, R> >
     //    >::type > : public boost::true_type 
     //{
-    //    typedef IsDgemmLeftSide<Node<L, MultiplyOp, R> > Accessor;
+    //    typedef IsDgemmLeftSide<Node<L, expt::MultiplyOp, R> > Accessor;
 
     //    template<typename ResultType, typename ArgumentVectorType>
     //    static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
@@ -854,12 +862,12 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::and_
@@ -873,7 +881,7 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -895,7 +903,7 @@ namespace Nektar
     //                    typedef typename LhsType::ResultType LhsResultType;
     //                    typedef typename RhsType::ResultType RhsResultType;
     //                    lhs.Evaluate(result);
-    //                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+    //                    expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
     //                }
     //            }
     //        };
@@ -905,12 +913,12 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::or_
@@ -924,7 +932,7 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -936,7 +944,7 @@ namespace Nektar
     //                typedef typename LhsType::ResultType LhsResultType;
     //                typedef typename RhsType::ResultType RhsResultType;
     //                lhs.Evaluate(result);
-    //                AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+    //                expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
     //            }
     //        };
 
@@ -948,15 +956,15 @@ namespace Nektar
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<double>,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                                            >,
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::and_
@@ -970,14 +978,14 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                    > LhsLhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        LhsLhsType,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -1001,7 +1009,7 @@ namespace Nektar
     //                    typedef typename LhsType::ResultType LhsResultType;
     //                    typedef typename RhsType::ResultType RhsResultType;
     //                    lhs.Evaluate(result);
-    //                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+    //                    expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
     //                }
     //            }
     //        };
@@ -1013,15 +1021,15 @@ namespace Nektar
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<double>,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                                            >,
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::or_
@@ -1035,14 +1043,14 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                    > LhsLhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        LhsLhsType,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -1054,7 +1062,7 @@ namespace Nektar
     //                typedef typename LhsType::ResultType LhsResultType;
     //                typedef typename RhsType::ResultType RhsResultType;
     //                lhs.Evaluate(result);
-    //                AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+    //                expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
     //            }
     //        };
 
@@ -1064,17 +1072,17 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                        >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::and_
@@ -1088,13 +1096,13 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                    > RhsType;
     //            
@@ -1115,7 +1123,7 @@ namespace Nektar
     //                {
     //                    lhs.Evaluate(result);
     //                    NekMatrix<double> rhsTemp = rhs.Evaluate();
-    //                    AddOp<NekMatrix<double>, NekMatrix<double> >::ApplyEqual(result, rhsTemp);
+    //                    expt::AddOp<NekMatrix<double>, NekMatrix<double> >::ApplyEqual(result, rhsTemp);
     //                }
     //            }
     //        };
@@ -1125,17 +1133,17 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                        >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::or_
@@ -1149,13 +1157,13 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                    > RhsType;
     //            
@@ -1165,7 +1173,7 @@ namespace Nektar
     //            {
     //                lhs.Evaluate(result);
     //                NekMatrix<double> rhsTemp = rhs.Evaluate();
-    //                AddOp<NekMatrix<double>, NekMatrix<double> >::ApplyEqual(result, rhsTemp);
+    //                expt::AddOp<NekMatrix<double>, NekMatrix<double> >::ApplyEqual(result, rhsTemp);
     //            }
     //        };
     //        
@@ -1176,20 +1184,20 @@ namespace Nektar
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<double>,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                                            >,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                        >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::and_
@@ -1203,20 +1211,20 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                    > LhsLhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        LhsLhsType,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                    > RhsType;
     //            
@@ -1241,7 +1249,7 @@ namespace Nektar
     //                    typedef typename RhsType::ResultType RhsResultType;
     //                    lhs.Evaluate(result);
     //                    NekMatrix<double> rhsTemp = rhs.Evaluate();
-    //                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+    //                    expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
     //                }
     //            }
     //        };
@@ -1253,20 +1261,20 @@ namespace Nektar
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<double>,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                                            >,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                        >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::or_
@@ -1280,20 +1288,20 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                    > LhsLhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        LhsLhsType,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsType;
     //             typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                    > RhsType;
     //            
@@ -1305,7 +1313,7 @@ namespace Nektar
     //                typedef typename RhsType::ResultType RhsResultType;
     //                lhs.Evaluate(result);
     //                NekMatrix<double> rhsTemp = rhs.Evaluate();
-    //                AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+    //                expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
     //            }
     //        };
     //        
@@ -1315,22 +1323,22 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                            >
     //                                        >,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                        >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::and_
@@ -1344,20 +1352,20 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsRhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        LhsRhsType
     //                    > LhsType;
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                    > RhsType;
     //            
@@ -1382,7 +1390,7 @@ namespace Nektar
     //                    typedef typename RhsType::ResultType RhsResultType;
     //                    lhs.Evaluate(result);
     //                    NekMatrix<double> rhsTemp = rhs.Evaluate();
-    //                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+    //                    expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
     //                }
     //            }
     //        };
@@ -1392,22 +1400,22 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                            >
     //                                        >,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                        >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::or_
@@ -1421,20 +1429,20 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsRhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        LhsRhsType
     //                    > LhsType;
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                    > RhsType;
     //            
@@ -1446,7 +1454,7 @@ namespace Nektar
     //                typedef typename RhsType::ResultType RhsResultType;
     //                lhs.Evaluate(result);
     //                NekMatrix<double> rhsTemp = rhs.Evaluate();
-    //                AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+    //                expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
     //            }
     //        };
     //        
@@ -1455,17 +1463,17 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                            >
     //                                        >,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::and_
@@ -1479,14 +1487,14 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsRhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        LhsRhsType
     //                    > LhsType;
     //            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -1511,7 +1519,7 @@ namespace Nektar
     //                    typedef typename RhsType::ResultType RhsResultType;
     //                    lhs.Evaluate(result);
     //                    const NekMatrix<T3, M3>& rhsTemp = *rhs;
-    //                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+    //                    expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
     //                }
     //            }
     //        };
@@ -1521,17 +1529,17 @@ namespace Nektar
     //        struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            BinaryExpressionPolicy
     //                                            <
     //                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                                                MultiplyOp,
+    //                                                expt::MultiplyOp,
     //                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                            >
     //                                        >,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                        NekMatrix<double, StandardMatrixTag>,
-    //                                        AddOp, BinaryNullOp,
+    //                                        expt::AddOp, BinaryNullOp,
     //                                        typename boost::enable_if
     //                                        <
     //                                            boost::mpl::or_
@@ -1545,14 +1553,14 @@ namespace Nektar
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    > LhsRhsType;
     //                    
     //            typedef BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        LhsRhsType
     //                    > LhsType;
     //            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -1565,7 +1573,7 @@ namespace Nektar
     //                typedef typename RhsType::ResultType RhsResultType;
     //                lhs.Evaluate(result);
     //                const NekMatrix<T3, M3>& rhsTemp = *rhs;
-    //                AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+    //                expt::AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
     //            }
     //        };
 
@@ -1578,18 +1586,18 @@ namespace Nektar
     //    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                    <
     //                                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                        MultiplyOp, 
+    //                                        expt::MultiplyOp, 
     //                                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                    >,
     //                                    ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp 
+    //                                    expt::AddOp, BinaryNullOp 
     //                                    >
     //    {
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                    MultiplyOp, 
+    //                    expt::MultiplyOp, 
     //                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                > LhsType;
     //        typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -1600,7 +1608,7 @@ namespace Nektar
     //        {
     //            return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+    //                                    expt::AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
     //        }
     //    };
 
@@ -1609,27 +1617,27 @@ namespace Nektar
     //    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                    <
     //                                        ConstantExpressionPolicy<double>,
-    //                                        MultiplyOp,
+    //                                        expt::MultiplyOp,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >
     //                                    >,
     //                                    ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp 
+    //                                    expt::AddOp, BinaryNullOp 
     //                                    >
     //    {
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<double>,
-    //                    MultiplyOp,
+    //                    expt::MultiplyOp,
     //                    BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    >
     //                > LhsType;
@@ -1641,7 +1649,7 @@ namespace Nektar
     //        {
     //            return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+    //                                    expt::AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
     //        }
     //    };
 
@@ -1653,15 +1661,15 @@ namespace Nektar
     //                                        BinaryExpressionPolicy
     //                                        <                                            
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                                        >,
-    //                                        MultiplyOp, 
+    //                                        expt::MultiplyOp, 
     //                                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                    >,
     //                                    ConstantExpressionPolicy<NekMatrix<T3, M3> >,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp 
+    //                                    expt::AddOp, BinaryNullOp 
     //                                    >
     //    {
     //        typedef BinaryExpressionPolicy
@@ -1669,10 +1677,10 @@ namespace Nektar
     //                    BinaryExpressionPolicy
     //                    <                                            
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                    >,
-    //                    MultiplyOp, 
+    //                    expt::MultiplyOp, 
     //                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                > LhsType;
     //        typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
@@ -1683,7 +1691,7 @@ namespace Nektar
     //        {
     //            return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+    //                                    expt::AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
     //        }
     //    };
     //    
@@ -1692,28 +1700,28 @@ namespace Nektar
     //    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
     //                                    <
     //                                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                        MultiplyOp, 
+    //                                        expt::MultiplyOp, 
     //                                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                    >,
     //                                    BinaryExpressionPolicy
     //                                    <
     //                                        ConstantExpressionPolicy<double>,
-    //                                        MultiplyOp,
+    //                                        expt::MultiplyOp,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                    >,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp>
+    //                                    expt::AddOp, BinaryNullOp>
     //    {
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                    MultiplyOp, 
+    //                    expt::MultiplyOp, 
     //                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                > LhsType;
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<double>,
-    //                    MultiplyOp,
+    //                    expt::MultiplyOp,
     //                    ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                > RhsType;
     //        
@@ -1723,7 +1731,7 @@ namespace Nektar
     //        {
     //            return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
     //                                NekMatrix<double, StandardMatrixTag>,
-    //                    AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+    //                    expt::AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
     //        }
     //    };
 
@@ -1732,39 +1740,39 @@ namespace Nektar
     //    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<double>,
-    //                                    MultiplyOp,
+    //                                    expt::MultiplyOp,
     //                                        BinaryExpressionPolicy
     //                                        <
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                                            MultiplyOp, 
+    //                                            expt::MultiplyOp, 
     //                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                        >
     //                                    >,
     //                                    BinaryExpressionPolicy
     //                                    <
     //                                        ConstantExpressionPolicy<double>,
-    //                                        MultiplyOp,
+    //                                        expt::MultiplyOp,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                    >,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp 
+    //                                    expt::AddOp, BinaryNullOp 
     //                                    >
     //    {
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<double>,
-    //                    MultiplyOp,
+    //                    expt::MultiplyOp,
     //                    BinaryExpressionPolicy
     //                    <
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-    //                        MultiplyOp, 
+    //                        expt::MultiplyOp, 
     //                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                    >
     //                > LhsType;
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<double>,
-    //                    MultiplyOp,
+    //                    expt::MultiplyOp,
     //                    ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                > RhsType;
     //        
@@ -1774,7 +1782,7 @@ namespace Nektar
     //        {
     //            return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+    //                                    expt::AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
     //        }
     //    };
 
@@ -1785,20 +1793,20 @@ namespace Nektar
     //                                        BinaryExpressionPolicy
     //                                        <                                            
     //                                            ConstantExpressionPolicy<double>,
-    //                                            MultiplyOp,
+    //                                            expt::MultiplyOp,
     //                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                                        >,
-    //                                        MultiplyOp, 
+    //                                        expt::MultiplyOp, 
     //                                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                                    >,
     //                                    BinaryExpressionPolicy
     //                                    <
     //                                        ConstantExpressionPolicy<double>,
-    //                                        MultiplyOp,
+    //                                        expt::MultiplyOp,
     //                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                                    >,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp 
+    //                                    expt::AddOp, BinaryNullOp 
     //                                    >
     //    {
     //        typedef BinaryExpressionPolicy
@@ -1806,16 +1814,16 @@ namespace Nektar
     //                    BinaryExpressionPolicy
     //                    <                                            
     //                        ConstantExpressionPolicy<double>,
-    //                        MultiplyOp,
+    //                        expt::MultiplyOp,
     //                        ConstantExpressionPolicy<NekMatrix<T1, M1> >
     //                    >,
-    //                    MultiplyOp, 
+    //                    expt::MultiplyOp, 
     //                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
     //                > LhsType;
     //        typedef BinaryExpressionPolicy
     //                <
     //                    ConstantExpressionPolicy<double>,
-    //                    MultiplyOp,
+    //                    expt::MultiplyOp,
     //                    ConstantExpressionPolicy<NekMatrix<T3, M3> >
     //                > RhsType;
     //        
@@ -1825,7 +1833,7 @@ namespace Nektar
     //        {
     //            return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
     //                                    NekMatrix<double, StandardMatrixTag>,
-    //                                    AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+    //                                    expt::AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
     //        }
     //    };
 

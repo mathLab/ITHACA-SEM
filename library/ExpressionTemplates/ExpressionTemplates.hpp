@@ -28,8 +28,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_HPP
+#ifndef EXPRESSION_TEMPLATES_HPP
+#define EXPRESSION_TEMPLATES_HPP
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 

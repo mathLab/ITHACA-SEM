@@ -80,45 +80,45 @@ namespace Nektar
  #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
      #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
          PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         Nektar::Node<Nektar::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, Nektar::MultiplyOp, Nektar::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::MultiplyOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
          operator*(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
                const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
          { \
-             return Nektar::CreateBinaryExpression<Nektar::MultiplyOp>(lhs, rhs); \
+             return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs); \
          }
          
      #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
          PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         Nektar::Node<Nektar::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, Nektar::DivideOp, Nektar::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::DivideOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
          operator/(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
                const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
          { \
-             return Nektar::CreateBinaryExpression<Nektar::DivideOp>(lhs, rhs); \
+             return expt::CreateBinaryExpression<expt::DivideOp>(lhs, rhs); \
          }
          
      #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
          PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         Nektar::Node<Nektar::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, Nektar::AddOp, Nektar::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::AddOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
          operator+(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
                const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
          { \
-             return Nektar::CreateBinaryExpression<Nektar::AddOp>(lhs, rhs); \
+             return expt::CreateBinaryExpression<expt::AddOp>(lhs, rhs); \
          }
      
      #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
          PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-         Nektar::Node<Nektar::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, Nektar::SubtractOp, Nektar::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::SubtractOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
          operator-(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
                const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
          { \
-             return Nektar::CreateBinaryExpression<Nektar::SubtractOp>(lhs, rhs); \
+             return expt::CreateBinaryExpression<expt::SubtractOp>(lhs, rhs); \
          }
          
  #else //NEKTAR_USE_EXPRESSION_TEMPLATES
  
     #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-        SHOW_TYPENAME(NumLeftParams, NumRightParams) Nektar::MultiplyOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
+        SHOW_TYPENAME(NumLeftParams, NumRightParams) expt::MultiplyOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
         operator*(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
         { \
@@ -128,7 +128,7 @@ namespace Nektar
          
     #define GENERATE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-        SHOW_TYPENAME(NumLeftParams, NumRightParams) Nektar::DivideOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
+        SHOW_TYPENAME(NumLeftParams, NumRightParams) expt::DivideOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
         operator/(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
         { \
@@ -137,7 +137,7 @@ namespace Nektar
       
     #define GENERATE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-        SHOW_TYPENAME(NumLeftParams, NumRightParams) Nektar::AddOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
+        SHOW_TYPENAME(NumLeftParams, NumRightParams) expt::AddOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
         operator+(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
         { \
@@ -147,7 +147,7 @@ namespace Nektar
 
     #define GENERATE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
-        SHOW_TYPENAME(NumLeftParams, NumRightParams) Nektar::SubtractOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
+        SHOW_TYPENAME(NumLeftParams, NumRightParams) expt::SubtractOp::ResultType<GET_TYPE(LeftType, LhsType, NumLeftParams), GET_TYPE(RightType, RhsType, NumRightParams)>::type \
         operator-(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs) \
         { \

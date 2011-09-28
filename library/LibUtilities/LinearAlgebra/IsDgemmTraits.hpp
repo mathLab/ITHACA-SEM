@@ -58,7 +58,7 @@ namespace Nektar
     struct IsDgemmRightSide : public boost::false_type {};
 
     template<typename L, typename R>
-    struct IsDgemmRightSide<Node<L, MultiplyOp, R>,
+    struct IsDgemmRightSide<expt::Node<L, expt::MultiplyOp, R>,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -71,10 +71,10 @@ namespace Nektar
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef EvaluateNodeWithTemporaryIfNeeded<L, IndicesType, index> LEvaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<L, IndicesType, index> LEvaluator;
 
             static const unsigned int RIndex = index + L::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<R, IndicesType, RIndex> REvaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<R, IndicesType, RIndex> REvaluator;
 
             template<typename ArgumentVectorType>
             static double GetBeta(const ArgumentVectorType& args)
@@ -92,7 +92,7 @@ namespace Nektar
     };
 
     template<typename L, typename R>
-    struct IsDgemmRightSide<Node<L, MultiplyOp, R>,
+    struct IsDgemmRightSide<expt::Node<L, expt::MultiplyOp, R>,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -105,10 +105,10 @@ namespace Nektar
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef EvaluateNodeWithTemporaryIfNeeded<L, IndicesType, index> LEvaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<L, IndicesType, index> LEvaluator;
 
             static const unsigned int RIndex = index + L::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<R, IndicesType, RIndex> REvaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<R, IndicesType, RIndex> REvaluator;
 
             template<typename ArgumentVectorType>
             static double GetBeta(const ArgumentVectorType& args)
@@ -126,14 +126,14 @@ namespace Nektar
     };
 
     template<typename T, typename Op>
-    struct IsDgemmRightSide<Node<T, Op, void> ,
+    struct IsDgemmRightSide<expt::Node<T, Op, void> ,
         typename boost::enable_if
-        < CanGetRawPtr<typename Node<T, Op, void>::ResultType > >::type > : public boost::true_type
+        < CanGetRawPtr<typename expt::Node<T, Op, void>::ResultType > >::type > : public boost::true_type
     {
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef EvaluateNodeWithTemporaryIfNeeded< Node<T, Op, void>, IndicesType, index> Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded< expt::Node<T, Op, void>, IndicesType, index> Evaluator;
 
             template<typename ArgumentVectorType>
             static double GetBeta(const ArgumentVectorType& args)
@@ -154,7 +154,7 @@ namespace Nektar
     struct IsDgemmLeftSide : public boost::false_type {};
 
     template<typename A1, typename A2, typename A3>
-    struct IsDgemmLeftSide< Node< Node<A1, MultiplyOp, A2>, MultiplyOp, A3> ,
+    struct IsDgemmLeftSide< expt::Node< expt::Node<A1, expt::MultiplyOp, A2>, expt::MultiplyOp, A3> ,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -168,13 +168,13 @@ namespace Nektar
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
 
             static const unsigned int A2Index = index + A1::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
 
             static const unsigned int A3Index = A2Index + A2::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
 
             template<typename ArgumentVectorType>
             static typename A1Evaluator::ResultType GetAlpha(const ArgumentVectorType& args)
@@ -197,7 +197,7 @@ namespace Nektar
     };
 
     template<typename A1, typename A2, typename A3>
-    struct IsDgemmLeftSide< Node< Node<A1, MultiplyOp, A2>, MultiplyOp, A3> ,
+    struct IsDgemmLeftSide< expt::Node< expt::Node<A1, expt::MultiplyOp, A2>, expt::MultiplyOp, A3> ,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -211,13 +211,13 @@ namespace Nektar
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
 
             static const unsigned int A2Index = index + A1::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
 
             static const unsigned int A3Index = A2Index + A2::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
 
             template<typename ArgumentVectorType>
             static typename A2Evaluator::ResultType GetAlpha(const ArgumentVectorType& args)
@@ -240,7 +240,7 @@ namespace Nektar
     };
 
     template<typename A1, typename A2, typename A3>
-    struct IsDgemmLeftSide< Node< Node<A1, MultiplyOp, A2>, MultiplyOp, A3> ,
+    struct IsDgemmLeftSide< expt::Node< expt::Node<A1, expt::MultiplyOp, A2>, expt::MultiplyOp, A3> ,
         typename boost::enable_if
         <
             boost::mpl::and_
@@ -254,13 +254,13 @@ namespace Nektar
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
 
             static const unsigned int A2Index = index + A1::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
 
             static const unsigned int A3Index = A2Index + A2::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
 
             template<typename ArgumentVectorType>
             static typename A3Evaluator::ResultType GetAlpha(const ArgumentVectorType& args)
@@ -286,12 +286,12 @@ namespace Nektar
     // Three matrices multiplied together constitutes a left hand side of 
     // a dgemm call (one subexpression will need to be evaluated first).
     template<typename A1, typename A2, typename A3>
-    struct IsDgemmLeftSide< Node< Node<A1, MultiplyOp, A2>, MultiplyOp, A3> ,
+    struct IsDgemmLeftSide< expt::Node< expt::Node<A1, expt::MultiplyOp, A2>, expt::MultiplyOp, A3> ,
         typename boost::enable_if
         <
             boost::mpl::and_
             <
-                CanGetRawPtr<typename Node<A1, MultiplyOp, A2>::ResultType>,
+                CanGetRawPtr<typename expt::Node<A1, expt::MultiplyOp, A2>::ResultType>,
                 CanGetRawPtr<typename A3::ResultType>,
                 boost::mpl::not_<boost::is_same<typename A1::ResultType, double> >,
                 boost::mpl::not_<boost::is_same<typename A2::ResultType, double> >
@@ -301,11 +301,11 @@ namespace Nektar
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef Node<A1, MultiplyOp, A2> LhsNode;
-            typedef EvaluateNodeWithTemporaryIfNeeded<LhsNode, IndicesType, index> A1Evaluator;
+            typedef expt::Node<A1, expt::MultiplyOp, A2> LhsNode;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<LhsNode, IndicesType, index> A1Evaluator;
 
             static const unsigned int A3Index = index + LhsNode::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A3, IndicesType, A3Index> A3Evaluator;
 
             template<typename ArgumentVectorType>
             static double GetAlpha(const ArgumentVectorType& args)
@@ -328,26 +328,26 @@ namespace Nektar
     };
 
     template<typename T, typename R>
-    struct IsDgemmLeftSide< Node< Node<T, void, void>, MultiplyOp, Node<R, void, void> > ,
+    struct IsDgemmLeftSide< expt::Node< expt::Node<T, void, void>, expt::MultiplyOp, expt::Node<R, void, void> > ,
         typename boost::enable_if
         <
             boost::mpl::and_
             <
-                CanGetRawPtr<typename Node<T, void, void>::ResultType>,
-                CanGetRawPtr<typename Node<R, void, void>::ResultType>
+                CanGetRawPtr<typename expt::Node<T, void, void>::ResultType>,
+                CanGetRawPtr<typename expt::Node<R, void, void>::ResultType>
             >
         >::type > : public boost::true_type
     {
         template<typename IndicesType, unsigned int index>
         struct GetValues
         {
-            typedef Node<T, void, void> A1;
-            typedef Node<R, void, void> A2;
+            typedef expt::Node<T, void, void> A1;
+            typedef expt::Node<R, void, void> A2;
 
-            typedef EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A1, IndicesType, index> A1Evaluator;
 
             static const unsigned int A2Index = index + A1::TotalCount;
-            typedef EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
+            typedef expt::EvaluateNodeWithTemporaryIfNeeded<A2, IndicesType, A2Index> A2Evaluator;
 
             template<typename ArgumentVectorType>
             static double GetAlpha(const ArgumentVectorType& args)

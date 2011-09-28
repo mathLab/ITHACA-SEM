@@ -27,13 +27,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
-#define NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
+#ifndef EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
+#define EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
 
-#include "Operators.hpp"
+#include <ExpressionTemplates/Operators.hpp>
 #include <boost/type_traits.hpp>
 
-namespace Nektar
+namespace expt
 {
     template<typename L, typename Op, typename R>
     struct CommutativeTraitsSpecialization : public boost::true_type
@@ -46,18 +46,22 @@ namespace Nektar
     };
 
     template<typename R, typename T>
-    struct CommutativeTraits<R, AddOp, T> : public boost::true_type
+    struct CommutativeTraits<R, expt::AddOp, T> : public boost::true_type
     {};
 
     template<typename R, typename T>
-    struct CommutativeTraits<R, MultiplyOp, T> :
-        public boost::mpl::and_
-        <
-            boost::true_type,
-            CommutativeTraitsSpecialization<R, MultiplyOp, T>
-        >::type
-    {
-    };
+    struct CommutativeTraits<R, expt::MultiplyOp, T> : public boost::true_type
+    {};
+
+//    template<typename R, typename T>
+//    struct CommutativeTraits<R, expt::MultiplyOp, T> :
+//        public boost::mpl::and_
+//        <
+//            boost::true_type,
+//            CommutativeTraitsSpecialization<R, expt::MultiplyOp, T>
+//        >::type
+//    {
+//    };
 }
 
-#endif //NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
+#endif //EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP

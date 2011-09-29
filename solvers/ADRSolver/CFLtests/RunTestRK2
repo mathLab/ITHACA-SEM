@@ -3,7 +3,7 @@ SOLVER=../../builds/dist/bin/ADRSolver-g
 test ! -x $SOLVER && echo "Solver $SOLVER not found." && exit
 
 CFL=1.0
-TimeScheme=AdamsBashforthOrder2
+TimeScheme=RungeKutta2_ImprovedEuler
 NQP=60
 
 for h in  1 2 3 4 5 6 7 8 9 10; do
@@ -44,7 +44,7 @@ for h in  1 2 3 4 5 6 7 8 9 10; do
 			L2_f=`awk 'BEGIN{};{V3=$5};END{print V3}' tmp_L2_f`
 			LI_f=`awk 'BEGIN{};{V3=$5};END{print V3}' tmp_LI_f`
 			
-            echo "$h $P $CFL $timestep $timing_q $timing_h $timing_f $L2_q $LI_q $L2_h $LI_h $L2_f $LI_f" >> resultsAB2.txt
+            echo "$h $P $CFL $timestep $timing_q $timing_h $timing_f $L2_q $LI_q $L2_h $LI_h $L2_f $LI_f" >> resultsRK2.txt
 			rm tmp_* *.fld
         done
 done

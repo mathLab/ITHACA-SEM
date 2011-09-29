@@ -120,7 +120,7 @@ namespace Nektar
                 m_data(rhs.m_data),
                 m_wrapperType(rhs.m_wrapperType)
             {
-                if( m_wrapperType = eCopy )
+                if( m_wrapperType == eCopy )
                 {
                     m_data = Array<OneD, DataType>(m_size);
                     std::copy(rhs.begin(), rhs.end(), m_data.get());

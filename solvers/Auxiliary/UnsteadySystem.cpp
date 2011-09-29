@@ -42,9 +42,7 @@
 #include <Auxiliary/UnsteadySystem.h>
 
 namespace Nektar
-{
-    NekDouble time1, time2;
-	
+{	
     NekDouble IntegrationTime = 0.0;
     /**
      * @class UnsteadySystem
@@ -160,6 +158,8 @@ namespace Nektar
         case LibUtilities::eBackwardEuler:
         case LibUtilities::eForwardEuler:
         case LibUtilities::eClassicalRungeKutta4:
+		case LibUtilities::eRungeKutta2_ModifiedEuler:
+		case LibUtilities::eRungeKutta2_ImprovedEuler:
 		case LibUtilities::eAdamsBashforthOrder1:
         case LibUtilities::eIMEXOrder1:
             {
@@ -239,9 +239,8 @@ namespace Nektar
         std::string outname = m_session->GetFilename() + ".his";
         std::ofstream hisFile (outname.c_str());
 		
-		int n_elements = m_fields[0]->GetExpSize();
-		Array<OneD,NekDouble> CFL(n_elements,0.0);
 		const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
+		
 		NekDouble TimeStability;
 		
 		if(m_cfl>0.0)
@@ -253,22 +252,21 @@ namespace Nektar
 			case LibUtilities::eForwardEuler:
 			case LibUtilities::eClassicalRungeKutta4:
 			{
-				TimeStability = 2.784*m_cfl;
-				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
+				TimeStability = 2.784;
 				break;
 			}
 			
 			case LibUtilities::eAdamsBashforthOrder1:
+			case LibUtilities::eRungeKutta2_ModifiedEuler:
+			case LibUtilities::eRungeKutta2_ImprovedEuler:
 			{
-				TimeStability = 2*m_cfl;
-				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
+				TimeStability = 2;
 				break;
 			}
 				  
 			case LibUtilities::eAdamsBashforthOrder2:
 			{
-				TimeStability = m_cfl;
-				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
+				TimeStability = 1.0;
 				break;
 			}
 			default:
@@ -278,18 +276,34 @@ namespace Nektar
 		   } 
 		}
 		
-		/////time loop
+		// Time loop
+		
+		/// CFL control has been implemented so far just for profiling reasons (just for CFLTester)
+		/// It has to be generalised
 		if(m_cfl>0.0)
 		{
-			while(n < m_steps || m_time<m_fintime)
+			NekDouble L2ErrorHalf, L2ErrorQuarter, L2ErrorFull, LInfErrorHalf, LInfErrorQuarter, LInfErrorFull;
+			bool QuarterNotpassed = true;
+			NekDouble QuartTime = m_fintime/4.0;
+			NekDouble HalfTime  = m_fintime/2.0;
+			
+			// This function is implemented for teh CFLTester only (for efficiency profiling)
+			m_timestep = GetTimeStep(ExpOrder[0],m_cfl,TimeStability);
+			
+			Timer timer;
+			
+			int step = 0;
+			
+			while(m_time < m_fintime)
 			{
-                Timer timer;
-                timer.Start();
+				timer.Start();
+				
+                // Increment time.
+				if(m_time + m_timestep > m_fintime && m_fintime > 0.0)
+				{
+					m_timestep = m_fintime - m_time;
+				}
 
-				// calculate the timestep if CFL condition is applicable
-				m_timestep = GetTimeStep(ExpOrder, CFL, TimeStability);
-				
-				
 				// Integrate over timestep.
 				if( n < numMultiSteps-1)
 				{
@@ -303,31 +317,38 @@ namespace Nektar
 				}
 				
 				
-				// Increment time.
-				if(m_time+m_timestep>m_fintime && m_fintime>0.0)
-				{
-					m_timestep = m_fintime - m_time;
-				}
-				
 				m_time += m_timestep;
 				
                 timer.Stop();
+				
 				IntegrationTime += timer.TimePerTest(1);
 				
-				
-				// Write out status information.
-				if(!((n+1)%m_infosteps) || n==m_steps || m_time==m_fintime)
+				if(QuarterNotpassed) // Error after quarter integration
 				{
-					cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
-					//                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
-					//                     << setw(7) << "Steps: " << setw(6) << n+1
-					//                     << setw(7) << "Time: "
-					//                     << setw(8) << fixed << setprecision(2) << m_time
-					//                     << "\t " << flush;
+					if(m_time <= QuartTime && (m_time + m_timestep) > QuartTime)
+					{
+						L2ErrorQuarter   = L2Error(0);
+						LInfErrorQuarter = LinfError(0);
+						QuarterNotpassed = false;
+					}
 				}
-				
+				else // Error after half integration 
+				{
+					if(m_time <= HalfTime && (m_time+m_timestep) > HalfTime)
+					{
+						L2ErrorHalf   = L2Error(0);
+						LInfErrorHalf = LinfError(0); 
+					}
+				}
+
+				// Write out status information.
+				if(!((step)%m_infosteps) || m_time==m_fintime)
+				{
+					cout << "Step: " << step << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
+				}
+			
 				// Write out checkpoint files.
-				if(n&&(!((n+1)%m_checksteps)) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))
+				if(m_time >= m_fintime && m_fintime>0.0)
 				{
 					for(i = 0; i < nvariables; ++i)
 					{
@@ -337,17 +358,31 @@ namespace Nektar
 					Checkpoint_Output(nchk++);
 					WriteHistoryData(hisFile);
 				}
+				
+				
 				// step advance
-				n++;
+				step++;
 			}
-			cout <<"\nCFL number              : " << m_cfl << endl;
-			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
 			
 			// At the end of the time integration, store final solution.
 			for(i = 0; i < nvariables; ++i)
 			{
 				m_fields[i]->UpdatePhys() = fields[i];
 			}
+			
+			L2ErrorFull   = L2Error(0);
+			LInfErrorFull =  LinfError(0);
+				
+			cout <<"\nCFL number                      : " << m_cfl << endl << endl;
+			cout <<"Time-integration timing (quarter): " << IntegrationTime/4.0 << " s" << endl << endl;
+			cout <<"Time-integration timing (half)   : " << IntegrationTime/2.0 << " s" << endl << endl;
+			cout <<"Time-integration timing (full)   : " << IntegrationTime << " s" << endl << endl;
+			cout <<"L2 error (quarter): " << L2ErrorQuarter  << endl << endl;
+			cout <<"LI error (quarter): " << LInfErrorQuarter << endl << endl;
+			cout <<"L2 error (half)   : " << L2ErrorHalf  << endl << endl;
+			cout <<"LI error (half)   : " << LInfErrorHalf  << endl << endl;
+			cout <<"L2 error (full)   : " << L2ErrorFull  << endl << endl;
+			cout <<"LI error (full)   : " << LInfErrorFull  << endl << endl;
 		}
 		
 		else
@@ -751,6 +786,23 @@ namespace Nektar
 	}
 	
 	/**
+	 *  This function calculate the proper time-step to keep the problem stable.
+	 *  It has been implemented to deal with an explict treatment of the advection term.
+	 *  In case of an explicit treatment of the diffusion term a re-implementation is required.
+	 *  The actual implementation can be found inside each equation class.
+	 *
+	 * @param ExpOrder          the expansion order we are using (P)
+	 * @param CFL               the CFL number we want to impose (<1)
+	 @ @param timeCFL           the stability coefficient of the time-integration scheme
+	 */
+	NekDouble UnsteadySystem::GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
+	{
+		NekDouble TimeStep = v_GetTimeStep(ExpOrder,CFL,TimeStability);
+		
+		return TimeStep;
+	}
+	
+	/**
 	 * See GetTimeStep. 
 	 * This is the virtual fuction to redirect the implementation to the proper class.
 	 */
@@ -761,6 +813,15 @@ namespace Nektar
         return 0.0;
     }
 	
+	/**
+	 * See GetTimeStep. 
+	 * This is the virtual fuction to redirect the implementation to the proper class.
+	 */
+	NekDouble UnsteadySystem::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
+    {
+		ASSERTL0(false, "v_GetTimeStep is not implemented in the base class (UnsteadySystem). Check if your equation class has its own implementation");
+        return 0.0;
+    }
 	
 	/**
 	 *

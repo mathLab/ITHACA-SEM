@@ -258,5 +258,18 @@ namespace Nektar
 		return TimeStep;
 	}
 	
+	NekDouble CFLtester::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
+	{
+		NekDouble TimeStep;
+		int n_elements = m_fields[0]->GetExpSize();
+		NekDouble DH   = sqrt(n_elements);
+		int H = (int)DH;
+		int P = ExpOrder-1;
+		
+		TimeStep = (TimeStability/EigenvaluesRegMeshes[H-1][P-1])*CFL;
+		
+		return TimeStep;
+	}
+	
 	
 }

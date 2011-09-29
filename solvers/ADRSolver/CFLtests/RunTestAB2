@@ -1,5 +1,5 @@
 #!/bin/bash
-SOLVER=../../builds/dist/bin/ADRSolver-g
+SOLVER=../../builds/dist/bin/ADRSolver
 test ! -x $SOLVER && echo "Solver $SOLVER not found." && exit
 
 CFL=1.0

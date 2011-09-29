@@ -306,21 +306,20 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES ="#NUMMODES#" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="#NUMMODES#" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
     
     <CONDITIONS>
 
     <PARAMETERS>
       <P> FinTime            = 1.0              </P>
-      <P> NumSteps           = #DT#             </P>
-      <P> TimeStep           = FinTime/NumSteps </P>
-      <P> IO_CheckSteps      = NumSteps         </P>
-      <P> IO_InfoSteps       = 1000             </P>
+      <P> TimeStep           = 0.1              </P>
+      <P> IO_CheckSteps      = 100              </P>
+      <P> IO_InfoSteps       = 100              </P>
       <P> CFL                = #CFL#            </P>
-      <P> NumQuadPointsError = #NQP#           </P>
+      <P> NumQuadPointsError = #NQP#            </P>
     </PARAMETERS>
-
+    
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="CFLtester"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>    
@@ -353,10 +352,10 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="2*PI*y"  />
-      <F LHS="Vy" VALUE="-2*PI*x" />
-    </USERDEFINEDEQNS>   
+    <FUNCTION NAME="AdvectionVelocity">
+      <E VAR="Vx" VALUE="2*PI*y"  />
+      <E VAR="Vy" VALUE="-2*PI*x" />
+    </FUNCTION>  
     
     <FUNCTION NAME="ExactSolution">
       <E VAR="u" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
@@ -367,11 +366,5 @@
     </FUNCTION>
     
   </CONDITIONS>
-  <GLOBALOPTIMIZATIONPARAMETERS>
-    <SOURCE FILE="tmp_opt.xml" />
-  </GLOBALOPTIMIZATIONPARAMETERS>
-  
-  <ELEMENTALOPTIMIZATIONPARAMETERS>
-    <SOURCE FILE="tmp_opt.xml" />
-  </ELEMENTALOPTIMIZATIONPARAMETERS>
+
 </NEKTAR>

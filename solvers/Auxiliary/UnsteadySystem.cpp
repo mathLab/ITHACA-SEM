@@ -327,6 +327,7 @@ namespace Nektar
 				{
 					if(m_time <= QuartTime && (m_time + m_timestep) > QuartTime)
 					{
+						m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
 						L2ErrorQuarter   = L2Error(0);
 						LInfErrorQuarter = LinfError(0);
 						QuarterNotpassed = false;
@@ -336,6 +337,7 @@ namespace Nektar
 				{
 					if(m_time <= HalfTime && (m_time+m_timestep) > HalfTime)
 					{
+						m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
 						L2ErrorHalf   = L2Error(0);
 						LInfErrorHalf = LinfError(0); 
 					}

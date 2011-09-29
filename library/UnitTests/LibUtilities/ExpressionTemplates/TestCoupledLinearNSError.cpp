@@ -106,11 +106,11 @@ namespace Nektar
             m->SetBlock(1, 0, s2);
             m->SetBlock(1, 1, s3);
 
-            double rhs_buf[] = {1, 2, 3, 4, 5, 6, 7, 8};
-            NekVector<NekDouble> rhs(8, rhs_buf);
+            double rhs_buf[] = {1, 2, 3, 4};
+            NekVector<NekDouble> rhs(4, rhs_buf);
 
-            double lhs_buf[] = {1, 2, 3, 4, 5, 6, 7, 8};
-            NekVector<NekDouble> lhs(8, lhs_buf);
+            double lhs_buf[] = {1, 2, 3, 4};
+            NekVector<NekDouble> lhs(4, lhs_buf);
 
             NekVector<NekDouble> result = lhs + (*m)*rhs;
 

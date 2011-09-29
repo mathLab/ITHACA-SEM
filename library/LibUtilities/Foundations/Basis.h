@@ -168,12 +168,12 @@ namespace Nektar
             LIB_UTILITIES_EXPORT  bool  Collocation() const;
 
             //Overloaded Operators
-            friend bool operator  == (const BasisKey& x, const BasisKey& y);
-            friend bool operator  == (const BasisKey* x, const BasisKey& y);
-            friend bool operator  == (const BasisKey& x, const BasisKey *y);
-            friend bool operator  != (const BasisKey& x, const BasisKey& y);
-            friend bool operator  != (const BasisKey* x, const BasisKey& y);
-            friend bool operator  != (const BasisKey& x, const BasisKey *y);
+            LIB_UTILITIES_EXPORT friend bool operator  == (const BasisKey& x, const BasisKey& y);
+            LIB_UTILITIES_EXPORT friend bool operator  == (const BasisKey* x, const BasisKey& y);
+            LIB_UTILITIES_EXPORT friend bool operator  == (const BasisKey& x, const BasisKey *y);
+            LIB_UTILITIES_EXPORT friend bool operator  != (const BasisKey& x, const BasisKey& y);
+            LIB_UTILITIES_EXPORT friend bool operator  != (const BasisKey* x, const BasisKey& y);
+            LIB_UTILITIES_EXPORT friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
             LIB_UTILITIES_EXPORT friend bool operator<(const BasisKey &lhs, const BasisKey &rhs);
             LIB_UTILITIES_EXPORT friend bool opLess::operator()( const BasisKey &lhs,

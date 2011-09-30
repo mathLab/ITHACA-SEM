@@ -42,15 +42,16 @@
 #include <sstream>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/SpatialDomainsDeclspec.h>
+//#include <LibUtilities/BasicUtils/Equation.h>
+//#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 class TiXmlElement;
 class TiXmlDocument;
 
-class MeshGraph;
+class SpatialDomainsDeclspec;
+class Equation;
 
 namespace Nektar
 {

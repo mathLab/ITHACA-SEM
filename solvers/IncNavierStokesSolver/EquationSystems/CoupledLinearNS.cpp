@@ -525,7 +525,8 @@ namespace Nektar
                         {
                             NekDouble beta =  2*M_PI*HomogeneousMode/m_LhomZ;
                             
-                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), -beta, phys,1,deriv,1);
+                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
+
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                             
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -542,7 +543,6 @@ namespace Nektar
                         {
                             if(j < 2) // required for mean mode of homogeneous expansion 
                             {
-                                //m_fields[m_velocity[0]]->GetExp(eid)->PhysDeriv(j,phys,deriv);
 		  		locExp->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);		
                                 m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                                 // copy into column major storage. 
@@ -572,7 +572,8 @@ namespace Nektar
                             
                             NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
                             
-                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), -beta, phys,1,deriv,1);
+                            Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1); 
+
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
 
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -697,14 +698,16 @@ namespace Nektar
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
                             NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
-
-                            Vmath::Smul(npoints,-beta,phys,1,deriv,1);
+                            
+                            // Real Component
+                            Vmath::Smul(npoints,beta,phys,1,deriv,1);
 
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() + 
                                         ((nz_loc*k+1)*bmap.num_elements()+i)*nsize_p[n],1);
-                            
+
+                            // Imaginary Component
                             Vmath::Neg(psize,pcoeffs,1);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() + 
@@ -847,12 +850,13 @@ namespace Nektar
                         { 
                             NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
 
-                            Vmath::Smul(npoints,-beta,phys,1,deriv,1);
-
+                            // Real Component
+                            Vmath::Smul(npoints,beta,phys,1,deriv,1);
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dint->GetRawPtr() + 
                                         ((nz_loc*k+1)*imap.num_elements()+i)*nsize_p[n],1);
+                            // Imaginary Component
                             Vmath::Neg(psize,pcoeffs,1);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dint->GetRawPtr() + 
@@ -1364,6 +1368,7 @@ namespace Nektar
         }
         
         SolveLinearNS(forcing);
+
     }
 
     const SpatialDomains::ExpansionMap &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)

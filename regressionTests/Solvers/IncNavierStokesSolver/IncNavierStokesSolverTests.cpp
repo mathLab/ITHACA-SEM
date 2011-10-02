@@ -91,25 +91,25 @@ int main(int argc, char* argv[])
     Execute("IncNavierStokesSolver","Test_TaylorVor_dt1.xml","Convergence: Taylor Vortex IMEXOrder2 dt=0.01");
     Execute("IncNavierStokesSolver","Test_TaylorVor_dt2.xml","Convergence: Taylor Vortex IMEXOrder2 dt=0.001");
 
-
     //Test Coupled LinearNS Kovasznay Flow
     Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Steady Oseen Kovasznay flow P=6");
     Execute("IncNavierStokesSolver","Test_Kovas_Quad6_Tri4_mixedbcs.xml","Steady Oseen Kovasznay flow, mixed elements and bcs P=7");
 
-
     //Test Coupled LinearNS unsteady Channel Flow
     Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady channel flow with coupled solver , P=8");
 
+    Execute("IncNavierStokesSolver","Test_SinCos_LinNS_3DHom1D.xml","Steady Linearised NavierStokes, 3D Soln with coupled solver , P=6");
+    
     //Test Modified Arnoldi direct stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability.xml","Linear stability (Mod. Arnoldi): Channel");
 	
-	//Test Modified Arnoldi adjoint stability (VelCorrectionScheme)
+    //Test Modified Arnoldi adjoint stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability_adj.xml","Adjoint stability (Mod. Arnoldi): Channel");
 	
-	//Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
-	Execute("IncNavierStokesSolver","bfs_tg.xml","Transient Growth (Modified Arnoldi): Backward-facing step");
+    //Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
+    Execute("IncNavierStokesSolver","bfs_tg.xml","Transient Growth (Modified Arnoldi): Backward-facing step");
 
-    #ifdef NEKTAR_USING_ARPACK
+#ifdef NEKTAR_USING_ARPACK
     //same stability tests with Arpack
 	/// @todo Fix ChanStability_Ar regression test to work on all architectures
 //	Execute("IncNavierStokesSolver","ChanStability_Ar.xml","Linear stability (Arpack): Channel");

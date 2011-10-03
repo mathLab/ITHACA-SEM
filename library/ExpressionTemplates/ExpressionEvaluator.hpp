@@ -37,7 +37,7 @@
 
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
 #include <boost/fusion/include/accumulate.hpp>
-
+#include <boost/version.hpp>
 
 namespace expt
 {

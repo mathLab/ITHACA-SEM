@@ -323,17 +323,7 @@ namespace Nektar
                 NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
 		
                 // Perform matrix-vector multiply.
-#if 0
-                for(int n = 0; n < nrows; ++n)
-                {
-                    for(int m = 0; m < ncols; ++m)
-                    {
-                        out[n] = (*blkmat)(n,m)*in[m];
-                    }
-                }
-#else
                 out = (*blkmat)*in;
-#endif
 				
                 UnshuffleFromHomogeneous1DClosePacked(sortedoutarray,outarray,IsForwards);
             }

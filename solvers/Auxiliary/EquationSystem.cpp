@@ -1709,10 +1709,6 @@ namespace Nektar
 
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
-            if (m_fields[i]->GetPhysState()==true)
-            {
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
             fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
             variables[i] = m_boundaryConditions->GetVariable(i);
         }

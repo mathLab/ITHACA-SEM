@@ -285,6 +285,7 @@ namespace Nektar
 #else
 		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(),0.0);
 #endif
+		
 
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);

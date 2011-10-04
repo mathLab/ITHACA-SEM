@@ -236,21 +236,22 @@ namespace Nektar
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
             {
-                for(i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_fields[i]->SetPhys(fields[i]);
-                    m_fields[i]->SetPhysState(true);
-                }
-                Checkpoint_Output(nchk++);
+				for(i = 0; i < m_nConvectiveFields; ++i)
+				{
+					m_fields[i]->SetPhys(fields[i]);
+					m_fields[i]->SetPhysState(true);
+				}
+				Checkpoint_Output(nchk++);
             }
         }
         
+		//Array<OneD, NekDouble>   test(256,0.0);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->SetPhys(fields[i]);
-            m_fields[i]->SetPhysState(true);
+			m_fields[i]->SetPhysState(true);
         }
-
+		
         if (m_historysteps)
         {
             hisFile.close();

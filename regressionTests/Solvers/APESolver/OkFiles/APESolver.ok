@@ -1,0 +1,18 @@
+APESolver
+==========================================
+Test_pulse.xml
+L 2 error (variable p): 10.9756
+L inf error (variable p): 98.1507
+L 2 error (variable u): 0.00258633
+L inf error (variable u): 0.0194736
+L 2 error (variable v): 0.00258633
+L inf error (variable v): 0.01947365
+----------------------------------------
+Test_channel.xml
+L 2 error (variable p): 0.0322839
+L inf error (variable p): 0.911223
+L 2 error (variable u): 7.86337e-05
+L inf error (variable u): 0.00221946
+L 2 error (variable v): 0
+L inf error (variable v): 3.54604e-17
+----------------------------------------

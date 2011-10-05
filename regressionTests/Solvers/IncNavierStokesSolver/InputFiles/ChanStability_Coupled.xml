@@ -244,8 +244,7 @@
         <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
 
->>>>>>> .r3149
-<<<<<<< .mine
+
     <PARAMETERS>
       <P> TimeStep      = 0.002 </P>
       <P> NumSteps      = 500    </P>
@@ -278,7 +277,6 @@
         <P VAR="u" VALUE="[2]" />
         <P VAR="v" VALUE="[2]" />
       </REGION>
-=======
     <CONDITIONS>
         <SOLVERINFO>
             <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />

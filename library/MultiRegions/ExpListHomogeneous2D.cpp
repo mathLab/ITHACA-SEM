@@ -299,12 +299,14 @@ namespace Nektar
             int i, pts_per_line;
             int n = inarray.num_elements();
             int packed_len;
+			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
+			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
 
             pts_per_line = n/m_lines.num_elements();
 
             if(UseNumModes)
             {
-                packed_len = m_ny*m_nz;
+                packed_len = NumMod_y*NumMod_z;
             }
             else
             {
@@ -328,6 +330,8 @@ namespace Nektar
             int i,pts_per_line;
             int n = inarray.num_elements();
             int packed_len;
+			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
+			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
 
             // use length of inarray to determine data storage type
             // (i.e.modal or physical).
@@ -335,7 +339,7 @@ namespace Nektar
 			
             if(UseNumModes)
             {
-                packed_len = m_ny*m_nz;
+                packed_len = NumMod_y*NumMod_z;
             }
             else
             {
@@ -403,6 +407,9 @@ namespace Nektar
             int n_exp = 0;
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
+			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
+			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
+			
 
             if((mattype == eForwardsCoeffSpace2D)
                ||(mattype == eBackwardsCoeffSpace2D)) // will operate on m_coeffs
@@ -426,13 +433,13 @@ namespace Nektar
 
             if((mattype == eForwardsCoeffSpace2D)||(mattype == eForwardsPhysSpace2D))
             {
-                nrows = Array<OneD, unsigned int>(n_exp,m_ny*m_nz);
+                nrows = Array<OneD, unsigned int>(n_exp,NumMod_y*NumMod_z);
                 ncols = Array<OneD, unsigned int>(n_exp,m_lines.num_elements());
             }
             else
             {
                 nrows = Array<OneD, unsigned int>(n_exp,m_lines.num_elements());
-                ncols = Array<OneD, unsigned int>(n_exp,m_ny*m_nz);
+                ncols = Array<OneD, unsigned int>(n_exp,NumMod_y*NumMod_z);
             }
 
             MatrixStorage blkmatStorage = eDIAGONAL;
@@ -501,6 +508,9 @@ namespace Nektar
         void ExpListHomogeneous2D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i,n,k;
+			
+			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
+			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
 
             int ncoeffs_per_line = m_lines[0]->GetNcoeffs();
 
@@ -517,7 +527,7 @@ namespace Nektar
                 int eid     = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
 
-                for(k = 0; k < (m_ny*m_nz); ++k)
+                for(k = 0; k < (NumMod_y*NumMod_z); ++k)
 				{
                     fielddata.insert(fielddata.end(),&coeffs[m_coeff_offset[eid]+k*ncoeffs_per_line],&coeffs[m_coeff_offset[eid]+k*ncoeffs_per_line]+datalen);
 				}
@@ -536,6 +546,8 @@ namespace Nektar
             int offset = 0;
             int datalen = fielddata.size()/fielddef->m_fields.size();
             int ncoeffs_per_line = m_lines[0]->GetNcoeffs();
+			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
+			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
 
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)
@@ -562,7 +574,7 @@ namespace Nektar
                 int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
                 
-				for(k = 0; k < (m_ny*m_nz); ++k)
+				for(k = 0; k < (NumMod_y*NumMod_z); ++k)
 				{
 					Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid] + k*ncoeffs_per_line],1);
 					offset += datalen;

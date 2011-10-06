@@ -1479,7 +1479,7 @@ namespace Nektar
 
         if(m_HomogeneousType == eHomogeneous1D)
         {
-            int ncoeffsplane = m_fields[m_velocity[i]]->GetPlane(0)->GetNcoeffs();
+            int ncoeffsplane = m_fields[m_velocity[0]]->GetPlane(0)->GetNcoeffs();
             for(n = 0; n < m_npointsZ/2; ++n)
             {
                 // Get the a Fourier mode of velocity and forcing components. 

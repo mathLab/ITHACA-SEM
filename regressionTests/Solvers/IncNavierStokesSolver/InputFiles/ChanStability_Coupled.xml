@@ -244,39 +244,6 @@
         <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="GLL_LAGRANGE" />
     </EXPANSIONS>
 
-
-    <PARAMETERS>
-      <P> TimeStep      = 0.002 </P>
-      <P> NumSteps      = 500    </P>
-      <P> IO_CheckSteps = 1000  </P>
-      <P> IO_InfoSteps  = 20    </P>
-      <P> Re            = 7500     </P>
-      <P> Kinvis        = 1.0/Re     </P>
-      <P> kdim          = 16       </P>
-      <P> nev           =  2  </P>
-    </PARAMETERS>
-
-    <VARIABLES>
-      <V ID="0"> u </V> 
-      <V ID="1"> v </V> 
-    </VARIABLES>
-    
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-    </BOUNDARYREGIONS>
-
-    <BOUNDARYCONDITIONS>
-      <REGION REF="0">
-        <D VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-      </REGION>
-      
-      <REGION REF="1">
-        <P VAR="u" VALUE="[2]" />
-        <P VAR="v" VALUE="[2]" />
-      </REGION>
     <CONDITIONS>
         <SOLVERINFO>
             <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />
@@ -320,25 +287,6 @@
                 <P VAR="u" VALUE="[2]" />
                 <P VAR="v" VALUE="[2]" />
             </REGION>
->>>>>>> .r3149
-
-<<<<<<< .mine
-      <REGION REF="2">
-        <P VAR="u" VALUE="[1]" />
-        <P VAR="v" VALUE="[1]" />
-      </REGION>
-    </BOUNDARYCONDITIONS>
-    
-    <FUNCTION NAME="BodyForce">
-      <E VAR="u" VALUE="cos(y)" />
-      <E VAR="v" VALUE="sin(y)" />
-    </FUNCTION>
-   
-    <FUNCTION NAME="AdvectionVelocity">
-      <E VAR="u" VALUE="1-y*y" />
-      <E VAR="v" VALUE="0" />
-    </FUNCTION>
-=======
             <REGION REF="2">
                 <P VAR="u" VALUE="[1]" />
                 <P VAR="v" VALUE="[1]" />

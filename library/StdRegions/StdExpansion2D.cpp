@@ -36,6 +36,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdExpansion2D.h>
+#include <SpatialDomains/Geometry2D.h>
 
 #ifdef max
 #undef max
@@ -171,6 +172,20 @@ namespace Nektar
             Int = Vmath::Vsum(nquad0 * nquad1, tmp, 1);
 
             return Int;
+        }
+
+        void StdExpansion2D::v_SetUpPhysNormals(const int edge)
+        {
+           ComputeEdgeNormal(edge);
+        }
+
+        const NormalVector & StdExpansion2D::v_GetEdgeNormal(const int edge) const
+        {
+            std::map<int, NormalVector>::const_iterator x;
+            x = m_edgeNormals.find(edge);
+            ASSERTL0 (x != m_edgeNormals.end(),
+                        "Edge normal not computed.");
+            return x->second;
         }
 
     } //end namespace

@@ -900,7 +900,10 @@ namespace Nektar
     void EquationSystem::v_SetInitialConditions(NekDouble initialtime,
                                          bool dumpInitialConditions)
     {
-       cout << "Initial Conditions:" << endl;
+        if (m_session->GetComm()->GetRank() == 0)
+        {
+            cout << "Initial Conditions:" << endl;
+        }
        if (m_session->DefinesFunction("InitialConditions"))
        {
            // Check for restart file.
@@ -936,8 +939,11 @@ namespace Nektar
                    m_fields[i]->SetPhysState(true);
                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                                                     m_fields[i]->UpdateCoeffs());
-                   cout << "\tField "<< m_session->GetVariable(i)
-                        <<": " << ifunc->GetEquation() << endl;
+                   if (m_session->GetComm()->GetRank() == 0)
+                   {
+                       cout << "\tField "<< m_session->GetVariable(i)
+                         <<": " << ifunc->GetEquation() << endl;
+                   }
                }
            }
        }
@@ -950,19 +956,16 @@ namespace Nektar
                m_fields[i]->SetPhysState(true);
                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                                                 m_fields[i]->UpdateCoeffs());
-               cout << "\tField "<< m_session->GetVariable(i)
-                    <<": 0 (default)" << endl;
+               if (m_session->GetComm()->GetRank() == 0)
+               {
+                    cout << "\tField "<< m_session->GetVariable(i)
+                        <<": 0 (default)" << endl;
+               }
            }
        }
        if(dumpInitialConditions)
        {
-           std::string outname = m_sessionName +"_initial.chk";
-           if (m_comm->GetSize() > 1)
-           {
-               char procout[16] = "";
-               sprintf(procout, "%d", m_comm->GetRank());
-               outname = outname + "." + procout;
-           }
+           std::string outname = m_sessionName +"_0.chk";
 
            // dump initial conditions to file
            WriteFld(outname);
@@ -1675,13 +1678,8 @@ namespace Nektar
         char procout[16] = "";
 
         sprintf(chkout, "%d", n);
-        std::string outname = m_sessionName +"_" + chkout + ".chk";
+        std::string outname = m_sessionName + "_" + chkout + ".chk";
 
-        if (m_comm->GetSize() > 1)
-        {
-            sprintf(procout, "%d", m_comm->GetRank());
-            outname = outname + "." + procout;
-        }
         WriteFld(outname);
     }
 
@@ -1693,7 +1691,7 @@ namespace Nektar
     {
         char chkout[16] = "";
         sprintf(chkout, "%d", n);
-        std::string outname = m_sessionName +"_" + chkout + ".chk";
+        std::string outname = m_sessionName + "_" + chkout + ".chk";
         WriteFld(outname, field, fieldcoeffs, variables);
     }
 
@@ -1989,8 +1987,11 @@ namespace Nektar
      */
     void EquationSystem::Summary(std::ostream &out)
     {
-        SessionSummary(out);
-        TimeParamSummary(out);
+        if (m_session->GetComm()->GetRank() == 0)
+        {
+            SessionSummary(out);
+            TimeParamSummary(out);
+        }
     }
 
 

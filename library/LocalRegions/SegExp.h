@@ -55,7 +55,7 @@ namespace Nektar
     namespace LocalRegions
     {
 
-        class SegExp: public StdRegions::StdSegExp, public Expansion1D
+        class SegExp: virtual public StdRegions::StdSegExp, virtual public Expansion1D
         {
 
         public:
@@ -223,7 +223,7 @@ namespace Nektar
 
         protected:
 
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
+//            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr     CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
@@ -267,7 +267,7 @@ namespace Nektar
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
-            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge);
+//            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge);
 
 
 	    virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge);
@@ -368,9 +368,9 @@ namespace Nektar
             }
 
             virtual void v_NormVectorIProductWRTBase(
-                    const Array<OneD, const NekDouble>   &Fx, 
-                    const Array<OneD, const NekDouble> &Fy, 
-                    Array< OneD, NekDouble> &outarray, 
+                    const Array<OneD, const NekDouble>   &Fx,
+                    const Array<OneD, const NekDouble> &Fy,
+                    Array< OneD, NekDouble> &outarray,
                     bool NegateNormal = false);
                     
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
@@ -542,6 +542,8 @@ namespace Nektar
                                                const int nmode_offset,
                                                Array<OneD, NekDouble> &coeffs);
 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
 
         private:
             SegExp();
@@ -593,23 +595,23 @@ namespace Nektar
                 BwdTrans(inarray,outarray);
             }
 
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> &outarray)
-            {
-                Expansion1D::AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
+//            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+//                                                     const Array<OneD, const NekDouble> &inarray,
+//                                                     Array<OneD,NekDouble> &outarray)
+//            {
+//                Expansion1D::AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
+//            }
 
 
-            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
-            {
-                Expansion1D::AddRobinMassMatrix(edgeid,primCoeffs, inoutmat);
-            }
-
-            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
-            {
-                Expansion1D::AddRobinEdgeContribution(edgeid,primCoeffs, coeffs);
-            }
+//            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+//            {
+//                Expansion1D::AddRobinMassMatrix(edgeid,primCoeffs, inoutmat);
+//            }
+//
+//            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+//            {
+//                Expansion1D::AddRobinEdgeContribution(edgeid,primCoeffs, coeffs);
+//            }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
             {
@@ -617,10 +619,6 @@ namespace Nektar
             }
 
 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
 
 
         };

@@ -44,10 +44,10 @@ namespace Nektar
             void SetUpJacGmat1D();
 
             /// Set up edge normals (given 2D element)
-            virtual void v_ComputeNormals(
-                        const GeometrySharedPtr &geom,
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key);
+//            virtual void v_ComputeNormals(
+//                        const GeometrySharedPtr &geom,
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key);
 
             ///Set up edge tangents (given 1D element)
             virtual void v_ComputeEdgeTangents(

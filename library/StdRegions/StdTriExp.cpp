@@ -47,12 +47,14 @@ namespace Nektar
 
 
         StdTriExp::StdTriExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
+            StdExpansion  (StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
             StdExpansion2D(StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb)
         {    
             ASSERTL0(Ba.GetNumModes() <=  Bb.GetNumModes(), "order in 'a' direction is higher than order in 'b' direction");
         }
 
         StdTriExp::StdTriExp(const StdTriExp &T):
+            StdExpansion(T),
             StdExpansion2D(T)
         {
         }

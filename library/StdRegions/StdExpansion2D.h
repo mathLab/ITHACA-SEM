@@ -47,7 +47,7 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdExpansion2D: public StdExpansion
+    class StdExpansion2D: virtual public StdExpansion
     {
         public:
             STD_REGIONS_EXPORT StdExpansion2D();
@@ -124,6 +124,8 @@ namespace Nektar
 
 
         protected:
+            std::map<int, NormalVector> m_edgeNormals;
+            NormalVector m_surfaceNormal;
 
         private:
 
@@ -147,6 +149,11 @@ namespace Nektar
             {
                 return PhysEvaluate(coords);
             }
+
+            virtual void v_SetUpPhysNormals(const int edge);
+
+            const NormalVector & v_GetEdgeNormal(const int edge) const;
+
     };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;

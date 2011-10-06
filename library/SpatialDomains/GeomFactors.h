@@ -143,20 +143,20 @@ namespace Nektar
             inline bool LaplacianMetricIsZero(const int indx) const;
 
             /// Computes the edge normals from a 2D element
-            inline void ComputeNormals(
-                            const GeometrySharedPtr &geom2D,
-                            const int edge,
-                            const LibUtilities::PointsKey &to_key);
+//            inline void ComputeNormals(
+//                            const GeometrySharedPtr &geom2D,
+//                            const int edge,
+//                            const LibUtilities::PointsKey &to_key);
             /// Computes the edge tangents from 1D element
             inline void ComputeEdgeTangents(
             	    	    const GeometrySharedPtr &geom2D,
             	    	    const int edge,
             	    	    const LibUtilities::PointsKey &to_key);
             /// Computes the edge normals for 1D geometries only.
-            inline void ComputeEdgeNormals(
-                            const int edge,
-                            const LibUtilities::PointsKey &to_key,
-                            Array<OneD, Array<OneD, NekDouble> > &output) const;
+//            inline void ComputeEdgeNormals(
+//                            const int edge,
+//                            const LibUtilities::PointsKey &to_key,
+//                            Array<OneD, Array<OneD, NekDouble> > &output) const;
 
             /// Set tangent orientation
             inline void SetTangentOrientation(std::string conn);
@@ -166,8 +166,8 @@ namespace Nektar
                             Array<OneD,NekDouble> &centre);
 
             /// Returns the normal vectors evaluated at each quadrature point.
-            inline const Array<OneD, const Array<OneD, NekDouble> >
-                                                            &GetNormal() const;
+//            inline const Array<OneD, const Array<OneD, NekDouble> >
+//                                                            &GetNormal() const;
 
 	    /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
 	    /// The tangent vectors are set using the function ComputeEdgeTangents.
@@ -195,6 +195,12 @@ namespace Nektar
                         const Array<OneD, const Array<OneD, NekDouble> > &in1,
                         const Array<OneD, const Array<OneD, NekDouble> > &in2,
                               Array<OneD, Array<OneD, NekDouble> > &out);
+
+            SPATIAL_DOMAINS_EXPORT const LibUtilities::PointsKey & GetPointsKey(unsigned int i) const
+            {
+                ASSERTL1(i < m_pointsKey.num_elements(), "PointsKey out of range.");
+                return m_pointsKey[i];
+            }
 
         protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
@@ -273,16 +279,16 @@ namespace Nektar
 
         private:
             /// (1D only) Compute normals based on a 2D element.
-            virtual void v_ComputeNormals(
-                        const GeometrySharedPtr &geom2D,
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key);
+//            virtual void v_ComputeNormals(
+//                        const GeometrySharedPtr &geom2D,
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key);
 
             /// (2D only) Compute the outward normals for a given edge.
-            virtual void v_ComputeEdgeNormals(
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key,
-                        Array<OneD, Array<OneD, NekDouble> > &output) const;
+//            virtual void v_ComputeEdgeNormals(
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key,
+//                        Array<OneD, Array<OneD, NekDouble> > &output) const;
 
             /// (2D only) Compute tangents based on a 1D element.
             virtual void v_ComputeEdgeTangents(
@@ -406,13 +412,13 @@ namespace Nektar
         }
 
         /// Computes the edge normals from a 2D element
-        inline void GeomFactors::ComputeNormals(
-                        const GeometrySharedPtr &geom2D,
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key)
-        {
-            v_ComputeNormals(geom2D, edge, to_key);
-        }
+//        inline void GeomFactors::ComputeNormals(
+//                        const GeometrySharedPtr &geom2D,
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key)
+//        {
+//            v_ComputeNormals(geom2D, edge, to_key);
+//        }
 
 	/// Computes the edge tangents from a 1D element
 	inline void GeomFactors::ComputeEdgeTangents(
@@ -423,13 +429,13 @@ namespace Nektar
 	   v_ComputeEdgeTangents(geom2D, edge, to_key);
 	}
         /// Computes the edge normals for 1D geometries only.
-        inline void GeomFactors::ComputeEdgeNormals(
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key,
-                        Array<OneD, Array<OneD, NekDouble> > &output) const
-        {
-            v_ComputeEdgeNormals(edge, to_key, output);
-        }
+//        inline void GeomFactors::ComputeEdgeNormals(
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key,
+//                        Array<OneD, Array<OneD, NekDouble> > &output) const
+//        {
+//            v_ComputeEdgeNormals(edge, to_key, output);
+//        }
 
         /// Set tangent orientation
         inline void GeomFactors::SetTangentOrientation(std::string conn)
@@ -452,11 +458,11 @@ namespace Nektar
         }
 
         /// Returns the normal vectors evaluated at each quadrature point.
-        inline const Array<OneD, const Array<OneD, NekDouble> >
-                                                &GeomFactors::GetNormal() const
-        {
-            return m_normal;
-        }
+//        inline const Array<OneD, const Array<OneD, NekDouble> >
+//                                                &GeomFactors::GetNormal() const
+//        {
+//            return m_normal;
+//        }
 
         /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
 	/// The tangent vectors are set using the function ComputeEdgeTangents.

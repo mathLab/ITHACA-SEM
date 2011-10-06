@@ -34,76 +34,64 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef EXPANSION1D_H
+#define EXPANSION1D_H
 
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+//#include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
+        class Expansion2D;
+        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
         
-        class Expansion1D: public Expansion
+        class Expansion1D: virtual public Expansion, virtual public StdRegions::StdExpansion1D
         {
-        public:
+            public:
             
-#if 0             
-            LOCAL_REGIONS_EXPORT void AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                              const Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray);
-#endif
-            
-            LOCAL_REGIONS_EXPORT void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const Array<OneD, const NekDouble> &inarray,                                           Array<OneD,NekDouble> &outarray);
+                LOCAL_REGIONS_EXPORT void AddNormTraceInt(
+                        const int dir,
+                        Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,NekDouble> &outarray);
 
-            LOCAL_REGIONS_EXPORT void AddNormTraceInt(const int dir, 
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray);
+                inline Expansion2DSharedPtr GetLeftAdjacentElementExp() const;
 
-            LOCAL_REGIONS_EXPORT void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
+                inline Expansion2DSharedPtr GetRightAdjacentElementExp() const;
 
-            void AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeefs, Array<OneD, NekDouble> &coeffs);
+                inline int GetLeftAdjacentElementEdge() const;
+
+                inline int GetRightAdjacentElementEdge() const;
+
+                inline void SetAdjacentElementExp(
+                        int edge,
+                        Expansion2DSharedPtr &e);
 
             protected:
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-            
+                virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
+                virtual void v_AddHDGHelmholtzTraceTerms(
+                        const NekDouble tau,
+                        const Array<OneD,const NekDouble> &inarray,
+                              Array<OneD,NekDouble> &outarray);
+
+                virtual void v_AddRobinMassMatrix(
+                        const int vert,
+                        const Array<OneD, const NekDouble > &primCoeffs,
+                        DNekMatSharedPtr &inoutmat);
+
+                virtual void v_AddRobinEdgeContribution(
+                        const int vert,
+                        const Array<OneD, const NekDouble > &primCoeffs,
+                              Array<OneD, NekDouble> &coeffs);
+
             private:
-            // Do not add members here since it may lead to conflicts.
-            // Only use this class for member functions
-            
-            
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray)
-            {
-                AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
- 
-            virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-            }
-            
-            virtual void v_AddRobinMassMatrix(const int vert, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+                Expansion2DSharedPtr m_elementLeft;
+                Expansion2DSharedPtr m_elementRight;
+                int m_elementEdgeLeft;
+                int m_elementEdgeRight;
 
-            virtual void v_AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs);
-
-            virtual int v_GetVertexMap(int vert)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-                return -1;
-            }
-
-
-            virtual int v_GetCoordim(void)
-            {
-                NEKERROR(ErrorUtil::efatal,  "Methods not valid in this class");        
-                return -1;
-            }
-
-            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
         };
         
         // type defines for use of PrismExp in a boost vector
@@ -111,6 +99,44 @@ namespace Nektar
         typedef std::vector< Expansion1DSharedPtr > Expansion1DVector;
         typedef std::vector< Expansion1DSharedPtr >::iterator Expansion1DVectorIter;
         
+        inline Expansion2DSharedPtr Expansion1D::GetLeftAdjacentElementExp() const
+        {
+            ASSERTL1(m_elementLeft.get(), "Left adjacent element not set.");
+            return m_elementLeft;
+        }
+
+        inline Expansion2DSharedPtr Expansion1D::GetRightAdjacentElementExp() const
+        {
+            ASSERTL1(m_elementLeft.get(), "Right adjacent element not set.");
+            return m_elementRight;
+        }
+
+        inline int Expansion1D::GetLeftAdjacentElementEdge() const
+        {
+            return m_elementEdgeLeft;
+        }
+
+        inline int Expansion1D::GetRightAdjacentElementEdge() const
+        {
+            return m_elementEdgeRight;
+        }
+
+        inline void Expansion1D::SetAdjacentElementExp(int edge, Expansion2DSharedPtr &e)
+        {
+            if (m_elementLeft.get())
+            {
+                ASSERTL1(!m_elementRight.get(),
+                         "Both adjacent elements already set.");
+                m_elementRight = e;
+                m_elementEdgeRight = edge;
+            }
+            else
+            {
+                m_elementLeft = e;
+                m_elementEdgeLeft = edge;
+            }
+        }
+
     } //end of namespace
 } //end of namespace
 

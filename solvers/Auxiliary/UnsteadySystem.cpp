@@ -236,7 +236,7 @@ namespace Nektar
             }
         }
 
-        std::string outname = m_session->GetFilename() + ".his";
+        std::string outname = m_session->GetSessionName() + ".his";
         std::ofstream hisFile (outname.c_str());
 		
 		const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
@@ -344,7 +344,8 @@ namespace Nektar
 				}
 
 				// Write out status information.
-				if(!((step)%m_infosteps) || m_time==m_fintime)
+				if(m_session->GetComm()->GetRank() == 0
+                        && !((step)%m_infosteps) || m_time==m_fintime)
 				{
 					cout << "Step: " << step << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
 				}
@@ -411,7 +412,8 @@ namespace Nektar
                 IntegrationTime += timer.TimePerTest(1);
 				
 				// Write out status information.
-				if(!((n+1)%m_infosteps))
+				if(m_session->GetComm()->GetRank() == 0
+                        && !((n+1)%m_infosteps))
 				{
 					cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
 					//                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"

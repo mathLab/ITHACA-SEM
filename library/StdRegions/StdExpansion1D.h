@@ -47,7 +47,7 @@ namespace Nektar
     namespace StdRegions
     {
 
-        class StdExpansion1D: public StdExpansion
+        class StdExpansion1D: virtual public StdExpansion
         {
 
         public:

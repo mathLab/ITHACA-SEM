@@ -91,6 +91,15 @@ namespace Nektar
                 std::vector<int> list;
             };
 
+            struct MeshCurved
+            {
+                int id;
+                int edgeid;
+                std::string type;
+                int npoints;
+                std::string data;
+            };
+
             struct MeshComposite
             {
                 int id;
@@ -152,6 +161,7 @@ namespace Nektar
             std::map<int, MeshEntity>  m_meshEdges;
             std::map<int, MeshEntity>  m_meshFaces;
             std::map<int, MeshEntity>  m_meshElements;
+            std::map<int, MeshCurved>  m_meshCurved;
             std::map<int, MeshEntity>  m_meshComposites;
             std::vector<unsigned int>  m_domain;
 

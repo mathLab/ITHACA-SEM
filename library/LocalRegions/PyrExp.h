@@ -52,7 +52,7 @@ namespace Nektar
     namespace LocalRegions
     {
 
-        class PyrExp: public StdRegions::StdPyrExp, public Expansion3D
+        class PyrExp: virtual public StdRegions::StdPyrExp, virtual public Expansion3D
         {
 
         public:

@@ -42,11 +42,13 @@ namespace Nektar
     {
 
         StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
+        StdExpansion(Ba.GetNumModes(), 1, Ba),
         StdExpansion1D(Ba.GetNumModes(),Ba)
         {    
         }
         
         StdSegExp::StdSegExp(const StdSegExp &T):
+            StdExpansion(T),
             StdExpansion1D(T)
         {
         }
@@ -110,7 +112,7 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
     
-        DNekMatSharedPtr StdSegExp::GenMatrix(const StdMatrixKey &mkey) 
+        DNekMatSharedPtr StdSegExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr Mat;
             MatrixType mattype;

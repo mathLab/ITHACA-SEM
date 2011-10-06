@@ -56,7 +56,7 @@ namespace Nektar
             }
         }
 
-        class StdTriExp: public StdExpansion2D
+        class StdTriExp: virtual public StdExpansion2D
         {
 
         public:
@@ -360,10 +360,10 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
-            {
-                return CreateGeneralMatrix(mkey);
-            }
+//            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
+//            {
+//                return CreateGeneralMatrix(mkey);
+//            }
             
             STD_REGIONS_EXPORT void BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray);
@@ -462,6 +462,11 @@ namespace Nektar
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);   
 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)
+            {
+                return CreateGeneralMatrix(mkey);
+            }
+
         private:
 
             virtual int v_GetNverts() const
@@ -503,11 +508,6 @@ namespace Nektar
             virtual int v_GetEdgeNumPoints(const int i) const
             {
                 return GetEdgeNumPoints(i);
-            }
-
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
-            {
-                return GenMatrix(mkey);
             }
 
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)

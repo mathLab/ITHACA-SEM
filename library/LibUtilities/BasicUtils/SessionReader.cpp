@@ -135,7 +135,8 @@ namespace Nektar
             for (unsigned int i = 1; i < argc; ++i)
             {
                 std::string vFile = argv[i];
-                if (vFile.substr(vFile.length() - 4, 4) == ".xml")
+
+                if (vFile.substr(vFile.find_last_of('.')) == ".xml")
                 {
                     vFilenames.push_back(vFile);
                 }
@@ -868,7 +869,8 @@ namespace Nektar
 
                 m_comm->Block();
 
-                m_filename = m_filename + "." + boost::lexical_cast<std::string>(m_comm->GetRank());
+                m_sessionName += "_P" + boost::lexical_cast<std::string>(m_comm->GetRank());
+                m_filename = m_sessionName + ".xml";
 
                 delete m_xmlDoc;
                 m_xmlDoc = new TiXmlDocument(m_filename);

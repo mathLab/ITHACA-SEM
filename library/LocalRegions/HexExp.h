@@ -55,7 +55,7 @@ namespace Nektar
     {
 
  
-        class HexExp: public StdRegions::StdHexExp, public Expansion3D
+        class HexExp: virtual public StdRegions::StdHexExp, virtual public Expansion3D
         {
         public:
     

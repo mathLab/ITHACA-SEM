@@ -47,7 +47,7 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdQuadExp: public StdExpansion2D
+    class StdQuadExp: virtual public StdExpansion2D
         {
 
         public:
@@ -155,7 +155,7 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
+//            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             //----------------------------
             // Differentiation Methods
@@ -449,6 +449,7 @@ namespace Nektar
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);   
             
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
 
 
         private:
@@ -561,11 +562,6 @@ namespace Nektar
                                                  Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
-            }
-
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
             }
 
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)

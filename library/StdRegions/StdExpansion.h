@@ -54,6 +54,8 @@ namespace Nektar
 
         class StdExpansion1D;
 
+        typedef Array<OneD, Array<OneD, NekDouble> > NormalVector;
+
         /** \brief The base class for all shapes
          *
          *  This is the lowest level basic class for all shapes and so
@@ -742,16 +744,6 @@ namespace Nektar
                 v_GetCoord(Lcoord, coord);
             }
 
-            /** \brief this function returns surface normal vector of a manifold
-             *
-             *  This function is a wrapper around the virtual function
-             *  \a v_GetSurfaceNormal()
-             */
-            void GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                  const int k)
-            {
-                v_GetSurfaceNormal(SurfaceNormal, k);
-            }
 
             /** \brief this function writes the solution to the file \a outfile
              *
@@ -796,6 +788,21 @@ namespace Nektar
                 return v_GetLocMatrix(mtype,lambdaval,tau);
             }
 
+            DNekScalMatSharedPtr& GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         const Array<OneD, NekDouble> &dir1Forcing,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                return v_GetLocMatrix(mtype, dir1Forcing, lambdaval, tau);
+            }
+
+            DNekScalMatSharedPtr& GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                return v_GetLocMatrix(mtype, varcoeffs, lambdaval, tau);
+            }
 
             DNekScalMatSharedPtr& GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
@@ -814,7 +821,7 @@ namespace Nektar
                 v_SetPhysNormals(normal);
             }
 
-            STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
+            STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
 
 	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
 
@@ -878,24 +885,24 @@ namespace Nektar
 
             // virtual functions related to LocalRegions
 
-            STD_REGIONS_EXPORT virtual void AddEdgeNormBoundaryInt(const int edge,
+            STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fx,
                                                 const Array<OneD, const NekDouble> &Fy,
                                                 Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void AddEdgeNormBoundaryInt(const int edge,
+            STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void AddEdgeNormBoundaryBiInt(const int edge,
+            STD_REGIONS_EXPORT void AddEdgeNormBoundaryBiInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fwd,
                                                 const Array<OneD, const NekDouble> &Bwd,
                                                 Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void AddNormTraceInt(const int dir,
+            STD_REGIONS_EXPORT void AddNormTraceInt(const int dir,
                                          Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray);
 
@@ -956,11 +963,6 @@ namespace Nektar
             void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion1D>   &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
-            }
-
-        boost::shared_ptr<StdExpansion1D> GetEdgeExp(int edge, bool SetUpNormals=true)
-            {
-          return v_GetEdgeExp(edge,SetUpNormals);
             }
 
             // Matrix Routines
@@ -1164,11 +1166,21 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau);
 
+            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         const Array<OneD, NekDouble> &dir1Forcing,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
+
+            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
+
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
 
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
+            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
 	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
 
@@ -1189,36 +1201,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual StdRegions::EdgeOrientation v_GetEorient(int edge);
             
             STD_REGIONS_EXPORT virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge);
-
-            STD_REGIONS_EXPORT virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
-                                                     Array<OneD,NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,
-                                                  const Array<OneD, const NekDouble> &Fy,
-                                                  Array<OneD, NekDouble> &outarray);
-
-             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
-                                                    boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                    const Array<OneD, const NekDouble> &Fwd,
-                                                    const Array<OneD, const NekDouble> &Bwd,
-                                                    Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddNormTraceInt(const int dir,
-                                           Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -1295,7 +1277,20 @@ namespace Nektar
             // I/O routines
             STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
 
+            const NormalVector & GetEdgeNormal(const int edge) const
+            {
+                return v_GetEdgeNormal(edge);
+            }
 
+            void ComputeEdgeNormal(const int edge)
+            {
+                v_ComputeEdgeNormal(edge);
+            }
+
+            const NormalVector & GetSurfaceNormal() const
+            {
+                // @TODO Implement this
+            }
         protected:
 
 
@@ -1420,6 +1415,37 @@ namespace Nektar
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
+                                                     Array<OneD,NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
+                                                  Array<OneD, NekDouble> &outarray);
+
+             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fn,
+                                                  Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
+                                                    boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                    const Array<OneD, const NekDouble> &Fwd,
+                                                    const Array<OneD, const NekDouble> &Bwd,
+                                                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_AddNormTraceInt(const int dir,
+                                           Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray);
+
+
         private:
             // Virtual functions
             STD_REGIONS_EXPORT virtual int v_GetNverts() const = 0;
@@ -1520,9 +1546,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_GetCoordim(void);
 
-            STD_REGIONS_EXPORT virtual void v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                            const int k);
-
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
@@ -1548,8 +1571,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion1D> v_GetEdgeExp(const int edge, bool SetUpNormals=true);
 
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
@@ -1619,6 +1640,10 @@ namespace Nektar
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
 #endif
+
+            virtual const NormalVector & v_GetEdgeNormal(const int edge) const;
+
+            virtual void v_ComputeEdgeNormal(const int edge);
 
         };
 

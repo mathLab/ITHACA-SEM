@@ -45,7 +45,7 @@ namespace Nektar
     namespace LocalRegions 
     {
         
-        class Expansion
+        class Expansion : virtual public StdRegions::StdExpansion
         {
             public:
                 LOCAL_REGIONS_EXPORT Expansion(); // default constructor. 
@@ -53,117 +53,118 @@ namespace Nektar
 
             protected:
 
-                virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
-                {
-                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-                    return LibUtilities::NullBasisSharedPtr; 
-                }
+//                virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
+//                    return LibUtilities::NullBasisSharedPtr;
+//                }
+//
+//                virtual int v_GetNcoeffs(void) const
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
+//                    return -1;
+//                }
 
-                virtual int v_GetNcoeffs(void) const 
-                {
-                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-                    return -1;
-                }
+//                virtual int v_GetNedges(void) const
+//                virtual int v_GetNedges(void) const
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
+//                    return -1;
+//                }
 
-                virtual int v_GetNedges(void) const 
-                {
-                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-                    return -1;
-                }
+//                virtual int v_GetNumPoints(const int dir) const
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
+//                    return -1;
+//                }
 
-                virtual int v_GetNumPoints(const int dir) const 
-                {
-                    NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-                    return -1;
-                }
+//                virtual int v_NumBndryCoeffs() const
+//                {
+//                    ASSERTL0(false, "This function is needs defining for this shape");
+//                    return 0;
+//                }
 
-                virtual int v_NumBndryCoeffs() const 
-                {
-                    ASSERTL0(false, "This function is needs defining for this shape");
-                    return 0;
-                }
+//                virtual int v_NumDGBndryCoeffs() const
+//                {
+//                    ASSERTL0(false, "This function is needs defining for this shape");
+//                    return 0;
+//                }
+//
+//                virtual const  SpatialDomains::GeomFactorsSharedPtr &v_GetMetricInfo() const
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+//                    return SpatialDomains::NullGeomFactorsSharedPtr;
+//                }
 
-                virtual int v_NumDGBndryCoeffs() const 
-                {
-                    ASSERTL0(false, "This function is needs defining for this shape");
-                    return 0;
-                }
-
-                virtual const  SpatialDomains::GeomFactorsSharedPtr &v_GetMetricInfo() const 
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                    return SpatialDomains::NullGeomFactorsSharedPtr;
-                }
-
-                virtual bool  v_IsBoundaryInteriorExpansion() 
-                {
-                    ASSERTL0(false,"This function has not been defined for this expansion");
-                    return false;
-                }
+//                virtual bool  v_IsBoundaryInteriorExpansion()
+//                {
+//                    ASSERTL0(false,"This function has not been defined for this expansion");
+//                    return false;
+//                }
 
 
-                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                    return NullDNekScalMatSharedPtr;
-                }
+//                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+//                    return NullDNekScalMatSharedPtr;
+//                }
+//
+//                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//                    const Array<OneD, Array<OneD, const NekDouble> >& dirForcing,
+//                    NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                    NekDouble tau = NekConstants::kNekUnsetDouble)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+//                    return NullDNekScalMatSharedPtr;
+//                }
+//
+//                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//                    const Array<OneD, NekDouble>& dirForcing,
+//                    NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                    NekDouble tau = NekConstants::kNekUnsetDouble)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+//                    return NullDNekScalMatSharedPtr;
+//                }
+//
+//                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//                    NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                    NekDouble tau = NekConstants::kNekUnsetDouble)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+//                    return NullDNekScalMatSharedPtr;
+//                }
 
-                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
-                    const Array<OneD, Array<OneD, const NekDouble> >& dirForcing,
-                    NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                    NekDouble tau = NekConstants::kNekUnsetDouble)
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                    return NullDNekScalMatSharedPtr;
-                }
+//                virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray,
+//                    Array<OneD, NekDouble> &outarray)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
+//                }
 
-                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
-                    const Array<OneD, NekDouble>& dirForcing,
-                    NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                    NekDouble tau = NekConstants::kNekUnsetDouble)
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                    return NullDNekScalMatSharedPtr;
-                }
-
-                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
-                    NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                    NekDouble tau = NekConstants::kNekUnsetDouble)
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                    return NullDNekScalMatSharedPtr;
-                }
-
-                virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray, 
-                    Array<OneD, NekDouble> &outarray) 
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
-                }
-
-                virtual void   v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &out_d0,
-                    Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                    Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
-                }
-
-		virtual void v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
-		    Array<OneD, NekDouble> &out_ds)
-		{
-		    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class");
-		}
-		virtual void v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
-		    Array<OneD, NekDouble>& out_dn)
-		{
-		    NEKERROR(ErrorUtil::efatal,"This function is not valid in this class");
-		}
-                virtual void  v_PhysDirectionalDeriv (const Array<OneD, const NekDouble> &inarray, 
-                    const Array<OneD, const NekDouble>& direction,
-                    Array<OneD, NekDouble> &out)
-                {
-                    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
-                }
+//                virtual void   v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
+//                    Array<OneD, NekDouble> &out_d0,
+//                    Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+//                    Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
+//                }
+//
+//		virtual void v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+//		    Array<OneD, NekDouble> &out_ds)
+//		{
+//		    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class");
+//		}
+//		virtual void v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+//		    Array<OneD, NekDouble>& out_dn)
+//		{
+//		    NEKERROR(ErrorUtil::efatal,"This function is not valid in this class");
+//		}
+//                virtual void  v_PhysDirectionalDeriv (const Array<OneD, const NekDouble> &inarray,
+//                    const Array<OneD, const NekDouble>& direction,
+//                    Array<OneD, NekDouble> &out)
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
+//                }
 
             private:
                 // Do not add members here since it may lead to conflicts.

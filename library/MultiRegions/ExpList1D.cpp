@@ -406,16 +406,16 @@ namespace Nektar
                         }
                     }
 
-                    if (NormalSet.count(id) == 0)
-                    {
-                        Seg = boost::dynamic_pointer_cast
-                                    <LocalRegions::SegExp>(
-                                        (*m_exp)[EdgeDone.find(id)->second]);
-
-                        // Set up normals at all Segment Quadrature points
-                        Seg->SetUpPhysNormals(locexp[i],j);
-                        NormalSet[id] = 1;
-                    }
+//                    if (NormalSet.count(id) == 0)
+//                    {
+//                        Seg = boost::dynamic_pointer_cast
+//                                    <LocalRegions::SegExp>(
+//                                        (*m_exp)[EdgeDone.find(id)->second]);
+//
+//                        // Set up normals at all Segment Quadrature points
+//                        Seg->SetUpPhysNormals(locexp[i],j);
+//                        NormalSet[id] = 1;
+//                    }
                 }
             }
 
@@ -655,34 +655,34 @@ namespace Nektar
          * Sets up the normals on all edges of expansions in the domain.
          * @param   locexp      Complete list of domain expansions.
          */
-        void ExpList1D::SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
-        {
-            map<int, int> EdgeGID;
-            int i,cnt,n,id;
-
-            // setup map of all global ids along boundary
-            for(cnt = i = 0; i < (*m_exp).size(); ++i)
-            {
-                id =  (*m_exp)[i]->GetGeom1D()->GetEid();
-                EdgeGID[id] = cnt++;
-            }
-
-            // Loop over elements and find edges that match;
-            for(cnt = n = 0; n < locexp.size(); ++n)
-            {
-                for(i = 0; i < locexp[n]->GetNedges(); ++i)
-                {
-                    id = locexp[n]->GetGeom2D()->GetEid(i);
-
-                    if(EdgeGID.count(id) > 0)
-                    {
-                        (*m_exp)[EdgeGID.find(id)->second]
-                                            ->SetUpPhysNormals(locexp[n],i);
-                    }
-                }
-            }
-        }
+//        void ExpList1D::SetUpPhysNormals(
+//                                const StdRegions::StdExpansionVector &locexp)
+//        {
+//            map<int, int> EdgeGID;
+//            int i,cnt,n,id;
+//
+//            // setup map of all global ids along boundary
+//            for(cnt = i = 0; i < (*m_exp).size(); ++i)
+//            {
+//                id =  (*m_exp)[i]->GetGeom1D()->GetEid();
+//                EdgeGID[id] = cnt++;
+//            }
+//
+//            // Loop over elements and find edges that match;
+//            for(cnt = n = 0; n < locexp.size(); ++n)
+//            {
+//                for(i = 0; i < locexp[n]->GetNedges(); ++i)
+//                {
+//                    id = locexp[n]->GetGeom2D()->GetEid(i);
+//
+//                    if(EdgeGID.count(id) > 0)
+//                    {
+//                        (*m_exp)[EdgeGID.find(id)->second]
+//                                            ->SetUpPhysNormals(locexp[n],i);
+//                    }
+//                }
+//            }
+//        }
 
 	void ExpList1D::SetUpPhysTangents(
 		const StdRegions::StdExpansionVector &locexp)
@@ -845,9 +845,12 @@ namespace Nektar
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
+                LocalRegions::Expansion1DSharedPtr loc_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((*m_exp)[i]);
+                LocalRegions::Expansion2DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
+
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                locnormals = (*m_exp)[i]->GetMetricInfo()->GetNormal();
+                locnormals = loc_elmt->GetEdgeNormal(loc_exp->GetLeftAdjacentElementEdge());
 
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
@@ -914,11 +917,11 @@ namespace Nektar
         /**
          *
          */
-        void ExpList1D::v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
-        {
-            SetUpPhysNormals(locexp);
-        }
+//        void ExpList1D::v_SetUpPhysNormals(
+//                                const StdRegions::StdExpansionVector &locexp)
+//        {
+//            SetUpPhysNormals(locexp);
+//        }
 
         void ExpList1D::v_SetUpPhysTangents(
                     const StdRegions::StdExpansionVector &locexp)

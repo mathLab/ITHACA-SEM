@@ -64,7 +64,7 @@ namespace Nektar
             }
         }
 
-        class StdPyrExp: public StdExpansion3D
+        class StdPyrExp: virtual public StdExpansion3D
         {
         
         public:

@@ -1315,12 +1315,13 @@ namespace Nektar
                                 const int k)
         {
             int i;
-            Array<OneD, NekDouble> e_SN;
+            Array<OneD, NekDouble> normals;
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
-                e_SN = SurfaceNormal + m_phys_offset[i];
-                (*m_exp)[i]->GetSurfaceNormal(e_SN, k);
+                //e_SN = SurfaceNormal + m_phys_offset[i];
+                normals = (*m_exp)[i]->GetSurfaceNormal()[k];
+                Vmath::Vcopy(normals.num_elements(), &normals[0], 1, &SurfaceNormal[0] + m_phys_offset[i], 1);
             }
         }
 
@@ -2423,8 +2424,7 @@ namespace Nektar
 		
 		/**
          */
-        void ExpList::v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
+        void ExpList::v_SetUpPhysNormals()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

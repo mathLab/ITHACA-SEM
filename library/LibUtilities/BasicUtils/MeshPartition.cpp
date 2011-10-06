@@ -106,7 +106,7 @@ namespace Nektar
 
                 vNew.LinkEndChild(vElmtNektar);
 
-                std::string vFilename = pSession->GetFilename() + "." + boost::lexical_cast<std::string>(i);
+                std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
                 vNew.SaveFile(vFilename.c_str());
             }
         }
@@ -215,6 +215,34 @@ namespace Nektar
                 e.type = x->Value()[0];
                 m_meshElements[e.id] = e;
                 x = x->NextSiblingElement();
+            }
+
+            // Read mesh curves
+            if (pSession->DefinesElement("Nektar/Geometry/Curved"))
+            {
+                vSubElement = pSession->GetElement("Nektar/Geometry/Curved");
+                x = vSubElement->FirstChildElement();
+                i = 0;
+                while(x)
+                {
+                    TiXmlAttribute* y;
+                    y = x->FirstAttribute();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    MeshCurved c;
+                    c.id = y->IntValue();
+                    y = y->Next();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    c.edgeid = y->IntValue();
+                    y = y->Next();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    c.type = y->Value();
+                    y = y->Next();
+                    ASSERTL0(y, "Failed to get attribute.");
+                    c.npoints = y->IntValue();
+                    c.data = x->FirstChild()->ToText()->Value();
+                    m_meshCurved[c.id] = c;
+                    x = x->NextSiblingElement();
+                }
             }
 
             // Read composites
@@ -371,6 +399,7 @@ namespace Nektar
             TiXmlElement *vEdge    = new TiXmlElement("EDGE");
             TiXmlElement *vFace    = new TiXmlElement("FACE");
             TiXmlElement *vElement = new TiXmlElement("ELEMENT");
+            TiXmlElement *vCurved  = new TiXmlElement("CURVED");
             TiXmlElement *vComposite = new TiXmlElement("COMPOSITE");
             TiXmlElement *vDomain  = new TiXmlElement("DOMAIN");
 
@@ -506,6 +535,26 @@ namespace Nektar
                 vElement->LinkEndChild(x);
             }
 
+            if (m_dim >= 2)
+            {
+                std::map<int, MeshCurved>::const_iterator vItCurve;
+                for (vItCurve = m_meshCurved.begin(); vItCurve != m_meshCurved.end(); ++vItCurve)
+                {
+                    MeshCurved c = vItCurve->second;
+                    if (vEdges.find(c.edgeid) != vEdges.end())
+                    {
+                        x = new TiXmlElement("E");
+                        x->SetAttribute("ID", c.id);
+                        x->SetAttribute("EDGEID", c.edgeid);
+                        x->SetAttribute("TYPE", c.type);
+                        x->SetAttribute("NUMPOINTS", c.npoints);
+                        y = new TiXmlText(c.data);
+                        x->LinkEndChild(y);
+                        vCurved->LinkEndChild(x);
+                    }
+                }
+            }
+
             for (vIt = m_meshComposites.begin(); vIt != m_meshComposites.end(); ++vIt)
             {
                 bool comma = false;
@@ -578,6 +627,10 @@ namespace Nektar
                 vElmtGeometry->LinkEndChild(vFace);
             }
             vElmtGeometry->LinkEndChild(vElement);
+            if (m_dim >= 2)
+            {
+                vElmtGeometry->LinkEndChild(vCurved);
+            }
             vElmtGeometry->LinkEndChild(vComposite);
             vElmtGeometry->LinkEndChild(vDomain);
 

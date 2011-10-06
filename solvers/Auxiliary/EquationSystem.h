@@ -539,13 +539,16 @@ namespace Nektar
      */
     inline void EquationSystem::PrintSummary(std::ostream &out)
     {
-        out << "=======================================================================" << endl;
-        out << "\tEquation Type   : " << m_session->GetSolverInfo("EQTYPE") << endl;
-        SessionSummary(out);
+        if (m_session->GetComm()->GetRank() == 0)
+        {
+            out << "=======================================================================" << endl;
+            out << "\tEquation Type   : " << m_session->GetSolverInfo("EQTYPE") << endl;
+            SessionSummary(out);
 
-        v_PrintSummary(out);
+            v_PrintSummary(out);
 
-        out << "=======================================================================" << endl;
+            out << "=======================================================================" << endl;
+        }
     }
 
 

@@ -57,7 +57,7 @@ namespace Nektar
     namespace LocalRegions
     {
         
-        class QuadExp: public StdRegions::StdQuadExp, public Expansion2D
+        class QuadExp: virtual public StdRegions::StdQuadExp, virtual public Expansion2D
         {
         public:
             
@@ -85,9 +85,6 @@ namespace Nektar
                            Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
             LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
-
-            LOCAL_REGIONS_EXPORT void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
-                                  const int k);
 
             const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
             {
@@ -262,7 +259,6 @@ namespace Nektar
             }       
 
         protected:
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
@@ -292,6 +288,8 @@ namespace Nektar
             void HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdRegions::StdMatrixKey &mkey);   
+
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;
@@ -404,12 +402,6 @@ namespace Nektar
                 GetCoord(lcoord, coord);
             }
 
-            virtual void v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                            const int k)
-            {
-                GetSurfaceNormal(SurfaceNormal, k);
-            }
-
             virtual  int v_GetCoordim()
             {
                 return m_geom->GetCoordim();
@@ -512,11 +504,6 @@ namespace Nektar
                 return StdExpansion::L2();
             }
         
-            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
-
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
             {
                 return CreateStdMatrix(mkey);
@@ -570,63 +557,63 @@ namespace Nektar
                 return m_geom->GetCartesianEorient(edge);
             }
 
-            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
-                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,  
-                                                  const Array<OneD, const NekDouble> &Fy,  
-                                                  Array<OneD, NekDouble> &outarray)
-            {
-                Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
-                
-            }
+//            virtual void v_AddEdgeNormBoundaryInt(const int edge,
+//                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+//                                                  const Array<OneD, const NekDouble> &Fx,
+//                                                  const Array<OneD, const NekDouble> &Fy,
+//                                                  Array<OneD, NekDouble> &outarray)
+//            {
+//                Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
+//
+//            }
+//
+//
+//            virtual void v_AddEdgeNormBoundaryInt(const int edge,
+//                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+//                                                  const Array<OneD, const NekDouble> &Fn,
+//                                                  Array<OneD, NekDouble> &outarray)
+//            {
+//                Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
+//
+//            }
+//
+//            virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
+//                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+//                                                  const Array<OneD, const NekDouble> &Fwd,
+//                                                  const Array<OneD, const NekDouble> &Bwd,
+//                                                  Array<OneD, NekDouble> &outarray)
+//            {
+//                Expansion2D::AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
+//
+//            }
 
 
-            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
-                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,  
-                                                  Array<OneD, NekDouble> &outarray)
-            {
-                Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
-                
-            }
+//            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+//                                                     const Array<OneD, const NekDouble> &inarray,
+//                                                     Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+//						     const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+//                                                     Array <OneD,NekDouble > &outarray)
+//            {
+//                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray);
+//            }
+//
+//            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+//            {
+//                Expansion2D::AddRobinMassMatrix(edgeid,primCoeffs, inoutmat);
+//            }
+//
+//            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD,NekDouble> &coeffs)
+//            {
+//                Expansion2D::AddRobinEdgeContribution(edgeid,primCoeffs,coeffs);
+//            }
 
-            virtual void v_AddEdgeNormBoundaryBiInt(const int edge, 
-                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fwd,  
-                                                  const Array<OneD, const NekDouble> &Bwd,  
-                                                  Array<OneD, NekDouble> &outarray)
-            {
-                Expansion2D::AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
-                
-            }
-
-
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-						     const Array<OneD, Array<OneD, const NekDouble> > &dirForcing, 
-                                                     Array <OneD,NekDouble > &outarray)
-            {
-                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray);
-            }
-
-            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
-            {
-                Expansion2D::AddRobinMassMatrix(edgeid,primCoeffs, inoutmat);
-            }
-
-            virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD,NekDouble> &coeffs)
-            {
-                Expansion2D::AddRobinEdgeContribution(edgeid,primCoeffs,coeffs);
-            }
-
-            virtual void v_DGDeriv(const int dir, 
-                                   const Array<OneD, const NekDouble>&incoeffs,
-                                   Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-                                   Array<OneD, NekDouble> &out_d)
-            {
-                Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
-            }
+//            virtual void v_DGDeriv(const int dir,
+//                                   const Array<OneD, const NekDouble>&incoeffs,
+//                                   Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+//                                   Array<OneD, NekDouble> &out_d)
+//            {
+//                Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
+//            }
 
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
@@ -642,8 +629,6 @@ namespace Nektar
                 GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
             
-            virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormal=true);
-
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
@@ -735,7 +720,7 @@ namespace Nektar
                                                const int nmode_offset,
                                                Array<OneD, NekDouble> &coeffs);
 
-
+            void v_ComputeEdgeNormal(const int edge);
         };
 
         // type defines for use of QuadExp in a boost vector

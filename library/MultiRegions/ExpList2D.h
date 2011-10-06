@@ -108,12 +108,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ~ExpList2D();
 
         protected:
-            /// Set up the normals on each expansion.
-            void SetUpPhysNormals(
-                        const StdRegions::StdExpansionVector &locexp);
-
-            /// Populate \a normals with the normals of all expansions.
-            void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
             /// Definition of the total number of degrees of freedom and
@@ -121,8 +115,7 @@ namespace Nektar
             void SetCoeffPhysOffsets(void);
 
             /// Set up the normals on each expansion.
-            virtual void v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp);
+            virtual void v_SetUpPhysNormals();
 
             virtual void v_ReadGlobalOptimizationParameters();
 

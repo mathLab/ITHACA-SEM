@@ -634,7 +634,7 @@ namespace Nektar
                                              const Array<OneD,const NekDouble> &inarray,
                                              Array<OneD,      NekDouble> &outarray);
 
-            inline void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
+            inline void SetUpPhysNormals();
 
             inline void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
  	                
@@ -1081,7 +1081,7 @@ namespace Nektar
 												     Array<OneD, NekDouble> &outarray,
 												     int BndID);
 			
-            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
+            virtual void v_SetUpPhysNormals();
 
             virtual void v_SetUpTangents();
 
@@ -1896,10 +1896,9 @@ namespace Nektar
         }
 
 
-        inline void ExpList::SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
+        inline void ExpList::SetUpPhysNormals()
         {
-            v_SetUpPhysNormals(locexp);
+            v_SetUpPhysNormals();
         }
 
         inline void ExpList::SetUpPhysTangents(

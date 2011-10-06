@@ -40,7 +40,7 @@ namespace Nektar
     namespace LocalRegions 
     {
         
-        DNekMatSharedPtr Expansion1D::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             
             DNekMatSharedPtr returnval;
@@ -49,16 +49,16 @@ namespace Nektar
             {
             case StdRegions::eHybridDGHelmholtz:
                 {                    
-                ASSERTL1(v_IsBoundaryInteriorExpansion(),
+                ASSERTL1(IsBoundaryInteriorExpansion(),
                          "HybridDGHelmholtz matrix not set up "
                          "for non boundary-interior expansions");
                     int       i;
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
-                    int       ncoeffs   = v_GetNcoeffs();
+                    int       ncoeffs   = GetNcoeffs();
 
-                    int       coordim = v_GetCoordim();
-                    DNekScalMat  &invMass = *v_GetLocMatrix(StdRegions::eInvMass);
+                    int       coordim = GetCoordim();
+                    DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
                     StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                            StdRegions::eWeakDeriv1,
                                                            StdRegions::eWeakDeriv2};
@@ -71,17 +71,17 @@ namespace Nektar
 
                     for(i=0;  i < coordim; ++i)
                     {
-                        DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[i]);
+                        DNekScalMat &Dmat = *GetLocMatrix(DerivType[i]);
 
                         Mat = Mat + Dmat*invMass*Transpose(Dmat);
                     }
 
                     // Add end Mass Matrix Contribution
-                    DNekScalMat  &Mass = *v_GetLocMatrix(StdRegions::eMass);
+                    DNekScalMat  &Mass = *GetLocMatrix(StdRegions::eMass);
                     Mat = Mat + lambdaval*Mass;                    
 
                     Array<OneD,unsigned int> bmap;
-                    v_GetBoundaryMap(bmap);
+                    GetBoundaryMap(bmap);
 
                     // Add tau*F_e using elemental mass matrices
                     for(i = 0; i < 2; ++i)
@@ -93,8 +93,8 @@ namespace Nektar
             case StdRegions::eHybridDGLamToU:
                 {
                     int j,k;
-                    int nbndry = v_NumDGBndryCoeffs();
-                    int ncoeffs = v_GetNcoeffs();
+                    int nbndry = NumDGBndryCoeffs();
+                    int ncoeffs = GetNcoeffs();
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
                     
@@ -110,7 +110,7 @@ namespace Nektar
                     DNekMat &Umat = *returnval;
                     
                     // Helmholtz matrix
-                    DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
+                    DNekScalMat  &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
                     
                     // for each degree of freedom of the lambda space
                     // calculate Umat entry 
@@ -138,9 +138,9 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ2:
                 {
                     int j,k,dir;
-                    int nbndry = v_NumDGBndryCoeffs();
-                    int nquad  = v_GetNumPoints(0);
-                    int ncoeffs = v_GetNcoeffs();
+                    int nbndry = NumDGBndryCoeffs();
+                    int nquad  = GetNumPoints(0);
+                    int ncoeffs = GetNcoeffs();
 
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);                    
@@ -157,13 +157,13 @@ namespace Nektar
                     DNekMat &Qmat = *returnval;
                     
                     // Helmholtz matrix
-                    DNekScalMat &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval,tau);
+                    DNekScalMat &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval,tau);
                     
                     // Lambda to U matrix
-                    DNekScalMat &lamToU = *v_GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval, tau);
+                    DNekScalMat &lamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval, tau);
                     
                     // Inverse mass matrix 
-                    DNekScalMat &invMass = *v_GetLocMatrix(StdRegions::eInvMass);
+                    DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
                     
                     //Weak Derivative matrix 
                     DNekScalMatSharedPtr Dmat;
@@ -171,15 +171,15 @@ namespace Nektar
                     {
                     case StdRegions::eHybridDGLamToQ0:
                         dir = 0;
-                        Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv0); 
+                        Dmat = GetLocMatrix(StdRegions::eWeakDeriv0);
                         break;
                     case StdRegions::eHybridDGLamToQ1:
                         dir = 1;
-                        Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv1); 
+                        Dmat = GetLocMatrix(StdRegions::eWeakDeriv1);
                         break;
                     case StdRegions::eHybridDGLamToQ2:
                         dir = 2;
-                        Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv2); 
+                        Dmat = GetLocMatrix(StdRegions::eWeakDeriv2);
                         break;
                     default:
                         ASSERTL0(false,"Direction not known");
@@ -219,24 +219,24 @@ namespace Nektar
             case StdRegions::eHybridDGHelmBndLam:
                 {
                     int j;
-                    int nbndry = v_NumBndryCoeffs();
+                    int nbndry = NumBndryCoeffs();
 
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
 
                     Array<OneD,unsigned int> bmap;
                     Array<OneD, NekDouble>   lam(2);
-                    v_GetBoundaryMap(bmap);
+                    GetBoundaryMap(bmap);
                     
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,  nbndry);
                     DNekMat &BndMat = *returnval;
                     
                     // Matrix to map Lambda to U
-                    DNekScalMat &LamToU = *v_GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval,tau);
+                    DNekScalMat &LamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval,tau);
                 
                     // Matrix to map Lambda to Q
-                    DNekScalMat &LamToQ = *v_GetLocMatrix(StdRegions::eHybridDGLamToQ0, lambdaval,tau);
+                    DNekScalMat &LamToQ = *GetLocMatrix(StdRegions::eHybridDGLamToQ0, lambdaval,tau);
 
                     lam[0] = 1.0; lam[1] = 0.0;
                     for(j = 0; j < nbndry; ++j)
@@ -265,12 +265,12 @@ namespace Nektar
         {
             
             int k;
-            int nbndry = v_NumBndryCoeffs();
-            int nquad  = v_GetNumPoints(0);
-            const Array<OneD, const NekDouble> &Basis  = v_GetBasis(0)->GetBdata();
+            int nbndry = NumBndryCoeffs();
+            int nquad  = GetNumPoints(0);
+            const Array<OneD, const NekDouble> &Basis  = GetBasis(0)->GetBdata();
             Array<OneD, unsigned int> vmap;
             
-            v_GetBoundaryMap(vmap);
+            GetBoundaryMap(vmap);
             
             // add G \lambda term (can assume G is diagonal since one
             // of the basis is zero at boundary otherwise)
@@ -280,71 +280,23 @@ namespace Nektar
             }
         }
 
-#if 0 
-        void Expansion1D::AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                                             const Array<OneD, const NekDouble> &inarray,
-                                                             Array<OneD,NekDouble> &outarray)
-        {
-            int i,j;
-            int nbndry = v_NumBndryCoeffs();
-            int nquad  = v_GetNumPoints(0);
-            int ncoeffs = v_GetNcoeffs();
-            Array<OneD, unsigned int> vmap;
-            
-            ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
-            
-            const LibUtilities::BasisSharedPtr base = v_GetBasis(0);
-            const Array<OneD, const NekDouble> &Dbasis = base->GetDbdata();
-            const Array<OneD, const NekDouble> &Basis  = base->GetBdata();
-            
-            SpatialDomains::GeomFactorsSharedPtr metricinfo = v_GetMetricInfo();
-            Array<TwoD, const NekDouble>  gmat = metricinfo->GetGmat();
-            NekDouble rx0,rx1;
-
-            if(metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                rx0 = gmat[0][0];
-                rx1 = gmat[0][nquad-1];
-            }
-            else
-            {
-                rx0 = rx1 = gmat[0][0];
-            }
-
-            v_GetBoundaryMap(vmap);
-
-            // Add -D^T M^{-1}G operation =-<n phi_i, d\phi_j/dx>
-            for(i = 0; i < nbndry; ++i)
-            {
-                for(j = 0; j < ncoeffs; ++j)
-                {
-                    outarray[vmap[i]] -= Basis[(vmap[i]+1)*nquad-1]*Dbasis[(j+1)*nquad-1]*rx1*inarray[j];
-                    outarray[vmap[i]] += Basis[vmap[i]*nquad]*Dbasis[j*nquad]*rx0*inarray[j];
-                }
-            }
-
-            AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
-        }
-#endif        
-
-        void Expansion1D::AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                    const Array<OneD, const NekDouble> &inarray,
-                                                    Array<OneD,NekDouble> &outarray)
+        void Expansion1D::v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                                 const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray)
         {
             int i,n;
-            int nbndry  = v_NumBndryCoeffs();
-            int nquad   = v_GetNumPoints(0);
-            int ncoeffs = v_GetNcoeffs();
-            int coordim = v_GetCoordim();
+            int nbndry  = NumBndryCoeffs();
+            int nquad   = GetNumPoints(0);
+            int ncoeffs = GetNcoeffs();
+            int coordim = GetCoordim();
             Array<OneD, unsigned int> vmap;
             
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
 
 
-            const Array<OneD, const NekDouble> &Basis  = v_GetBasis(0)->GetBdata();
-            DNekScalMat  &invMass = *v_GetLocMatrix(StdRegions::eInvMass); 
+            const Array<OneD, const NekDouble> &Basis  = GetBasis(0)->GetBdata();
+            DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
 
-            v_GetBoundaryMap(vmap);
+            GetBoundaryMap(vmap);
 
             // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
             for(i = 0; i < nbndry; ++i)
@@ -378,19 +330,19 @@ namespace Nektar
                     
                 }
                 
-                DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[n]);
+                DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
                 Coeffs = Coeffs  + Dmat*Tmpcoeff; 
             }
         }
 
-        void Expansion1D::AddRobinMassMatrix(const int vert, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        void Expansion1D::v_AddRobinMassMatrix(const int vert, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
         {
-            ASSERTL0(v_IsBoundaryInteriorExpansion(),"Robin boundary conditions are only implemented for boundary-interior expanisons"); 
+            ASSERTL0(IsBoundaryInteriorExpansion(),"Robin boundary conditions are only implemented for boundary-interior expanisons");
             ASSERTL1(inoutmat->GetRows() == inoutmat->GetColumns(),
                      "Assuming that input matrix was square");
 
             // Get local Element mapping for vertex point
-             NekDouble  map = v_GetVertexMap(vert);
+             NekDouble  map = GetVertexMap(vert);
 
             // Now need to identify a map which takes the local edge
             // mass matrix to the matrix stored in inoutmat;
@@ -402,15 +354,15 @@ namespace Nektar
              
              int rows = inoutmat->GetRows();
              
-             if (rows == v_GetNcoeffs())
+             if (rows == GetNcoeffs())
              {
                  // no need to do anything
              }
-             else if(rows == v_NumBndryCoeffs())  // same as NumDGBndryCoeffs()
+             else if(rows == NumBndryCoeffs())  // same as NumDGBndryCoeffs()
              {
                  int i;
                  Array<OneD,unsigned int> bmap;
-                 v_GetBoundaryMap(bmap);
+                 GetBoundaryMap(bmap);
                  
                  for(i = 0; i < 2; ++i)
                  {
@@ -425,6 +377,7 @@ namespace Nektar
              
              // assumes end points have unit magnitude
              (*inoutmat)(map,map) +=  primCoeffs[0];
+
         }
 
         /**
@@ -435,24 +388,14 @@ namespace Nektar
          * - multiplies the edge vector by the edge mass matrix
          * - maps the edge coefficients back onto the elemental coefficients
          */
-        void Expansion1D::AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs)
-        {
-            ASSERTL1(v_IsBoundaryInteriorExpansion(),
-                     "Not set up for non boundary-interior expansions");
-
-            NekDouble  map = v_GetVertexMap(vert);
-            Vmath::Zero(v_GetNcoeffs(), coeffs, 1);
-            coeffs[map] = primCoeffs[0];
-        }
-
-        void Expansion1D::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
-        {
-            AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
-        }
-
         void Expansion1D::v_AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
         {
-            AddRobinEdgeContribution(vert,primCoeffs,coeffs);
+            ASSERTL1(IsBoundaryInteriorExpansion(),
+                     "Not set up for non boundary-interior expansions");
+
+            NekDouble  map = GetVertexMap(vert);
+            Vmath::Zero(GetNcoeffs(), coeffs, 1);
+            coeffs[map] = primCoeffs[0];
         }
 
 

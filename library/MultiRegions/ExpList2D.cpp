@@ -579,35 +579,18 @@ namespace Nektar
 
 
         /**
-         * Sets up the normals on all edges of expansions in the domain.
-         * @param   locexp      Complete list of domain expansions.
-         */
-        void ExpList2D::SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
-        {
-
-        }
-
-        /**
-         * For each local element, copy the normals stored in the element list
-         * into the array \a normals.
-         * @param   normals     Multidimensional array in which to copy normals
-         *                      to. Must have dimension equal to or larger than
-         *                      the spatial dimension of the elements.
-         */
-        void ExpList2D::GetNormals(
-                                Array<OneD, Array<OneD, NekDouble> > &normals)
-        {
-
-        }
-
-        /**
          *
          */
-        void ExpList2D::v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
+        void ExpList2D::v_SetUpPhysNormals()
         {
-            SetUpPhysNormals(locexp);
+            int i, j;
+            for (i = 0; i < m_exp->size(); ++i)
+            {
+                for (j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
+                {
+                    (*m_exp)[i]->ComputeEdgeNormal(j);
+                }
+            }
         }
 
 

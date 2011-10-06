@@ -113,15 +113,18 @@ namespace Nektar
                             {
                                 LocalRegions::Expansion2DSharedPtr exp2d
                                     = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[i]);
-                                StdRegions::StdExpansion1DSharedPtr exp1d
-                                    = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_trace->GetExp(k));
+                                LocalRegions::Expansion1DSharedPtr exp1d
+                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(m_trace->GetExp(k));
 
                                 exp2d->SetEdgeExp(j,exp1d);
+                                exp1d->SetAdjacentElementExp(j,exp2d);
                                 break;
                             }
                         }
                     }
                 }
+
+                SetUpPhysNormals();
 
                 m_traceMap = MemoryManager<LocalToGlobalDGMap>::
                     AllocateSharedPtr(m_session, graph2D,m_trace,*this,
@@ -138,8 +141,8 @@ namespace Nektar
                 {
                     MultiRegions::ExpListSharedPtr locExpList;
 
-                    if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                    {
+//                    if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+//                    {
                         int e;
                         locExpList = m_bndCondExpansions[i];
 
@@ -147,14 +150,17 @@ namespace Nektar
                         {
                             LocalRegions::Expansion2DSharedPtr exp2d
                                 = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
-                            StdRegions::StdExpansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(locExpList->GetExp(e));
+                            LocalRegions::Expansion1DSharedPtr exp1d
+                                = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(locExpList->GetExp(e));
 
                             exp2d->SetEdgeExp(EdgeID[cnt+e],exp1d);
+                            exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
                         }
-                    }
+//                    }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
+
+                SetUpPhysNormals();
             }
         }
 
@@ -214,15 +220,18 @@ namespace Nektar
                                 {
                                     LocalRegions::Expansion2DSharedPtr exp2d
                                         = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[i]);
-                                    StdRegions::StdExpansion1DSharedPtr exp1d
-                                        = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_trace->GetExp(k));
+                                    LocalRegions::Expansion1DSharedPtr exp1d
+                                        = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(m_trace->GetExp(k));
 
                                     exp2d->SetEdgeExp(j,exp1d);
+                                    exp1d->SetAdjacentElementExp(j,exp2d);
                                     break;
                                 }
                             }
                         }
                     }
+
+                    SetUpPhysNormals();
 
                     // Finally set up the trace map between element edges and
                     // trace segment expansions.
@@ -243,8 +252,8 @@ namespace Nektar
                     {
                         MultiRegions::ExpListSharedPtr locExpList;
 
-                        if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
-                        {
+//                        if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+//                        {
                             int e;
                             locExpList = m_bndCondExpansions[i];
 
@@ -252,14 +261,17 @@ namespace Nektar
                             {
                                 LocalRegions::Expansion2DSharedPtr exp2d
                                     = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
-                                StdRegions::StdExpansion1DSharedPtr exp1d
-                                    = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(locExpList->GetExp(e));
+                                LocalRegions::Expansion1DSharedPtr exp1d
+                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(locExpList->GetExp(e));
 
                                 exp2d->SetEdgeExp(EdgeID[cnt+e],exp1d);
+                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
                             }
-                        }
+//                        }
                         cnt += m_bndCondExpansions[i]->GetExpSize();
                     }
+
+                    SetUpPhysNormals();
                 }
             }
             else
@@ -348,11 +360,12 @@ namespace Nektar
                                             graph2D,
                                             DeclareCoeffPhysArrays);
                     
+
                     // Set up normals on non-Dirichlet boundary conditions
                     if(locBCond->GetBoundaryConditionType()
                        != SpatialDomains::eDirichlet)
                     {
-                        locExpList->SetUpPhysNormals(*m_exp);
+                        SetUpPhysNormals();
                     }
 
                     m_bndCondExpansions[cnt]  = locExpList;
@@ -361,7 +374,7 @@ namespace Nektar
             	    if((type== "I")||(type=="CalcBC"))
                     {                        	    
                   	  locExpList->SetUpPhysTangents(*m_exp);               	  
-		          locExpList->SetUpPhysNormals(*m_exp);		                  	  
+		          SetUpPhysNormals();
                     }                    
                 }
             }
@@ -940,24 +953,30 @@ namespace Nektar
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
             int e_ncoeffs,id;
 
-            // linked data
+            // Retrieve block matrix of U^e
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,lambda,tau,varCoeff);
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
+            // Retrieve global trace space storage, \Lambda, from trace expansion
             Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs();
+
+            // Create trace space forcing, F
             Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0);
-            // Zero trace space
+
+            // Zero \Lambda
             Vmath::Zero(GloBndDofs,BndSol,1);
 
+            // Retrieve number of local trace space coefficients N_{\lambda},
+            // and set up local elemental trace solution \lambda^e.
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
             DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
 
             //----------------------------------
-            // Evaluate Trace Forcing
+            // Evaluate Trace Forcing vector F
+            // Kirby et al, 2010, P23, Step 5.
             //----------------------------------
-
-            // Determing <u_lam,f> terms using HDGLamToU matrix
+            // Loop over all expansions in the domain
             for(cnt = cnt1 = n = 0; n < nexp; ++n)
             {
                 nbndry = (*m_exp)[m_offset_elmt_id[n]]->NumDGBndryCoeffs();
@@ -966,20 +985,23 @@ namespace Nektar
                 e_f       = f + cnt;
                 e_l       = loc_lambda + cnt1;
 
-                // use outarray as tmp space
+                // Local trace space \lambda^e
                 DNekVec     Floc    (nbndry, e_l, eWrapper);
+                // Local forcing f^e
                 DNekVec     ElmtFce (e_ncoeffs, e_f, eWrapper);
+                // Compute local (U^e)^{\top} f^e
                 Floc = Transpose(*(HDGLamToU->GetBlock(n,n)))*ElmtFce;
 
                 cnt   += e_ncoeffs;
                 cnt1  += nbndry;
             }
 
-            // Assemble into global operator
+            // Assemble local \lambda_e into global \Lambda
             m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
+            // Copy Dirichlet boundary conditions and weak forcing into trace
+            // space
             cnt = 0;
-            // Copy Dirichlet boundary conditions into trace space
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -1002,7 +1024,8 @@ namespace Nektar
             }
 
             //----------------------------------
-            // Solve trace problem
+            // Solve trace problem: \Lambda = K^{-1} F
+            // K is the HybridDGHelmBndLam matrix.
             //----------------------------------
             if(GloBndDofs - NumDirichlet > 0)
             {

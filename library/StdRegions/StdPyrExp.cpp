@@ -45,7 +45,8 @@ namespace Nektar
         }
         
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc) 
-            : StdExpansion3D(StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
+            : StdExpansion(StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),3,Ba,Bb,Bc),
+              StdExpansion3D(StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
               //     : StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), Ba, Bb, Bc)
         {
 
@@ -60,7 +61,8 @@ namespace Nektar
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
-            : StdExpansion3D(T)
+            : StdExpansion(T),
+              StdExpansion3D(T)
         {
         }
 

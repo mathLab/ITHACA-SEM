@@ -1994,7 +1994,6 @@ namespace Nektar
                 /// Read id attribute.
                 err = edgelement->QueryIntAttribute("ID", &edgeindx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-                ASSERTL0(edgeindx == nextEdgeNumber, "Curve IDs must begin with zero and be sequential.");
 
                 /// Read edge id attribute.
                 err = edgelement->QueryIntAttribute("EDGEID", &edgeid);

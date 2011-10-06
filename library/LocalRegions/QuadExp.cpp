@@ -45,7 +45,10 @@ namespace Nektar
         QuadExp::QuadExp(const LibUtilities::BasisKey &Ba,
                          const LibUtilities::BasisKey &Bb,
                          const SpatialDomains::QuadGeomSharedPtr &geom):
-            StdRegions::StdQuadExp(Ba,Bb),
+             StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes(),2,Ba,Bb),
+             Expansion     (),
+             StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb),
+             StdQuadExp(Ba,Bb),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("QuadExpMatrix")),
@@ -61,7 +64,10 @@ namespace Nektar
         }
 
         QuadExp::QuadExp(const QuadExp &T):
-            StdRegions::StdQuadExp(T),
+            StdExpansion(T),
+            Expansion   (),
+            StdExpansion2D(T),
+            StdQuadExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(std::string("QuadExpMatrix")),
@@ -978,14 +984,14 @@ namespace Nektar
 
         }
 
-        void QuadExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
-                                       const int k)
-	    {
-            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-
-            Vmath::Vcopy(m_num, m_metricinfo->GetNormal()[k], 1,
-                                SurfaceNormal, 1);
-      	}
+//        void QuadExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
+//                                       const int k)
+//	    {
+//            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+//
+//            Vmath::Vcopy(m_num, GetSurfaceNormal()[k], 1,
+//                                SurfaceNormal, 1);
+//      	}
 
         void QuadExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                 Array<OneD,NekDouble> &coords_1,
@@ -1316,7 +1322,7 @@ namespace Nektar
             return StdQuadExp::PhysEvaluate(Lcoord);
         }
 
-        DNekMatSharedPtr QuadExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr QuadExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
 
@@ -1328,10 +1334,10 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
-                returnval = Expansion2D::GenMatrix(mkey);
+                returnval = Expansion2D::v_GenMatrix(mkey);
                 break;
             default:
-                returnval = StdQuadExp::GenMatrix(mkey);
+                returnval = StdQuadExp::v_GenMatrix(mkey);
             }
 
             return returnval;
@@ -1950,15 +1956,6 @@ namespace Nektar
             return returnval;
         }
 
-        StdRegions::StdExpansion1DSharedPtr QuadExp::v_GetEdgeExp(const int edge, bool SetUpNormals)
-        {
-            if (m_edgeExp.size() > 0)
-            {
-                return m_edgeExp[edge];
-            }
-            ASSERTL0(false,"Cannot find trace space expansion for this edge.");
-        }
-
         // Unpack data from input file assuming it comes from the same expansion type
         void QuadExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
                                             const int offset, 
@@ -1995,6 +1992,187 @@ namespace Nektar
                 break;
             default:
                 ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
+        }
+
+        void QuadExp::v_ComputeEdgeNormal(const int edge)
+        {
+            int i;
+            const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+            SpatialDomains::GeomType type = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
+            int nqe = m_base[0]->GetNumPoints();
+            int vCoordDim = GetCoordim();
+
+            m_edgeNormals[edge] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            Array<OneD, Array<OneD, NekDouble> > &normal = m_edgeNormals[edge];
+            for (i = 0; i < vCoordDim; ++i)
+            {
+                normal[i] = Array<OneD, NekDouble>(nqe);
+            }
+
+            // Regular geometry case
+            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            {
+                NekDouble fac;
+                // Set up normals
+                switch(edge)
+                {
+                case 0:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[2*i+1][0],normal[i],1);
+                    }
+                    break;
+                case 1:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,gmat[2*i][0],normal[i],1);
+                    }
+                    break;
+                case 2:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,gmat[2*i+1][0],normal[i],1);
+                    }
+                    break;
+                case 3:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[2*i][0],normal[i],1);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"edge is out of range (edge < 4)");
+                }
+
+                // normalise
+                fac = 0.0;
+                for(i =0 ; i < vCoordDim; ++i)
+                {
+                    fac += normal[i][0]*normal[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < vCoordDim; ++i)
+                {
+                    Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
+                }
+            }
+            else   // Set up deformed normals
+            {
+                int j;
+
+                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
+                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
+
+                LibUtilities::PointsKey from_key;
+
+                Array<OneD,NekDouble> normals(vCoordDim*max(nquad0,nquad1),0.0);
+                Array<OneD,NekDouble> edgejac(vCoordDim*max(nquad0,nquad1),0.0);
+
+                // Extract Jacobian along edges and recover local
+                // derivates (dx/dr) for polynomial interpolation by
+                // multiplying m_gmat by jacobian
+                switch(edge)
+                {
+                case 0:
+                    for(j = 0; j < nquad0; ++j)
+                    {
+                        edgejac[j] = jac[j];
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                           normals[i*nquad0+j] = -gmat[2*i+1][j]*edgejac[j];
+                        }
+                   }
+                    from_key = geomFactors->GetPointsKey(0);
+                    break;
+                case 1:
+                    for(j = 0; j < nquad1; ++j)
+                    {
+                        edgejac[j] = jac[nquad0*j+nquad0-1];
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            normals[i*nquad1+j]  = gmat[2*i][nquad0*j + nquad0-1]*edgejac[j];
+                        }
+                    }
+                    from_key = geomFactors->GetPointsKey(1);
+                    break;
+                case 2:
+                    for(j = 0; j < nquad0; ++j)
+                    {
+                        edgejac[j] = jac[nquad0*(nquad1-1)+j];
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            normals[i*nquad0+j] = (gmat[2*i+1][nquad0*(nquad1-1)+j])*edgejac[j];
+                        }
+                    }
+                    from_key = geomFactors->GetPointsKey(0);
+                    break;
+                case 3:
+                    for(j = 0; j < nquad1; ++j)
+                    {
+                        edgejac[j] = jac[nquad0*j];
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            normals[i*nquad1+j] = -gmat[2*i][nquad0*j]*edgejac[j];
+                        }
+                    }
+                    from_key = geomFactors->GetPointsKey(1);
+                    break;
+                default:
+                    ASSERTL0(false,"edge is out of range (edge < 3)");
+                }
+
+                int nq  = from_key.GetNumPoints();
+                Array<OneD,NekDouble> work(nqe,0.0);
+
+                // interpolate Jacobian and invert
+                LibUtilities::Interp1D(from_key,jac,m_base[0]->GetPointsKey(),work);
+                Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+
+                // interpolate
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    LibUtilities::Interp1D(from_key,&normals[i*nq],m_base[0]->GetPointsKey(),&normal[i][0]);
+                    Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
+                }
+
+                //normalise normal vectors
+                Vmath::Zero(nqe,work,1);
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    Vmath::Vvtvp(nqe,normal[i],1, normal[i],1,work,1,work,1);
+                }
+
+                Vmath::Vsqrt(nqe,work,1,work,1);
+                Vmath::Sdiv(nqe,1.0,work,1,work,1);
+
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
+                }
+
+                // Reverse direction so that points are in
+                // anticlockwise direction if edge >=2
+                if(edge >= 2)
+                {
+                    for(i = 0; i < GetCoordim(); ++i)
+                    {
+                        Vmath::Reverse(nqe,normal[i],1, normal[i],1);
+                    }
+                }
+            }
+            if(GetGeom()->GetEorient(edge) == StdRegions::eBackwards)
+            {
+                for(i = 0; i < vCoordDim; ++i)
+                {
+                    if(geomFactors->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Reverse(nqe, normal[i], 1, normal[i],1);
+                    }
+                    Vmath::Neg(nqe,normal[i],1);
+                }
             }
         }
 

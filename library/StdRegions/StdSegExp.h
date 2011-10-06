@@ -45,7 +45,7 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdSegExp: public StdExpansion1D
+    class StdSegExp: virtual public StdExpansion1D
         {
         public:
             /** \brief Default constructor */
@@ -137,7 +137,7 @@ namespace Nektar
             // Generate Matrix Routine
             //----------------------------------
 
-            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
+//            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             //-----------------------------
             // Differentiation Methods
@@ -276,6 +276,8 @@ namespace Nektar
                                  Array<OneD, NekDouble> &outarray, 
                                  int coll_check);
 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
+
         private:
             virtual int v_GetNverts() const
             {
@@ -353,11 +355,6 @@ namespace Nektar
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
                 FillMode(mode,outarray);
-            } 
-
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
-            {
-                return GenMatrix(mkey);
             }
 
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)

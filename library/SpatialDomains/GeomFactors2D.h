@@ -48,10 +48,10 @@ namespace Nektar
                         Array<OneD,Array<OneD,NekDouble> > &output);
 
             /// Compute outward edge normals along an edge.
-            virtual void v_ComputeEdgeNormals(
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key,
-                        Array<OneD, Array<OneD, NekDouble> > &output) const;
+//            virtual void v_ComputeEdgeNormals(
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key,
+//                        Array<OneD, Array<OneD, NekDouble> > &output) const;
 
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();

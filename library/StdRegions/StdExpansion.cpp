@@ -988,9 +988,9 @@ namespace Nektar
 
 
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
-            void StdExpansion::SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge)
+            void StdExpansion::SetUpPhysNormals(const int edge)
             {
-                v_SetUpPhysNormals(exp2d,edge);
+                v_SetUpPhysNormals(edge);
             }
 
 	    void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
@@ -1042,6 +1042,23 @@ namespace Nektar
                 return NullDNekScalMatSharedPtr;
             }
 
+            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         const Array<OneD, NekDouble> &dir1Forcing,
+                                                         NekDouble lambdaval,
+                                                         NekDouble tau)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalMatSharedPtr;
+            }
+
+            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
+                                                         NekDouble lambdaval,
+                                                         NekDouble tau)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalMatSharedPtr;
+            }
 
             const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
             {
@@ -1055,7 +1072,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
 
-            void StdExpansion::v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+            void StdExpansion::v_SetUpPhysNormals(const int edge)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
@@ -1397,12 +1414,6 @@ namespace Nektar
                 return -1;
             }
 
-            void StdExpansion::v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                            const int k)
-            {
-                NEKERROR(ErrorUtil::efatal, "GetSurfaceNormal Error");
-            }
-
             void StdExpansion::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
@@ -1458,13 +1469,6 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
-
-            boost::shared_ptr<StdExpansion1D> StdExpansion::v_GetEdgeExp(const int edge, bool SetUpNormals)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
-                return boost::shared_ptr<StdExpansion1D>();
-            }
-
 
             void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
             {
@@ -1626,6 +1630,15 @@ namespace Nektar
                 HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
 
+            const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
+            {
+                ASSERTL0(false, "Cannot get edge normals for this expansion.");
+            }
+
+            void StdExpansion::v_ComputeEdgeNormal(const int edge)
+            {
+                ASSERTL0(false, "Cannot compute edge normal for this expansion.");
+            }
     }//end namespace
 }//end namespace
 

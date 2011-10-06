@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef EXPANSION2D_H
+#define EXPANSION2D_H
 
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion1D.h>
@@ -43,43 +44,11 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-
-        class Expansion2D: public Expansion
+        class Expansion2D: virtual public Expansion, virtual public StdRegions::StdExpansion2D
         {
         public:
-            // Hybridized DG routines
-            LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                        StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                        const Array<OneD, const NekDouble> &Fx,
-                                        const Array<OneD, const NekDouble> &Fy,
-                                        Array<OneD, NekDouble> &outarray);
-
-
-            LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                   const Array<OneD, const NekDouble> &Fn,
-                                        Array<OneD, NekDouble> &outarray);
-
-            LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryBiInt(const int edge,
-                                          StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                          const Array<OneD, const NekDouble> &Fwd,
-                                          const Array<OneD, const NekDouble> &Bwd,
-                                          Array<OneD, NekDouble> &outarray);
-
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            Array<OneD, NekDouble> &inout);
-
-            LOCAL_REGIONS_EXPORT void AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-                                 Array<OneD,NekDouble> &outarray,
-                                 const Array<OneD, NekDouble> &directional = NullNekDouble1DArray );
-
-            LOCAL_REGIONS_EXPORT void AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-                                           const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
-                                           Array<OneD,NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT void Getnormalindir(const int edge,
                                 StdRegions::StdExpansion1DSharedPtr &EdgeExp_e,
@@ -87,122 +56,97 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &directional,
                                 Array<OneD, NekDouble> &outarray);
 
-            StdRegions::StdExpansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormal=true)
-            {
-                return v_GetEdgeExp(edge, SetUpNormal);
-            }
+            Expansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormal=true);
 
-            void SetEdgeExp(const int edge, StdRegions::StdExpansion1DSharedPtr &e)
-            {
-                int nEdges = v_GetNedges();
-                ASSERTL0(edge < nEdges, "Edge out of range.");
-                if (m_edgeExp.size() < nEdges)
-                {
-                    m_edgeExp.resize(nEdges);
-                }
-                m_edgeExp[edge] = e;
-            }
+            void SetEdgeExp(const int edge, Expansion1DSharedPtr &e);
 
-        protected:
-            std::vector<StdRegions::StdExpansion1DSharedPtr> m_edgeExp;
-
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-
-
-            void AddNormTraceInt(const int dir,
+            inline void AddNormTraceInt(const int dir,
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray);
 
-            void AddHDGHelmholtzEdgeTerms(const NekDouble tau,
+            inline void AddNormTraceInt(const int dir,
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                 Array<OneD,NekDouble> &outarray,
+                                 const Array<OneD, NekDouble> &directional = NullNekDouble1DArray );
+
+            inline void AddEdgeBoundaryInt(const int edge,
+                                    const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                    Array <OneD,NekDouble > &outarray);
+
+            inline void AddHDGHelmholtzEdgeTerms(const NekDouble tau,
                                           const int edge,
                                           Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
                                           const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
                                           Array <OneD,NekDouble > &outarray);
 
-            void AddEdgeBoundaryInt(const int edge,
+            inline void AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                           const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                           Array<OneD,NekDouble> &outarray);
+
+        protected:
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
+            // Hybridized DG routines
+            virtual void v_AddNormTraceInt(const int dir,
+                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                 Array<OneD,NekDouble> &outarray);
+
+            virtual void v_AddNormTraceInt(const int dir,
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                 Array<OneD,NekDouble> &outarray,
+                                 const Array<OneD, NekDouble> &directional = NullNekDouble1DArray );
+
+
+            virtual void v_AddHDGHelmholtzEdgeTerms(const NekDouble tau,
+                                          const int edge,
+                                          Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
+                                          const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                          Array <OneD,NekDouble > &outarray);
+
+            virtual void v_AddEdgeBoundaryInt(const int edge,
                                     const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                     Array <OneD,NekDouble > &outarray);
 
-            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
-            
-            void AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
-
-            void DGDeriv(int dir,
+            virtual void v_DGDeriv(int dir,
                          const Array<OneD, const NekDouble>&incoeffs,
                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                          Array<OneD, NekDouble> &out_d);
 
-        private:
-            // Do not add members here since it may lead to conflicts.
-            // Only use this class for member functions
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                           const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                           Array<OneD,NekDouble> &outarray);
 
-            virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-                return StdRegions::eForwards;
-            }
-
-            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
-            {
-              NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-                return StdRegions::eForwards;
-            }
-
-            virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-            }
-
-            virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-            }
+            virtual void v_AddEdgeNormBoundaryInt(const int edge,
+                                        StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                        const Array<OneD, const NekDouble> &Fx,
+                                        const Array<OneD, const NekDouble> &Fy,
+                                        Array<OneD, NekDouble> &outarray);
 
 
-            virtual int v_GetCoordim(void)
-            {
-                NEKERROR(ErrorUtil::efatal,  "Methods not valid in this class");
-                return -1;
-            }
+            virtual void v_AddEdgeNormBoundaryInt(const int edge,
+                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                   const Array<OneD, const NekDouble> &Fn,
+                                        Array<OneD, NekDouble> &outarray);
 
-            virtual int v_GetNedges(void) const
-            {
-                NEKERROR(ErrorUtil::efatal, "Methods not valid in this class");
-                return -1;
-            }
-
-            virtual int v_GetEdgeNcoeffs(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-
-            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
-
-            virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
-            {
-                ASSERTL0(false,"Function only currently valid for 2D Local expansions");
-                return StdRegions::StdExpansion1DSharedPtr();
-            }
+            virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
+                                          StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                          const Array<OneD, const NekDouble> &Fwd,
+                                          const Array<OneD, const NekDouble> &Bwd,
+                                          Array<OneD, NekDouble> &outarray);
 
             virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
 
             virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
-            virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
-            }
 
-
-            virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdRegions::StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
-            }
+        private:
+            std::vector<Expansion1DSharedPtr> m_edgeExp;
 
          };
 
@@ -210,6 +154,64 @@ namespace Nektar
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
         typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
         typedef std::vector< Expansion2DSharedPtr >::iterator Expansion2DVectorIter;
+
+        inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)
+        {
+            ASSERTL1(edge < GetNedges(), "Edge out of range.");
+            return m_edgeExp[edge];
+        }
+
+        inline void Expansion2D::SetEdgeExp(const int edge, Expansion1DSharedPtr &e)
+        {
+            int nEdges = GetNedges();
+            ASSERTL1(edge < nEdges, "Edge out of range.");
+            if (m_edgeExp.size() < nEdges)
+            {
+                m_edgeExp.resize(nEdges);
+            }
+            m_edgeExp[edge] = e;
+        }
+
+        inline void Expansion2D::AddNormTraceInt(const int dir,
+                             Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                             Array<OneD,NekDouble> &outarray)
+        {
+            v_AddNormTraceInt(dir, EdgeExp, outarray);
+        }
+
+        inline void Expansion2D::AddNormTraceInt(const int dir,
+                             Array<OneD, const NekDouble> &inarray,
+                             Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                             Array<OneD,NekDouble> &outarray,
+                             const Array<OneD, NekDouble> &directional )
+        {
+            v_AddNormTraceInt(dir, inarray, EdgeExp, outarray, directional);
+        }
+
+        inline void Expansion2D::AddEdgeBoundaryInt(const int edge,
+                                const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                Array <OneD,NekDouble > &outarray)
+        {
+            v_AddEdgeBoundaryInt(edge, EdgeExp, outarray);
+        }
+
+        inline void Expansion2D::AddHDGHelmholtzEdgeTerms(const NekDouble tau,
+                                      const int edge,
+                                      Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
+                                      const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                      Array <OneD,NekDouble > &outarray)
+        {
+            v_AddHDGHelmholtzEdgeTerms(tau, edge, EdgeExp, dirForcing, outarray);
+        }
+
+        inline void Expansion2D::AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                       const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                       const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                       Array<OneD,NekDouble> &outarray)
+        {
+            v_AddHDGHelmholtzTraceTerms(tau, inarray, EdgeExp, dirForcing, outarray);
+        }
 
     } //end of namespace
 } //end of namespace

@@ -47,11 +47,13 @@ namespace Nektar
 
         StdQuadExp::StdQuadExp(const LibUtilities::BasisKey &Ba, 
                                const LibUtilities::BasisKey &Bb):
+            StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes(),2,Ba,Bb),
             StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb)
         { 
         }
 
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
+            StdExpansion(T),
             StdExpansion2D(T)
         {
         }
@@ -188,7 +190,7 @@ namespace Nektar
             }
         }
 
-        DNekMatSharedPtr StdQuadExp::GenMatrix(const StdMatrixKey &mkey)
+        DNekMatSharedPtr StdQuadExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             int      i;
             int      order0    = GetBasisNumModes(0);

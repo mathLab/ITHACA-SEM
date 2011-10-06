@@ -45,12 +45,14 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
+#include <LocalRegions/Expansion2D.h>
+
 namespace Nektar
 {
     namespace LocalRegions 
     {  
         
-    class NodalTriExp: public StdRegions::StdNodalTriExp
+    class NodalTriExp: virtual public StdRegions::StdNodalTriExp, virtual public Expansion2D
         {
         public:
             /** \brief Constructor using BasisKey class for quadrature
@@ -191,6 +193,8 @@ namespace Nektar
                                        Array<OneD,NekDouble> &outarray,
                                        const StdRegions::StdMatrixKey &mkey); 
             
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
         private:           
             SpatialDomains::Geometry2DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -426,6 +430,7 @@ namespace Nektar
                 HelmholtzMatrixOp(inarray,outarray,mkey);
             }  
             
+            void v_ComputeEdgeNormal(const int edge);
         };
     
         // type defines for use of TriExp in a boost vector

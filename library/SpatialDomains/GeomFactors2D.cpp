@@ -567,7 +567,7 @@ namespace Nektar
          * @returns Array of normals organised with consecutive concatenated
          *          \f$N_Q\f$ blocks for each coordinate.
          */
-        void GeomFactors2D::v_ComputeEdgeNormals(
+/*        void GeomFactors2D::v_ComputeEdgeNormals(
                             const int edge,
                             const LibUtilities::PointsKey &to_key,
                             Array<OneD, Array<OneD, NekDouble> > &returnval) const
@@ -811,7 +811,7 @@ namespace Nektar
                 }
             }            
         }
-
+*/
 
         /**
          * Computes the tangent vector at each quadrature point in the

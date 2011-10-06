@@ -155,10 +155,13 @@ namespace Nektar
                     // Check to see that edge normals have non-zero
                     // component in this direction since otherwise
                     // also can be singular.
+/// @TODO: Fix this so that we can extract normals from edges
                     for(k = 0; k < bndCondExp[j]->GetNumElmts(); ++k)
                     {
                         Array<OneD,Array<OneD,NekDouble> > locnorm;
-                        locnorm = bndCondExp[j]->GetExp(k)->GetMetricInfo()->GetNormal();
+                        LocalRegions::Expansion1DSharedPtr loc_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(bndCondExp[j]->GetExp(k));
+                        locnorm = loc_exp->GetLeftAdjacentElementExp()->GetEdgeNormal(loc_exp->GetLeftAdjacentElementEdge());
+                        //locnorm = bndCondExp[j]->GetExp(k)->Get GetMetricInfo()->GetNormal();
                         
                         for(int l = 0; l < locnorm[0].num_elements(); ++l)
                         {

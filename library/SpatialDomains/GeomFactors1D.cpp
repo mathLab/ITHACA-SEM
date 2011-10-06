@@ -219,42 +219,42 @@ namespace Nektar
          *                      which to evaluate the normals (typically the
          *                      PointsKey of the associated segment).
          */
-        void GeomFactors1D::v_ComputeNormals(
-                            const GeometrySharedPtr &geom,
-                            const int edge,
-                            const LibUtilities::PointsKey &to_key)
-        {
-            int k;
-            int nq      = to_key.GetNumPoints();
-            // Ensure we have a 2D geometry.
-            Geometry2DSharedPtr g;
-            if (!(g = boost::dynamic_pointer_cast<Geometry2D>(geom)))
-            {
-                ASSERTL0(false, "FAIL");
-            }
-            GeomFactorsSharedPtr gf = geom->GetMetricInfo();
-
-            // Retrieve the GeomFactors object describing the shape geometry
-            // and generate the normals to the edge.
-            m_normal = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
-            for (k = 0; k < m_coordDim; ++k)
-            {
-                m_normal[k] = Array<OneD, NekDouble>(nq);
-            }
-            gf->ComputeEdgeNormals(edge, to_key, m_normal);
-
-            if(g->GetEorient(edge) == StdRegions::eBackwards)
-            {
-                for(k = 0; k < m_coordDim; ++k)
-                {
-                    if(gf->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Reverse(nq, m_normal[k], 1, m_normal[k],1);
-                    }
-                    Vmath::Neg(nq,m_normal[k],1);
-                }
-            }
-        }
+//        void GeomFactors1D::v_ComputeNormals(
+//                            const GeometrySharedPtr &geom,
+//                            const int edge,
+//                            const LibUtilities::PointsKey &to_key)
+//        {
+//            int k;
+//            int nq      = to_key.GetNumPoints();
+//            // Ensure we have a 2D geometry.
+//            Geometry2DSharedPtr g;
+//            if (!(g = boost::dynamic_pointer_cast<Geometry2D>(geom)))
+//            {
+//                ASSERTL0(false, "FAIL");
+//            }
+//            GeomFactorsSharedPtr gf = geom->GetMetricInfo();
+//
+//            // Retrieve the GeomFactors object describing the shape geometry
+//            // and generate the normals to the edge.
+//            m_normal = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+//            for (k = 0; k < m_coordDim; ++k)
+//            {
+//                m_normal[k] = Array<OneD, NekDouble>(nq);
+//            }
+//            gf->ComputeEdgeNormals(edge, to_key, m_normal);
+//
+//            if(g->GetEorient(edge) == StdRegions::eBackwards)
+//            {
+//                for(k = 0; k < m_coordDim; ++k)
+//                {
+//                    if(gf->GetGtype() == SpatialDomains::eDeformed)
+//                    {
+//                        Vmath::Reverse(nq, m_normal[k], 1, m_normal[k],1);
+//                    }
+//                    Vmath::Neg(nq,m_normal[k],1);
+//                }
+//            }
+//        }
  
 
         void GeomFactors1D::v_ComputeEdgeTangents(

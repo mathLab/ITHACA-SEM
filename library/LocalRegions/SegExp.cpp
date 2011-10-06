@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <LocalRegions/LocalRegions.h>
 #include <LocalRegions/LocalRegions.hpp>
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/SegExp.h>
 
 namespace Nektar
@@ -46,6 +47,8 @@ namespace Nektar
          */
         SegExp::SegExp( const LibUtilities::BasisKey &Ba,
                         const SpatialDomains::Geometry1DSharedPtr &geom):
+            StdExpansion(Ba.GetNumModes(), 1, Ba),
+            StdExpansion1D(Ba.GetNumModes(), Ba),
             StdRegions::StdSegExp(Ba),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
@@ -519,7 +522,8 @@ cout<<"der_n"<<endl;
                     {
                     	    normals[k]= Array<OneD, NekDouble>(nquad0); 
                     }
-                    normals = GetMetricInfo()->GetNormal();  
+// @TODO: this routine no longer makes sense, since normals are not unique on an edge
+//                    normals = GetMetricInfo()->GetNormal();
 		    for(int i=0; i<nquad0; i++)
 		    {
 cout<<"nx= "<<normals[0][i]<<"  ny="<<normals[1][i]<<endl;
@@ -1111,7 +1115,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return returnval;
         }
         
-        DNekMatSharedPtr SegExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr SegExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             
             DNekMatSharedPtr returnval;
@@ -1124,10 +1128,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
-                returnval = Expansion1D::GenMatrix(mkey);
+                returnval = Expansion1D::v_GenMatrix(mkey);
                 break;
             default:
-                returnval = StdSegExp::GenMatrix(mkey);
+                returnval = StdSegExp::v_GenMatrix(mkey);
                 break;
             }
             
@@ -1259,8 +1263,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
-
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetMetricInfo()->GetNormal();
+//            cout << "I am segment " << GetGeom()->GetGlobalID() << endl;
+//            cout << "I want edge " << GetLeftAdjacentElementEdge() << endl;
+// @TODO: This routine no longer makes sense as a normal is not unique to an edge
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetEdgeNormal(GetLeftAdjacentElementEdge());
             Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
             Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
 
@@ -1272,9 +1278,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             IProductWRTBase(Fn,outarray);
         }
 
-        void SegExp::v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
-        {
-            GetMetricInfo()->ComputeNormals(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());            
+//        void SegExp::v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
+//        {
+//            GetMetricInfo()->ComputeNormals(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());
 /*            int k;
             int coordim = exp2D->GetCoordim();
             int nq      = m_base[0]->GetNumPoints();
@@ -1296,7 +1302,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 Vmath::Neg(nq*coordim,m_physNormal,1);
             }
-*/        }
+*///        }
 
 	void SegExp::v_SetUpPhysTangents(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
 	{

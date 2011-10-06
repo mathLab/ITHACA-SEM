@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    try
-    {
+//    try
+//    {
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
@@ -179,12 +179,12 @@ int main(int argc, char *argv[])
 
         }
         //----------------------------------------------
-    }
-    catch (const std::runtime_error& e)
-    {
-        cout << "Caught an error" << endl;
-        return 1;
-    }
+//    }
+//    catch (const std::runtime_error& e)
+//    {
+//        cout << "Caught an error" << endl;
+//        return 1;
+//    }
 
     vSession->Finalise();
 

@@ -124,7 +124,7 @@ namespace Nektar
                                 Array<OneD,NekDouble> &outarray);
 
             /// Set up the normals on each expansion.
-            MULTI_REGIONS_EXPORT void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
+//            MULTI_REGIONS_EXPORT void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
 	    /// Set up the tangents on each expansion
 	    MULTI_REGIONS_EXPORT void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
@@ -162,8 +162,8 @@ namespace Nektar
             virtual void v_ReadGlobalOptimizationParameters();
 
             /// Set up the normals on each expansion.
-            virtual void v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp);
+//            virtual void v_SetUpPhysNormals(
+//                                const StdRegions::StdExpansionVector &locexp);
 
             /// Set up the tangents on each expansion.
             virtual void v_SetUpPhysTangents(

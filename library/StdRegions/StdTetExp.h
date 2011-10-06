@@ -76,7 +76,7 @@ namespace Nektar
             }
         }
 
-        class StdTetExp: public StdExpansion3D
+        class StdTetExp: virtual public StdExpansion3D
         {
 
         public:

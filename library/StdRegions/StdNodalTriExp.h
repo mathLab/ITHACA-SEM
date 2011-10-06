@@ -216,10 +216,27 @@ namespace Nektar
                 NodalToModalTranspose(outarray,outarray);
             }
                         
-            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
+//            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
             
             STD_REGIONS_EXPORT DNekMatSharedPtr GenNBasisTransMatrix();
             
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)
+            {
+                DNekMatSharedPtr Mat;
+
+                switch(mkey.GetMatrixType())
+                {
+                case eNBasisTrans:
+                    Mat =  GenNBasisTransMatrix();
+                    break;
+                default:
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+                    break;
+                }
+
+                return Mat;
+            }
+
         private:
             
             virtual int v_NumBndryCoeffs() const
@@ -235,11 +252,6 @@ namespace Nektar
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 return GetEdgeBasisType(i);
-            }
-
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
-            {
-                return GenMatrix(mkey);
             }
 
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)

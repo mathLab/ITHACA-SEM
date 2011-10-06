@@ -55,8 +55,11 @@ namespace Nektar
          */
         StdTetExp::StdTetExp(   const LibUtilities::BasisKey &Ba,
                                 const LibUtilities::BasisKey &Bb,
-                                const LibUtilities::BasisKey &Bc )
-            : StdExpansion3D(StdTetData::getNumberOfCoefficients(
+                                const LibUtilities::BasisKey &Bc ):
+                StdExpansion(StdTetData::getNumberOfCoefficients(
+                        Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
+                    3, Ba, Bb, Bc),
+                StdExpansion3D(StdTetData::getNumberOfCoefficients(
                         Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                     Ba, Bb, Bc)
         {
@@ -82,6 +85,7 @@ namespace Nektar
          * @param   T           StdTetExp object to copy.
          */
         StdTetExp::StdTetExp(const StdTetExp &T):
+            StdExpansion(T),
             StdExpansion3D(T)
         {
         }

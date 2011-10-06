@@ -44,6 +44,10 @@ namespace Nektar
                        const LibUtilities::BasisKey &Bb,
                        const LibUtilities::BasisKey &Bc,
                        const SpatialDomains::PyrGeomSharedPtr &geom):
+            StdExpansion(StdRegions::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),3,Ba,Bb,Bc),
+            Expansion(),
+            StdExpansion3D(StdRegions::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc),
+            Expansion3D(),
             StdRegions::StdPyrExp(Ba,Bb,Bc),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
@@ -62,6 +66,10 @@ namespace Nektar
         }
 
         PyrExp::PyrExp(const PyrExp &T):
+            StdExpansion(T),
+            Expansion(T),
+            StdExpansion3D(T),
+            Expansion3D(T),
             StdRegions::StdPyrExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),

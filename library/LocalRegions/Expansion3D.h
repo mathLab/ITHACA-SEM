@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        class Expansion3D: public Expansion
+        class Expansion3D: virtual public Expansion, virtual public StdRegions::StdExpansion3D
         {
             public:
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);

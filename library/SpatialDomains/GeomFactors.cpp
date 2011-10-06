@@ -179,13 +179,13 @@ namespace Nektar
         /**
          * Placeholder function.
          */
-        void GeomFactors::v_ComputeNormals(
-                        const GeometrySharedPtr &geom2D,
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key)
-        {
-            ASSERTL0(false, "Cannot compute normals for this geometry.");
-        }
+//        void GeomFactors::v_ComputeNormals(
+//                        const GeometrySharedPtr &geom2D,
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key)
+//        {
+//            ASSERTL0(false, "Cannot compute normals for this geometry.");
+//        }
    
 	/**
 	 *Placeholder function.
@@ -201,13 +201,13 @@ namespace Nektar
         /**
          * Placeholder function.
          */
-        void GeomFactors::v_ComputeEdgeNormals(
-                        const int edge,
-                        const LibUtilities::PointsKey &to_key,
-                        Array<OneD, Array<OneD, NekDouble> > &returnval) const
-        {
-            ASSERTL0(false, "Cannot compute edge normals for this geometry.");
-        }
+//        void GeomFactors::v_ComputeEdgeNormals(
+//                        const int edge,
+//                        const LibUtilities::PointsKey &to_key,
+//                        Array<OneD, Array<OneD, NekDouble> > &returnval) const
+//        {
+//            ASSERTL0(false, "Cannot compute edge normals for this geometry.");
+//        }
 
 
         /**

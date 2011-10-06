@@ -48,6 +48,8 @@ namespace Nektar
         StdNodalTriExp::StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
                                        const LibUtilities::BasisKey &Bb, 
                                        LibUtilities::PointsType Ntype):
+            StdExpansion  (StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
+            StdExpansion2D(StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
             StdTriExp(Ba,Bb),
             m_nodalPointsKey()
         {
@@ -59,6 +61,8 @@ namespace Nektar
         }
 
         StdNodalTriExp::StdNodalTriExp(const StdNodalTriExp &T):
+            StdExpansion(T),
+            StdExpansion2D(T),
             StdTriExp(T),
             m_nodalPointsKey(T.m_nodalPointsKey)
         {
@@ -69,22 +73,22 @@ namespace Nektar
         { 
         }
         
-        DNekMatSharedPtr StdNodalTriExp::GenMatrix(const StdMatrixKey &mkey)
-        {
-            DNekMatSharedPtr Mat;
-
-            switch(mkey.GetMatrixType())
-            {
-            case eNBasisTrans:
-                Mat =  GenNBasisTransMatrix();
-                break;
-            default:
-                Mat = StdExpansion::CreateGeneralMatrix(mkey);
-                break;
-            }
-
-            return Mat;
-        }
+//        DNekMatSharedPtr StdNodalTriExp::GenMatrix(const StdMatrixKey &mkey)
+//        {
+//            DNekMatSharedPtr Mat;
+//
+//            switch(mkey.GetMatrixType())
+//            {
+//            case eNBasisTrans:
+//                Mat =  GenNBasisTransMatrix();
+//                break;
+//            default:
+//                Mat = StdExpansion::CreateGeneralMatrix(mkey);
+//                break;
+//            }
+//
+//            return Mat;
+//        }
 
         DNekMatSharedPtr StdNodalTriExp::GenNBasisTransMatrix()
         {

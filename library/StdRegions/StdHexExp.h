@@ -45,7 +45,7 @@ namespace Nektar
     namespace StdRegions
     {
         /// Class representing a hexehedral element in reference space.
-        class StdHexExp: public StdExpansion3D
+        class StdHexExp: virtual public StdExpansion3D
         {
 
         public:

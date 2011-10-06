@@ -57,6 +57,8 @@ namespace Nektar
         StdHexExp::StdHexExp(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::BasisKey &Bc):
+            StdExpansion(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), 3,
+                                                   Ba, Bb, Bc),
             StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),
                            Ba, Bb, Bc)
         {
@@ -79,6 +81,7 @@ namespace Nektar
          * @param   T           ?
          */
         StdHexExp::StdHexExp(const StdHexExp &T):
+            StdExpansion(T),
             StdExpansion3D(T)
         {
         }

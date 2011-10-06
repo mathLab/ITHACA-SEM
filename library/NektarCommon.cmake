@@ -311,7 +311,7 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
 
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 
-            PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+            PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
     
 	INSTALL(TARGETS ${name} 

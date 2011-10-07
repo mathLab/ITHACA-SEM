@@ -56,7 +56,7 @@ In this example, it will be demonstrated how the Helmholtz equation can be solve
 First of all, you should describe the problem you want to solve in a way Nektar++ can properly interprete it. 
 Therefore, an input file in the Nektar++ input format should be created.
 For this example, we will use the readily available file <em>helmholtz2D.xml</em>, which can be found
-in the directory <em>Nektar++/library/Demos/MultiRegions/</em>. Opening this file, you can see that it
+in the directory <em>Nektar++/library/Demos/MultiRegions/XmlFiles</em>. Opening this file, you can see that it
 contains of the following three parts:
 <ol>
 <li>Description of the mesh<BR>
@@ -73,15 +73,15 @@ boundary conditions. In case of the helmholtz problem, you can also use this sec
 <li><h3>Run the code</h3>
 To run the code (i.e. solve the helmholtz problem), follow these steps
 <ul>
-<li>Copy the input file <em>helmholtz2D.xml</em> to the directory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
-<li>At the terminal, go this same directory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
-<li>Run the code by entering "./Helmholtz2D helmholtz2D.xml helmholtz2D.xml". (If you have build the library in Debug mode, this should be "./Helmholtz2D-g helmholtz2D.xml helmholtz2D.xml")</li>
+<li>Copy the input file <em>helmholtz2D.xml</em> to the directory <em>Nektar++/builds/Demos/MultiRegions/XmlFiles/</em></li>
+<li>At the terminal, go this same directory <em>Nektar++/builds/Demos/MultiRegions/XmlFiles</em></li>
+<li>Run the code by entering "./Helmholtz2D helmholtz2D.xml". (If you have build the library in Debug mode, this should be "./Helmholtz2D-g helmholtz2D.xml")</li>
 </ul></li>
 <li><h3>Post-processing</h3><BR>
 The solution should now have been written to the file <em>helmholtz2D.fld</em>. This file is formatted in the Nektar++ output format (see also <a href="usage_postprocessing.html">here</a>). To visualize the solution in Gmsh, we first have to convert this file. This can be done in the following way:
 <ul>
-<li>At the terminal, make sure you are still at the dirctory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
-<li>Type "../../../utilities/builds/PostProcessing/FldToGmsh helmholtz2D.xml helmholtz2D.fld". (If you have build the utilities in Debug mode, this should be "../../../utilities/builds/PostProcessing/FldToGmsh-g helmholtz2D.xml helmholtz2D.fld")</li>
+<li>At the terminal, make sure you are still at the dirctory <em>Nektar++/builds/Demos/MultiRegions/XmlFiles</em></li>
+<li>Type "../../../../utilities/builds/PostProcessing/FldToGmsh helmholtz2D.xml helmholtz2D.fld". (If you have build the utilities in Debug mode, this should be "../../../../utilities/builds/PostProcessing/FldToGmsh-g helmholtz2D.xml helmholtz2D.fld")</li>
 </ul>
 This should have been created the file <em>helmholtz2D_u.pos</em> in the current directory. If you open this file with Gmsh, you should see something like this:
 <h2 ALIGN=center><img src="images/helmholtz2D.png" width="500" height="367"></h2>

@@ -167,7 +167,7 @@ namespace Nektar
             }
             else
             {
-                NekDouble beta = 2*M_PI/m_LhomZ;
+                NekDouble beta = - 2*M_PI/m_LhomZ; // only e^{-i beta z} has symmetry in stokes operator
                 NekDouble lam = lambda + m_kinvis*beta*beta;
                 
                 SetUpCoupledMatrix(lam,Advfield,IsLinearNSEquation,1,m_mat[0],m_locToGloMap[0]);
@@ -192,7 +192,7 @@ namespace Nektar
             
             for(n = 1; n < nz; ++n)
             {
-                NekDouble beta = 2*M_PI*n/m_LhomZ;
+                NekDouble beta = - 2*M_PI*n/m_LhomZ; // only e^{-i beta z} has symmetry in stokes operator
                 
                 NekDouble lam = lambda + m_kinvis*beta*beta;
                 
@@ -523,7 +523,8 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            NekDouble beta =  2*M_PI*HomogeneousMode/m_LhomZ;
+                            // only e^{-i beta z} has symmetry in stokes operator
+                            NekDouble beta =  -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
 
@@ -569,8 +570,8 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            // only e^{-i beta z} has symmetry in stokes operator
+                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1); 
 
@@ -610,8 +611,8 @@ namespace Nektar
 #if 0
             if(nz_loc  == 2)
             {
-                //cout << "Ah" << endl;
-                //cout << *Ah << endl;
+                cout << "Ah" << endl;
+                cout << *Ah << endl;
                 cout << "B" << endl;
                 cout << *B << endl;
                 cout << "C" << endl;
@@ -697,7 +698,8 @@ namespace Nektar
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            // only e^{-i beta z} has symmetry in stokes operator
+                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
@@ -758,7 +760,6 @@ namespace Nektar
                         {
                             if(k < 2)
                             {
-                                //locExp->PhysDeriv(k,phys, deriv);
                                 locExp->PhysDeriv(MultiRegions::DirCartesianMap[k],phys, deriv);
                                 Vmath::Vmul(npoints, 
                                             Advtmp = Advfield[k] + phys_offset,
@@ -780,6 +781,7 @@ namespace Nektar
                                             coeffs[imap[j]];
                                     }
                                 }
+
                                 // copy into column major storage. 
                                 m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                                 for(j = 0; j < nz_loc; ++j)
@@ -848,7 +850,8 @@ namespace Nektar
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            // only e^{-i beta z} has symmetry in stokes operator
+                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
 
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
@@ -969,30 +972,30 @@ namespace Nektar
                         }
                     }
                 }
+
 #if 0
-            if(nz_loc  == 1)
+            if(nz_loc  == 2)
             {
                 //cout << "Ah" << endl;
-                //cout << *Ah << endl;
-                cout << "B" << endl;
-                cout >> *B << endl;
-                cout << "C" << endl;
-                cout >> *C << endl;
+                //                cout << *Ah << endl;
+                //                cout << "B" << endl;
+                //cout << *B << endl;
+                //cout << "C" << endl;
+                //  cout >> *C << endl;
                 cout << "D" << endl;
-                cout >> *D << endl;
+                ///cout >> *D << endl;
                 cout << *D << endl;
                 //cout << "Dbnd" << endl;
                 //cout >> *Dbnd << endl;
-                //cout << "Dint" << endl;
-                //cout >> *Dint << endl;
-                exit(1);
+                cout << "Dint" << endl;
+                cout << *Dint << endl;
             }
-#endif                
+#endif
 
                 D->Invert();
                 (*B) = (*B)*(*D);
 
-                
+
                 // perform (*Ah) = (*Ah) - (*B)*(*C) but since size of
                 // Ah is larger than (*B)*(*C) easier to call blas
                 // directly
@@ -1009,7 +1012,6 @@ namespace Nektar
             mat.m_D_bnd->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dbnd));
             mat.m_D_int->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dint));
 
-            
             // Do matrix manipulations and get final set of block matries    
             // reset boundary to put mean mode into boundary system. 
             
@@ -1020,20 +1022,24 @@ namespace Nektar
             BCinv  = B;  
             Btilde = C; 
 
-
-            DintCinvDTint = (*Dint)*(*Cinv)*Transpose(*Dint);
+#if 0 
+            DintCinvDTint      = (*Dint)*(*Cinv)*Transpose(*Dint);
+#else
+            DNekMat CinvDTint = (*Cinv)*Transpose(*Dint);
             
-            BCinvDTint_m_DTbnd =  (*BCinv)*Transpose(*Dint) - Transpose(*Dbnd);
+            DintCinvDTint      = (*Dint)*(CinvDTint);
+#endif
+
+            BCinvDTint_m_DTbnd = (*BCinv)*Transpose(*Dint) - Transpose(*Dbnd);
             
             // This could be transpose of BCinvDint in some cases
-            DintCinvBTtilde_m_Dbnd =(*Dint)*(*Cinv)*Transpose(*Btilde) -  (*Dbnd); 
+            DintCinvBTtilde_m_Dbnd = (*Dint)*(*Cinv)*Transpose(*Btilde) - (*Dbnd); 
             
             // Set up final set of matrices. 
             DNekMatSharedPtr Bh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_bndry_p1[n],nsize_p_m1[n],zero);
             DNekMatSharedPtr Ch = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n],nsize_bndry_p1[n],zero);
             DNekMatSharedPtr Dh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n], nsize_p_m1[n],zero);
             
-
             // Copy matrices into final structures. 
             int n1,n2;
             for(n1 = 0; n1 < nz_loc; ++n1)
@@ -1078,11 +1084,36 @@ namespace Nektar
                         (*Bh)(i,j+n1*(psize-1)) = BCinvDTint_m_DTbnd(i,j+1+n1*psize);
                         (*Ch)(j+n1*(psize-1),i) = DintCinvBTtilde_m_Dbnd(j+1+n1*psize,i);
                     }
-
-                    (*Bh)(nsize_bndry_p1[n]-nz_loc+n1,j+n1*(psize-1)) = -DintCinvDTint(n1*psize,j+1+n1*psize);
-                    (*Ch)(j+n1*(psize-1),nsize_bndry_p1[n]-nz_loc+n1) = -DintCinvDTint(j+1+n1*psize,n1*psize);
                 }
             }
+
+            for(n1 = 0; n1 < nz_loc; ++n1)
+            {
+                for(n2 = 0; n2 < nz_loc; ++n2)
+                {
+                    for(j = 0; j < psize-1; ++j)
+                    {
+                        (*Bh)(nsize_bndry_p1[n]-nz_loc+n1,j+n2*(psize-1)) = -DintCinvDTint(n1*psize,j+1+n2*psize);
+                        (*Ch)(j+n2*(psize-1),nsize_bndry_p1[n]-nz_loc+n1) = -DintCinvDTint(j+1+n2*psize,n1*psize);
+                    }
+                }
+            }
+
+
+#if 0
+            if(nz_loc  == 2)
+            {
+                cout << "Bh" << endl;
+                cout << *Bh << endl;
+                cout << "DintCinvDTint" << endl;
+                cout << DintCinvDTint << endl;
+            }
+#endif
+
+            // Do static condensation
+            Dh->Invert();
+            (*Bh) = (*Bh)*(*Dh);
+            (*Ah) = (*Ah) - (*Bh)*(*Ch);
 
 #if 0
             if(nz_loc  == 2)
@@ -1093,21 +1124,18 @@ namespace Nektar
                 //cout << *Dbnd << endl;
                 //cout << "Dint" << endl;
                 //cout << *Dint << endl;
-                cout << "Ah" << endl;
-                cout << *Ah << endl;
+                //cout << "Ah" << endl;
+                // cout << *Ah << endl;
                 cout << "Bh" << endl;
                 cout << *Bh << endl;
-                cout << "Ch" << endl;
-                cout << *Ch << endl;
                 cout << "Dh" << endl;
                 cout << *Dh << endl;
                 exit(1);
+                cout << "Ch" << endl;
+                cout << *Ch << endl;
+                exit(1);
             }
 #endif
-            // Do static condensation
-            Dh->Invert();
-            (*Bh) = (*Bh)*(*Dh);
-            (*Ah) = (*Ah) - (*Bh)*(*Ch);
 
             // Set matrices for later inversion. Probably do not need to be 
             // attached to class
@@ -1727,8 +1755,8 @@ namespace Nektar
                 {
                     p_coeffs[n*totpcoeffs + cnt1+j] = 
                         f_p[cnt+j] = bnd[loctoglomap[offset + 
-                                                     (nvel*nz_loc)*nbnd + 
-                                                     n*nint +j]];
+                                                    (nvel*nz_loc)*nbnd + 
+                                                     n*nint + j]];
                 }
                 cnt += nint;
             }
@@ -1795,10 +1823,8 @@ namespace Nektar
         
         fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());
 
-        // project pressure field to velocity space
-      
-        m_pressure->BwdTrans(m_pressure->GetCoeffs(), m_pressure->UpdatePhys());
-        
+        // project pressure field to velocity space      
+        m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
         m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
         variables[i] = "p"; 
   

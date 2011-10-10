@@ -167,7 +167,7 @@ namespace Nektar
             }
             else
             {
-                NekDouble beta = - 2*M_PI/m_LhomZ; // only e^{-i beta z} has symmetry in stokes operator
+                NekDouble beta =  2*M_PI/m_LhomZ; 
                 NekDouble lam = lambda + m_kinvis*beta*beta;
                 
                 SetUpCoupledMatrix(lam,Advfield,IsLinearNSEquation,1,m_mat[0],m_locToGloMap[0]);
@@ -192,7 +192,7 @@ namespace Nektar
             
             for(n = 1; n < nz; ++n)
             {
-                NekDouble beta = - 2*M_PI*n/m_LhomZ; // only e^{-i beta z} has symmetry in stokes operator
+                NekDouble beta = 2*M_PI*n/m_LhomZ;
                 
                 NekDouble lam = lambda + m_kinvis*beta*beta;
                 
@@ -523,8 +523,7 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            // only e^{-i beta z} has symmetry in stokes operator
-                            NekDouble beta =  -2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta =  2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
 
@@ -570,8 +569,7 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            // only e^{-i beta z} has symmetry in stokes operator
-                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1); 
 
@@ -698,8 +696,7 @@ namespace Nektar
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
-                            // only e^{-i beta z} has symmetry in stokes operator
-                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
@@ -850,8 +847,7 @@ namespace Nektar
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
-                            // only e^{-i beta z} has symmetry in stokes operator
-                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
 
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);

@@ -1268,7 +1268,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 // @TODO: This routine no longer makes sense as a normal is not unique to an edge
             const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetEdgeNormal(GetLeftAdjacentElementEdge());
             Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
-            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
+            //            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
 
             if(NegateNormal == true)
             {

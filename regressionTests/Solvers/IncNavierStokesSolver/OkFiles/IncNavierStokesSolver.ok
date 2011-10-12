@@ -95,10 +95,10 @@ L inf error (variable p) : 0
 ChanStability_adj.xml
 L 2 error (variable u) : 2.58928
 L inf error (variable u) : 1
-L 2 error (variable v) : 0.00336198
-L inf error (variable v) : 0.00284208
-L 2 error (variable p) : 0.00433521
-L inf error (variable p) : 0.00446624
+L 2 error (variable v) : 0.00334392
+L inf error (variable v) : 0.0028285
+L 2 error (variable p) : 0.0059301
+L inf error (variable p) : 0.00590453
 ----------------------------------------
 ChanStability_Ar.xml
 L 2 error (variable u) : 0.0263526
@@ -117,20 +117,21 @@ L 2 error (variable p) : 0.00236396
 L inf error (variable p) : 0.00177702
 ----------------------------------------
 bfs_tg-AR.xml
-L 2 error (variable u) : 0.0184415
+L 2 error (variable u) : 0.00395863
 L inf error (variable u) : 0
-L 2 error (variable v) : 0.0173103
+L 2 error (variable v) : 0.00235967
 L inf error (variable v) : 0
-L 2 error (variable p) : 1.01536
+L 2 error (variable p) : 0.191912
 L inf error (variable p) : 0
 ----------------------------------------
 bfs_tg.xml
-L 2 error (variable u) : 0.0212961
+L 2 error (variable u) : 0.0212141
 L inf error (variable u) : 0
-L 2 error (variable v) : 0.0221723
+L 2 error (variable v) : 0.0220853
 L inf error (variable v) : 0
-L 2 error (variable p) : 0.0179093
+L 2 error (variable p) : 0.0178261
 L inf error (variable p) : 0
+
 ----------------------------------------
 ChanStability_Coupled.xml
 L 2 error (variable u) : 2.58914

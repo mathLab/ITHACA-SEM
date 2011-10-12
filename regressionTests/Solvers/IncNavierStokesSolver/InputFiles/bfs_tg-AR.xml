@@ -1740,7 +1740,7 @@
             <F FILE="bfs_tg-AR.bse" />
         </FUNCTION>
 
-        <FUNCTION NAME="InitialConditions">
+       <FUNCTION NAME="InitialConditions">
             <F FILE="bfs_tg-AR.rst" />
         </FUNCTION>
 

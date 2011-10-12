@@ -261,6 +261,7 @@
             <P> kdim          = 16      </P>
             <P> nvec           =2      </P>
             <P> evtol           =1e-6      </P>
+            <P> nits            =1000 </P>
 
         </PARAMETERS>
 

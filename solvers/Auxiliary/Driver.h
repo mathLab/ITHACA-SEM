@@ -75,8 +75,10 @@ namespace Nektar
         /// Initialise Object
         inline void InitObject();
         
-		/// Execute driver
+        /// Execute driver
         inline void Execute();
+
+        inline  Array<OneD, EquationSystemSharedPtr>   GetEqu();
 	
     protected:
         /// Communication object
@@ -88,11 +90,11 @@ namespace Nektar
         /// Equation system to solve
         Array<OneD, EquationSystemSharedPtr>        m_equ;
 		
-		///number of equations
-		int m_nequ;
-		
-		///Evolution Operator
-		enum EvolutionOperatorType m_EvolutionOperator;
+        ///number of equations
+        int m_nequ;
+	
+        ///Evolution Operator
+        enum EvolutionOperatorType m_EvolutionOperator;
 	
         /// Initialises EquationSystem class members.
         Driver(const LibUtilities::SessionReaderSharedPtr pSession);
@@ -117,6 +119,11 @@ namespace Nektar
     inline void Driver::Execute()
     {
         v_Execute();
+    }
+
+    inline Array<OneD, EquationSystemSharedPtr>   Driver::GetEqu()
+    {
+        return m_equ;
     }
 	
 } //end of namespace

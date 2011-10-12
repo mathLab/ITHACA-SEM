@@ -43,7 +43,7 @@ namespace Nektar
     DriverArnoldi::DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession)
             : Driver(pSession)
     {
-        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1);
     };
 
 
@@ -118,11 +118,11 @@ namespace Nektar
         fields = m_equ[m_nequ-1]->UpdateFields();
         for (int k = 0; k < m_nfields; ++k)
         {
-			int nq = fields[0]->GetNcoeffs();
+            int nq = fields[0]->GetNcoeffs();
             Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1, &array[k*nq], 1);
-		    fields[k]->SetPhysState(false);
-			
-		}
+            fields[k]->SetPhysState(false);
+            
+        }
     };
     
 	
@@ -131,26 +131,58 @@ namespace Nektar
      */
     void DriverArnoldi::CopyFwdToAdj()
     {
-
-		Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-
-		if(m_TimeSteppingAlgorithm)
-		{
-     		 fields = m_equ[0]->UpdateFields();
-			int nq = fields[0]->GetNcoeffs();
-
-
-		for (int k=0 ; k < m_nfields; ++k)
-			{
-			Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
-				
-			}
-		}
-		else
-		{
-			ASSERTL0(false,"Transient Growth non available for Coupled Solver");
-
-		}
-
+        Array<OneD, MultiRegions::ExpListSharedPtr> fields;
+        
+        if(m_TimeSteppingAlgorithm)
+        {
+            fields = m_equ[0]->UpdateFields();
+            int nq = fields[0]->GetNcoeffs();
+            
+            
+            for (int k=0 ; k < m_nfields; ++k)
+            {
+                Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1,&m_equ[1]->UpdateFields()[k]->UpdateCoeffs()[0], 1);
+                
+            }
+        }
+        else
+        {
+            ASSERTL0(false,"Transient Growth non available for Coupled Solver");
+            
+        }
     };
+
+    void DriverArnoldi::WriteFld(std::string file, Array<OneD, Array<OneD, NekDouble> > coeffs)
+    {
+        
+        Array<OneD, std::string>  variables(m_nfields);
+        
+        ASSERTL1(coeffs.num_elements() >= m_nfields, "coeffs is not of the correct length");
+        for(int i = 0; i < m_nfields; ++i)
+        {
+            variables[i] = m_equ[0]->GetVariable(i);
+        }
+        
+        m_equ[0]->WriteFld(file,m_equ[0]->UpdateFields()[0], coeffs, variables);
+    }
+
+
+    void DriverArnoldi::WriteFld(std::string file, Array<OneD, NekDouble> coeffs)
+    {
+        
+        Array<OneD, std::string>  variables(m_nfields);
+        Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
+        
+        int ncoeffs = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
+        ASSERTL1(coeffs.num_elements() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");
+
+        for(int i = 0; i < m_nfields; ++i)
+        {
+            variables[i] = m_equ[0]->GetVariable(i);
+            fieldcoeffs[i] = coeffs + i*ncoeffs;
+        }
+        
+        m_equ[0]->WriteFld(file,m_equ[0]->UpdateFields()[0], fieldcoeffs, variables);
+    }
+
 }

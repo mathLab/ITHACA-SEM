@@ -80,8 +80,8 @@ namespace Nektar
         
         //Initialisation of Arnoldi parameters
         m_maxn   = 1000000; // Maximum size of the problem
-        m_maxnev = 12;      // maximum number of eigenvalues requested
-        m_maxncv = 200;     // Largest number of basis vector used in Implicitly Restarted Arnoldi		
+        m_maxnev = 200;      // maximum number of eigenvalues requested
+        m_maxncv = 500;     // Largest number of basis vector used in Implicitly Restarted Arnoldi		
 	
         m_session->LoadParameter("realShift", m_realShift, 0.0);
         
@@ -301,47 +301,33 @@ namespace Nektar
         {
             WriteEvs(stdout,i,dr[i],di[i]);
             WriteEvs(pFile,i,dr[i],di[i]);
-            
-            for (int k = 0; k < m_nfields; ++k)
-            {
-                Vmath::Vcopy(nq, &z[k*nq+i*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);
-				
-            }
-			
-			
-			for (int k = 0; k < m_nfields; ++k)
-			{
-				//Backward transformation in the physical space for plotting eigenmodes
-				fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
-				fields[k]->SetPhysState(true);
-			}
 			
             std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
-			
-            m_equ[0]->WriteFld(file);
+            
+            WriteFld(file,z + k*nq);
         }
 
         fclose (pFile);
         
         if(m_EvolutionOperator != eTransientGrowth)
         {
-              cout<<"Dump eigenvector: "<<nconv-1<<endl;
-              CopyArnoldiArrayToField(z);               
-              m_equ[0]->DoSolve(); 
-
-              for (int k = 0; k < m_nfields; ++k)
-              {
-        		Vmath::Vcopy(nq, &z[k*nq+(nconv-1)*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);				
-              }			
-			
-              for (int k = 0; k < m_nfields; ++k)
-              {
-        		//Backward transformation in the physical space for plotting eigenmodes
-        		fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
-        		fields[k]->SetPhysState(true);
-              } 
-        	      	
-              m_equ[0]->Output();
+            cout<<"Dump eigenvector: "<<nconv-1<<endl;
+            CopyArnoldiArrayToField(z);               
+            m_equ[0]->DoSolve(); 
+            
+            for (int k = 0; k < m_nfields; ++k)
+            {
+                Vmath::Vcopy(nq, &z[k*nq+(nconv-1)*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);				
+            }			
+            
+            for (int k = 0; k < m_nfields; ++k)
+            {
+                //Backward transformation in the physical space for plotting eigenmodes
+                fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
+                fields[k]->SetPhysState(true);
+            } 
+            
+            m_equ[0]->Output();
         }
         
 	for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)

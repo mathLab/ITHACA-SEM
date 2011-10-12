@@ -41,70 +41,73 @@
 namespace Nektar
 
 {
-	string DriverModifiedArnoldi::className = GetDriverFactory().RegisterCreatorFunction("ModifiedArnoldi", DriverModifiedArnoldi::create);
-	string DriverModifiedArnoldi::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","ModifiedArnoldi",0);
-
-	/**
-	 *
-	 */
-	DriverModifiedArnoldi::DriverModifiedArnoldi(
-			const LibUtilities::SessionReaderSharedPtr        pSession)
-        : DriverArnoldi(pSession)
-	{
-	}
-	
-
+    string DriverModifiedArnoldi::className = GetDriverFactory().RegisterCreatorFunction("ModifiedArnoldi", DriverModifiedArnoldi::create);
+    string DriverModifiedArnoldi::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","ModifiedArnoldi",0);
+    
     /**
      *
      */
-	DriverModifiedArnoldi::~DriverModifiedArnoldi()
-	{
-	}
-	
-
-	/**
-	 *
-	 */
-	void DriverModifiedArnoldi::v_InitObject()
-	{
-	    DriverArnoldi::v_InitObject();
-
+    DriverModifiedArnoldi::DriverModifiedArnoldi(
+                                                 const LibUtilities::SessionReaderSharedPtr        pSession)
+        : DriverArnoldi(pSession)
+    {
+    }
+    
+    
+    /**
+     *
+     */
+    DriverModifiedArnoldi::~DriverModifiedArnoldi()
+    {
+    }
+    
+    
+    /**
+     *
+     */
+    void DriverModifiedArnoldi::v_InitObject()
+    {
+        DriverArnoldi::v_InitObject();
+        
         m_equ[0]->PrintSummary(cout);
-
+            
         // Print session parameters
         cout << "\tArnoldi solver type   : Modified Arnoldi" << endl;
-        cout << "\tEvolution operator    : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
+        if(m_TimeSteppingAlgorithm)
+        {
+            cout << "\tEvolution operator    : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
+        }
         cout << "\tKrylov-space dimension: " << m_kdim << endl;
         cout << "\tNumber of vectors:      " << m_nvec << endl;
         cout << "\tMax iterations:         " << m_nits << endl;
         cout << "\tEigenvalue tolerance:   " << m_evtol << endl;
         cout << "=======================================================================" << endl;
-
+        
         m_equ[m_nequ - 1]->DoInitialise();
-		
-		//FwdTrans Initial conditions to be in Coefficient Space
-		m_equ[m_nequ-1] ->TransPhysToCoeff();
-	}
+	
+        //FwdTrans Initial conditions to be in Coefficient Space
+        m_equ[m_nequ-1] ->TransPhysToCoeff();
+    }
     
 	
-	/**
-	 *
-	 */
-	void DriverModifiedArnoldi::v_Execute()
-	{
+    /**
+     *
+     */
+    void DriverModifiedArnoldi::v_Execute()
+    {
         int nq                  = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
         int ntot                = m_nfields*nq;
         int converged           = 0;
         NekDouble resnorm       = 0.0;
         std::string evlFile     = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + ".evl";
         ofstream evlout(evlFile.c_str());
-
+        
         // Allocate memory
-        Array<OneD, NekDouble> alpha     = Array<OneD, NekDouble>  (m_kdim + 1,      0.0);
-        Array<OneD, NekDouble> wr        = Array<OneD, NekDouble>  (m_kdim,          0.0);
-        Array<OneD, NekDouble> wi        = Array<OneD, NekDouble>  (m_kdim,          0.0);
-        Array<OneD, NekDouble> zvec      = Array<OneD, NekDouble>  (m_kdim * m_kdim, 0.0);
-
+        Array<OneD, NekDouble> alpha     = Array<OneD, NekDouble> (m_kdim+1,      0.0);
+        Array<OneD, NekDouble> wr        = Array<OneD, NekDouble> (m_kdim,        0.0);
+        Array<OneD, NekDouble> wi        = Array<OneD, NekDouble> (m_kdim,        0.0);
+        Array<OneD, NekDouble> zvec      = Array<OneD, NekDouble> (m_kdim*m_kdim, 0.0);
+        
         Array<OneD, Array<OneD, NekDouble> > Kseq
             = Array<OneD, Array<OneD, NekDouble> > (m_kdim + 1);
         Array<OneD, Array<OneD, NekDouble> > Tseq
@@ -118,124 +121,126 @@ namespace Nektar
 		
         // Copy starting vector into second sequence element (temporary).
          if(m_session->DefinesFunction("InitialConditions"))
-		 {
-			cout << "\tInital vector       : input file  " << endl;
-			CopyFieldToArnoldiArray(Kseq[1]);
-		 }
-		 else 
-		 {
-			cout << "\tInital vector       : random  " << endl;
-			
-			double eps=1;
-			 
-			Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
-			
-		}
-		
-        // Perform one iteration to enforce boundary conditions.
-        // Set this as the initial value in the sequence.
-        EV_update(Kseq[1], Kseq[0]);
-        cout << "Iteration: " << 0 <<  endl;
+         {
+             cout << "\tInital vector       : specified in input file " << endl;
+             m_equ[0]->SetInitialConditions(0.0,false);
 
-        // Normalise first vector in sequence
-        alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
-        alpha[0] = std::sqrt(alpha[0]);
-        Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
+             CopyFieldToArnoldiArray(Kseq[1]);
+         }
+         else 
+         {
+             cout << "\tInital vector       : random  " << endl;
+             
+             double eps=1;
+             
+             Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
+             
+         }
+         
+         // Perform one iteration to enforce boundary conditions.
+         // Set this as the initial value in the sequence.
+         EV_update(Kseq[1], Kseq[0]);
+         cout << "Iteration: " << 0 <<  endl;
+         
+         // Normalise first vector in sequence
+         alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
+         alpha[0] = std::sqrt(alpha[0]);
+         Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
 
-        // Fill initial krylov sequence
-		NekDouble resid0;
-        int i;
-        for (i = 1; !converged && i <= m_kdim; ++i)
-        {
-            // Compute next vector
-            EV_update(Kseq[i-1], Kseq[i]);
-            
-            // Normalise
-            alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
-            alpha[i] = std::sqrt(alpha[i]);
-            Vmath::Smul(ntot, 1.0/alpha[i], Kseq[i], 1, Kseq[i], 1);
-            
-            // Copy Krylov sequence into temporary storage
-            for (int k = 0; k < i + 1; ++k)
-            {
-                Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+         // Fill initial krylov sequence
+         NekDouble resid0;
+         int i;
+         for (i = 1; !converged && i <= m_kdim; ++i)
+         {
+             // Compute next vector
+             EV_update(Kseq[i-1], Kseq[i]);
+             
+             // Normalise
+             alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
+             alpha[i] = std::sqrt(alpha[i]);
+             Vmath::Smul(ntot, 1.0/alpha[i], Kseq[i], 1, Kseq[i], 1);
+             
+             // Copy Krylov sequence into temporary storage
+             for (int k = 0; k < i + 1; ++k)
+             {
+                 Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
             }
-            
-            // Generate Hessenberg matrix and compute eigenvalues of it.
-            EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
-            
-            // Test for convergence.
-            converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0); 
-            converged = max (converged, 0);
-            cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
-        }
-
-        // Continue with full sequence
-        if (!converged)
-        {
-            for (i = m_kdim + 1; !converged && i <= m_nits; ++i)
-            {
-                // Shift all the vectors in the sequence.
-                // First vector is removed.
-                //NekDouble invnorm = 1.0/sqrt(Blas::Ddot(ntot,Kseq[1],1,Kseq[1],1));
-                for (int j = 1; j <= m_kdim; ++j)
-                {
-                    alpha[j-1] = alpha[j];
-                    //Vmath::Smul(ntot,invnorm,Kseq[j],1,Kseq[j],1);
+             
+             // Generate Hessenberg matrix and compute eigenvalues of it.
+             EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
+             
+             // Test for convergence.
+             converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0); 
+             converged = max (converged, 0);
+             cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
+         }
+         
+         // Continue with full sequence
+         if (!converged)
+         {
+             for (i = m_kdim + 1; !converged && i <= m_nits; ++i)
+             {
+                 // Shift all the vectors in the sequence.
+                 // First vector is removed.
+                 //NekDouble invnorm = 1.0/sqrt(Blas::Ddot(ntot,Kseq[1],1,Kseq[1],1));
+                 for (int j = 1; j <= m_kdim; ++j)
+                 {
+                     alpha[j-1] = alpha[j];
+                     //Vmath::Smul(ntot,invnorm,Kseq[j],1,Kseq[j],1);
                     Vmath::Vcopy(ntot, Kseq[j], 1, Kseq[j-1], 1);
-                }
-
-                // Compute next vector
-                EV_update(Kseq[m_kdim - 1], Kseq[m_kdim]);
-
-                // Compute new scale factor
-                alpha[m_kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1));
-                alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
-                Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1, Kseq[m_kdim], 1);
-
+                 }
+                 
+                 // Compute next vector
+                 EV_update(Kseq[m_kdim - 1], Kseq[m_kdim]);
+                 
+                 // Compute new scale factor
+                 alpha[m_kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1));
+                 alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
+                 Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1, Kseq[m_kdim], 1);
+                 
                 // Copy Krylov sequence into temporary storage
-                for (int k = 0; k < m_kdim + 1; ++k)
-                {
-                    Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
-                }
-
-                // Generate Hessenberg matrix and compute eigenvalues of it
-                EV_small(Tseq, ntot, alpha, m_kdim, zvec, wr, wi, resnorm);
-
-                // Test for convergence.
-                converged = EV_test(i,m_kdim,zvec,wr,wi,resnorm,m_nvec,evlout,resid0);
-				cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
-            }
-        }
-
-        m_equ[0]->Output();
-
-        // Evaluate and output computation time and solution accuracy.
-        // The specific format of the error output is essential for the
-        // regression tests to work.
-        // Evaluate L2 Error
-        for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
-        {
-            NekDouble vL2Error = m_equ[0]->L2Error(j,false);
-            NekDouble vLinfError = m_equ[0]->LinfError(j);
-            if (m_comm->GetRank() == 0)
-            {
-                cout << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
-                cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
-            }
-        }
-
-        // Process eigenvectors and write out.
-        EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi, converged);
-
-        // Close the runtime info file.
-        evlout.close();
-	}
+                 for (int k = 0; k < m_kdim + 1; ++k)
+                 {
+                     Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+                 }
+                 
+                 // Generate Hessenberg matrix and compute eigenvalues of it
+                 EV_small(Tseq, ntot, alpha, m_kdim, zvec, wr, wi, resnorm);
+                 
+                 // Test for convergence.
+                 converged = EV_test(i,m_kdim,zvec,wr,wi,resnorm,m_nvec,evlout,resid0);
+                 cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
+             }
+         }
+         
+         m_equ[0]->Output();
+         
+         // Evaluate and output computation time and solution accuracy.
+         // The specific format of the error output is essential for the
+         // regression tests to work.
+         // Evaluate L2 Error
+         for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
+         {
+             NekDouble vL2Error = m_equ[0]->L2Error(j,false);
+             NekDouble vLinfError = m_equ[0]->LinfError(j);
+             if (m_comm->GetRank() == 0)
+             {
+                 cout << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
+                 cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
+             }
+         }
+         
+         // Process eigenvectors and write out.
+         EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi, converged);
+         
+         // Close the runtime info file.
+         evlout.close();
+    }
     
     
-	/**
-	 *
-	 */
+    /**
+     *
+     */
     void DriverModifiedArnoldi::EV_update(
                                           Array<OneD, NekDouble> &src,
                                           Array<OneD, NekDouble> &tgt)
@@ -243,7 +248,7 @@ namespace Nektar
         // Copy starting vector into first sequence element.
         CopyArnoldiArrayToField(src);
 		
-		m_equ[0]->TransCoeffToPhys();
+        m_equ[0]->TransCoeffToPhys();
 		
         m_equ[0]->DoSolve();
 
@@ -256,7 +261,7 @@ namespace Nektar
 			//start Adjoint with latest fields of direct 
             CopyFwdToAdj();
 
-			m_equ[1]->TransCoeffToPhys();
+            m_equ[1]->TransCoeffToPhys();
 			
             m_equ[1]->DoSolve();
         }
@@ -470,21 +475,13 @@ namespace Nektar
             EV_big(Tseq, Kseq, ntot, kdim, icon, zvec, wr, wi);
             int nq = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
             Array<OneD, MultiRegions::ExpListSharedPtr> fields
-                        = m_equ[0]->UpdateFields();
+                = m_equ[0]->UpdateFields();
 
             for (int j = 0; j < icon; ++j)
             {
-				for (int i = 0; i < m_nfields; ++i)
-                {
-                    Vmath::Vcopy(nq, &Kseq[j][i*nq], 1, &fields[i]->UpdateCoeffs()[0], 1);
-					fields[i]->BwdTrans_IterPerExp(fields[i]->GetCoeffs(),
-												   fields[i]->UpdatePhys());
-                    fields[i]->SetPhysState(true);
-                }
-				
                 std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(j);
-
-                m_equ[0]->WriteFld(file);
+                
+                WriteFld(file,Kseq[j]);
             }
         }
         else

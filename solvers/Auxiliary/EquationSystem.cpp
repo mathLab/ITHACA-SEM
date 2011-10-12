@@ -423,58 +423,70 @@ namespace Nektar
 
         if (m_session->DefinesFunction("BodyForce"))
         {
+            
             m_forces  = Array<OneD, MultiRegions::ExpListSharedPtr>(v_GetForceDimension());
             int nq = m_fields[0]->GetNpoints();
             switch(m_expdim)
             {
-                case 1:
-					if(m_HomogeneousType == eHomogeneous2D)
-					{
-						bool DeclarePlaneSetCoeffsPhys = true;
-                        for(int i = 0 ; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous2D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
-                        }
-					}
-					else 
-					{
-						m_forces[0] = MemoryManager<MultiRegions
-						::DisContField1D>::AllocateSharedPtr
-						(*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
-						Vmath::Zero(nq,(m_forces[0]->UpdatePhys()),1);
-					}
-                    break;
-                case 2:
-                    if(m_HomogeneousType == eHomogeneous1D)
+            case 1:
+                if(m_HomogeneousType == eHomogeneous2D)
+                {
+                    bool DeclarePlaneSetCoeffsPhys = true;
+                    for(int i = 0 ; i < m_forces.num_elements(); i++)
                     {
-                        bool DeclarePlaneSetCoeffsPhys = true;
-                        for(int i = 0 ; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous1D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
-                        }
+                        m_forces[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous2D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
                     }
-                    else
+                }
+                else 
+                {
+                    m_forces[0] = MemoryManager<MultiRegions
+                        ::DisContField1D>::AllocateSharedPtr
+                        (*boost::static_pointer_cast<MultiRegions::DisContField1D>(m_fields[0]));
+                    Vmath::Zero(nq,(m_forces[0]->UpdatePhys()),1);
+                }
+                break;
+            case 2:
+                if(m_HomogeneousType == eHomogeneous1D)
+                {
+                    bool DeclarePlaneSetCoeffsPhys = true;
+                    for(int i = 0 ; i < m_forces.num_elements(); i++)
                     {
-                        for(int i = 0 ; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i] = MemoryManager<MultiRegions
-                                    ::ExpList2D>::AllocateSharedPtr
-                                     (*boost::static_pointer_cast<MultiRegions::ExpList2D>(m_fields[i]));
-                            Vmath::Zero(nq,(m_forces[i]->UpdatePhys()),1);
-                        }
+                        m_forces[i]= MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost::static_pointer_cast<MultiRegions::ExpList3DHomogeneous1D>(m_fields[i]),DeclarePlaneSetCoeffsPhys);
                     }
-                    break;
-                case 3:
-                    ASSERTL0(false, "Force function not implemented for 3D.");
+                }
+                else
+                {
+                    for(int i = 0 ; i < m_forces.num_elements(); i++)
+                    {
+                        m_forces[i] = MemoryManager<MultiRegions
+                            ::ExpList2D>::AllocateSharedPtr
+                            (*boost::static_pointer_cast<MultiRegions::ExpList2D>(m_fields[i]));
+                        Vmath::Zero(nq,(m_forces[i]->UpdatePhys()),1);
+                    }
+                }
+                break;
+            case 3:
+                ASSERTL0(false, "Force function not implemented for 3D.");
             }
-
-            std::vector<std::string> fieldStr;
-            for(int i = 0; i < v_GetForceDimension(); ++i)
+               
+            // Check for file.
+            if (m_session->GetFunctionType("BodyForce")
+                == LibUtilities::eFunctionTypeFile)
             {
-                fieldStr.push_back(m_session->GetVariable(i));
+                std::string forcefile
+                    = m_session->GetFunctionFilename("BodyForce");
+                ImportFld(forcefile, m_forces);
             }
-
-            EvaluateFunction(fieldStr, m_forces, "BodyForce");
+            else
+            {                
+                std::vector<std::string> fieldStr;
+                for(int i = 0; i < v_GetForceDimension(); ++i)
+                {
+                    fieldStr.push_back(m_session->GetVariable(i));
+                }
+                
+                EvaluateFunction(fieldStr, m_forces, "BodyForce");
+            }
         }
 
         // If a tangent vector policy is defined then the local tangent vectors
@@ -536,8 +548,8 @@ namespace Nektar
      * @param   pEqn            The equation to evaluate.
      */
     void EquationSystem::EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                              LibUtilities::EquationSharedPtr pEqn,
-                              const NekDouble pTime)
+                                          LibUtilities::EquationSharedPtr pEqn,
+                                          const NekDouble pTime)
     {
         int nq = m_fields[0]->GetNpoints();
 
@@ -2181,4 +2193,8 @@ namespace Nektar
                         "for the Base class");
     }
 
+    MultiRegions::ExpListSharedPtr EquationSystem::v_GetPressure()
+    {
+        ASSERTL0(false, "This function is not valid for the Base class");
+    }
 }

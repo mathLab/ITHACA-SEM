@@ -61,16 +61,15 @@ namespace Nektar
     Driver::Driver(const LibUtilities::SessionReaderSharedPtr pSession)
 	        : m_comm(pSession->GetComm()),
 	          m_session(pSession)
-	{
-
-	}
-	
-	Driver::~Driver()
-	
-	{
-	}
-	
-
+    {
+    }
+    
+    Driver::~Driver()
+        
+    {
+    }
+    
+    
     /**
      *
      */

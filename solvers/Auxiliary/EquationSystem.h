@@ -85,7 +85,16 @@ namespace Nektar
 		
         /// Perform output operations after solve.
         inline void Output();
+        
+        /// Get Session name
+        std::string GetSessionName()
+        {
+            return m_sessionName;
+        }
 
+        /// Get pressure field if available
+        MultiRegions::ExpListSharedPtr GetPressure(); 
+        
         /// Print a summary of parameters and solver characteristics.
         inline void PrintSummary(std::ostream &out);
 
@@ -123,16 +132,16 @@ namespace Nektar
 
         /// Perform initialisation of the base flow.
         void InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base);
-
+        
         /// Initialise the data in the dependent fields.
         inline void SetInitialConditions(NekDouble initialtime = 0.0,
-                                  bool dumpInitialConditions = true);
+                                         bool dumpInitialConditions = true);
 
         /// Evaluates an exact solution
         inline void EvaluateExactSolution(int field,
-                Array<OneD, NekDouble> &outfield,
-                const NekDouble time);
-
+                                          Array<OneD, NekDouble> &outfield,
+                                          const NekDouble time);
+        
         /// Compute the L2 error between fields and a given exact solution.
         NekDouble L2Error(unsigned int field,
                           const Array<OneD,NekDouble> &exactsoln,
@@ -410,10 +419,10 @@ namespace Nektar
         /// Virtual function for solve implementation.
         virtual void v_DoSolve();
 		
-		/// Virtual function for transformation to physical space.
+        /// Virtual function for transformation to physical space.
         virtual void v_TransCoeffToPhys();
 		
-		/// Virtual function for transformation to coefficient space.
+        /// Virtual function for transformation to coefficient space.
         virtual void v_TransPhysToCoeff();
 
         /// Virtual function for printing summary information.
@@ -435,6 +444,9 @@ namespace Nektar
 
         // Ouptut field information
         virtual void v_Output(void);
+
+        // Get pressure field if available
+        virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
 
     private:
 
@@ -529,6 +541,13 @@ namespace Nektar
         v_Output();
     }
 
+    /**
+     * Get Pressure field if available
+     */
+    inline  MultiRegions::ExpListSharedPtr EquationSystem::GetPressure(void)
+    {
+        return v_GetPressure();
+    }
 
     /**
      * Prints a summary of variables and problem parameters.

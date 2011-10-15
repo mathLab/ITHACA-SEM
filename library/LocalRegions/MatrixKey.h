@@ -46,7 +46,7 @@ namespace Nektar
     namespace LocalRegions
     {
 
-        class MatrixKey
+        class MatrixKey : public StdRegions::StdMatrixKey
         {
         public:
             LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
@@ -68,32 +68,32 @@ namespace Nektar
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
-		      StdRegions::ExpansionType expansionType,
-		      StdRegions::StdExpansion &stdExpansion,
-		      NekDouble    scalefactor,
-		      NekDouble    constant, 
-		      const Array<OneD,const NekDouble>& varcoeffs,
+                      StdRegions::ExpansionType expansionType,
+                      StdRegions::StdExpansion &stdExpansion,
+                      NekDouble    scalefactor,
+                      NekDouble    constant,
+                      const Array<OneD,const NekDouble>& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
-		      StdRegions::ExpansionType expansionType,
-		      StdRegions::StdExpansion &stdExpansion,
-		      NekDouble    scalefactor,
-		      NekDouble    constant, 
-		      const Array<OneD,const NekDouble>& varcoeffs1,
-		      const Array<OneD,const NekDouble>& varcoeffs2,
+                      StdRegions::ExpansionType expansionType,
+                      StdRegions::StdExpansion &stdExpansion,
+                      NekDouble    scalefactor,
+                      NekDouble    constant,
+                      const Array<OneD,const NekDouble>& varcoeffs1,
+                      const Array<OneD,const NekDouble>& varcoeffs2,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
-		      StdRegions::ExpansionType expansionType,
-		      StdRegions::StdExpansion &stdExpansion,
-		      NekDouble    scalefactor,
-		      NekDouble    constant, 
-		      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
+                      StdRegions::ExpansionType expansionType,
+                      StdRegions::StdExpansion &stdExpansion,
+                      NekDouble    scalefactor,
+                      NekDouble    constant,
+                      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
-                      const StdRegions::ExpansionType expansionType, 
+            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType,
+                      const StdRegions::ExpansionType expansionType,
                       const StdRegions::StdExpansion &stdExpansion,
                       const Array<OneD,const NekDouble>& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
@@ -126,96 +126,18 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT friend bool opLess::operator()(const MatrixKey &lhs, 
                 const MatrixKey &rhs) const;
 
-            StdRegions::MatrixType GetMatrixType() const
-            {
-                return m_stdMatKey->GetMatrixType(); 
-            }
-
-            StdRegions::ExpansionType GetExpansionType() const
-            {
-                return m_stdMatKey->GetExpansionType();
-            }
-
-            int GetNcoeffs() const
-            {
-                return m_stdMatKey->GetNcoeffs();
-            }
-
-            const Array<OneD, const LibUtilities::BasisSharedPtr> &GetBase()
-            {
-                return m_stdMatKey->GetBase();
-            }
-
-            inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
-            {
-                return m_stdMatKey->GetBasis(dir);
-            }
-
-            const StdRegions::StdMatrixKeySharedPtr &GetStdMatKey() const 
-            {
-                return m_stdMatKey;
-            }
-
             SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
             {
                 return m_metricinfo;
             }
 
-            int GetMatrixID() const
-            {
-                return m_stdMatKey->GetMatrixID(); 
-            }
-
-            const NekDouble GetConstant(int i) const 
-            {
-                return m_stdMatKey->GetConstant(i);
-            }
-
-           int GetNvariableCoefficients() const
-            {
-                return m_stdMatKey->GetNvariableCoefficients();
-            }
-
-            int GetNvariableLaplacianCoefficients() const
-            {
-                return m_stdMatKey->GetNvariableLaplacianCoefficients();
-            }
-
-            inline const Array<OneD, Array<OneD, const NekDouble> >& GetVariableCoefficient() const
-            {             
-                return m_stdMatKey->GetVariableCoefficient();
-            }
-
-            inline const Array<OneD,const NekDouble>& GetVariableCoefficient(int i) const
-            {             
-                return m_stdMatKey->GetVariableCoefficient(i);
-            }
-
-            inline const Array<OneD,const NekDouble>& GetVariableLaplacianCoefficient() const
-            {             
-                return m_stdMatKey->GetVariableLaplacianCoefficient();
-            }
-
-            inline const Array<OneD,const NekDouble>& Get2DVariableLaplacianCoefficient(int i, int j) const
-            {  
-                return m_stdMatKey->Get2DVariableLaplacianCoefficient(i,j);    
-            }
-
-            inline const Array<OneD,const NekDouble>& Get3DVariableLaplacianCoefficient(int i, int j) const
-            {
-                return m_stdMatKey->Get3DVariableLaplacianCoefficient(i,j);
-            }
-
         protected:
             MatrixKey();
 
-            StdRegions::StdMatrixKeySharedPtr     m_stdMatKey;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo; 
 
         private:
         };
-
-        LOCAL_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const MatrixKey& rhs);
 
     } // end of namespace
 } // end of namespace

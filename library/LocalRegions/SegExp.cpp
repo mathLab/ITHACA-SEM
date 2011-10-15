@@ -1020,7 +1020,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
                                             mkey.GetExpansionType(), *this);  
 
-                        DNekMatSharedPtr WeakDerivStd = GetStdMatrix(*deriv0key.GetStdMatKey());
+                        DNekMatSharedPtr WeakDerivStd = GetStdMatrix(deriv0key);
                         fac = m_metricinfo->GetGmat()[dir][0]*
                             m_metricinfo->GetJac()[0];
 
@@ -1077,7 +1077,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     NekDouble one    = 1.0;
                     
-                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
@@ -1097,13 +1097,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 break;
             UseLocRegionsMatrix:
                 {
-                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                 }
                 break;
             UseStdRegionsMatrix:
                 {
-                    DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                    DNekMatSharedPtr mat = GetStdMatrix(mkey);
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                 }
                 break;
@@ -1180,7 +1180,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
-                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));                    
+                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(mkey);
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 

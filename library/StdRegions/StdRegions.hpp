@@ -194,6 +194,25 @@ namespace Nektar
             "FwdTrans"
         };
 
+        enum MatrixVarCoeff
+        {
+            eVarCoeffD00,
+            eVarCoeffD11,
+            eVarCoeffD22,
+            eVarCoeffD01,
+            eVarCoeffD02,
+            eVarCoeffD12
+        };
+
+        const char* const MatrixVarCoeffMap[] = {
+            "VarCoeffD00",
+            "VarCoeffD11",
+            "VarCoeffD22",
+            "VarCoeffD01",
+            "VarCoeffD02",
+            "VarCoeffD12"
+        };
+
         /** enum list of StdExpansion regions */
         enum ExpansionType
         {

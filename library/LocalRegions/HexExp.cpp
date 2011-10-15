@@ -1460,7 +1460,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GenMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(one,mat);
                     }
@@ -1468,7 +1468,7 @@ namespace Nektar
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         DNekMatSharedPtr mat
-                                        = GetStdMatrix(*mkey.GetStdMatKey());
+                                        = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(jac,mat);
                     }
@@ -1491,7 +1491,7 @@ namespace Nektar
                     {
                         NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
                         DNekMatSharedPtr mat
-                                        = GetStdMatrix(*mkey.GetStdMatKey());
+                                        = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(fac,mat);
                     }
@@ -1504,7 +1504,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GenMatrix(mkey);
 
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(one,mat);
@@ -1534,10 +1534,8 @@ namespace Nektar
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
                                             mkey.GetExpansionType(), *this);
 
-                        DNekMat &deriv0
-                                    = *GetStdMatrix(*deriv0key.GetStdMatKey());
-                        DNekMat &deriv1
-                                    = *GetStdMatrix(*deriv1key.GetStdMatKey());
+                        DNekMat &deriv0 = *GetStdMatrix(deriv0key);
+                        DNekMat &deriv1 = *GetStdMatrix(deriv1key);
 
                         int rows = deriv0.GetRows();
                         int cols = deriv1.GetColumns();
@@ -1557,7 +1555,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GenMatrix(mkey);
 
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(one,mat);
@@ -1577,18 +1575,12 @@ namespace Nektar
                         MatrixKey lap22key(StdRegions::eLaplacian22,
                                            mkey.GetExpansionType(), *this);
 
-                        DNekMat &lap00
-                                    = *GetStdMatrix(*lap00key.GetStdMatKey());
-                        DNekMat &lap01
-                                    = *GetStdMatrix(*lap01key.GetStdMatKey());
-                        DNekMat &lap02
-                                    = *GetStdMatrix(*lap02key.GetStdMatKey());
-                        DNekMat &lap11
-                                    = *GetStdMatrix(*lap11key.GetStdMatKey());
-                        DNekMat &lap12
-                                    = *GetStdMatrix(*lap12key.GetStdMatKey());
-                        DNekMat &lap22
-                                    = *GetStdMatrix(*lap22key.GetStdMatKey());
+                        DNekMat &lap00 = *GetStdMatrix(lap00key);
+                        DNekMat &lap01 = *GetStdMatrix(lap01key);
+                        DNekMat &lap02 = *GetStdMatrix(lap02key);
+                        DNekMat &lap11 = *GetStdMatrix(lap11key);
+                        DNekMat &lap12 = *GetStdMatrix(lap12key);
+                        DNekMat &lap22 = *GetStdMatrix(lap22key);
 
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat
@@ -1647,13 +1639,13 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GenMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
+                        DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
                 }
@@ -1666,7 +1658,7 @@ namespace Nektar
                 {
                     NekDouble one    = 1.0;
 
-                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
@@ -1687,7 +1679,7 @@ namespace Nektar
             default:
                 {
                     NekDouble        one = 1.0;
-                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
 
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
@@ -1738,7 +1730,7 @@ namespace Nektar
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
-                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));
+                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(mkey);
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 

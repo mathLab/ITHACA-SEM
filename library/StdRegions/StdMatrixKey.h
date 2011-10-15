@@ -263,6 +263,25 @@ namespace Nektar
                 return(m_base[dir]);
             }
 
+            inline const int GetNVarCoeff() const
+            {
+                return m_varcoeffs.size();
+            }
+
+            inline const Array<OneD, const NekDouble> &GetVarCoeff(StdRegions::MatrixVarCoeff & coeff) const
+            {
+                std::map<StdRegions::MatrixVarCoeff, Array<OneD, const NekDouble> >::const_iterator x;
+                x = m_varcoeffs.find(coeff);
+                ASSERTL1(x != m_varcoeffs.end(), "Coeff not defined");
+                return x->second;
+            }
+
+            inline void SetVarCoeff(StdRegions::MatrixVarCoeff & coeff,
+                                    Array<OneD, NekDouble> & varcoeff)
+            {
+                m_varcoeffs[coeff] = varcoeff;
+            }
+
         protected:
             ExpansionType m_expansionType;
             Array<OneD, const LibUtilities::BasisSharedPtr> m_base;
@@ -276,6 +295,7 @@ namespace Nektar
 
             int m_nvariablecoefficients;
             Array<OneD, Array<OneD,const NekDouble> >  m_variablecoefficient;
+            std::map<StdRegions::MatrixVarCoeff, Array<OneD, const NekDouble> > m_varcoeffs;
 
             int                   m_matrixid;
 

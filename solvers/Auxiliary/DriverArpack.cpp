@@ -304,7 +304,7 @@ namespace Nektar
 			
             std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
             
-            WriteFld(file,z + k*nq);
+            WriteFld(file,z + i*nq);
         }
 
         fclose (pFile);

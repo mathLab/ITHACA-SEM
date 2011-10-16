@@ -154,6 +154,11 @@ namespace Nektar
         void SetBoundaryConditions(NekDouble time);
 
         // Virtual functions
+        virtual MultiRegions::ExpListSharedPtr v_GetPressure()
+        {
+            return m_pressure; 
+        }
+
         virtual void v_PrintSummary(std::ostream &out)
         {
             ASSERTL0(false,"This method is not defined in this class");
@@ -169,12 +174,12 @@ namespace Nektar
             ASSERTL0(false,"This method is not defined in this class");
         }
 		
-		virtual void v_TransCoeffToPhys(void)
+        virtual void v_TransCoeffToPhys(void)
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
 		
-		virtual void v_TransPhysToCoeff(void)
+        virtual void v_TransPhysToCoeff(void)
         {
             ASSERTL0(false,"This method is not defined in this class");
         }

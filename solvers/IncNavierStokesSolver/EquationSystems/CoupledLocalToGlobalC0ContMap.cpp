@@ -155,7 +155,7 @@ namespace Nektar
                     // Check to see that edge normals have non-zero
                     // component in this direction since otherwise
                     // also can be singular.
-/// @TODO: Fix this so that we can extract normals from edges
+                    /// @TODO: Fix this so that we can extract normals from edges
                     for(k = 0; k < bndCondExp[j]->GetNumElmts(); ++k)
                     {
                         Array<OneD,Array<OneD,NekDouble> > locnorm;

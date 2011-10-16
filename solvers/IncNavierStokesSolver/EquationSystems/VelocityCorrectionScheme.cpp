@@ -362,42 +362,42 @@ namespace Nektar
         }
     }
 	
-	void VelocityCorrectionScheme::CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
+    void VelocityCorrectionScheme::CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
-		switch(m_nConvectiveFields)
-		{
-			case 1:
-				ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
-				break;
-			case 2:
- 				CalcPressureBCs2D(fields,N);
-				break;
-			case 3:
-				CalcPressureBCs3D(fields,N);
-				break;
-		}
+        switch(m_nConvectiveFields)
+        {
+        case 1:
+            ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
+            break;
+        case 2:
+            CalcPressureBCs2D(fields,N);
+            break;
+        case 3:
+            CalcPressureBCs3D(fields,N);
+            break;
+        }
     }
     
     void VelocityCorrectionScheme::CalcPressureBCs2D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
-	{
-		int  i,n;
+    {
+        int  i,n;
         
-		Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
+        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
-		
+	
         PBndConds = m_pressure->GetBndConditions();
         PBndExp   = m_pressure->GetBndCondExpansions();
 		
-		StdRegions::StdExpansionSharedPtr elmt;
-		StdRegions::StdExpansion1DSharedPtr Pbc;
+        StdRegions::StdExpansionSharedPtr elmt;
+        StdRegions::StdExpansion1DSharedPtr Pbc;
         
         Array<OneD, NekDouble> Pvals;
         
-		int maxpts = 0,cnt;
-		int elmtid,nq,offset, boundary;
-		
-		bool NegateNormals;
-		
+        int maxpts = 0,cnt;
+        int elmtid,nq,offset, boundary;
+	
+        bool NegateNormals;
+	
         // find the maximum values of points 
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
@@ -407,77 +407,77 @@ namespace Nektar
             }
         }
 		
-		Array<OneD, const NekDouble> U,V,Nu,Nv;
-		Array<OneD, NekDouble> Uy(maxpts);
-		Array<OneD, NekDouble> Vx(maxpts);
-		Array<OneD, NekDouble> Qx(maxpts);  
-		Array<OneD, NekDouble> Qy(maxpts);
-		Array<OneD, NekDouble> Q(maxpts); 
+        Array<OneD, const NekDouble> U,V,Nu,Nv;
+        Array<OneD, NekDouble> Uy(maxpts);
+        Array<OneD, NekDouble> Vx(maxpts);
+        Array<OneD, NekDouble> Qx(maxpts);  
+        Array<OneD, NekDouble> Qy(maxpts);
+        Array<OneD, NekDouble> Q(maxpts); 
 		
-		for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
-		{
-			
-			string type = PBndConds[n]->GetUserDefined().GetEquation(); 
-			
-			if(type == "H")
-			{
-				for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
-				{
-					// find element and edge of this expansion. 
-					// calculate curl x curl v;
-					elmtid = m_pressureBCtoElmtID[cnt];
-					elmt   = m_fields[0]->GetExp(elmtid);
-					nq     = elmt->GetTotPoints();
-					offset = m_fields[0]->GetPhys_Offset(elmtid);
-					
-					U = fields[m_velocity[0]] + offset;
-					V = fields[m_velocity[1]] + offset; 
-					
-					// Calculating vorticity Q = (dv/dx - du/dy)
-					elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
-					elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);					
-					
-					Vmath::Vsub(nq,Vx,1,Uy,1,Q,1);
-					
-					// Calculate  Curl(Q) = Qy i - Qx j 
-					elmt->PhysDeriv(Q,Qx,Qy);
-					
-					Nu = N[0] + offset;
-					Nv = N[1] + offset; 
-					
-					// Evaluate [N - kinvis Curlx Curl V].n
-					// x-component (stored in Qy)
-					Vmath::Svtvp(nq,-m_kinvis,Qy,1,Nu,1,Qy,1);
-					
-					// y-component (stored in Qx )
-					Vmath::Svtvp(nq,m_kinvis,Qx,1,Nv,1,Qx,1);
-					
-					Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
-					
-					boundary = m_pressureBCtoTraceID[cnt];
-					
-					// Get edge values and put into Uy, Vx
-					elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
-					elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
-					
-					// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
-					Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
-					// Decide if normals facing outwards
-					NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
-					
-					Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
-				}
-			}
-			else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
-			{
-				cnt += PBndExp[n]->GetExpSize();
-			}
-			else
-			{
-				ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
-			}
-		}
-	}
+        for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
+        {
+            
+            string type = PBndConds[n]->GetUserDefined().GetEquation(); 
+            
+            if(type == "H")
+            {
+                for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
+                {
+                    // find element and edge of this expansion. 
+                    // calculate curl x curl v;
+                    elmtid = m_pressureBCtoElmtID[cnt];
+                    elmt   = m_fields[0]->GetExp(elmtid);
+                    nq     = elmt->GetTotPoints();
+                    offset = m_fields[0]->GetPhys_Offset(elmtid);
+                    
+                    U = fields[m_velocity[0]] + offset;
+                    V = fields[m_velocity[1]] + offset; 
+                    
+                    // Calculating vorticity Q = (dv/dx - du/dy)
+                    elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
+                    elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);					
+                    
+                    Vmath::Vsub(nq,Vx,1,Uy,1,Q,1);
+                    
+                    // Calculate  Curl(Q) = Qy i - Qx j 
+                    elmt->PhysDeriv(Q,Qx,Qy);
+                    
+                    Nu = N[0] + offset;
+                    Nv = N[1] + offset; 
+                    
+                    // Evaluate [N - kinvis Curlx Curl V].n
+                    // x-component (stored in Qy)
+                    Vmath::Svtvp(nq,-m_kinvis,Qy,1,Nu,1,Qy,1);
+                    
+                    // y-component (stored in Qx )
+                    Vmath::Svtvp(nq,m_kinvis,Qx,1,Nv,1,Qx,1);
+                    
+                    Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
+                    
+                    boundary = m_pressureBCtoTraceID[cnt];
+                    
+                    // Get edge values and put into Uy, Vx
+                    elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
+                    elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
+                    
+                    // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
+                    Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
+                    // Decide if normals facing outwards
+                    NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
+                    
+                    Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
+                }
+            }
+            else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
+            {
+                cnt += PBndExp[n]->GetExpSize();
+            }
+            else
+            {
+                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
+            }
+        }
+    }
 				
 	void VelocityCorrectionScheme::CalcPressureBCs3D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
 	{

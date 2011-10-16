@@ -77,6 +77,8 @@ namespace Nektar
             */
             STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
+
             void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
             {
                 v_SetCoeffsToOrientation(dir);
@@ -118,6 +120,11 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
+            }
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(coords,physvals);
             }
 
             virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,

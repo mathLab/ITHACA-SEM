@@ -319,7 +319,7 @@ namespace Nektar
             }
 
             virtual bool v_ContainsPoint(
-                    const Array<OneD, const NekDouble> &gloCoord);
+                                         const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0);
         };
 
     }; //end of namespace

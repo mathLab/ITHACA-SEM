@@ -116,6 +116,12 @@ namespace Nektar
 
         NekDouble StdExpansion2D::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
         {
+            PhysEvaluate(coords,m_phys);
+        }
+
+
+        NekDouble StdExpansion2D::PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        {
             NekDouble val;
             int i;
             int nq0 = m_base[0]->GetNumPoints();
@@ -133,7 +139,7 @@ namespace Nektar
             for (i = 0; i < nq1;++i)
             {
                 wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1,
-                                     &m_phys[i * nq0], 1);
+                                     &physvals[i * nq0], 1);
             }
 
             // interpolate in second coordinate direction

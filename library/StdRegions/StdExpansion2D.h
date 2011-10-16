@@ -118,6 +118,8 @@ namespace Nektar
              */
             STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
+
             STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray,
                                const Array<OneD, const NekDouble>& w0,
                                const Array<OneD, const NekDouble>& w1);
@@ -148,6 +150,11 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
+            }
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(coords,physvals);
             }
 
             virtual void v_SetUpPhysNormals(const int edge);

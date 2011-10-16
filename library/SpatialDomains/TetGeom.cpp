@@ -726,7 +726,7 @@ namespace Nektar
         * within this tetrahedral geometry.
         */
        bool TetGeom::v_ContainsPoint(
-               const Array<OneD, const NekDouble> &gloCoord)
+                                     const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
        {
            // Validation checks
            ASSERTL1(gloCoord.num_elements() == 3,
@@ -737,8 +737,9 @@ namespace Nektar
            GetLocCoords(gloCoord, locCoord);
 
            // Check local coordinate is within [-1,1]^3 bounds.
-           if (locCoord[0] >= -1 && locCoord[1] >= -1  && locCoord[2] >= -1
-               && locCoord[0] <= 1 && locCoord[1] <= 1 && locCoord[2] <= 1)
+           if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol)  
+               && locCoord[2] >= -(1+tol)
+               && locCoord[0] + locCoord[1] + locCoord[2] <= tol)
            {
                return true;
            }

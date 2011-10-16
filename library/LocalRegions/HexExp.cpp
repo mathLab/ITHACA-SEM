@@ -522,11 +522,17 @@ namespace Nektar
         NekDouble HexExp::v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord)
         {
+            v_PhysEvaluate(coord,m_phys);
+        }
+
+        NekDouble HexExp::v_PhysEvaluate(
+                                         const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)
+        {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
-            return StdHexExp::v_PhysEvaluate(Lcoord);
+            return StdHexExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
 

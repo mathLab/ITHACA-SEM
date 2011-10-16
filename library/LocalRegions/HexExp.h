@@ -135,6 +135,9 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coords);
 
+            virtual NekDouble v_PhysEvaluate(
+                                             const Array<OneD, const NekDouble> &coords, const Array<OneD, const NekDouble> & physvals);
+
             /// Retrieve the local coordinates of each quadrature point.
             virtual void v_GetCoords( Array<OneD,NekDouble> &coords_1,
                             Array<OneD,NekDouble> &coords_2, 

@@ -353,6 +353,14 @@ namespace Nektar
             {
                 return 2;
             }
+
+            virtual bool v_ContainsPoint(
+                                         const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function has not been defined for this geometry");
+                return false;
+            }
         };
 
 

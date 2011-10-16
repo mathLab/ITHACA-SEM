@@ -205,7 +205,9 @@ namespace Nektar
 
             /** \brief Single Point Evaluation */
             STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& xi);
-         
+
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& xi,  const Array<OneD, const NekDouble> & physvals);
+            
             STD_REGIONS_EXPORT void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
             STD_REGIONS_EXPORT void FillMode(const int mode, Array<OneD, NekDouble> &outarray);        
             STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
@@ -402,6 +404,11 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
+            }
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(Lcoords, physvals);
             }
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")

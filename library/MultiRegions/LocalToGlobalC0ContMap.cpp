@@ -1003,11 +1003,23 @@ namespace Nektar
             systemSingular = (s == 1 ? true : false);
             if(systemSingular == true && checkIfSystemSingular)
             {
-                //last region i and j=0 edge
-                bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
+                if(m_session->DefinesParameter("SingularElement"))
+                {
+                    int s_eid = m_session->GetParameter("SingularElement");
 
-                //first vertex 0 of the edge
-                meshVertId = (bndSegExp->GetGeom1D())->GetVid(0);
+                    ASSERTL1(s_eid < locExpVector.size(),"SingularElement Parameter is too large");
+                    
+                    meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
+                }
+                else
+                {
+                    //last region i and j=0 edge
+                    bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
+                    
+                    //first vertex 0 of the edge
+                    meshVertId = (bndSegExp->GetGeom1D())->GetVid(0);
+                }
+
                 if(ReorderedGraphVertId[0].count(meshVertId) == 0)
                 {
                     ReorderedGraphVertId[0][meshVertId] = graphVertId++;

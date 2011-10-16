@@ -1294,12 +1294,25 @@ namespace Nektar
         /* region defined by vertices. The do point search. 
         **/
         int ExpList::GetExpIndex(
-                    const Array<OneD, const NekDouble> &gloCoord)
+                                 const Array<OneD, const NekDouble> &gloCoord,
+                                 NekDouble tol)
         {
-            for (int i = 0; i < (*m_exp).size(); ++i)
+            static int start = 0;
+            // start search at previous element or 0 
+            for (int i = start; i < (*m_exp).size(); ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
                 {
+                    start = i;
+                    return i;
+                }
+            }
+
+            for (int i = 0; i < start; ++i)
+            {
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
+                {
+                    start = i;
                     return i;
                 }
             }

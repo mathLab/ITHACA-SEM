@@ -1314,12 +1314,17 @@ namespace Nektar
 
         NekDouble QuadExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
-            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
+            PhysEvaluate(coord,m_phys);
+        }
 
+        NekDouble QuadExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)
+        {
+            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
+            
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
 
-            return StdQuadExp::PhysEvaluate(Lcoord);
+            return StdQuadExp::PhysEvaluate(Lcoord, physvals);
         }
 
         DNekMatSharedPtr QuadExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)

@@ -214,6 +214,8 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coord);
 
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coord, const Array<OneD, const NekDouble> & physvals);
+
             LOCAL_REGIONS_EXPORT void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
@@ -417,6 +419,11 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
+            }
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(coords, physvals);
             }
 
             /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$

@@ -165,6 +165,8 @@ namespace Nektar
                                          Array<OneD, NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals);
+
             /** \brief Extract the physical values along edge \a edge
                 from \a inarray into \a outarray following the local
                 edge orientation and point distribution defined by
@@ -471,11 +473,15 @@ namespace Nektar
                 return PhysEvaluate(coords);
             }
 
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(coords, physvals);
+            }
+
             virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
             {
                 return Linf(sol);
             }
-
 
             virtual NekDouble v_Linf()
             {

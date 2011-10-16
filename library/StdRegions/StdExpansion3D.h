@@ -130,9 +130,17 @@ namespace Nektar
                 return v_PhysEvaluate(coords);
             }
 
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords, 
+                                   const Array<OneD, const NekDouble>& physvals)
+            {
+                return v_PhysEvaluate(coords, physvals);
+            }
+
         protected:
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
         private:
 

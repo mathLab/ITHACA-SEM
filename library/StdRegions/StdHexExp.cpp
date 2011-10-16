@@ -2540,6 +2540,12 @@ namespace Nektar
             return StdExpansion3D::v_PhysEvaluate(Lcoords);
         }
 
+        NekDouble StdHexExp::v_PhysEvaluate(
+                                            Array<OneD, const NekDouble>& Lcoords, const Array<OneD, const NekDouble> & physvals)
+        {
+            return StdExpansion3D::v_PhysEvaluate(Lcoords, physvals);
+        }
+
         int StdHexExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");

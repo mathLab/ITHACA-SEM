@@ -413,6 +413,16 @@ namespace Nektar
         NekDouble TetExp::v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord)
         {
+            v_PhysEvaluate(coord,m_phys);
+        }
+        /**
+         * @param   coord       Physical space coordinate
+         * @returns Evaluation of expansion at given coordinate.
+         */
+        NekDouble TetExp::v_PhysEvaluate(
+                            const Array<OneD, const NekDouble> &coord,
+                            const Array<OneD, const NekDouble> & physvals)
+        {
             ASSERTL0(m_geom,"m_geom not defined");
 
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
@@ -421,7 +431,7 @@ namespace Nektar
             m_geom->GetLocCoords(coord,Lcoord);
 
             // Evaluate point in local (eta) coordinates.
-            return StdExpansion3D::v_PhysEvaluate(Lcoord);
+            return StdExpansion3D::v_PhysEvaluate(Lcoord,physvals);
         }
 
 

@@ -103,8 +103,13 @@ namespace Nektar
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS
     }
 
-    NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
-    {
+        NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
+        {
+            PhysEvaluate(Lcoord,m_phys);
+        }
+        
+        NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord, const Array<OneD, const NekDouble> & physvals)
+        {
         int    nquad = GetTotPoints();
         NekDouble  val;
         DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
@@ -112,7 +117,7 @@ namespace Nektar
         ASSERTL2(Lcoord[0] >= -1,"Lcoord[0] < -1");
         ASSERTL2(Lcoord[0] <=  1,"Lcoord[0] >  1");
 
-        val = Blas::Ddot(nquad, I->GetPtr(), 1, m_phys, 1);
+        val = Blas::Ddot(nquad, I->GetPtr(), 1, physvals, 1);
 
         return val;
     }

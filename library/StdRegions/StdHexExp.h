@@ -240,6 +240,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(Array<OneD,
                                 const NekDouble>& Lcoords);
 
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(Array<OneD, const NekDouble>& Lcoords, const Array<OneD, const NekDouble> & physvals);
+
             STD_REGIONS_EXPORT virtual void v_MassMatrixOp(
                             const Array<OneD, const NekDouble> &inarray, 
                             Array<OneD,NekDouble> &outarray,

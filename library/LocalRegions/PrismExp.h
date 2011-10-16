@@ -109,6 +109,8 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals);
+
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -269,6 +271,11 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
             {
                 return PhysEvaluate(coords);
+            }
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(coords,physvals);
             }
 
             virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)

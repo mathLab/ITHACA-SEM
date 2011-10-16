@@ -171,13 +171,13 @@ namespace Nektar
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
-            LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                          Array<OneD, NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
-            LOCAL_REGIONS_EXPORT void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
-                                         Array<OneD, NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
         
             LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);        
+
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals);        
 
             LOCAL_REGIONS_EXPORT void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
@@ -480,6 +480,11 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
             {
                 return PhysEvaluate(coords);
+            }
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords, const Array<OneD, const NekDouble> & physvals)
+            {
+                return PhysEvaluate(coords, physvals);
             }
     
             virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)

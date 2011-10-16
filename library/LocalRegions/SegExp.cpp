@@ -940,12 +940,17 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
         NekDouble SegExp::PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {
+            PhysEvaluate(coord,m_phys);
+        }
+
+        NekDouble SegExp::PhysEvaluate(const Array<OneD, const NekDouble>& coord, const Array<OneD, const NekDouble> &physvals)
+        {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
 
             ASSERTL0(m_geom,"_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
 
-            return StdSegExp::PhysEvaluate(Lcoord);
+            return StdSegExp::PhysEvaluate(Lcoord, physvals);
         }
 
         DNekScalMatSharedPtr SegExp::CreateMatrix(const MatrixKey &mkey)

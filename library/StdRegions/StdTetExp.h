@@ -143,6 +143,8 @@ namespace Nektar
             /** \brief Single Point Evaluation */
             STD_REGIONS_EXPORT NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
 
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords,  const Array<OneD, const NekDouble> & physvals);
+
 
             //----------------------------------
             // Generate Matrix Routine
@@ -235,6 +237,8 @@ namespace Nektar
                             Array<OneD, NekDouble> &out_d2);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords,  const Array<OneD, const NekDouble> & physvals);
 
         private:
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,

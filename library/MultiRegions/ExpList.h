@@ -524,7 +524,7 @@ namespace Nektar
 
             /// This function returns the index of the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
-            MULTI_REGIONS_EXPORT int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord);
+            MULTI_REGIONS_EXPORT int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
@@ -1037,54 +1037,54 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 			
-			virtual void v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z);
-			
-			virtual void v_GetCoord(Array<OneD, NekDouble> &coords);
+            virtual void v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z);
+            
+            virtual void v_GetCoord(Array<OneD, NekDouble> &coords);
 
-			virtual void v_SetCoeff(NekDouble val);
-			
-			virtual void v_SetPhys(NekDouble val);
-			
-			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
-			
-			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
-			
-			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d0,
-									 Array<OneD, NekDouble> &out_d1, 
-									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs = false);
-			
-			virtual void v_PhysDeriv(const int dir,
-									 const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
-			
-			virtual void v_PhysDeriv(Direction edir, 
-									 const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
-			
-			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
-			
-			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
-			
-			virtual void v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
-			
-			virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
-									   const Array<OneD, NekDouble> &TotField, 
-									   int BndID);
-			
-			virtual void v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
-												     Array<OneD, const NekDouble> &V2,
-												     Array<OneD, NekDouble> &outarray,
-												     int BndID);
-			
+            virtual void v_SetCoeff(NekDouble val);
+            
+            virtual void v_SetPhys(NekDouble val);
+            
+            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
+            
+            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
+            
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1, 
+                                     Array<OneD, NekDouble> &out_d2, bool UseContCoeffs = false);
+            
+            virtual void v_PhysDeriv(const int dir,
+                                     const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+            
+            virtual void v_PhysDeriv(Direction edir, 
+                                     const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+            
+            virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD, NekDouble> &outarray, 
+                                               bool UseContCoeffs = false);
+            
+            virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD, NekDouble> &outarray, 
+                                               bool UseContCoeffs = false);
+            
+            virtual void v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            
+            virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
+                                       const Array<OneD, NekDouble> &TotField, 
+                                       int BndID);
+            
+            virtual void v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+                                                     Array<OneD, const NekDouble> &V2,
+                                                     Array<OneD, NekDouble> &outarray,
+                                                     int BndID);
+            
             virtual void v_SetUpPhysNormals();
-
+            
             virtual void v_SetUpTangents();
-
+            
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
 

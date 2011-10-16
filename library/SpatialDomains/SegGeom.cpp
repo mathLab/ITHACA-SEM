@@ -393,12 +393,11 @@ namespace Nektar
             }
         }
 
-        bool SegGeom::v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord)
+        bool SegGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -1 && stdCoord[0] <= 1)
+            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol)
             {
                 return true;
             }

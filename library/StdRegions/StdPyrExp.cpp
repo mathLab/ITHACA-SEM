@@ -571,6 +571,11 @@ namespace Nektar
         
         NekDouble StdPyrExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
+            PhysEvaluate(xi,m_phys);
+        }
+
+        NekDouble StdPyrExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi,  const Array<OneD, const NekDouble> & physvals)
+        {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol )    // NekConstants::kEvaluateTol = 1e-12
@@ -592,7 +597,7 @@ namespace Nektar
             // cout << "xi_x = " << xi[0] << ", xi_y = " << xi[1] << ", xi_z = " << xi[2] << endl;
             // cout << "eta_x = " << eta[0] << ", eta_y = " << eta[1] << ", eta_z = " << eta[2] << endl;
             
-            return  StdExpansion3D::PhysEvaluate(eta);  
+            return  StdExpansion3D::PhysEvaluate(eta, physvals);  
         }
         
         void StdPyrExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)

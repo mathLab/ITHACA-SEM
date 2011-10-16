@@ -213,7 +213,13 @@ namespace Nektar
 
             NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords)
             {
-                return  StdExpansion2D::PhysEvaluate(coords); 
+                return  StdExpansion2D::PhysEvaluate(coords, m_phys); 
+            }
+
+            NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords,
+                                   const Array<OneD, const NekDouble> & physvals)
+            {
+                return  StdExpansion2D::PhysEvaluate(coords, physvals); 
             }
 
             STD_REGIONS_EXPORT void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
@@ -627,6 +633,12 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(Array<OneD, const NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
+            }
+
+
+            virtual NekDouble v_PhysEvaluate(Array<OneD, const NekDouble>& Lcoords, const Array<OneD, const NekDouble> &physvals)
+            {
+                return PhysEvaluate(Lcoords, physvals);
             }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)

@@ -201,7 +201,12 @@ namespace Nektar
     }
 
 
-    NekDouble StdExpansion3D::v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
+        NekDouble StdExpansion3D::v_PhysEvaluate(const Array<OneD, const NekDouble> &coords )
+        {
+            v_PhysEvaluate(coords,m_phys);
+        }
+
+    NekDouble StdExpansion3D::v_PhysEvaluate(const Array<OneD, const NekDouble> &coords, const Array<OneD, const NekDouble> & physvals)
     {
         NekDouble  value;
         ASSERTL2(coords[0] >= -1,"coord[0] < -1");
@@ -227,7 +232,7 @@ namespace Nektar
         interpolatingNodes = &I->GetPtr()[0];
         for(int i = 0; i < Qy*Qz;++i)
         {
-            sumFactorization_qr[i] =  Blas::Ddot(Qx, interpolatingNodes, 1, &m_phys[ i*Qx ], 1);
+            sumFactorization_qr[i] =  Blas::Ddot(Qx, interpolatingNodes, 1, &physvals[ i*Qx ], 1);
         }
 
         // Interpolate in second coordinate direction

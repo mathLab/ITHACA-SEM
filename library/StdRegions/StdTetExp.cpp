@@ -1080,6 +1080,11 @@ namespace Nektar
 
         NekDouble StdTetExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
+            v_PhysEvaluate(xi,m_phys);
+        }
+
+        NekDouble StdTetExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi, const Array<OneD, const NekDouble> & physvals)
+        {
             // Validation checks
             ASSERTL0(xi[0] + xi[1] + xi[2] <= -1,
                      "Coordinate outside bounds of tetrahedron.");
@@ -1124,7 +1129,7 @@ namespace Nektar
                         || (eta[2] - NekConstants::kNekZeroTol <= 1),
                      "Eta Coordinate outside bounds of tetrahedron.");
 
-            return  StdExpansion3D::v_PhysEvaluate(eta);
+            return  StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }
 
 

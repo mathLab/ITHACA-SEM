@@ -792,16 +792,16 @@ namespace Nektar
         }
 
         bool HexGeom::v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord)
+                                      const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -1 && stdCoord[0] <= 1
-                && stdCoord[1] >= -1 && stdCoord[1] <= 1
-                && stdCoord[2] >= -1 && stdCoord[2] <= 1)
+            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
+                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
+                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
             {
                 return true;
             }

@@ -1401,12 +1401,17 @@ namespace Nektar
 
         NekDouble TriExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
+            PhysEvaluate(coord,m_phys);
+        }
+
+        NekDouble TriExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)
+        {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
 
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
-
-            return StdTriExp::PhysEvaluate(Lcoord);
+            
+            return StdTriExp::PhysEvaluate(Lcoord, physvals);
         }
 
         DNekScalMatSharedPtr TriExp::CreateMatrix(const MatrixKey &mkey)

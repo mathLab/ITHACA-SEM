@@ -166,9 +166,9 @@ namespace Nektar
                 }
 
                 inline bool ContainsPoint(
-                        const Array<OneD, const NekDouble> &gloCoord)
+                                          const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0)
                 {
-                    return v_ContainsPoint(gloCoord);
+                    return v_ContainsPoint(gloCoord,tol);
                 }
 
             protected:
@@ -242,7 +242,7 @@ namespace Nektar
                 }
 
                 virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble> &gloCoord)
+                                             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0)
                 {
                     NEKERROR(ErrorUtil::efatal,
                              "This function has not been defined for this geometry");

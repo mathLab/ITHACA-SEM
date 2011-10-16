@@ -659,6 +659,11 @@ namespace Nektar
 
         NekDouble StdPrismExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
+            PhysEvaluate(xi,m_phys);
+        }
+
+        NekDouble StdPrismExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi,  const Array<OneD, const NekDouble> & physvals)
+        {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)    // NekConstants::kEvaluateTol = 1e-12
@@ -682,7 +687,7 @@ namespace Nektar
             } 
 
 
-            return  StdExpansion3D::PhysEvaluate(eta);  
+            return  StdExpansion3D::PhysEvaluate(eta, physvals);  
         }
 
  

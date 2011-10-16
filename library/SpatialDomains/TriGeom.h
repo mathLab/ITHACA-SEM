@@ -315,8 +315,7 @@ namespace Nektar
                     return kNedges;
                 }
 
-                virtual bool v_ContainsPoint(
-                        const Array<OneD, const NekDouble> &gloCoord);
+                virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0);
         };
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar

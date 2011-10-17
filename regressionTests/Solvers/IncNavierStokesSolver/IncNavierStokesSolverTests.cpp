@@ -108,7 +108,13 @@ int main(int argc, char* argv[])
 	
     //Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","bfs_tg.xml","Transient Growth (Modified Arnoldi): Backward-facing step");
-
+	
+	//Test 3D homogeneous 1D approach, velocity correction scheme, Laminar Channel Flow
+	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_MVM.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (MVM)");
+#ifdef NEKTAR_USING_FFTW
+	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_FFT.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (FFT)");
+#endif
+	
 #ifdef NEKTAR_USING_ARPACK
     //same stability tests with Arpack
 	/// @todo Fix ChanStability_Ar regression test to work on all architectures
@@ -118,7 +124,7 @@ int main(int argc, char* argv[])
 
 	//Test Modified Arnoldi direct stability  (CoupledSolver)
 	Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
-	#endif
+#endif
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;

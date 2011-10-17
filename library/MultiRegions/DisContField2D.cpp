@@ -282,6 +282,43 @@ namespace Nektar
                     m_trace        = In.m_trace;
                     m_traceMap     = In.m_traceMap;
                 }
+				else 
+				{
+					m_globalBndMat = In.m_globalBndMat;
+                    m_trace        = In.m_trace;
+                    m_traceMap     = In.m_traceMap;
+					
+					// set elmt edges to point to robin bc edges if required.
+                    int i,cnt;
+                    Array<OneD, int> ElmtID,EdgeID;
+                    GetBoundaryToElmtMap(ElmtID,EdgeID);
+					
+                    for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                    {
+                        MultiRegions::ExpListSharedPtr locExpList;
+						
+						//                        if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+						//                        {
+						int e;
+						locExpList = m_bndCondExpansions[i];
+						
+						for(e = 0; e < locExpList->GetExpSize(); ++e)
+						{
+							LocalRegions::Expansion2DSharedPtr exp2d
+							= boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
+							LocalRegions::Expansion1DSharedPtr exp1d
+							= boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(locExpList->GetExp(e));
+							
+							exp2d->SetEdgeExp(EdgeID[cnt+e],exp1d);
+							exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
+						}
+						//                        }
+                        cnt += m_bndCondExpansions[i]->GetExpSize();
+                    }
+					
+                    SetUpPhysNormals();
+				}
+
             }
         }
 

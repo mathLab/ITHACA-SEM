@@ -492,73 +492,28 @@ namespace Nektar
 		int maxpts = 0;
 		
 		Array<OneD, NekDouble> Pvals;
-				
-		int phystot = m_fields[0]->GetTotPoints();
+		
+		// find the maximum values of points 
+        for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
+        {
+            for(int i = 0; i < PBndExp[n]->GetExpSize(); ++i)
+            {
+                maxpts = max(maxpts, m_fields[0]->GetExp(m_pressureBCtoElmtID[cnt++])->GetTotPoints());
+            }
+        }
 		
 		Array<OneD, const NekDouble> U,V,W,Nu,Nv,Nw;
+		Array<OneD, NekDouble> Uy(maxpts);
+		Array<OneD, NekDouble> Uz(maxpts);
+		Array<OneD, NekDouble> Vx(maxpts);
+		Array<OneD, NekDouble> Vz(maxpts);
+		Array<OneD, NekDouble> Wx(maxpts);
+		Array<OneD, NekDouble> Wy(maxpts);
+		Array<OneD, NekDouble> Qx(maxpts);  
+		Array<OneD, NekDouble> Qy(maxpts);
+		Array<OneD, NekDouble> Qz(maxpts);
 		
-		Array<OneD, NekDouble> Uy(phystot);
-		Array<OneD, NekDouble> Uz(phystot);
-		Array<OneD, NekDouble> Vx(phystot);
-		Array<OneD, NekDouble> Vz(phystot);
-		Array<OneD, NekDouble> Wx(phystot);
-		Array<OneD, NekDouble> Wy(phystot);
-		Array<OneD, NekDouble> Qx(phystot);  
-		Array<OneD, NekDouble> Qy(phystot);
-		Array<OneD, NekDouble> Qz(phystot);
 		
-		U = fields[m_velocity[0]];
-		V = fields[m_velocity[1]];
-		W = fields[m_velocity[2]];
-		
-		// Calculating vorticity Q = Qx i + Qy j + Qz k
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],W,Wy);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],V,Vz);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],U,Uz);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],W,Wx);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
-		
-		Vmath::Vsub(phystot,Wy,1,Vz,1,Qx,1);
-		Vmath::Vsub(phystot,Uz,1,Wx,1,Qy,1);
-		Vmath::Vsub(phystot,Vx,1,Uy,1,Qz,1);
-		
-		// Calculate  NxQ = Curl(Q) = (Qzy-Qyz) i + (Qxz-Qzx) j + (Qyx-Qxy) k
-		// NxQ = NxQ_x i + NxQ_y j + NxQ_z k
-		// Using the memory space assocaited with the velocity derivatives to
-		// store the vorticity derivatives to save space.
-		// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Qz,Uy);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Qy,Uz);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Qx,Vx);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Qz,Vz);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Qy,Wx);
-		m_fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Qx,Wy);
-		
-		// Using the sorage space associated with the 3 components of the vorticity
-		// to store the 3 components od the vorticity curl to save space
-		// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy
-		Vmath::Vsub(phystot,Uy,1,Uz,1,Qx,1);
-		Vmath::Vsub(phystot,Vx,1,Vz,1,Qy,1);
-		Vmath::Vsub(phystot,Wx,1,Wy,1,Qz,1);
-		
-		Nu = N[0];
-		Nv = N[1];
-		Nw = N[2];
-		
-		// Evaluate [N - kinvis Curlx Curl V]
-		
-		// x-component (stored in Qx)
-		Vmath::Svtvp(phystot,-m_kinvis,Qx,1,Nu,1,Qx,1);
-		// y-component (stored in Qy)
-		Vmath::Svtvp(phystot,-m_kinvis,Qy,1,Nv,1,Qy,1);
-		// z-component (stored in Qz) not required for this approach
-		Vmath::Svtvp(phystot,-m_kinvis,Qz,1,Nw,1,Qz,1);
-		
-		///////////////////////////////////////////////////////////////////
-		// 3D cases (Homo1D, Homo2D, Homo3D and Full 3D)
-		
-		// 3D Homogeneous 1D
 		if(m_HomogeneousType == eHomogeneous1D)
 		{
 			StdRegions::StdExpansionSharedPtr elmt;
@@ -566,10 +521,33 @@ namespace Nektar
 			
 			int exp_size, exp_size_per_plane;
 			
+			Array<OneD, Array< OneD, NekDouble> > velocity(m_nConvectiveFields);
+			Array<OneD, Array< OneD, NekDouble> > advection(m_nConvectiveFields);
+			
+			int phystot = m_fields[0]->GetTotPoints();
+			
+			for(int n = 0; n < m_nConvectiveFields; ++n)
+			{
+				velocity[n] = Array<OneD, NekDouble> (phystot);
+				advection[n] = Array<OneD, NekDouble> (phystot);
+			}
+			
+			
+			for(int i = 0; i < fields.num_elements(); i++)
+			{
+				m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
+				m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
+			}
+			
+			int K;
+			NekDouble WaveNumber;
 			cnt = 0;
 			
 			for(int k = 0; k < m_npointsZ; k++)
 			{
+				K = k/2;
+				WaveNumber = 2*M_PI*pow(-1.0,double(k))*(double(K));
+				
 				for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 				{
 					string type = PBndConds[n]->GetUserDefined().GetEquation();
@@ -583,28 +561,70 @@ namespace Nektar
 						for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
 						{
 							// find element and edge of this expansion. 
+							// calculate curl x curl v;
 							elmtid = m_pressureBCtoElmtID[cnt];
 							elmt   = m_fields[0]->GetExp(elmtid);
 							nq     = elmt->GetTotPoints();
 							offset = m_fields[0]->GetPhys_Offset(elmtid);
 							
-							Array<OneD, NekDouble> NQx(nq);
-							Array<OneD, NekDouble> NQy(nq);
+							U = velocity[m_velocity[0]] + offset;
+							V = velocity[m_velocity[1]] + offset;
+							W = velocity[m_velocity[2]] + offset;
+							
+							// Calculating vorticity Q = Qx i + Qy j + Qz k
+							elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],W,Wy);
+							elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],W,Wx);
+							elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
+							elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
+							Vmath::Smul(nq,WaveNumber,V,1,Vz,1);
+							Vmath::Smul(nq,WaveNumber,U,1,Uz,1);
+							
+							Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
+							Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
+							Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
+							
+							// Calculate  NxQ = Curl(Q) = (Qzy-Qyz) i + (Qxz-Qzx) j + (Qyx-Qxy) k
+							// NxQ = NxQ_x i + NxQ_y j + NxQ_z k
+							// Using the memory space assocaited with the velocity derivatives to
+							// store the vorticity derivatives to save space.
+							// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
+							elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Qz,Uy);
+							elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Qz,Vz);
+							Vmath::Smul(nq,WaveNumber,Qy,1,Uz,1);
+							Vmath::Smul(nq,WaveNumber,Qx,1,Vx,1);
+							
+							// Using the storage space associated with the 3 components of the vorticity
+							// to store the 3 components od the vorticity curl to save space
+							// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy 
+							// The last one is not required becasue the third component of the normal vector is always zero.
+							Vmath::Vsub(nq,Uy,1,Uz,1,Qx,1);
+							Vmath::Vsub(nq,Vx,1,Vz,1,Qy,1);
+							
+							Nu = advection[0] + offset;
+							Nv = advection[1] + offset;
+							
+							// Evaluate [N - kinvis Curlx Curl V]
+							// x-component (stored in Qx)
+							Vmath::Svtvp(nq,-m_kinvis,Qx,1,Nu,1,Qx,1);
+							// y-component (stored in Qy)
+							Vmath::Svtvp(nq,m_kinvis,Qy,1,Nv,1,Qy,1);
+							// z-component (stored in Qz) not required for this approach
+							// the third component of the normal vector is always zero
 							
 							Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i+k*exp_size_per_plane));
 							
 							boundary = m_pressureBCtoTraceID[cnt];
 							
-							// Get edge values and put into NQx and NQy
-							elmt->GetEdgePhysVals(boundary,Pbc,Qy+offset,NQy);
-							elmt->GetEdgePhysVals(boundary,Pbc,Qx+offset,NQx);
+							// Get edge values and put into Uy, Vx
+							elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
+							elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
 							
 							// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
 							Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i+k*exp_size_per_plane);
 							// Decide if normals facing outwards
 							NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
 							
-							Pbc->NormVectorIProductWRTBase(NQx,NQy,Pvals,NegateNormals);
+							Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals,NegateNormals);
 						}
 					}
 					else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
@@ -618,20 +638,45 @@ namespace Nektar
 				}
 			}
 		}
-		// 3D Homogeneous 2D
 		else if(m_HomogeneousType == eHomogeneous2D)
 		{
 			StdRegions::StdExpansionSharedPtr elmt;
 			StdRegions::StdExpansion1DSharedPtr Pbc;
 			
 			int exp_size, exp_size_per_line;
-
+			
+			Array<OneD, Array< OneD, NekDouble> > velocity(m_nConvectiveFields);
+			Array<OneD, Array< OneD, NekDouble> > advection(m_nConvectiveFields);
+			
+			int phystot = m_fields[0]->GetTotPoints();
+			
+			for(int n = 0; n < m_nConvectiveFields; ++n)
+			{
+				velocity[n] = Array<OneD, NekDouble> (phystot);
+				advection[n] = Array<OneD, NekDouble> (phystot);
+			}
+			
+			
+			for(int i = 0; i < fields.num_elements(); i++)
+			{
+				m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
+				m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
+			}
+			
+			int Ky,Kz;
+			NekDouble WaveNumber_y,WaveNumber_z;
 			cnt = 0;
 			
 			for(int k1 = 0; k1 < m_npointsZ; k1++)
 			{
+				Kz = k1/2;
+				WaveNumber_z = double(Kz);
+				
 				for(int k2 = 0; k2 < m_npointsY; k2++)
-				{					
+				{
+					Ky = k2/2;
+					WaveNumber_y = double(Ky);
+					
 					for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 					{
 						string type = PBndConds[n]->GetUserDefined().GetEquation();
@@ -651,19 +696,47 @@ namespace Nektar
 								nq     = elmt->GetTotPoints();
 								offset = m_fields[0]->GetPhys_Offset(elmtid);
 								
-								Array<OneD, NekDouble> NQx(nq);
+								U = velocity[m_velocity[0]] + offset;
+								V = velocity[m_velocity[1]] + offset;
+								W = velocity[m_velocity[2]] + offset;
 								
-								NQx = Qx + offset;
+								// Calculating vorticity Q = Qx i + Qy j + Qz k
+								elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],W,Wx);
+								elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
+								Vmath::Smul(nq,WaveNumber_y,U,1,Uy,1);
+								Vmath::Smul(nq,WaveNumber_z,U,1,Uz,1);
+								
+								Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
+								Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
+								
+								// Calculate  NxQ = Curl(Q) = (Qzy-Qyz) i + (Qxz-Qzx) j + (Qyx-Qxy) k
+								// NxQ = NxQ_x i + NxQ_y j + NxQ_z k
+								// Using the memory space assocaited with the velocity derivatives to
+								// store the vorticity derivatives to save space.
+								// Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
+								Vmath::Smul(nq,WaveNumber_y,Qz,1,Uy,1);
+								Vmath::Smul(nq,WaveNumber_z,Qy,1,Uz,1);
+								
+								// Using the storage space associated with the 3 components of the vorticity
+								// to store the 3 components od the vorticity curl to save space
+								// Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy 
+								Vmath::Vsub(nq,Uy,1,Uz,1,Qx,1);
+								
+								Nu = advection[0] + offset;
+								
+								// Evaluate [N - kinvis Curlx Curl V]
+								// x-component (stored in Qx)
+								Vmath::Svtvp(nq,-m_kinvis,Qx,1,Nu,1,Qx,1);
 								
 								boundary = m_pressureBCtoTraceID[cnt];
 								
 								if(boundary == 0)
 								{
-									(PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i+(k1*m_npointsY+k2)*exp_size_per_line))[0] = -1*NQx[0];
+									(PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i+(k1*m_npointsY+k2)*exp_size_per_line))[0] = -1*Qx[0];
 								}
 								else if (boundary == 1)
 								{
-									(PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i+(k1*m_npointsY+k2)*exp_size_per_line))[0] = NQx[nq-1];
+									(PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i+(k1*m_npointsY+k2)*exp_size_per_line))[0] = Qx[nq-1];
 								}
 								else 
 								{
@@ -683,12 +756,10 @@ namespace Nektar
 				}
 			}
 		}
-		// 3D Homogeneous 3D
 		else if(m_HomogeneousType == eHomogeneous3D)
 		{
 			ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 3D approach");
 		}
-		// Full 3D
 		else
 		{
 			ASSERTL0(false,"Velocity correction scheme not set up for 3D spectral element approach");

@@ -131,7 +131,6 @@ L 2 error (variable v) : 0.0220853
 L inf error (variable v) : 0
 L 2 error (variable p) : 0.0178261
 L inf error (variable p) : 0
-
 ----------------------------------------
 ChanStability_Coupled.xml
 L 2 error (variable u) : 2.58914
@@ -146,4 +145,24 @@ L 2 error (variable v) : 7.91735e-16
 L inf error (variable v) : 4.66294e-15
 L 2 error (variable w) : 1.15463e-05
 L inf error (variable w) : 1.11177e-05
+----------------------------------------
+Test_ChanFlow_3DH1D_MVM.xml
+L 2 error (variable u) : 3.92495e-16
+L inf error (variable u) : 4.38538e-15
+L 2 error (variable v) : 1.77297e-16
+L inf error (variable v) : 4.65263e-16
+L 2 error (variable w) : 3.15535e-16
+L inf error (variable w) : 6.83893e-16
+L 2 error (variable p) : 6.31026e-14
+L inf error (variable p) : 1.14131e-13
+----------------------------------------
+Test_ChanFlow_3DH1D_FFT.xml
+L 2 error (variable u) : 3.61746e-16
+L inf error (variable u) : 3.10862e-15
+L 2 error (variable v) : 0
+L inf error (variable v) : 3.35155e-16
+L 2 error (variable w) : 3.13528e-16
+L inf error (variable w) : 5.23075e-16
+L 2 error (variable p) : 2.27999e-14
+L inf error (variable p) : 6.39488e-14
 ----------------------------------------

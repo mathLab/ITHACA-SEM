@@ -670,12 +670,12 @@ namespace Nektar
 			for(int k1 = 0; k1 < m_npointsZ; k1++)
 			{
 				Kz = k1/2;
-				WaveNumber_z = double(Kz);
+				WaveNumber_z =2*M_PI*pow(-1.0,double(k1))*(double(Kz));
 				
 				for(int k2 = 0; k2 < m_npointsY; k2++)
 				{
 					Ky = k2/2;
-					WaveNumber_y = double(Ky);
+					WaveNumber_y = 2*M_PI*pow(-1.0,double(k2))*(double(Ky));
 					
 					for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 					{

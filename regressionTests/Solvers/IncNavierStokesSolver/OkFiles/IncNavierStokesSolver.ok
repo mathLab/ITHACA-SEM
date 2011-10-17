@@ -166,3 +166,23 @@ L inf error (variable w) : 5.23075e-16
 L 2 error (variable p) : 2.27999e-14
 L inf error (variable p) : 6.39488e-14
 ----------------------------------------
+Test_ChanFlow_3DH2D_MVM.xml
+L 2 error (variable u) : 0
+L inf error (variable u) : 1.84649e-16
+L 2 error (variable v) : 5.19877e-16
+L inf error (variable v) : 1.60982e-15
+L 2 error (variable w) : 0
+L inf error (variable w) : 6.72284e-18
+L 2 error (variable p) : 3.636e-15
+L inf error (variable p) : 7.01649e-15
+----------------------------------------
+Test_ChanFlow_3DH2D_FFT.xml
+L 2 error (variable u) : 0
+L inf error (variable u) : 6.47537e-17
+L 2 error (variable v) : 0
+L inf error (variable v) : 1.11022e-16
+L 2 error (variable w) : 0
+L inf error (variable w) : 8.64333e-32
+L 2 error (variable p) : 1.7416e-15
+L inf error (variable p) : 2.21531e-15
+----------------------------------------

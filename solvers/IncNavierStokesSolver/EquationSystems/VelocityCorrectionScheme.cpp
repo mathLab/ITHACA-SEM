@@ -121,33 +121,35 @@ namespace Nektar
             break;
         }
 		
-		
-        // Set up mapping from pressure boundary condition to pressure
-        // element details.
-        m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
+		if(m_HomogeneousType != eHomogeneous3D)
+		{
+			// Set up mapping from pressure boundary condition to pressure
+			// element details.
+			m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
                                          m_pressureBCtoTraceID);
+			// Storage array for high order pressure BCs
+			m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
 
-        // Storage array for high order pressure BCs
-        m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
+			// Count number of HBC conditions
+			Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
+			Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
 
-        // Count number of HBC conditions
-        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
-        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
+			int n,cnt;
+			for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
+			{
+				// High order boundary condition;
+				if(PBndConds[n]->GetUserDefined().GetEquation() == "H")
+				{
+					cnt += PBndExp[n]->GetNcoeffs();
+				}
+			}
+		
 
-        int n,cnt;
-        for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
-        {
-            // High order boundary condition;
-            if(PBndConds[n]->GetUserDefined().GetEquation() == "H")
-            {
-                cnt += PBndExp[n]->GetNcoeffs();
-            }
-        }
-
-        for(n = 0; n < m_intSteps; ++n)
-        {
-            m_pressureHBCs[n] = Array<OneD, NekDouble>(cnt);
-        }
+			for(n = 0; n < m_intSteps; ++n)
+			{
+				m_pressureHBCs[n] = Array<OneD, NekDouble>(cnt);
+			}
+		}
 		
         
         m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
@@ -253,8 +255,11 @@ namespace Nektar
             }
         }        
 
-        // Set pressure BCs
-        EvaluatePressureBCs(inarray, outarray);
+		if(m_HomogeneousType != eHomogeneous3D)
+		{
+			// Set pressure BCs
+			EvaluatePressureBCs(inarray, outarray);
+		}
     }
 
     void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -758,7 +763,7 @@ namespace Nektar
 		}
 		else if(m_HomogeneousType == eHomogeneous3D)
 		{
-			ASSERTL0(false,"Velocity correction scheme not set up for 3D Homogeneous 3D approach");
+			ASSERTL0(false,"High Order Pressure BC not required for this approach");
 		}
 		else
 		{

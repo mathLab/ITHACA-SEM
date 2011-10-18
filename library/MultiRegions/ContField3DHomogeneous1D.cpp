@@ -93,7 +93,7 @@ namespace Nektar
 
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
-                m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,False);
+                m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,False,CheckIfSingularSystem);
                 
                 for(j = 0; j < nel; ++j)
                 {

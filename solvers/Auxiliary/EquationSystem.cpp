@@ -154,13 +154,11 @@ namespace Nektar
                (HomoStr == "3D")||(HomoStr == "Homo3D"))
             {
                 m_HomogeneousType = eHomogeneous3D;
-                m_npointsX        = m_session->GetParameter("HomModesX");
-                m_LhomX           = m_session->GetParameter("LX");
                 m_npointsY        = m_session->GetParameter("HomModesY");
                 m_LhomY           = m_session->GetParameter("LY");
                 m_npointsZ        = m_session->GetParameter("HomModesZ");
                 m_LhomZ           = m_session->GetParameter("LZ");
-                m_HomoDirec       = 3;
+                m_HomoDirec       = 2;
             }
 
             if(m_session->DefinesSolverInfo("USEFFT"))
@@ -219,7 +217,7 @@ namespace Nektar
             {
                 case 1:
                 {
-                    if(m_HomogeneousType == eHomogeneous2D)
+                    if(m_HomogeneousType == eHomogeneous2D || m_HomogeneousType == eHomogeneous3D)
                     {
                         const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
@@ -253,7 +251,7 @@ namespace Nektar
                         for(i = 0 ; i < m_fields.num_elements(); i++)
                         {
                             m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
                         }
                     }
                     else
@@ -275,12 +273,12 @@ namespace Nektar
                 }
                 case 3:
                     {
-                        if(m_HomogeneousType == eHomogeneous3D)
-                        {
-                            ASSERTL0(false,"3D fully periodic problems not implemented yet");
-                        }
-                        else
-                        {
+                        //if(m_HomogeneousType == eHomogeneous3D)
+                        //{
+                        //    ASSERTL0(false,"3D fully periodic problems not implemented yet");
+                        //}
+                        //else
+                        //{
                             i = 0;
                             MultiRegions::ContField3DSharedPtr firstfield =
                                 MemoryManager<MultiRegions::ContField3D>
@@ -292,7 +290,7 @@ namespace Nektar
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(*firstfield,m_graph,m_session->GetVariable(i));
                             }
-                        }
+                        //}
                         break;
                     }
             default:
@@ -306,7 +304,7 @@ namespace Nektar
             {
                 case 1:
                 {
-                    if(m_HomogeneousType == eHomogeneous2D)
+                    if(m_HomogeneousType == eHomogeneous2D || m_HomogeneousType == eHomogeneous3D)
                     {
                         const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
@@ -358,14 +356,14 @@ namespace Nektar
                 }
             case 3:
                 {
-                    if(m_HomogeneousType == eHomogeneous3D)
-                    {
-                        ASSERTL0(false,"3D fully periodic problems not implemented yet");
-                    }
-                    else
-                    {
+                    //if(m_HomogeneousType == eHomogeneous3D)
+                    //{
+                    //    ASSERTL0(false,"3D fully periodic problems not implemented yet");
+                    //}
+                    //else
+                    //{
                         ASSERTL0(false,"3 D not set up");
-                    }
+                    //}c
                     break;
                 }
             default:
@@ -429,7 +427,7 @@ namespace Nektar
             switch(m_expdim)
             {
             case 1:
-                if(m_HomogeneousType == eHomogeneous2D)
+                if(m_HomogeneousType == eHomogeneous2D || m_HomogeneousType == eHomogeneous3D)
                 {
                     bool DeclarePlaneSetCoeffsPhys = true;
                     for(int i = 0 ; i < m_forces.num_elements(); i++)

@@ -79,10 +79,10 @@ namespace Nektar
         void ArpackSummary(std::ostream &out);
 
         /// Virtual function for initialisation implementation.
-        virtual void v_InitObject();
+        virtual void v_InitObject(ostream &out = cout);
 
         /// Virtual function for solve implementation.
-        virtual void v_Execute();
+        virtual void v_Execute(ostream &out = cout);
 
         static std::string arpackProblemTypeLookupIds[];
         static std::string arpackProblemTypeDefault;

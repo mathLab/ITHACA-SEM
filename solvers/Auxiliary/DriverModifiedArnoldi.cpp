@@ -65,23 +65,23 @@ namespace Nektar
     /**
      *
      */
-    void DriverModifiedArnoldi::v_InitObject()
+    void DriverModifiedArnoldi::v_InitObject(ostream &out)
     {
-        DriverArnoldi::v_InitObject();
+        DriverArnoldi::v_InitObject(out);
         
-        m_equ[0]->PrintSummary(cout);
+        m_equ[0]->PrintSummary(out);
             
         // Print session parameters
-        cout << "\tArnoldi solver type   : Modified Arnoldi" << endl;
+        out << "\tArnoldi solver type   : Modified Arnoldi" << endl;
         if(m_TimeSteppingAlgorithm)
         {
-            cout << "\tEvolution operator    : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
+            out << "\tEvolution operator    : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
         }
-        cout << "\tKrylov-space dimension: " << m_kdim << endl;
-        cout << "\tNumber of vectors:      " << m_nvec << endl;
-        cout << "\tMax iterations:         " << m_nits << endl;
-        cout << "\tEigenvalue tolerance:   " << m_evtol << endl;
-        cout << "=======================================================================" << endl;
+        out << "\tKrylov-space dimension: " << m_kdim << endl;
+        out << "\tNumber of vectors:      " << m_nvec << endl;
+        out << "\tMax iterations:         " << m_nits << endl;
+        out << "\tEigenvalue tolerance:   " << m_evtol << endl;
+        out << "=======================================================================" << endl;
         
         m_equ[m_nequ - 1]->DoInitialise();
 	
@@ -93,7 +93,7 @@ namespace Nektar
     /**
      *
      */
-    void DriverModifiedArnoldi::v_Execute()
+    void DriverModifiedArnoldi::v_Execute(ostream &out)
     {
         int nq                  = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
         int ntot                = m_nfields*nq;
@@ -122,14 +122,14 @@ namespace Nektar
         // Copy starting vector into second sequence element (temporary).
          if(m_session->DefinesFunction("InitialConditions"))
          {
-             cout << "\tInital vector       : specified in input file " << endl;
+             out << "\tInital vector       : specified in input file " << endl;
              m_equ[0]->SetInitialConditions(0.0,false);
 
              CopyFieldToArnoldiArray(Kseq[1]);
          }
          else 
          {
-             cout << "\tInital vector       : random  " << endl;
+             out << "\tInital vector       : random  " << endl;
              
              double eps=1;
              
@@ -140,7 +140,7 @@ namespace Nektar
          // Perform one iteration to enforce boundary conditions.
          // Set this as the initial value in the sequence.
          EV_update(Kseq[1], Kseq[0]);
-         cout << "Iteration: " << 0 <<  endl;
+         out << "Iteration: " << 0 <<  endl;
          
          // Normalise first vector in sequence
          alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
@@ -172,7 +172,7 @@ namespace Nektar
              // Test for convergence.
              converged = EV_test(i,i,zvec,wr,wi,resnorm,std::min(i,m_nvec),evlout,resid0); 
              converged = max (converged, 0);
-             cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
+             out << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
          }
          
          // Continue with full sequence
@@ -209,7 +209,7 @@ namespace Nektar
                  
                  // Test for convergence.
                  converged = EV_test(i,m_kdim,zvec,wr,wi,resnorm,m_nvec,evlout,resid0);
-                 cout << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
+                 out << "Iteration: " <<  i << " (residual : " << resid0 << ")" <<endl;
              }
          }
          
@@ -225,8 +225,8 @@ namespace Nektar
              NekDouble vLinfError = m_equ[0]->LinfError(j);
              if (m_comm->GetRank() == 0)
              {
-                 cout << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
-                 cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
+                 out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
+                 out << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
              }
          }
          

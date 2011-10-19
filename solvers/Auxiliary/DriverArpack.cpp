@@ -74,9 +74,9 @@ namespace Nektar
     /**
      *
      */
-    void DriverArpack::v_InitObject()
+    void DriverArpack::v_InitObject(ostream &out)
     {
-        DriverArnoldi::v_InitObject();
+        DriverArnoldi::v_InitObject(out);
         
         //Initialisation of Arnoldi parameters
         m_maxn   = 1000000; // Maximum size of the problem
@@ -92,14 +92,14 @@ namespace Nektar
         ASSERTL0(m_kdim <= m_maxncv,"NEV is greater than MAXNEV");
         ASSERTL0(2      <= m_kdim-m_nvec,"NCV-NEV is less than 2");
 	
-        m_equ[0]->PrintSummary(cout);
+        m_equ[0]->PrintSummary(out);
         
-        ArpackSummary(cout);
+        ArpackSummary(out);
         
         m_equ[m_nequ - 1]->DoInitialise();
 		
-		//FwdTrans Initial conditions to be in Coefficient Space
-		m_equ[m_nequ-1] ->TransPhysToCoeff();
+        //FwdTrans Initial conditions to be in Coefficient Space
+        m_equ[m_nequ-1] ->TransPhysToCoeff();
 
     }
     
@@ -137,7 +137,7 @@ namespace Nektar
         out << "=======================================================================" << endl;
     }
 
-    void DriverArpack::v_Execute()
+    void DriverArpack::v_Execute(ostream out)
         
     {
         Array<OneD, NekDouble> tmpworkd;
@@ -166,21 +166,20 @@ namespace Nektar
 
         ASSERTL0(n <= m_maxn,  "N is greater than   MAXN");
 
-
-			if(m_session->DefinesFunction("InitialConditions"))
-			{
-				
-				cout << "\tInital vector       : input file  " << endl;
-				info = 1;
-				CopyFieldToArnoldiArray(resid);
-				
-			}
-			else
-			{
-				cout << "\tInital vector       : random  " << endl;
-				info = 0;
-			}
-
+        if(m_session->DefinesFunction("InitialConditions"))
+        {
+            
+            out << "\tInital vector       : input file  " << endl;
+            info = 1;
+            CopyFieldToArnoldiArray(resid);
+            
+        }
+        else
+        {
+            out << "\tInital vector       : random  " << endl;
+            info = 0;
+        }
+        
 	
         iparam[0] = 1;      // strategy for shift-invert
         iparam[1] = 0;      // (deprecated)
@@ -202,14 +201,14 @@ namespace Nektar
         iparam[10]= 0;      // number of reorthogonalisation steps
 
         int cycle = 0;
-		const char* problem = ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")].c_str();
-
+        const char* problem = ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")].c_str();
+        
         FILE *pFile;
         std::string name = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.'))+".evl";
         pFile= fopen (name.c_str(), "w");
         
         ido     = 0;    //At the first call must be initialisedat 0
-
+        
         while(ido != 99)//ido==-1 || ido==1 || ido==0)
         {
             //Routine for eigenvalue evaluation for non-symmetric operators
@@ -220,11 +219,11 @@ namespace Nektar
                             &workl[0], lworkl, info);
             
             //Plotting of real and imaginary part of the eigenvalues from workl
-            cout << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush <<endl;
+            out << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush <<endl;
 
             if(!((cycle-1)%m_kdim)&&(cycle> m_kdim))
             {
-                cout << endl;
+                out << endl;
                 fprintf (pFile, "Krylov spectrum at iteration: %i\t \n", cycle);
                 for(int k=0; k<=m_kdim-1; ++k)
                 {                    
@@ -259,20 +258,19 @@ namespace Nektar
 
             if(m_EvolutionOperator == eTransientGrowth)
             {
-				//start Adjoint with latest fields of direct 
-				CopyFwdToAdj();
-				
-				m_equ[1]->TransCoeffToPhys();
-				
-				m_equ[1]->DoSolve();
+                //start Adjoint with latest fields of direct 
+                CopyFwdToAdj();
+		
+                m_equ[1]->TransCoeffToPhys();
+                m_equ[1]->DoSolve();
             }
-        
+            
             // operated fields are copied into workd[inptr[1]-1] 
             CopyFieldToArnoldiArray(tmpworkd = workd + (ipntr[1]-1));
             
         }
-
-        cout<< endl << "Converged in " << iparam[8] << " iterations" << endl;
+        
+        out<< endl << "Converged in " << iparam[8] << " iterations" << endl;
 	
         ASSERTL0(info >= 0," Error with Dnaupd");
 	
@@ -287,13 +285,13 @@ namespace Nektar
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
         Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, 
-        	problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+                       problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
 		
         ASSERTL0(info == 0, " Error with Dneupd");
-		int nconv=iparam[4];	
+        int nconv=iparam[4];	
         Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
-        cout << "Converged Eigenvalues: " << nconv << endl;
+        out << "Converged Eigenvalues: " << nconv << endl;
         fprintf(pFile,"Converged Eigenvalues: %d\n:",nconv);
 		
 		
@@ -311,7 +309,7 @@ namespace Nektar
         
         if(m_EvolutionOperator != eTransientGrowth)
         {
-            cout<<"Dump eigenvector: "<<nconv-1<<endl;
+            out<<"Dump eigenvector: "<<nconv-1<<endl;
             CopyArnoldiArrayToField(z);               
             m_equ[0]->DoSolve(); 
             
@@ -336,10 +334,9 @@ namespace Nektar
             NekDouble vLinfError = m_equ[0]->LinfError(j);
             if (m_comm->GetRank() == 0)
             {
-                cout << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
-                cout << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
-            }
-			
+                out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
+                out << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
+            }			
         }
     }
 

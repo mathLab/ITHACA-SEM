@@ -44,7 +44,7 @@
 
 namespace Nektar
 {
-	class Driver;
+    class Driver;
 	
     /// A shared pointer to a Driver object
     typedef boost::shared_ptr<Driver> DriverSharedPtr;
@@ -73,10 +73,10 @@ namespace Nektar
         virtual ~Driver();
         
         /// Initialise Object
-        inline void InitObject();
+        inline void InitObject(ostream &out = cout);
         
         /// Execute driver
-        inline void Execute();
+        inline void Execute(ostream &out = cout);
 
         inline  Array<OneD, EquationSystemSharedPtr>   GetEqu();
 	
@@ -99,10 +99,10 @@ namespace Nektar
         /// Initialises EquationSystem class members.
         Driver(const LibUtilities::SessionReaderSharedPtr pSession);
         
-        virtual void v_InitObject();
+        virtual void v_InitObject(ostream &out = cout);
         
-		/// Virtual function for solve implementation.
-        virtual void v_Execute() = 0;
+        /// Virtual function for solve implementation.
+        virtual void v_Execute(ostream &out = cout) = 0;
 
         static std::string evolutionOperatorLookupIds[];
         static std::string evolutionOperatorDef;
@@ -110,15 +110,15 @@ namespace Nektar
 	};
 
 
-    inline void Driver::InitObject()
+    inline void Driver::InitObject(ostream &out)
     {
-        v_InitObject();
+        v_InitObject(out);
     }
 
 
-    inline void Driver::Execute()
+    inline void Driver::Execute(ostream &out)
     {
-        v_Execute();
+        v_Execute(out);
     }
 
     inline Array<OneD, EquationSystemSharedPtr>   Driver::GetEqu()

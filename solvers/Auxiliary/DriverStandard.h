@@ -48,28 +48,28 @@ namespace Nektar
     public:
         friend class MemoryManager<DriverStandard>;
 
-		/// Creates an instance of this class
+        /// Creates an instance of this class
         static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
             DriverSharedPtr p = MemoryManager<DriverStandard>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
-		}
-		
-		///Name of the class
-		static std::string className;
-		
+        }
+	
+        ///Name of the class
+        static std::string className;
+	
     protected:
         /// Constructor
         DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession);
 
-		/// Destructor
-		virtual ~DriverStandard();
+        /// Destructor
+        virtual ~DriverStandard();
+        
+        /// Second-stage initialisation
+        virtual void v_InitObject(ostream &out = cout);
 
-		/// Second-stage initialisation
-		virtual void v_InitObject();
-
-		/// Virtual function for solve implementation.
-        virtual void v_Execute();
+        /// Virtual function for solve implementation.
+        virtual void v_Execute(ostream &out = cout);
 		
         static std::string driverLookupId;
 	};

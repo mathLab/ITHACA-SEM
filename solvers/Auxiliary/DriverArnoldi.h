@@ -78,7 +78,7 @@ namespace Nektar
 
         void WriteFld(std::string file, Array<OneD, NekDouble> coeffs);
 
-        virtual void v_InitObject();
+        virtual void v_InitObject(ostream &out = cout);
     };
 	
 } //end of namespace

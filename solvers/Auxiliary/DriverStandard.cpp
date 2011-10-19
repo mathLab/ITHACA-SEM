@@ -61,16 +61,16 @@ namespace Nektar
     /**
      *
      */
-    void DriverStandard::v_InitObject()
+    void DriverStandard::v_InitObject(ostream &out)
     {
-        Driver::v_InitObject();
+        Driver::v_InitObject(out);
     }
     
     
-    void DriverStandard::v_Execute()
+    void DriverStandard::v_Execute(ostream &out)
         
     {
-        m_equ[0]->PrintSummary(cout);
+        m_equ[0]->PrintSummary(out);
         m_equ[0]->DoInitialise();
         m_equ[0]->DoSolve();
         m_equ[0]->Output();
@@ -85,12 +85,11 @@ namespace Nektar
             NekDouble vLinfError = m_equ[0]->LinfError(i);
             if (m_comm->GetRank() == 0)
             {
-                cout << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
-                cout << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
+                out << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
+                out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
             }
         }
     }
-
 }
 
 

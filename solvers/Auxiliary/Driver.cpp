@@ -73,7 +73,7 @@ namespace Nektar
     /**
      *
      */
-    void Driver::v_InitObject()
+    void Driver::v_InitObject(ostream &out)
     {
         try
         {
@@ -129,7 +129,7 @@ namespace Nektar
         catch (int e)
         {
             ASSERTL0(e == -1, "No such class class defined.");
-            cout << "An error occurred during driver initialisation." << endl;
+            out << "An error occurred during driver initialisation." << endl;
         }
     }
 

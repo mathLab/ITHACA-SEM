@@ -92,6 +92,13 @@ namespace Nektar
             return m_sessionName;
         }
 
+
+        /// Get Session name
+        LibUtilities::SessionReaderSharedPtr GetSession()
+        {
+            return m_session;
+        }
+
         /// Get pressure field if available
         MultiRegions::ExpListSharedPtr GetPressure(); 
         

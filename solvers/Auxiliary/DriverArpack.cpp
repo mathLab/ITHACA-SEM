@@ -137,7 +137,7 @@ namespace Nektar
         out << "=======================================================================" << endl;
     }
 
-    void DriverArpack::v_Execute(ostream out)
+    void DriverArpack::v_Execute(ostream &out)
         
     {
         Array<OneD, NekDouble> tmpworkd;

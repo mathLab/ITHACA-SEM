@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File VortexWaveInteractionSolver.cpp
+// File VortexWaveInteraction.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,52 +29,65 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Vortex Wave Interaction solver
+// Description: Vortex Wave Interaction class
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifndef NEKTAR_SOLVERS_VORTEXWAVEINTERACTION_H
+#define NEKTAR_SOLVERS_VORTEXWAVEINTERACTION_H
 
 #include <Auxiliary/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
-using namespace Nektar;
+namespace Nektar
+{     
 
-#include<VortexWaveInteraction/VortexWaveInteraction.h>
-
-int main(int argc, char *argv[])
-{
-    
-    if(argc != 2)
+    class VortexWaveInteraction
     {
-        cerr << "\n \t Usage: VortexWaveInteractionSolver  input \n" << endl;
-        exit(1);
-    }
+    public:
+        VortexWaveInteraction(int argc, char *argv[]);
 
-    try
-    { 
-        VortexWaveInteraction vwi(argc,argv);
+        ~VortexWaveInteraction(void);
         
-        for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+        void ExecuteRoll(void);
+        void ExecuteStreak(void);
+        void ExecuteWaveAndForce(void);
+
+        void CalcNonLinearWaveForce(EquationSystemSharedPtr &eqn);
+        void SaveFile(string fileend, string dir, int n);
+
+        int GetIterStart()
         {
-            vwi.ExecuteRoll();
-            vwi.SaveFile(".rst","Save",i);
-            
-            vwi.ExecuteStreak();
-            vwi.SaveFile("_streak.fld","Save",i);
-            
-            vwi.ExecuteWaveAndForce();
-            vwi.SaveFile(".evl","Save",i);
-            vwi.SaveFile("_eig_0","Save",i);
-            vwi.SaveFile(".vwi","Save",i+1);
+            return m_iterStart;
+        }
+
+        int GetIterEnd()
+        {
+            return m_iterEnd;
         }
         
-    }
-    catch (const std::runtime_error& e)
-    {
-        return 1;
-    }
-    catch (const std::string& eStr)
-    {
-        cout << "Error: " << eStr << endl;
-    }
+    protected:
+
+    private:
+        int m_iterStart;
+        int m_iterEnd;
+
+        NekDouble m_rho;
+        NekDouble m_alpha;
+
+        string m_sessionName;
+        LibUtilities::SessionReaderSharedPtr m_sessionVWI; 
+
+        EquationSystemSharedPtr m_solverRoll;
+
+        LibUtilities::SessionReaderSharedPtr m_sessionStreak; 
+        LibUtilities::SessionReaderSharedPtr m_sessionWave; 
+
+        std::string m_fldToRst;
+        std::string m_fldToBase;
+        std::string m_fldToStreak;
+    };
+    
 }
 
+#endif

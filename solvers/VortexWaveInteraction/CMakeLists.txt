@@ -14,6 +14,7 @@ SET(VortexWaveInteractionSolverSource
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
+       ./VortexWaveInteraction.cpp 
        ./VortexWaveInteractionSolver.cpp 
        )
 

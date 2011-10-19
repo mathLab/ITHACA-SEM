@@ -65,6 +65,8 @@ int main(int argc, char *argv[])
             vwi.SaveFile(".evl","Save",i);
             vwi.SaveFile("_eig_0","Save",i);
             vwi.SaveFile(".vwi","Save",i+1);
+
+            vwi.AppendEvlToFile("conv.his",i);
         }
         
     }

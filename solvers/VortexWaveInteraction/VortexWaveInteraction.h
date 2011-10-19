@@ -56,6 +56,8 @@ namespace Nektar
         void CalcNonLinearWaveForce(EquationSystemSharedPtr &eqn);
         void SaveFile(string fileend, string dir, int n);
 
+        void AppendEvlToFile(std::string file, int n);
+
         int GetIterStart()
         {
             return m_iterStart;
@@ -74,6 +76,9 @@ namespace Nektar
 
         NekDouble m_rho;
         NekDouble m_alpha;
+
+        NekDouble m_leading_real_evl;   /// < Leading real eigenvalue 
+        NekDouble m_leading_imag_evl;   /// < Leading imaginary eigenvalue
 
         string m_sessionName;
         LibUtilities::SessionReaderSharedPtr m_sessionVWI; 

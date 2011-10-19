@@ -184,6 +184,9 @@ namespace Nektar
         cout << "Executing wave solution " << endl;
         solverWave->Execute();
 
+        m_leading_real_evl = solverWave->GetRealEvl()[0];
+        m_leading_imag_evl = solverWave->GetImagEvl()[0];
+        
         cout << "Calculating Nonlinear Wave Forcing" << endl;
         CalcNonLinearWaveForce(solverWave->GetEqu()[0]);
     }
@@ -340,4 +343,16 @@ namespace Nektar
 
         system(syscall.c_str());
     }
+
+    void VortexWaveInteraction::AppendEvlToFile(string file, int n)
+    {
+        FILE *fp;
+        fp = fopen(file.c_str(),"a");
+
+        NekDouble invmag = 1.0/(m_leading_real_evl*m_leading_real_evl + 
+                                m_leading_imag_evl*m_leading_imag_evl);
+        fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha, -m_leading_real_evl*invmag,m_leading_imag_evl*invmag);
+        fclose(fp);
+    }
+
 }

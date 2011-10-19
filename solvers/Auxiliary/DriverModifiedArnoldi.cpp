@@ -233,6 +233,9 @@ namespace Nektar
          // Process eigenvectors and write out.
          EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi, converged);
          
+         m_real_evl = wr;
+         m_imag_evl = wi;
+         
          // Close the runtime info file.
          evlout.close();
     }

@@ -305,6 +305,8 @@ namespace Nektar
             WriteFld(file,z + i*nq);
         }
 
+        m_real_evl = dr;
+        m_imag_evl = di;
         fclose (pFile);
         
         if(m_EvolutionOperator != eTransientGrowth)

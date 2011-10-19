@@ -80,6 +80,10 @@ namespace Nektar
 
         inline  Array<OneD, EquationSystemSharedPtr>   GetEqu();
 	
+        Array<OneD, NekDouble> GetRealEvl(void);         
+        Array<OneD, NekDouble> GetImagEvl(void);
+         
+
     protected:
         /// Communication object
         LibUtilities::CommSharedPtr                 m_comm;
@@ -103,10 +107,16 @@ namespace Nektar
         
         /// Virtual function for solve implementation.
         virtual void v_Execute(ostream &out = cout) = 0;
+        
+
+        virtual Array<OneD, NekDouble> v_GetRealEvl(void);         
+        virtual Array<OneD, NekDouble> v_GetImagEvl(void);
+
 
         static std::string evolutionOperatorLookupIds[];
         static std::string evolutionOperatorDef;
         static std::string driverDefault;
+
 	};
 
 
@@ -125,6 +135,17 @@ namespace Nektar
     {
         return m_equ;
     }
+
+    inline Array<OneD, NekDouble> Driver::GetRealEvl()
+    {
+        return v_GetRealEvl();
+    }
+    
+    inline Array<OneD, NekDouble> Driver::GetImagEvl()
+    {
+        return v_GetImagEvl();
+    }
+
 	
 } //end of namespace
 

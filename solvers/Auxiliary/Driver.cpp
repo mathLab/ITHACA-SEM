@@ -133,5 +133,17 @@ namespace Nektar
         }
     }
 
+    Array<OneD, NekDouble> Driver::v_GetRealEvl(void)
+    {
+        ASSERTL0(false,"This routine is not valid in this class");
+        return NullNekDouble1DArray;
+    }
+    
+    Array<OneD, NekDouble> Driver::v_GetImagEvl(void)
+    {
+        ASSERTL0(false,"This routine is not valid in this class");
+        return NullNekDouble1DArray;
+    }
+
 }	
 	

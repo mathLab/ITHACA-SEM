@@ -58,6 +58,10 @@ namespace Nektar
 
         int       m_nfields;
 
+        Array<OneD, NekDouble> m_real_evl;
+        Array<OneD, NekDouble> m_imag_evl;
+        
+
         /// Constructor
         DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
 
@@ -79,6 +83,17 @@ namespace Nektar
         void WriteFld(std::string file, Array<OneD, NekDouble> coeffs);
 
         virtual void v_InitObject(ostream &out = cout);
+
+        virtual  Array<OneD, NekDouble> v_GetRealEvl(void)
+        {
+            return m_real_evl;
+        }
+
+        virtual Array<OneD, NekDouble> v_GetImagEvl(void)
+        {
+            return m_imag_evl;
+        }
+
     };
 	
 } //end of namespace

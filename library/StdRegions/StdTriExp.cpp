@@ -660,6 +660,11 @@ namespace Nektar
 
         NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
         {
+            PhysEvaluate(coords,m_phys);
+        }
+
+        NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        {
             Array<OneD, NekDouble> coll(2);
 
             // set up local coordinate system 
@@ -675,7 +680,7 @@ namespace Nektar
                 coll[1] = coords[1]; 
             }
 
-            return  StdExpansion2D::PhysEvaluate(coll); 
+            return  StdExpansion2D::PhysEvaluate(coll,physvals); 
         }
 
         void StdTriExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)

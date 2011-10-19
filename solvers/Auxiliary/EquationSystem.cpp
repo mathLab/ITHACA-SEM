@@ -123,6 +123,7 @@ namespace Nektar
         // Setting parameteres for homogenous problems
         m_HomoDirec       = 0;
         m_useFFT          = false;
+		m_dealiasing      = false;
         m_HomogeneousType = eNotHomogeneous;
 
         if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -165,6 +166,11 @@ namespace Nektar
             {
                 m_useFFT = true;
             }
+			
+			if(m_session->DefinesSolverInfo("DEALIASING"))
+			{
+				m_dealiasing = true;
+			}
         }
         else
         {

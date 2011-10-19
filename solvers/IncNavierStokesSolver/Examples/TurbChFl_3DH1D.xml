@@ -3,7 +3,7 @@
 <NEKTAR>
 
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,w,p" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
@@ -14,6 +14,7 @@
       <I PROPERTY="Projection" VALUE="Galerkin"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
       <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
+      <I PROPERTY="DEALIASING" VALUE="ON"/>
     </SOLVERINFO>
 
     <PARAMETERS>
@@ -21,9 +22,9 @@
       <P> NumSteps      = 10000       </P>
       <P> IO_CheckSteps = 1000       </P>
       <P> IO_InfoSteps  = 10       </P>
-      <P> Re            = 200       </P>
+      <P> Re            = 2000       </P>
       <P> Kinvis        = 1.0/Re     </P>
-      <P> HomModesZ     = 64          </P>
+      <P> HomModesZ     = 32          </P>
       <P> LZ            = 4*PI/3     </P>
     </PARAMETERS>
 
@@ -67,6 +68,12 @@
      <E VAR="w" VALUE="0" />
      <E VAR="p" VALUE="0" />
    </FUNCTION>
+   
+   <FUNCTION NAME="BodyForce">
+          <E VAR="u" VALUE="2*Kinvis" />
+          <E VAR="v" VALUE="0" />
+          <E VAR="w" VALUE="0" />
+        </FUNCTION>
     
   </CONDITIONS>
 

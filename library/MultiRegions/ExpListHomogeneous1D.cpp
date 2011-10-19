@@ -138,8 +138,8 @@ namespace Nektar
 			Array<OneD, NekDouble> physpad(2*nplanes,0.0);
 			Array<OneD, NekDouble> coefpad(2*nplanes,0.0);
 			
-			NekVector<const NekDouble> in (1,physpad,eWrapper);
-			NekVector<      NekDouble> out(1,coefpad,eWrapper);
+			NekVector<const NekDouble> in (2*nplanes,physpad,eWrapper);
+			NekVector<      NekDouble> out(2*nplanes,coefpad,eWrapper);
 			
 			// Shuffle to have the nplanes Fourier points is a row,
 			// for each one of the 2D expansion physical point
@@ -164,11 +164,11 @@ namespace Nektar
 				Vmath::Vcopy(nplanes,&(coefpad[0]),1,&(tmparray[i*nplanes]),1);
 			}
 			
-			// reordering the degrees of freedom in the original fromat
+			// reordering the degrees of freedom in the original format
 			
 			UnshuffleFromHomogeneous1DClosePacked(tmparray,tmp,false);
 			
-			// now we are in pysical space for the spectral element part and coefficient space
+			// now we are in physical space for the spectral element part and coefficient space
 			// for the Fourier part. We need to BwdTrans the Fourier part to have outarray in physical space
 			
 			HomogeneousBwdTrans(tmp,outarray,UseContCoeffs);

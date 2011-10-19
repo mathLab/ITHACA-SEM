@@ -384,6 +384,8 @@ namespace Nektar
 
         bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
 
+		bool m_dealiasing;           ///< flag to determine if use dealising or not
+		
         enum HomogeneousType m_HomogeneousType;
 
         NekDouble m_LhomX; ///< physical length in X direction (if homogeneous)

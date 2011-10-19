@@ -96,6 +96,9 @@ namespace Nektar
         std::string m_sessionName;
         /// Pointer to mesh graph
         SpatialDomains::MeshGraphSharedPtr          m_graph;
+		
+		bool m_dealiasing;           ///< flag to determine if use dealising or not
+		bool m_UseContCoeff;
         
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;

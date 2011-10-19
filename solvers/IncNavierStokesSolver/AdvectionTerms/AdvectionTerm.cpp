@@ -101,6 +101,14 @@ namespace Nektar
                 "defaulting to continuous Galerkin" << endl;
             m_projectionType = MultiRegions::eGalerkin;
         }
+		
+		m_UseContCoeff = false;
+		m_dealiasing = false;
+		
+		if(m_session->DefinesSolverInfo("DEALIASING"))
+		{
+			m_dealiasing = true;
+		}
     }
     
     AdvectionTerm::~AdvectionTerm()

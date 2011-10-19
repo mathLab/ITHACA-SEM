@@ -104,6 +104,10 @@ namespace Nektar
             Vmath::Vmul( nPointsTot,grad0,1,pV[0],1,pOutarray,1);
             Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
             Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
+			if(m_dealiasing)
+			{
+				pFields[0]->Dealiasing(pOutarray,m_UseContCoeff);
+			}
             break;
         default:
             ASSERTL0(false,"dimension unknown");

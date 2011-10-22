@@ -394,6 +394,28 @@ namespace Nektar
         }
 
 
+
+        /**
+         *
+         */
+        void SessionReader::SetParameter(const std::string &pName, int &pVar) 
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            m_parameters[vName] = pVar;
+        }
+
+
+        /**
+         *
+         */
+        void SessionReader::SetParameter(const std::string &pName, NekDouble& pVar) 
+        {
+            std::string vName = boost::to_upper_copy(pName);
+            m_parameters[vName] = pVar;
+        }
+
+
+
         /**
          *
          */

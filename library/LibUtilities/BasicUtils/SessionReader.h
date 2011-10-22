@@ -162,6 +162,13 @@ namespace Nektar
             /// Check for and load a double-precision parameter.
             LIB_UTILITIES_EXPORT void LoadParameter(const std::string &name, NekDouble &var, const NekDouble &def) const;
 
+
+
+            /// Set an integer parameter
+            LIB_UTILITIES_EXPORT void SetParameter(const std::string &name, int &var);
+            /// Set a double precision parameter
+            LIB_UTILITIES_EXPORT void SetParameter(const std::string &name, NekDouble &var);
+
             /* ------ SOLVER INFO ------ */
             /// Checks if a solver info property is specified.
             LIB_UTILITIES_EXPORT bool DefinesSolverInfo(const std::string &name) const;

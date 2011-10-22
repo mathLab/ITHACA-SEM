@@ -10,6 +10,7 @@ library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver
 solvers/FitzHughNagumoSolver
 solvers/CardiacEPSolver
+solvers/APESolver
 docs/*.doc
 docs/arch
 docs/emacs
@@ -23,3 +24,5 @@ docs/html/*.html
 docs/html/*.php
 docs/html/*.css
 utilities/PreProcessing/Extras
+utilities/PostProcessing/FldCalcBCs.cpp
+utilities/PostProcessing/MoveMesh.cpp

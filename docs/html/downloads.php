@@ -48,6 +48,11 @@ Material</a></p>
         <hr>
 	<ul>
       <li>
+         <h3 align="left">release 3.0.1 (October 2011) </h3>
+         <p><a href="downloads/nektar++-3.0.1.tar.gz">Nektar++ Linux/Windows Code</a></p>
+         <p><a href="downloads/ThirdParty-3.0.1.tar.gz">Required Third Party Libraries</a></p>
+      </li>
+      <li>
          <h3 align="left">release 3.0.0 (August 2011) </h3>
          <p><a href="downloads/nektar++-3.0.0.tar.gz">Nektar++ Linux/Windows Code</a></p>
          <p><a href="downloads/ThirdParty-3.0.0.tar.gz">Required Third Party Libraries</a></p>

@@ -253,13 +253,15 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             }
 
+            /*
             virtual void v_IProductWRTDerivBase (const int dir,
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
-
+            */
+            
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray)
@@ -303,18 +305,11 @@ namespace Nektar
                 return CreateStdMatrix(mkey);
             }
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-            {
-                return m_matrixManager[mkey];
-            }
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(
+                const MatrixKey &mkey);
 
-            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
-            {
-                return m_staticCondMatrixManager[mkey];
-            }
-
-
-
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(
+                const MatrixKey &mkey);
         };
 
         // type defines for use of PrismExp in a boost vector

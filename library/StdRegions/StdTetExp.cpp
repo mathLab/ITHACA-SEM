@@ -1723,66 +1723,66 @@ namespace Nektar
                     for (i = 0; i < P; ++i)
 			{
                         for (j = 0; j < Q-i; ++j)
-            {
+                        {
                             if ((int)faceOrient == 2 && i > 1)
-                {
+                            {
                                 signarray[idx] = (i%2 ? -1 : 1);
-                    }
+                            }
                             maparray[idx++] = GetMode(i,j,0);
-                }
-            }
+                        }
+                        }
                     break;
                 case 1:
                     idx = 0;
                     for (i = 0; i < P; ++i)
-            {
-                        for (k = 0; k < Q-i; ++k)
-                {
-                            if ((int)faceOrient == 2 && i > 1)
                     {
+                        for (k = 0; k < Q-i; ++k)
+                        {
+                            if ((int)faceOrient == 2 && i > 1)
+                            {
                                 signarray[idx] = (i%2 ? -1: 1);
-                    }
+                            }
                             maparray[idx++] = GetMode(i,0,k);
-                }
-            }
+                        }
+                    }
                     break;
                 case 2:
                     idx = 0;
                     for (j = 0; j < P-1; ++j)
-            {
+                    {
                         for (k = 0; k < Q-1-j; ++k)
-            {
+                        {
                             if ((int)faceOrient == 2 && j > 1)
-                {
+                            {
                                 signarray[idx] = ((j+1)%2 ? -1: 1);
-                    }
+                            }
                             maparray[idx++] = GetMode(1,j,k);
                             // Incorporate modes from zeroth plane where needed.
                             if (j == 0 && k == 0) {
                                 maparray[idx++] = GetMode(0,0,1);
-                }
+                            }
                             if (j == 0 && k == Q-2) {
                                 for (int r = 0; r < Q-1; ++r) {
                                     maparray[idx++] = GetMode(0,1,r);
+                                }
+                            }
+                        }
                     }
-                }
-                    }
-                }
-                break;
-            case 3:
+                    break;
+                case 3:
                     idx = 0;
                     for (j = 0; j < P; ++j)
-                {
-                        for (k = 0; k < Q-j; ++k)
                     {
+                        for (k = 0; k < Q-j; ++k)
+                        {
                             if ((int)faceOrient == 2 && j > 1)
                             {
                                 signarray[idx] = (j%2 ? -1: 1);
-                    }
+                            }
                             maparray[idx++] = GetMode(0,j,k);
-                }
-            }
-            	break;
+                        }
+                    }
+                    break;
                 default:
                     ASSERTL0(false, "Element map not available.");
             }

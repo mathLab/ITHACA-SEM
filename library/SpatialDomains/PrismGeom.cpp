@@ -36,7 +36,7 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/PrismGeom.h>
-
+#include <iomanip>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -60,18 +60,27 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
+            int order0  = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumModes();
+            int points0 = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumPoints();
+            int order1  = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
+            int points1 = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+            int order2  = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
+            int points2 = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+
             // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
             //PointsKey (const int &numpoints, const PointsType &pointstype)
-            const LibUtilities::BasisKey A(LibUtilities::eModified_A, 2,
+            const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B(LibUtilities::eModified_B, 2,
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order1,
+                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey C(LibUtilities::eModified_B, order2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(A,A,B);
+                m_xmap[i] = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(A,B,C);
             }
         }
 
@@ -81,26 +90,25 @@ namespace Nektar
             m_geomShapeType = ePrism;
 
             /// Copy the quad face shared pointers
-            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PrismGeom::kNfaces);
+            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PrismGeom::kNqfaces);
 
             /// Copy the triangle face shared pointers
-            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PrismGeom::kNfaces);
-
+            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PrismGeom::kNtfaces);
+            
             for (int j=0; j<kNfaces; ++j)
             {
                m_forient[j] = forient[j];
             }
-
+            
             m_coordim = tfaces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-
         }
 
         PrismGeom::PrismGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[],
                              const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
                              const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
         {
-             m_geomShapeType = ePrism;
+            m_geomShapeType = ePrism;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+PrismGeom::kNverts);
@@ -148,9 +156,8 @@ namespace Nektar
         PrismGeom::~PrismGeom()
         {
         }
-
+        
         void PrismGeom::SetUpLocalEdges(){
-
             // find edge 0
             int i,j;
             unsigned int check;
@@ -159,71 +166,31 @@ namespace Nektar
 
             // First set up the 4 bottom edges
             int f;  //  Connected face index
-            for(f = 1; f < 5 ; f++)
+            for (f = 1; f < 5 ; f++)
             {
+                int nEdges = m_faces[f]->GetNumEdges();
                 check = 0;
-                if(f==1 || f==3){
-                    for(i = 0; i < 4; i++)
+                for (i = 0; i < 4; i++)
+                {
+                    for (j = 0; j < nEdges; j++)
                     {
-                        cout << "tf = " << f << endl;
-                        int nEdges = m_faces[f]->GetNumEdges();
-
-                        for(j = 0; j < nEdges; j++)
+                        if (m_faces[0]->GetEid(i) == m_faces[f]->GetEid(j))
                         {
-                          cout << "outside the if ..." << endl;
-                          cout << "nEdges = " << nEdges << endl;
-
-        cout << "m_tfaces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ",  " << "m_tfaces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
-
-                            if( m_faces[0]->GetEid(i) == m_faces[f]->GetEid(j) )
-                            {
-                    cout << "inside the if ..." << endl;
-        cout << "m_tfaces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ", " << "m_faces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
-
                             edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
                             m_edges.push_back(edge);
                             check++;
-                            }
                         }
-                     }
-                   }
-                    else
-                   {
-                    for(i = 0; i < 4; i++)
-                    {
-                        cout << "qf = " << f << endl;
-                        int nEdges = m_faces[f]->GetNumEdges();
+                    }
+                }
 
-                        for(j = 0; j < nEdges; j++)
-                        {
-                        cout << "outside the if ..." << endl;
-                        cout << "nEdges = " << nEdges <<endl;
-
-        cout << "m_faces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ",  " << "m_faces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
-
-                            if( m_faces[0]->GetEid(i) == m_faces[f]->GetEid(j) )
-                            {
-                    cout << "inside the if ..." << endl;
-        cout << "m_faces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ", " << "m_faces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
-
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
-                            m_edges.push_back(edge);
-                            check++;
-                            }
-                        }
-                      }
-                   }
-
-
-
-                if( check < 1 )
+                if (check < 1)
                 {
                     std::ostringstream errstrm;
                     errstrm << "Connected faces do not share an edge. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[f])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }
-                else if( check > 1)
+                else if (check > 1)
                 {
                     std::ostringstream errstrm;
                     errstrm << "Connected faces share more than one edge. Faces ";
@@ -322,7 +289,6 @@ namespace Nektar
                 errstrm << (m_faces[1])->GetFid() << ", " << (m_faces[3])->GetFid();
                 ASSERTL0(false, errstrm.str());
             }
-
         };
 
 
@@ -390,7 +356,6 @@ namespace Nektar
                 errstrm << m_edges[8]->GetEid();
                 ASSERTL0(false, errstrm.str());
             }
-
         };
 
 
@@ -471,7 +436,7 @@ namespace Nektar
                 { {0,1,2,3} ,
                   {0,1,4,-1},  // This is triangle requires only three vertices
                   {1,2,5,4} ,
-                  {2,3,5,-1},  // This is triangle requires only three vertices
+                  {3,2,5,-1},  // This is triangle requires only three vertices
                   {0,3,5,4} ,};
 
             NekDouble dotproduct1 = 0.0;
@@ -752,41 +717,36 @@ namespace Nektar
 
         void PrismGeom::FillGeom()
         {
-            // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
-                for(int i = 0; i < kNfaces; i++)
+                int i,j,k;
+
+                for(i = 0; i < kNfaces; i++)
                 {
-                    // Recurse to the 2D components
                     m_faces[i]->FillGeom();
+                    int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
+                    Array<OneD, unsigned int> mapArray (nFaceCoeffs,1);
+                    Array<OneD, int>          signArray(nFaceCoeffs,1);
+                    
+                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
 
-                    for(int j = 0 ; j < m_coordim; j++)
+                    for(j = 0 ; j < m_coordim; j++)
                     {
-                        int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
-                        Array<OneD, unsigned int>   mapArray (nFaceCoeffs,1);
-                        Array<OneD, int>            signArray(nFaceCoeffs,1);
-
-                        m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
-
-                        for(int k = 0; k < nFaceCoeffs; k++)
+                    	const Array<OneD, const NekDouble> &coeffs = (*m_faces[i])[j]->GetCoeffs();
+                        for(k = 0; k < nFaceCoeffs; k++)
                         {
-                            (*m_faces[i])[j];
-                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
-                            double v = signArray[k]* coeffs[k];
+                            double v = signArray[k] * coeffs[k];
                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-
                         }
                     }
                 }
-
-                for(int i = 0; i < m_coordim; ++i)
+                for(i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
 
                 m_state = ePtsFilled;
             }
-
         }
 
         void PrismGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)

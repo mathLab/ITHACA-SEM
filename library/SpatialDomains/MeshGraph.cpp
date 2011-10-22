@@ -548,6 +548,27 @@ namespace Nektar
                             }
                         }
                         break;
+                    case ePrism:
+                        {
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_prismGeoms.find(k) != m_prismGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_prismGeoms[k];
+
+                            for(int b = 0; b < 3; ++b)
+                            {
+                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
+                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                                cout << "bkey " << b << ": " <<bkey;
+                                bkeyvec.push_back(bkey);
+                            }
+
+                            if(!UniOrder)
+                            {
+                                cnt += 2;
+                            }
+                        }
+                        break;
                     case eHexahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
@@ -967,6 +988,19 @@ namespace Nektar
                         const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
                         LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,order,pkey2);
                         returnval.push_back(bkey2);
+                    }
+                    break;
+                case ePrism:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        
+                        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        returnval.push_back(bkey1);
+                        
                     }
                     break;
                 default:

@@ -5,6 +5,7 @@
 #include "StdRegions/StdExpansion3D.h"
 #include "LocalRegions/HexExp.h"
 #include "LocalRegions/TetExp.h"
+#include "LocalRegions/PrismExp.h"
 
 #include "LocalRegions/LocalRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
@@ -25,6 +26,14 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
 NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
             int order1, int order2, int order3);
 
+/// Defines a solution which excites all modes in the Tet expansion.
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
+                    int order1, int order2, int order3);
+
+/// Derivative of the Tet expansion solution.
+NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
+                     int order1, int order2, int order3);
+
 /// Defines a solution which excites all modes in the Hex expansion.
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
             int order1, int order2, int order3,
@@ -41,6 +50,9 @@ NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
 
 /// Creates a Hex geometry based on the command-line parameters.
 SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[]);
+
+/// Creates a Prism geometry based on the command-line parameters.
+SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[]);
 
 /// Creates a Tet geometry based on the command-line parameters.
 SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[]);
@@ -96,8 +108,9 @@ int main(int argc, char *argv[]){
     regionshape = (ExpansionType) atoi(argv[1]);
 
     // Check to see if 3D region
-    if((regionshape != StdRegions::eTetrahedron)
-            && (regionshape != StdRegions::eHexahedron))
+    if (regionshape != StdRegions::eTetrahedron &&
+        regionshape != StdRegions::ePrism       &&
+        regionshape != StdRegions::eHexahedron)
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 3D region");
     }
@@ -131,6 +144,29 @@ int main(int argc, char *argv[]){
         {
             NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
                                         "Ortho_B, Modified_A or Modified_B");
+        }
+        break;
+    case StdRegions::ePrism:
+        if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+                || (btype1 == eModified_B) || (btype1 == eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 1 cannot be of type Ortho_B, Ortho_C, Modified_B "
+                     "or Modified_C");
+        }
+        if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
+                || (btype2 == eModified_B) || (btype2 == eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 2 cannot be of type Ortho_B, Ortho_C, Modified_B "
+                     "or Modified_C");
+        }
+        if((btype3 == eOrtho_A) || (btype3 == eOrtho_C)
+                || (btype3 == eModified_A) || (btype3 == eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 3 cannot be of type Ortho_A, Ortho_C, Modified_A "
+                     "or Modified_C");
         }
         break;
     case StdRegions::eHexahedron:
@@ -193,6 +229,10 @@ int main(int argc, char *argv[]){
         if (regionshape == StdRegions::eTetrahedron) {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
+        else if (regionshape == StdRegions::ePrism)
+        {
+            Qtype3 = LibUtilities::eGaussRadauMAlpha1Beta0;
+        }
         else
         {
             Qtype3 = LibUtilities::eGaussLobattoLegendre;
@@ -230,6 +270,29 @@ int main(int argc, char *argv[]){
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
                 sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
+            }
+            //----------------------------------------------
+        }
+        break;
+    case StdRegions::ePrism:
+        {
+            const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+            const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+            const LibUtilities::PointsKey Pkey3(nq3,Qtype3);
+            const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
+            const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
+            const LibUtilities::BasisKey  Bkey3(btype3,order3,Pkey3);
+
+            SpatialDomains::PrismGeomSharedPtr geom = CreatePrismGeom(argc, argv);
+            E = new LocalRegions::PrismExp(Bkey1, Bkey2, Bkey3, geom);
+            
+            E->GetCoords(x,y,z);
+            
+            //----------------------------------------------
+            // Define solution to be projected
+            for(i = 0; i < nq1*nq2*nq3; ++i)
+            {
+                sol[i]  = Prism_sol(x[i],y[i],z[i],order1,order2,order3);
             }
             //----------------------------------------------
         }
@@ -289,6 +352,14 @@ int main(int argc, char *argv[]){
             }
         }
         break;
+    case StdRegions::ePrism:
+        {
+            for(i = 0; i < nq1*nq2*nq3; ++i)
+            {
+                sol[i] = Prism_Dsol(x[i],y[i],z[i],order1,order2,order3);
+            }
+        }
+        break;
     case StdRegions::eHexahedron:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -312,7 +383,7 @@ int main(int argc, char *argv[]){
 
 
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3){
+                  int order1, int order2, int order3){
     int    l,k,m;
     NekDouble sol = 0;
 
@@ -331,11 +402,32 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
 }
 
 
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
+                    int order1, int order2, int order3)
+{
+    int k, l, m;
+    NekDouble sol = 0;
+    
+    for(k = 0; k < order1; ++k)
+    {
+        for(l = 0; l < order2; ++l)
+        {
+            for(m = 0; m < order3-k; ++m)
+            {
+                sol += pow(x,k)*pow(y,l)*pow(z,m);
+            }
+        }
+    }
+
+    return sol;
+}
+
+
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3,
-           LibUtilities::BasisType btype1,
-           LibUtilities::BasisType btype2,
-           LibUtilities::BasisType btype3)
+                  int order1, int order2, int order3,
+                  LibUtilities::BasisType btype1,
+                  LibUtilities::BasisType btype2,
+                  LibUtilities::BasisType btype3)
 {
     int i,j,k;
     NekDouble sol = 0.0;
@@ -375,6 +467,28 @@ NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
         for(l = 0; l < order2-k; ++l)
         {
             for(m = 0; m < order3-k-l; ++m)
+            {
+                sol += k*pow_loc(x,k-1)*pow_loc(y,l)*pow_loc(z,m)
+                    + pow_loc(x,k)*l*pow_loc(y,l-1)*pow_loc(z,m)
+                    + pow_loc(x,k)*pow_loc(y,l)*m*pow_loc(z,m-1);
+            }
+        }
+    }
+
+    return sol;
+}
+
+
+NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
+                     int order1, int order2, int order3){
+    int    l,k,m;
+    NekDouble sol = 0;
+    
+    for(k = 0; k < order1; ++k)
+    {
+        for(l = 0; l < order2; ++l)
+        {
+            for(m = 0; m < order3-k; ++m)
             {
                 sol += k*pow_loc(x,k-1)*pow_loc(y,l)*pow_loc(z,m)
                     + pow_loc(x,k)*l*pow_loc(y,l-1)*pow_loc(z,m)
@@ -513,6 +627,117 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
 
     SpatialDomains::HexGeomSharedPtr geom =
             MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
+    geom->SetOwnData();
+
+    return geom;
+}
+
+
+SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
+{
+    if (argc != 29)
+    {
+        cout << "Insufficient points for a prism!" << endl;
+    }
+    
+    // /////////////////////////////////////////////////////////////////////
+    // Set up Prism vertex coordinates
+    // VertexComponent (const int coordim, const int vid, double x,
+    //   double y, double z)
+    const int nVerts = 6;
+    const double point[][3] = {
+        {atof(argv[11]),atof(argv[12]),atof(argv[13])},
+        {atof(argv[14]),atof(argv[15]),atof(argv[16])},
+        {atof(argv[17]),atof(argv[18]),atof(argv[19])},
+        {atof(argv[20]),atof(argv[21]),atof(argv[22])},
+        {atof(argv[23]),atof(argv[24]),atof(argv[25])},
+        {atof(argv[26]),atof(argv[27]),atof(argv[28])}
+    };
+
+    // Populate the list of verts
+    VertexComponentSharedPtr verts[nVerts];
+    const int three = 3;
+    
+    for( int i = 0; i < nVerts; ++i ) {
+        verts[i] = MemoryManager<VertexComponent>
+            ::AllocateSharedPtr( three,  i,   point[i][0],
+                                 point[i][1], point[i][2] );
+    }
+
+    // /////////////////////////////////////////////////////////////////////
+    // Set up Prism Edges
+    // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
+    const int nEdges = 9;
+    const int vertexConnectivity[][2] = {
+        {0,1}, {1,2}, {2,3}, {3,0}, {0,4}, 
+        {1,4}, {2,5}, {3,5}, {5,4}
+    };
+    
+    // Populate the list of edges
+    SegGeomSharedPtr edges[nEdges];
+    for( int i = 0; i < nEdges; ++i ) {
+        VertexComponentSharedPtr vertsArray[2];
+        for( int j = 0; j < 2; ++j ) {
+            vertsArray[j] = verts[vertexConnectivity[i][j]];
+        }
+        edges[i] = MemoryManager<SegGeom>
+            ::AllocateSharedPtr( i, three, vertsArray);
+    }
+    
+    // ////////////////////////////////////////////////////////////////////
+    // Set up Prism faces
+    const int nQFaces = 3;
+    const int nTFaces = 2;
+    const int nFaces  = 5;
+    const int edgeConnectivity[][4] = {
+        {0,1,2,3}, 
+        {0,5,4,-1}, // Triangular face
+        {1,6,8,5},
+        {2,7,6,-1}, // Triangular face 
+        {3,7,8,4}
+    };
+    const bool   isEdgeFlipped[][4] = {
+        {0,0,0,1},
+        {0,0,1,0},
+        {0,0,0,1},
+        {0,0,1,0},
+        {1,0,0,1}
+    };
+    
+    // Populate the list of faces
+    Geometry2DSharedPtr faces[5];
+
+    for (int i = 0; i < nFaces; ++i) {
+        if (i == 1 || i == 3) 
+        {
+            SegGeomSharedPtr edgeArray[3];
+            EdgeOrientation eorientArray[3];
+            
+            for (int j = 0; j < 3; ++j) {
+                edgeArray[j]    = edges[edgeConnectivity[i][j]];
+                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
+            }
+            
+            faces[i] = MemoryManager<TriGeom>
+                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+        }
+        else
+        {
+            SegGeomSharedPtr edgeArray[4];
+            EdgeOrientation eorientArray[4];
+            
+            for (int j = 0; j < 4; ++j) {
+                edgeArray[j]    = edges[edgeConnectivity[i][j]];
+                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
+            }
+            cout << i << endl;
+            faces[i] = MemoryManager<QuadGeom>
+                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+        }
+    }
+
+    SpatialDomains::PrismGeomSharedPtr geom =
+        MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
     geom->SetOwnData();
 
     return geom;

@@ -511,14 +511,17 @@ namespace Nektar
                         const int kNfaces = PrismGeom::kNfaces;
                         const int kNtfaces = PrismGeom::kNtfaces;
                         const int kNqfaces = PrismGeom::kNqfaces;
-                        TriGeomSharedPtr tfaces[kNtfaces];
-                        QuadGeomSharedPtr qfaces[kNqfaces];
+                        Geometry2DSharedPtr faces[kNfaces];
                         int Ntfaces = 0;
                         int Nqfaces = 0;
+                        int Nfaces  = 0;
 
                         /// Fill the arrays and make sure there aren't too many faces.
                         std::stringstream errorstring;
-                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                        errorstring << "Element " << indx << " must have " 
+                                    << kNtfaces << " triangle face(s), and " 
+                                    << kNqfaces << " quadrilateral face(s).";
+                        
                         for (int i = 0; i < kNfaces; i++)
                         {
                             int faceID;
@@ -534,12 +537,14 @@ namespace Nektar
                             else if (face->GetGeomShapeType() == eTriangle)
                             {
                                 ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                Ntfaces++;
                             }
                             else if (face->GetGeomShapeType() == eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                Nqfaces++;
                             }
                         }
 
@@ -556,7 +561,7 @@ namespace Nektar
                             //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
                         };
 
-                        PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
+                        PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(faces));
                         prismgeom->SetGlobalID(indx);
 
                         m_prismGeoms[indx] = prismgeom;

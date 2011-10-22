@@ -416,6 +416,95 @@ namespace Nektar
         }
 
 
+        unsigned int Prism::typeIds[3] = {
+                GetElementFactory().RegisterCreatorFunction(6,  Prism::create, "Order 1 Prism"),
+                GetElementFactory().RegisterCreatorFunction(13, Prism::create, "Order 2 Prism"),
+                GetElementFactory().RegisterCreatorFunction(18, Prism::create, "Order 3 Prism")
+            };
+
+        Prism::Prism(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
+                : Element()
+        {
+            m_tag = "R";
+            m_dim = 3;
+            m_taglist = pTagList;
+            int n = 0;
+            switch (m_taglist.back())
+            {
+            case 6:  n = 0; break;
+            case 13: n = 1; break;
+            }
+            int order = n+1;
+
+            // Create a map to relate edge nodes to a pair of vertices defining an edge
+            // This is based on the ordering produced by gmsh.
+            map<pair<int,int>, int> edgeNodeMap;
+            map<pair<int,int>, int>::iterator it;
+            edgeNodeMap[pair<int,int>(1,2)] = 7;
+            edgeNodeMap[pair<int,int>(1,3)] = 7 + n;
+            edgeNodeMap[pair<int,int>(1,4)] = 7 + 2*n;
+            edgeNodeMap[pair<int,int>(2,3)] = 7 + 3*n;
+            edgeNodeMap[pair<int,int>(2,5)] = 7 + 4*n;
+            edgeNodeMap[pair<int,int>(3,6)] = 7 + 5*n;
+            edgeNodeMap[pair<int,int>(4,5)] = 7 + 6*n;
+            edgeNodeMap[pair<int,int>(4,6)] = 7 + 7*n;
+            edgeNodeMap[pair<int,int>(5,6)] = 7 + 8*n;
+            
+            // Add vertices
+            for (int i = 0; i < 6; ++i) {
+                vertex.push_back(pNodeList[i]);
+            }
+
+            // Create edges (with corresponding set of edge points)
+            for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
+            {
+                vector<NodeSharedPtr> edgeNodes;
+                if (order > 1) {
+                    for (int j = it->second; j < it->second + n; ++j) {
+                        edgeNodes.push_back(pNodeList[j-1]);
+                    }
+                }
+                edge.push_back(EdgeSharedPtr(new Edge(  pNodeList[it->first.first-1],
+                                                        pNodeList[it->first.second-1],
+                                                        edgeNodes)));
+            }
+            
+            // Create faces
+            int face_ids[5][4] = {
+                {1,2,5,4},{5,4,3,-1},{0,2,5,3},{1,2,0,-1},{4,1,0,3}};
+            for (int j = 0; j < 5; ++j)
+            {
+                vector<NodeSharedPtr> faceVertices;
+                vector<EdgeSharedPtr> faceEdges;
+                vector<NodeSharedPtr> faceNodes;
+                for (int k = 0; k < 4; ++k)
+                {
+                    if (face_ids[j][k] == -1)
+                        break;
+                    faceVertices.push_back(vertex[face_ids[j][k]]);
+                    NodeSharedPtr a = vertex[face_ids[j][k]];
+                    NodeSharedPtr b = vertex[face_ids[j][(k+1)%(j%2==0?4:3)]];
+                    for (unsigned int i = 0; i < edge.size(); ++i)
+                    {
+                        if ( ((*(edge[i]->n1)==*a) && (*(edge[i]->n2)==*b))
+                                || ((*(edge[i]->n1)==*b) && (*(edge[i]->n2) == *a)) )
+                        {
+                            faceEdges.push_back(edge[i]);
+                            break;
+                        }
+                    }
+
+                }
+                int N = 4 + 6*n + j*n*(n-1)/2;
+                for (unsigned int i = 0; i < n*(n-1)/2; ++i)
+                {
+                    faceNodes.push_back(pNodeList[N+i]);
+                }
+                face.push_back(FaceSharedPtr(new Face(faceVertices, faceNodes, faceEdges)));
+            }
+        }
+
+
         unsigned int Hexahedron::typeIds[2] = {
                 GetElementFactory().RegisterCreatorFunction(5, Hexahedron::create, "Order 1 Hexahedron"),
                 GetElementFactory().RegisterCreatorFunction(12, Hexahedron::create, "Order 2 Hexahedron")

@@ -97,9 +97,9 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Write solution
-    ofstream outfile("ProjectContFileOrig3D.dat");
-    Fce->WriteToFile(outfile,eGnuplot);
-    outfile.close();
+    //ofstream outfile("ProjectContFileOrig3D.dat");
+    //Fce->WriteToFile(outfile,eGnuplot);
+    //outfile.close();
     //----------------------------------------------
 
     //---------------------------------------------
@@ -114,9 +114,9 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Write solution
-    ofstream outfile2("ProjectContFile3D.dat");
-    Exp->WriteToFile(outfile2,eGnuplot);
-    outfile2.close();
+    //ofstream outfile2("ProjectContFile3D.dat");
+    //Exp->WriteToFile(outfile2,eGnuplot);
+    //outfile2.close();
     //----------------------------------------------
 
     //--------------------------------------------

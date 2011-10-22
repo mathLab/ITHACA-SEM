@@ -1,9 +1,7 @@
-
 #include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include <StdRegions/StdExpUtil.h>
 #include <StdRegions/StdPrismExp.h>
-
 
 #include <algorithm>
 #include <iostream>
@@ -16,14 +14,21 @@ using namespace std;
 using namespace Nektar;
 
 
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, 
+                    int order1, int order2, int order3,
+                    LibUtilities::BasisType bType_x, 
+                    LibUtilities::BasisType bType_y, 
+                    LibUtilities::BasisType bType_z);
 
-NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2, int order3,
-                  LibUtilities::BasisType bType_x, LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z);
-NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, LibUtilities::BasisType bType_x,
-                  LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z, int dir);                 
+NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, 
+                         int P, int Q, int R, 
+                         LibUtilities::BasisType bType_x,
+                         LibUtilities::BasisType bType_y, 
+                         LibUtilities::BasisType bType_z, 
+                         int dir);
 
 // modification to deal with exact solution. Return 1 if integer < 0
-static double  pow_loc(const double val, const int i)
+static double pow_loc(const double val, const int i)
 {
   return (i < 0)? 1.0: pow(val,i);
 }
@@ -52,7 +57,7 @@ int main(int argc, char *argv[]) {
 
         exit(1);
     }
-
+    
     StdRegions::ExpansionType regionShape = ePrism;    
     
     int bType_x_val = atoi(argv[1]);
@@ -109,32 +114,32 @@ int main(int argc, char *argv[]) {
     Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
     Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
     
-  if(bType_x != LibUtilities::eFourier)
-  {
-      Qtype_x = LibUtilities::eGaussLobattoLegendre; 
-  }
-  else 
-  {
-      Qtype_x = LibUtilities::eFourierEvenlySpaced;
-  }
-
-  if(bType_y != LibUtilities::eFourier)
-  {
-      Qtype_y = LibUtilities::eGaussLobattoLegendre; 
-  }
-  else
-  {
-      Qtype_y = LibUtilities::eFourierEvenlySpaced;
-  }
-  
-  if(bType_z != LibUtilities::eFourier)
-  {
-      Qtype_z = LibUtilities::eGaussRadauMAlpha1Beta0; 
-  }
-  else
-  {
-      Qtype_z = LibUtilities::eFourierEvenlySpaced;
-  }
+    if(bType_x != LibUtilities::eFourier)
+    {
+        Qtype_x = LibUtilities::eGaussLobattoLegendre; 
+    }
+    else 
+    {
+        Qtype_x = LibUtilities::eFourierEvenlySpaced;
+    }
+    
+    if(bType_y != LibUtilities::eFourier)
+    {
+        Qtype_y = LibUtilities::eGaussLobattoLegendre; 
+    }
+    else
+    {
+        Qtype_y = LibUtilities::eFourierEvenlySpaced;
+    }
+    
+    if(bType_z != LibUtilities::eFourier)
+    {
+        Qtype_z = LibUtilities::eGaussRadauMAlpha1Beta0; 
+    }
+    else
+    {
+        Qtype_z = LibUtilities::eFourierEvenlySpaced;
+    }
         
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
@@ -166,50 +171,49 @@ int main(int argc, char *argv[]) {
         for(int n = 0; n < Qx * Qy * Qz; ++n) {
             solution[n]  = Prism_sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z );
             //cout << "Prism_solution["<<n<<"] = " << solution[n] << ",  x = " << x[n] << ", y = " << y[n] << ", z = " << z[n] << endl;
-                        
         }
         //----------------------------------------------
         
-       //----------------------------------------------
+        //----------------------------------------------
         // Define the derivative solution
-         for(int n = 0; n < Qx*Qy*Qz; ++n){
+        for(int n = 0; n < Qx*Qy*Qz; ++n){
             diff_solution_x[n] =  Prism_Diff_Sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z, 1);
             diff_solution_y[n] =  Prism_Diff_Sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z, 2);
             diff_solution_z[n] =  Prism_Diff_Sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z, 3);
         }
         //---------------------------------------------
-                
+        
     }
-       
+    
     //---------------------------------------------
     // Project onto Expansion 
-   spe->FwdTrans( solution, spe->UpdateCoeffs() );
+    spe->FwdTrans( solution, spe->UpdateCoeffs() );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-   spe->BwdTrans( spe->GetCoeffs(), spe->UpdatePhys() );
+    spe->BwdTrans( spe->GetCoeffs(), spe->UpdatePhys() );
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
-   cout << "\n*****************************************************\n " << endl;
-   cout << "L infinity error: " << spe->Linf(solution) << endl;
-   cout << "L 2 error:        " << spe->L2  (solution) << endl;
-   cout << "\n*****************************************************\n " << endl;
+    cout << "\n*****************************************************\n " << endl;
+    cout << "L infinity error: " << spe->Linf(solution) << endl;
+    cout << "L 2 error:        " << spe->L2  (solution) << endl;
+    cout << "\n*****************************************************\n " << endl;
     //--------------------------------------------
-        
-        
- //--------------------------------------------
+    
+    
+    //--------------------------------------------
     // Taking the physical derivative and putting them into dx, dy, dz.
     spe->PhysDeriv( spe->GetPhys(), dx, dy, dz );        
     //--------------------------------------------     
-         
+    
     
     double error_x = 0, error_y=0, error_z=0;
     
     for( int n = 0; n < Qx*Qy*Qz; ++n ) {
-    
+        
         error_x += fabs(diff_solution_x[n] - dx[n]);
         error_y += fabs(diff_solution_y[n] - dy[n]);
         error_z += fabs(diff_solution_z[n] - dz[n]);
@@ -217,8 +221,6 @@ int main(int argc, char *argv[]) {
                 "diff_solution_y[n] = " << diff_solution_y[n] << ",    dy[n] = " << dy[n] << ",     " <<
                 "diff_solution_z[n] = " << diff_solution_z[n] << ",    dz[n] = " << dz[n] << ",     " <<
         endl;
-        
-        
     }
     
     cout << "\n ******************************************** " << endl;
@@ -233,37 +235,43 @@ int main(int argc, char *argv[]) {
     // Evaulate solution at x = y = z = 0  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
 
-     t[0] = -0.39;
-     t[1] = -0.25;
-     t[2] = 0.5;
-
-
- if( regionShape == StdRegions::ePrism ) {
+    t[0] = -0.39;
+    t[1] = -0.25;
+    t[2] = 0.5;
+    
+    if (regionShape == StdRegions::ePrism) {
         diff_solution_x[0] = Prism_Diff_Sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z, 1 );  
     }
-    
      
     return 0;
 }
 
 
 
-NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, LibUtilities::BasisType bType_x,
-                  LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z ) {
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, 
+                    int P, int Q, int R, 
+                    LibUtilities::BasisType bType_x,
+                    LibUtilities::BasisType bType_y, 
+                    LibUtilities::BasisType bType_z )
+{
     NekDouble sol = 0;
  
-    // case 1 -- Common case
-    if( (bType_x != LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier)  )
+    // case 1 -- Common non-Fourier case
+    if (bType_x != LibUtilities::eFourier && 
+        bType_y != LibUtilities::eFourier && 
+        bType_z != LibUtilities::eFourier)
     {
         for(int p = 0; p <= P; ++p) {
             for(int q = 0; q <= Q; ++q) {
                 for(int r = 0; r <= R - p; ++r) {
-                    sol += pow(x,p) * pow(y,q) * pow(z,r);
+                    sol += pow_loc(x,p) * pow_loc(y,q) * pow_loc(z,r);
                 }
             }
         }
-    } else  // case 2
-    if((bType_x != LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z == LibUtilities::eFourier))
+    } 
+    else if (bType_x != LibUtilities::eFourier && 
+             bType_y != LibUtilities::eFourier && 
+             bType_z == LibUtilities::eFourier)
     {
         for(int i = 0; i <= P; ++i) {
             for(int j = 0; j <= Q; ++j) {
@@ -272,8 +280,10 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, 
                 }
             }
         }
-    }else // case 3
-    if((bType_x == LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier))
+    }
+    else if (bType_x == LibUtilities::eFourier && 
+             bType_y != LibUtilities::eFourier && 
+             bType_z != LibUtilities::eFourier)
     {
         for(int i = 0; i <= P/2; ++i) {
             for(int j = 0; j <= Q; ++j) {
@@ -283,8 +293,9 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, 
             }
         }
     }
-    else // case 4
-    if((bType_x != LibUtilities::eFourier) && (bType_y == LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier))
+    else if (bType_x != LibUtilities::eFourier && 
+             bType_y == LibUtilities::eFourier && 
+             bType_z != LibUtilities::eFourier)
     {
         for(int i = 0; i <= P; ++i) {
             for(int j = 0; j <= Q/2; ++j) {
@@ -298,25 +309,33 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, 
     return sol;
 }
 
-NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, LibUtilities::BasisType bType_x,
-                  LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z, int dir)
+NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, 
+                         int P, int Q, int R, 
+                         LibUtilities::BasisType bType_x,
+                         LibUtilities::BasisType bType_y, 
+                         LibUtilities::BasisType bType_z, 
+                         int dir)
 {  
     NekDouble sol = 0;
-    // case 1 -- Common case
-    if( (bType_x != LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier)  )
+
+    // case 1 -- Common non-Fourier case
+    if (bType_x != LibUtilities::eFourier && 
+        bType_y != LibUtilities::eFourier && 
+        bType_z != LibUtilities::eFourier)
     {
         for(int p = 0; p <= P; ++p) {
             for(int q = 0; q <= Q; ++q) {
                 for(int r = 0; r <= R - p; ++r) {
-                   // sol += pow(x,p) * pow(y,q) * pow(z,r);
-                if(dir == 1 && p > 0) { sol += p * pow_loc(x,p-1)* pow_loc(y,q)   * pow_loc(z,r); }
-                if(dir == 2 && q > 0) { sol += q * pow_loc(x,p)  * pow_loc(y,q-1) * pow_loc(z,r); }
-                if(dir == 3 && r > 0) { sol += r * pow_loc(x,p)  * pow_loc(y,q)   * pow_loc(z,r-1); }
+                    if(dir == 1 && p > 0) { sol += p * pow_loc(x,p-1)* pow_loc(y,q)   * pow_loc(z,r); }
+                    if(dir == 2 && q > 0) { sol += q * pow_loc(x,p)  * pow_loc(y,q-1) * pow_loc(z,r); }
+                    if(dir == 3 && r > 0) { sol += r * pow_loc(x,p)  * pow_loc(y,q)   * pow_loc(z,r-1); }
                 }
             }
         }
-    } else  // case 2
-    if((bType_x != LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z == LibUtilities::eFourier))
+    } 
+    else if (bType_x != LibUtilities::eFourier && 
+             bType_y != LibUtilities::eFourier &&
+             bType_z == LibUtilities::eFourier)
     {
         for(int i = 0; i <= P; ++i) {
             for(int j = 0; j <= Q; ++j) {
@@ -331,8 +350,10 @@ NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, in
                 }
             }
         }
-    }else // case 3
-    if((bType_x == LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier))
+    } 
+    else if (bType_x == LibUtilities::eFourier && 
+             bType_y != LibUtilities::eFourier && 
+             bType_z != LibUtilities::eFourier)
     {
         for(int i = 0; i <= P/2; ++i) {
             for(int j = 0; j <= Q; ++j) {
@@ -348,8 +369,9 @@ NekDouble Prism_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, in
             }
         }
     }
-    else // case 4
-    if((bType_x != LibUtilities::eFourier) && (bType_y == LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier))
+    else if (bType_x != LibUtilities::eFourier && 
+             bType_y == LibUtilities::eFourier && 
+             bType_z != LibUtilities::eFourier)
     {
         for(int i = 0; i <= P; ++i) {
             for(int j = 0; j <= Q/2; ++j) {

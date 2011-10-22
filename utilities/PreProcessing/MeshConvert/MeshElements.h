@@ -549,6 +549,25 @@ namespace Nektar
 
 
         /**
+         * @brief A 3-dimensional five-faced element (2 triangles, 3
+         * quadrilaterals).
+         */
+        class Prism : public Element {
+        public:
+            /// Creates an instance of this class
+            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
+                return boost::shared_ptr<Element>(new Prism(pNodeList, pTagList));
+            }
+            /// Gmsh IDs
+            static unsigned int typeIds[];
+
+            Prism(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Prism(const Prism& pSrc);
+            virtual ~Prism() {}
+        };
+
+
+        /**
          * @brief A 3-dimensional six-faced element.
          */
         class Hexahedron : public Element {

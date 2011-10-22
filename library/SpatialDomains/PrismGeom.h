@@ -72,6 +72,12 @@ namespace Nektar
 			SPATIAL_DOMAINS_EXPORT void FillGeom();
 			SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
+            inline int GetVid(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 5),"Vertex id must be between 0 and 5");
+                return m_verts[i]->GetVid();
+            }
+
             inline int GetFid(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
@@ -84,6 +90,12 @@ namespace Nektar
                 return m_forient[i];
             }
 
+            inline const SegGeomSharedPtr GetEdge(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 8),"Edge id must be between 0 and 8");
+                return m_edges[i];
+            }
+
             inline const Geometry2DSharedPtr GetFace(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
@@ -93,6 +105,18 @@ namespace Nektar
             inline int GetEid() const 
             {
                 return m_eid;
+            }
+
+            inline int GetEid(int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 8),"Edge id must be between 0 and 8");
+                return m_edges[i]->GetEid();
+            }
+
+            inline StdRegions::EdgeOrientation GetEorient(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 8),"Edge id must be between 0 and 5");
+                return m_eorient[i];
             }
 
             inline int GetCoordDim() const 
@@ -113,6 +137,27 @@ namespace Nektar
             inline void SetOwnData()
             {
                 m_owndata = true; 
+            }
+
+            /// \brief Return the edge number of the given edge, or -1, if
+            /// not an edge of this element.
+            int WhichEdge(SegGeomSharedPtr edge)
+            {
+                int returnval = -1;
+
+                SegGeomVector::iterator edgeIter;
+                int i;
+
+                for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+                {
+                    if (*edgeIter == edge)
+                    {
+                        returnval = i;
+                        break;
+                    }
+                }
+
+                return returnval;
             }
 
             /// \brief Return the face number of the given face, or N, if not a face of this element.
@@ -191,11 +236,26 @@ namespace Nektar
                 return IsElmtConnected(gvo_id,locid);
             }
             
+            virtual int v_GetEid(int i) const
+            {
+                return GetEid(i);
+            }
+
             virtual int v_GetEid() const 
             {
                 return GetEid();
             }
 
+            virtual const Geometry1DSharedPtr v_GetEdge(int i) const
+            {
+                return GetEdge(i);
+            }
+
+            virtual int v_GetVid(int i) const
+            {
+                return GetVid(i);
+            }
+            
             virtual int v_GetCoordDim() const 
             {
                 return GetCoordDim();
@@ -236,6 +296,16 @@ namespace Nektar
                 return GetFaceorient(i);
             }
 
+            virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
+            {
+                return GetEorient(i);
+            }
+            
+            virtual int v_WhichEdge(SegGeomSharedPtr edge)
+            {
+                return WhichEdge(edge);
+            }
+
             virtual int v_WhichFace(Geometry2DSharedPtr face)
             {
                return WhichFace(face);
@@ -250,7 +320,6 @@ namespace Nektar
             {
                 return kNedges;
             }
-
         };
     }; //end of namespace
 }; //end of namespace

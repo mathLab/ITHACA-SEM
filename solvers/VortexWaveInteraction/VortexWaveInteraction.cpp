@@ -134,7 +134,7 @@ namespace Nektar
         std::string LZstr("LZ");
         NekDouble LZ = 2*M_PI/m_alpha;
         cout << "Setting LZ in Linearised solver to " << LZ << endl;
-        m_sessionWave->LoadParameter(LZstr,LZ);
+        m_sessionWave->SetParameter(LZstr,LZ);
 
 
         // Check for restart
@@ -210,7 +210,7 @@ namespace Nektar
         std::string LZstr("LZ");
         NekDouble LZ = 2*M_PI/m_alpha;
         cout << "Setting LZ in Linearised solver to " << LZ << endl;
-        m_sessionWave->LoadParameter(LZstr,LZ);
+        m_sessionWave->SetParameter(LZstr,LZ);
 
         // Create driver
         std::string vDriverModule;

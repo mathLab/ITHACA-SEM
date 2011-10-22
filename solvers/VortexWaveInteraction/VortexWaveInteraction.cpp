@@ -72,8 +72,17 @@ namespace Nektar
             m_iterEnd = 1; 
         }
 
-        m_rho   = m_sessionVWI->GetParameter("Rho");
-        m_alpha = m_sessionVWI->GetParameter("Alpha");
+        m_waveForceMag = m_sessionVWI->GetParameter("WaveForceMag");
+        m_alpha        = m_sessionVWI->GetParameter("Alpha");
+        
+        if(m_sessionVWI->DefinesParameter("Relaxation"))
+        {
+            m_vwiRelaxation = m_sessionVWI->GetParameter("Relaxation");
+        }
+        else
+        {
+            m_vwiRelaxation = 0.0;
+        }
         
         // Initialise NS Roll solver 
         std::string IncCondFile(argv[argc-1]); 
@@ -83,9 +92,23 @@ namespace Nektar
         IncNSFilenames.push_back(IncCondFile);
 
         // Create Incompressible NavierStokesSolver session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames);
-        std::string vEquation = session->GetSolverInfo("SolverType");
-        m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, session);
+        m_sessionRoll = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames);
+        std::string vEquation = m_sessionRoll->GetSolverInfo("SolverType");
+        m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll);
+
+
+        int ncoeffs = m_solverRoll->UpdateFields()[0]->GetNcoeffs();
+        m_vwiForcing = Array<OneD, Array<OneD, NekDouble> > (4);
+        m_vwiForcing[0] = Array<OneD, NekDouble> (4*ncoeffs);
+        for(int i = 1; i < 4; ++i)
+        {
+            m_vwiForcing[i] = m_vwiForcing[i-1] + ncoeffs;
+        }
+
+        // Fill forcing into m_vwiForcing
+        Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[0]->GetCoeffs(),1,m_vwiForcing[0],1);
+        Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[1]->GetCoeffs(),1,m_vwiForcing[1],1);
+        
 
         // Create AdvDiff Streak solver 
         std::string AdvDiffCondFile(argv[argc-1]); 
@@ -122,8 +145,10 @@ namespace Nektar
             string nstr =  boost::lexical_cast<std::string>(m_iterStart);
             cout << "Restarting from iteration " << m_iterStart << endl;
             std::string rstfile = "cp -f Save/" + m_sessionName + ".rst." + nstr + " " + m_sessionName + ".rst"; 
+            cout << "      " << rstfile << endl;
             system(rstfile.c_str());
             std::string vwifile = "cp -f Save/" + m_sessionName + ".vwi." + nstr + " " + m_sessionName + ".vwi"; 
+            cout << "      " << vwifile << endl;
             system(vwifile.c_str());
         }
 
@@ -143,6 +168,12 @@ namespace Nektar
     
     void VortexWaveInteraction::ExecuteRoll(void)
     {
+        
+        // Read vwi file
+        std::string forcefile
+            = m_sessionRoll->GetFunctionFilename("BodyForce");
+        m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+
         // Execute Roll 
         cout << "Executing Roll solver" << endl;
         m_solverRoll->DoInitialise();
@@ -172,8 +203,15 @@ namespace Nektar
         system(m_fldToStreak.c_str());
     }
 
-    void VortexWaveInteraction::ExecuteWaveAndForce(void)
+    void VortexWaveInteraction::ExecuteWave(void)
     {
+
+        // Set the initial beta value in stability to be equal to VWI file
+        std::string LZstr("LZ");
+        NekDouble LZ = 2*M_PI/m_alpha;
+        cout << "Setting LZ in Linearised solver to " << LZ << endl;
+        m_sessionWave->LoadParameter(LZstr,LZ);
+
         // Create driver
         std::string vDriverModule;
         m_sessionWave->LoadSolverInfo("Driver", vDriverModule, "ModifiedArnoldi");
@@ -184,48 +222,49 @@ namespace Nektar
         cout << "Executing wave solution " << endl;
         solverWave->Execute();
 
+        // Store data relevant to other operations 
         m_leading_real_evl = solverWave->GetRealEvl()[0];
         m_leading_imag_evl = solverWave->GetImagEvl()[0];
         
-        cout << "Calculating Nonlinear Wave Forcing" << endl;
-        CalcNonLinearWaveForce(solverWave->GetEqu()[0]);
+        m_waveVelocities = solverWave->GetEqu()[0]->UpdateFields();
+        m_wavePressure   = solverWave->GetEqu()[0]->GetPressure();
+        
     }
 
-    void VortexWaveInteraction::CalcNonLinearWaveForce(EquationSystemSharedPtr &eqn)
+    void VortexWaveInteraction::CalcNonLinearWaveForce(void)
     {
-        Array<OneD, MultiRegions::ExpListSharedPtr> fields = eqn->UpdateFields();
-        MultiRegions::ExpListSharedPtr pres = eqn->GetPressure();
         
-        int npts    = fields[0]->GetPlane(0)->GetNpoints();
-        int ncoeffs = fields[0]->GetPlane(0)->GetNcoeffs();
+        int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
+        int ncoeffs = m_waveVelocities[0]->GetPlane(0)->GetNcoeffs();
         Array<OneD, NekDouble> val(npts), der1(2*npts);
         Array<OneD, NekDouble> der2 = der1 + npts; 
-        Array<OneD, Array<OneD, NekDouble> >  outfield(2);
-        
-        outfield[0] = Array<OneD, NekDouble> (2*ncoeffs); 
-        outfield[1] = outfield[0] + ncoeffs;
+
+        // Shift m_vwiForcing in case of relaxation 
+        Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
+        Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
+
         
         // determine inverse of area normalised field. 
-        pres->GetPlane(0)->BwdTrans(pres->GetPlane(0)->GetCoeffs(),
-                                    pres->GetPlane(0)->UpdatePhys());
-        pres->GetPlane(0)->BwdTrans(pres->GetPlane(1)->GetCoeffs(),
-                                    pres->GetPlane(1)->UpdatePhys());
-        NekDouble norm = eqn->GetPressure()->L2();
+        m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),
+                                              m_wavePressure->GetPlane(0)->UpdatePhys());
+        m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
+                                              m_wavePressure->GetPlane(1)->UpdatePhys());
+        NekDouble norm = m_wavePressure->L2();
         Vmath::Fill(2*npts,1.0,der1,1);
-        norm = sqrt(fields[0]->PhysIntegral(der1)/(norm*norm));
+        norm = sqrt(m_waveVelocities[0]->PhysIntegral(der1)/(norm*norm));
         
         // Get hold of arrays. 
-        fields[0]->GetPlane(0)->BwdTrans(fields[0]->GetPlane(0)->GetCoeffs(),fields[0]->GetPlane(0)->UpdatePhys());
-        Array<OneD, NekDouble> u_real = fields[0]->GetPlane(0)->UpdatePhys();
+        m_waveVelocities[0]->GetPlane(0)->BwdTrans(m_waveVelocities[0]->GetPlane(0)->GetCoeffs(),m_waveVelocities[0]->GetPlane(0)->UpdatePhys());
+        Array<OneD, NekDouble> u_real = m_waveVelocities[0]->GetPlane(0)->UpdatePhys();
         Vmath::Smul(npts,norm,u_real,1,u_real,1);
-        fields[0]->GetPlane(1)->BwdTrans(fields[0]->GetPlane(1)->GetCoeffs(),fields[0]->GetPlane(1)->UpdatePhys());
-        Array<OneD, NekDouble> u_imag = fields[0]->GetPlane(1)->UpdatePhys();
+        m_waveVelocities[0]->GetPlane(1)->BwdTrans(m_waveVelocities[0]->GetPlane(1)->GetCoeffs(),m_waveVelocities[0]->GetPlane(1)->UpdatePhys());
+        Array<OneD, NekDouble> u_imag = m_waveVelocities[0]->GetPlane(1)->UpdatePhys();
         Vmath::Smul(npts,norm,u_imag,1,u_imag,1);
-        fields[1]->GetPlane(0)->BwdTrans(fields[1]->GetPlane(0)->GetCoeffs(),fields[1]->GetPlane(0)->UpdatePhys());
-        Array<OneD, NekDouble> v_real = fields[1]->GetPlane(0)->UpdatePhys(); 
+        m_waveVelocities[1]->GetPlane(0)->BwdTrans(m_waveVelocities[1]->GetPlane(0)->GetCoeffs(),m_waveVelocities[1]->GetPlane(0)->UpdatePhys());
+        Array<OneD, NekDouble> v_real = m_waveVelocities[1]->GetPlane(0)->UpdatePhys(); 
         Vmath::Smul(npts,norm,v_real,1,v_real,1);
-        fields[1]->GetPlane(1)->BwdTrans(fields[1]->GetPlane(1)->GetCoeffs(),fields[1]->GetPlane(1)->UpdatePhys());
-        Array<OneD, NekDouble> v_imag = fields[1]->GetPlane(1)->UpdatePhys();
+        m_waveVelocities[1]->GetPlane(1)->BwdTrans(m_waveVelocities[1]->GetPlane(1)->GetCoeffs(),m_waveVelocities[1]->GetPlane(1)->UpdatePhys());
+        Array<OneD, NekDouble> v_imag = m_waveVelocities[1]->GetPlane(1)->UpdatePhys();
         Vmath::Smul(npts,norm,v_imag,1,v_imag,1);
         
         // Calculate non-linear terms for x and y directions
@@ -233,30 +272,30 @@ namespace Nektar
         Vmath::Vmul (npts,u_real,1,u_real,1,val,1);
         Vmath::Vvtvp(npts,u_imag,1,u_imag,1,val,1,val,1);
         Vmath::Smul (npts,2.0,val,1,val,1);
-        fields[0]->GetPlane(0)->PhysDeriv(0,val,der1);
+        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
         
         // d/dy(v u* + v* u)
         Vmath::Vmul (npts,u_real,1,v_real,1,val,1);
         Vmath::Vvtvp(npts,u_imag,1,v_imag,1,val,1,val,1);
         Vmath::Smul (npts,2.0,val,1,val,1);
-        fields[0]->GetPlane(0)->PhysDeriv(1,val,der2);
+        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
         
         Vmath::Vadd(npts,der1,1,der2,1,der1,1);
         
-        fields[0]->GetPlane(0)->FwdTrans_IterPerExp(der1,outfield[0]);
-        Vmath::Neg(ncoeffs,outfield[0],1);
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[0]);
+        Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[0],1,m_vwiForcing[0],1);
         
         // d/dx(u v* + u* v)
-        fields[0]->GetPlane(0)->PhysDeriv(0,val,der1);
+        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
         
         // d/dy(v v* + v* v)
         Vmath::Vmul(npts,v_real,1,v_real,1,val,1);
         Vmath::Vvtvp(npts,v_imag,1,v_imag,1,val,1,val,1);
         Vmath::Smul (npts,2.0,val,1,val,1);
-        fields[0]->GetPlane(0)->PhysDeriv(1,val,der2);
+        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
         
-        fields[0]->GetPlane(0)->FwdTrans_IterPerExp(der1,outfield[1]);
-        Vmath::Neg(ncoeffs,outfield[1],1);
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
+        Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[1],1,m_vwiForcing[1],1);
         
         // Symmetrise forcing
         //-> Get coordinates 
@@ -265,7 +304,7 @@ namespace Nektar
         Array<OneD, NekDouble> coord_y(npts);
         
         //-> Impose symmetry (x -> -x + Lx/2, y-> -y) on coordinates
-        fields[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
+        m_waveVelocities[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
         NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
         Vmath::Neg(npts,coord_x,1);
         Vmath::Sadd(npts,xmax,coord_x,1,coord_x,1);
@@ -282,47 +321,66 @@ namespace Nektar
             coord[1] = coord_y[i];
             
             // Note this will not quite be symmetric. 
-            Eid[i] = fields[0]->GetPlane(0)->GetExpIndex(coord,1e-6);
+            Eid[i] = m_waveVelocities[0]->GetPlane(0)->GetExpIndex(coord,1e-6);
         }
         
         // Interpolate field 0 
-        fields[0]->GetPlane(0)->BwdTrans_IterPerExp(outfield[0],der1);
+        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
         for(i = 0; i < npts; ++i)
         {
-            physoffset = fields[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
+            physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
             coord[0] = coord_x[i];
             coord[1] = coord_y[i];
-            der2[i] = fields[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
-                                                                           der1 + physoffset);
+            der2 [i] = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
+                                                                            der1 + physoffset);
         }
         //-> Average field 0 
         Vmath::Vsub(npts,der1,1,der2,1,der2,1);
         Vmath::Smul(npts,0.5,der2,1,der2,1);
-        fields[0]->GetPlane(0)->FwdTrans_IterPerExp(der2, outfield[0]);
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[0]);
         
         //-> Interpoloate field 1
-        fields[0]->GetPlane(0)->BwdTrans_IterPerExp(outfield[1],der1);
+        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
         for(i = 0; i < npts; ++i)
         {
-            physoffset = fields[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
+            physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
             coord[0] = coord_x[i];
             coord[1] = coord_y[i];
-            der2[i] = fields[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
+            der2[i]  = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
                                                                            der1 + physoffset);
         }
         
         //-> Average field 1
         Vmath::Vsub(npts,der1,1,der2,1,der2,1);
         Vmath::Smul(npts,0.5,der2,1,der2,1);
-        fields[0]->GetPlane(0)->FwdTrans_IterPerExp(der2, outfield[1]);
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[1]);
+
+        // Apply relaxation 
+        if(m_vwiRelaxation)
+        {
+            Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
+                        m_vwiForcing[0],1,m_vwiForcing[0],1);
+            Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[2],1,
+                          m_vwiForcing[0],1,m_vwiForcing[0],1);
+
+            Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
+                        m_vwiForcing[1],1,m_vwiForcing[1],1);
+            Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[3],1,
+                          m_vwiForcing[1],1,m_vwiForcing[1],1);
+        }
+
+
         
         // dump output
         Array<OneD, std::string> variables(2);
+        Array<OneD, Array<OneD, NekDouble> > outfield(2);
         variables[0] = "u";   variables[1] = "v";
+        outfield[0]  = m_vwiForcing[0];
+        outfield[1]  = m_vwiForcing[1];
         
-        std::string outname = eqn->GetSessionName().substr(0,eqn->GetSessionName().find_last_of('.')) + ".vwi";
+        std::string outname = m_sessionName  + ".vwi";
         
-        eqn->WriteFld(outname, fields[0]->GetPlane(0), outfield, variables);
+        m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
     }
     
     void VortexWaveInteraction::SaveFile(string fileend, string dir, int n)

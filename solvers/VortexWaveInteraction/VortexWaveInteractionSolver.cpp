@@ -61,19 +61,24 @@ int main(int argc, char *argv[])
             vwi.ExecuteStreak();
             vwi.SaveFile("_streak.fld","Save",i);
             
-            vwi.ExecuteWaveAndForce();
+            vwi.ExecuteWave();
             vwi.SaveFile(".evl","Save",i);
             vwi.SaveFile("_eig_0","Save",i);
+
+            cout << "Calculating Nonlinear Wave Forcing" << endl;
+            vwi.CalcNonLinearWaveForce();
             vwi.SaveFile(".vwi","Save",i+1);
 
             vwi.AppendEvlToFile("conv.his",i);
         }
         
     }
+
     catch (const std::runtime_error& e)
     {
         return 1;
     }
+
     catch (const std::string& eStr)
     {
         cout << "Error: " << eStr << endl;

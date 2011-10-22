@@ -51,9 +51,9 @@ namespace Nektar
         
         void ExecuteRoll(void);
         void ExecuteStreak(void);
-        void ExecuteWaveAndForce(void);
+        void ExecuteWave(void);
 
-        void CalcNonLinearWaveForce(EquationSystemSharedPtr &eqn);
+        void CalcNonLinearWaveForce(void);
         void SaveFile(string fileend, string dir, int n);
 
         void AppendEvlToFile(std::string file, int n);
@@ -74,15 +74,23 @@ namespace Nektar
         int m_iterStart;
         int m_iterEnd;
 
-        NekDouble m_rho;
+        NekDouble m_waveForceMag;
         NekDouble m_alpha;
 
         NekDouble m_leading_real_evl;   /// < Leading real eigenvalue 
         NekDouble m_leading_imag_evl;   /// < Leading imaginary eigenvalue
 
+        NekDouble m_vwiRelaxation; 
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_waveVelocities;
+        MultiRegions::ExpListSharedPtr              m_wavePressure;
+        
+        Array<OneD, Array<OneD, NekDouble > >  m_vwiForcing; 
+
         string m_sessionName;
         LibUtilities::SessionReaderSharedPtr m_sessionVWI; 
 
+        LibUtilities::SessionReaderSharedPtr m_sessionRoll; 
         EquationSystemSharedPtr m_solverRoll;
 
         LibUtilities::SessionReaderSharedPtr m_sessionStreak; 
@@ -92,7 +100,6 @@ namespace Nektar
         std::string m_fldToBase;
         std::string m_fldToStreak;
     };
-    
 }
 
 #endif

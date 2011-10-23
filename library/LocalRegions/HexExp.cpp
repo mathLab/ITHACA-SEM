@@ -417,7 +417,7 @@ namespace Nektar
             Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(ntot);
             Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(ntot);
 
-            StdHexExp::PhysDeriv(inarray, Diff0, Diff1, Diff2);
+            StdHexExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -796,7 +796,7 @@ namespace Nektar
             }
 
             // call StdHexExp version;
-            returnVal = StdHexExp::Integral(tmp);
+            returnVal = StdHexExp::v_Integral(tmp);
 
             return  returnVal;
         }
@@ -1445,7 +1445,7 @@ namespace Nektar
                 returnval = Expansion3D::GenMatrix(mkey);
                 break;
             default:
-                returnval = StdHexExp::GenMatrix(mkey);
+                returnval = StdHexExp::v_GenMatrix(mkey);
             }
 
             return returnval;

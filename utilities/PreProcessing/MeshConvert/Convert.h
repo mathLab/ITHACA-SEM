@@ -74,25 +74,29 @@ namespace Nektar
             unsigned int                        m_spaceDim;
             /// List of mesh nodes.
             std::vector<NodeSharedPtr>          m_node;
-            /// List of element vertices.
-            std::vector<NodeSharedPtr>          m_vertex;
-            /// List of element edges.
-            std::vector<EdgeSharedPtr>          m_edge;
-            /// List of element faces.
-            std::vector<FaceSharedPtr>          m_face;
+            /// Set of element vertices.
+            NodeSet                             m_vertexSet;
+            /// Set of element edges.
+            EdgeSet                             m_edgeSet;
+            /// Set of element faces.
+            FaceSet                             m_faceSet;
             /// List of elements.
             std::vector<ElementSharedPtr>       m_element;
             /// List of composites.
             std::vector<CompositeSharedPtr>     m_composite;
+            /// Name of convert module.
+            std::string                         m_modName;
 
-            /// Returns true if the given node exists in the mesh.
-            int FindNodeIndex(const NodeSharedPtr pSrc);
-            /// Returns true if the given node is a mesh vertex.
-            int FindVertexIndex(const NodeSharedPtr pSrc);
-            /// Returns the index of the edge in #m_edge, or -1 if not found.
-            int FindEdgeIndex(const EdgeSharedPtr pSrc);
-            /// Returns the index of the face in #m_face, or -1 if not found.
-            int FindFaceIndex(const FaceSharedPtr pSrc);
+            /// Extract element vertices
+            virtual void ProcessVertices();
+            /// Extract element edges
+            virtual void ProcessEdges();
+            /// Extract element faces
+            virtual void ProcessFaces();
+            /// Generate element IDs
+            virtual void ProcessElements();
+            /// Generate composites
+            virtual void ProcessComposites();
 
         private:
             /// Writes the <NODES> section of the XML file.
@@ -114,10 +118,12 @@ namespace Nektar
             /// Writes the <CONDITIONS> section of the XML file.
             void WriteXmlConditions(TiXmlElement * pRoot);
         };
-
+        
         typedef LibUtilities::NekFactory< std::string, Convert> ConvertFactory;
 
         ConvertFactory& GetConvertFactory();
+        
+        
     }
 }
 #endif

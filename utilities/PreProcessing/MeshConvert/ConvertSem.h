@@ -61,20 +61,6 @@ namespace Nektar
             virtual void ReadFile(const std::string pFilename);
             /// Populate and validate required data structures.
             virtual void Process();
-
-        private:
-            /// Extract element vertices
-            void ProcessVertices();
-            /// Extract element edges
-            void ProcessEdges();
-            /// Extract element faces
-            void ProcessFaces();
-            /// Generate element IDs
-            void ProcessElements();
-            /// Generate composites
-            void ProcessComposites();
-            /// Returns the number of nodes in a given Gmsh entity.
-            int GetNnodes(int GmshEntity);
         };
     }
 }

@@ -43,6 +43,7 @@
 #include <sstream>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_set.hpp>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
@@ -50,6 +51,7 @@ namespace Nektar
 {
     namespace Utilities
     {
+        /*
         /// Defines a less-than operator between objects referred to using
         /// shared pointers.
         template <typename T>
@@ -85,7 +87,7 @@ namespace Nektar
                 return *a == *b;
             }
         };
-
+        */
 
         /**
          * @brief Represents a point in the domain.
@@ -98,7 +100,7 @@ namespace Nektar
         public:
             /// Create a new node at a specified coordinate.
             Node(unsigned int pId, double pX, double pY, double pZ)
-                : id(pId), x(pX), y(pY), z(pZ) {}
+                : id(pId), oId(pId), x(pX), y(pY), z(pZ) {}
             /// Copy an existing node.
             Node(const Node& pSrc)
                 : id(pSrc.id), x(pSrc.x), y(pSrc.y), z(pSrc.z) {}
@@ -115,6 +117,8 @@ namespace Nektar
                 return ((x==pSrc.x) && (y==pSrc.y) && (z==pSrc.z));
             }
 
+            /// Original ID of node
+            unsigned int oId;
             /// ID of node.
             unsigned int id;
             /// X-coordinate.
@@ -126,6 +130,17 @@ namespace Nektar
         };
         /// Shared pointer to a Node.
         typedef boost::shared_ptr<Node> NodeSharedPtr;
+
+        bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+        
+        struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
+        {
+            std::size_t operator()(NodeSharedPtr const& p) const
+            {
+                return boost::hash_value(p->oId);
+            }
+        };
+        typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
 
 
         /**
@@ -145,12 +160,13 @@ namespace Nektar
             ~Edge() {}
 
             /// Equality is defined based on the vertices.
+            /*
             bool operator==(const Edge& pSrc)
             {
                 return ( ((*n1 == *(pSrc.n1)) && (*n2 == *(pSrc.n2)))
                         || ((*n2 == *(pSrc.n1)) && (*n1 == *(pSrc.n2))));
             }
-
+            */
             /// Returns the total number of nodes defining the edge.
             unsigned int GetNodeCount() const
             {
@@ -185,8 +201,24 @@ namespace Nektar
         };
         /// Shared pointer to an edge.
         typedef boost::shared_ptr<Edge> EdgeSharedPtr;
-
-
+        
+        bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
+        
+        struct EdgeHash : std::unary_function<EdgeSharedPtr, std::size_t>
+        {
+            std::size_t operator()(EdgeSharedPtr const& p) const
+            {
+                std::size_t seed = 0;
+                unsigned int id1 = p->n1->id;
+                unsigned int id2 = p->n2->id;
+                boost::hash_combine(seed, id1 < id2 ? id1 : id2);
+                boost::hash_combine(seed, id2 < id1 ? id1 : id2);
+                return seed;
+            }
+        };
+        typedef boost::unordered_set<EdgeSharedPtr, EdgeHash> EdgeSet;
+        
+        
         /**
          * @brief Represents a face comprised of three or more edges.
          *
@@ -271,6 +303,28 @@ namespace Nektar
         };
         /// Shared pointer to a face.
         typedef boost::shared_ptr<Face> FaceSharedPtr;
+        
+        bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2);
+        
+        struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
+        {
+            std::size_t operator()(FaceSharedPtr const& p) const
+            {
+                std::size_t seed = 0;
+                std::vector<unsigned int> ids;
+                for (int i = 0; i < p->vertexList.size(); ++i)
+                {
+                    ids.push_back(p->vertexList[i]->id);
+                }
+                std::sort(ids.begin(), ids.end());
+                for (int i = 0; i < ids.size(); ++i)
+                {
+                    boost::hash_combine(seed, ids[i]);
+                }
+                return seed;
+            }
+        };
+        typedef boost::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
 
 
         /**

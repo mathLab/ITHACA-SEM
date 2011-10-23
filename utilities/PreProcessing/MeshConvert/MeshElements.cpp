@@ -67,7 +67,7 @@ namespace Nektar
             {
                 for (int j = 0; j < face[i]->edgeList.size(); ++j)
                 {
-                    if (*face[i]->edgeList[j] == *vOld)
+                    if (face[i]->edgeList[j] == vOld)
                     {
                         face[i]->edgeList[j] = pNew;
                     }
@@ -75,7 +75,33 @@ namespace Nektar
             }
         }
 
+        bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
+        {
+            return p1->x == p2->x && p1->y == p2->y && p1->z == p2->z;
+        }
 
+        bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
+        {
+            return ( ((*(p1->n1) == *(p2->n1)) && (*(p1->n2) == *(p2->n2)))
+                  || ((*(p1->n2) == *(p2->n1)) && (*(p1->n1) == *(p2->n2))));
+        }
+
+        bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
+        {
+            bool e = true;
+            std::vector<NodeSharedPtr>::iterator it1, it2;
+            for (it1 = p1->vertexList.begin(); it1 != p1->vertexList.end(); ++it1)
+            {
+                if (find(p2->vertexList.begin(), p2->vertexList.end(), *it1)
+                    == p2->vertexList.end())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        
         /**
          * When a face is replaced, no other consistency checks are required.
          */

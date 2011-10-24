@@ -527,45 +527,5 @@ namespace Nektar
             }
             pRoot->LinkEndChild(expansions);
         }
-
-        void Convert::WriteXmlConditions(TiXmlElement * pRoot)
-        {
-            TiXmlElement * conditions = new TiXmlElement ("CONDITIONS");
-            pRoot->LinkEndChild(conditions);
-        }
-
-        int Convert::FindNodeIndex(const NodeSharedPtr pSrc)
-        {
-            vector<NodeSharedPtr>::iterator it;
-            it = find(m_node.begin(), m_node.end(), pSrc);
-            return (it != m_node.end() ? it - m_node.begin() : -1);
-        }
-
-        int Convert::FindVertexIndex(const NodeSharedPtr pSrc)
-        {
-            vector<NodeSharedPtr>::iterator it;
-            it = find(m_vertex.begin(), m_vertex.end(), pSrc);
-            return (it != m_vertex.end() ? it - m_vertex.begin() : -1);
-        }
-
-        int Convert::FindEdgeIndex(const EdgeSharedPtr pSrc)
-        {
-            vector<EdgeSharedPtr>::iterator it;
-            for (it = m_edge.begin(); it != m_edge.end(); ++it)
-            {
-                if (**it == *pSrc) return (it - m_edge.begin());
-            }
-            return -1;
-        }
-
-        int Convert::FindFaceIndex(const FaceSharedPtr pSrc)
-        {
-            vector<FaceSharedPtr>::iterator it;
-            for (it = m_face.begin(); it != m_face.end(); ++it)
-            {
-                if (**it == *pSrc) return (it - m_face.begin());
-            }
-            return -1;
-        }
     }
 }

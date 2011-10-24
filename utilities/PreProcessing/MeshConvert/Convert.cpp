@@ -527,5 +527,11 @@ namespace Nektar
             }
             pRoot->LinkEndChild(expansions);
         }
+        
+        void Convert::WriteXmlConditions(TiXmlElement * pRoot)
+        {
+            TiXmlElement * conditions = new TiXmlElement ("CONDITIONS");
+            pRoot->LinkEndChild(conditions);
+        }   
     }
 }

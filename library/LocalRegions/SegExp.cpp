@@ -139,7 +139,7 @@ namespace Nektar
             }
 
             // call StdSegExp version;
-            ival = StdSegExp::Integral(tmp);
+            ival = StdSegExp::v_Integral(tmp);
             return ival;
         }
 

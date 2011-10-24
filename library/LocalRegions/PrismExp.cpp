@@ -130,7 +130,7 @@ namespace Nektar
             }
 
             // call StdPrismExp version;
-            retrunVal = StdPrismExp::Integral(tmp);
+            retrunVal = StdPrismExp::v_Integral(tmp);
 
             return retrunVal; 
         }

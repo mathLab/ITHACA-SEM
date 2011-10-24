@@ -62,11 +62,11 @@ namespace Nektar
                 return nCoef;
             }
         }
-        
+
         /// Class representing a prismatic element in reference space.
         class StdPrismExp: virtual public StdExpansion3D
         {
-        
+
         public:
 
             STD_REGIONS_EXPORT StdPrismExp();
@@ -74,18 +74,18 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPrismExp(const LibUtilities::BasisKey &Ba, 
                                            const LibUtilities::BasisKey &Bb, 
                                            const LibUtilities::BasisKey &Bc);
-        
+
             STD_REGIONS_EXPORT StdPrismExp(const LibUtilities::BasisKey &Ba, 
                                            const LibUtilities::BasisKey &Bb, 
                                            const LibUtilities::BasisKey &Bc,
                                            double *coeffs, 
                                            double *phys);
-        
+
             STD_REGIONS_EXPORT StdPrismExp(const StdPrismExp &T);
-        
+
             STD_REGIONS_EXPORT ~StdPrismExp();
-        
-            
+
+
             //---------------------------------------
             // Integration/public 3D methods
             //---------------------------------------
@@ -101,7 +101,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& wx,
                 const Array<OneD, const NekDouble>& wy,
                 const Array<OneD, const NekDouble>& wz);
-            
+
             STD_REGIONS_EXPORT NekDouble Integral3D(
                 const Array<OneD, const NekDouble>& inarray,
                 const Array<OneD, const NekDouble>& wx,
@@ -120,7 +120,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d0,
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2);
-            
+
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
                 const int dir,
                 const Array<OneD, const NekDouble>& inarray,
@@ -132,7 +132,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2);
 
-            STD_REGIONS_EXPORT NekDouble v_Integral(
+            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
                 const Array<OneD, const NekDouble>& inarray);
 
 
@@ -143,11 +143,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_BwdTrans(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
-            
+
             STD_REGIONS_EXPORT void v_BwdTrans_SumFac(
                 const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble>& outarray);
-            
+
             STD_REGIONS_EXPORT void v_BwdTrans_SumFacKernel(
                 const Array<OneD, const NekDouble> &base0,
                 const Array<OneD, const NekDouble> &base1,
@@ -158,7 +158,7 @@ namespace Nektar
                 bool                                doCheckCollDir0,
                 bool                                doCheckCollDir1,
                 bool                                doCheckCollDir2);
-            
+
             STD_REGIONS_EXPORT virtual void v_FwdTrans(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
@@ -183,18 +183,18 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray, 
                 Array<OneD, NekDouble> & outarray); 
 
-            
+
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& xi);
-            
+
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> & xi_x, 
                 Array<OneD, NekDouble> & xi_y, 
                 Array<OneD, NekDouble> & xi_z);
-            
+
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
@@ -222,7 +222,7 @@ namespace Nektar
                 const bool dumpVar = true,
                 std::string var = "v");
 
-            
+
             //---------------------------------------
             // Mappings
             //---------------------------------------
@@ -246,13 +246,13 @@ namespace Nektar
                 Array<OneD, unsigned int> &outarray);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                 Array<OneD, unsigned int>& outarray);
-            
+
 
             //---------------------------------------
             // Wrapper functions
             //---------------------------------------
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
-            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey);
 
 
         private:
@@ -264,8 +264,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray);
         };
+
         typedef boost::shared_ptr<StdPrismExp> StdPrismExpSharedPtr;
-    
+
     } //end of namespace
 } //end of namespace
 

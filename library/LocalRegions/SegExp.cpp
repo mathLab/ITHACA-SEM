@@ -163,7 +163,7 @@ namespace Nektar
             {
                 Vmath::Smul(nquad0, jac[0], inarray, 1, tmp, 1);
             }
-            StdSegExp::IProductWRTBase(base,tmp,outarray,coll_check);
+            StdSegExp::v_IProductWRTBase(base,tmp,outarray,coll_check);
         }
 
         void SegExp::IProductWRTDerivBase(const int dir, 

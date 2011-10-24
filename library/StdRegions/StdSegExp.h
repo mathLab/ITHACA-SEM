@@ -45,584 +45,202 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdSegExp: virtual public StdExpansion1D
+        class StdSegExp;
+        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
+
+        /// Class representing a segment element in reference space
+
+        class StdSegExp: virtual public StdExpansion1D
         {
         public:
-            /** \brief Default constructor */
+
             STD_REGIONS_EXPORT StdSegExp();
 
-            /** \brief Constructor using BasisKey class for quadrature points and 
-             *  order definition
-             *
-             *  \param Ba BasisKey class definition containing order and quadrature 
-             *  points.
-             */
             STD_REGIONS_EXPORT StdSegExp(const LibUtilities::BasisKey &Ba);
 
-            /** \brief Copy Constructor */
             STD_REGIONS_EXPORT StdSegExp(const StdSegExp &T);
 
-            /** \brief Destructor */
             STD_REGIONS_EXPORT ~StdSegExp();
 
-            /** \brief Return Shape of region, using  ShapeType enum list.
-             *  i.e. Segment
-             */
-            ExpansionType DetExpansionType() const
-            {
-                return eSegment;
-            };
 
-            bool IsBoundaryInteriorExpansion()
-            {
-                bool returnval = false;
-                
-                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-                {
-                    returnval = true;
-                }
-                
-                if(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange)
-                {
-                    returnval = true;
-                }
-                
-                return returnval;
-            }
+            //---------------------------------------
+            // Inner product functions
+            //---------------------------------------
 
+            STD_REGIONS_EXPORT void IProductWRTDerivBase(
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> & outarray);
 
-            //----------------------------
-            // Integration Methods
-            //----------------------------
+        protected:
 
-            /** \brief Integrate the physical point list \a inarray over region 
-             *  and return the value
-             *
-             *  \param inarray definition of function to be integrated evauluated at 
-             *  quadrature point of expansion. 
-             *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
-             *  = u(\xi_{1i}) \f$
-             */
-            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
+            STD_REGIONS_EXPORT virtual ExpansionType
+                v_DetExpansionType() const;
 
+            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
+                const Array<OneD, const NekDouble>& inarray);
 
-            /** \brief Inner product of \a inarray over region with respect to the
-             *  expansion basis (this)->m_base[0] and return in \a outarray
-             *
-             *  Wrapper call to StdSegExp::IProductWRTBase
-             *  \param inarray array of function values evaluated at the physical
-             *  collocation points
-             *  \param outarray  the values of the inner product with respect to 
-             *  each basis over region will be stored in the array \a outarray as
-             *  output of the function
-             */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-            }
-
-            void IProductWRTDerivBase(const int dir, 
-                                      const Array<OneD, const NekDouble>& inarray, 
-                                      Array<OneD, NekDouble> & outarray)
-            {
-                ASSERTL1(dir >= 0 &&dir < 1,"input dir is out of range");            
-                IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
-            }
-
-            STD_REGIONS_EXPORT void FillMode(const int mode, 
-                          Array<OneD, NekDouble> &outarray);
-
-            //----------------------------------
-            // Generate Matrix Routine
-            //----------------------------------
-
-//            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
 
-            /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the physical 
-             *  quadrature points given by \a inarray and return in \a outarray.
-             *
-             *  This is a wrapper around StdExpansion1D::Tensor_Deriv
-             *  \param inarray array of a function evaluated at the quadrature points
-             *  \param  outarray the resulting array of the derivative \f$
-             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
-             */
-            STD_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                           Array<OneD, NekDouble> &out_d0,
-                           Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                           Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);   
- 
-	    STD_REGIONS_EXPORT void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
-	    	    	   Array<OneD, NekDouble> &out_ds);
-            STD_REGIONS_EXPORT void PhysDeriv_n(const Array<OneD,const NekDouble>& inarray,
-            	    	   Array<OneD, NekDouble>& out_dn);
-	    
-            void PhysDeriv(const int dir, 
-                           const Array<OneD, const NekDouble>& inarray,
-                           Array<OneD, NekDouble> &outarray)
-            {
-                ASSERTL1(dir==0,"input dir is out of range");
-                PhysDeriv(inarray, outarray);                
-            }
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
-            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                              Array<OneD, NekDouble> &out_d0,
-                              Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                              Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-            {
-                PhysDeriv(inarray, out_d0);
-            }
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv(
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
 
-            void StdPhysDeriv (const int dir, 
-                               const Array<OneD, const NekDouble>& inarray, 
-                               Array<OneD, NekDouble> &outarray)
-            {
-                ASSERTL1(dir==0,"input dir is out of range");
-                PhysDeriv(inarray, outarray);                
-            }
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv (
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
+                const Array<OneD, const NekDouble>& inarray,
+                const Array<OneD, const NekDouble>& direction,
+                Array<OneD, NekDouble> &outarray);
+
+
+            /// Declared but not implemented ? (and not virtual)
+
+            STD_REGIONS_EXPORT void PhysDeriv_s(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &out_ds);
+
+            STD_REGIONS_EXPORT void PhysDeriv_n(
+                const Array<OneD,const NekDouble>& inarray,
+                Array<OneD, NekDouble>& out_dn);
+
+
+            //---------------------------------------
+            // Transforms
+            //---------------------------------------
+
+            STD_REGIONS_EXPORT virtual void v_BwdTrans(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_FwdTrans(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+
+            //---------------------------------------
+            // Inner product functions
+            //---------------------------------------
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                const Array<OneD, const NekDouble>& base,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                int coll_check);
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase (
+                const int dir,
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray);
+
 
             //----------------------------
             // Evaluations Methods
             //---------------------------
 
-            /** \brief Backward transform from coefficient space given
-             *  in \a inarray and evaluate at the physical quadrature
-             *  points \a outarray
-             *
-             *  Operation can be evaluated as \f$ u(\xi_{1i}) =
-             *  \sum_{p=0}^{order-1} \hat{u}_p \phi_p(\xi_{1i}) \f$ or equivalently 
-             *  \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ where
-             *  \f${\bf B}[i][j] = \phi_i(\xi_{1j}), \mbox{\_coeffs}[p] = {\bf
-             *  \hat{u}}[p] \f$
-             *
-             *  The function takes the coefficient array \a inarray as
-             *  input for the transformation
-             *
-             *  \param inarray: the coeffficients of the expansion 
-             *
-             *  \param outarray: the resulting array of the values of the function at 
-             *  the physical quadrature points will be stored in the array \a outarray
-             */
-            STD_REGIONS_EXPORT void BwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray);
 
-            /** \brief Forward transform from physical quadrature space stored in 
-             *  \a inarray and evaluate the expansion coefficients and store in 
-             *  \a outarray
-             *
-             *  Perform a forward transform using a Galerkin projection by taking the 
-             *  inner product of the physical points and multiplying by the inverse of
-             *  the mass matrix using the Solve method of the standard matrix 
-             *  container holding the local mass matrix, i.e. \f$ {\bf \hat{u}} = 
-             *  {\bf M}^{-1} {\bf I} \f$ where \f$ {\bf I}[p] =  \int^1_{-1} 
-             *  \phi_p(\xi_1) u(\xi_1) d\xi_1 \f$
-             *
-             *  This function stores the expansion coefficients calculated by the 
-             *  transformation in the coefficient space array \a outarray
-             *
-             *  \param inarray: array of physical quadrature points to be transformed
-             *
-             *  \param outarray: the coeffficients of the expansion 
-             */ 
-            STD_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray,
+                const double lambda);
 
-            STD_REGIONS_EXPORT void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
-                                         Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_FillMode(
+                const int mode,
+                Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT virtual void v_GetCoords(
+                Array<OneD, NekDouble> &coords_0,
+                Array<OneD, NekDouble> &coords_1,
+                Array<OneD, NekDouble> &coords_2);
 
-            STD_REGIONS_EXPORT void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
-            STD_REGIONS_EXPORT int GetVertexMap(const int localVertexId);
+            //---------------------------------------
+            // Helper functions
+            //---------------------------------------
 
-            STD_REGIONS_EXPORT void GetCoords(Array<OneD, NekDouble> &coords_1);
+            STD_REGIONS_EXPORT virtual int v_GetNverts() const;
+            STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
+            STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
+            STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(
+                const std::vector<unsigned int> &nummodes,
+                int &modes_offset);
+            STD_REGIONS_EXPORT virtual void v_WriteToFile(
+                std::ofstream &outfile,
+                OutputFormat format,
+                const bool dumpVar = true,
+                std::string var = "v");
+            STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
 
-            STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
-            STD_REGIONS_EXPORT void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray);
+            //---------------------------------------
+            // Mappings
+            //---------------------------------------
 
-            STD_REGIONS_EXPORT void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray,
-                                   const double lambda);
 
-        protected:
+            STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
+                Array<OneD, unsigned int>& outarray);
 
-            /** \brief  Inner product of \a inarray over region with respect to 
-             *  expansion basis \a base and return in \a outarray 
-             *
-             *  Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
-             *  = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
-             *  \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
-             *  \phi_p(\xi_{1i}) \f$.
-             *
-             *  \param  base an array defining the local basis for the inner product 
-             *  usually passed from Basis->GetBdata() or Basis->GetDbdata()
-             *  \param inarray: physical point array of function to be integrated
-             *  \f$ u(\xi_1) \f$
-             *  \param coll_check flag to identify when a Basis->Collocation() call 
-             *  should be performed to see if this is a GLL_Lagrange basis with a 
-             *  collocation property. (should be set to 0 if taking the inner product 
-             *  with respect to the derivative of basis)
-             *  \param outarray  the values of the inner product with respect to 
-             *  each basis over region will be stored in the array \a outarray as
-             *  output of the function
-             */
-            STD_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble>& base, 
-                                 const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> &outarray, 
-                                 int coll_check);
+            STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
+                Array<OneD, unsigned int>& outarray);
 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual int v_GetVertexMap(
+                const int localVertexId);
+
+            //---------------------------------------
+            // Wrapper functions
+            //---------------------------------------
+
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(
+                const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
+                const StdMatrixKey &mkey);
+
 
         private:
-            virtual int v_GetNverts() const
-            {
-                return 2;
-            } 
 
-            virtual int v_NumBndryCoeffs() const
-            {
-                return 2;
-            } 
+        }; // class
 
-            virtual int v_NumDGBndryCoeffs() const
-            {
-                return 2;
-            } 
-
-            virtual ExpansionType v_DetExpansionType() const
-            {
-                return DetExpansionType();
-            }
-
-            virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
-            {
-                int nmodes = nummodes[modes_offset];
-                modes_offset += 1;
-                
-                return nmodes;
-            }
-
-
-            virtual bool v_IsBoundaryInteriorExpansion()
-            {
-                return IsBoundaryInteriorExpansion();
-            }
-
-
-            /** \brief Virtual call to integrate the physical point list \a inarray 
-             *  over region (see StdSegExp::Integral)
-             */
-            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
-            {
-                return Integral(inarray);
-            } 
-
-            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                     Array<OneD, NekDouble> &coords_1,
-                                     Array<OneD, NekDouble> &coords_2)
-            {
-                GetCoords(coords_0);
-            }
-
-            /** \brief Virtual call to StdSegExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                           Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(inarray,outarray);
-            } 
-
-
-            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                           Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(inarray,outarray);
-            } 
-
-            virtual void v_IProductWRTDerivBase (const int dir, 
-                                                 const Array<OneD, const NekDouble> &inarray, 
-                                                 Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTDerivBase(dir,inarray,outarray);
-            }
-
-
-
-            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-            {
-                FillMode(mode,outarray);
-            }
-
-            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
-
-            /** \brief Virtual call to StdSegExp::Deriv */
-
-            virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &out_d0,
-                                     Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                                     Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-            {
-                PhysDeriv(inarray,out_d0);
-            }
-            
-            virtual void v_PhysDeriv(const int dir, 
-                                     const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &outarray)
-            {
-                PhysDeriv(dir,inarray,outarray);
-            }
-
-            virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                ASSERTL0(false,"This method is not defined or valid for this class type");
-            }
-
-            /** \brief Virtual call to StdSegExp::Deriv */
-            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &out_d0,
-                                        Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                                        Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-            {
-                StdPhysDeriv(inarray, out_d0);
-            }
-
-            virtual void   v_StdPhysDeriv (const int dir, 
-                                           const Array<OneD, const NekDouble>& inarray, 
-                                           Array<OneD, NekDouble> &outarray)
-            {
-                StdPhysDeriv(dir,inarray, outarray);                
-            }
-
-
-            /** \brief Virtual call to StdSegExp::BwdTrans */
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                                    Array<OneD, NekDouble> &outarray)
-            {
-                BwdTrans(inarray, outarray);
-            }
-
-            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                    Array<OneD, NekDouble> &outarray)
-            {
-                BwdTrans(inarray, outarray);
-            }
-
-            /** \brief Virtual call to StdSegExp::FwdTrans */
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                                    Array<OneD, NekDouble> &outarray)
-            {
-                FwdTrans(inarray, outarray);
-            }
-
-            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
-                                                   Array<OneD, NekDouble> &outarray)
-            {
-                FwdTrans_BndConstrained(inarray, outarray); 
-            }
-
-            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-            {
-                GetBoundaryMap(outarray);
-            }
-
-            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
-            {
-                GetInteriorMap(outarray);
-            }
-
-            virtual int v_GetVertexMap(int localVertexId)
-            {
-                return GetVertexMap(localVertexId);
-            }
-
-
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
-            {
-                WriteToFile(outfile,format,dumpVar,var);
-            }
-
-            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
-            {
-                LaplacianMatrixOp(inarray,outarray);
-            }
-            
-            virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray,
-                                             const double lambda)
-            {
-                HelmholtzMatrixOp(inarray,outarray,lambda);
-            } 
-        };
-
-        typedef boost::shared_ptr<StdSegExp> StdSegExpSharedPtr;
 
     } //end of namespace
 } //end of namespace
 
 #endif //STDSEGEXP_H
-
-/**
- * $Log: StdSegExp.h,v $
- * Revision 1.44  2009/04/27 21:32:45  sherwin
- * Updated WriteToField method
- *
- * Revision 1.43  2009/03/04 14:17:38  pvos
- * Removed all methods that take and Expansion as argument
- *
- * Revision 1.42  2008/08/14 22:09:51  sherwin
- * Modifications to remove HDG routines from StdRegions and removed StdExpMap
- *
- * Revision 1.41  2008/07/19 21:12:54  sherwin
- * Removed MapTo function and made orientation convention anticlockwise in UDG routines
- *
- * Revision 1.40  2008/07/04 10:18:40  pvos
- * Some updates
- *
- * Revision 1.39  2008/07/02 14:08:56  pvos
- * Implementation of HelmholtzMatOp and LapMatOp on shape level
- *
- * Revision 1.38  2008/05/30 00:33:49  delisi
- * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- * Revision 1.37  2008/05/29 21:36:25  pvos
- * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- * Revision 1.36  2008/04/06 06:04:15  bnelson
- * Changed ConstArray to Array<const>
- *
- * Revision 1.35  2008/04/02 22:18:10  pvos
- * Update for 2D local to global mapping
- *
- * Revision 1.34  2008/03/12 15:25:09  pvos
- * Clean up of the code
- *
- * Revision 1.33  2008/02/29 19:15:19  sherwin
- * Update for UDG stuff
- *
- * Revision 1.32  2007/12/17 13:03:51  sherwin
- * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
- *
- * Revision 1.31  2007/12/06 22:44:47  pvos
- * 2D Helmholtz solver updates
- *
- * Revision 1.30  2007/11/29 21:40:22  sherwin
- * updates for MultiRegions and DG solver
- *
- * Revision 1.29  2007/10/03 11:37:51  sherwin
- * Updates relating to static condensation implementation
- *
- * Revision 1.28  2007/07/22 23:04:27  bnelson
- * Backed out Nektar::ptr.
- *
- * Revision 1.27  2007/07/20 02:16:55  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.26  2007/07/16 18:28:44  sherwin
- * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
- *
- * Revision 1.25  2007/07/12 12:55:16  sherwin
- * Simplified Matrix Generation
- *
- * Revision 1.24  2007/07/11 06:35:24  sherwin
- * Update after manager reshuffle
- *
- * Revision 1.23  2007/07/10 20:41:52  kirby
- * more fixes
- *
- * Revision 1.22  2007/07/10 19:27:58  kirby
- * Update for new matrix structures
- *
- * Revision 1.21  2007/05/31 19:13:12  pvos
- * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
- *
- * Revision 1.20  2007/05/17 17:59:28  sherwin
- * Modification to make Demos work after introducion of Array<>
- *
- * Revision 1.19  2007/05/15 05:18:24  bnelson
- * Updated to use the new Array object.
- *
- * Revision 1.18  2007/04/10 14:00:46  sherwin
- * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
- *
- * Revision 1.17  2007/04/08 03:36:58  jfrazier
- * Updated to use SharedArray consistently and minor reformatting.
- *
- * Revision 1.16  2007/04/06 08:44:43  sherwin
- * Update to make 2D regions work at StdRegions level
- *
- * Revision 1.15  2007/04/05 15:20:11  sherwin
- * Updated 2D stuff to comply with SharedArray philosophy
- *
- * Revision 1.14  2007/04/04 20:48:17  sherwin
- * Update to handle SharedArrays
- *
- * Revision 1.13  2007/03/29 19:35:09  bnelson
- * Replaced boost::shared_array with SharedArray
- *
- * Revision 1.12  2007/03/25 15:48:22  sherwin
- * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
- *
- * Revision 1.11  2007/03/21 20:56:43  sherwin
- * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
- *
- * Revision 1.10  2007/03/20 16:58:43  sherwin
- * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
- *
- * Revision 1.9  2007/03/14 21:24:09  sherwin
- * Update for working version of MultiRegions up to ExpList1D
- *
- * Revision 1.8  2007/02/07 12:51:53  sherwin
- * Compiling version of Project1D
- *
- * Revision 1.7  2007/01/28 18:34:24  sherwin
- * More modifications to make Demo Project1D compile
- *
- * Revision 1.6  2007/01/23 23:20:22  sherwin
- * New version after Jan 07 update
- *
- * Revision 1.5  2007/01/15 15:07:26  pvos
- * updating doxygen documentation
- *
- * Revision 1.4  2006/12/10 19:00:54  sherwin
- * Modifications to handle nodal expansions
- *
- * Revision 1.3  2006/07/02 17:16:19  sherwin
- *
- * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
- *
- * Revision 1.2  2006/06/01 14:13:37  kirby
- * *** empty log message ***
- *
- * Revision 1.1  2006/05/04 18:58:33  kirby
- * *** empty log message ***
- *
- * Revision 1.41  2006/03/13 18:29:35  sherwin
- *
- * Corrected error with definition of GetCoords
- *
- * Revision 1.40  2006/03/05 22:11:03  sherwin
- *
- * Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
- *
- * Revision 1.39  2006/03/04 20:26:55  bnelson
- * Added comments after #endif.
- *
- * Revision 1.38  2006/03/01 08:25:04  sherwin
- *
- * First compiling version of StdRegions
- *
- * Revision 1.37  2006/02/26 23:37:30  sherwin
- *
- * Updates and compiling checks upto StdExpansions1D
- *
- **/

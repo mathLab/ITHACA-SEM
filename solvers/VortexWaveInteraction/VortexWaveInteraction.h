@@ -42,6 +42,19 @@
 namespace Nektar
 {     
 
+    
+    enum VWIIterationType
+    {
+        eFixedAlphaWaveForcing,
+        eFixedWaveForcing,
+        eVWIIterationTypeSize
+    };
+
+    const std::string VWIIterationTypeMap[] = 
+    {
+        "FixedAlphaWaveForcing"
+    };
+
     class VortexWaveInteraction
     {
     public:
@@ -53,8 +66,17 @@ namespace Nektar
         void ExecuteStreak(void);
         void ExecuteWave(void);
 
+        void ExecuteLoop(void);
+        void SaveLoopDetails(int i);
+
         void CalcNonLinearWaveForce(void);
         void SaveFile(string fileend, string dir, int n);
+        void CopyFile(string file1end, string file2end);
+
+
+        bool CheckGrowthConverged(void);
+        bool CheckIfAtNeutralPoint(void);
+        void UpdateAlpha(int n);
 
         void AppendEvlToFile(std::string file, int n);
 
@@ -67,20 +89,37 @@ namespace Nektar
         {
             return m_iterEnd;
         }
+
+        VWIIterationType GetVWIIterationType(void)
+        {
+            return m_VWIIterationType;
+        }
         
+        int GetMaxOuterIterations(void)
+        {
+            return m_maxOuterIterations;
+        }
+
     protected:
 
     private:
-        int m_iterStart;
-        int m_iterEnd;
+        int m_iterStart; // Start iterations of inner loop
+        int m_iterEnd;   // End iterations of inner loop
+
+        int m_maxOuterIterations; // Maximum number of outer iterations        
 
         NekDouble m_waveForceMag;
-        NekDouble m_alpha;
 
-        NekDouble m_leading_real_evl;   /// < Leading real eigenvalue 
-        NekDouble m_leading_imag_evl;   /// < Leading imaginary eigenvalue
+        Array<OneD, NekDouble> m_leading_real_evl;   /// < Leading real eigenvalue 
+        Array<OneD, NekDouble> m_leading_imag_evl;   /// < Leading imaginary eigenvalue
 
+        Array<OneD, NekDouble> m_alpha; 
+
+        NekDouble m_alphaStep;
+        NekDouble m_neutralPointTol; 
         NekDouble m_vwiRelaxation; 
+
+        VWIIterationType m_VWIIterationType;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_waveVelocities;
         MultiRegions::ExpListSharedPtr              m_wavePressure;
@@ -95,10 +134,6 @@ namespace Nektar
 
         LibUtilities::SessionReaderSharedPtr m_sessionStreak; 
         LibUtilities::SessionReaderSharedPtr m_sessionWave; 
-
-        std::string m_fldToRst;
-        std::string m_fldToBase;
-        std::string m_fldToStreak;
     };
 }
 

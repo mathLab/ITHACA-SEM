@@ -36,9 +36,15 @@
 
 namespace Nektar
 {
-    
-    VortexWaveInteraction::VortexWaveInteraction(int argc, char * argv[])
+
+    VortexWaveInteraction::VortexWaveInteraction(int argc, char * argv[]):
+        m_neutralPointTol(1e-4),
+        m_maxOuterIterations(100),
+        m_alphaStep(0.1)
     {
+
+        int storesize = 4;// number of previous iterations to store
+
         m_sessionName = argv[argc-1];
         string meshfile = m_sessionName + ".xml";
 
@@ -73,7 +79,11 @@ namespace Nektar
         }
 
         m_waveForceMag = m_sessionVWI->GetParameter("WaveForceMag");
-        m_alpha        = m_sessionVWI->GetParameter("Alpha");
+
+        m_alpha = Array<OneD, NekDouble> (storesize);
+        m_leading_real_evl = Array<OneD, NekDouble> (storesize);
+        m_leading_imag_evl = Array<OneD, NekDouble> (storesize);
+        m_alpha[0]        = m_sessionVWI->GetParameter("Alpha");
         
         if(m_sessionVWI->DefinesParameter("Relaxation"))
         {
@@ -132,10 +142,27 @@ namespace Nektar
 
         // Set the initial beta value in stability to be equal to VWI file
         std::string LZstr("LZ");
-        NekDouble LZ = 2*M_PI/m_alpha;
+        NekDouble LZ = 2*M_PI/m_alpha[0];
         cout << "Setting LZ in Linearised solver to " << LZ << endl;
         m_sessionWave->SetParameter(LZstr,LZ);
 
+        // Check for iteration type 
+        if(m_sessionVWI->DefinesSolverInfo("VWIIterationType"))
+        {
+            std::string IterationTypeStr = m_sessionVWI->GetSolverInfo("VWIIterationType");
+            for(int i = 0; i < (int) eVWIIterationTypeSize; ++i)
+            {
+                if(m_solverRoll->NoCaseStringCompare(VWIIterationTypeMap[i],IterationTypeStr) == 0 )
+                {
+                    m_VWIIterationType = (VWIIterationType)i; 
+                    break;
+                }
+            }
+        }
+        else
+        {
+            m_VWIIterationType = eFixedAlphaWaveForcing;
+        }
 
         // Check for restart
         bool restart;
@@ -151,11 +178,6 @@ namespace Nektar
             cout << "      " << vwifile << endl;
             system(vwifile.c_str());
         }
-
-        // system call strings; 
-        m_fldToRst    = "cp -f " + m_sessionName + ".fld " + m_sessionName + ".rst";
-        m_fldToBase   = "cp -f " + m_sessionName + ".fld " + m_sessionName + "-Base.fld";
-        m_fldToStreak = "cp -f " + m_sessionName + ".fld " + m_sessionName + "_streak.fld";
     }
 
 
@@ -181,10 +203,12 @@ namespace Nektar
         m_solverRoll->Output();
         
         // Copy .fld file to .rst and base.fld
-        cout << "Executing " <<  m_fldToRst << endl;
-        system(m_fldToRst.c_str());
-        cout << "Executing " <<  m_fldToBase << endl;
-        system(m_fldToBase.c_str());
+        cout << "Executing cp -f session.fld session.rst" << endl;
+        CopyFile(".fld",".rst");
+        cout << "Executing cp -f session.fld session-Base.fld" << endl;
+        CopyFile(".fld","-Base.fld");
+
+
     }
 
 
@@ -199,8 +223,9 @@ namespace Nektar
         solverStreak->DoSolve();
         solverStreak->Output();
         
-        cout << "Executing " <<  m_fldToStreak << endl;
-        system(m_fldToStreak.c_str());
+        cout << "Executing cp -f session.fld session_streak.fld" << endl;
+        CopyFile(".fld","_streak.fld");
+
     }
 
     void VortexWaveInteraction::ExecuteWave(void)
@@ -208,7 +233,7 @@ namespace Nektar
 
         // Set the initial beta value in stability to be equal to VWI file
         std::string LZstr("LZ");
-        NekDouble LZ = 2*M_PI/m_alpha;
+        NekDouble LZ = 2*M_PI/m_alpha[0];
         cout << "Setting LZ in Linearised solver to " << LZ << endl;
         m_sessionWave->SetParameter(LZstr,LZ);
 
@@ -222,9 +247,13 @@ namespace Nektar
         cout << "Executing wave solution " << endl;
         solverWave->Execute();
 
+        // Copy file to a rst location for next restart
+        cout << "Executing cp -f session_eig_0 session_eig_0.rst" << endl;
+        CopyFile("_eig_0","_eig_0.rst");
+
         // Store data relevant to other operations 
-        m_leading_real_evl = solverWave->GetRealEvl()[0];
-        m_leading_imag_evl = solverWave->GetImagEvl()[0];
+        m_leading_real_evl[0] = solverWave->GetRealEvl()[0];
+        m_leading_imag_evl[0] = solverWave->GetImagEvl()[0];
         
         m_waveVelocities = solverWave->GetEqu()[0]->UpdateFields();
         m_wavePressure   = solverWave->GetEqu()[0]->GetPressure();
@@ -402,15 +431,207 @@ namespace Nektar
         system(syscall.c_str());
     }
 
+    void VortexWaveInteraction::CopyFile(string file1end, string file2end)
+    {
+        string cpfile1   = m_sessionName + file1end;
+        string cpfile2   = m_sessionName + file2end;
+        string syscall  = "cp -f "  + cpfile1 + " " + cpfile2; 
+
+        system(syscall.c_str());
+    }
+
     void VortexWaveInteraction::AppendEvlToFile(string file, int n)
     {
         FILE *fp;
         fp = fopen(file.c_str(),"a");
 
-        NekDouble invmag = 1.0/(m_leading_real_evl*m_leading_real_evl + 
-                                m_leading_imag_evl*m_leading_imag_evl);
-        fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha, -m_leading_real_evl*invmag,m_leading_imag_evl*invmag);
+        NekDouble invmag = 1.0/(m_leading_real_evl[0]*m_leading_real_evl[0] + 
+                                m_leading_imag_evl[0]*m_leading_imag_evl[0]);
+        fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha[0], -m_leading_real_evl[0]*invmag,m_leading_imag_evl[0]*invmag);
         fclose(fp);
+    }
+
+    void VortexWaveInteraction::SaveLoopDetails(int i)
+
+    {
+        // Save NS restart file
+        SaveFile(".rst","Save",i);
+        // Save Streak Solution
+        SaveFile("_streak.fld","Save",i);
+        // Save Wave solution output
+        SaveFile(".evl","Save",i);
+        SaveFile("_eig_0","Save",i);
+        // Save new forcing file
+        SaveFile(".vwi","Save",i+1);
+    }
+
+    void VortexWaveInteraction::ExecuteLoop(void)
+    {
+        ExecuteRoll();
+                        
+        ExecuteStreak();
+                        
+        ExecuteWave();
+                        
+        CalcNonLinearWaveForce();
+    }
+
+    bool VortexWaveInteraction::CheckGrowthConverged(void)
+    {
+        static NekDouble previous_real_evl = -1.0; 
+        
+        if(previous_real_evl = m_leading_real_evl[0])
+        {
+            m_leading_real_evl[0] = previous_real_evl;
+            return false;
+        }
+
+        if(fabs(m_leading_real_evl[0] - previous_real_evl) < m_neutralPointTol)
+        {
+            m_leading_real_evl[0] = previous_real_evl;
+            return true;
+        }
+        else
+        {
+            if(fabs(m_leading_imag_evl[0]) > 1e-2)
+            {
+                cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
+            }
+            m_leading_real_evl[0] = previous_real_evl;
+            return false;
+        }
+    }
+
+    // Check to see if leading eigenvalue is within tolerance defined
+    // in m_neutralPointTol
+    bool VortexWaveInteraction::CheckIfAtNeutralPoint(void)
+    {
+        if((m_leading_real_evl[0]*m_leading_real_evl[0] + m_leading_imag_evl[0]*m_leading_imag_evl[0]) < m_neutralPointTol*m_neutralPointTol)
+        {
+            return true;
+        }
+        else
+        {
+            if(fabs(m_leading_imag_evl[0]) > 1e-2)
+            {
+                cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
+            }
+            return false;
+        }
+
+    }
+    
+    void VortexWaveInteraction::UpdateAlpha(int outeriter)
+    {
+        NekDouble alp_new;
+
+        if(outeriter == 1)
+        {
+            m_alpha[1] = m_alpha[0];
+            if(m_leading_real_evl[0] > 0.0)
+            {
+                alp_new = m_alpha[0] + m_alphaStep;
+            }
+            else
+            {
+                alp_new = m_alpha[0] - m_alphaStep;
+            }
+        }
+        else
+        {
+            int i,j;
+            int nstore = (m_alpha.num_elements() < outeriter)? m_alpha.num_elements(): outeriter;
+            Array<OneD, NekDouble> Alpha(nstore);
+            Array<OneD, NekDouble> Growth(nstore);
+            
+            Vmath::Vcopy(nstore,m_alpha,1,Alpha,1);
+
+            // Sort Alpha Growth values; 
+            double store;
+            int k;
+            for(i = 0; i < nstore-1; ++i)
+            {
+                k = Vmath::Imin(nstore-i,&Alpha[i],1);
+                
+                store    = Alpha[i]; 
+                Alpha[i] = Alpha[k];
+                Alpha[k] = store;
+
+                store     = Growth[i];
+                Growth[i] = Growth[k];
+                Growth[k] = store; 
+
+            }
+
+            // See if we have any values that cross zero
+            for(i = 0; i < nstore-1; ++i)
+            {
+                if(Growth[i]*Growth[i+1] < 0.0)
+                {
+                    break;
+                }
+            }
+            
+            if(i != nstore-1)
+            {
+                if(nstore == 2)
+                {
+                    alp_new = (Alpha[0]*Growth[1] - Alpha[1]*Growth[0])/(Growth[1]-Growth[0]);
+                }
+                else
+                {
+                    // use a quadratic fit and step through 10000 points
+                    // to find zero.
+                    int     j; 
+                    int     nsteps = 10000;
+                    int     idx = (i == 0)?1:i;
+                    double  da = Alpha[idx+1] - Alpha[idx-1];
+                    double  gval_m1 = Growth[idx-1],a,gval;
+                    double  c1 = Growth[idx-1]/(Alpha[idx-1]-Alpha[idx])/
+                        (Alpha[idx-1]-Alpha[idx+1]);
+                    double  c2 = Growth[idx]/(Alpha[idx]-Alpha[idx-1])/
+                        (Alpha[idx]-Alpha[idx+1]);
+                    double  c3 = Growth[idx+1]/(Alpha[idx+1]-Alpha[idx-1])/
+                        (Alpha[idx+1]-Alpha[idx]);
+                    
+                    for(j = 1; j < nsteps+1; ++j)
+                    {
+                        a = Alpha[i] + j*da/(double) nsteps;
+                        gval = c1*(a - Alpha[idx  ])*(a - Alpha[idx+1]) 
+                            +  c2*(a - Alpha[idx-1])*(a - Alpha[idx+1])
+                            +  c3*(a - Alpha[idx-1])*(a - Alpha[idx]);
+                        
+                        if(gval*gval_m1 < 0.0)
+                        {
+                            alp_new = ((a+da/(double)nsteps)*gval - a*gval_m1)/
+                                (gval - gval_m1);
+                            break;
+                        }
+                    }
+                }
+            }
+            else // step backward/forward by 0.1 depending on sign
+            {
+                if(Growth[i] > 0.0)
+                {
+                    alp_new = m_alpha[0] + m_alphaStep;
+                }
+                else
+                {
+                    alp_new = m_alpha[0] - m_alphaStep;
+                }
+            }
+        }
+        
+        for(int i = m_alpha.num_elements()-1; i > 0; --i)
+        {
+            m_alpha[i] = m_alpha[i-1];
+            m_leading_real_evl[i] = m_leading_real_evl[i-1];
+            m_leading_imag_evl[i] = m_leading_imag_evl[i-1];
+        }
+
+        m_alpha[0] = alp_new;
+
     }
 
 }

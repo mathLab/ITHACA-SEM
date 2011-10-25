@@ -53,23 +53,65 @@ int main(int argc, char *argv[])
     { 
         VortexWaveInteraction vwi(argc,argv);
         
-        for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+        switch(vwi.GetVWIIterationType())
         {
-            vwi.ExecuteRoll();
-            vwi.SaveFile(".rst","Save",i);
+        case eFixedAlphaWaveForcing:
             
-            vwi.ExecuteStreak();
-            vwi.SaveFile("_streak.fld","Save",i);
-            
-            vwi.ExecuteWave();
-            vwi.SaveFile(".evl","Save",i);
-            vwi.SaveFile("_eig_0","Save",i);
+            for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+            {
+                vwi.ExecuteLoop();
+                vwi.SaveLoopDetails(i);
+                vwi.AppendEvlToFile("conv.his",i);            
+            }
+            break;
+        case eFixedWaveForcing:
+            {
+                int i;
+                int nouter_iter = 0;
+                bool exit_iteration = false;
+                
+                while(exit_iteration == false)
+                {
+                    
+                    
+                    for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+                    {
+                        vwi.ExecuteLoop();
+                        vwi.SaveLoopDetails(i);
+                        vwi.AppendEvlToFile("conv.his",i);            
+                        
+                        if(vwi.CheckGrowthConverged())
+                        {
+                            break;
+                        }
+                    }
+                    
+                    // check to see if growth was converged. 
+                    if(i == vwi.GetIterEnd())
+                    {
+                        cout << "Failed to converge growth rate in" << 
+                            " inner iteration after " << vwi.GetIterEnd() 
+                             << " loops" << endl;
+                        exit_iteration = true;
+                    }
+                    
+                    vwi.AppendEvlToFile("OuterIter.his",nouter_iter++);            
+                    exit_iteration = vwi.CheckIfAtNeutralPoint();
+                    if(exit_iteration == false)
+                    {
+                        vwi.UpdateAlpha(nouter_iter);
+                    }
 
-            cout << "Calculating Nonlinear Wave Forcing" << endl;
-            vwi.CalcNonLinearWaveForce();
-            vwi.SaveFile(".vwi","Save",i+1);
-
-            vwi.AppendEvlToFile("conv.his",i);
+                    if(nouter_iter >= vwi.GetMaxOuterIterations())
+                    {
+                        cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
+                        exit_iteration == true;
+                    }
+                }
+            }
+            break;
+        default:
+            ASSERTL0(false,"Unknown iteration type");
         }
         
     }

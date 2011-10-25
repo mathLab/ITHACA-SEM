@@ -326,6 +326,9 @@ namespace Nektar
         inline void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
                   Array<OneD, Array<OneD, NekDouble> >  &qflux);
+        
+        /// Perform a case-insensitive string comparison.
+        int NoCaseStringCompare(const string & s1, const string& s2) ;
 
     protected:
         /// Communicator
@@ -407,9 +410,6 @@ namespace Nektar
 
         /// Initialises EquationSystem class members.
         EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        /// Perform a case-insensitive string comparison.
-        int NoCaseStringCompare(const string & s1, const string& s2) ;
 
         // Here for consistency purposes with old version
         int nocase_cmp(const string & s1, const string& s2)

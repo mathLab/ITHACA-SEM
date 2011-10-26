@@ -484,13 +484,13 @@ namespace Nektar
     {
         static NekDouble previous_real_evl = -1.0; 
         
-        if(previous_real_evl = m_leading_real_evl[0])
+        if(previous_real_evl == -1.0)
         {
-            m_leading_real_evl[0] = previous_real_evl;
+            previous_real_evl = m_leading_real_evl[0];
             return false;
         }
 
-        if(fabs(m_leading_real_evl[0] - previous_real_evl) < m_neutralPointTol)
+        if(fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_neutralPointTol)
         {
             m_leading_real_evl[0] = previous_real_evl;
             return true;

@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
                         cout << "Failed to converge growth rate in" << 
                             " inner iteration after " << vwi.GetIterEnd() 
                              << " loops" << endl;
-                        exit_iteration = true;
+                        exit(1);
                     }
                     
                     vwi.AppendEvlToFile("OuterIter.his",nouter_iter++);            

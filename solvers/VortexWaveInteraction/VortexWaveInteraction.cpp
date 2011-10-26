@@ -472,11 +472,11 @@ namespace Nektar
     void VortexWaveInteraction::ExecuteLoop(void)
     {
         ExecuteRoll();
-                        
+
         ExecuteStreak();
-                        
+ 
         ExecuteWave();
-                        
+                   
         CalcNonLinearWaveForce();
     }
 
@@ -490,9 +490,11 @@ namespace Nektar
             return false;
         }
 
+        cout << "Growth tolerance: " << fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) << endl; 
+            
         if(fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_neutralPointTol)
         {
-            m_leading_real_evl[0] = previous_real_evl;
+            previous_real_evl = m_leading_real_evl[0];
             return true;
         }
         else
@@ -501,7 +503,7 @@ namespace Nektar
             {
                 cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
             }
-            m_leading_real_evl[0] = previous_real_evl;
+            previous_real_evl = m_leading_real_evl[0];
             return false;
         }
     }
@@ -553,7 +555,7 @@ namespace Nektar
             // Sort Alpha Growth values; 
             double store;
             int k;
-            for(i = 0; i < nstore-1; ++i)
+            for(i = 0; i < nstore; ++i)
             {
                 k = Vmath::Imin(nstore-i,&Alpha[i],1);
                 
@@ -564,7 +566,6 @@ namespace Nektar
                 store     = Growth[i];
                 Growth[i] = Growth[k];
                 Growth[k] = store; 
-
             }
 
             // See if we have any values that cross zero

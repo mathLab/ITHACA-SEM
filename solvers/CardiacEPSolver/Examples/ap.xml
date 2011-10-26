@@ -527,7 +527,7 @@
             <I PROPERTY="Projection" VALUE="Continuous" />
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3" />
-            <I PROPERTY="GlobalSysSolve" VALUE="DirectMultiLevelStaticCond" />
+            <I PROPERTY="GlobalSysSoln" VALUE="DirectMultiLevelStaticCond" />
         </SOLVERINFO>
 
         <VARIABLES>

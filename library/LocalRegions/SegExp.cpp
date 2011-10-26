@@ -139,7 +139,8 @@ namespace Nektar
             }
 
             // call StdSegExp version;
-            ival = StdSegExp::v_Integral(tmp);
+            //ival = StdSegExp::v_Integral(tmp);
+            ival = StdSegExp::Integral(tmp);
             return ival;
         }
 
@@ -163,6 +164,7 @@ namespace Nektar
             {
                 Vmath::Smul(nquad0, jac[0], inarray, 1, tmp, 1);
             }
+            //StdSegExp::v_IProductWRTBase(base,tmp,outarray,coll_check);
             StdSegExp::v_IProductWRTBase(base,tmp,outarray,coll_check);
         }
 

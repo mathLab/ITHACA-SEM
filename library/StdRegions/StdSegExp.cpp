@@ -56,8 +56,8 @@ namespace Nektar
          */
 
         StdSegExp::StdSegExp(const LibUtilities::BasisKey &Ba):
-            StdExpansion(Ba.GetNumModes(), 1, Ba),
-            StdExpansion1D(Ba.GetNumModes(),Ba)
+        StdExpansion(Ba.GetNumModes(), 1, Ba),
+        StdExpansion1D(Ba.GetNumModes(),Ba)
         {
         }
 
@@ -65,8 +65,8 @@ namespace Nektar
         /** \brief Copy Constructor */
 
         StdSegExp::StdSegExp(const StdSegExp &T):
-            StdExpansion(T),
-            StdExpansion1D(T)
+                StdExpansion(T),
+                StdExpansion1D(T)
         {
         }
 
@@ -74,6 +74,36 @@ namespace Nektar
         StdSegExp::~StdSegExp()
         {
         }
+
+        /** \brief Return Shape of region, using  ShapeType enum list.
+         *  i.e. Segment
+         */
+        ExpansionType StdSegExp::v_DetExpansionType() const
+        {
+            return eSegment;
+        }
+
+        bool StdSegExp::v_IsBoundaryInteriorExpansion()
+        {
+
+            bool returnval = false;
+
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                returnval = true;
+            }
+
+            if(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange)
+            {
+                returnval = true;
+            }
+
+            return returnval;
+
+            //return IsBoundaryInteriorExpansion();
+        }
+
+
 
 
         //---------------------------------------------------------------------
@@ -88,8 +118,7 @@ namespace Nektar
          *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
          *  = u(\xi_{1i}) \f$
          */
-
-        NekDouble StdSegExp::v_Integral(const Array<OneD, const NekDouble>& inarray)
+        NekDouble StdSegExp::v_Integral(const Array<OneD, const NekDouble>& inarray )
         {
             NekDouble Int = 0.0;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -121,48 +150,48 @@ namespace Nektar
          *  \param  outarray the resulting array of the derivative \f$
          *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
          */
+
         void StdSegExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> &out_d0,
-                                  Array<OneD, NekDouble> &out_d1,
-                                  Array<OneD, NekDouble> &out_d2)
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1,
+                Array<OneD, NekDouble> &out_d2)
         {
             PhysTensorDeriv(inarray,out_d0);
         }
 
 
         void StdSegExp::v_PhysDeriv(const int dir,
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
         {
             ASSERTL1(dir==0,"input dir is out of range");
-            v_PhysDeriv(inarray, outarray);
+            PhysTensorDeriv(inarray,outarray);
+//            PhysDeriv(inarray, outarray);                
+            // PhysDeriv(dir,inarray,outarray);
         }
 
         void StdSegExp::v_StdPhysDeriv(
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &out_d0,
-            Array<OneD, NekDouble> &out_d1,
-            Array<OneD, NekDouble> &out_d2)
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &out_d0,
+                Array<OneD, NekDouble> &out_d1,
+                Array<OneD, NekDouble> &out_d2)
         {
-            v_PhysDeriv(inarray, out_d0);
+            PhysTensorDeriv(inarray,out_d0);
+//            PhysDeriv(inarray, out_d0);
+            //StdPhysDeriv(inarray, out_d0);
         }
 
         void StdSegExp::v_StdPhysDeriv(
-            const int dir,
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
         {
             ASSERTL1(dir==0,"input dir is out of range");
-            v_PhysDeriv(inarray, outarray);
+            PhysTensorDeriv(inarray,outarray);
+//            PhysDeriv(inarray, outarray);                
+            //StdPhysDeriv(dir,inarray, outarray);                
         }
 
-        void StdSegExp::v_PhysDirectionalDeriv(
-            const Array<OneD, const NekDouble>& inarray,
-            const Array<OneD, const NekDouble>& direction,
-            Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,"This method is not defined or valid for this class type");
-        }
 
 
         //---------------------------------------------------------------------
@@ -189,9 +218,11 @@ namespace Nektar
          */
 
         void StdSegExp::v_BwdTrans(
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
         {
+            //BwdTrans(inarray, outarray);
+
             int  nquad = m_base[0]->GetNumPoints();
 
             if(m_base[0]->Collocation())
@@ -216,6 +247,7 @@ namespace Nektar
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
 
             }
+
         }
 
         /** \brief Forward transform from physical quadrature space stored in 
@@ -238,8 +270,10 @@ namespace Nektar
          */ 
 
         void StdSegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
         {
+            //FwdTrans(inarray, outarray);
+
             if(m_base[0]->Collocation())
             {
                 Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
@@ -260,9 +294,11 @@ namespace Nektar
         }
 
         void StdSegExp::v_FwdTrans_BndConstrained(
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
         {
+            //FwdTrans_BndConstrained(inarray, outarray); 
+
             if(m_base[0]->Collocation())
             {
                 Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
@@ -291,8 +327,8 @@ namespace Nektar
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
 
-                outarray[v_GetVertexMap(0)] = inarray[0];
-                outarray[v_GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
+                outarray[GetVertexMap(0)] = inarray[0];
+                outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
 
                 if(m_ncoeffs>2)
                 {
@@ -314,11 +350,12 @@ namespace Nektar
                                 nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);
                 }
             }
+
         }
 
 
         void StdSegExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
         {
             v_BwdTrans(inarray, outarray);
         }
@@ -351,10 +388,11 @@ namespace Nektar
          *  each basis over region will be stored in the array \a outarray as
          *  output of the function
          */
-        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base, 
-                                        const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray, 
-                                        int coll_check)
+
+        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                int coll_check)
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
@@ -385,35 +423,37 @@ namespace Nektar
          *  output of the function
          */
         void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                             Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+            // IProductWRTBase(inarray,outarray);
         }
-
-
-        void StdSegExp::v_IProductWRTBase_SumFac(
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
-        {
-            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-        }
-
 
         void StdSegExp::v_IProductWRTDerivBase(
-            const int dir,
-            const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> & outarray)
-        {
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> & outarray)
+      {
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
             v_IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
+
+            // IProductWRTDerivBase(dir,inarray,outarray);
+        }
+
+        void StdSegExp::v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray)
+        {
+            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
 
 
 
-        //---------------------------------------------------------------------
-        // Evaluation functions
-        //---------------------------------------------------------------------
 
+
+        //----------------------------
+        // Evaluation
+        //----------------------------
 
         void StdSegExp::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
@@ -424,13 +464,13 @@ namespace Nektar
              "calling argument mode is larger than total expansion order");
 
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
+
+
+            //FillMode(mode,outarray);
         }
 
-
-
-
         void StdSegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray)
+                Array<OneD,NekDouble> &outarray)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -442,12 +482,15 @@ namespace Nektar
             // Laplacian matrix operation
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
+
+//            LaplacianMatrixOp(inarray,outarray);
         }
 
 
-        void StdSegExp::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray,
-                                          const double lambda)
+        void StdSegExp::v_HelmholtzMatrixOp(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray,
+                const double lambda)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -464,99 +507,22 @@ namespace Nektar
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
             Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
-        }
 
+//            HelmholtzMatrixOp(inarray,outarray,lambda);
+        } 
 
 
         void StdSegExp::v_GetCoords(
-            Array<OneD, NekDouble> &coords_0,
-            Array<OneD, NekDouble> &coords_1,
-            Array<OneD, NekDouble> &coords_2)
+                Array<OneD, NekDouble> &coords_0,
+                Array<OneD, NekDouble> &coords_1,
+                Array<OneD, NekDouble> &coords_2)
         {
-            Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),1,&coords_0[0],1);
+            Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
+                        1,&coords_0[0],1);
+//            GetCoords(coords_0);
         }
 
 
-
-        //---------------------------------------------------------------------
-        // Mappings
-        //---------------------------------------------------------------------
-
-
-        void StdSegExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-        {
-            if(outarray.num_elements() != v_NumBndryCoeffs())
-            {
-                outarray = Array<OneD, unsigned int>(v_NumBndryCoeffs());
-            }
-            const LibUtilities::BasisType Btype = GetBasisType(0);
-            int nummodes = m_base[0]->GetNumModes();
-
-            outarray[0] = 0;
-
-            switch(Btype)
-            {
-            case LibUtilities::eGLL_Lagrange:
-            case LibUtilities::eChebyshev:
-            case LibUtilities::eFourier:
-                outarray[1]= nummodes-1;
-                break;
-            case LibUtilities::eModified_A:
-            case LibUtilities::eModified_B:
-                outarray[1] = 1;
-                break;
-            default:
-                ASSERTL0(0,"Mapping array is not defined for this expansion");
-                break;
-            }
-        }
-
-        void StdSegExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
-        {
-            int i;
-            if(outarray.num_elements()!=GetNcoeffs()-v_NumBndryCoeffs())
-            {
-                outarray = Array<OneD, unsigned int>(GetNcoeffs()-v_NumBndryCoeffs());
-            }
-            const LibUtilities::BasisType Btype = GetBasisType(0);
-
-            switch(Btype)
-            {
-            case LibUtilities::eGLL_Lagrange:
-            case LibUtilities::eChebyshev:
-            case LibUtilities::eFourier:
-                for(i = 0 ; i < GetNcoeffs()-2;i++)
-                {
-                    outarray[i] = i+1;
-                }
-                break;
-            case LibUtilities::eModified_A:
-            case LibUtilities::eModified_B:
-                for(i = 0 ; i < GetNcoeffs()-2;i++)
-                {
-                    outarray[i] = i+2;
-                }
-                break;
-            default:
-                ASSERTL0(0,"Mapping array is not defined for this expansion");
-                break;
-            }
-        }
-
-        int StdSegExp::v_GetVertexMap(const int localVertexId)
-        {
-            ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
-                     "must be between 0 or 1");
-
-            int localDOF = localVertexId;
-
-            if( (m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange) &&
-                (localVertexId==1) )
-            {
-                localDOF = m_base[0]->GetNumModes()-1;
-            }
-            return localDOF;
-        }
 
 
 
@@ -564,37 +530,12 @@ namespace Nektar
         // Helper functions
         //---------------------------------------------------------------------
 
-        int StdSegExp::v_GetNverts() const
-        {
-            return 2;
-        } 
-
-        int StdSegExp::v_NumBndryCoeffs() const
-        {
-            return 2;
-        } 
-
-        int StdSegExp::v_NumDGBndryCoeffs() const
-        {
-            return 2;
-        } 
-
-        int StdSegExp::v_CalcNumberOfCoefficients(
-            const std::vector<unsigned int> &nummodes,
-            int &modes_offset)
-        {
-            int nmodes = nummodes[modes_offset];
-            modes_offset += 1;
-
-            return nmodes;
-        }
-
 
         void StdSegExp::v_WriteToFile(
-            std::ofstream &outfile,
-            OutputFormat format,
-            const bool dumpVar,
-            std::string var)
+                std::ofstream &outfile,
+                OutputFormat format,
+                const bool dumpVar,
+                std::string var)
         {
             if(format==eTecplot)
             {
@@ -641,34 +582,33 @@ namespace Nektar
             {
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
+
+            // WriteToFile(outfile,format,dumpVar,var);
         }
 
-
-        /** \brief Return Shape of region, using  ShapeType enum list.
-         *  i.e. Segment
-         */
-
-        ExpansionType StdSegExp::v_DetExpansionType() const
+        int StdSegExp::v_GetNverts() const
         {
-            return eSegment;
-        }
+            return 2;
+        } 
 
-
-        bool StdSegExp::v_IsBoundaryInteriorExpansion()
+        int StdSegExp::v_NumBndryCoeffs() const
         {
-            bool returnval = false;
+            return 2;
+        } 
 
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                returnval = true;
-            }
+        int StdSegExp::v_NumDGBndryCoeffs() const
+        {
+            return 2;
+        } 
 
-            if(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange)
-            {
-                returnval = true;
-            }
+        int StdSegExp::v_CalcNumberOfCoefficients(
+                const std::vector<unsigned int> &nummodes,
+                int &modes_offset)
+        {
+            int nmodes = nummodes[modes_offset];
+            modes_offset += 1;
 
-            return returnval;
+            return nmodes;
         }
 
         //---------------------------------------------------------------------
@@ -714,12 +654,102 @@ namespace Nektar
             return Mat;
         }
 
+
         DNekMatSharedPtr StdSegExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
-            return v_GenMatrix(mkey);
+            return GenMatrix(mkey);
         }
 
+        //---------------------------------------------------------------------
+        // Mappings
+        //---------------------------------------------------------------------
+
+
+        void StdSegExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            if(outarray.num_elements() != NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
+            }
+            const LibUtilities::BasisType Btype = GetBasisType(0);
+            int nummodes = m_base[0]->GetNumModes();
+
+            outarray[0] = 0;
+
+            switch(Btype)
+            {
+            case LibUtilities::eGLL_Lagrange:
+            case LibUtilities::eChebyshev:
+            case LibUtilities::eFourier:
+                outarray[1]= nummodes-1;
+                break;
+            case LibUtilities::eModified_A:
+            case LibUtilities::eModified_B:
+                outarray[1] = 1;
+                break;
+            default:
+                ASSERTL0(0,"Mapping array is not defined for this expansion");
+                break;
+            }
+
+
+//            GetBoundaryMap(outarray);
+        }
+
+        void StdSegExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            int i;
+            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
+            }
+            const LibUtilities::BasisType Btype = GetBasisType(0);
+
+            switch(Btype)
+            {
+            case LibUtilities::eGLL_Lagrange:
+            case LibUtilities::eChebyshev:
+            case LibUtilities::eFourier:
+                for(i = 0 ; i < GetNcoeffs()-2;i++)
+                {
+                    outarray[i] = i+1;
+                }
+                break;
+            case LibUtilities::eModified_A:
+            case LibUtilities::eModified_B:
+                for(i = 0 ; i < GetNcoeffs()-2;i++)
+                {
+                    outarray[i] = i+2;
+                }
+                break;
+            default:
+                ASSERTL0(0,"Mapping array is not defined for this expansion");
+                break;
+            }
+
+
+//            GetInteriorMap(outarray);
+        }
+
+        int StdSegExp::v_GetVertexMap(int localVertexId)
+        {
+            ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
+                     "must be between 0 or 1");
+
+            int localDOF = localVertexId;
+
+            if( (m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange) &&
+                (localVertexId==1) )
+            {
+                localDOF = m_base[0]->GetNumModes()-1;
+            }
+            return localDOF;
+
+
+//            return GetVertexMap(localVertexId);
+        }
 
 
     }//end namespace
 }//end namespace
+

@@ -254,7 +254,14 @@ namespace Nektar
         // Store data relevant to other operations 
         m_leading_real_evl[0] = solverWave->GetRealEvl()[0];
         m_leading_imag_evl[0] = solverWave->GetImagEvl()[0];
-        
+
+        // Set up leading eigenvalue from inverse 
+        NekDouble invmag = 1.0/(m_leading_real_evl[0]*m_leading_real_evl[0] + 
+                                m_leading_imag_evl[0]*m_leading_imag_evl[0]);
+        m_leading_real_evl[0] *= -invmag;
+        m_leading_imag_evl[0] *= invmag;
+
+
         m_waveVelocities = solverWave->GetEqu()[0]->UpdateFields();
         m_wavePressure   = solverWave->GetEqu()[0]->GetPressure();
         
@@ -444,10 +451,7 @@ namespace Nektar
     {
         FILE *fp;
         fp = fopen(file.c_str(),"a");
-
-        NekDouble invmag = 1.0/(m_leading_real_evl[0]*m_leading_real_evl[0] + 
-                                m_leading_imag_evl[0]*m_leading_imag_evl[0]);
-        fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha[0], -m_leading_real_evl[0]*invmag,m_leading_imag_evl[0]*invmag);
+        fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha[0], m_leading_real_evl[0],m_leading_imag_evl[0]);
         fclose(fp);
     }
 
@@ -631,7 +635,7 @@ namespace Nektar
         }
 
         m_alpha[0] = alp_new;
-
+        
     }
 
 }

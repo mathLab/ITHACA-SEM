@@ -52,7 +52,8 @@ namespace Nektar
 
     const std::string VWIIterationTypeMap[] = 
     {
-        "FixedAlphaWaveForcing"
+        "FixedAlphaWaveForcing",
+        "FixedWaveForcing"
     };
 
     class VortexWaveInteraction

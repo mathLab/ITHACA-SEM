@@ -96,6 +96,11 @@ namespace Nektar
             return m_VWIIterationType;
         }
         
+        int GetNOuterIterations(void)
+        {
+            return m_nOuterIterations;
+        }
+
         int GetMaxOuterIterations(void)
         {
             return m_maxOuterIterations;
@@ -106,7 +111,8 @@ namespace Nektar
     private:
         int m_iterStart; // Start iterations of inner loop
         int m_iterEnd;   // End iterations of inner loop
-
+        
+        int m_nOuterIterations; 
         int m_maxOuterIterations; // Maximum number of outer iterations        
 
         NekDouble m_waveForceMag;
@@ -118,6 +124,7 @@ namespace Nektar
 
         NekDouble m_alphaStep;
         NekDouble m_neutralPointTol; 
+        NekDouble m_growthRateRelTol; 
         NekDouble m_vwiRelaxation; 
 
         VWIIterationType m_VWIIterationType;

@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         case eFixedWaveForcing:
             {
                 int i;
-                int nouter_iter = 0;
+                int nouter_iter = vwi.GetNOuterIterations();
                 bool exit_iteration = false;
                 
                 while(exit_iteration == false)

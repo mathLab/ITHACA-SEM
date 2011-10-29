@@ -39,6 +39,8 @@ namespace Nektar
 
     VortexWaveInteraction::VortexWaveInteraction(int argc, char * argv[]):
         m_neutralPointTol(1e-4),
+        m_growthRateRelTol(1e-3),
+        m_nOuterIterations(0),
         m_maxOuterIterations(100),
         m_alphaStep(0.1)
     {
@@ -169,14 +171,59 @@ namespace Nektar
         m_sessionVWI->MatchSolverInfo("RestartIteration","True",restart,false);
         if(restart)
         {
-            string nstr =  boost::lexical_cast<std::string>(m_iterStart);
-            cout << "Restarting from iteration " << m_iterStart << endl;
-            std::string rstfile = "cp -f Save/" + m_sessionName + ".rst." + nstr + " " + m_sessionName + ".rst"; 
-            cout << "      " << rstfile << endl;
-            system(rstfile.c_str());
-            std::string vwifile = "cp -f Save/" + m_sessionName + ".vwi." + nstr + " " + m_sessionName + ".vwi"; 
-            cout << "      " << vwifile << endl;
-            system(vwifile.c_str());
+            switch(m_VWIIterationType)
+            {
+            case eFixedAlphaWaveForcing:
+                {
+                    string nstr =  boost::lexical_cast<std::string>(m_iterStart);
+                    cout << "Restarting from iteration " << m_iterStart << endl;
+                    std::string rstfile = "cp -f Save/" + m_sessionName + ".rst." + nstr + " " + m_sessionName + ".rst"; 
+                    cout << "      " << rstfile << endl;
+                    system(rstfile.c_str());
+                    std::string vwifile = "cp -f Save/" + m_sessionName + ".vwi." + nstr + " " + m_sessionName + ".vwi"; 
+                    cout << "      " << vwifile << endl;
+                    system(vwifile.c_str());
+                }
+                break;
+            case  eFixedWaveForcing:
+                {
+                    FILE *fp;
+                    // Check for OuterIter.his file to read
+                    if(fp = fopen("OuterIter.his","r"))
+                    {
+                        char buf[BUFSIZ];
+                        std::vector<NekDouble> Alpha, Growth, Phase;
+                        NekDouble alpha,growth,phase;
+                        while(fgets(buf,BUFSIZ,fp))
+                        {
+                            sscanf(buf,"%*d:%lf%lf%lf",&alpha,&growth,&phase);
+                            Alpha.push_back(alpha);
+                            Growth.push_back(growth);
+                            Phase.push_back(phase);
+                        }
+
+                        m_nOuterIterations = Alpha.size();
+                        
+                        int nvals = std::min(m_nOuterIterations,(int)m_alpha.num_elements());
+                        
+                        for(int i = 0; i < nvals; ++i)
+                        {
+                            m_alpha[nvals-1-i]            = Alpha[m_nOuterIterations-nvals+i];
+                            m_leading_real_evl[nvals-1-i] = Growth[m_nOuterIterations-nvals+i];
+                            m_leading_imag_evl[nvals-1-i] = Phase [m_nOuterIterations-nvals+i];
+                        }
+
+                        UpdateAlpha(m_nOuterIterations++);
+                    }
+                    else
+                    {
+                        cout << " No File OuterIter.his to restart from" << endl;
+                    }
+                }
+                break;
+            Default:
+                ASSERTL0(false,"Unknown VWIITerationType in restart");
+            }
         }
     }
 
@@ -492,7 +539,7 @@ namespace Nektar
 
         cout << "Growth tolerance: " << fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) << endl; 
             
-        if(fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_neutralPointTol)
+        if(fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_growthRateRelTol)
         {
             previous_real_evl = m_leading_real_evl[0];
             return true;
@@ -531,6 +578,7 @@ namespace Nektar
     {
         NekDouble alp_new;
 
+
         if(outeriter == 1)
         {
             m_alpha[1] = m_alpha[0];
@@ -551,7 +599,8 @@ namespace Nektar
             Array<OneD, NekDouble> Growth(nstore);
             
             Vmath::Vcopy(nstore,m_alpha,1,Alpha,1);
-
+            Vmath::Vcopy(nstore,m_leading_real_evl,1,Growth,1);
+            
             // Sort Alpha Growth values; 
             double store;
             int k;
@@ -560,12 +609,12 @@ namespace Nektar
                 k = Vmath::Imin(nstore-i,&Alpha[i],1);
                 
                 store    = Alpha[i]; 
-                Alpha[i] = Alpha[k];
-                Alpha[k] = store;
+                Alpha[i] = Alpha[i+k];
+                Alpha[i+k] = store;
 
                 store     = Growth[i];
-                Growth[i] = Growth[k];
-                Growth[k] = store; 
+                Growth[i] = Growth[i+k];
+                Growth[i+k] = store; 
             }
 
             // See if we have any values that cross zero

@@ -49,6 +49,8 @@ namespace Nektar
 
         /// Class representing a segment element in reference space
 
+        /// All interface of this class sits in StdExpansion class
+
         class StdSegExp: virtual public StdExpansion1D
         {
         public:
@@ -62,48 +64,8 @@ namespace Nektar
             STD_REGIONS_EXPORT ~StdSegExp();
 
 
-
-            //----------------------------
-            // Public transforms
-            //----------------------------
-
-            STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray);
-
-            //----------------------------
-            // Public helper functions
-            //----------------------------
-
-            STD_REGIONS_EXPORT virtual ExpansionType
-                    v_DetExpansionType() const;
-
-            //-----------------------------
-            // Public Differentiation Methods
-            //-----------------------------
-
-            STD_REGIONS_EXPORT virtual void v_PhysDeriv(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &out_d0,
-                    Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                    Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
-
-            //----------------------------
-            // Public Mappings
-            //---------------------------
-
-            // These three referenced from MultiRegions/LocalToGlobalC0ContMap
-
-            STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
-                    Array<OneD, unsigned int>& outarray);
-
-            STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
-                    Array<OneD, unsigned int>& outarray);
-
-            STD_REGIONS_EXPORT virtual int v_GetVertexMap(
-                    const int localVertexId);
-
     protected:
+
 
             //----------------------------
             // Integration Methods
@@ -115,6 +77,12 @@ namespace Nektar
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
+
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv(
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &out_d0,
+                    Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                    Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
                     const int dir,
@@ -144,8 +112,11 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                     Array<OneD, NekDouble> &outarray);
 
-
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
                     const Array<OneD, const NekDouble>& inarray,
                     Array<OneD, NekDouble> &outarray);
 
@@ -174,7 +145,6 @@ namespace Nektar
 
 
 
-
             //----------------------------
             // Evaluations Methods
             //---------------------------
@@ -199,6 +169,20 @@ namespace Nektar
 
 
             //----------------------------
+            // Public Mappings
+            //---------------------------
+
+            STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
+                    Array<OneD, unsigned int>& outarray);
+
+            STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
+                    Array<OneD, unsigned int>& outarray);
+
+            STD_REGIONS_EXPORT virtual int v_GetVertexMap(
+                    const int localVertexId);
+
+
+            //----------------------------
             // Helper functions
             //---------------------------
 
@@ -214,6 +198,8 @@ namespace Nektar
                     OutputFormat format,
                     const bool dumpVar = true,
                     std::string var = "v");
+            STD_REGIONS_EXPORT virtual ExpansionType
+                    v_DetExpansionType() const;
 
             //----------------------------
             // Wrapper functions

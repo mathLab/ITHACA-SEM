@@ -99,8 +99,6 @@ namespace Nektar
             }
 
             return returnval;
-
-            //return IsBoundaryInteriorExpansion();
         }
 
 
@@ -166,8 +164,7 @@ namespace Nektar
         {
             ASSERTL1(dir==0,"input dir is out of range");
             PhysTensorDeriv(inarray,outarray);
-//            PhysDeriv(inarray, outarray);                
-            // PhysDeriv(dir,inarray,outarray);
+            // PhysDeriv(inarray, outarray);
         }
 
         void StdSegExp::v_StdPhysDeriv(
@@ -177,8 +174,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d2)
         {
             PhysTensorDeriv(inarray,out_d0);
-//            PhysDeriv(inarray, out_d0);
-            //StdPhysDeriv(inarray, out_d0);
+            // PhysDeriv(inarray, out_d0);
         }
 
         void StdSegExp::v_StdPhysDeriv(
@@ -188,8 +184,7 @@ namespace Nektar
         {
             ASSERTL1(dir==0,"input dir is out of range");
             PhysTensorDeriv(inarray,outarray);
-//            PhysDeriv(inarray, outarray);                
-            //StdPhysDeriv(dir,inarray, outarray);                
+            // PhysDeriv(inarray, outarray);
         }
 
 
@@ -221,8 +216,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
-            //BwdTrans(inarray, outarray);
-
             int  nquad = m_base[0]->GetNumPoints();
 
             if(m_base[0]->Collocation())
@@ -247,7 +240,6 @@ namespace Nektar
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
 
             }
-
         }
 
         /** \brief Forward transform from physical quadrature space stored in 
@@ -272,8 +264,6 @@ namespace Nektar
         void StdSegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
-            //FwdTrans(inarray, outarray);
-
             if(m_base[0]->Collocation())
             {
                 Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
@@ -297,8 +287,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
-            //FwdTrans_BndConstrained(inarray, outarray); 
-
             if(m_base[0]->Collocation())
             {
                 Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
@@ -426,7 +414,6 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-            // IProductWRTBase(inarray,outarray);
         }
 
         void StdSegExp::v_IProductWRTDerivBase(
@@ -436,8 +423,6 @@ namespace Nektar
       {
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
             v_IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
-
-            // IProductWRTDerivBase(dir,inarray,outarray);
         }
 
         void StdSegExp::v_IProductWRTBase_SumFac(
@@ -464,9 +449,6 @@ namespace Nektar
              "calling argument mode is larger than total expansion order");
 
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
-
-
-            //FillMode(mode,outarray);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -482,8 +464,6 @@ namespace Nektar
             // Laplacian matrix operation
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
-
-//            LaplacianMatrixOp(inarray,outarray);
         }
 
 
@@ -507,9 +487,7 @@ namespace Nektar
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
             Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
-
-//            HelmholtzMatrixOp(inarray,outarray,lambda);
-        } 
+        }
 
 
         void StdSegExp::v_GetCoords(
@@ -519,7 +497,6 @@ namespace Nektar
         {
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords_0[0],1);
-//            GetCoords(coords_0);
         }
 
 
@@ -582,8 +559,6 @@ namespace Nektar
             {
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
-
-            // WriteToFile(outfile,format,dumpVar,var);
         }
 
         int StdSegExp::v_GetNverts() const
@@ -657,7 +632,7 @@ namespace Nektar
 
         DNekMatSharedPtr StdSegExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
-            return GenMatrix(mkey);
+            return v_GenMatrix(mkey);
         }
 
         //---------------------------------------------------------------------
@@ -691,9 +666,6 @@ namespace Nektar
                 ASSERTL0(0,"Mapping array is not defined for this expansion");
                 break;
             }
-
-
-//            GetBoundaryMap(outarray);
         }
 
         void StdSegExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
@@ -726,9 +698,6 @@ namespace Nektar
                 ASSERTL0(0,"Mapping array is not defined for this expansion");
                 break;
             }
-
-
-//            GetInteriorMap(outarray);
         }
 
         int StdSegExp::v_GetVertexMap(int localVertexId)
@@ -744,9 +713,6 @@ namespace Nektar
                 localDOF = m_base[0]->GetNumModes()-1;
             }
             return localDOF;
-
-
-//            return GetVertexMap(localVertexId);
         }
 
 

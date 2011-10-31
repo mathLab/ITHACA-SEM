@@ -658,7 +658,7 @@ namespace Nektar
 			
 			for(int i = 0; i < nP_pts; i++)
 			{
-				StdSeg.v_PhysDeriv(tmp1 = temparray + i*nF_pts, tmp2 = outarray + i*nF_pts);
+				StdSeg.PhysDeriv(tmp1 = temparray + i*nF_pts, tmp2 = outarray + i*nF_pts);
 			}
 			
 			UnshuffleFromHomogeneous1DClosePacked(outarray,out_d2,false);
@@ -697,7 +697,7 @@ namespace Nektar
 				
 				for(int i = 0; i < nP_pts; i++)
 				{
-					StdSeg.v_PhysDeriv(tmp1 = temparray + i*nF_pts, tmp2 = outarray + i*nF_pts);
+					StdSeg.PhysDeriv(tmp1 = temparray + i*nF_pts, tmp2 = outarray + i*nF_pts);
 				}
 				
 				UnshuffleFromHomogeneous1DClosePacked(outarray,out_d,false);

@@ -689,6 +689,16 @@ namespace Nektar
                 v_IProductWRTBase(inarray, outarray);
             }
 
+            void IProductWRTBase(
+                    const Array<OneD, const NekDouble>& base,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    int coll_check)
+            {
+                v_IProductWRTBase(base, inarray, outarray, coll_check);
+            }
+
+
             void   IProductWRTDerivBase(const int dir,
                                         const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &outarray)
@@ -1513,6 +1523,15 @@ namespace Nektar
                                          Array<OneD, NekDouble> &outarray) = 0;
             STD_REGIONS_EXPORT virtual void  v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray) = 0;
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& base,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    int coll_check)
+            {
+                ASSERTL0(false, "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
+            }
 
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDerivBase (const int dir,
                                                    const Array<OneD, const NekDouble>& inarray,

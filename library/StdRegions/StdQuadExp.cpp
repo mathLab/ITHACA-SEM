@@ -529,8 +529,8 @@ namespace Nektar
 
                 for(i = 0; i < 4; i++)
                 {
-                    segexp[i%2]->v_FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
-                    //segexp[i%2]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
+                    //segexp[i%2]->v_FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
+                    segexp[i%2]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
 
                     GetEdgeToElementMap(i,eForwards,mapArray,signArray);
                     for(j=0; j < nmodes[i%2]; j++)

@@ -661,7 +661,7 @@ namespace Nektar
 
         NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
         {
-            PhysEvaluate(coords,m_phys);
+            return PhysEvaluate(coords,m_phys);
         }
 
         NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
@@ -672,7 +672,7 @@ namespace Nektar
             if((fabs(coords[0]+1.0) < NekConstants::kNekZeroTol)
                &&(fabs(coords[1]-1.0) < NekConstants::kNekZeroTol))
             {
-                coll[0] = 0.0;
+                coll[0] = -1.0;
                 coll[1] = 1.0;
             }
             else

@@ -41,16 +41,28 @@ namespace Nektar
     namespace StdRegions
     {
         
-        StdTriExp::StdTriExp() // default constructor of StdExpansion is directly called. 
+        StdTriExp::StdTriExp()
         {
-        } //default constructor
+        }
 
 
-        StdTriExp::StdTriExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
-            StdExpansion  (StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
-            StdExpansion2D(StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb)
+        StdTriExp::StdTriExp(
+            const LibUtilities::BasisKey &Ba, 
+            const LibUtilities::BasisKey &Bb) :
+            StdExpansion (StdTriData::getNumberOfCoefficients(
+                              Ba.GetNumModes(),
+                              Bb.GetNumModes()),
+                          2,Ba,Bb),
+            StdExpansion2D(StdTriData::getNumberOfCoefficients(
+                               Ba.GetNumModes(),
+                               Bb.GetNumModes()),
+                           Ba,Bb)
         {    
-            ASSERTL0(Ba.GetNumModes() <=  Bb.GetNumModes(), "order in 'a' direction is higher than order in 'b' direction");
+            if(m_ncoeffs > 10)
+                cout << "STDTRIEXP::STDTRIEXP" << endl;
+            ASSERTL0(Ba.GetNumModes() <= Bb.GetNumModes(), 
+                     "order in 'a' direction is higher than order "
+                     "in 'b' direction");
         }
 
         StdTriExp::StdTriExp(const StdTriExp &T):
@@ -63,10 +75,11 @@ namespace Nektar
         {
         }
 
-        //////////////////////////////
+        //-------------------------------
         // Integration Methods
-        //////////////////////////////
-        NekDouble StdTriExp::Integral(const Array<OneD, const NekDouble>& inarray)
+        //-------------------------------
+        NekDouble StdTriExp::v_Integral(
+            const Array<OneD, const NekDouble>& inarray)
         {
             int    i;
             int nquad1 = m_base[1]->GetNumPoints();
@@ -78,382 +91,50 @@ namespace Nektar
 
             switch(m_base[1]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                for(i = 0; i < nquad1; ++i)
+                case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
                 {
-                    w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
+                    }
+                    break;
                 }
-                break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
-                Vmath::Smul(nquad1, 0.5, w1, 1, w1_tmp,1);      
-                break;
-            default:
-                ASSERTL0(false, "populate swith for this point type");
+                case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
+                {
+                    Vmath::Smul(nquad1, 0.5, w1, 1, w1_tmp,1);      
+                    break;
+                }
+                default:
+                {
+                    ASSERTL0(false, "populate swith for this point type");
+                    break;
+                }
             }
 
             return StdExpansion2D::Integral(inarray,w0,w1_tmp);
         }     
 
-        void StdTriExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
-                                              Array<OneD, NekDouble> &outarray)
-        {
-            int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
-            
-            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
-        }
-
-        void StdTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                                Array<OneD, NekDouble> &outarray)
-        {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    order0 = m_base[0]->GetNumModes();
-                            
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);         
-            
-            // multiply by integration constants 
-            MultiplyByQuadratureMetric(inarray,tmp);
-            
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
-        }
-     
-        void StdTriExp::IProductWRTDerivBase_SumFac(const int dir, 
-                                                    const Array<OneD, const NekDouble>& inarray, 
-                                                    Array<OneD, NekDouble> & outarray)
-        {
-            int    i;
-            int    nquad0  = m_base[0]->GetNumPoints();
-            int    nquad1  = m_base[1]->GetNumPoints();
-            int    nqtot   = nquad0*nquad1; 
-            int    nmodes0 = m_base[0]->GetNumModes();
-            int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
-
-            Array<OneD, NekDouble> gfac0(2*wspsize);
-            Array<OneD, NekDouble> tmp0 (gfac0+wspsize);
-
-            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
-            
-            // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac0[i] = 2.0/(1-z1[i]);
-            }
-
-            for(i = 0; i < nquad1; ++i)  
-            {
-                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
-            }
-                 
-            MultiplyByQuadratureMetric(tmp0,tmp0);
-
-            switch(dir)
-            {
-            case 0:
-                {                    
-                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                                 m_base[1]->GetBdata(),
-                                                 tmp0,outarray,gfac0);
-                }
-                break;
-            case 1:
-                {
-                    Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
-
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        gfac0[i] = 0.5*(1+z0[i]);
-                    }        
-
-                    for(i = 0; i < nquad1; ++i) 
-                    {
-                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
-                    }       
-          
-                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                                 m_base[1]->GetBdata(),
-                                                 tmp0,tmp3,gfac0); 
-
-                    MultiplyByQuadratureMetric(inarray,tmp0);
-                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                                 m_base[1]->GetDbdata(),
-                                                 tmp0,outarray,gfac0);  
-                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);      
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
-                }
-                break;
-            }             
-        }
-
-        void StdTriExp::IProductWRTDerivBase_MatOp(const int dir, 
-                                                   const Array<OneD, const NekDouble>& inarray, 
-                                                   Array<OneD, NekDouble> &outarray)
-        {
-            int nq = GetTotPoints();
-            MatrixType mtype;
-
-            switch(dir)
-            {
-            case 0:
-                {
-                    mtype = eIProductWRTDerivBase0;
-                }
-                break;
-            case 1:
-                {
-                    mtype = eIProductWRTDerivBase1;
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(false,"input dir is out of range");
-                }
-                break;
-            }  
-
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
- 
-            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);            
-        }
-
-        void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-        {
-            int    i,m;
-            int   nquad0 = m_base[0]->GetNumPoints();
-            int   nquad1 = m_base[1]->GetNumPoints();
-            int   order0 = m_base[0]->GetNumModes();
-            int   order1 = m_base[1]->GetNumModes();
-            Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
-            Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
-            int   mode0;
-
-            ASSERTL2(mode <= m_ncoeffs,
-                     "calling argument mode is larger than total expansion order");
-
-            m= order1;
-            for(i = 0; i < order0; ++i, m+=order1-i)
-            {
-                if(m > mode)
-                {
-                    mode0 = i;
-                    break;
-                }
-            }
-
-            // deal with top vertex mode in modified basis
-            if((mode == 1)&&(m_base[0]->GetBasisType() == LibUtilities::eModified_A))
-            {
-                Vmath::Fill(nquad0*nquad1 , 1.0, outarray, 1);
-            }
-            else
-            {
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Vcopy(nquad0,(NekDouble *)(base0.get()+mode0*nquad0),
-                                 1,&outarray[0]+i*nquad0,1);
-                }
-            }
-
-            for(i = 0; i < nquad0; ++i)
-            {
-                Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode*nquad1),1,&outarray[0]+i,
-                            nquad0,&outarray[0]+i,nquad0);
-            }
-        }       
-
-        void StdTriExp::GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
-                                               Array<OneD,NekDouble> &outarray,
-                                               const StdMatrixKey &mkey)
-        {
-            DNekMatSharedPtr& mat = m_stdMatrixManager[mkey];
-            
-            if(inarray.get() == outarray.get())
-            {
-                Array<OneD,NekDouble> tmp(m_ncoeffs);
-                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
-                
-                Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1); 
-            }
-            else
-            {
-                Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1); 
-            }
-        }
-        
-        void StdTriExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
-                                                   Array<OneD, NekDouble> &outarray)
-        {         
-            int    i; 
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-                
-            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
-
-            // multiply by integration constants 
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
-                            w0.get(),1, outarray.get()+i*nquad0,1);
-            }
-                
-            switch(m_base[1]->GetPointsType())
-            {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
-                }
-                break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
-                }
-                break;
-            }          
-        }
-
-        void StdTriExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD,NekDouble> &outarray,
-                                                         const StdMatrixKey &mkey)
-        {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
-            {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
-                int    i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nquadmax = max(nquad0,nquad1);
-                int    nqtot = nquad0*nquad1; 
-
-                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
-                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-                Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
-
-                BwdTrans_SumFac(inarray,physValues);
-
-                // Laplacian matrix operation
-                PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-                // multiply with metric terms of collapsed coordinate system
-                const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
-                const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
-
-                for(i = 0; i < nquad0; ++i)
-                {
-                    gfac0[i] = 0.5*(1+z0[i]);
-                }        
-            
-                for(i = 0; i < nquad1; ++i) 
-                {
-                    Vmath::Vvtvp(nquad0,&gfac0[0],1,dPhysValuesdy.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1);
-                } 
-
-                for(i = 0; i < nquad1; ++i)
-                {
-                    gfac0[i] = 2.0/(1-z1[i]);
-                }
-
-                for(i = 0; i < nquad1; ++i)  
-                {
-                    Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
-                }
-             
-                MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
-                MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
-                
-                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray,physValues);
-                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp,physValues);  
-                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);          
-            }    
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }    
-        }       
-        
-        void StdTriExp::HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD,NekDouble> &outarray,
-                                                         const StdMatrixKey &mkey)
-        {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            int    nquadmax = max(nquad0,nquad1);
-            NekDouble lambda = mkey.GetConstant(0);
-
-            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
-            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-            Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
-
-            BwdTrans_SumFac(inarray,physValues);
-
-            // mass matrix operation
-            IProductWRTBase_SumFac(physValues,tmp);
-
-            // Laplacian matrix operation
-            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-            // multiply with metric terms of collapsed coordinate system
-            const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
-            const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
-
-            for(i = 0; i < nquad0; ++i)
-            {
-                gfac0[i] = 0.5*(1+z0[i]);
-            }        
-            
-            for(i = 0; i < nquad1; ++i) 
-            {
-                Vmath::Vvtvp(nquad0,&gfac0[0],1,dPhysValuesdy.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1,dPhysValuesdx.get()+i*nquad0,1);
-            } 
-
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac0[i] = 2.0/(1-z1[i]);
-            }
-
-            for(i = 0; i < nquad1; ++i)  
-            {
-                Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
-            }
-             
-            MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
-            MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
-            
-            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray,physValues);
-            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp,physValues);  
-            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);                  
-        }
-
         //-----------------------------
         // Differentiation Methods
         //-----------------------------
 
-        void StdTriExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                                  Array<OneD, NekDouble> &out_d0, 
-                                  Array<OneD, NekDouble> &out_d1,
-                                  Array<OneD, NekDouble> &out_d2)
+        /**
+         * \brief Calculate the derivative of the physical points.
+         *
+         * \f$ \frac{\partial u}{\partial  x_1} =  \left . 
+         * \frac{2.0}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
+         * \right |_{\eta_2}\f$
+         *
+         * \f$ \frac{\partial u}{\partial  x_2} =  \left . 
+         * \frac{1+\eta_1}{1-\eta_2} \frac{\partial u}{\partial d\eta_1}
+         * \right |_{\eta_2}  + \left . \frac{\partial u}{\partial d\eta_2}
+         * \right |_{\eta_1}  \f$
+         */
+        void StdTriExp::v_PhysDeriv(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& out_d0, 
+                  Array<OneD,       NekDouble>& out_d1,
+                  Array<OneD,       NekDouble>& out_d2)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -464,89 +145,133 @@ namespace Nektar
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
+            for (i = 0; i < nquad1; ++i)
             {
                 wsp[i] = 2.0/(1-z1[i]);
             }
 
-            if(out_d0.num_elements() > 0)
+            if (out_d0.num_elements() > 0)
             {
                 PhysTensorDeriv(inarray, out_d0, out_d1);
                 
-                for(i = 0; i < nquad1; ++i)  
+                for (i = 0; i < nquad1; ++i)  
                 {
                     Blas::Dscal(nquad0,wsp[i],&out_d0[0]+i*nquad0,1);
                 }
 
-                if(out_d1.num_elements() > 0)// if no d1 required do not need to calculate both deriv
+                // if no d1 required do not need to calculate both deriv
+                if (out_d1.num_elements() > 0)
                 {
                     // set up geometric factor: (1_z0)/(1-z1)
-                    for(i = 0; i < nquad0; ++i)
+                    for (i = 0; i < nquad0; ++i)
                     {
                         wsp[i] = 0.5*(1+z0[i]);
                     }
                     
-                    for(i = 0; i < nquad1; ++i) 
+                    for (i = 0; i < nquad1; ++i) 
                     {
-                        Vmath::Vvtvp(nquad0,&wsp[0],1,&out_d0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
-                                     &out_d1[0]+i*nquad0,1);
+                        Vmath::Vvtvp(nquad0,&wsp[0],1,&out_d0[0]+i*nquad0,
+                                     1,&out_d1[0]+i*nquad0,
+                                     1,&out_d1[0]+i*nquad0,1);
                     }    
                 }
             }
-            else if(out_d1.num_elements() > 0)
+            else if (out_d1.num_elements() > 0)
             {
                 Array<OneD, NekDouble> diff0(nquad0*nquad1);
                 PhysTensorDeriv(inarray, diff0, out_d1);
                 
-                for(i = 0; i < nquad1; ++i)  
+                for (i = 0; i < nquad1; ++i)  
                 {
                     Blas::Dscal(nquad0,wsp[i],&diff0[0]+i*nquad0,1);
                 }
 
-                for(i = 0; i < nquad0; ++i)
+                for (i = 0; i < nquad0; ++i)
                 {
                     wsp[i] = 0.5*(1+z0[i]);
                 }
                 
-                for(i = 0; i < nquad1; ++i) 
+                for (i = 0; i < nquad1; ++i) 
                 {
-                    Vmath::Vvtvp(nquad0,&wsp[0],1,&diff0[0]+i*nquad0,1,&out_d1[0]+i*nquad0,1,
-                                 &out_d1[0]+i*nquad0,1);
+                    Vmath::Vvtvp(nquad0,&wsp[0],1,&diff0[0]+i*nquad0,
+                                 1,&out_d1[0]+i*nquad0,
+                                 1,&out_d1[0]+i*nquad0,1);
                 } 
             }
         }
         
-        void StdTriExp::PhysDeriv(const int dir, 
-                                  const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> &outarray)
+        void StdTriExp::v_PhysDeriv(
+            const int                           dir, 
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             switch(dir)
             {
-            case 0:
+                case 0:
                 {
-                    PhysDeriv(inarray, outarray, NullNekDouble1DArray);   
+                    v_PhysDeriv(inarray, outarray, NullNekDouble1DArray);   
+                    break;
                 }
-                break;
-            case 1:
+                case 1:
                 {
-                    PhysDeriv(inarray, NullNekDouble1DArray, outarray);   
+                    v_PhysDeriv(inarray, NullNekDouble1DArray, outarray);   
+                    break;
                 }
-                break;
-            default:
+                default:
                 {
                     ASSERTL1(false,"input dir is out of range");
+                    break;
                 }
-                break;
             }             
         }
 
+        void StdTriExp::v_PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble>& inarray,
+            const Array<OneD, const NekDouble>& direction,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            ASSERTL0(false,"This method is not defined "
+                     "or valid for this class type");
+        }
 
-        ///////////////////////////////
-        // Evaluation Methods
-        ///////////////////////////////
+        void StdTriExp::v_StdPhysDeriv(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& out_d0,
+                  Array<OneD,       NekDouble>& out_d1,
+                  Array<OneD,       NekDouble>& out_d2)
+        {
+            v_PhysDeriv(inarray, out_d0, out_d1);
+        }
 
-        void StdTriExp::BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
+        void StdTriExp::v_StdPhysDeriv(
+            const int dir, 
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            v_PhysDeriv(dir,inarray,outarray);
+        }
+        
+
+        //---------------------------------------
+        // Transforms
+        //---------------------------------------
+
+        /** 
+         * \brief Backward tranform for triangular elements
+         *
+         * @note 'q' (base[1]) runs fastest in this element.
+         */
+        void StdTriExp::v_BwdTrans(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            v_BwdTrans_SumFac(inarray,outarray);
+        }
+
+
+        void StdTriExp::v_BwdTrans_SumFac(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
         {
             Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()* 
                                        m_base[1]->GetNumModes());
@@ -556,25 +281,65 @@ namespace Nektar
                                   inarray,outarray,wsp);
         }
 
-        void StdTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray)
+        void StdTriExp::BwdTrans_SumFacKernel(
+            const Array<OneD, const NekDouble>& base0, 
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray,
+                  Array<OneD,       NekDouble>& wsp)
         {
+            int  i;
+            int  mode;
+            int  nquad0  = m_base[0]->GetNumPoints();
+            int  nquad1  = m_base[1]->GetNumPoints();
+            int  nmodes0 = m_base[0]->GetNumModes();
+            int  nmodes1 = m_base[1]->GetNumModes();
+            
+            ASSERTL1(wsp.num_elements() >= nquad0*nmodes1,
+                     "Workspace size is not sufficient");
+            ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
+                     (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                     "Basis[1] is not of general tensor type");
 
-            IProductWRTBase(inarray,outarray);
-
+            for (i = mode = 0; i < nmodes0; ++i)
+            {
+                Blas::Dgemv('N', nquad1,nmodes1-i,1.0,base1.get()+mode*nquad1,
+                            nquad1,&inarray[0]+mode,1,0.0,&wsp[0]+i*nquad1,1);
+                mode += nmodes1-i;
+            }
+            
+            // fix for modified basis by splitting top vertex mode
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
+                            &wsp[0]+nquad1,1);
+            }
+            
+            Blas::Dgemm('N','T', nquad0,nquad1,nmodes0,1.0, base0.get(),nquad0,
+                        &wsp[0], nquad1,0.0, &outarray[0], nquad0);
+        }
+        
+        void StdTriExp::v_FwdTrans(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            v_IProductWRTBase(inarray,outarray);
+            
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
             DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
-
+            
             // copy inarray in case inarray == outarray
             NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-
+            
             out = (*matsys)*in;
         }
 
-        void StdTriExp::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
-                                                Array<OneD, NekDouble> &outarray)
+
+        void StdTriExp::v_FwdTrans_BndConstrained(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
         {
             int i,j;
             int npoints[2] = {m_base[0]->GetNumPoints(),
@@ -603,20 +368,24 @@ namespace Nektar
                 physEdge[2][i] = inarray[(npoints[1]-1)*npoints[0]-i*npoints[0]];
             }
 
-            StdSegExpSharedPtr segexp[2] = {MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey()),
-                                            MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(m_base[1]->GetBasisKey())};
+            StdSegExpSharedPtr segexp[2] = {
+                MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(
+                    m_base[0]->GetBasisKey()),
+                MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(
+                    m_base[1]->GetBasisKey())
+            };
 
             Array<OneD, unsigned int> mapArray;
             Array<OneD, int>          signArray;
             NekDouble sign;
 
-            for(i = 0; i < 3; i++)
+            for (i = 0; i < 3; i++)
             {
                 //segexp[i!=0]->v_FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
                 segexp[i!=0]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
 
-                GetEdgeToElementMap(i,eForwards,mapArray,signArray);
-                for(j=0; j < nmodes[i!=0]; j++)
+                v_GetEdgeToElementMap(i,eForwards,mapArray,signArray);
+                for (j = 0; j < nmodes[i != 0]; j++)
                 {
                     sign = (NekDouble) signArray[j];
                     outarray[ mapArray[j] ] = sign * coeffEdge[i][j];
@@ -628,52 +397,298 @@ namespace Nektar
                 
             StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
             MassMatrixOp(outarray,tmp0,masskey);
-            IProductWRTBase(inarray,tmp1);
+            v_IProductWRTBase(inarray,tmp1);
                 
             Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
                 
             // get Mass matrix inverse (only of interior DOF)
             // use block (1,1) of the static condensed system
             // note: this block alreay contains the inverse matrix
-            DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
+            DNekMatSharedPtr matsys = 
+                (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
 
-            int nBoundaryDofs = NumBndryCoeffs();
+            int nBoundaryDofs = v_NumBndryCoeffs();
             int nInteriorDofs = m_ncoeffs - nBoundaryDofs; 
 
-            Array<OneD, NekDouble> rhs(nInteriorDofs);
+            Array<OneD, NekDouble> rhs   (nInteriorDofs);
             Array<OneD, NekDouble> result(nInteriorDofs);
 
-            GetInteriorMap(mapArray);
+            v_GetInteriorMap(mapArray);
 
-            for(i = 0; i < nInteriorDofs; i++)
+            for (i = 0; i < nInteriorDofs; i++)
             {
                 rhs[i] = tmp1[ mapArray[i] ];
             }
 
-            Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
-                        nInteriorDofs,rhs.get(),1,0.0,result.get(),1);   
+            Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,
+                        1.0,&(matsys->GetPtr())[0],nInteriorDofs,
+                        rhs.get(),1,
+                        0.0,result.get(),1);   
 
-            for(i = 0; i < nInteriorDofs; i++)
+            for (i = 0; i < nInteriorDofs; i++)
             {
                 outarray[ mapArray[i] ] = result[i];
             }
         }
 
-        NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+        //---------------------------------------
+        // Inner product functions
+        //---------------------------------------
+        
+        /** 
+         * \brief Calculate the inner product of inarray with respect to the
+         * basis B=base0[p]*base1[pq] and put into outarray.
+         *
+         * \f$ 
+         * \begin{array}{rcl}
+         * I_{pq} = (\phi^A_q \phi^B_{pq}, u) &=& 
+         * \sum_{i=0}^{nq_0}\sum_{j=0}^{nq_1}
+         * \phi^A_p(\eta_{0,i})\phi^B_{pq}(\eta_{1,j}) w^0_i w^1_j 
+         * u(\xi_{0,i} \xi_{1,j})\                             \
+         * & = & \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i})
+         * \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) \tilde{u}_{i,j} 
+         * \end{array}
+         * \f$ 
+         *
+         * where
+         *
+         * \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+         *
+         * which can be implemented as
+         *
+         * \f$  f_{pj} = \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i}) 
+         * \tilde{u}_{i,j} 
+         * \rightarrow {\bf B_1 U}  \f$
+         * \f$  I_{pq} = \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) f_{pj} 
+         * \rightarrow {\bf B_2[p*skip] f[skip]}  \f$
+         *
+         * \b Recall: \f$ \eta_{1} = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \, 
+         * \eta_2 = \xi_2\f$
+         *
+         * \b Note: For the orthgonality of this expansion to be realised the
+         * 'q' ordering must run fastest in contrast to the Quad and Hex
+         * ordering where 'p' index runs fastest to be consistent with the
+         * quadrature ordering.
+         *
+         * In the triangular space the i (i.e. \f$\eta_1\f$ direction)
+         * ordering still runs fastest by convention.
+         */        
+        void StdTriExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
         {
-            return PhysEvaluate(coords,m_phys);
+            StdTriExp::v_IProductWRTBase_SumFac(inarray,outarray);
+        }
+        
+        void StdTriExp::v_IProductWRTBase_MatOp(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int nq = GetTotPoints();
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
+            
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
-        NekDouble StdTriExp::PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        void StdTriExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    order0 = m_base[0]->GetNumModes();
+                            
+            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);         
+            
+            // multiply by integration constants 
+            MultiplyByQuadratureMetric(inarray,tmp);
+            
+            IProductWRTBase_SumFacKernel(
+                m_base[0]->GetBdata(),
+                m_base[1]->GetBdata(),
+                tmp,outarray,wsp);
+        }
+        
+        void StdTriExp::IProductWRTBase_SumFacKernel(
+            const Array<OneD, const NekDouble>& base0, 
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray,
+                  Array<OneD,       NekDouble>& wsp)
+        {
+            int    i;
+            int    mode;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();   
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    nmodes1 = m_base[1]->GetNumModes();
+            
+            ASSERTL1(wsp.num_elements() >= nquad1*nmodes0,
+                     "Workspace size is not sufficient");
+                
+            Blas::Dgemm('T','N',nquad1,nmodes0,nquad0,1.0,inarray.get(),nquad0,
+                        base0.get(),nquad0,0.0,wsp.get(),nquad1);
+                
+            // Inner product with respect to 'b' direction 
+            for (mode=i=0; i < nmodes0; ++i)
+            {
+                Blas::Dgemv('T',nquad1,nmodes1-i,1.0, base1.get()+mode*nquad1,
+                            nquad1,wsp.get()+i*nquad1,1, 0.0, 
+                            outarray.get() + mode,1);
+                mode += nmodes1 - i;
+            }
+            
+            // fix for modified basis by splitting top vertex mode
+            if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
+                                          wsp.get()+nquad1,1);
+            }
+        }   
+        
+        void StdTriExp::v_IProductWRTDerivBase(
+            const int                           dir, 
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            StdTriExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+        }
+        
+        void StdTriExp::v_IProductWRTDerivBase_MatOp(
+            const int                           dir, 
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int nq = GetTotPoints();
+            MatrixType mtype;
+
+            switch(dir)
+            {
+                case 0:
+                {
+                    mtype = eIProductWRTDerivBase0;
+                    break;
+                }
+                case 1:
+                {
+                    mtype = eIProductWRTDerivBase1;
+                    break;
+                }
+                default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                    break;
+                }
+            }  
+
+            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
+ 
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+        }
+
+        void StdTriExp::v_IProductWRTDerivBase_SumFac(
+            const int                           dir, 
+            const Array<OneD, const NekDouble>& inarray, 
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int    i;
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1; 
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
+
+            Array<OneD, NekDouble> gfac0(2*wspsize);
+            Array<OneD, NekDouble> tmp0 (gfac0+wspsize);
+
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            
+            // set up geometric factor: 2/(1-z1)
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,
+                            &tmp0[0]+i*nquad0,1);
+            }
+                 
+            MultiplyByQuadratureMetric(tmp0,tmp0);
+
+            switch(dir)
+            {
+                case 0:
+                {                    
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 tmp0,outarray,gfac0);
+                    break;
+                }
+                case 1:
+                {
+                    Array<OneD, NekDouble> tmp3(m_ncoeffs);    
+                    const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+
+                    for (i = 0; i < nquad0; ++i)
+                    {
+                        gfac0[i] = 0.5*(1+z0[i]);
+                    }        
+
+                    for (i = 0; i < nquad1; ++i) 
+                    {
+                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,
+                                    &tmp0[0]+i*nquad0,1);
+                    }       
+          
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 tmp0,tmp3,gfac0); 
+
+                    MultiplyByQuadratureMetric(inarray,tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetDbdata(),
+                                                 tmp0,outarray,gfac0);  
+                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,
+                                &outarray[0],1);      
+                    break;
+                }
+                default:
+                {
+                    ASSERTL1(false, "input dir is out of range");
+                    break;
+                }
+            }             
+        }
+
+        //---------------------------------------
+        // Evaluation functions
+        //---------------------------------------
+
+        NekDouble StdTriExp::v_PhysEvaluate(
+            const Array<OneD, const NekDouble>& coords)
+        {
+            return v_PhysEvaluate(coords,m_phys);
+        }
+
+        NekDouble StdTriExp::v_PhysEvaluate(
+            const Array<OneD, const NekDouble>& coords,
+            const Array<OneD, const NekDouble>& physvals)
         {
             Array<OneD, NekDouble> coll(2);
 
             // set up local coordinate system 
-            if((fabs(coords[0]+1.0) < NekConstants::kNekZeroTol)
-               &&(fabs(coords[1]-1.0) < NekConstants::kNekZeroTol))
+            if (fabs(coords[0]+1.0) < NekConstants::kNekZeroTol &&
+                fabs(coords[1]-1.0) < NekConstants::kNekZeroTol)
             {
                 coll[0] = -1.0;
-                coll[1] = 1.0;
+                coll[1] =  1.0;
             }
             else
             {
@@ -681,281 +696,191 @@ namespace Nektar
                 coll[1] = coords[1]; 
             }
 
-            return  StdExpansion2D::PhysEvaluate(coll,physvals); 
+            return StdExpansion2D::PhysEvaluate(coll,physvals); 
         }
 
-        void StdTriExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        void StdTriExp::v_FillMode(
+            const int mode, Array<OneD, NekDouble> &outarray)
         {
-            const LibUtilities::BasisType Btype0 = GetBasisType(0);
-            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+            int   i,m;
+            int   nquad0 = m_base[0]->GetNumPoints();
+            int   nquad1 = m_base[1]->GetNumPoints();
+            int   order0 = m_base[0]->GetNumModes();
+            int   order1 = m_base[1]->GetNumModes();
+            int   mode0;
+            Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
 
-            ASSERTL1((Btype0 == LibUtilities::eModified_A)&&
-                     (Btype1 == LibUtilities::eModified_B),
-                     "Expansion not of a proper type");
-            int i;
-            int cnt;
-            int nummodes0, nummodes1;
-            int value;
-            if(outarray.num_elements()!=NumBndryCoeffs())
+            ASSERTL2(mode <= m_ncoeffs,
+                     "calling argument mode is larger than "
+                     "total expansion order");
+
+            m = order1;
+            for (i = 0; i < order0; ++i, m+=order1-i)
             {
-                outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
-            }
-
-            nummodes0 = m_base[0]->GetNumModes();
-            nummodes1 = m_base[1]->GetNumModes();
-
-            value = 2*nummodes1-1;
-            for(i = 0; i < value; i++)
-            {
-                outarray[i]=i;
-            }
-            cnt = value;
-
-            for(i = 0; i < nummodes0-2; i++)
-            {
-                outarray[cnt++]=value;
-                value += nummodes1-2-i;
-            }
-        }
-
-        void StdTriExp::GetInteriorMap(Array<OneD, unsigned int>& outarray)
-        {
-            const LibUtilities::BasisType Btype0 = GetBasisType(0);
-            const LibUtilities::BasisType Btype1 = GetBasisType(1);
-
-            ASSERTL1((Btype0 == LibUtilities::eModified_A)&&
-                     (Btype1 == LibUtilities::eModified_B),
-                     "Expansion not of a proper type");
-
-            int i,j;
-            int cnt=0;
-            int nummodes0, nummodes1;
-            int startvalue;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
-            {
-                outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
-            }
-
-            nummodes0 = m_base[0]->GetNumModes();
-            nummodes1 = m_base[1]->GetNumModes();
-
-            startvalue = 2*nummodes1;
-
-            for(i = 0; i < nummodes0-2; i++)
-            {
-                for(j = 0; j < nummodes1-3-i; j++)
+                if (m > mode)
                 {
-                    outarray[cnt++]=startvalue+j;
+                    mode0 = i;
+                    break;
                 }
-                startvalue+=nummodes1-2-i;
-            }
-        }
-
-        int StdTriExp::GetVertexMap(const int localVertexId)
-        {
-            ASSERTL0((GetEdgeBasisType(localVertexId)==LibUtilities::eModified_A)||
-                     (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_B),
-                     "Mapping not defined for this type of basis");
-            
-            int localDOF;
-            switch(localVertexId)
-            {
-            case 0:
-                { 
-                    localDOF = 0;    
-                }
-                break;
-            case 1:
-                {   
-                    localDOF = m_base[1]->GetNumModes();                 
-                }
-                break;
-            case 2:
-                { 
-                    localDOF = 1;    
-                }
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 2");
-                break;
             }
 
-            return localDOF;
-        }
- 
-        void StdTriExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                           Array<OneD, unsigned int> &maparray,
-                                           Array<OneD, int> &signarray)
-        {
-            ASSERTL0((GetEdgeBasisType(eid)==LibUtilities::eModified_A)||
-                     (GetEdgeBasisType(eid)==LibUtilities::eModified_B),
-                     "Mapping not defined for this type of basis");
-            int i;
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
-
-            if(maparray.num_elements() != nEdgeIntCoeffs)
+            // deal with top vertex mode in modified basis
+            if (mode == 1 && 
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
-            }
-
-            if(signarray.num_elements() != nEdgeIntCoeffs)
-            {
-                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+                Vmath::Fill(nquad0*nquad1 , 1.0, outarray, 1);
             }
             else
             {
-                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+                for (i = 0; i < nquad1; ++i)
+                {
+                    Vmath::Vcopy(nquad0,(NekDouble *)(base0.get()+mode0*nquad0),
+                                 1,&outarray[0]+i*nquad0,1);
+                }
             }
 
-            switch(eid)
+            for(i = 0; i < nquad0; ++i)
             {
-            case 0:
-                {         
-                    int cnt = 2*nummodes1 - 1;
-                    for(i = 0; i < nEdgeIntCoeffs; cnt+=nummodes1-2-i, ++i)
-                    {
-                        maparray[i] = cnt; 
-                    }   
+                Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode*nquad1),
+                            1,&outarray[0]+i,nquad0,&outarray[0]+i,nquad0);
+            }
+        }       
 
-                    if(edgeOrient==eBackwards)
-                    {                            
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }       
-                }
-                break;
-            case 1:
-                {
-                    for(i = 0; i < nEdgeIntCoeffs; i++)
-                    {
-                        maparray[i] = nummodes1+1+i; 
-                    }            
 
-                    if(edgeOrient==eBackwards)
-                    {                            
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }            
-                }
-                break;
-            case 2:
-                {
-                    for(i = 0; i < nEdgeIntCoeffs; i++)
-                    {
-                        maparray[i] = 2+i;
-                    }  
-
-                    if(edgeOrient==eForwards)
-                    {                            
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }                      
-                }
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 2");
-                break;
-            }  
+        int StdTriExp::v_GetNverts() const
+        {
+            return 3;
+        }
+        
+        int StdTriExp::v_GetNedges() const
+        {
+            return 3;
         }
 
-        void StdTriExp::GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
-                                            Array<OneD, unsigned int> &maparray,
-                                            Array<OneD, int> &signarray)
-        {           
-            ASSERTL0((GetEdgeBasisType(eid)==LibUtilities::eModified_A)||
-                     (GetEdgeBasisType(eid)==LibUtilities::eModified_B),
-                     "Mapping not defined for this type of basis");
-            int i;
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+        ExpansionType StdTriExp::v_DetExpansionType() const
+        {
+            return eTriangle;
+        }
+        
+        int StdTriExp::v_NumBndryCoeffs() const
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B,
+                     "BasisType is not a boundary interior form");
+            
+            return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
+        } 
+        
+        int StdTriExp::v_NumDGBndryCoeffs() const
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B,
+                     "BasisType is not a boundary interior form");
+            
+            return GetBasisNumModes(0) + 2*GetBasisNumModes(1);
+        } 
+        
+        int StdTriExp::v_GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 2, "edge id is out of range");
 
-            if(maparray.num_elements() != nEdgeCoeffs)
+            if (i == 0)
             {
-                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
-            }
-
-            if(signarray.num_elements() != nEdgeCoeffs)
-            {
-                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+                return GetBasisNumModes(0);
             }
             else
             {
-                fill( signarray.get() , signarray.get()+nEdgeCoeffs, 1 );
+                return GetBasisNumModes(1);
             }
-            
-            switch(eid)
-            {
-            case 0:
-                {         
-                    int cnt = 0;
-                    for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
-                    {
-                        maparray[i] = cnt; 
-                    }  
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        } 
-                    }        
-                }
-                break;
-            case 1:
-                {
-                    maparray[0] = nummodes1;
-                    maparray[1] = 1;
-                    for(i = 2; i < nEdgeCoeffs; i++)
-                    {
-                        maparray[i] = nummodes1-1+i; 
-                    } 
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }                         
-                }
-                break;
-            case 2:
-                {
-                    for(i = 0; i < nEdgeCoeffs; i++)
-                    {
-                        maparray[i] = i;
-                    }   
-
-                    if(edgeOrient==eForwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-                        
-                        for(i = 3; i < nEdgeCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }                         
-                    }                      
-                }
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 2");
-                break;
-            }  
         }
 
-        void StdTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+        int StdTriExp::v_GetEdgeNumPoints(const int i) const
+        {
+            ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
+            
+            if (i == 0)
+            {
+                return GetNumPoints(0);
+            }
+            else
+            {
+                return GetNumPoints(1); 
+            }
+        }
+
+        int StdTriExp::v_CalcNumberOfCoefficients(
+            const std::vector<unsigned int> &nummodes, 
+            int                             &modes_offset)
+        {
+            int nmodes = StdRegions::StdTriData::getNumberOfCoefficients(
+                nummodes[modes_offset],
+                nummodes[modes_offset+1]);
+            modes_offset += 2;
+                
+            return nmodes;
+        }
+
+        LibUtilities::BasisType StdTriExp::v_GetEdgeBasisType(const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 2, "edge id is out of range");
+            
+            if (i == 0)
+            {
+                return GetBasisType(0);
+            }
+            else
+            {
+                return GetBasisType(1);
+            }
+        }
+
+        void StdTriExp::v_ReadFromFile(
+            std::ifstream &infile, 
+            OutputFormat   format, 
+            const bool     dumpVar)
+        {
+            if (format == eTecplot)
+            {
+                int  i,j;
+                int  nq0,nq1;
+                int  nquad0 = m_base[0]->GetNumPoints();
+                int  nquad1 = m_base[1]->GetNumPoints();
+                char str[256];
+
+                if(dumpVar)
+                {
+                    infile.getline(str,sizeof(str));
+                    infile.getline(str,sizeof(str));
+                }
+                infile.getline(str,sizeof(str));
+                sscanf(str,"Zone, I=%d, J=%d",&nq0,&nq1);
+                ASSERTL1(nq0 == nquad0,"nquad0 does not match");
+                ASSERTL1(nq1 == nquad1,"nquad0 does not match");
+                
+                for(j = 0; j < nquad1; ++j)
+                {
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        infile.getline(str,sizeof(str));
+                        sscanf(str,"%*f %*f %lf",&m_phys[0]+j*nquad0+i);
+                    }
+                }
+            } 
+            else
+            {
+                ASSERTL0(false, "Input routine not implemented for "
+                         "requested type of output");
+            }
+        }
+
+        void StdTriExp::v_WriteToFile(
+            std::ofstream &outfile,
+            OutputFormat   format,
+            const bool     dumpVar,
+            std::string    var)
         {
             if(format==eTecplot)
             {
@@ -970,7 +895,8 @@ namespace Nektar
                     outfile << "Variables = z1,  z2"; 
                     outfile << ", "<< var << std::endl << std::endl;
                 }
-                outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
+                outfile << "Zone, I=" << nquad0
+                        << ", J=" << nquad1 <<", F=Point" << std::endl;
                 
                 for(j = 0; j < nquad1; ++j)
                 {
@@ -1000,18 +926,23 @@ namespace Nektar
 
                 // calculate the coefficients (monomial format)
                 int i,j;
-                int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                int maxnummodes = max(m_base[0]->GetNumModes(),
+                                      m_base[1]->GetNumModes());
                    
-                const LibUtilities::PointsKey Pkey1Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
-                const LibUtilities::PointsKey Pkey2Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
-                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),maxnummodes,Pkey1Gmsh);
-                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),maxnummodes,Pkey2Gmsh);
+                const LibUtilities::PointsKey Pkey1Gmsh(
+                    maxnummodes,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::PointsKey Pkey2Gmsh(
+                    maxnummodes,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::BasisKey  Bkey1Gmsh(
+                    m_base[0]->GetBasisType(),maxnummodes,Pkey1Gmsh);
+                const LibUtilities::BasisKey  Bkey2Gmsh(
+                    m_base[1]->GetBasisType(),maxnummodes,Pkey2Gmsh);
                 LibUtilities::PointsType ptype = LibUtilities::eNodalTriElec;
 
                 StdRegions::StdNodalTriExpSharedPtr EGmsh;
                 EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
                     AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
-
+                
                 Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
                 Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
                 EGmsh->GetNodalPoints(xi1,xi2);
@@ -1047,12 +978,14 @@ namespace Nektar
                     }            
                 }
 
-                NekMatrix<NekDouble> vdm(EGmsh->GetNcoeffs(),EGmsh->GetNcoeffs());
+                NekMatrix<NekDouble> vdm(EGmsh->GetNcoeffs(),
+                                         EGmsh->GetNcoeffs());
                 for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
                 {
                     for(j = 0 ; j < EGmsh->GetNcoeffs(); j++)
                     {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                        vdm(i,j) = pow(x[i],exponentMap[j][0])*
+                            pow(y[i],exponentMap[j][1]);
                     }
                 } 
 
@@ -1141,48 +1074,12 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
+                ASSERTL0(false, "Output routine not implemented for "
+                         "requested type of output");
             }
         }
 
-        
-        void StdTriExp::ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar)
-        {
-            if(format==eTecplot)
-            {
-                int  i,j;
-                int  nq0,nq1;
-                int  nquad0 = m_base[0]->GetNumPoints();
-                int  nquad1 = m_base[1]->GetNumPoints();
-                char str[256];
-
-                if(dumpVar)
-                {
-                    infile.getline(str,sizeof(str));
-                    infile.getline(str,sizeof(str));
-                }
-                infile.getline(str,sizeof(str));
-                sscanf(str,"Zone, I=%d, J=%d",&nq0,&nq1);
-                ASSERTL1(nq0 == nquad0,"nquad0 does not match");
-                ASSERTL1(nq1 == nquad1,"nquad0 does not match");
-                
-                for(j = 0; j < nquad1; ++j)
-                {
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        infile.getline(str,sizeof(str));
-                        sscanf(str,"%*f %*f %lf",&m_phys[0]+j*nquad0+i);
-                    }
-                }
-            } 
-            else
-            {
-                ASSERTL0(false, "Input routine not implemented for requested type of output");
-            }
-        }
-
-        //   I/O routine
-        void StdTriExp::WriteCoeffsToFile(std::ofstream &outfile)
+        void StdTriExp::v_WriteCoeffsToFile(std::ofstream &outfile)
         {
             int  i,j;
             int  order0 = m_base[0]->GetNumModes();
@@ -1190,9 +1087,8 @@ namespace Nektar
             int  cnt = 0;
             Array<OneD, NekDouble> wsp(order0*order1,0.0);
 
-            // put coeffs into matrix and reverse order so that p index is fastest
-            // recall q is fastest for tri's
-
+            // Put coeffs into matrix and reverse order so that p index is
+            // fastest; recall q is fastest for triangles.
             for(i = 0; i < order0; ++i)
             {
                 for(j = 0; j < order1-i; ++j,cnt++)
@@ -1214,46 +1110,9 @@ namespace Nektar
             outfile << "]" ; 
         }
         
-        const LibUtilities::BasisKey StdTriExp::DetEdgeBasisKey(const int i) const
-        {
-            ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
-            
-            if(i == 0)
-            {
-                return  GetBasis(0)->GetBasisKey();
-            }
-            else
-            {
-                switch(m_base[1]->GetBasisType())
-                {
-                case LibUtilities::eModified_B:
-                    {
-                        switch(m_base[1]->GetPointsType())
-                        {
-                        case LibUtilities::eGaussRadauMAlpha1Beta0:
-                            {                            
-                                LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoLegendre);
-                                
-                                return LibUtilities::BasisKey(LibUtilities::eModified_A,m_base[1]->GetNumModes(),pkey);
-                            }
-                            break;
-
-			default:
-			  ASSERTL0(false,"unexpected points distribution");
-			  break;
-                        }
-                    }
-                default:
-                    ASSERTL0(false,"Information not available to set edge key");
-                    break;
-                }
-                
-            }
-        }
-
-
-        void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
-                                  Array<OneD, NekDouble> &coords_1)
+        void StdTriExp::v_GetCoords(Array<OneD, NekDouble> &coords_0, 
+                                    Array<OneD, NekDouble> &coords_1,
+                                    Array<OneD, NekDouble> &coords_2)
         {
             Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
             Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
@@ -1271,232 +1130,614 @@ namespace Nektar
             }
         }
 
+        bool StdTriExp::v_IsBoundaryInteriorExpansion()
+        {
+            return m_base[0]->GetBasisType() == LibUtilities::eModified_A &&
+                   m_base[1]->GetBasisType() == LibUtilities::eModified_B;
+        }
+
+        int StdTriExp::v_DetCartesianDirOfEdge(const int edge)
+        {
+            ASSERTL2(edge >= 0 && edge <= 2, "edge id is out of range");
+            
+            return edge == 0 ? 0 : 1;
+        }
+
+        const LibUtilities::BasisKey StdTriExp::v_DetEdgeBasisKey(
+            const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 2, "edge id is out of range");
+            
+            if (i == 0)
+            {
+                return GetBasis(0)->GetBasisKey();
+            }
+            else
+            {
+                switch(m_base[1]->GetBasisType())
+                {
+                    case LibUtilities::eModified_B:
+                    {
+                        switch(m_base[1]->GetPointsType())
+                        {
+                            case LibUtilities::eGaussRadauMAlpha1Beta0:
+                            {                            
+                                LibUtilities::PointsKey pkey(
+                                    m_base[1]->GetBasisKey().GetPointsKey().
+                                    GetNumPoints()+1,
+                                    LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(
+                                    LibUtilities::eModified_A,
+                                    m_base[1]->GetNumModes(),pkey);
+                                break;
+                            }
+
+			default:
+                            ASSERTL0(false,"unexpected points distribution");
+                            break;
+                        }
+                    }
+                default:
+                    ASSERTL0(false,"Information not available to set edge key");
+                    break;
+                }
+            }
+        }
+
+
+
+        //--------------------------
+        // Mappings
+        //--------------------------
+        
+        void StdTriExp::v_GetEdgeToElementMap(
+            const int                  eid, 
+            const EdgeOrientation      edgeOrient,
+            Array<OneD, unsigned int>& maparray,
+            Array<OneD,          int>& signarray)
+        {
+            ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
+                     GetEdgeBasisType(eid) == LibUtilities::eModified_B,
+                     "Mapping not defined for this type of basis");
+            
+            int i;
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
+
+            if(maparray.num_elements() != nEdgeCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            }
+
+            if(signarray.num_elements() != nEdgeCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeCoeffs,1);
+            }
+            else
+            {
+                fill(signarray.get() , signarray.get()+nEdgeCoeffs, 1);
+            }
+            
+            switch(eid)
+            {
+                case 0:
+                {         
+                    int cnt = 0;
+                    for(i = 0; i < nEdgeCoeffs; cnt+=nummodes1-i, ++i)
+                    {
+                        maparray[i] = cnt; 
+                    }  
+
+                    if(edgeOrient==eBackwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+
+                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        } 
+                    }        
+                    break;
+                }
+                case 1:
+                {
+                    maparray[0] = nummodes1;
+                    maparray[1] = 1;
+                    for(i = 2; i < nEdgeCoeffs; i++)
+                    {
+                        maparray[i] = nummodes1-1+i; 
+                    } 
+
+                    if(edgeOrient==eBackwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+
+                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }                         
+                    break;
+                }
+                case 2:
+                {
+                    for(i = 0; i < nEdgeCoeffs; i++)
+                    {
+                        maparray[i] = i;
+                    }   
+
+                    if(edgeOrient==eForwards)
+                    {
+                        swap( maparray[0] , maparray[1] );
+                        
+                        for(i = 3; i < nEdgeCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }                         
+                    }                      
+                    break;
+                }
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+                break;
+            }  
+        }
+
+        int StdTriExp::v_GetVertexMap(const int localVertexId)
+        {
+            ASSERTL0(
+                GetEdgeBasisType(localVertexId) == LibUtilities::eModified_A ||
+                GetEdgeBasisType(localVertexId) == LibUtilities::eModified_B,
+                "Mapping not defined for this type of basis");
+            
+            int localDOF;
+            switch(localVertexId)
+            {
+                case 0:
+                { 
+                    localDOF = 0;    
+                    break;
+                }
+                case 1:
+                {   
+                    localDOF = m_base[1]->GetNumModes();                 
+                    break;
+                }
+                case 2:
+                { 
+                    localDOF = 1;    
+                    break;
+                }
+                default:
+                {
+                    ASSERTL0(false,"eid must be between 0 and 2");
+                    break;
+                }
+            }
+            
+            return localDOF;
+        }
+
+        void StdTriExp::v_GetEdgeInteriorMap(
+            const int                  eid,
+            const EdgeOrientation      edgeOrient,
+            Array<OneD, unsigned int>& maparray,
+            Array<OneD,          int>& signarray)
+        {
+            ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A||
+                     GetEdgeBasisType(eid) == LibUtilities::eModified_B,
+                     "Mapping not defined for this type of basis");
+            int i;
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
+
+            if(maparray.num_elements() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+            }
+
+            switch(eid)
+            {
+                case 0:
+                {         
+                    int cnt = 2*nummodes1 - 1;
+                    for(i = 0; i < nEdgeIntCoeffs; cnt+=nummodes1-2-i, ++i)
+                    {
+                        maparray[i] = cnt; 
+                    }   
+
+                    if(edgeOrient==eBackwards)
+                    {                            
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }       
+                    break;
+                }
+                case 1:
+                {
+                    for(i = 0; i < nEdgeIntCoeffs; i++)
+                    {
+                        maparray[i] = nummodes1+1+i; 
+                    }            
+
+                    if(edgeOrient==eBackwards)
+                    {                            
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }            
+                    break;
+                }
+                case 2:
+                {
+                    for(i = 0; i < nEdgeIntCoeffs; i++)
+                    {
+                        maparray[i] = 2+i;
+                    }  
+
+                    if(edgeOrient==eForwards)
+                    {                            
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }                      
+                    break;
+                }
+                default:
+                {
+                    ASSERTL0(false,"eid must be between 0 and 2");
+                    break;
+                }
+            }
+        }
+
+        void StdTriExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            const LibUtilities::BasisType Btype0 = GetBasisType(0);
+            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+            
+            ASSERTL1(Btype0 == LibUtilities::eModified_A &&
+                     Btype1 == LibUtilities::eModified_B,
+                     "Expansion not of a proper type");
+            
+            int i,j;
+            int cnt = 0;
+            int nummodes0, nummodes1;
+            int startvalue;
+            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
+            }
+
+            nummodes0 = m_base[0]->GetNumModes();
+            nummodes1 = m_base[1]->GetNumModes();
+
+            startvalue = 2*nummodes1;
+
+            for(i = 0; i < nummodes0-2; i++)
+            {
+                for(j = 0; j < nummodes1-3-i; j++)
+                {
+                    outarray[cnt++]=startvalue+j;
+                }
+                startvalue+=nummodes1-2-i;
+            }
+        }
+
+        void StdTriExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            const LibUtilities::BasisType Btype0 = GetBasisType(0);
+            const LibUtilities::BasisType Btype1 = GetBasisType(1);
+
+            ASSERTL1(Btype0 == LibUtilities::eModified_A &&
+                     Btype1 == LibUtilities::eModified_B,
+                     "Expansion not of a proper type");
+            int i;
+            int cnt;
+            int nummodes0, nummodes1;
+            int value;
+
+            if (outarray.num_elements()!=NumBndryCoeffs())
+            {
+                outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
+            }
+
+            nummodes0 = m_base[0]->GetNumModes();
+            nummodes1 = m_base[1]->GetNumModes();
+
+            value = 2*nummodes1-1;
+            for(i = 0; i < value; i++)
+            {
+                outarray[i]=i;
+            }
+            cnt = value;
+
+            for(i = 0; i < nummodes0-2; i++)
+            {
+                outarray[cnt++]=value;
+                value += nummodes1-2-i;
+            }
+        }
+
+
+        //---------------------------------------
+        // Wrapper functions
+        //---------------------------------------
+        
+        DNekMatSharedPtr StdTriExp::v_GenMatrix(const StdMatrixKey &mkey)
+        {
+            return StdExpansion::CreateGeneralMatrix(mkey);
+        }
+        
+        DNekMatSharedPtr StdTriExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
+        {
+            return v_GenMatrix(mkey);
+        }
+
+        
+        //---------------------------------------
+        // Operator evaluation functions
+        //---------------------------------------
+        
+        void StdTriExp::v_MassMatrixOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
+        }
+        
+        void StdTriExp::v_LaplacianMatrixOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            StdTriExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
+        }
+        
+        void StdTriExp::v_LaplacianMatrixOp(
+            const int                           k1,
+            const int                           k2,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            StdExpansion::LaplacianMatrixOp_MatFree(
+                k1,k2,inarray,outarray,mkey);
+        }
+        
+        void StdTriExp::v_WeakDerivMatrixOp(
+            const int                           i,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
+        }
+        
+        void StdTriExp::v_HelmholtzMatrixOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            StdTriExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
+        }
+        
+        void StdTriExp::v_LaplacianMatrixOp_MatFree(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            {
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
+                int    i;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int    nquadmax = max(nquad0,nquad1);
+                int    nqtot = nquad0*nquad1; 
+
+                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
+                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+                Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
+
+                BwdTrans_SumFac(inarray,physValues);
+
+                // Laplacian matrix operation
+                PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+                // multiply with metric terms of collapsed coordinate system
+                const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
+                const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
+
+                for(i = 0; i < nquad0; ++i)
+                {
+                    gfac0[i] = 0.5*(1+z0[i]);
+                }        
+            
+                for(i = 0; i < nquad1; ++i) 
+                {
+                    Vmath::Vvtvp(nquad0,&gfac0[0],1,
+                                 dPhysValuesdy.get()+i*nquad0,1,
+                                 dPhysValuesdx.get()+i*nquad0,1,
+                                 dPhysValuesdx.get()+i*nquad0,1);
+                } 
+
+                for(i = 0; i < nquad1; ++i)
+                {
+                    gfac0[i] = 2.0/(1-z1[i]);
+                }
+
+                for(i = 0; i < nquad1; ++i)  
+                {
+                    Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
+                }
+             
+                MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
+                MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
+                
+                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                             m_base[1]->GetBdata(),
+                                             dPhysValuesdx,outarray,physValues);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetDbdata(),
+                                             dPhysValuesdy,tmp,physValues);  
+                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,
+                            outarray.get(),1);          
+            }    
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
+                    inarray,outarray,mkey);
+            }    
+        }       
+        
+        void StdTriExp::v_HelmholtzMatrixOp_MatFree(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            int    i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1; 
+            int    nquadmax = max(nquad0,nquad1);
+            NekDouble lambda = mkey.GetConstant(0);
+
+            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
+            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+            Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
+
+            BwdTrans_SumFac(inarray,physValues);
+
+            // mass matrix operation
+            IProductWRTBase_SumFac(physValues,tmp);
+
+            // Laplacian matrix operation
+            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+            // multiply with metric terms of collapsed coordinate system
+            const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
+
+            for(i = 0; i < nquad0; ++i)
+            {
+                gfac0[i] = 0.5*(1+z0[i]);
+            }        
+            
+            for(i = 0; i < nquad1; ++i) 
+            {
+                Vmath::Vvtvp(nquad0,&gfac0[0],1,
+                             dPhysValuesdy.get()+i*nquad0,1,
+                             dPhysValuesdx.get()+i*nquad0,1,
+                             dPhysValuesdx.get()+i*nquad0,1);
+            } 
+
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac0[i] = 2.0/(1-z1[i]);
+            }
+
+            for(i = 0; i < nquad1; ++i)  
+            {
+                Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
+            }
+             
+            MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
+            MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
+            
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata(),
+                                         dPhysValuesdx,outarray,physValues);
+            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetDbdata(),
+                                         dPhysValuesdy,tmp,physValues);  
+            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,
+                        outarray.get(),1);                  
+        }
+
+        void StdTriExp::v_GeneralMatrixOp_MatOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
+        {
+            DNekMatSharedPtr& mat = m_stdMatrixManager[mkey];
+            
+            if(inarray.get() == outarray.get())
+            {
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
+                
+                Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1); 
+            }
+            else
+            {
+                Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1); 
+            }
+        }
+
+        //---------------------------------------
+        // Private helper functions
+        //---------------------------------------
+        
+        void StdTriExp::MultiplyByQuadratureMetric(
+            const Array<OneD, const NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
+        {
+            int    i; 
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+                
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+
+            // multiply by integration constants 
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
+                            w0.get(),1, outarray.get()+i*nquad0,1);
+            }
+                
+            switch(m_base[1]->GetPointsType())
+            {
+                // Legendre inner product 
+                case LibUtilities::eGaussLobattoLegendre: 
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i],
+                                    outarray.get()+i*nquad0,1);
+                    }
+                    break;
+
+                // (1,0) Jacobi Inner product 
+                case LibUtilities::eGaussRadauMAlpha1Beta0:
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Blas::Dscal(nquad0,0.5*w1[i],outarray.get()+i*nquad0,1);
+                    }
+                    break;
+            }
+        }
     }//end namespace
 }//end namespace
-
-
-/** 
- * $Log: StdTriExp.cpp,v $
- * Revision 1.62  2009/12/17 01:37:54  bnelson
- * Fixed visual studio compiler warning.
- *
- * Revision 1.61  2009/10/22 17:29:37  cbiotto
- * Updates for variable order expansion
- *
- * Revision 1.60  2009/09/23 12:42:09  pvos
- * Updates for variable order expansions
- *
- * Revision 1.59  2009/08/19 14:13:35  claes
- * Removed Gauss-Kronrod parts
- *
- * Revision 1.58  2009/08/17 11:53:47  pvos
- * Fixed bug
- *
- * Revision 1.57  2009/06/18 11:47:24  claes
- * changes supporting the static use of Kronrod points
- *
- * Revision 1.56  2009/06/15 01:59:21  claes
- * Gauss-Kronrod updates
- *
- * Revision 1.55  2009/04/27 21:32:45  sherwin
- * Updated WriteToField method
- *
- * Revision 1.54  2009/04/22 22:30:48  sherwin
- * Added ReadFromFile method to read back in .dat file
- *
- * Revision 1.53  2009/04/20 16:11:47  sherwin
- * Mods to handle output and optimise DG work
- *
- * Revision 1.52  2009/01/21 16:58:39  pvos
- * Added additional geometric factors to improve efficiency
- *
- * Revision 1.51  2008/12/18 14:11:35  pvos
- * NekConstants Update
- *
- * Revision 1.50  2008/12/16 11:31:52  pvos
- * Performance updates
- *
- * Revision 1.49  2008/11/24 10:31:14  pvos
- * Changed name from _PartitionedOp to _MatFree
- *
- * Revision 1.48  2008/11/19 16:02:47  pvos
- * Added functionality for variable Laplacian coeffcients
- *
- * Revision 1.47  2008/11/05 16:08:15  pvos
- * Added elemental optimisation functionality
- *
- * Revision 1.46  2008/09/23 18:19:26  pvos
- * Updates for working ProjectContField3D demo
- *
- * Revision 1.45  2008/09/17 13:46:06  pvos
- * Added LocalToGlobalC0ContMap for 3D expansions
- *
- * Revision 1.44  2008/09/08 08:04:18  pvos
- * removed NEKTAR_USING_DIRECT_BLAS_CALLS
- *
- * Revision 1.43  2008/08/28 15:03:54  pvos
- * small efficiency updates
- *
- * Revision 1.42  2008/07/31 21:20:56  sherwin
- * Updates to make DG advection run with tris
- *
- * Revision 1.41  2008/07/31 11:10:15  sherwin
- * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
- *
- * Revision 1.40  2008/07/19 21:12:54  sherwin
- * Removed MapTo function and made orientation convention anticlockwise in UDG routines
- *
- * Revision 1.39  2008/07/04 10:18:41  pvos
- * Some updates
- *
- * Revision 1.38  2008/07/02 14:08:56  pvos
- * Implementation of HelmholtzMatOp and LapMatOp on shape level
- *
- * Revision 1.37  2008/06/05 20:13:12  ehan
- * Removed undefined function GetAlpha() in the ASSERTL2().
- *
- * Revision 1.36  2008/05/30 00:33:49  delisi
- * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- * Revision 1.35  2008/05/29 21:36:25  pvos
- * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- * Revision 1.34  2008/05/07 16:04:57  pvos
- * Mapping + Manager updates
- *
- * Revision 1.33  2008/04/22 05:22:15  bnelson
- * Speed enhancements.
- *
- * Revision 1.32  2008/04/06 06:04:15  bnelson
- * Changed ConstArray to Array<const>
- *
- * Revision 1.31  2008/04/03 16:12:11  pvos
- * updates for NEKTAR_USING_DIRECT_BLAS_CALLS
- *
- * Revision 1.30  2008/04/02 22:18:10  pvos
- * Update for 2D local to global mapping
- *
- * Revision 1.29  2008/03/12 15:25:09  pvos
- * Clean up of the code
- *
- * Revision 1.28  2008/01/23 09:09:46  sherwin
- * Updates for Hybrized DG
- *
- * Revision 1.27  2007/12/17 13:03:51  sherwin
- * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
- *
- * Revision 1.26  2007/12/06 22:44:47  pvos
- * 2D Helmholtz solver updates
- *
- * Revision 1.25  2007/11/20 10:16:23  pvos
- * IProductWRTDerivBase routine fix
- *
- * Revision 1.24  2007/11/08 16:55:14  pvos
- * Updates towards 2D helmholtz solver
- *
- * Revision 1.23  2007/10/15 20:40:24  ehan
- * Make changes of column major matrix
- *
- * Revision 1.22  2007/07/20 02:16:55  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.21  2007/07/11 13:35:18  kirby
- * *** empty log message ***
- *
- * Revision 1.20  2007/07/10 21:05:18  kirby
- * even more fixes
- *
- * Revision 1.19  2007/07/09 15:19:15  sherwin
- * Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
- *
- * Revision 1.18  2007/06/07 15:54:19  pvos
- * Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
- * Also made corrections to various ASSERTL2 calls
- *
- * Revision 1.17  2007/05/31 19:13:12  pvos
- * Updated NodalTriExp + LocalRegions/Project2D + some other modifications
- *
- * Revision 1.16  2007/05/22 02:01:50  bnelson
- * Changed Array::size to Array::num_elements.
- *
- * Fixed some compiler errors in assertions.
- *
- * Revision 1.15  2007/05/15 05:18:24  bnelson
- * Updated to use the new Array object.
- *
- * Revision 1.14  2007/04/10 14:00:46  sherwin
- * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
- *
- * Revision 1.13  2007/04/06 08:44:43  sherwin
- * Update to make 2D regions work at StdRegions level
- *
- * Revision 1.12  2007/04/05 15:20:11  sherwin
- * Updated 2D stuff to comply with SharedArray philosophy
- *
- * Revision 1.11  2007/03/20 16:58:43  sherwin
- * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
- *
- * Revision 1.10  2007/01/17 16:36:58  pvos
- * updating doxygen documentation
- *
- * Revision 1.9  2007/01/17 16:05:41  pvos
- * updated doxygen documentation
- *
- * Revision 1.8  2006/12/10 19:00:54  sherwin
- * Modifications to handle nodal expansions
- *
- * Revision 1.7  2006/08/05 19:03:48  sherwin
- * Update to make the multiregions 2D expansion in connected regions work
- *
- * Revision 1.6  2006/07/02 17:16:19  sherwin
- *
- * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
- *
- * Revision 1.5  2006/06/13 18:05:02  sherwin
- * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
- *
- * Revision 1.4  2006/06/06 15:25:21  jfrazier
- * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
- * NEKERROR.
- *
- * Revision 1.3  2006/06/02 18:48:40  sherwin
- * Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
- *
- * Revision 1.2  2006/06/01 14:13:37  kirby
- * *** empty log message ***
- *
- * Revision 1.1  2006/05/04 18:58:33  kirby
- * *** empty log message ***
- *
- * Revision 1.50  2006/04/25 20:23:34  jfrazier
- * Various fixes to correct bugs, calls to ASSERT, etc.
- *
- * Revision 1.49  2006/04/01 21:59:27  sherwin
- * Sorted new definition of ASSERT
- *
- * Revision 1.48  2006/03/21 09:21:32  sherwin
- * Introduced NekMemoryManager
- *
- * Revision 1.47  2006/03/12 14:20:44  sherwin
- *
- * First compiling version of SpatialDomains and associated modifications
- *
- * Revision 1.46  2006/03/06 12:39:59  sherwin
- *
- * Added NekConstants class for all constants in this library
- *
- * Revision 1.45  2006/03/03 23:04:54  sherwin
- *
- * Corrected Mistake in StdBasis.cpp to do with eModified_B
- *
- * Revision 1.44  2006/03/01 08:25:05  sherwin
- *
- * First compiling version of StdRegions
- *
- * Revision 1.43  2006/02/26 23:37:30  sherwin
- *
- * Updates and compiling checks upto StdExpansions1D
- *
- **/ 
-
-

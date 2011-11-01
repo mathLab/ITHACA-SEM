@@ -292,7 +292,7 @@ namespace Nektar
 
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
-                return DetExpansionType();
+                return StdTriExp::v_DetExpansionType();
             }
 
 	    virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
@@ -339,30 +339,29 @@ namespace Nektar
 
             virtual bool v_IsBoundaryInteriorExpansion()
             {
-                return StdTriExp::IsBoundaryInteriorExpansion();
+                return StdTriExp::v_IsBoundaryInteriorExpansion();
             }
 
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
-                return GetEdgeNcoeffs(i);
+                return StdTriExp::v_GetEdgeNcoeffs(i);
             }
 
             virtual int v_GetEdgeNumPoints(const int i) const
             {
-                return GetEdgeNumPoints(i);
+                return StdTriExp::v_GetEdgeNumPoints(i);
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient,
                                                Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
             {
-                StdTriExp::GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
+                StdTriExp::v_GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
             {
-                StdTriExp::GetBoundaryMap(maparray);
+                StdTriExp::v_GetBoundaryMap(maparray);
             }
-
 
             virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
@@ -464,13 +463,13 @@ namespace Nektar
             virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray)
             {
-                BwdTrans(inarray,outarray);
+                StdTriExp::v_BwdTrans(inarray,outarray);
             }
 
             /// Virtual call to TriExp::Evaluate
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
             {
-                return PhysEvaluate(coords);
+                return StdTriExp::v_PhysEvaluate(coords);
             }
 
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords, const Array<OneD, const NekDouble> & physvals)
@@ -624,7 +623,7 @@ namespace Nektar
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
-                BwdTrans_SumFac(inarray,outarray);
+                StdTriExp::v_BwdTrans_SumFac(inarray,outarray);
             }
 
             virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,

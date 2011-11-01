@@ -280,7 +280,7 @@ namespace Nektar
             }
 
             // call StdTetExp version;
-            retrunVal = StdTetExp::Integral(tmp);
+            retrunVal = StdTetExp::v_Integral(tmp);
 
             return retrunVal;
         }

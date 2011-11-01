@@ -40,6 +40,10 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
+        Expansion2D::Expansion2D() : 
+            StdExpansion2D(), Expansion(), StdExpansion()
+        {
+        }
         
         void Expansion2D::v_AddEdgeNormBoundaryInt(const int edge,
                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,

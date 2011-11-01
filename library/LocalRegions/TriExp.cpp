@@ -119,7 +119,7 @@ namespace Nektar
             }
 
             // call StdQuadExp version;
-            ival = StdTriExp::Integral(tmp);
+            ival = StdTriExp::v_Integral(tmp);
             return ival;
         }
 
@@ -785,7 +785,7 @@ namespace Nektar
                 Array<OneD,NekDouble> diff0(2*nqtot);
                 Array<OneD,NekDouble> diff1(diff0+nqtot);
 
-                StdTriExp::PhysDeriv(inarray, diff0, diff1);
+                StdTriExp::v_PhysDeriv(inarray, diff0, diff1);
 
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
@@ -882,7 +882,7 @@ namespace Nektar
             Array<OneD,NekDouble> diff1(diff0+nqtot);
 
             // diff0 = du/d_xi, diff1 = du/d_eta
-            StdTriExp::PhysDeriv(inarray, diff0, diff1);
+            StdTriExp::v_PhysDeriv(inarray, diff0, diff1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -1411,7 +1411,7 @@ namespace Nektar
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
             
-            return StdTriExp::PhysEvaluate(Lcoord, physvals);
+            return StdTriExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
         DNekScalMatSharedPtr TriExp::CreateMatrix(const MatrixKey &mkey)

@@ -125,7 +125,7 @@ namespace Nektar
             }
             
             // call StdQuadExp version;
-            ival = StdNodalTriExp::Integral(tmp);            
+            ival = StdNodalTriExp::v_Integral(tmp);            
             return ival; 
         }
 
@@ -337,7 +337,7 @@ namespace Nektar
             Array<OneD,NekDouble> diff0(nquad0*nquad1);
             Array<OneD,NekDouble> diff1(nquad0*nquad1);
             
-            StdNodalTriExp::PhysDeriv(inarray, diff0, diff1);
+            StdNodalTriExp::v_PhysDeriv(inarray, diff0, diff1);
         
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -789,7 +789,7 @@ namespace Nektar
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
             
-            return StdNodalTriExp::PhysEvaluate(Lcoord);
+            return StdNodalTriExp::v_PhysEvaluate(Lcoord);
         }
         
         DNekScalMatSharedPtr NodalTriExp::CreateMatrix(const MatrixKey &mkey)

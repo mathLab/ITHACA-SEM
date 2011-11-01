@@ -203,10 +203,10 @@ namespace Nektar
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
             
 
-            virtual StdRegions::ExpansionType v_DetExpansionType() const
-            {
-                return DetExpansionType();
-            }
+            //virtual StdRegions::ExpansionType v_DetExpansionType() const
+            //{
+            //   return DetExpansionType();
+            //}
             
             virtual DNekMatSharedPtr v_GenNBasisTransMatrix()
             {
@@ -282,7 +282,7 @@ namespace Nektar
                                         Array<OneD, NekDouble> &out_d0,
                                         Array<OneD, NekDouble> &out_d1)
             {
-                StdTriExp::PhysDeriv(inarray, out_d0, out_d1);
+                StdTriExp::v_PhysDeriv(inarray, out_d0, out_d1);
             }
         
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
@@ -377,7 +377,7 @@ namespace Nektar
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
-                BwdTrans_SumFac(inarray,outarray);
+                StdNodalTriExp::v_BwdTrans_SumFac(inarray,outarray);
             }    
             
             virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 

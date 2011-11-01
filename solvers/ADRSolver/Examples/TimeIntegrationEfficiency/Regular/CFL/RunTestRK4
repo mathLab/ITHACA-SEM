@@ -1,0 +1,52 @@
+#!/bin/bash
+SOLVER=../../builds/dist/bin/ADRSolver
+test ! -x $SOLVER && echo "Solver $SOLVER not found." && exit
+
+CFL=1.0
+TimeScheme=ClassicalRungeKutta4
+NQP=60
+
+for h in  1 2 3 4 5 6 7 8 9 10; do
+
+        sed  "s/#CFL#/$CFL/" < CFL_$h.xml > tmp1.xml
+        sed  "s/#TimeScheme#/$TimeScheme/" < tmp1.xml > tmp2.xml
+        sed  "s/#NQP#/$NQP/" < tmp2.xml > tmp3.xml
+        
+		for P in 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+
+            sed "s/#NUMMODES#/$P/" < tmp3.xml > tmp.xml
+
+            $SOLVER tmp.xml > output.txt
+			
+            grep "Step: 0" output.txt > tmp_Timestep
+            
+			grep "Time-integration timing (quarter)" output.txt > tmp_T_q
+			grep "Time-integration timing (half)" output.txt > tmp_T_h
+			grep "Time-integration timing (full)" output.txt > tmp_T_f
+            
+			grep "L2 error (quarter)" output.txt > tmp_L2_q
+			grep "LI error (quarter)" output.txt > tmp_LI_q
+			grep "L2 error (half)" output.txt > tmp_L2_h
+			grep "LI error (half)" output.txt > tmp_LI_h
+			grep "L2 error (full)" output.txt > tmp_L2_f
+			grep "LI error (full)" output.txt > tmp_LI_f
+			
+			timestep=`awk 'BEGIN{};{V1=$6};END{print V1}' tmp_Timestep`
+            
+			timing_q=`awk 'BEGIN{};{V2=$4};END{print V2}' tmp_T_q`
+			timing_h=`awk 'BEGIN{};{V2=$5};END{print V2}' tmp_T_h`
+			timing_f=`awk 'BEGIN{};{V2=$5};END{print V2}' tmp_T_f`
+            
+			L2_q=`awk 'BEGIN{};{V3=$4};END{print V3}' tmp_L2_q`
+			LI_q=`awk 'BEGIN{};{V3=$4};END{print V3}' tmp_LI_q`
+			L2_h=`awk 'BEGIN{};{V3=$5};END{print V3}' tmp_L2_h`
+			LI_h=`awk 'BEGIN{};{V3=$5};END{print V3}' tmp_LI_h`
+			L2_f=`awk 'BEGIN{};{V3=$5};END{print V3}' tmp_L2_f`
+			LI_f=`awk 'BEGIN{};{V3=$5};END{print V3}' tmp_LI_f`
+			
+            echo "$h $P $CFL $timestep $timing_q $timing_h $timing_f $L2_q $LI_q $L2_h $LI_h $L2_f $LI_f" >> resultsRK4.txt
+			rm tmp_* *.fld
+        done
+done
+rm tmp*
+

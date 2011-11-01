@@ -1,0 +1,14 @@
+#!/bin/bash
+SOLVER=./ADRSolver-g
+test ! -x $SOLVER && echo "Solver $SOLVER not found." && exit
+
+MAX_H=10
+MAX_P=15
+    for h in $(seq 1 $MAX_H); do
+        for P in $(seq 2 $MAX_P); do
+            sed "s/#NUMMODES#/$P/" < CFL_$h.xml > tmp.xml
+            $SOLVER tmp.xml > output.txt
+            mv Eigenvalues.txt Eigenvalues_$h_$P.txt
+        done
+    done
+rm -f tmp* output.txt

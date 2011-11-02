@@ -551,7 +551,7 @@ namespace Nektar
 			for(int k = 0; k < m_npointsZ; k++)
 			{
 				K = k/2;
-				WaveNumber = 2*M_PI*pow(-1.0,double(k))*(double(K));
+				WaveNumber = 2*M_PI*pow(-1.0,double(k))*(double(K))/m_LhomZ;
 				
 				for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 				{

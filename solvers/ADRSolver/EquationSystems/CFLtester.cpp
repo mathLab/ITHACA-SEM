@@ -260,13 +260,22 @@ namespace Nektar
 	
 	NekDouble CFLtester::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
 	{
+		// This function has been created just to test specific problems, hence is not general
+		// and it has been implemented in a rude fashion, as the full CFLtester class.
+		// For real CFL calculations refer to the general implementation above. (A.Bolis)
+		
 		NekDouble TimeStep;
 		int n_elements = m_fields[0]->GetExpSize();
 		NekDouble DH   = sqrt(n_elements);
 		int H = (int)DH;
 		int P = ExpOrder-1;
 		
-		TimeStep = (TimeStability/EigenvaluesRegMeshes[H-1][P-1])*CFL;
+		//Regular meshes
+		//TimeStep = (TimeStability/EigenvaluesRegMeshes[H-1][P-1])*CFL;
+		
+		//Anisotropic meshes
+		int eigenmap[10] = {0, 0, 0, 0, 0, 1, 0, 2, 0, 3};
+		TimeStep = (TimeStability/EigenvaluesAnaMeshes[eigenmap[H]][P-1])*CFL;
 		
 		return TimeStep;
 	}

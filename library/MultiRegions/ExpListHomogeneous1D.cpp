@@ -701,6 +701,7 @@ namespace Nektar
 				}
 				
 				UnshuffleFromHomogeneous1DClosePacked(outarray,out_d,false);
+				Vmath::Smul(nT_pts,1.0/m_lhom,out_d,1,out_d,1);
 			}
 		}
         

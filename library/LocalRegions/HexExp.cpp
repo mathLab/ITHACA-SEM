@@ -1358,6 +1358,11 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
+        StdRegions::FaceOrientation HexExp::v_GetFaceorient(int face)
+        {
+            return m_geom->GetFaceorient(face);
+        }
+
         NekDouble HexExp::v_Linf()
         {
             return Linf();
@@ -1809,6 +1814,215 @@ namespace Nektar
             }
             return returnval;
         }
+        
+        void HexExp::v_GetFacePhysVals(
+                           const int face,
+                           const Array<OneD,
+                           const NekDouble> &inarray,
+                           Array<OneD,NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+	    int nquad2 = m_base[2]->GetNumPoints();
+
+            Array<OneD,const NekDouble> e_tmp;
+	    Array<OneD,NekDouble>       outtmp(nquad0*nquad1);
+	    Array<OneD,NekDouble>       o_tmp(nquad0*nquad1);
+
+	    StdRegions::FaceOrientation facedir = GetFaceorient(face);
+            	    
+	    switch(face)
+            {
+	    case 0:
+	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+	        {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad0*nquad1,inarray,1,outarray,1);
+	        }
+	        else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int j=0; j<nquad1; j++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+j*nquad0,-1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A positive and B negative
+                    for (int j=0; j<nquad1; j++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+nquad0*(nquad1-1-j),1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                } 
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A negative and B negative
+                    for(int j=0; j<nquad1; j++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1-1-j*nquad0),-1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                }
+                break;
+            case 1:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*k),1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(nquad0*nquad1*k),-1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(nquad0*nquad1*k),-1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                break;
+            case 2:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad0*nquad1,e_tmp=inarray+(nquad0-1),nquad0,outarray,1);
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A positive and B negative
+                    for (int k=nquad2-1; k=0; k--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(k*nquad0*nquad1),nquad0,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A negative and B negative
+                    for (int k=nquad2-1; k=0; k--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                break;
+            case 3:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Directions A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*(nquad1-1))+(k*nquad0*nquad1),1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A positive and B negative
+                    for (int k=nquad2-1; k=0; k--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*(nquad1-1))+(k*nquad0*nquad1),1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A negative and B negative
+                    for (int k=nquad2-1; k=0; k--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                break;
+            case 4:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad0*nquad1,inarray,nquad0,outarray,1);
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+nquad0*(nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A positive and B negative
+                    for (int k=nquad2-1; k=0; k--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(k*nquad0*nquad1),nquad0,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A negative and B negative
+                    for (int k=nquad2-1; k=0; k--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+nquad0*(nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad0),1);
+                    }
+                }
+                break;
+            case 5:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad0*nquad1,e_tmp=inarray+nquad0*nquad1*(nquad2-1),1,outarray,1);
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A negative and B positive
+                    for (int j=0; j<nquad1; j++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+nquad0*nquad1*(nquad2-1)+(nquad0-1+j*nquad0),-1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A positive and B negative
+                    for (int j=nquad1-1; j=0; j--)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+nquad0*nquad1*(nquad2-1)+j*nquad0,-1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                }
+                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                {
+                    //Direction A negative and B negative
+                    for (int j=0; j=nquad1-1; j++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+nquad0*nquad1*(nquad2-1-j*nquad1),-1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"face value (> 5) is out of range");
+                break;
+            }
+	}
+
 /*
         void HexExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                              Array<OneD, NekDouble> &outarray)
@@ -1835,117 +2049,3 @@ namespace Nektar
 */
     }//end of namespace
 }//end of namespace
-
-/**
- *    $Log: HexExp.cpp,v $
- *    Revision 1.29  2010/03/07 14:45:22  cantwell
- *    Added support for solving Helmholtz on Hexes
- *
- *    Revision 1.28  2010/02/26 13:52:45  cantwell
- *    Tested and fixed where necessary Hex/Tet projection and differentiation in
- *      StdRegions, and LocalRegions for regular and deformed (where applicable).
- *    Added SpatialData and SpatialParameters classes for managing spatiall-varying
- *      data.
- *    Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
- *      with some associated input meshes.
- *    Added 3D std and loc projection demos for tet and hex.
- *    Added 3D std and loc regression tests for tet and hex.
- *    Fixed bugs in regression tests in relation to reading OK files.
- *    Extended Elemental and Global optimisation parameters for 3D expansions.
- *    Added GNUPlot output format option.
- *    Updated ADR2DManifoldSolver to use spatially varying data.
- *    Added Barkley model to ADR2DManifoldSolver.
- *    Added 3D support to FldToVtk and XmlToVtk.
- *    Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
- *
- *    Revision 1.27  2009/12/15 18:09:02  cantwell
- *    Split GeomFactors into 1D, 2D and 3D
- *    Added generation of tangential basis into GeomFactors
- *    Updated ADR2DManifold solver to use GeomFactors for tangents
- *    Added <GEOMINFO> XML session section support in MeshGraph
- *    Fixed const-correctness in VmathArray
- *    Cleaned up LocalRegions code to generate GeomFactors
- *    Removed GenSegExp
- *    Temporary fix to SubStructuredGraph
- *    Documentation for GlobalLinSys and GlobalMatrix classes
- *
- *    Revision 1.26  2009/10/30 14:00:06  pvos
- *    Multi-level static condensation updates
- *
- *    Revision 1.25  2009/05/01 13:23:21  pvos
- *    Fixed various bugs
- *
- *    Revision 1.24  2009/04/27 21:34:07  sherwin
- *    Updated WriteToField
- *
- *    Revision 1.23  2009/01/21 16:59:56  pvos
- *    Added additional geometric factors to improve efficiency
- *
- *    Revision 1.22  2008/09/23 18:20:25  pvos
- *    Updates for working ProjectContField3D demo
- *
- *    Revision 1.21  2008/09/20 11:34:52  ehan
- *    Fixed some errors
- *
- *    Revision 1.20  2008/09/17 17:29:58  ehan
- *    Fixed some errors to test the LocHexDemo.
- *
- *    Revision 1.19  2008/09/09 15:05:09  sherwin
- *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
- *
- *    Revision 1.18  2008/08/14 22:12:56  sherwin
- *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
- *
- *    Revision 1.17  2008/07/19 21:15:38  sherwin
- *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
- *
- *    Revision 1.16  2008/07/09 11:44:49  sherwin
- *    Replaced GetScaleFactor call with GetConstant(0)
- *
- *    Revision 1.15  2008/07/04 10:19:04  pvos
- *    Some updates
- *
- *    Revision 1.14  2008/06/14 01:20:21  ehan
- *    Clean up the codes
- *
- *    Revision 1.13  2008/06/06 23:23:39  ehan
- *    Added doxygen documentation
- *
- *    Revision 1.12  2008/06/05 20:17:11  ehan
- *    Fixed undefined function GetGtype() in the ASSERTL2().
- *
- *    Revision 1.11  2008/05/30 00:33:48  delisi
- *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- *    Revision 1.10  2008/05/29 21:33:37  pvos
- *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- *    Revision 1.9  2008/05/29 01:02:13  bnelson
- *    Added precompiled header support.
- *
- *    Revision 1.8  2008/04/06 05:59:04  bnelson
- *    Changed ConstArray to Array<const>
- *
- *    Revision 1.7  2008/03/19 06:52:46  ehan
- *    Fixed recent changes of call by reference for the matrix shared pointer. Also fixed name of old functions from Get* to Create*.
- *
- *    Revision 1.5  2008/02/16 05:49:32  ehan
- *    Added PhysDeriv, GenMatrixInfo, standard matrix, and virtual functions.
- *
- *    Revision 1.4  2008/02/05 00:35:25  ehan
- *    Modified coordinate
- *
- *    Revision 1.3  2008/01/31 10:56:50  ehan
- *    Implemented IProductWRTBase, FwdTrans, GetCoord, GetStdMatrix, and GetStdStaticCondMatrix.
- *
- *    Revision 1.2  2007/07/20 00:45:50  bnelson
- *    Replaced boost::shared_ptr with Nektar::ptr
- *
- *    Revision 1.1  2006/05/04 18:58:45  kirby
- *    *** empty log message ***
- *
- *    Revision 1.8  2006/03/12 07:43:31  sherwin
- *
- *    First revision to meet coding standard. Needs to be compiled
- *
- **/

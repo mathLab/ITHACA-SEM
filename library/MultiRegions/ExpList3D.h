@@ -87,6 +87,9 @@ namespace Nektar
 
         protected:
 
+            /// Set up the normals on each expansion.
+            virtual void v_SetUpPhysNormals();
+
         private:
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a

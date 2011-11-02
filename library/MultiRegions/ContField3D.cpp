@@ -120,7 +120,7 @@ namespace Nektar
         ContField3D::ContField3D(const ContField3D &In,
                                  const SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  const std::string &variable):
-            DisContField3D(In),
+	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {

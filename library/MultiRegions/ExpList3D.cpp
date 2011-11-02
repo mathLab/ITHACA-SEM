@@ -507,6 +507,18 @@ namespace Nektar
             outfile << "      <PointData>" << endl;
         }
 
+        void ExpList3D::v_SetUpPhysNormals()
+        {
+            int i, j;
+            for (i = 0; i < m_exp->size(); ++i)
+            {
+                for (j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
+                {
+                    (*m_exp)[i]->ComputeFaceNormal(j);
+                }
+            }
+        }
+
   } //end of namespace
 } //end of namespace
 

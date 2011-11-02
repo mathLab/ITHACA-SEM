@@ -261,6 +261,10 @@ namespace Nektar
         return value;
     }
 
+        const NormalVector & StdExpansion3D::v_GetSurfaceNormal() const
+        {
+            return m_surfaceNormal;
+        }
     }//end namespace
 }//end namespace
 

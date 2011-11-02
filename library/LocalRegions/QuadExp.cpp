@@ -2180,261 +2180,33 @@ namespace Nektar
                 }
             }
         }
+        
+      void QuadExp::v_NormVectorIProductWRTBase(
+                const Array<OneD, const NekDouble> &Fx,
+                const Array<OneD, const NekDouble> &Fy,
+                const Array<OneD, const NekDouble> &Fz,
+                Array< OneD, NekDouble> &outarray,
+                bool NegateNormal)
+        {
+            int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetSurfaceNormal(); // m_metricinfo->GetNormals();
+            //for(int i=0; i<nq; i++)
+            //{
+            //cout<<"nx= "<<normals[0][i]<<"  ny="<<normals[1][i]<<"  nz="<<normals[2][i]<<endl;
+            //}
+            Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fz[0],1,&normals[0][3],1,&Fn[0],1,&Fn[0],1);
+            //cout<<"NegateNormal =  "<<NegateNormal<<endl;
+            if(NegateNormal == true)
+            {
+                Vmath::Neg(nq,Fn,1);
+            }
+
+            IProductWRTBase(Fn,outarray);
+	    }
 
     }//end of namespace
 }//end of namespace
-
-/**
- *    $Log: QuadExp.cpp,v $
- *    Revision 1.75  2010/03/02 23:50:23  sherwin
- *    Updates related to making IncNavierStokesSolver able to use ContCoeffs
- *
- *    Revision 1.74  2010/01/10 16:53:44  cantwell
- *    Support for embedded regular Quad and Tri in 3D coord system.
- *    Cleaned up Helmholtz2D solver.
- *
- *    Revision 1.73  2009/12/17 23:43:25  bnelson
- *    Fixed windows compiler warnings.
- *
- *    Revision 1.72  2009/12/17 17:48:22  bnelson
- *    Fixed visual studio compiler warning.
- *
- *    Revision 1.71  2009/12/15 18:09:02  cantwell
- *    Split GeomFactors into 1D, 2D and 3D
- *    Added generation of tangential basis into GeomFactors
- *    Updated ADR2DManifold solver to use GeomFactors for tangents
- *    Added <GEOMINFO> XML session section support in MeshGraph
- *    Fixed const-correctness in VmathArray
- *    Cleaned up LocalRegions code to generate GeomFactors
- *    Removed GenSegExp
- *    Temporary fix to SubStructuredGraph
- *    Documentation for GlobalLinSys and GlobalMatrix classes
- *
- *    Revision 1.70  2009/11/13 16:18:34  sehunchun
- *    *** empty log message ***
- *
- *    Revision 1.69  2009/11/11 18:45:09  sehunchun
- *    *** empty log message ***
- *
- *    Revision 1.68  2009/11/10 19:04:24  sehunchun
- *    Variable coefficients for HDG2D Solver
- *
- *    Revision 1.67  2009/11/09 15:43:51  sehunchun
- *    HDG2DManifold Solver with Variable coefficients
- *
- *    Revision 1.66  2009/09/23 12:42:40  pvos
- *    Updates for variable order expansions
- *
- *    Revision 1.65  2009/09/06 22:24:00  sherwin
- *    Updates for Navier-Stokes solver
- *
- *    Revision 1.64  2009/07/08 17:19:48  sehunchun
- *    Deleting GetTanBasis
- *
- *    Revision 1.63  2009/07/08 11:11:24  sehunchun
- *    Adding GetSurfaceNormal Function
- *
- *    Revision 1.62  2009/07/03 15:34:52  sehunchun
- *    Adding GetTanBasis function
- *
- *    Revision 1.61  2009/05/15 14:38:41  pvos
- *    Changed check for regular quads so that it also includes parallellograms
- *
- *    Revision 1.60  2009/04/27 21:34:07  sherwin
- *    Updated WriteToField
- *
- *    Revision 1.59  2009/04/27 09:38:22  pvos
- *    Fixed some bugs
- *
- *    Revision 1.58  2009/04/03 15:02:36  sherwin
- *    Made default Create Matrix the call through to the StdRegions generalised operators
- *
- *    Revision 1.57  2009/01/21 16:59:57  pvos
- *    Added additional geometric factors to improve efficiency
- *
- *    Revision 1.56  2008/12/16 11:32:33  pvos
- *    Performance updates
- *
- *    Revision 1.55  2008/11/24 10:31:14  pvos
- *    Changed name from _PartitionedOp to _MatFree
- *
- *    Revision 1.54  2008/11/19 16:01:41  pvos
- *    Added functionality for variable Laplacian coeffcients
- *
- *    Revision 1.53  2008/11/05 16:08:15  pvos
- *    Added elemental optimisation functionality
- *
- *    Revision 1.52  2008/09/23 18:20:25  pvos
- *    Updates for working ProjectContField3D demo
- *
- *    Revision 1.51  2008/09/09 15:05:09  sherwin
- *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
- *
- *    Revision 1.50  2008/08/14 22:12:56  sherwin
- *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
- *
- *    Revision 1.49  2008/08/02 18:58:50  sherwin
- *    Version with matrix formulation of AddUDGHelmholtzEdgeTerms formulated instead of edge integrals. Will probably push routine back to StdExpansion2D at next iteration
- *
- *    Revision 1.48  2008/07/31 11:13:22  sherwin
- *    Depracated GetEdgeBasis and replaced with DetEdgeBasisKey
- *
- *    Revision 1.47  2008/07/29 22:25:34  sherwin
- *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
- *
- *    Revision 1.46  2008/07/19 21:15:38  sherwin
- *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
- *
- *    Revision 1.45  2008/07/16 22:20:54  sherwin
- *    Added AddEdgeNormBoundaryInt
- *
- *    Revision 1.44  2008/07/12 19:08:29  sherwin
- *    Modifications for DG advection routines
- *
- *    Revision 1.43  2008/07/12 17:27:07  sherwin
- *    Update for AddBoundaryInt and moved various members to be private rather than protected
- *
- *    Revision 1.42  2008/07/09 11:45:48  sherwin
- *    Modification to make workinvg UDG solver, added BndSysForce matrix, replaced GetScaleFactor with GetConstant(0)
- *
- *    Revision 1.41  2008/07/04 10:19:05  pvos
- *    Some updates
- *
- *    Revision 1.40  2008/07/02 14:09:18  pvos
- *    Implementation of HelmholtzMatOp and LapMatOp on shape level
- *
- *    Revision 1.39  2008/06/06 14:57:51  pvos
- *    Minor Updates
- *
- *    Revision 1.38  2008/06/05 20:18:21  ehan
- *    Fixed undefined function GetGtype() in the ASSERTL2().
- *
- *    Revision 1.37  2008/05/30 00:33:48  delisi
- *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- *    Revision 1.36  2008/05/29 21:33:37  pvos
- *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- *    Revision 1.35  2008/05/29 01:02:13  bnelson
- *    Added precompiled header support.
- *
- *    Revision 1.34  2008/05/14 09:02:35  pvos
- *    fixed bug
- *
- *    Revision 1.33  2008/05/10 18:27:32  sherwin
- *    Modifications necessary for QuadExp Unified DG Solver
- *
- *    Revision 1.32  2008/04/06 05:59:05  bnelson
- *    Changed ConstArray to Array<const>
- *
- *    Revision 1.31  2008/04/02 22:19:26  pvos
- *    Update for 2D local to global mapping
- *
- *    Revision 1.30  2008/03/18 14:12:53  pvos
- *    Update for nodal triangular helmholtz solver
- *
- *    Revision 1.29  2008/03/12 15:24:29  pvos
- *    Clean up of the code
- *
- *    Revision 1.28  2008/02/28 10:04:11  sherwin
- *    Modes for UDG codes
- *
- *    Revision 1.27  2008/01/25 16:46:54  sherwin
- *    Added UDG work
- *
- *    Revision 1.26  2008/01/21 19:59:32  sherwin
- *    Updated to take SegGeoms instead of EdgeComponents
- *
- *    Revision 1.25  2007/12/17 13:04:30  sherwin
- *    Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
- *
- *    Revision 1.24  2007/12/06 22:49:08  pvos
- *    2D Helmholtz solver updates
- *
- *    Revision 1.23  2007/11/08 16:54:26  pvos
- *    Updates towards 2D helmholtz solver
- *
- *    Revision 1.22  2007/08/11 23:41:22  sherwin
- *    Various updates
- *
- *    Revision 1.21  2007/07/28 05:09:32  sherwin
- *    Fixed version with updated MemoryManager
- *
- *    Revision 1.20  2007/07/20 00:45:51  bnelson
- *    Replaced boost::shared_ptr with Nektar::ptr
- *
- *    Revision 1.19  2007/07/12 12:53:00  sherwin
- *    Updated to have a helmholtz matrix
- *
- *    Revision 1.18  2007/07/11 19:26:04  sherwin
- *    update for new Manager structure
- *
- *    Revision 1.17  2007/07/11 06:36:23  sherwin
- *    Updates with MatrixManager update
- *
- *    Revision 1.16  2007/07/10 17:17:25  sherwin
- *    Introduced Scaled Matrices into the MatrixManager
- *
- *    Revision 1.15  2007/06/17 19:00:45  bnelson
- *    Removed unused variables.
- *
- *    Revision 1.14  2007/06/07 15:54:19  pvos
- *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
- *    Also made corrections to various ASSERTL2 calls
- *
- *    Revision 1.13  2007/06/06 11:29:31  pvos
- *    Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
- *
- *    Revision 1.12  2007/06/01 17:08:07  pvos
- *    Modification to make LocalRegions/Project2D run correctly (PART1)
- *
- *    Revision 1.11  2007/05/31 19:13:12  pvos
- *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
- *
- *    Revision 1.10  2007/05/31 11:38:16  pvos
- *    Updated QuadExp and TriExp
- *
- *    Revision 1.9  2007/04/26 15:00:16  sherwin
- *    SJS compiling working version using SHaredArrays
- *
- *    Revision 1.8  2006/08/05 19:03:47  sherwin
- *    Update to make the multiregions 2D expansion in connected regions work
- *
- *    Revision 1.7  2006/06/02 18:48:39  sherwin
- *    Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
- *
- *    Revision 1.6  2006/06/01 15:27:27  sherwin
- *    Modifications to account for LibUtilities reshuffle
- *
- *    Revision 1.5  2006/06/01 14:15:57  sherwin
- *    Added typdef of boost wrappers and made GeoFac a boost shared pointer.
- *
- *    Revision 1.4  2006/05/30 14:00:03  sherwin
- *    Updates to make MultiRegions and its Demos work
- *
- *    Revision 1.3  2006/05/29 17:05:49  sherwin
- *    Modified to put shared_ptr around geom definitions
- *
- *    Revision 1.2  2006/05/06 20:36:16  sherwin
- *    Modifications to get LocalRegions/Project1D working
- *
- *    Revision 1.1  2006/05/04 18:58:46  kirby
- *    *** empty log message ***
- *
- *    Revision 1.23  2006/03/13 19:47:54  sherwin
- *
- *    Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts
- *
- *    Revision 1.22  2006/03/13 18:20:33  sherwin
- *
- *    Fixed error in ResetGmat
- *
- *    Revision 1.21  2006/03/12 21:59:48  sherwin
- *
- *    compiling version of LocalRegions
- *
- *    Revision 1.20  2006/03/12 07:43:32  sherwin
- *
- *    First revision to meet coding standard. Needs to be compiled
- *
- **/

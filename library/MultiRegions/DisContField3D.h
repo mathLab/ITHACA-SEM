@@ -69,6 +69,12 @@ namespace Nektar
                            const std::string &variable,
                            const bool SetUpJustDG = true);
 
+            MULTI_REGIONS_EXPORT DisContField3D(
+                           const DisContField3D &In,
+                           const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                           const std::string &variable,
+                           const bool SetUpJustDG = false);
+            
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.
             MULTI_REGIONS_EXPORT DisContField3D(const DisContField3D &In);

@@ -1104,6 +1104,16 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
 
+        void StdExpansion::v_NormVectorIProductWRTBase(
+                              const Array<OneD, const NekDouble> &Fx, 
+                              const Array<OneD, const NekDouble> &Fy, 
+                              const Array<OneD, const NekDouble> &Fz, 
+                              Array< OneD, NekDouble> &outarray, 
+                              bool NegateNorm)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
             DNekScalBlkMatSharedPtr& StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1477,6 +1487,11 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+            void StdExpansion::v_GetFacePhysVals(const int face, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
             void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
@@ -1645,6 +1660,16 @@ namespace Nektar
             void StdExpansion::v_ComputeEdgeNormal(const int edge)
             {
                 ASSERTL0(false, "Cannot compute edge normal for this expansion.");
+            }
+
+            void StdExpansion::v_ComputeFaceNormal(const int face)
+            {
+                ASSERTL0(false, "Cannot compute face normal for this expansion.");
+            }
+
+            const NormalVector & StdExpansion::v_GetSurfaceNormal() const
+            {
+                ASSERTL0(false, "Cannot get face normals for this expansion.");
             }
     }//end namespace
 }//end namespace

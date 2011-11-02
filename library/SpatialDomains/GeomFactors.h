@@ -104,6 +104,9 @@ namespace Nektar
             /// Return the G matrix.
             inline const Array<TwoD, const NekDouble> &GetGmat() const;
 
+            /// Return the G matrix.
+            inline const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &GetDeriv() const;
+
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
 
@@ -331,6 +334,12 @@ namespace Nektar
         inline const Array<TwoD, const NekDouble> &GeomFactors::GetGmat() const
         {
             return m_gmat;
+        }
+
+        /// Return the G matrix.
+        inline const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &GeomFactors::GetDeriv() const
+        {
+            return m_deriv;
         }
 
         /// Return the number of dimensions of the coordinate system.

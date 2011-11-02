@@ -154,6 +154,12 @@ namespace Nektar
                             const bool dumpVar = true, 
                             std::string var = "v");
 
+            //Extract physical values on a face
+            virtual void v_GetFacePhysVals(
+                            const int face,
+                            const Array<OneD,
+                            const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray);
 
             //------------------------------
             //    Integration Method
@@ -235,6 +241,8 @@ namespace Nektar
             virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
 
             virtual int v_GetCoordim();
+        
+            virtual StdRegions::FaceOrientation v_GetFaceorient(int face);
 
             virtual NekDouble v_Linf();
     

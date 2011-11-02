@@ -841,6 +841,11 @@ namespace Nektar
                 v_NormVectorIProductWRTBase(Fx,Fy,outarray,NegateNorm);
             }
 
+            void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray, bool NegateNorm = false)
+            {
+                v_NormVectorIProductWRTBase(Fx,Fy,Fz,outarray,NegateNorm);
+            }
+
             DNekScalBlkMatSharedPtr& GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocStaticCondMatrix(mkey);
@@ -973,6 +978,11 @@ namespace Nektar
             void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion1D>   &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
+            }
+
+            void GetFacePhysVals(const int face, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_GetFacePhysVals(face,inarray,outarray);
             }
 
             // Matrix Routines
@@ -1234,6 +1244,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false);
 
+	    STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray, bool NegateNorm = false);
+
             STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
             STD_REGIONS_EXPORT virtual StdRegions::FaceOrientation v_GetFaceorient(int face);
@@ -1327,9 +1339,15 @@ namespace Nektar
                 v_ComputeEdgeNormal(edge);
             }
 
+            void ComputeFaceNormal(const int face)
+            {
+                v_ComputeFaceNormal(face);
+            }
+
             const NormalVector & GetSurfaceNormal() const
             {
                 // @TODO Implement this
+                return v_GetSurfaceNormal(); 
             }
         protected:
 
@@ -1623,6 +1641,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(const int face, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             STD_REGIONS_EXPORT virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
@@ -1696,6 +1716,9 @@ namespace Nektar
 
             virtual void v_ComputeEdgeNormal(const int edge);
 
+            virtual void v_ComputeFaceNormal(const int face);
+
+            virtual const NormalVector & v_GetSurfaceNormal() const;
         };
 
 

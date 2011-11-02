@@ -66,6 +66,37 @@ namespace Nektar
 
         }
 
+        DisContField3D::DisContField3D( const DisContField3D &In,
+                                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                        const std::string &variable,
+                                        const bool SetUpJustDG) :
+            ExpList3D(In)
+       {
+            SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
+
+            GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo();
+
+            if(!SameTypeOfBoundaryConditions(In))
+            {
+              if(SetUpJustDG)
+              {
+                // Set up matrix map
+                m_globalBndMat = MemoryManager<GlobalLinSysMap>
+                                                    ::AllocateSharedPtr();
+                map<int,int> periodicEdges;
+                map<int,int> periodicVertices;
+                map<int,int> periodicFaces;
+                GetPeriodicFaces(graph3D,bcs,variable,
+                                 periodicVertices,periodicEdges,periodicFaces);
+
+                ASSERTL0(false, "DisContField3D Constructor needs implementation.");
+             }
+            }
+        }
+
+
 
         /**
          *
@@ -238,6 +269,7 @@ namespace Nektar
                                                 graph3D);
                         bndCondExpansions[cnt]  = locExpList;
                         bndConditions[cnt++]    = locBCond;
+                        SetUpPhysNormals();
                     }
                     break;
                 case SpatialDomains::eDirichlet: // do nothing for these types

@@ -765,10 +765,134 @@ namespace Nektar
 		{
 			ASSERTL0(false,"High Order Pressure BC not required for this approach");
 		}
-		else
+		// Full 3D		
+                else
 		{
-			ASSERTL0(false,"Velocity correction scheme not set up for 3D spectral element approach");
-		}
+                    int i, cnt;
+
+                    StdRegions::StdExpansionSharedPtr elmt;
+                    StdRegions::StdExpansion2DSharedPtr Pbc;
+
+                    for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
+                    {
+
+                        string type = PBndConds[n]->GetUserDefined().GetEquation(); 
+
+                        if(type == "H")
+                        {
+                            for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
+                            {
+                                // find element and face of this expansion. 
+                                // calculate curl x curl v;
+                                elmtid = m_pressureBCtoElmtID[cnt];
+                                elmt   = m_fields[0]->GetExp(elmtid);
+                                nq     = elmt->GetTotPoints();
+                                offset = m_fields[0]->GetPhys_Offset(elmtid);
+					
+                                U = fields[m_velocity[0]] + offset;
+				V = fields[m_velocity[1]] + offset; 
+				W = fields[m_velocity[2]] + offset;
+					
+			        // Calculating vorticity Q = (dv/dx - du/dy)
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],U,Uz);					
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);					
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],V,Vz);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],W,Wx);					
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],W,Wy);					
+
+                                Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
+                                Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
+                                Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
+
+                                // Calculate  NxQ = Curl(Q) = (Qzy-Qyz) i + (Qxz-Qzx) j + (Qyx-Qxy) k
+                                // NxQ = NxQ_x i + NxQ_y j + NxQ_z k
+                                // Using the velocity derivatives memory space to
+                                // store the vorticity derivatives.
+                                // Qzy => Uy // Qyz => Uz // Qxz => Vx // Qzx => Vz // Qyx => Wx // Qxy => Wy 
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Qz,Uy);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Qz,Vz);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],Qy,Uz);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],Qx,Vx);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Qy,Wx);
+                                elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Qx,Wy);
+		
+                                // Using the storage space associated with the 3 components of the vorticity
+                                // to store the 3 components od the vorticity curl to save space
+                                // Qx = Qzy-Qyz = Uy-Uz // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy = Wx-Wy 
+                                Vmath::Vsub(nq,Uy,1,Uz,1,Qx,1);
+                                Vmath::Vsub(nq,Vx,1,Vz,1,Qy,1);
+                                Vmath::Vsub(nq,Wx,1,Wy,1,Qz,1);
+
+                                Nu = N[0] + offset;
+                                Nv = N[1] + offset;
+                                Nw = N[2] + offset;
+
+                                // Evaluate [N - kinvis Curlx Curl V]
+                                // x-component (stored in Qx)
+                                Vmath::Svtvp(nq,-m_kinvis,Qx,1,Nu,1,Qx,1);
+                                // y-component (stored in Qy)
+                                Vmath::Svtvp(nq,m_kinvis,Qy,1,Nv,1,Qy,1);
+                                // z-component (stored in Qz)
+                                Vmath::Svtvp(nq,m_kinvis,Qz,1,Nw,1,Qz,1);		
+
+                                Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (PBndExp[n]->GetExp(i));
+
+                                boundary = m_pressureBCtoTraceID[cnt];
+
+                                // Get face values and put into Uy, Vx and Wx
+                                elmt->GetFacePhysVals(boundary,Qy+offset,Uy);
+                                elmt->GetFacePhysVals(boundary,Qx+offset,Vx);
+                                elmt->GetFacePhysVals(boundary,Qz+offset,Wx);
+
+                                // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
+                                Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
+
+                                // Decide if normals facing outwards
+                                switch(boundary)
+                                {
+                                case 0:
+                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
+                                                 || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2BwdDir2) ? true:false; 
+                                    break;
+                                case 1:
+                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) 
+                                                 || (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) ? true:false;
+                                    break;
+                                case 2:
+                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) 
+                                                 || (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) ? true:false; 
+                                    break;
+                                case 3:
+                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
+                                                 || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2BwdDir2) ? true:false; 
+                                    break;
+                                case 4:
+                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
+                                                 || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) ? true:false; 
+                                    break;
+                                case 5:
+                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) 
+                                                 || (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) ? true:false; 
+                                    break;
+                                default:
+                                    ASSERTL0(false,"face value (> 5) is out of range");
+                                    break;
+                                }
+                            
+                                Pbc->NormVectorIProductWRTBase(Uy,Vx,Wx,Pvals,NegateNormals); 
+                            }
+                        }
+                        else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
+                        {
+                            cnt += PBndExp[n]->GetExpSize();
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
+                        }
+                    }
+	        }
 	}
 	
 	

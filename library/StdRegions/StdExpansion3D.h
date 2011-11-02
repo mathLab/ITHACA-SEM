@@ -142,6 +142,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
+            NormalVector m_surfaceNormal;
+
         private:
 
             virtual int v_GetShapeDimension() const
@@ -153,6 +155,8 @@ namespace Nektar
             {
                 return 3;
             }
+
+            const NormalVector & v_GetSurfaceNormal() const;
         };
     } //end of namespace
 } //end of namespace

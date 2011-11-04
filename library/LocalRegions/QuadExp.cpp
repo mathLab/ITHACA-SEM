@@ -119,7 +119,7 @@ namespace Nektar
             }
 
             // call StdQuadExp version;
-            ival = StdQuadExp::Integral(tmp);
+            ival = StdQuadExp::v_Integral(tmp);
             return  ival;
         }
 
@@ -717,7 +717,7 @@ namespace Nektar
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
 
-            StdQuadExp::PhysDeriv(inarray, diff0, diff1);
+            StdQuadExp::v_PhysDeriv(inarray, diff0, diff1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -807,7 +807,7 @@ namespace Nektar
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
 
-            StdQuadExp::PhysDeriv(inarray, diff0, diff1);
+            StdQuadExp::v_PhysDeriv(inarray, diff0, diff1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -1324,7 +1324,7 @@ namespace Nektar
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
 
-            return StdQuadExp::PhysEvaluate(Lcoord, physvals);
+            return StdQuadExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
         DNekMatSharedPtr QuadExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
@@ -2181,7 +2181,7 @@ namespace Nektar
             }
         }
         
-      void QuadExp::v_NormVectorIProductWRTBase(
+        void QuadExp::v_NormVectorIProductWRTBase(
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
                 const Array<OneD, const NekDouble> &Fz,
@@ -2206,7 +2206,13 @@ namespace Nektar
             }
 
             IProductWRTBase(Fn,outarray);
-	    }
+        }
+     
+        void QuadExp::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &outarray)
+        {
+            StdQuadExp::v_BwdTrans(inarray,outarray);
+        }
 
     }//end of namespace
 }//end of namespace

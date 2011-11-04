@@ -75,10 +75,10 @@ namespace Nektar
 
             /// Return Shape of region, using ShapeType enum
             /// list. i.e. Quadrilateral
-            StdRegions::ExpansionType DetExpansionType() const
-            {
-                return StdRegions::eQuadrilateral;
-            }
+            //StdRegions::ExpansionType DetExpansionType() const
+            //{
+            //    return StdRegions::eQuadrilateral;
+            //}
 
             LOCAL_REGIONS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2, 
@@ -330,17 +330,17 @@ namespace Nektar
 
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
-                return GetEdgeNcoeffs(i);
+                return StdQuadExp::v_GetEdgeNcoeffs(i);
             }
 
             virtual int v_GetEdgeNumPoints(const int i) const
             {
-                return GetEdgeNumPoints(i);
+	        return StdQuadExp::v_GetEdgeNumPoints(i);
             }
 
             virtual bool v_IsBoundaryInteriorExpansion()
             {
-                return StdQuadExp::IsBoundaryInteriorExpansion();
+                return StdQuadExp::v_IsBoundaryInteriorExpansion();
             }
 
             virtual int v_NumBndryCoeffs() const
@@ -368,17 +368,17 @@ namespace Nektar
             } 
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
-                return DetExpansionType();
+	        return StdQuadExp::v_DetExpansionType();
             }
             
             virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
             {
-                StdQuadExp::GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
+                StdQuadExp::v_GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
             {
-                StdQuadExp::GetBoundaryMap(maparray);
+                StdQuadExp::v_GetBoundaryMap(maparray);
             }
 
             virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
@@ -478,10 +478,7 @@ namespace Nektar
 
             /// Virtual call to StdQuadExp::BwdTrans
             virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                    Array<OneD, NekDouble> &outarray)
-            {
-                BwdTrans(inarray,outarray);
-            }
+                                    Array<OneD, NekDouble> &outarray);
     
             /// Virtual call to QuadExp::Evaluate
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
@@ -644,7 +641,7 @@ namespace Nektar
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
-                BwdTrans_SumFac(inarray,outarray);
+	        StdQuadExp::BwdTrans_SumFac(inarray,outarray);
             }
             
             virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 

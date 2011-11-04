@@ -58,8 +58,6 @@ namespace Nektar
                                Bb.GetNumModes()),
                            Ba,Bb)
         {    
-            if(m_ncoeffs > 10)
-                cout << "STDTRIEXP::STDTRIEXP" << endl;
             ASSERTL0(Ba.GetNumModes() <= Bb.GetNumModes(), 
                      "order in 'a' direction is higher than order "
                      "in 'b' direction");

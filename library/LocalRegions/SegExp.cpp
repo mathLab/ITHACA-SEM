@@ -41,6 +41,8 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
+        /// Constructor using BasisKey class for quadrature points and
+        /// order definition.
         /**
          * @param   Ba          Basis key of segment expansion.
          * @param   geom        Description of geometry.
@@ -70,6 +72,7 @@ namespace Nektar
         }
 
 
+        /// Copy Constructor
         /**
          * @param   S           Existing segment to duplicate.
          */
@@ -145,7 +148,56 @@ namespace Nektar
         }
 
 
-        void SegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base, 
+        /** \brief  Inner product of \a inarray over region with respect to
+            the expansion basis (this)->_Base[0] and return in \a outarray
+
+            Wrapper call to SegExp::IProduct_WRT_B
+
+            Input:\n
+
+            - \a inarray: array of function evaluated at the physical
+            collocation points
+
+            Output:\n
+
+            - \a outarray: array of inner product with respect to each
+            basis over region
+        */
+        void SegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
+                             Array<OneD, NekDouble> &outarray)
+        {
+            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+        }
+
+
+        /**
+           \brief  Inner product of \a inarray over region with respect to
+           expansion basis \a base and return in \a outarray
+
+           Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
+           = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
+           \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
+           \phi_p(\xi_{1i}) \f$.
+
+           Inputs: \n
+
+           - \a base: an array definiing the local basis for the inner
+           product usually passed from Basis->get_bdata() or
+           Basis->get_Dbdata()
+           - \a inarray: physical point array of function to be integrated
+           \f$ u(\xi_1) \f$
+           - \a coll_check: Flag to identify when a Basis->collocation()
+           call should be performed to see if this is a GLL_Lagrange basis
+           with a collocation property. (should be set to 0 if taking the
+           inner product with respect to the derivative of basis)
+
+           Output: \n
+
+           - \a outarray: array of coefficients representing the inner
+           product of function with ever  mode in the exapnsion
+
+        **/
+        void SegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &outarray, 
                                      int coll_check)
@@ -166,6 +218,7 @@ namespace Nektar
             }
             StdSegExp::v_IProductWRTBase(base,tmp,outarray,coll_check);
         }
+
 
         void SegExp::v_IProductWRTDerivBase(const int dir, 
                                           const Array<OneD, const NekDouble>& inarray, 
@@ -411,8 +464,6 @@ namespace Nektar
             du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dz, 
             \f$ depending on value of \a dim
         */
-
-
         void SegExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                Array<OneD,NekDouble> &out_d0,
                                Array<OneD,NekDouble> &out_d1,
@@ -466,6 +517,13 @@ namespace Nektar
             }
         }
 
+        /**
+        *\brief Evaluate the derivative along a line: \f$ d/ds=\frac{spacedim}{||tangent||}d/d{\xi}  \f$.
+        * The derivative is calculated performing
+        *the product \f$ du/d{s}=\nabla u \cdot tangent \f$.
+        *\param inarray function to derive
+        *\param out_ds result of the derivative operation 
+        **/
         void SegExp::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
                                Array<OneD,NekDouble> &out_ds)
         {
@@ -501,6 +559,13 @@ namespace Nektar
             }
         }
 
+        /**
+           *\brief Evaluate the derivative normal to a line: \f$ d/dn=\frac{spacedim}{||normal||}d/d{\xi}  \f$.
+           * The derivative is calculated performing
+           *the product \f$ du/d{s}=\nabla u \cdot normal \f$.
+           *\param inarray function to derive
+           *\param out_dn result of the derivative operation 
+        **/
         void SegExp::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble>& out_dn)
         {
@@ -768,10 +833,185 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
+
+        int SegExp::v_GetCoordim()
+        {
+            return m_geom->GetCoordim();
+        }
+
+        /// Returns a pointer to the GeomFactors object describing the
+        /// metric information for the segment.
+        const SpatialDomains::GeomFactorsSharedPtr& SegExp::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
+
+        const Array<OneD, const NekDouble>& SegExp::v_GetPhysNormals(void)
+        {
+            NEKERROR(ErrorUtil::efatal, "Got to SegExp");
+            return NullNekDouble1DArray;
+        }
+
+        SpatialDomains::GeomType SegExp::v_MetricInfoType()
+        {
+            return m_metricinfo->GetGtype();
+        }
+
+
+
+        /// Returns a pointer to a Geometry object describing the
+        /// geometry of the segment.
+        const SpatialDomains::GeometrySharedPtr SegExp::v_GetGeom() const
+        {
+            return m_geom;
+        }
+
+        /// Returns a pointer to a Geometry1D object describing the
+        /// geometry of the segment.
+        const SpatialDomains::Geometry1DSharedPtr& SegExp::v_GetGeom1D() const
+        {
+            return m_geom;
+        }
+
+        /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
+            error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
+            u_{exact}\f$ is given by the array \a sol.
+
+            The full function is defined in StdExpansion::Linf
+
+            Input:
+
+            - \a _phys: takes the physical value space array as
+            approximate solution
+
+            - \a sol: array of solution function  at physical quadrature points
+
+            output:
+
+            - returns the \f$ L_\infty \f$ error as a NekDouble.
+        */
+        NekDouble SegExp::v_Linf(const Array<OneD, const NekDouble>& sol)
+        {
+            return Linf(sol);
+        }
+
+        /** \brief Virtual function to evaluate the \f$ L_\infty \f$ norm of
+            the function defined at the physical points \a (this)->_phys.
+
+            The full function is defined in StdExpansion::Linf
+
+            Input:
+
+            - \a _phys: uses the physical value space array as discrete
+            function to be evaulated.
+
+            output:
+
+            - returns the \f$ L_\infty \f$  as a NekDouble.
+        */
+        NekDouble SegExp::v_Linf()
+        {
+            return Linf();
+        }
+
+        /** \brief Virtual function to evaluate the \f$ L_2\f$, \f$ |
+            \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx
+            \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the
+            array sol.
+
+            The full function is defined in StdExpansion::L2
+
+            Input:
+
+            - \a _phys: takes the physical value space array as
+            approximate solution
+            - \a sol: array of solution function  at physical quadrature points
+
+            output:
+
+            - returns the \f$ L_2 \f$ error as a NekDouble.
+        */
+        NekDouble SegExp::v_L2(const Array<OneD, const NekDouble>& sol)
+        {
+            return StdExpansion::L2(sol);
+        }
+
+        /** \brief Virtual function to evaluate the \f$ L_2\f$ norm of the
+            function defined at the physical points \a (this)->_phys.
+
+            The full function is defined in StdExpansion::L2
+
+            Input:
+
+            - \a _phys: uses the physical value space array as discrete
+            function to be evaulated.
+
+            output:
+
+            - returns the \f$ L_2 \f$  as a NekDouble.
+        */
+        NekDouble SegExp::v_L2()
+        {
+            return StdExpansion::L2();
+        }
+
+        DNekScalMatSharedPtr& SegExp::v_GetLocMatrix(const MatrixKey &mkey)
+        {
+            return m_matrixManager[mkey];
+        }
+
+
+        DNekScalMatSharedPtr& SegExp::v_GetLocMatrix(
+                const StdRegions::MatrixType mtype,
+                NekDouble lambdaval,
+                NekDouble tau)
+        {
+            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
+            return m_matrixManager[mkey];
+        }
+
+        DNekScalBlkMatSharedPtr& SegExp::v_GetLocStaticCondMatrix(
+                const MatrixKey &mkey)
+        {
+            return m_staticCondMatrixManager[mkey];
+        }
+
+        int SegExp::v_GetNumPoints(const int dir) const
+        {
+            return GetNumPoints(dir);
+        }
+
+
+        int SegExp::v_GetNcoeffs(void) const
+        {
+            return m_ncoeffs;
+        }
+
+        const LibUtilities::BasisSharedPtr& SegExp::v_GetBasis(int dir) const
+        {
+            return GetBasis(dir);
+        }
+
+
+        int SegExp::v_NumBndryCoeffs() const
+        {
+            return 2;
+        }
+
+
+        int SegExp::v_NumDGBndryCoeffs() const
+        {
+            return 2;
+        }
+
+
+        /// Returns the locations of the quadrature points in up to
+        /// three-dimensions.
         void SegExp::v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                Array<OneD, NekDouble> &coords_1,
                                Array<OneD, NekDouble> &coords_2)
-        { 
+        {
             Array<OneD,NekDouble>  x;
 
             LibUtilities::BasisSharedPtr CBasis; 
@@ -849,6 +1089,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
+        /// Writes out the physical space data to file.
         void SegExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)

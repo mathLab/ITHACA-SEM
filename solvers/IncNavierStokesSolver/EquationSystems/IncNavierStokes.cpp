@@ -50,7 +50,8 @@ namespace Nektar
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         EquationSystem(pSession),
-        m_infosteps(10)
+        m_infosteps(10),
+        m_steadyStateSteps(0)
     {
     }
 
@@ -110,7 +111,9 @@ namespace Nektar
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
             m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
             m_session->LoadParameter("IO_HistorySteps", m_historysteps, 0);
-
+            m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
+            m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
+            
             // check to see if any user defined boundary condition is
             // indeed implemented
             
@@ -236,16 +239,25 @@ namespace Nektar
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
             {
-				for(i = 0; i < m_nConvectiveFields; ++i)
-				{
-					m_fields[i]->SetPhys(fields[i]);
-					m_fields[i]->SetPhysState(true);
-				}
-				Checkpoint_Output(nchk++);
+                for(i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[i]->SetPhys(fields[i]);
+                    m_fields[i]->SetPhysState(true);
+                }
+                Checkpoint_Output(nchk++);
+            }
+
+            
+            if(m_steadyStateSteps && n && (!((n+1)%m_steadyStateSteps)))
+            {
+                if(CalcSteadyState() == true)
+                {
+                    cout << "Reached Steady State to tolerance " << m_steadyStateTol << endl; 
+                    break;
+                }
             }
         }
         
-		//Array<OneD, NekDouble>   test(256,0.0);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->SetPhys(fields[i]);
@@ -256,6 +268,7 @@ namespace Nektar
         {
             hisFile.close();
         }
+
         if (m_energysteps)
         {
             mdlFile.close();
@@ -313,6 +326,33 @@ namespace Nektar
         }
     }
     
+    // Decide if at a steady state if the discrerte L2 sum of the
+    // coefficients is the same as the previous step to within the
+    // tolerance m_steadyStateTol;
+    bool IncNavierStokes::CalcSteadyState(void)
+    {
+        static NekDouble previousL2 = 0.0;
+        bool returnval = false;
+
+        NekDouble L2 = 0.0;
+        
+        // calculate L2 discrete summation 
+        int ncoeffs = m_fields[0]->GetNcoeffs(); 
+        
+        for(int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            L2 += Vmath::Dot(ncoeffs,m_fields[i]->GetCoeffs(),1,m_fields[i]->GetCoeffs(),1);
+        }
+        
+        if(fabs(L2-previousL2) < ncoeffs*m_steadyStateTol)
+        {
+            returnval = true;
+        }
+
+        previousL2 = L2;
+
+        return returnval;
+    }
     
 
     // case insensitive string comparison from web

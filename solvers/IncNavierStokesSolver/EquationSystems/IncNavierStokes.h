@@ -53,9 +53,9 @@ namespace Nektar
         eNoEquationType,
         eSteadyStokes,
         eSteadyOseen,
-  	    eSteadyLinearisedNS,
+        eSteadyLinearisedNS,
         eUnsteadyStokes,
-  	    eUnsteadyLinearisedNS,
+        eUnsteadyLinearisedNS,
         eUnsteadyNavierStokes,
         eEquationTypeSize
     };
@@ -66,9 +66,9 @@ namespace Nektar
         "NoType",
         "SteadyStokes",
         "SteadyOseen",
-	    "SteadyLinearisedNS",
+        "SteadyLinearisedNS",
         "UnsteadyStokes",
-	    "UnsteadyLinearisedNS",
+        "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes"
     };
 
@@ -120,11 +120,15 @@ namespace Nektar
         /// Pointer to field holding pressure field
         MultiRegions::ExpListSharedPtr m_pressure;  
         
-        NekDouble     m_kinvis;        ///< Kinematic viscosity
-        int           m_infosteps;     ///< dump info to stdout at steps time
-        int           m_energysteps;   ///< dump energy to file at steps time
-        int           m_historysteps;  ///< dump history to file at steps time
+        NekDouble   m_kinvis;        ///< Kinematic viscosity
+        int         m_infosteps;     ///< dump info to stdout at steps time
+        int         m_energysteps;   ///< dump energy to file at steps time
+        int         m_historysteps;  ///< dump history to file at steps time
+        int         m_steadyStateSteps; ///< Check for steady state at step interval
+        NekDouble   m_steadyStateTol; ///< Tolerance to which steady state should be evaluated at
+
         EquationType  m_equationType;  ///< equation type;
+        
 
         // Time integration classes
         LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
@@ -152,6 +156,9 @@ namespace Nektar
         //time dependent boundary conditions updating
 	
         void SetBoundaryConditions(NekDouble time);
+
+        // evaluate steady state
+        bool CalcSteadyState(void);
 
         // Virtual functions
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
@@ -185,7 +192,7 @@ namespace Nektar
         }
 		
 				
-
+        
     private: 
     };
     

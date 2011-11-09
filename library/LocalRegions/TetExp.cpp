@@ -52,18 +52,13 @@ namespace Nektar
             StdRegions::StdTetExp(Ba,Bb,Bc),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("TetExpMatrix")),
-            m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&TetExp::CreateMatrix, this, _1),
+                    std::string("TetExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&TetExp::CreateStaticCondMatrix, this, _1),
+                    std::string("TetExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TetExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
-            }
         }
 
 
@@ -75,8 +70,8 @@ namespace Nektar
             StdRegions::StdTetExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("TetExpMatrix")),
-            m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
+            m_matrixManager(T.m_matrixManager),
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         }
 

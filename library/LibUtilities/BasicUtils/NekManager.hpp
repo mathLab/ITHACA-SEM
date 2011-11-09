@@ -98,7 +98,8 @@ namespace Nektar
                     }
                 };
 
-                    explicit NekManager(CreateFuncType f, std::string whichPool="") :
+
+                explicit NekManager(CreateFuncType f, std::string whichPool="") :
                     m_values(),
                     m_globalCreateFunc(f),
                     m_keySpecificCreateFuncs()
@@ -123,7 +124,9 @@ namespace Nektar
                     }
                 }
                 
-                ~NekManager() {}
+                ~NekManager()
+                {
+                }
             
                 /// Register the given function and associate it with the key.
                 /// The return value is just to facilitate calling statically.

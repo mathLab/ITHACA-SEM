@@ -81,17 +81,7 @@ namespace Nektar
             const bool NodalTriEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTriEvenlySpaced), NodalTriEvenlySpaced::Create);
             const bool NodalTetEveInited = PointsManager().RegisterCreator(PointsKey(0, eNodalTetEvenlySpaced), NodalTetEvenlySpaced::Create);
 
-            const bool Ortho_A_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_A, 0, NullPointsKey), Basis::Create);
-            const bool Ortho_B_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_B, 0, NullPointsKey), Basis::Create);
-            const bool Ortho_C_Inited = BasisManager().RegisterCreator(BasisKey(eOrtho_C, 0, NullPointsKey), Basis::Create);
-            const bool Modified_A_Inited = BasisManager().RegisterCreator(BasisKey(eModified_A, 0, NullPointsKey), Basis::Create);
-            const bool Modified_B_Inited = BasisManager().RegisterCreator(BasisKey(eModified_B, 0, NullPointsKey), Basis::Create);
-            const bool Modified_C_Inited = BasisManager().RegisterCreator(BasisKey(eModified_C, 0, NullPointsKey), Basis::Create);
-            const bool Fourier_Inited = BasisManager().RegisterCreator(BasisKey(eFourier, 0, NullPointsKey), Basis::Create);
-            const bool GLL_Lagrange_Inited = BasisManager().RegisterCreator(BasisKey(eGLL_Lagrange, 0, NullPointsKey), Basis::Create);
-            const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
-            const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
-            const bool Monomial_Inited = BasisManager().RegisterCreator(BasisKey(eMonomial, 0, NullPointsKey), Basis::Create);
+            const bool Basis_Inited = BasisManager().RegisterGlobalCreator(Basis::Create);
         };
 
         PointsManagerT &PointsManager(void)

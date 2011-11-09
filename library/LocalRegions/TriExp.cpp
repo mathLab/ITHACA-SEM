@@ -51,16 +51,13 @@ namespace Nektar
                StdTriExp(Ba,Bb),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("TriExpMatrix")),
-            m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&TriExp::CreateMatrix, this, _1),
+                    std::string("TriExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&TriExp::CreateStaticCondMatrix, this, _1),
+                    std::string("TriExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TriExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
-            }
         }
 
         TriExp::TriExp(const TriExp &T):
@@ -71,8 +68,8 @@ namespace Nektar
             StdRegions::StdTriExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("TriExpMatrix")),
-            m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
+            m_matrixManager(T.m_matrixManager),
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         }
 

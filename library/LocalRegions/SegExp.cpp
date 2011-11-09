@@ -54,21 +54,13 @@ namespace Nektar
             StdRegions::StdSegExp(Ba),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("SegExpMatrix")),
-            m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&SegExp::CreateMatrix, this, _1),
+                    std::string("SegExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&SegExp::CreateStaticCondMatrix, this, _1),
+                    std::string("SegExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(
-                                MatrixKey((StdRegions::MatrixType) i,
-                                          StdRegions::eNoExpansionType,*this),
-                                boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(
-                                MatrixKey((StdRegions::MatrixType) i, 
-                                          StdRegions::eNoExpansionType,*this), 
-                                boost::bind(&SegExp::CreateStaticCondMatrix, 
-                                            this, _1));
-            }
         }
 
 
@@ -80,21 +72,9 @@ namespace Nektar
             StdRegions::StdSegExp(S),
             m_geom(S.m_geom),
             m_metricinfo(S.m_metricinfo),
-            m_matrixManager(std::string("SegExpMatrix")),
-            m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
+            m_matrixManager(S.m_matrixManager),
+            m_staticCondMatrixManager(S.m_staticCondMatrixManager)
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(
-                                MatrixKey((StdRegions::MatrixType) i,
-                                          StdRegions::eNoExpansionType,*this),
-                                boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(
-                                MatrixKey((StdRegions::MatrixType) i,
-                                          StdRegions::eNoExpansionType,*this),
-                                boost::bind(&SegExp::CreateStaticCondMatrix,
-                                            this, _1));
-            }
         }
 
 

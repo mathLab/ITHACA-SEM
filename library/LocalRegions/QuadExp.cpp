@@ -51,16 +51,13 @@ namespace Nektar
              StdQuadExp(Ba,Bb),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("QuadExpMatrix")),
-            m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&QuadExp::CreateMatrix, this, _1),
+                    std::string("QuadExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1),
+                    std::string("QuadExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), boost::bind(&QuadExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1));
-            }
         }
 
         QuadExp::QuadExp(const QuadExp &T):
@@ -70,8 +67,8 @@ namespace Nektar
             StdQuadExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("QuadExpMatrix")),
-            m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
+            m_matrixManager(T.m_matrixManager),
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         }
 

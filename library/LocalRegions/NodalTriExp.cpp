@@ -54,18 +54,13 @@ namespace Nektar
             StdNodalTriExp(Ba,Bb,Ntype),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("NodalTriExpMatrix")),
-            m_staticCondMatrixManager(std::string("NodalTriExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&NodalTriExp::CreateMatrix, this, _1),
+                    std::string("NodalTriExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&NodalTriExp::CreateStaticCondMatrix, this, _1),
+                    std::string("NodalTriExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&NodalTriExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&NodalTriExp::CreateStaticCondMatrix, this, _1));
-            } 
         }
         
         NodalTriExp::NodalTriExp(const NodalTriExp &T):
@@ -76,8 +71,8 @@ namespace Nektar
             StdRegions::StdNodalTriExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("NodalTriExpMatrix")),
-            m_staticCondMatrixManager(std::string("NodalTriExpStaticCondMatrix"))
+            m_matrixManager(T.m_matrixManager),
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         }        
         

@@ -90,17 +90,17 @@ namespace Nektar
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
-		m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-	            boost::bind(&GaussPoints::CreateMatrix, this, _1));
-		m_InterpManager.RegisterCreator(PointsKey(0, eGaussKronrodLegendre),
-		     boost::bind(&GaussPoints::CreateMatrix, this, _1));
-	        m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
-	        m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussKronrodLegendre),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
-	        m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
-		m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));

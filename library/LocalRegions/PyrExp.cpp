@@ -51,18 +51,13 @@ namespace Nektar
             StdRegions::StdPyrExp(Ba,Bb,Bc),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("PyrExpMatrix")),
-            m_staticCondMatrixManager(std::string("PyrExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&PyrExp::CreateMatrix, this, _1),
+                    std::string("PyrExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1),
+                    std::string("PyrExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&PyrExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&PyrExp::CreateStaticCondMatrix, this, _1));
-            }
         }
 
         PyrExp::PyrExp(const PyrExp &T):
@@ -73,8 +68,8 @@ namespace Nektar
             StdRegions::StdPyrExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("PyrExpMatrix")),
-            m_staticCondMatrixManager(std::string("PyrExpStaticCondMatrix"))
+            m_matrixManager(T.m_matrixManager),
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         } 
 

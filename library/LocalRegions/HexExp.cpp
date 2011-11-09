@@ -62,21 +62,13 @@ namespace Nektar
             StdRegions::StdHexExp(Ba,Bb,Bc),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(std::string("HexExpMatrix")),
-            m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
+            m_matrixManager(
+                    boost::bind(&HexExp::CreateMatrix, this, _1),
+                    std::string("HexExpMatrix")),
+            m_staticCondMatrixManager(
+                    boost::bind(&HexExp::CreateStaticCondMatrix, this, _1),
+                    std::string("HexExpStaticCondMatrix"))
         {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(
-                                MatrixKey((StdRegions::MatrixType) i,
-                                StdRegions::eNoExpansionType,*this),
-                                boost::bind(&HexExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(
-                                MatrixKey((StdRegions::MatrixType) i,
-                                StdRegions::eNoExpansionType,*this),
-                                boost::bind(&HexExp::CreateStaticCondMatrix,
-                                this, _1));
-            }
         }
 
 
@@ -91,8 +83,8 @@ namespace Nektar
             StdRegions::StdHexExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
-            m_matrixManager(std::string("HexExpMatrix")),
-            m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
+            m_matrixManager(T.m_matrixManager),
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         }
 

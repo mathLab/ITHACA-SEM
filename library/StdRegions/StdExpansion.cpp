@@ -67,8 +67,12 @@ namespace Nektar
             m_base(m_numbases),
             m_ncoeffs(numcoeffs),
             m_coeffs(m_ncoeffs,0.0),
-            m_stdMatrixManager(std::string("StdExpansionStdMatrix")),
-            m_stdStaticCondMatrixManager(std::string("StdExpansionStdStaticCondMatrix"))
+            m_stdMatrixManager(
+                    boost::bind(&StdExpansion::CreateStdMatrix, this, _1),
+                    std::string("StdExpansionStdMatrix")),
+            m_stdStaticCondMatrixManager(
+                    boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1),
+                    std::string("StdExpansionStdStaticCondMatrix"))
         {
             switch(m_numbases)
             {
@@ -94,15 +98,6 @@ namespace Nektar
             //allocate memory for phys
             m_phys = Array<OneD, NekDouble>(GetTotPoints());
 
-            // Register Creators for  Managers
-            for(int i = 0; i < SIZE_MatrixType; ++i)
-            {
-                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),
-                                   boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),
-                                   boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
-            }
-
         } //end constructor
 
 
@@ -113,19 +108,12 @@ namespace Nektar
             m_ncoeffs(T.m_ncoeffs),
             m_coeffs(m_ncoeffs),
             m_phys((T.m_phys).num_elements()),
-            m_stdMatrixManager(std::string("StdExpansion")),
-            m_stdStaticCondMatrixManager(std::string("StdExpansionStaticCondMat"))
+            m_stdMatrixManager(T.m_stdMatrixManager),
+            m_stdStaticCondMatrixManager(T.m_stdStaticCondMatrixManager)
         {
             //CopyArray(T.m_base, m_base);
             CopyArray(T.m_coeffs, m_coeffs);
             CopyArray(T.m_phys, m_phys);
-
-            // Register Creators for  Managers
-            for(int i = 0; i < SIZE_MatrixType; ++i)
-            {
-                m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this), boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this), boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
-            }
         }
 
         StdExpansion::~StdExpansion()

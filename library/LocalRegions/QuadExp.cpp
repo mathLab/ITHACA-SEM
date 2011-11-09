@@ -36,6 +36,9 @@
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/QuadExp.h>
+#include <LocalRegions/Expansion3D.h>
+
+
 
 
 namespace Nektar
@@ -2188,7 +2191,7 @@ namespace Nektar
             int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
 
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetSurfaceNormal(); // m_metricinfo->GetNormals();
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetFaceNormal(GetLeftAdjacentElementFace());
             //for(int i=0; i<nq; i++)
             //{
             //cout<<"nx= "<<normals[0][i]<<"  ny="<<normals[1][i]<<"  nz="<<normals[2][i]<<endl;

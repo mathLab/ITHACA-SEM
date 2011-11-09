@@ -181,10 +181,10 @@ namespace Nektar
             }
 
             // Setting up Surface Normal Vectors
-            if(coordim == 3)
+            /*if(coordim == 3)
             {
                 v_ComputeSurfaceNormals();
-            }
+            }*/
 
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation

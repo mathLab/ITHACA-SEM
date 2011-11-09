@@ -44,6 +44,9 @@ namespace Nektar
 {
     namespace LocalRegions
     {
+      class Expansion3D;
+      typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+
         class Expansion2D: virtual public Expansion, virtual public StdRegions::StdExpansion2D
         {
         public:
@@ -87,6 +90,18 @@ namespace Nektar
                                            Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
                                            Array<OneD,NekDouble> &outarray);
+
+            inline Expansion3DSharedPtr GetLeftAdjacentElementExp() const;
+
+            inline Expansion3DSharedPtr GetRightAdjacentElementExp() const;
+
+            inline int GetLeftAdjacentElementFace() const;
+
+            inline int GetRightAdjacentElementFace() const;
+
+            inline void SetAdjacentElementExp(
+                        int face,
+                        Expansion3DSharedPtr &f);
 
         protected:
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
@@ -149,6 +164,11 @@ namespace Nektar
 
         private:
             std::vector<Expansion1DSharedPtr> m_edgeExp;
+
+            Expansion3DSharedPtr m_elementLeft;
+            Expansion3DSharedPtr m_elementRight;
+            int m_elementFaceLeft;
+            int m_elementFaceRight;
 
          };
 
@@ -215,46 +235,47 @@ namespace Nektar
             v_AddHDGHelmholtzTraceTerms(tau, inarray, EdgeExp, dirForcing, outarray);
         }
 
+        inline Expansion3DSharedPtr Expansion2D::GetLeftAdjacentElementExp() const
+        {
+            ASSERTL1(m_elementLeft.get(), "Left adjacent element not set.");
+            return m_elementLeft;
+        }
+        
+        inline Expansion3DSharedPtr Expansion2D::GetRightAdjacentElementExp() const
+        {
+            ASSERTL1(m_elementLeft.get(), "Right adjacent element not set.");
+            return m_elementRight;
+        }
+
+        inline int Expansion2D::GetLeftAdjacentElementFace() const
+        {
+            return m_elementFaceLeft;
+        }
+
+        inline int Expansion2D::GetRightAdjacentElementFace() const
+        {
+            return m_elementFaceRight;
+        }
+        
+        inline void Expansion2D::SetAdjacentElementExp(int face, Expansion3DSharedPtr &f)
+        {
+            if (m_elementLeft.get())
+            {
+                ASSERTL1(!m_elementRight.get(),
+                         "Both adjacent elements already set.");
+                m_elementRight = f;
+                m_elementFaceRight = face;
+            }
+            else
+            {
+                m_elementLeft = f;
+                m_elementFaceLeft = face;
+            }
+	}
+
+
     } //end of namespace
 } //end of namespace
 
 #define EXPANSION2D_H
 #endif
-
-/**
- *    $Log: Expansion2D.h,v $
- *    Revision 1.11  2009/11/17 17:43:36  sehunchun
- *    *** empty log message ***
- *
- *    Revision 1.10  2009/11/09 15:43:51  sehunchun
- *    HDG2DManifold Solver with Variable coefficients
- *
- *    Revision 1.9  2009/11/06 21:43:56  sherwin
- *    DGDeriv function
- *
- *    Revision 1.8  2009/09/06 22:24:00  sherwin
- *    Updates for Navier-Stokes solver
- *
- *    Revision 1.7  2009/07/07 16:31:47  sehunchun
- *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
- *
- *    Revision 1.6  2009/04/02 13:04:36  sherwin
- *    Modified Hybrid Matrix call to use matrix D M^{-1}D' formulation and removed operations based version
- *
- *    Revision 1.5  2008/11/01 22:08:29  bnelson
- *    Fixed compiler warning
- *
- *    Revision 1.4  2008/10/04 19:34:09  sherwin
- *    Added an upwind method which takes the normal flux rather than than individual components
- *
- *    Revision 1.3  2008/08/27 16:35:13  pvos
- *    Small efficiency update
- *
- *    Revision 1.2  2008/08/20 09:16:39  sherwin
- *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
- *
- *    Revision 1.1  2008/08/14 22:12:56  sherwin
- *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
- *
- *
- **/

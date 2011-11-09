@@ -54,6 +54,22 @@ namespace Nektar
             
             return returnval;
         }
+
+        void Expansion3D::SetFaceExp(const int face, Expansion2DSharedPtr &f)
+            {
+               int nFaces = GetNfaces();
+               ASSERTL1(face < nFaces, "Face is out of range.");
+               if (m_faceExp.size() < nFaces)
+                  {
+                      m_faceExp.resize(nFaces);
+                  }
+               m_faceExp[face] = f;
+            }
+
+
+
+
+
 #if 0 //needs m_faceMap to be defined and setupin Expansion3D similar to 2D case
         void Expansion3D::AddRobinMassMatrix(const int face, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
         {

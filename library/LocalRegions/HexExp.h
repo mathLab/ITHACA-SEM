@@ -274,7 +274,8 @@ namespace Nektar
 
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(
                             const MatrixKey &mkey);
-      
+
+            void v_ComputeFaceNormal(const int face);      
         };
 
         // type defines for use of HexExp in a boost vector

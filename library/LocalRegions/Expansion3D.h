@@ -36,6 +36,7 @@
 #ifndef EXPANSION3D_H
 
 #include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
@@ -46,12 +47,15 @@ namespace Nektar
         {
             public:
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-            
+                LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                       
             protected:
-            
+
             private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
+
+            std::vector<Expansion2DSharedPtr> m_faceExp;
+
         };
         
         // type defines for use of PrismExp in a boost vector

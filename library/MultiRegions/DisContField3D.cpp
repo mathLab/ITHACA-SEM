@@ -63,7 +63,31 @@ namespace Nektar
                                       m_bndCondExpansions,m_bndConditions,
                                       periodicEdges);
 */            }
+              else
+	      {
+		  int i,cnt,f;
+                  Array<OneD, int> ElmtID,FaceID;
+                  GetBoundaryToElmtMap(ElmtID,FaceID);
 
+                  for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                  {
+                      MultiRegions::ExpListSharedPtr locExpList;
+                      locExpList = m_bndCondExpansions[i];
+
+                      for(f = 0; f < locExpList->GetExpSize(); ++f)
+                      {
+                          LocalRegions::Expansion3DSharedPtr exp3d
+                              = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[ElmtID[cnt+f]]);
+                          LocalRegions::Expansion2DSharedPtr exp2d
+                              = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>(locExpList->GetExp(f));
+ 
+                          exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
+                          exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                      }
+                      
+                      cnt += m_bndCondExpansions[i]->GetExpSize();
+                  }
+	      }
         }
 
         DisContField3D::DisContField3D( const DisContField3D &In,
@@ -93,6 +117,32 @@ namespace Nektar
 
                 ASSERTL0(false, "DisContField3D Constructor needs implementation.");
              }
+              else
+	      {
+		  int i,cnt,f;
+                  Array<OneD, int> ElmtID,FaceID;
+                  GetBoundaryToElmtMap(ElmtID,FaceID);
+
+                  for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                  {
+                      MultiRegions::ExpListSharedPtr locExpList;
+                      locExpList = m_bndCondExpansions[i];
+
+                      for(f = 0; f < locExpList->GetExpSize(); ++f)
+                      {
+                          LocalRegions::Expansion3DSharedPtr exp3d
+                              = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[ElmtID[cnt+f]]);
+                          LocalRegions::Expansion2DSharedPtr exp2d
+                              = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>(locExpList->GetExp(f));
+ 
+                          exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
+                          exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                      }
+                      
+                      cnt += m_bndCondExpansions[i]->GetExpSize();
+                  }
+	      }
+
             }
         }
 

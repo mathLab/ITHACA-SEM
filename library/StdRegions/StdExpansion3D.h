@@ -144,6 +144,8 @@ namespace Nektar
 
             NormalVector m_surfaceNormal;
 
+            std::map<int, NormalVector> m_faceNormals;
+
         private:
 
             virtual int v_GetShapeDimension() const
@@ -155,8 +157,8 @@ namespace Nektar
             {
                 return 3;
             }
-
             const NormalVector & v_GetSurfaceNormal() const;
+            const NormalVector & v_GetFaceNormal(const int face) const;
         };
     } //end of namespace
 } //end of namespace

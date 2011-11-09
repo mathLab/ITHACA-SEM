@@ -1344,11 +1344,17 @@ namespace Nektar
                 v_ComputeFaceNormal(face);
             }
 
+            const NormalVector & GetFaceNormal(const int face) const
+            {
+                return v_GetFaceNormal(face); 
+            }
+
             const NormalVector & GetSurfaceNormal() const
             {
                 // @TODO Implement this
                 return v_GetSurfaceNormal(); 
             }
+
         protected:
 
 
@@ -1718,6 +1724,7 @@ namespace Nektar
 
             virtual void v_ComputeFaceNormal(const int face);
 
+            virtual const NormalVector & v_GetFaceNormal(const int face) const;
             virtual const NormalVector & v_GetSurfaceNormal() const;
         };
 

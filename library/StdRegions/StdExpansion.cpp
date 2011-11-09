@@ -1655,6 +1655,10 @@ namespace Nektar
                 ASSERTL0(false, "Cannot compute face normal for this expansion.");
             }
 
+            const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
+            {
+                ASSERTL0(false, "Cannot get face normals for this expansion.");
+            }
             const NormalVector & StdExpansion::v_GetSurfaceNormal() const
             {
                 ASSERTL0(false, "Cannot get face normals for this expansion.");

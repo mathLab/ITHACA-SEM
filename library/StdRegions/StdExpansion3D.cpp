@@ -265,81 +265,14 @@ namespace Nektar
         {
             return m_surfaceNormal;
         }
+        const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
+        {
+            std::map<int, NormalVector>::const_iterator x;
+            x = m_faceNormals.find(face);
+            ASSERTL0 (x != m_faceNormals.end(),
+                        "face normal not computed.");
+            return x->second;
+        }
+
     }//end namespace
 }//end namespace
-
-/**
- * $Log: StdExpansion3D.cpp,v $
- * Revision 1.19  2008/12/09 17:15:49  rcantao
- * Missing outarray_dy[ijk] = 0.0 prior to calculation.
- *
- * Revision 1.18  2008/11/23 00:32:57  sherwin
- * Removed dump value from PhysEvaluate
- *
- * Revision 1.17  2008/07/04 10:18:40  pvos
- * Some updates
- *
- * Revision 1.16  2008/05/07 16:04:57  pvos
- * Mapping + Manager updates
- *
- * Revision 1.15  2008/04/06 06:04:15  bnelson
- * Changed ConstArray to Array<const>
- *
- * Revision 1.14  2007/11/08 14:27:07  ehan
- * Fixed PhysTensorDerivative3D matrix and improved L1 error up to 1e-15.
- *
- * Revision 1.13  2007/10/29 20:30:44  ehan
- * Fixed floating point approximation up to 1-e15 for PhysEvaluate.
- *
- * Revision 1.12  2007/10/15 20:37:59  ehan
- * Make changes of column major matrix
- *
- * Revision 1.11  2007/07/20 02:16:53  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.10  2007/05/22 02:01:49  bnelson
- * Changed Array::size to Array::num_elements.
- *
- * Fixed some compiler errors in assertions.
- *
- * Revision 1.9  2007/05/15 05:18:23  bnelson
- * Updated to use the new Array object.
- *
- * Revision 1.8  2007/04/10 14:00:45  sherwin
- * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
- *
- * Revision 1.7  2007/04/04 20:48:17  sherwin
- * Update to handle SharedArrays
- *
- * Revision 1.6  2007/03/29 19:35:09  bnelson
- * Replaced boost::shared_array with SharedArray
- *
- * Revision 1.5  2007/03/20 16:58:43  sherwin
- * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
- *
- * Revision 1.4  2007/01/18 18:44:45  bnelson
- * Updates to compile on Visual Studio 2005.
- *
- * Revision 1.3  2007/01/17 16:05:40  pvos
- * updated doxygen documentation
- *
- * Revision 1.2  2006/06/01 14:46:16  kirby
- * *** empty log message ***
- *
- * Revision 1.1  2006/05/04 18:58:31  kirby
- * *** empty log message ***
- *
- * Revision 1.9  2006/04/01 21:59:27  sherwin
- * Sorted new definition of ASSERT
- *
- * Revision 1.8  2006/03/21 09:21:32  sherwin
- * Introduced NekMemoryManager
- *
- * Revision 1.7  2006/02/27 23:47:23  sherwin
- *
- * Standard coding update upto compilation of StdHexExp.cpp
- *
- **/
-
-
-

@@ -2015,6 +2015,84 @@ namespace Nektar
             }
 	}
 
+        void HexExp::v_ComputeFaceNormal(const int face)
+        {
+            int i;
+            const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+            SpatialDomains::GeomType type = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
+            int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            int vCoordDim = GetCoordim();
+
+            m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
+            for (i = 0; i < vCoordDim; ++i)
+            {
+                normal[i] = Array<OneD, NekDouble>(nqe);
+            }
+
+            // Regular geometry case
+            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            {
+                NekDouble fac;
+                // Set up normals
+                switch(face)
+                {
+                case 0:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[3*i+2][0],normal[i],1);
+                    }
+                    break;
+                case 1:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[3*i+1][0],normal[i],1);
+                    }
+                    break;
+                case 2:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,gmat[3*i][0],normal[i],1);
+                    }
+                    break;
+                case 3:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,gmat[3*i+1][0],normal[i],1);
+                    }
+                    break;
+                case 4:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[3*i][0],normal[i],1);
+                    }
+                    break;
+                case 5:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,gmat[3*i+2][0],normal[i],1);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"face is out of range (edge < 5)");
+                }
+
+                // normalise
+                fac = 0.0;
+                for(i =0 ; i < vCoordDim; ++i)
+                {
+                    fac += normal[i][0]*normal[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < vCoordDim; ++i)
+                {
+                    Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
+                }
+	    }
+	}
+
 /*
         void HexExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                              Array<OneD, NekDouble> &outarray)

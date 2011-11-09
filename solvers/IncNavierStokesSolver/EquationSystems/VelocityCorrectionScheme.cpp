@@ -780,7 +780,7 @@ namespace Nektar
 
                         if(type == "H")
                         {
-                            for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
+		            for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                             {
                                 // find element and face of this expansion. 
                                 // calculate curl x curl v;
@@ -841,9 +841,9 @@ namespace Nektar
                                 boundary = m_pressureBCtoTraceID[cnt];
 
                                 // Get face values and put into Uy, Vx and Wx
-                                elmt->GetFacePhysVals(boundary,Qy+offset,Uy);
-                                elmt->GetFacePhysVals(boundary,Qx+offset,Vx);
-                                elmt->GetFacePhysVals(boundary,Qz+offset,Wx);
+                                elmt->GetFacePhysVals(boundary,Qy,Uy);
+                                elmt->GetFacePhysVals(boundary,Qx,Vx);
+                                elmt->GetFacePhysVals(boundary,Qz,Wx);
 
                                 // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
                                 Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
@@ -879,7 +879,7 @@ namespace Nektar
                                     ASSERTL0(false,"face value (> 5) is out of range");
                                     break;
                                 }
-                            
+
                                 Pbc->NormVectorIProductWRTBase(Uy,Vx,Wx,Pvals,NegateNormals); 
                             }
                         }
@@ -892,7 +892,7 @@ namespace Nektar
                             ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
                         }
                     }
-	        }
+                }
 	}
 	
 	

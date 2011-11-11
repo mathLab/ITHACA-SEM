@@ -98,15 +98,23 @@ namespace Nektar
             Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
             break;	 
         case 3:
-            grad1 = Array<OneD, NekDouble> (nPointsTot);
-            grad2 = Array<OneD, NekDouble> (nPointsTot);
-            pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
-            Vmath::Vmul( nPointsTot,grad0,1,pV[0],1,pOutarray,1);
-            Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
-            Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
+			grad1 = Array<OneD, NekDouble> (nPointsTot);
+			grad2 = Array<OneD, NekDouble> (nPointsTot);
+			pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
+			
 			if(m_dealiasing)
 			{
-				pFields[0]->Dealiasing(pOutarray,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[0],grad0,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[1],grad1,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[2],grad2,m_UseContCoeff);
+				Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
+			}
+			else 
+			{
+				Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
+				Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
+				Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
 			}
             break;
         default:

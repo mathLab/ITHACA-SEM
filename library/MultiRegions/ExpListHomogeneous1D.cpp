@@ -110,70 +110,100 @@ namespace Nektar
             Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
         }
 		
-		void ExpListHomogeneous1D::v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous1D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+												   Array<OneD, NekDouble> &outarray, 
+												   bool UseContCoeffs)
 		{
 			
+			// inarray = first term of the product
+			// outarray = second term of the product
+			// dealiased product stored in outarray
+			
+			// values entering in physical space
 			// outarray entering in physical space
 			// it must go out in physical space too
 			
 			int npoints  = outarray.num_elements(); // number of total physical points
-			int nplanes  = m_planes.num_elements(); // number of planes == number of Fourier modes = number of Fourrier coeff
+			int nplanes  = m_planes.num_elements(); // number of planes == number of Fourier modes = number of Fourier coeff
 			int npencils = npoints/nplanes;         // number of pencils = numebr of physical points per plane
 			
-			Array<OneD, NekDouble> tmparray(npoints);
-			Array<OneD, NekDouble> tmp(npoints);
+			Array<OneD, NekDouble> V1(npoints);
+			Array<OneD, NekDouble> V2(npoints);
+			Array<OneD, NekDouble> V1V2(npoints);
 			
+			HomogeneousFwdTrans(inarray,V1,UseContCoeffs);
+			HomogeneousFwdTrans(outarray,V2,UseContCoeffs);
+			// now we have the two transformed vectors in Fourier space (still physical space fo the spec/hp elm part)
+			// Fourier space still of dimension N = nplanes
 			/////////////////////////////////////////////////////////////////////////////
 			// Creating the padded Fourire system (2 times the original one)
-			// later we can use the 3/2 rules
+			// New system of dimension 2N
 			
+			// Matrices generation
 			DNekMatSharedPtr    MatFwd;
+			DNekMatSharedPtr    MatBwd;
 			
 			StdRegions::StdSegExp StdSeg(m_paddingBasis->GetBasisKey());
 			
-			StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,StdSeg.DetExpansionType(),StdSeg);
+			StdRegions::StdMatrixKey matkey1(StdRegions::eFwdTrans,StdSeg.DetExpansionType(),StdSeg);
+			StdRegions::StdMatrixKey matkey2(StdRegions::eBwdTrans,StdSeg.DetExpansionType(),StdSeg);
 			
-			MatFwd = StdSeg.GetStdMatrix(matkey);
+			MatFwd = StdSeg.GetStdMatrix(matkey1);
+			MatBwd = StdSeg.GetStdMatrix(matkey2);
+			/////////////////////////////////////////////////////////////////////////////
+			// Reordering degrees of freedom, by pencils
+			Array<OneD, NekDouble> ShufV1(npoints);
+			Array<OneD, NekDouble> ShufV2(npoints);
+			Array<OneD, NekDouble> ShufV1V2(npoints);
 			
-			Array<OneD, NekDouble> physpad(2*nplanes,0.0);
-			Array<OneD, NekDouble> coefpad(2*nplanes,0.0);
+			ShuffleIntoHomogeneous1DClosePacked(V1,ShufV1,false);
+			ShuffleIntoHomogeneous1DClosePacked(V2,ShufV2,false);
+			/////////////////////////////////////////////////////////////////////////////
+			// Creating padded vectors for each pencil
+			Array<OneD, NekDouble> PadV1_pencil_coeff(2*nplanes,0.0);
+			Array<OneD, NekDouble> PadV2_pencil_coeff(2*nplanes,0.0);
+			Array<OneD, NekDouble> PadRe_pencil_coeff(2*nplanes,0.0);
 			
-			NekVector<const NekDouble> in (2*nplanes,physpad,eWrapper);
-			NekVector<      NekDouble> out(2*nplanes,coefpad,eWrapper);
+			Array<OneD, NekDouble> PadV1_pencil_phys(2*nplanes,0.0);
+			Array<OneD, NekDouble> PadV2_pencil_phys(2*nplanes,0.0);
+			Array<OneD, NekDouble> PadRe_pencil_phys(2*nplanes,0.0);
+									
+			NekVector<const NekDouble> PadIN_V1(2*nplanes,PadV1_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V1(2*nplanes,PadV1_pencil_phys,eWrapper);
 			
-			// Shuffle to have the nplanes Fourier points is a row,
-			// for each one of the 2D expansion physical point
+			NekVector<const NekDouble> PadIN_V2(2*nplanes,PadV2_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V2(2*nplanes,PadV2_pencil_phys,eWrapper);
 			
-			ShuffleIntoHomogeneous1DClosePacked(outarray,tmparray,false);
+			NekVector<const NekDouble> PadIN_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
 			
+			//Looping on the pencils
 			for(int i = 0 ; i< npencils ; i++)
 			{
-				// copying the physical point of one fourier exapnsion in physpas
-				// which  is 2*nplanes long, the last nplanes entry are zero
+				//Copying the i-th pencil pf lenght N into a bigger pencil of lenght 2N
+				//We are in Fourier space
+				Vmath::Vcopy(nplanes,&(ShufV1[i*nplanes]),1,&(PadV1_pencil_coeff[0]),1);
+				Vmath::Vcopy(nplanes,&(ShufV2[i*nplanes]),1,&(PadV2_pencil_coeff[0]),1);
 				
-				Vmath::Vcopy(nplanes,&(tmparray[i*nplanes]),1,&(physpad[0]),1);
+				//Moving to physical space using the padded system
+				PadOUT_V1 = (*MatBwd)*PadIN_V1;
+				PadOUT_V2 = (*MatBwd)*PadIN_V2;
 				
-				// trasforming the physpad vector in coefficient space using 
-				// the extended system for the padding
+				//Perfroming the vectors multiplication ins physical space on the padded system
+				Vmath::Vmul(2*nplanes,PadV1_pencil_phys,1,PadV2_pencil_phys,1,PadRe_pencil_phys,1);
 				
-				out = (*MatFwd)*in;
+				//Moving back the result (V1*V2)_phys in Fourier space, padded system
+				PadOUT_Re = (*MatFwd)*PadIN_Re;
 				
-				// copying the first half of the coefficient in temparray
-				// so we dump the extra coefficient
-				
-				Vmath::Vcopy(nplanes,&(coefpad[0]),1,&(tmparray[i*nplanes]),1);
+				//Copying the first half of the padded pencil in the full vector (Fourier space)
+				Vmath::Vcopy(nplanes,&(PadRe_pencil_coeff[0]),1,&(ShufV1V2[i*nplanes]),1);
 			}
 			
-			// reordering the degrees of freedom in the original format
+			//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
+			UnshuffleFromHomogeneous1DClosePacked(ShufV1V2,V1V2,false);
 			
-			UnshuffleFromHomogeneous1DClosePacked(tmparray,tmp,false);
-			
-			// now we are in physical space for the spectral element part and coefficient space
-			// for the Fourier part. We need to BwdTrans the Fourier part to have outarray in physical space
-			
-			HomogeneousBwdTrans(tmp,outarray,UseContCoeffs);
-			/////////////////////////////////////////////////
-			// outarray is in physical space and dealised
+			//Moving the results in physical space for the output
+			HomogeneousBwdTrans(V1V2,outarray,UseContCoeffs);
 		}
 
         void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -662,6 +692,8 @@ namespace Nektar
 			}
 			
 			UnshuffleFromHomogeneous1DClosePacked(outarray,out_d2,false);
+			
+			Vmath::Smul(nT_pts,1.0/m_lhom,out_d2,1,out_d2,1);
 		}
 		
 		void ExpListHomogeneous1D::v_PhysDeriv(Direction edir,

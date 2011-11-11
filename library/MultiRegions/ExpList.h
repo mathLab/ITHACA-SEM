@@ -354,7 +354,9 @@ namespace Nektar
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs = false);
 			
-			inline void Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+									  Array<OneD, NekDouble> &outarray, 
+									  bool UseContCoeffs = false);
 			
 			inline void GetBCValues(Array<OneD, NekDouble> &BndVals, 
 									const Array<OneD, NekDouble> &TotField, 
@@ -1070,7 +1072,9 @@ namespace Nektar
                                                Array<OneD, NekDouble> &outarray, 
                                                bool UseContCoeffs = false);
             
-            virtual void v_Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray,
+										 Array<OneD, NekDouble> &outarray, 
+										 bool UseContCoeffs = false);
             
             virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
                                        const Array<OneD, NekDouble> &TotField, 
@@ -1559,9 +1563,11 @@ namespace Nektar
 		/**
 		 *
 		 */
-		inline void ExpList::Dealiasing(Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		inline void ExpList::DealiasedProd(const Array<OneD, NekDouble> &inarray,
+										   Array<OneD, NekDouble> &outarray, 
+										   bool UseContCoeffs)
 		{
-			v_Dealiasing(outarray,UseContCoeffs);
+			v_DealiasedProd(inarray,outarray,UseContCoeffs);
 		}
 		
 		/**

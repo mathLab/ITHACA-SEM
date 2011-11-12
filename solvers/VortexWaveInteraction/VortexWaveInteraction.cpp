@@ -325,16 +325,21 @@ namespace Nektar
         // Shift m_vwiForcing in case of relaxation 
         Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
         Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
-
         
         // determine inverse of area normalised field. 
         m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),
                                               m_wavePressure->GetPlane(0)->UpdatePhys());
-        m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
+        m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
                                               m_wavePressure->GetPlane(1)->UpdatePhys());
-        NekDouble norm = m_wavePressure->L2();
+        // Determine normalisation of pressure so that |P|/A = 1
+        NekDouble norm = 0, l2;
+        l2    = m_wavePressure->GetPlane(0)->L2();
+        norm  = l2*l2;
+        l2    = m_wavePressure->GetPlane(1)->L2();
+        norm += l2*l2;
         Vmath::Fill(2*npts,1.0,der1,1);
-        norm = sqrt(m_waveVelocities[0]->PhysIntegral(der1)/(norm*norm));
+        NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+        norm = sqrt(area/norm);
         
         // Get hold of arrays. 
         m_waveVelocities[0]->GetPlane(0)->BwdTrans(m_waveVelocities[0]->GetPlane(0)->GetCoeffs(),m_waveVelocities[0]->GetPlane(0)->UpdatePhys());
@@ -380,6 +385,7 @@ namespace Nektar
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
         Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[1],1,m_vwiForcing[1],1);
         
+#if 0 
         // Symmetrise forcing
         //-> Get coordinates 
         Array<OneD, NekDouble> coord(2);
@@ -437,6 +443,25 @@ namespace Nektar
         Vmath::Vsub(npts,der1,1,der2,1,der2,1);
         Vmath::Smul(npts,0.5,der2,1,der2,1);
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[1]);
+#else
+        int i;
+        static Array<OneD, int> index = GetReflectionIndex();
+
+        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
+        for(i = 0; i < npts; ++i)
+        {
+            val[i] = 0.5*(der1[i] - der1[index[i]]);
+        }
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1, m_vwiForcing[0]);
+
+        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
+        for(i = 0; i < npts; ++i)
+        {
+            val[i] = 0.5*(der1[i] - der1[index[i]]);
+        }
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1, m_vwiForcing[1]);
+#endif
+
 
         // Apply relaxation 
         if(m_vwiRelaxation)
@@ -686,6 +711,41 @@ namespace Nektar
 
         m_alpha[0] = alp_new;
         
+    }
+
+    Array<OneD, int> VortexWaveInteraction::GetReflectionIndex(void)
+    {
+        int i,j;
+        int npts = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
+        Array<OneD, int> index(npts);
+
+        Array<OneD, NekDouble> coord(2);
+        Array<OneD, NekDouble> coord_x(npts);
+        Array<OneD, NekDouble> coord_y(npts);
+        
+        //-> Dermine the point which is on coordinate (x -> -x + Lx/2, y-> -y)
+        m_waveVelocities[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
+        NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
+        NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
+        NekDouble xnew,ynew;
+
+        for(i = 0; i < npts; ++i)
+        {
+            xnew = - coord_x[i]  + xmax;
+            ynew = - coord_y[i];
+
+            for(j = 0; j < npts; ++j)
+            {
+                if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
+                {
+                    index[i] = j;
+                    break;
+                }
+            }
+            ASSERTL0(j != npts,"Failsed to find matching point");
+        }
+        
+        return index;
     }
 
 }

@@ -106,6 +106,8 @@ namespace Nektar
             return m_maxOuterIterations;
         }
 
+        Array<OneD, int> GetReflectionIndex(void);
+
     protected:
 
     private:

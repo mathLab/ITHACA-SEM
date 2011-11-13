@@ -39,7 +39,7 @@ namespace Nektar
 
     VortexWaveInteraction::VortexWaveInteraction(int argc, char * argv[]):
         m_neutralPointTol(1e-4),
-        m_growthRateRelTol(1e-3),
+        m_eigRelTol(1e-3),
         m_nOuterIterations(0),
         m_maxOuterIterations(100),
         m_alphaStep(0.1)
@@ -556,9 +556,10 @@ namespace Nektar
         CalcNonLinearWaveForce();
     }
 
-    bool VortexWaveInteraction::CheckGrowthConverged(void)
+    bool VortexWaveInteraction::CheckEigIsStationary(void)
     {
         static NekDouble previous_real_evl = -1.0; 
+        static NekDouble previous_imag_evl = -1.0; 
         
         if(previous_real_evl == -1.0)
         {
@@ -567,10 +568,13 @@ namespace Nektar
         }
 
         cout << "Growth tolerance: " << fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) << endl; 
+        cout << "Phase tolerance: " << fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) << endl; 
             
-        if(fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_growthRateRelTol)
+        // See if real and imaginary growth have converged to with m_eigRelTol
+        if((fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_eigRelTol)&&(fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) < m_eigRelTol))
         {
             previous_real_evl = m_leading_real_evl[0];
+            previous_imag_evl = m_leading_imag_evl[0];
             return true;
         }
         else
@@ -580,6 +584,7 @@ namespace Nektar
                 cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
             }
             previous_real_evl = m_leading_real_evl[0];
+            previous_imag_evl = m_leading_imag_evl[0];
             return false;
         }
     }

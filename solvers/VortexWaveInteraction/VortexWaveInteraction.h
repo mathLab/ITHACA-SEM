@@ -75,7 +75,7 @@ namespace Nektar
         void CopyFile(string file1end, string file2end);
 
 
-        bool CheckGrowthConverged(void);
+        bool CheckEigIsStationary(void);
         bool CheckIfAtNeutralPoint(void);
         void UpdateAlpha(int n);
 
@@ -126,7 +126,7 @@ namespace Nektar
 
         NekDouble m_alphaStep;
         NekDouble m_neutralPointTol; 
-        NekDouble m_growthRateRelTol; 
+        NekDouble m_eigRelTol; 
         NekDouble m_vwiRelaxation; 
 
         VWIIterationType m_VWIIterationType;

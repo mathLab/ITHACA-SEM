@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
                         vwi.SaveLoopDetails(i);
                         vwi.AppendEvlToFile("conv.his",i);            
                         
-                        if(vwi.CheckGrowthConverged())
+                        if(vwi.CheckEigIsStationary())
                         {
                             break;
                         }

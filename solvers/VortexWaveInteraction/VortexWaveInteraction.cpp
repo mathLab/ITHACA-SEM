@@ -241,7 +241,11 @@ namespace Nektar
         // Read vwi file
         std::string forcefile
             = m_sessionRoll->GetFunctionFilename("BodyForce");
-        m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+
+        if(forcefile != "")
+        {
+            m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+        }
 
         // Execute Roll 
         cout << "Executing Roll solver" << endl;

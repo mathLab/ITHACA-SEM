@@ -571,7 +571,7 @@ namespace Nektar
         
         NekDouble StdPyrExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
-            PhysEvaluate(xi,m_phys);
+            return PhysEvaluate(xi,m_phys);
         }
 
         NekDouble StdPyrExp::PhysEvaluate(const Array<OneD, const NekDouble>& xi,  const Array<OneD, const NekDouble> & physvals)

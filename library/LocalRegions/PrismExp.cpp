@@ -439,7 +439,7 @@ namespace Nektar
 
         NekDouble PrismExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
-            PhysEvaluate(coord,m_phys);
+            return PhysEvaluate(coord,m_phys);
         }
 
         NekDouble PrismExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)

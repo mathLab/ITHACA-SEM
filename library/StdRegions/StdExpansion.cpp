@@ -1643,6 +1643,8 @@ namespace Nektar
             const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
             {
                 ASSERTL0(false, "Cannot get edge normals for this expansion.");
+                static NormalVector result;
+                return result;
             }
 
             void StdExpansion::v_ComputeEdgeNormal(const int edge)
@@ -1658,10 +1660,14 @@ namespace Nektar
             const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
             {
                 ASSERTL0(false, "Cannot get face normals for this expansion.");
+                static NormalVector result;
+                return result;
             }
             const NormalVector & StdExpansion::v_GetSurfaceNormal() const
             {
                 ASSERTL0(false, "Cannot get face normals for this expansion.");
+                static NormalVector result;
+                return result;
             }
     }//end namespace
 }//end namespace

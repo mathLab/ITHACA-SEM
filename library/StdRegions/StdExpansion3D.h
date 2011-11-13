@@ -157,8 +157,8 @@ namespace Nektar
             {
                 return 3;
             }
-            const NormalVector & v_GetSurfaceNormal() const;
-            const NormalVector & v_GetFaceNormal(const int face) const;
+            STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal() const;
+            STD_REGIONS_EXPORT const NormalVector & v_GetFaceNormal(const int face) const;
         };
     } //end of namespace
 } //end of namespace

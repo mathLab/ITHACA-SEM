@@ -408,7 +408,7 @@ namespace Nektar
         NekDouble TetExp::v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord)
         {
-            v_PhysEvaluate(coord,m_phys);
+            return v_PhysEvaluate(coord,m_phys);
         }
         /**
          * @param   coord       Physical space coordinate

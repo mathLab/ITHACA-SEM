@@ -1030,7 +1030,7 @@ namespace Nektar
         NekDouble StdTetExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& xi)
         {
-            v_PhysEvaluate(xi, m_phys);
+            return v_PhysEvaluate(xi, m_phys);
         }
 
         NekDouble StdTetExp::v_PhysEvaluate(

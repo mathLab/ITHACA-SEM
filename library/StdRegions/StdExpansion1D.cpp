@@ -105,7 +105,7 @@ namespace Nektar
 
         NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
         {
-            PhysEvaluate(Lcoord,m_phys);
+            return PhysEvaluate(Lcoord,m_phys);
         }
         
         NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord, const Array<OneD, const NekDouble> & physvals)

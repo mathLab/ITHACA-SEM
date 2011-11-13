@@ -1718,14 +1718,14 @@ namespace Nektar
                                                            const StdMatrixKey &mkey);
 #endif
 
-            virtual const NormalVector & v_GetEdgeNormal(const int edge) const;
+            STD_REGIONS_EXPORT virtual const NormalVector & v_GetEdgeNormal(const int edge) const;
 
-            virtual void v_ComputeEdgeNormal(const int edge);
+            STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
 
-            virtual void v_ComputeFaceNormal(const int face);
+            STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 
-            virtual const NormalVector & v_GetFaceNormal(const int face) const;
-            virtual const NormalVector & v_GetSurfaceNormal() const;
+            STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
+            STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
         };
 
 

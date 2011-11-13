@@ -157,9 +157,9 @@ namespace Nektar
                 return PhysEvaluate(coords,physvals);
             }
 
-            virtual void v_SetUpPhysNormals(const int edge);
+            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
-            const NormalVector & v_GetEdgeNormal(const int edge) const;
+            STD_REGIONS_EXPORT const NormalVector & v_GetEdgeNormal(const int edge) const;
 
     };
 

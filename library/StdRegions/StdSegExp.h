@@ -179,7 +179,7 @@ namespace Nektar
                     Array<OneD, unsigned int>& outarray);
 
             STD_REGIONS_EXPORT virtual int v_GetVertexMap(
-                    const int localVertexId);
+                    int localVertexId);
 
 
             //----------------------------

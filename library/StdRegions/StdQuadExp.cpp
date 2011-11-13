@@ -892,7 +892,7 @@ namespace Nektar
             }
         }
 
-        int StdQuadExp::v_GetVertexMap(const int localVertexId)
+        int StdQuadExp::v_GetVertexMap(int localVertexId)
         {
             int localDOF;
             switch(localVertexId)

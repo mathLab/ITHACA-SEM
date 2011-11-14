@@ -9,4 +9,5 @@ ADD_UTILITIES_EXECUTABLE(FldAddField   util-extra FldAddField.cpp)
 ADD_UTILITIES_EXECUTABLE(CombinePartitions   util-extra CombinePartitions.cpp)
 ADD_UTILITIES_EXECUTABLE(FldCalcBCs   util-extra FldCalcBCs.cpp)
 ADD_UTILITIES_EXECUTABLE(MoveMesh   util-extra MoveMesh.cpp)
+ADD_UTILITIES_EXECUTABLE(CalcVorticity   util-extra CalcVorticity.cpp)
 

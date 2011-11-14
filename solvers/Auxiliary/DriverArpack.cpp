@@ -312,13 +312,16 @@ namespace Nektar
         if(m_EvolutionOperator != eTransientGrowth)
         {
               cout<<"Dump leading eigenvector"<<endl;
+              CopyArnoldiArrayToField(z);               
+              m_equ[0]->DoSolve(); 
               //copy leading eigenvector (conv=0) to field before writing the output file
               for (int k = 0; k < m_nfields; ++k)
               {
-        		//Backward transformation in the physical space for plotting eigenmodes       		
-        		//fields[k]->BwdTrans_IterPerExp(fields[k]->GetCoeffs(),fields[k]->UpdatePhys());
-        		Vmath::Vcopy(nq, &z[k*nq], 1, &fields[k]->UpdateCoeffs()[0] , 1);        		
-        		fields[k]->SetPhysState(false);
+
+        		//Vmath::Vcopy(nq, &z[k*nq], 1, &fields[k]->UpdateCoeffs()[0] , 1);   
+        		//fields[k]->SetPhysState(false);     
+        		Vmath::Vcopy(nq, &z[k*nq+(nconv-1)*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);			
+        		fields[k]->SetPhysState(true);
               }    	
               m_equ[0]->Output();
         }

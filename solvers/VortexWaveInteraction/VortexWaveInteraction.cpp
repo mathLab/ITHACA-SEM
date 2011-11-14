@@ -42,10 +42,10 @@ namespace Nektar
         m_eigRelTol(1e-3),
         m_nOuterIterations(0),
         m_maxOuterIterations(100),
-        m_alphaStep(0.1)
+        m_alphaStep(0.05)
     {
 
-        int storesize = 4;// number of previous iterations to store
+        int storesize = 10;// number of previous iterations to store
 
         m_sessionName = argv[argc-1];
         string meshfile = m_sessionName + ".xml";

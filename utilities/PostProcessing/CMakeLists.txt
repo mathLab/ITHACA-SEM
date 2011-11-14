@@ -1,4 +1,3 @@
-
 ADD_UTILITIES_EXECUTABLE(FldToTecplot  util FldToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToGmsh     util FldToGmsh.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplot  util XmlToTecplot.cpp)
@@ -7,7 +6,12 @@ ADD_UTILITIES_EXECUTABLE(XmlToVtk      util XmlToVtk.cpp)
 ADD_UTILITIES_EXECUTABLE(ProbeFld      util-extra ProbeFld.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddField   util-extra FldAddField.cpp)
 ADD_UTILITIES_EXECUTABLE(CombinePartitions   util-extra CombinePartitions.cpp)
-ADD_UTILITIES_EXECUTABLE(FldCalcBCs   util-extra FldCalcBCs.cpp)
-ADD_UTILITIES_EXECUTABLE(MoveMesh   util-extra MoveMesh.cpp)
-ADD_UTILITIES_EXECUTABLE(CalcVorticity   util-extra CalcVorticity.cpp)
 
+# Generate list of available solvers
+FILE(GLOB dir_list "*")
+LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/PreProcessing/.svn")
+FOREACH(dir ${dir_list})
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+        ADD_SUBDIRECTORY(${dir})
+    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+ENDFOREACH(dir ${dir_list})

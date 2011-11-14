@@ -24,5 +24,4 @@ docs/html/*.html
 docs/html/*.php
 docs/html/*.css
 utilities/PreProcessing/Extras
-utilities/PostProcessing/FldCalcBCs.cpp
-utilities/PostProcessing/MoveMesh.cpp
+utilities/PostProcessing/Extras

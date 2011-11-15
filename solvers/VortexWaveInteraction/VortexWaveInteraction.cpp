@@ -502,11 +502,10 @@ namespace Nektar
         string chkdir = "file " + dir;
 
         if(system(chkdir.c_str()) != 0)
-        {        {
+        {      
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
             system(mkdir.c_str());
-            init = false;
         }
         
         string cpfile   = m_sessionName + fileend;

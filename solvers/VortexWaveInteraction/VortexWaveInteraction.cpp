@@ -484,7 +484,6 @@ namespace Nektar
         }
 
 
-        
         // dump output
         Array<OneD, std::string> variables(2);
         Array<OneD, Array<OneD, NekDouble> > outfield(2);
@@ -499,13 +498,14 @@ namespace Nektar
     
     void VortexWaveInteraction::SaveFile(string fileend, string dir, int n)
     {
-        string chkdir = "file " + dir;
+        static map<string,int> opendir;
 
-        if(system(chkdir.c_str()) != 0)
-        {      
+        if(opendir.find(dir) == opendir.end())
+        {
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
             system(mkdir.c_str());
+            opendir[dir] = 1;
         }
         
         string cpfile   = m_sessionName + fileend;
@@ -580,16 +580,16 @@ namespace Nektar
                 previous_imag_evl = m_leading_imag_evl[0];
                 return true;
             }
-            else
+        }
+        else
+        {
+            if(fabs(m_leading_imag_evl[0]) > 1e-2)
             {
-                if(fabs(m_leading_imag_evl[0]) > 1e-2)
-                {
-                    cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
-                }
-                previous_real_evl = m_leading_real_evl[0];
-                previous_imag_evl = m_leading_imag_evl[0];
-                return false;
+                cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
             }
+            previous_real_evl = m_leading_real_evl[0];
+            previous_imag_evl = m_leading_imag_evl[0];
+            return false;
         }
     }
 

@@ -38,14 +38,10 @@ namespace Nektar
 {
 
     VortexWaveInteraction::VortexWaveInteraction(int argc, char * argv[]):
-        m_neutralPointTol(1e-4),
-        m_eigRelTol(1e-3),
-        m_nOuterIterations(0),
-        m_maxOuterIterations(100),
-        m_alphaStep(0.05)
+        m_nOuterIterations(0)
     {
 
-        int storesize = 10;// number of previous iterations to store
+        int storesize;// number of previous iterations to store
 
         m_sessionName = argv[argc-1];
         string meshfile = m_sessionName + ".xml";
@@ -60,7 +56,13 @@ namespace Nektar
 
         // Create Incompressible NavierStokesSolver session reader.
         m_sessionVWI = LibUtilities::SessionReader::CreateInstance(argc, argv, VWIFilenames);
-        
+
+
+        m_sessionVWI->LoadParameter("AlphaStep",m_alphaStep,0.05);
+        m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
+        m_sessionVWI->LoadParameter("EigenvalueRelativeTol",m_eigRelTol,1e-3);
+        m_sessionVWI->LoadParameter("NeutralPointTolerance",m_neutralPointTol,1e-4);
+        m_sessionVWI->LoadParameter("MaxOuterIterations",m_maxOuterIterations,100);
         
         if(m_sessionVWI->DefinesParameter("StartIteration"))
         {
@@ -531,18 +533,18 @@ namespace Nektar
         fclose(fp);
     }
 
-    void VortexWaveInteraction::SaveLoopDetails(int i)
+    void VortexWaveInteraction::SaveLoopDetails(std::string SaveDir, int i)
 
     {
         // Save NS restart file
-        SaveFile(".rst","Save",i);
+        SaveFile(".rst",SaveDir,i);
         // Save Streak Solution
-        SaveFile("_streak.fld","Save",i);
+        SaveFile("_streak.fld",SaveDir,i);
         // Save Wave solution output
-        SaveFile(".evl","Save",i);
-        SaveFile("_eig_0","Save",i);
+        SaveFile(".evl",SaveDir,i);
+        SaveFile("_eig_0",SaveDir,i);
         // Save new forcing file
-        SaveFile(".vwi","Save",i+1);
+        SaveFile(".vwi",SaveDir,i+1);
     }
 
     void VortexWaveInteraction::ExecuteLoop(void)

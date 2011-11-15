@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
             for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
             {
                 vwi.ExecuteLoop();
-                vwi.SaveLoopDetails(i);
+                vwi.SaveLoopDetails("Save",i);
                 vwi.AppendEvlToFile("conv.his",i);            
             }
             break;
@@ -72,16 +72,15 @@ int main(int argc, char *argv[])
                 
                 while(exit_iteration == false)
                 {
-                    
-                    
                     for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
                     {
                         vwi.ExecuteLoop();
-                        vwi.SaveLoopDetails(i);
+                        vwi.SaveLoopDetails("Save", i);
                         vwi.AppendEvlToFile("conv.his",i);            
                         
                         if(vwi.CheckEigIsStationary())
                         {
+                            vwi.SaveLoopDetails("Save_Outer", nouter_iter);
                             break;
                         }
                     }

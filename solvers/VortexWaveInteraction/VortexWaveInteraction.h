@@ -68,7 +68,7 @@ namespace Nektar
         void ExecuteWave(void);
 
         void ExecuteLoop(void);
-        void SaveLoopDetails(int i);
+        void SaveLoopDetails(string dir, int i);
 
         void CalcNonLinearWaveForce(void);
         void SaveFile(string fileend, string dir, int n);

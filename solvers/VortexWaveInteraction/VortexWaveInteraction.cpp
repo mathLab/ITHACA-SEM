@@ -499,10 +499,10 @@ namespace Nektar
     
     void VortexWaveInteraction::SaveFile(string fileend, string dir, int n)
     {
-        static bool init = true; 
+        string chkdir = "file " + dir;
 
-        if(init == true)
-        {
+        if(system(chkdir.c_str()) != 0)
+        {        {
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
             system(mkdir.c_str());

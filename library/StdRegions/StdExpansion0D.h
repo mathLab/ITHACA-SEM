@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ADRSolver.cpp
+// File StdExpansion0D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,77 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Advection Diffusion Reaction framework solver
+// Description: Daughter of StdExpansion. This class contains routine
+// which are common to 0d expansion. Typically this inolves physical
+// space operations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
 
-#include <Auxiliary/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-using namespace Nektar;
+#ifndef STDEXP0D_H
+#define STDEXP0D_H
 
-int main(int argc, char *argv[])
+#include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdRegionsDeclspec.h>
+
+namespace Nektar
 {
-    if(argc != 2)
+    namespace StdRegions
     {
-        cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        GetEquationSystemFactory().PrintAvailableClasses();
-        exit(1);
-    }
 
-    LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    DriverSharedPtr drv;
+        class StdExpansion0D: virtual public StdExpansion
+        {
 
-  //  try
-  //  {
-        // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+        public:
 
-        // Create driver
-        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+            STD_REGIONS_EXPORT StdExpansion0D();
+            STD_REGIONS_EXPORT StdExpansion0D(const StdExpansion0D &T);
+            STD_REGIONS_EXPORT ~StdExpansion0D();
 
-        // Execute driver
-        drv->Execute();
+            
+        protected:
+			std::map<int, NormalVector> m_vertexNormals;
 
-        // Finalise session
-        session->Finalise();
-   // }
-    //catch (const std::runtime_error& e)
-   // {
-   //     return 1;
-   // }
-   // catch (const std::string& eStr)
-   // {
-   //     cout << "Error: " << eStr << endl;
-    //}
+        private:
 
-    return 0;
-}
+            // Virtual Functions ----------------------------------------
+
+            virtual int v_GetCoordim(void)
+            {
+                return 1;
+            }
+
+            virtual int v_GetShapeDimension() const
+            {
+                return 1;
+            }
+
+            virtual int v_GetNedges() const
+            {
+                return 0;
+            }
+
+            virtual int v_GetNfaces() const
+            {
+                return 0;
+            }
+
+        };
+
+        typedef boost::shared_ptr<StdExpansion0D> StdExpansion0DSharedPtr;
+
+    } //end of namespace
+} //end of namespace
+
+#endif //STDEXP0D_H
+
+/**
+* $Log: StdExpansion1D.h,v $
+* Revision 1.1  2011/11/16 13:37:03  croth
+* created class 
+* 
+*
+**/
+
+
+

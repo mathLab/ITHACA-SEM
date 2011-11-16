@@ -1532,6 +1532,63 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 ASSERTL0(false,"basis is either not set up or not hierarchicial");
             }
         }
+		
+		
+		
+		void SegExp::v_ComputeVertexNormal(const int vertex)
+        {
+            int i;
+            const SpatialDomains::GeomFactorsSharedPtr &geomFactors = GetGeom()->GetMetricInfo();
+            SpatialDomains::GeomType type = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
+            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
+            int nqe = m_base[0]->GetNumPoints();
+            int vCoordDim = GetCoordim();
+			
+            m_vertexNormals[vertex] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            Array<OneD, Array<OneD, NekDouble> > &normal = m_vertexNormals[vertex];
+            for (i = 0; i < vCoordDim; ++i)
+            {
+                normal[i] = Array<OneD, NekDouble>(nqe);
+            }
+			
+            // Regular geometry case
+            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            {
+                NekDouble vert;
+                // Set up normals
+                switch(vertex)
+                {
+					case 0:
+						for(i = 0; i < vCoordDim; ++i)
+						{
+							Vmath::Fill(nqe,-gmat[i][0],normal[i],1);
+						}
+						break;
+					case 1:
+						for(i = 0; i < vCoordDim; ++i)
+						{
+							Vmath::Fill(nqe,gmat[i][0],normal[i],1);
+						}
+						break;
+					default:
+						ASSERTL0(false,"point is out of range (point < 2)");
+                }
+				
+                // normalise
+                vert = 0.0;
+                for(i =0 ; i < vCoordDim; ++i)
+                {
+                    vert += normal[i][0]*normal[i][0];
+                }
+                vert = 1.0/sqrt(vert);
+                for (i = 0; i < vCoordDim; ++i)
+                {
+                    Vmath::Smul(nqe,vert,normal[i],1,normal[i],1);
+                }
+			}
+		}
+		
 
 
     } // end of namespace

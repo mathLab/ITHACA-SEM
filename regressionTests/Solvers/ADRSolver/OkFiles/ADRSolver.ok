@@ -52,6 +52,10 @@ Test_Helmholtz1D_8nodes.xml
 L 2 error (variable u) : 1.11262e-05
 L inf error (variable u) : 1.28659e-05
 ----------------------------------------
+Test_Advection1D_m7_DG.xml
+L 2 error (variable u) : 0.000354307
+L inf error (variable u) : 0.000269188
+----------------------------------------
 Test_Advection1D_m8_Order1.xml
 L 2 error (variable u) : 0.00803532
 L inf error (variable u) : 0.00557451

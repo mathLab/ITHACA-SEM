@@ -23,6 +23,7 @@ PyrGeom.cpp
 #QuadFaceComponent.cpp
 QuadGeom.cpp
 SegGeom.cpp
+PointGeom.cpp
 SpatialData.cpp
 TetGeom.cpp
 #TriFaceComponent.cpp
@@ -55,6 +56,7 @@ PyrGeom.h
 #QuadFaceComponent.h
 QuadGeom.h
 SegGeom.h
+PointGeom.h
 SpatialData.h
 SpatialDomainsDeclspec.h
 TetGeom.h

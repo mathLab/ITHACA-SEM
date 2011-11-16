@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ADRSolver.cpp
+// File StdExpansion0D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Advection Diffusion Reaction framework solver
+// Description: Daughter of StdExpansion. This class contains routine
+// which are common to 0d expansion. Typically this inolves physiocal
+// space operations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
+#include <StdRegions/StdExpansion0D.h>
 
-#include <Auxiliary/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-using namespace Nektar;
-
-int main(int argc, char *argv[])
+namespace Nektar
 {
-    if(argc != 2)
+    namespace StdRegions
     {
-        cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        GetEquationSystemFactory().PrintAvailableClasses();
-        exit(1);
+
+    StdExpansion0D::StdExpansion0D()
+    {
     }
 
-    LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    DriverSharedPtr drv;
+    StdExpansion0D::StdExpansion0D(const StdExpansion0D &T):StdExpansion(T)
+    {
+    }
 
-  //  try
-  //  {
-        // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    StdExpansion0D::~StdExpansion0D()
+    {
+    }
 
-        // Create driver
-        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+		
+    }//end namespace
+}//end namespace
 
-        // Execute driver
-        drv->Execute();
+/**
+ * $Log: StdExpansion0D.cpp,v $
+ * Revision 1.1  2011/11/16 09:14:57  croth
+ * 
+ * created class
+ *
+ **/
 
-        // Finalise session
-        session->Finalise();
-   // }
-    //catch (const std::runtime_error& e)
-   // {
-   //     return 1;
-   // }
-   // catch (const std::string& eStr)
-   // {
-   //     cout << "Error: " << eStr << endl;
-    //}
-
-    return 0;
-}

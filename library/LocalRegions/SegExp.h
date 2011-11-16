@@ -54,13 +54,6 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        class SegExp;
-
-        // type defines for use of SegExp in a boost vector
-        typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
-        typedef std::vector< SegExpSharedPtr > SegExpVector;
-        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
-
 
         class SegExp: virtual public StdRegions::StdSegExp, virtual public Expansion1D
         {
@@ -274,8 +267,21 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
 
             LOCAL_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
+			
+			void v_ComputeVertexNormal(const int vertex);
+			
+			virtual StdRegions::PointOrientation v_GetPorient(int point)
+            {
+                return m_geom->GetPorient(point);
+            }
 
         };
+		
+		// type defines for use of SegExp in a boost vector
+        typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
+        typedef std::vector< SegExpSharedPtr > SegExpVector;
+        typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
+		
 
     } //end of namespace
 } //end of namespace

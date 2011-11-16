@@ -106,7 +106,9 @@ int main(int argc, char* argv[])
     // Test Steady Advection Diffusion Reaction
     Execute("ADRSolver","Test_SteadyAdvDiffReact2D_modal.xml","2D Steady Advection Diffusion Reaction P=9");
 
-    Execute("ADRSolver","Test_Advection1D_m8_Order1.xml","1D unsteady advection, order 1, P=8");
+	Execute("ADRSolver","Test_Advection1D_m7_DG.xml","1D unsteady DG advection, P=7");
+
+	Execute("ADRSolver","Test_Advection1D_m8_Order1.xml","1D unsteady advection, order 1, P=8");
 
     Execute("ADRSolver","Test_Advection1D_m12_Order2.xml","1D unsteady advection, order 2, P=12");
 

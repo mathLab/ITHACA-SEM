@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Field definition for 2D domain with boundary
+// Description: Field definition for  2D domain with boundary
 // conditions using LDG flux
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -159,7 +159,7 @@ namespace Nektar
 //                    }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
-
+				
                 SetUpPhysNormals();
             }
         }
@@ -315,7 +315,7 @@ namespace Nektar
 						//                        }
                         cnt += m_bndCondExpansions[i]->GetExpSize();
                     }
-					
+
                     SetUpPhysNormals();
 				}
 
@@ -411,7 +411,7 @@ namespace Nektar
             	    if((type== "I")||(type=="CalcBC"))
                     {                        	    
                   	  locExpList->SetUpPhysTangents(*m_exp);               	  
-		          SetUpPhysNormals();
+						SetUpPhysNormals();
                     }                    
                 }
             }
@@ -665,17 +665,18 @@ namespace Nektar
                     }
                 }
             }
-
+			
             // fill boundary conditions into missing elements
             int id1,id2 = 0;
             cnt = 0;
+			
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {
+            {				
                 if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
+						
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
 
                         if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
@@ -750,13 +751,13 @@ namespace Nektar
             // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
-                phys_offset = GetPhys_Offset(n);
-
+				phys_offset = GetPhys_Offset(n);
+				
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
+					(*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
                                                  inarray + phys_offset,
                                                  e_tmp = outarray + offset);
                 }
@@ -791,6 +792,7 @@ namespace Nektar
         /// Note this routine changes m_trace->m_coeffs space;
         void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, Array<OneD, NekDouble> &outarray)
         {
+			
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
@@ -802,7 +804,6 @@ namespace Nektar
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-
                     (*m_exp)[n]->AddEdgeNormBoundaryInt(e,elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray = outarray+offset);

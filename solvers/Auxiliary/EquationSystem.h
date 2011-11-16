@@ -45,6 +45,7 @@
 #include <SpatialDomains/SpatialData.h>
 
 #include <MultiRegions/ExpList.h>
+#include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
 
 namespace Nektar
@@ -656,9 +657,12 @@ namespace Nektar
         switch(m_expdim)
         {
             case 1:
+			{
                 // can't have two &GetTrace in ExpList.h hmm...
-                //return m_fields[0]->GetTrace().num_elements();
-                break;
+				return m_fields[0]->GetTrace1D()->GetExpSize();
+				//return m_graph->GetNvertices();
+				break;
+			}
             case 2:
             case 3:
                 return m_fields[0]->GetTrace()->GetNpoints();

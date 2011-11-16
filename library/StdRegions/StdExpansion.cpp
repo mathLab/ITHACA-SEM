@@ -1121,6 +1121,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
                 return eForwards;
             }
+		
+			StdRegions::PointOrientation StdExpansion::v_GetPorient(int point)
+			{
+				NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
+				return eFwd;
+			}
 
 
             StdRegions::EdgeOrientation StdExpansion::v_GetCartesianEorient(int edge)
@@ -1656,6 +1662,11 @@ namespace Nektar
             {
                 ASSERTL0(false, "Cannot compute face normal for this expansion.");
             }
+		
+			void StdExpansion::v_ComputeVertexNormal(const int vertex)
+			{
+				ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
+			}
 
             const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
             {
@@ -1663,6 +1674,12 @@ namespace Nektar
                 static NormalVector result;
                 return result;
             }
+		
+			const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
+			{
+				ASSERTL0(false, "Cannot get vertex normals for this expansion.");
+			}	
+		
             const NormalVector & StdExpansion::v_GetSurfaceNormal() const
             {
                 ASSERTL0(false, "Cannot get face normals for this expansion.");

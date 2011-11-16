@@ -56,6 +56,7 @@ namespace Nektar
         {
             eNoGeomShapeType,
             eSegment,
+			ePoint,
             eTriangle,
             eQuadrilateral,
             eTetrahedron,
@@ -70,6 +71,7 @@ namespace Nektar
         {
             "NoGeomShapeType",
             "Segment",
+			"Point",
             "Triangle",
             "Quadrilateral",
             "Tetrahedron",
@@ -154,6 +156,11 @@ namespace Nektar
                 {
                     return v_GetEorient(i);
                 }
+			
+				inline StdRegions::PointOrientation GetPorient(const int i) const
+				{
+					return v_GetPorient(i);
+				}
 
                 inline int GetNumEdges() const
                 {
@@ -225,6 +232,13 @@ namespace Nektar
                         "This function is not valid for this geometry.");
                     return StdRegions::eForwards;
                 }
+			
+				virtual StdRegions::PointOrientation v_GetPorient(const int i) const
+				{
+					NEKERROR(ErrorUtil::efatal,
+							 "This function is not valid for this geometry.");
+					return StdRegions::eFwd;
+				}
 
                 virtual int v_GetNumEdges() const
                 {

@@ -860,7 +860,11 @@ namespace Nektar
             {
                 return v_GetEorient(edge);
             }
-
+			
+			StdRegions::PointOrientation GetPorient(int point)
+            {
+                return v_GetPorient(point);
+            }
 
             StdRegions::EdgeOrientation GetCartesianEorient(int edge)
             {
@@ -1254,6 +1258,8 @@ namespace Nektar
             
             STD_REGIONS_EXPORT virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge);
 
+			STD_REGIONS_EXPORT virtual StdRegions::PointOrientation v_GetPorient(int point);
+			
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
              *    u_{exact}\f$ is given by the array \a sol.
@@ -1343,10 +1349,20 @@ namespace Nektar
             {
                 v_ComputeFaceNormal(face);
             }
+			
+			void ComputeVertexNormal(const int vertex)
+            {
+                v_ComputeVertexNormal(vertex);
+            }
 
             const NormalVector & GetFaceNormal(const int face) const
             {
                 return v_GetFaceNormal(face); 
+            }
+			
+			const NormalVector & GetVertexNormal(const int vertex) const
+            {
+                return v_GetVertexNormal(vertex); 
             }
 
             const NormalVector & GetSurfaceNormal() const
@@ -1724,6 +1740,10 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 
+			virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
+
+			virtual void v_ComputeVertexNormal(const int vertex);
+			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
         };

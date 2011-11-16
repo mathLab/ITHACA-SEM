@@ -151,6 +151,25 @@ namespace Nektar
 
 
                 SPATIAL_DOMAINS_EXPORT void WriteToFile(std::ofstream &outfile, const int dumpVar);
+			
+				inline StdRegions::PointOrientation GetPorient(const int i) const
+				{
+					//cout << "StdRegions::PointOrientation GetPorient"<<endl;
+					ASSERTL2((i >=0) && (i <= 1),"Point id must be between 0 and 1");
+					
+					if (i%2==0)
+					{
+						return StdRegions::eBwd;
+					}
+					else 
+					{
+						return StdRegions::eFwd;
+					}
+
+					//return m_porient[i];
+				}
+			
+			
 
             protected:
                 int                             m_eid;
@@ -160,6 +179,8 @@ namespace Nektar
                 static const int                kNverts = 2;
                 static const int                kNedges = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
+
+				StdRegions::PointOrientation         m_porient[kNverts];
 
                 void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
@@ -260,6 +281,11 @@ namespace Nektar
 
                 virtual bool v_ContainsPoint(
                                              const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0);
+
+				virtual StdRegions::PointOrientation v_GetPorient(const int i) const
+				{
+					return GetPorient(i);
+				}
         };
 
         // shorthand for boost pointer

@@ -116,6 +116,9 @@ namespace Nektar
 
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList();
+			
+			////
+			//virtual boost::shared_ptr<ExpList> do_clone(void);
 
             /// Copy coefficients from concatenated list to expansion list.
             MULTI_REGIONS_EXPORT void PutCoeffsInToElmtExp(void);
@@ -583,6 +586,8 @@ namespace Nektar
             inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
 			
             inline boost::shared_ptr<ExpList1D> &GetTrace();
+			
+			inline boost::shared_ptr<ExpList0D> &GetTrace1D();
 
             inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
 
@@ -913,6 +918,8 @@ namespace Nektar
             virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 			
             virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
+			
+			virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D();
 
             virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap();
 
@@ -1788,6 +1795,11 @@ namespace Nektar
             return v_GetTrace();
         }
 
+		inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D()
+        {
+            return v_GetTrace1D();
+        }		
+		
         inline boost::shared_ptr<LocalToGlobalDGMap> &ExpList::GetTraceMap()
         {
             return v_GetTraceMap();

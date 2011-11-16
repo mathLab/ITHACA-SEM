@@ -381,9 +381,17 @@ namespace Nektar
             switch(m_expdim)
             {
             case 1:
-                    // no need??...
-                break;
-            case 2:
+				{
+					m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+					
+                    for(i = 0; i < m_spacedim; ++i)
+                    {
+                        m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
+                    }
+					m_fields[0]->GetTrace1D()->GetNormals(m_traceNormals);
+					break;
+				}
+			case 2:
                 {
                     m_traceNormals
                         = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);

@@ -35,6 +35,8 @@
 
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
+#include <LocalRegions/SegExp.h>
+
 
 namespace Nektar
 {
@@ -683,6 +685,20 @@ namespace Nektar
 //                }
 //            }
 //        }
+		
+		//croth
+		void ExpList1D::v_SetUpPhysNormals()
+        {
+            int i, j;
+            for (i = 0; i < m_exp->size(); ++i)
+            {
+                for (j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                {
+                    (*m_exp)[i]->ComputeVertexNormal(j);
+                }
+            }
+        }
+		
 
 	void ExpList1D::SetUpPhysTangents(
 		const StdRegions::StdExpansionVector &locexp)

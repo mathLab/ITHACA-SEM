@@ -73,63 +73,92 @@ namespace Nektar
             AddEdgeNormBoundaryInt(edge, EdgeExp, EdgeExp->GetPhys(), outarray);
         }
 
+		
         void Expansion2D::v_AddEdgeNormBoundaryInt(const int edge,
 						 StdRegions::StdExpansion1DSharedPtr &EdgeExp,
 						 const Array<OneD, const NekDouble> &Fn,  
 						 Array<OneD, NekDouble> &outarray)
         {
-	  int i;
-	  Array<OneD,unsigned int>     map;
-	  Array<OneD,int>              sign;
-	  StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
+			int i;
+			Array<OneD,unsigned int>     map;
+			Array<OneD,int>              sign;
+			StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
 	  
-	  GetEdgeToElementMap(edge,edgedir,map,sign);
-	  int order_e = map.num_elements(); // Order of the element
-	  int n_coeffs = (EdgeExp->GetCoeffs()).num_elements(); // Order of the trace
-	  
-	  if(n_coeffs!=order_e) // Going to orthogonal space
-	  {
-	      EdgeExp->FwdTrans(Fn,EdgeExp->UpdateCoeffs());
-	      // negate backward edge values due to inwards normal definition
-	      if(edgedir == StdRegions::eBackwards)
-	      {
-		  
-		  Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-              }
+			GetEdgeToElementMap(edge,edgedir,map,sign);
+			int order_e = map.num_elements(); // Order of the element
+			int n_coeffs = (EdgeExp->GetCoeffs()).num_elements(); // Order of the trace
+			
+			
+			if(n_coeffs!=order_e) // Going to orthogonal space
+			{
+				EdgeExp->FwdTrans(Fn,EdgeExp->UpdateCoeffs());
+				// negate backward edge values due to inwards normal definition
+				if(edgedir == StdRegions::eBackwards)
+				{
+					Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
+				}
 
-	      Array<OneD, NekDouble> coeff(n_coeffs,0.0);
-	      LibUtilities::BasisType btype = ((LibUtilities::BasisType) 1); //1-->Ortho_A
-	      LibUtilities::BasisKey bkey_ortho(btype,EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
-	      LibUtilities::BasisKey bkey(EdgeExp->GetBasis(0)->GetBasisType(),EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
-	      LibUtilities::InterpCoeff1D(bkey,EdgeExp->GetCoeffs(),bkey_ortho,coeff);
-	      // Cutting high frequencies
-	      for(i = order_e; i < n_coeffs; i++)
-		{
-		  coeff[i] = 0.0;
-		}	
-	      LibUtilities::InterpCoeff1D(bkey_ortho,coeff,bkey,EdgeExp->UpdateCoeffs());
+				Array<OneD, NekDouble> coeff(n_coeffs,0.0);
+				LibUtilities::BasisType btype = ((LibUtilities::BasisType) 1); //1-->Ortho_A
+				LibUtilities::BasisKey bkey_ortho(btype,EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
+				LibUtilities::BasisKey bkey(EdgeExp->GetBasis(0)->GetBasisType(),EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
+				LibUtilities::InterpCoeff1D(bkey,EdgeExp->GetCoeffs(),bkey_ortho,coeff);
+				// Cutting high frequencies
+				for(i = order_e; i < n_coeffs; i++)
+				{
+					coeff[i] = 0.0;
+				}	
+				LibUtilities::InterpCoeff1D(bkey_ortho,coeff,bkey,EdgeExp->UpdateCoeffs());
 	      
-	      StdRegions::StdMatrixKey masskey(StdRegions::eMass,StdRegions::eSegment,*EdgeExp);
-	      EdgeExp->MassMatrixOp(EdgeExp->UpdateCoeffs(),EdgeExp->UpdateCoeffs(),masskey);
-	    }
-	  else
-	    {
-	      EdgeExp->IProductWRTBase(Fn,EdgeExp->UpdateCoeffs());
+				StdRegions::StdMatrixKey masskey(StdRegions::eMass,StdRegions::eSegment,*EdgeExp);
+				EdgeExp->MassMatrixOp(EdgeExp->UpdateCoeffs(),EdgeExp->UpdateCoeffs(),masskey);
+			}
+			else
+			{
+				//coefficients before:
+				//for (int i=0; i<order_e; i++)
+					//cout << "coeff["<<i<<"] = "<<EdgeExp->GetCoeff(i)<<endl;
+				
+				EdgeExp->IProductWRTBase(Fn,EdgeExp->UpdateCoeffs());
 
-	      // negate backward edge values due to inwards normal definition
-	      if(edgedir == StdRegions::eBackwards)
-		{
-		  Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
-		}
-	    }
-	  
-	  // add data to outarray if forward edge normal is outwards
-	  for(i = 0; i < order_e; ++i)
-	    {
-	      outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
-	    }
+				//for (int i=0; i<order_e; i++)
+					//cout << " update coeff["<<i<<"] = "<<EdgeExp->GetCoeff(i)<<endl;
+			
+				// negate backward edge values due to inwards normal definition
+				if(edgedir == StdRegions::eBackwards)
+					Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
+		  
+			
+				//for (int i=0; i<order_e; i++)
+					//cout << "  negate coeff["<<i<<"] = "<<EdgeExp->GetCoeff(i)<<endl;
+			
+			}
+			
+			//for (int i=0; i<outarray.num_elements();i++)
+			//	cout << "before outarray["<<i<<"] = "<<outarray[i]<<endl;
+
+			// add data to outarray if forward edge normal is outwards
+			for(i = 0; i < order_e; ++i)
+			{
+			//	cout<< "order = "<<i<<"\t\t";
+			//	cout << "map[i] = "<<map[i]<<"\t\t";
+				outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
+			//	cout << "added = "<<sign[i]*EdgeExp->GetCoeff(i)<<endl;
+			}
+			
+			//for (int i=0; i<outarray.num_elements();i++)
+			//	cout << "after outarray["<<i<<"] = "<<outarray[i]<<endl;
+		
+			
+			
+			//cout << "length of m_coeff: "<<m_coeffs.num_elements()<<endl;
+			//for (int i=0; i<m_coeffs.num_elements(); i++)
+			//	cout << "  m_coeff["<<i<<"] = "<<m_coeffs[i]<<endl;
+			
+			//cout << "length of outarray: "<<outarray.num_elements()<<endl;
         }
 
+		
         void Expansion2D::v_AddEdgeNormBoundaryBiInt(const int edge,
                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                                  const Array<OneD, const NekDouble> &Fwd,  

@@ -33,6 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <LocalRegions/LocalRegions.h>
+#include <LocalRegions/LocalRegions.hpp>
+#include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion0D.h>
 #include <LocalRegions/PointExp.h>
 
 namespace Nektar

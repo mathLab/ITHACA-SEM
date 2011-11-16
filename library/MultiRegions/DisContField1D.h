@@ -72,11 +72,111 @@ namespace Nektar
 
             /// Destructor.
             MULTI_REGIONS_EXPORT ~DisContField1D();
-
+			
+			////2D
+			inline ExpList0DSharedPtr &GetTrace1D(void)
+            {
+                return m_trace;
+            }
+			
+			////2D
+			inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
+            {
+                return m_traceMap;
+            }
+			
             /// For a given key, returns the associated global linear system.
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                     const GlobalLinSysKey &mkey);
 
+			/**
+             * \brief This method extracts the "forward" and
+             * "backward" trace data from the array #m_phys and puts
+             * the data into output vectors \a Fwd and \a Bwd.
+             *
+             * This is a wrapper call.
+             *
+             * \param field is a NekDouble array which contains the 2D
+             * data from which we wish to extract the backward and
+             * forward orientated trace/edge arrays.
+             *
+             * \return Updates  a NekDouble array \a Fwd and \a Bwd
+             */
+			
+            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
+														 Array<OneD,NekDouble> &Bwd);
+			
+			
+            /**
+             * \brief This method extracts the "forward" and
+             * "backward" trace data from the array \a field and puts
+             * the data into output vectors \a Fwd and \a Bwd.
+             *
+             * An element unique edge is defined to be #eForwards if
+             * the edge is oriented in a counter clockwise sense
+             * within the element. Conversley it is defined to be
+             * #eBackwards if the elemet edge is orientated in a
+             * clockwise sense. Therefore along two intersecting edges
+             * one edge is always forwards and the adjacent edge is
+             * backwards. We define a unique normal between two
+             * adjacent edges as running from the #eFowards edge to the
+             * #eBackward edge.
+             *
+             * This method collects/interpolates the edge data from
+             * the 2D array \a field which contains information over a
+             * collection of 2D shapes and puts this edge data into
+             * the arrays of trace data \a Bwd or \a Fwd depending on
+             * the orientation of the local edge within an element.
+             *
+             * If an edge is aligned along a boundary we use the
+             * method GetBndExpAdjacentOrient() method to determine if
+             * an adjacent boundary edge is orientated in a forwards
+             * or backwards sense. This method returns an enum
+             * #AdjacentTraceOrientation which in 2D has entires of
+             * #eAdjacentEdgeIsForwards and #eAdjacentEdgeIsBackwards.
+             *
+             * \param field is a NekDouble array which contains the 2D
+             * data from which we wish to extract the backward and
+             * forward orientated trace/edge arrays.
+             *
+             * \return Updates  a NekDouble array \a Fwd and \a Bwd
+             */
+            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+														 Array<OneD,NekDouble> &Fwd,
+														 Array<OneD,NekDouble> &Bwd);
+			
+            void ExtractTracePhys()
+            {
+                ExtractTracePhys(m_trace->UpdatePhys());
+            }
+			
+			
+            MULTI_REGIONS_EXPORT void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
+			
+			
+            /**
+             * \brief This method extracts the trace (edges in 2D)
+             * from the field \a inarray and puts the values in \a
+             * outarray.
+			 
+             * It assumes the field is C0 continuous so that
+             * it can overwrite the edge data when visited by the two
+             * adjacent elements.
+             *
+             * \param inarray is a NekDouble array which contains the 2D
+             * data from which we wish to extract the edge data
+             *
+             * \return Updates a NekDouble array \a outarray which
+             * contains the edge information
+             */
+            
+			MULTI_REGIONS_EXPORT void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray,
+													   Array<OneD, NekDouble> &outarray);
+			
+			
+            MULTI_REGIONS_EXPORT void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
+													   Array<OneD, NekDouble> &outarray);
+			
             /// Retrieve the boundary condition expansions.
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&GetBndCondExpansions();
 			
@@ -90,6 +190,7 @@ namespace Nektar
             /// for a robin aboundary condition in the location of the
             /// element id
             MULTI_REGIONS_EXPORT map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
+			
         protected:
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.
@@ -132,10 +233,61 @@ namespace Nektar
             GlobalLinSysMapShPtr                               m_globalBndMat;
 
             /// Trace space storage for points between elements.
-            Array<OneD,NekDouble>                              m_trace;
+			ExpList0DSharedPtr                                 m_trace;
+			Array<OneD,NekDouble>                              tmpBndSol;
+
 
             /// Local to global DG mapping for trace space.
             LocalToGlobalDGMapSharedPtr                        m_traceMap;
+			
+			
+			////2D
+			inline virtual ExpList0DSharedPtr &v_GetTrace1D(void)
+            {
+                return GetTrace1D();
+            }
+			
+			inline virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap(void)
+			{
+				return GetTraceMap();
+			}
+			 
+			virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
+											Array<OneD, NekDouble> &outarray)
+			{
+				AddTraceIntegral(Fn,outarray);
+			}
+			 
+			/*virtual void v_AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd,
+											  const Array<OneD, const NekDouble> &Bwd,
+											  Array<OneD, NekDouble> &outarray)
+			{
+				AddTraceBiIntegral(Fwd,Bwd,outarray);
+			}*/
+			 
+			virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
+			Array<OneD,NekDouble> &Bwd)
+			{
+				GetFwdBwdTracePhys(Fwd,Bwd);
+			}
+			 
+			virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+											  Array<OneD,NekDouble> &Fwd,
+											  Array<OneD,NekDouble> &Bwd)
+			{
+				GetFwdBwdTracePhys(field, Fwd,Bwd);
+			}
+			 
+			virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+			{
+				ExtractTracePhys(outarray);
+			}
+			 
+			virtual void v_ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+			{
+				ExtractTracePhys(inarray,outarray);
+			}
+			 
 
             /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
@@ -155,6 +307,25 @@ namespace Nektar
             {
                 return GetRobinBCInfo();
             }
+			
+			
+			/// Retrieve the boundary condition descriptions.
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();
+			
+			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
+            {
+                return m_bndConditions;
+            }
+			
+			inline MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
+            {
+                return m_bndCondExpansions[i];
+            }
+			
+            /// Evaluate all boundary conditions at a given time..
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
+													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
+													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 
             /// Solve the Helmholtz equation.
             virtual void v_HelmSolve(
@@ -172,24 +343,6 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           NekDouble tau);
-
-            /// Retrieve the boundary condition descriptions.
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();
-			
-			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
-            {
-                return m_bndConditions;
-            }
-			
-			inline MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
-            {
-                return m_bndCondExpansions[i];
-            }
-
-            /// Evaluate all boundary conditions at a given time..
-            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
-													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 			
         };
 

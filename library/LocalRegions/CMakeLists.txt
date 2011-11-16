@@ -1,5 +1,6 @@
 SET(LOCAL_REGIONS_SOURCES
 Expansion.cpp
+Expansion0D.cpp
 Expansion1D.cpp
 Expansion2D.cpp
 Expansion3D.cpp
@@ -18,6 +19,7 @@ TriExp.cpp
 
 SET(LOCAL_REGIONS_HEADERS
 Expansion.h
+Expansion0D.h
 Expansion1D.h
 Expansion2D.h
 Expansion3D.h

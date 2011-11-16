@@ -121,6 +121,20 @@ namespace Nektar
 
         return val;
     }
+	
+	void StdExpansion1D::v_SetUpPhysNormals(const int vertex)
+    {
+		ComputeVertexNormal(vertex);
+    }	
+		
+	const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
+    {
+         std::map<int, NormalVector>::const_iterator x;
+         x = m_vertexNormals.find(vertex);
+         ASSERTL0 (x != m_vertexNormals.end(),
+				  "vertex normal not computed.");
+         return x->second;
+	}
 
     }//end namespace
 }//end namespace

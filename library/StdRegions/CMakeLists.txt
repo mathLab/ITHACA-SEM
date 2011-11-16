@@ -1,5 +1,6 @@
 SET(STD_REGIONS_SOURCES
 StdExpansion.cpp
+StdExpansion0D.cpp
 StdExpansion1D.cpp
 StdExpansion2D.cpp
 StdExpansion3D.cpp
@@ -11,12 +12,14 @@ StdPrismExp.cpp
 StdPyrExp.cpp
 StdQuadExp.cpp
 StdSegExp.cpp
+StdPointExp.cpp
 StdTetExp.cpp
 StdTriExp.cpp
 )
 
 SET(STD_REGIONS_HEADERS
 SpatialDomainsDeclarations.hpp
+StdExpansion0D.h
 StdExpansion1D.h
 StdExpansion2D.h
 StdExpansion3D.h
@@ -31,6 +34,7 @@ StdPyrExp.h
 StdQuadExp.h
 StdRegionsDeclspec.h
 StdSegExp.h
+StdPointExp.h
 StdTetExp.h
 StdTriExp.h
 LocalRegionsDeclarations.hpp

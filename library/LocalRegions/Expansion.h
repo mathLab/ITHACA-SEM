@@ -36,6 +36,7 @@
 #ifndef EXPANSION_H
 
 #include <StdRegions/StdExpansion1D.h>
+#include <StdRegions/StdExpansion0D.h>
 #include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>

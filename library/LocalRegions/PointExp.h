@@ -37,8 +37,12 @@
 #define POINTEXP_H
 
 #include <LocalRegions/LocalRegions.hpp>
+
+#include <StdRegions/StdPointExp.h>
+
 #include <SpatialDomains/MeshComponents.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+#include <LocalRegions/Expansion0D.h>
 #include <StdRegions/StdExpansion.h>
 
 namespace Nektar
@@ -46,7 +50,7 @@ namespace Nektar
     namespace LocalRegions
     {
 
-	class PointExp
+		class PointExp: virtual public StdRegions::StdPointExp, virtual public Expansion0D
     {
         
     public:

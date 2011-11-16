@@ -261,6 +261,12 @@ namespace Nektar
             eForwards,
             eBackwards
         };
+		
+		enum PointOrientation
+        {
+            eFwd,
+            eBwd
+        };
 
         const char* const EdgeOrientationMap[] =
         {

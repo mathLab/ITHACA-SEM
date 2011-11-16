@@ -156,6 +156,26 @@ namespace Nektar
 
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             CalculateBndSystemBandWidth();
+			
+			
+			// Check to see which way boundary point is
+			// orientated with respect to convention (croth)
+			m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (nbnd);
+			
+			for (int i=0; i<nbnd; i++)
+			{
+				vid = ((bndCondExp[i])->GetVertex())->GetVid();
+				//cout << "VID = "<<vid<<endl;
+								
+				if(vid == 0)
+				{
+					m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsBackwards;
+				}
+				else
+				{
+					m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsForwards;
+				}
+			}
         }
 
 

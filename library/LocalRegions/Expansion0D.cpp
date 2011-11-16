@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ADRSolver.cpp
+// File Expansion0D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Advection Diffusion Reaction framework solver
+// Description: File for Expansion0D routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
+#include <LocalRegions/Expansion0D.h>
 
-#include <Auxiliary/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-using namespace Nektar;
-
-int main(int argc, char *argv[])
+namespace Nektar
 {
-    if(argc != 2)
+    namespace LocalRegions 
     {
-        cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        GetEquationSystemFactory().PrintAvailableClasses();
-        exit(1);
-    }
+        
+        
 
-    LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    DriverSharedPtr drv;
+    } //end of namespace
+} //end of namespace
 
-  //  try
-  //  {
-        // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
-
-        // Create driver
-        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
-
-        // Execute driver
-        drv->Execute();
-
-        // Finalise session
-        session->Finalise();
-   // }
-    //catch (const std::runtime_error& e)
-   // {
-   //     return 1;
-   // }
-   // catch (const std::string& eStr)
-   // {
-   //     cout << "Error: " << eStr << endl;
-    //}
-
-    return 0;
-}
+/** 
+ *    $Log: Expansion1D.cpp,v $
+ *    
+ *
+ *    Revision 1.1  2011/11/16 22:12:56  croth
+ *    created class
+ *
+ *
+ **/

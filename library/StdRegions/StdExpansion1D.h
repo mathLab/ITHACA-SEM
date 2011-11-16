@@ -92,6 +92,7 @@ namespace Nektar
             }
 
         protected:
+			std::map<int, NormalVector> m_vertexNormals;
 
         private:
 
@@ -138,6 +139,11 @@ namespace Nektar
             {
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }
+			
+			virtual void v_SetUpPhysNormals(const int vertex);
+						
+			const NormalVector & v_GetVertexNormal(const int vertex) const;
+
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

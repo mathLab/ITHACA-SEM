@@ -52,6 +52,8 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/Kernel/kernel.h>
 #include <SpatialDomains/MeshComponents.h>
+//#include <LocalRegions/Expansion0D.h>
+
 
 namespace Nektar
 {
@@ -82,10 +84,33 @@ namespace Nektar
             // wrap around LocalRegion::PointExp
             MULTI_REGIONS_EXPORT ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom);
 
+			/// Specialised constructor for trace expansions (croth)
+            MULTI_REGIONS_EXPORT ExpList0D(
+										   const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+										   const Array<OneD,const SpatialDomains
+										   ::BoundaryConditionShPtr>  &bndCond,
+										   const StdRegions::StdExpansionVector &locexp,
+										   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+										   const map<int,int> &periodicVertices,
+										   const bool DeclareCoeffPhysArrays = true);
+			
             /// Destructor.
             MULTI_REGIONS_EXPORT ~ExpList0D();
 			
 			LocalRegions::PointExpSharedPtr m_point;
+			
+            /// Upwind the \a Fwd and \a Bwd states based on the one-
+            /// dimensional normal velocity field given by \a Vn.
+            MULTI_REGIONS_EXPORT void Upwind(const Array<OneD, const NekDouble> &Vn,
+											 const Array<OneD, const NekDouble> &Fwd,
+											 const Array<OneD, const NekDouble> &Bwd,
+											 Array<OneD, NekDouble> &Upwind,
+											 int direction=1);
+			
+			/// Populate \a normals with the normals of all expansions.
+            MULTI_REGIONS_EXPORT void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
+
+			
 			            
         protected:
 
@@ -103,6 +128,7 @@ namespace Nektar
 			
 			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
 		
+			void SetCoeffPhysOffsets(void);
             
         };
 

@@ -35,6 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField1D.h>
+#include <LocalRegions/SegExp.h>
+
 
 namespace Nektar
 {
@@ -71,11 +73,11 @@ namespace Nektar
          * @param   solnType    Type of global system to use.
          */
         DisContField1D::DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    const std::string &variable):
-            ExpList1D(pSession,graph1D),
-            m_bndCondExpansions(),
-            m_bndConditions()
+									   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+									   const std::string &variable):
+									   ExpList1D(pSession,graph1D),
+									   m_bndCondExpansions(),
+									   m_bndConditions()
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
@@ -93,8 +95,44 @@ namespace Nektar
                 AllocateSharedPtr(pSession,graph1D,*this,
                                   m_bndCondExpansions,m_bndConditions);
 
-            m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
-        }
+			m_trace = MemoryManager<ExpList0D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph1D,periodicVertices);
+
+			tmpBndSol = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
+
+			// Scatter trace points to 1D elements. For each element,
+			// we find the trace point associated to each vertex. The
+			// element then retains a pointer to the trace space points,
+			// to ensure uniqueness of normals when retrieving from two
+			// adjoining elements which do not lie in a plane.
+			
+			int ElmtPointGeom = 0;
+			int TracePointGeom = 0;
+			for (int i = 0; i < m_exp->size(); ++i)
+			{
+				for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+				{
+					ElmtPointGeom  = ((*m_exp)[i]->GetGeom1D())->GetVid(j);
+
+					for (int k = 0; k < m_trace->GetExpSize(); ++k)
+					{
+						TracePointGeom = m_trace->GetPhys_Offset(k);
+
+						if (TracePointGeom == ElmtPointGeom)
+						{
+							LocalRegions::Expansion1DSharedPtr exp1d
+							= boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((*m_exp)[i]);
+							LocalRegions::Expansion0DSharedPtr exp0d
+							= boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(m_trace->GetExp(k));
+							
+							exp0d->SetAdjacentElementExp(j,exp1d);
+							break;
+						}
+					}
+				}
+			}
+			
+			SetUpPhysNormals();
+		}
 
 
         /**
@@ -427,9 +465,171 @@ namespace Nektar
 
 
         /**
-         *
-         */
-        void DisContField1D::v_HelmSolve(
+         // Construct the two trace vectors of the inner and outer
+		 // trace solution from the field contained in m_phys, where
+		 // the Weak dirichlet boundary conditions are listed in the
+		 // outer part of the vector (croth)
+		 **/
+         void DisContField1D::GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
+                                                Array<OneD,NekDouble> &Bwd)
+         {
+            GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+         }
+		
+		 void DisContField1D::GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+												 Array<OneD,NekDouble> &Fwd,
+												 Array<OneD,NekDouble> &Bwd)	//(croth)
+		 {
+			 // Loop over elements and collect forward expansion
+			 int nexp = GetExpSize();
+			 int n_quad,cnt,n,p,offset, phys_offset;
+			 double vertnorm =0.0;
+			 Array<OneD,NekDouble> e_tmp;
+			 
+			 // zero vectors;
+			 Vmath::Zero(Fwd.num_elements(),Fwd,1);
+			 Vmath::Zero(Bwd.num_elements(),Bwd,1);
+			 
+			 
+			 for(n  = 0; n < nexp; ++n)
+			 {
+				 phys_offset = GetPhys_Offset(n);
+				 n_quad = (*m_exp)[n]->GetNumPoints(0);
+
+				 for(p = 0; p < 2; ++p)
+				 {
+					 vertnorm = 0.0;
+					 for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+					 {
+						 vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+					 }
+					 cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<endl;
+
+					 if(vertnorm >= 0.0)
+					 {
+						 offset = m_trace->GetPhys_Offset(n+p);
+						 Fwd[offset] = field[phys_offset+n_quad-1];
+					 }					 
+					 if(vertnorm < 0.0) 
+					 {
+						 offset = m_trace->GetPhys_Offset(n+p);
+						 Bwd[offset] = field[phys_offset];
+					 }
+				 }
+			 }
+			 
+			 // fill boundary conditions into missing elements
+			 int id1 = 0;
+			 int id2 = 0;
+			 cnt = 0;
+			 p=0;
+			 
+			 for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+			 {				 
+				 if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+				 {
+					 if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
+					 {
+						 id1 = 0; //GetCoeff_Offset(n)+1;
+						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+						 Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+					 }
+					 else
+					 {
+						 id1 = 0; //GetCoeff_Offset(n);
+						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+						 Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+					 }
+				 }
+				 else if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)||(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eRobin))
+				 {
+					 if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
+					 {
+						 id1 = 0;
+						 ASSERTL0(m_bndCondExpansions[n]->GetCoeff(id1) == 0.0,"method not set up for non-zero Neumann boundary condition");
+						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+					 }
+					 else
+					 {
+						 id1 = 0;
+						 ASSERTL0(m_bndCondExpansions[n]->GetCoeff(id1) == 0.0,"method not set up for non-zero Neumann boundary condition");
+						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+					 }
+				 }
+				 else
+				 {
+					 ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+				 }
+				 
+			 }			 
+			
+			 
+		}
+		 
+		
+		
+		 //// Gets the velocity at the tracepoints (croth)
+		 void DisContField1D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+		 {
+			 ASSERTL1(m_physState == true,"local physical space is not true ");
+			 ExtractTracePhys(m_phys, outarray);
+		 }
+
+		 void DisContField1D::ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray) //(croth)
+		 {
+			 // Loop over elemente and collect forward expansion
+			 int nexp = GetExpSize();
+			 int n_quad,n,p,offset,phys_offset;
+			 
+			 ASSERTL1(outarray.num_elements() >= m_trace->GetExpSize(),
+					  "input array is of insufficient length");
+			 
+			 for(n  = 0; n < nexp; ++n)
+			 {
+				 phys_offset = GetPhys_Offset(n);
+				 
+				 for(p = 0; p < (*m_exp)[n]->GetNverts(); ++p)
+				 {
+					 offset = m_trace->GetPhys_Offset(p+n);
+					 outarray[offset] = inarray[phys_offset];
+				 }
+			 }
+		 }		 
+		
+		/// Note this routine changes m_trace->m_coeffs space; ; is the same for point expansion (croth)
+        void DisContField1D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, Array<OneD, NekDouble> &outarray)
+        {
+            int p,n,offset, t_offset;
+			double vertnorm =0.0;
+			
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(p = 0; p < 2; ++p)
+                {
+					vertnorm = 0.0;
+					for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+					{
+						vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+					}
+					//cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<"\t\t";
+					
+					t_offset = GetTrace1D()->GetPhys_Offset(n+p);
+
+					if(vertnorm >= 0.0) 
+					{
+						outarray[offset+1] += Fn[t_offset];
+					}	
+					if(vertnorm < 0.0) 
+					{
+						outarray[offset] -= Fn[t_offset];
+					}
+				}
+            }
+        }
+		
+	
+		void DisContField1D::v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
@@ -473,12 +673,15 @@ namespace Nektar
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,
                                          lambda,tau);
 
-            const DNekScalBlkMatSharedPtr &HDGLamToU
-                                                = GetBlockMatrix(HDGLamToUKey);
+            const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
+			// Retrieve global trace space storage, \Lambda, from trace expansion
+            Array<OneD,NekDouble> BndSol = tmpBndSol; //m_trace->UpdateCoeffs();
+
+			
             Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0);
             // Zero trace space
-            Vmath::Zero(GloBndDofs,m_trace,1);
+            Vmath::Zero(GloBndDofs,BndSol,1);
 
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
@@ -514,7 +717,7 @@ namespace Nektar
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
-                    m_trace[id] = m_bndCondExpansions[i]->GetCoeff(0);
+                    BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
                 }
                 else
                 {
@@ -531,7 +734,7 @@ namespace Nektar
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
                                           m_traceMap,lambda,tau);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
-                LinSys->Solve(BndRhs,m_trace,m_traceMap);
+                LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
 
             //----------------------------------
@@ -546,7 +749,7 @@ namespace Nektar
             Vmath::Zero(m_ncoeffs,outarray,1);
 
             // get local trace solution from BndSol
-            m_traceMap->GlobalToLocalBnd(m_trace,loc_lambda);
+            m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;

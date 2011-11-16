@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ADRSolver.cpp
+// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PointExp.cpp,v $
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,54 +29,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Advection Diffusion Reaction framework solver
+// Description: Definition of a Point expansion 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
+#include <StdRegions/StdPointExp.h>
 
-#include <Auxiliary/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-using namespace Nektar;
-
-int main(int argc, char *argv[])
+namespace Nektar
 {
-    if(argc != 2)
+    namespace StdRegions
     {
-        cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        GetEquationSystemFactory().PrintAvailableClasses();
-        exit(1);
+
+			StdPointExp::StdPointExp():
+            m_coeffs(1,0.0),
+            m_phys(1,0.0)
+        {
+        }
+        
+        StdPointExp::~StdPointExp(void)
+        {
+        }
+		
+		void StdPointExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
+                                 Array<OneD, NekDouble> &outarray)
+        {
+			outarray = inarray;
+		}
+		
+		void StdPointExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
+								   Array<OneD, NekDouble> &outarray)
+        {
+			outarray = inarray;
+		}
+		
+		void StdPointExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+								   Array<OneD, NekDouble> &outarray)
+        {
+			outarray = inarray;
+		}
+			
     }
-
-    LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    DriverSharedPtr drv;
-
-  //  try
-  //  {
-        // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
-
-        // Create driver
-        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
-
-        // Execute driver
-        drv->Execute();
-
-        // Finalise session
-        session->Finalise();
-   // }
-    //catch (const std::runtime_error& e)
-   // {
-   //     return 1;
-   // }
-   // catch (const std::string& eStr)
-   // {
-   //     cout << "Error: " << eStr << endl;
-    //}
-
-    return 0;
 }

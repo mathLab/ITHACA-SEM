@@ -89,8 +89,6 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
 
-                SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
-
             protected:
 				static const int                kNverts = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];

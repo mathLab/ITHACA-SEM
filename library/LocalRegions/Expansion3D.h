@@ -46,6 +46,8 @@ namespace Nektar
         class Expansion3D: virtual public Expansion, virtual public StdRegions::StdExpansion3D
         {
             public:
+				LOCAL_REGIONS_EXPORT Expansion3D();
+			
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
                 LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                       
             protected:

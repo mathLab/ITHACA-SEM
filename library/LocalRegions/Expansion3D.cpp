@@ -39,7 +39,8 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        
+		Expansion3D:Expansion3D(){}
+		
         DNekMatSharedPtr Expansion3D::GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
 

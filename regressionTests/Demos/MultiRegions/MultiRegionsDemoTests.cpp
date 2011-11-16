@@ -150,7 +150,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info, 
 
     // Copy input file to current location
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Demos/MultiRegions/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + " .";
+    std::string syscommand = std::string(COPY_COMMAND) + filePath.generic_string() + " .";
     int status = system(syscommand.c_str());
     if(status)
     {
@@ -205,7 +205,7 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
 
     // Copy input file to current location
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Demos/MultiRegions/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + " .";
+    std::string syscommand = std::string(COPY_COMMAND) + filePath.generic_string() + " .";
     int status = system(syscommand.c_str());
     if(status)
     {

@@ -13,7 +13,6 @@ int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
-	cout << "entered Helmholtz1D.cpp"<<endl;
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 

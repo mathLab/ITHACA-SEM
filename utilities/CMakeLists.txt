@@ -80,6 +80,10 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
             TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
         ENDIF (NEKTAR_USE_MPI)
     ENDIF( NEKTAR++_FOUND )
+    
+    IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
+        TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
+    ENDIF()
 
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 

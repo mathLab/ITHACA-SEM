@@ -14,6 +14,10 @@ MACRO(ADD_REGRESSION_EXECUTABLE name source)
     ADD_EXECUTABLE(${name} ${source} ${ARGN})
     TARGET_LINK_LIBRARIES(${name} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
+    IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
+	TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
+    ENDIF()
+
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 
             PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")

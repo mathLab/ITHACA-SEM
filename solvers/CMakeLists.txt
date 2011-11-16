@@ -79,6 +79,10 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
         ENDIF(NEKTAR_USE_MPI)
     ENDIF( NEKTAR++_FOUND )
 
+    IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
+        TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
+    ENDIF()
+
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 
             PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")

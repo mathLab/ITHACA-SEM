@@ -305,11 +305,11 @@ namespace Nektar
 				}
 
 				// Integrate over timestep.
-				if( n < numMultiSteps-1)
+				if( step < numMultiSteps-1)
 				{
 					// Use initialisation schemes if time step is less than the
 					// number of steps in the scheme.
-					fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
+					fields = IntScheme[step]->TimeIntegrate(m_timestep,u,m_ode);
 				}
 				else
 				{

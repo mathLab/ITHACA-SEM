@@ -112,8 +112,8 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/CompressibleFlowSolver/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + filePath.generic_string() + "xml .";
-	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.generic_string() + "rst .";
+    std::string syscommand = std::string(COPY_COMMAND) + filePath.string() + "xml .";
+	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.string() + "rst .";
 
 	int status = system(syscommand.c_str());
     if(status)
@@ -184,8 +184,8 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/CompressibleFlowSolver/InputFiles/" + input);
-	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.generic_string() + "xml .";
-	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.generic_string() + "rst .";
+	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.string() + "xml .";
+	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.string() + "rst .";
 
     int status1 = system(syscommand1.c_str());
     if(status1)

@@ -163,8 +163,8 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 	for (unsigned int i = 0; i < extensions.size(); ++i)
 	{
 	    struct stat vFileInfo;
-	    std::string source  = filePath.generic_string() + extensions[i];
-	    std::string command = std::string(COPY_COMMAND) + filePath.generic_string() + extensions[i] + " .";
+	    std::string source  = filePath.string() + extensions[i];
+	    std::string command = std::string(COPY_COMMAND) + filePath.string() + extensions[i] + " .";
 	    int vNotPresent = stat(source.c_str(), &vFileInfo);
 	    if (!vNotPresent)
 	    {
@@ -235,8 +235,8 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
     for (unsigned int i = 0; i < extensions.size(); ++i)
     {
         struct stat vFileInfo;
-        std::string source  = filePath.generic_string() + extensions[i];
-        std::string command = std::string(COPY_COMMAND) + filePath.generic_string() + extensions[i] + " .";
+        std::string source  = filePath.string() + extensions[i];
+        std::string command = std::string(COPY_COMMAND) + filePath.string() + extensions[i] + " .";
         int vNotPresent = stat(source.c_str(), &vFileInfo);
         if (!vNotPresent)
         {

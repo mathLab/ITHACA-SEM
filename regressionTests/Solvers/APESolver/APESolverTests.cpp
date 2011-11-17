@@ -104,7 +104,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
     // Copy input file to current location
 	boost::filesystem::path sourceFile(std::string(REG_PATH) + "Solvers/APESolver/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + sourceFile.generic_string() + " .";
+    std::string syscommand = std::string(COPY_COMMAND) + sourceFile.string() + " .";
     int status = system(syscommand.c_str());
     if(status)
     {
@@ -157,7 +157,7 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
 
     // Copy input file to current location
 	boost::filesystem::path sourceFile(std::string(REG_PATH) + "Solvers/APESolver/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + sourceFile.generic_string() +" .";
+    std::string syscommand = std::string(COPY_COMMAND) + sourceFile.string() +" .";
     int status = system(syscommand.c_str());
     if(status)
     {

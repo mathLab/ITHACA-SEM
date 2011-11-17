@@ -206,7 +206,6 @@ namespace Nektar
             Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);			
 		}
 		
-		
         for(i = 0; i < numflux.num_elements(); ++i)
         {
             m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);

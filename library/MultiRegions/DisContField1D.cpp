@@ -482,15 +482,19 @@ namespace Nektar
 		 {
 			 // Loop over elements and collect forward expansion
 			 int nexp = GetExpSize();
-			 int n_quad,cnt,n,p,offset, phys_offset;
+			 int n_quad=0;
+			 int cnt =0;
+			 int n=0;
+			 int p=0;
+			 int offset=0;
+			 int phys_offset=0;
 			 double vertnorm =0.0;
 			 Array<OneD,NekDouble> e_tmp;
 			 
 			 // zero vectors;
 			 Vmath::Zero(Fwd.num_elements(),Fwd,1);
 			 Vmath::Zero(Bwd.num_elements(),Bwd,1);
-			 
-			 
+			
 			 for(n  = 0; n < nexp; ++n)
 			 {
 				 phys_offset = GetPhys_Offset(n);
@@ -499,24 +503,25 @@ namespace Nektar
 				 for(p = 0; p < 2; ++p)
 				 {
 					 vertnorm = 0.0;
+					 offset = (*m_exp)[n]->GetGeom1D()->GetVid(p);
+					 
 					 for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
 					 {
 						 vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
 					 }
-					 cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<endl;
+					 //cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<"\t\t";
 
 					 if(vertnorm >= 0.0)
 					 {
-						 offset = m_trace->GetPhys_Offset(n+p);
 						 Fwd[offset] = field[phys_offset+n_quad-1];
 					 }					 
 					 if(vertnorm < 0.0) 
 					 {
-						 offset = m_trace->GetPhys_Offset(n+p);
 						 Bwd[offset] = field[phys_offset];
 					 }
 				 }
 			 }
+			 
 			 
 			 // fill boundary conditions into missing elements
 			 int id1 = 0;
@@ -562,7 +567,6 @@ namespace Nektar
 				 }
 				 
 			 }			 
-			
 			 
 		}
 		 

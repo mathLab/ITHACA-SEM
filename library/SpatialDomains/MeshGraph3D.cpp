@@ -347,7 +347,7 @@ namespace Nektar
 
                 /// These should be ordered.
                 nextElementNumber++;
-
+                
                 /// Read id attribute.
                 int indx;
                 int err = element->QueryIntAttribute("ID", &indx);
@@ -742,22 +742,17 @@ namespace Nektar
 
         Geometry2DSharedPtr MeshGraph3D::GetGeometry2D(int gID)
         {
-            for (TriGeomMapIter iter = m_triGeoms.begin(); iter != m_triGeoms.end(); iter++)
-            {
-                if (iter->first == gID)
-                {
-                    return iter->second;
-                }
-            }
-
-            for (QuadGeomMapIter iter = m_quadGeoms.begin(); iter != m_quadGeoms.end(); iter++)
-            {
-                if (iter->first == gID)
-                {
-                    return iter->second;
-                }
-            }
-
+            TriGeomMapIter it1;
+            QuadGeomMapIter it2;
+            
+            it1 = m_triGeoms.find(gID);
+            if (it1 != m_triGeoms.end())
+                return it1->second;
+            
+            it2 = m_quadGeoms.find(gID);
+            if (it2 != m_quadGeoms.end())
+                return it2->second;
+            
             return Geometry2DSharedPtr();
         };
 

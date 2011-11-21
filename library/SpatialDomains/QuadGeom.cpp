@@ -347,11 +347,12 @@ namespace Nektar
         {
             int i;
 
-            FillGeom();
-
+            FillGeom();                       
             // calculate local coordinate for coord
+/*
+	//this method works only for strictly regular elements and sometimes fails
             if(GetGtype() == eRegular)
-            { // can assume it is right angled rectangle
+            { // can assume it is right angled rectangle        	    
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
                 NekDouble xi0 = 0.0;
@@ -379,13 +380,64 @@ namespace Nektar
 
                 Lcoords[0] =  2*xi0/len0-1.0;
                 Lcoords[1] =  2*xi1/len1-1.0;
-
             }
             else
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "inverse mapping must be set up to use this call");
-            }
+            { 
+*/         
+                Array<OneD, NekDouble> ptsx;
+                Array<OneD, NekDouble> ptsy;  
+                NekDouble xmap,ymap, F1,F2;
+                NekDouble jac, derx_1k, derx_2k, dery_1k, dery_2k ;
+                NekDouble invderx_1k, invderx_2k, invdery_1k, invdery_2k;
+                F1=F2 = 2000;
+                //guess the first local coords
+                Lcoords[0]=0.5;
+                Lcoords[1]=0.5; 
+                ptsx = m_xmap[0]->GetPhys();
+                ptsy = m_xmap[1]->GetPhys();
+                Array<OneD, NekDouble> derx_1 (ptsx.num_elements());
+                Array<OneD, NekDouble> derx_2 (ptsx.num_elements());                 
+                Array<OneD, NekDouble> dery_1 (ptsy.num_elements());
+                Array<OneD, NekDouble> dery_2 (ptsy.num_elements());
+                m_xmap[0]->StdPhysDeriv(ptsx, derx_1, derx_2);                  
+                m_xmap[1]->StdPhysDeriv(ptsy, dery_1, dery_2);      
+                
+                
+
+                int elmtid = m_fid;
+                int offset=0;              
+                //determine y
+                int cnt=0;
+                while( abs(F2) > 0.00001 || abs(F1)> 0.00001)
+                {
+
+                    //calculate the gradient tensor at Lcoords
+                    derx_1k = m_xmap[0]->PhysEvaluate(Lcoords, derx_1);
+                    derx_2k = m_xmap[0]->PhysEvaluate(Lcoords, derx_2);
+                    dery_1k = m_xmap[1]->PhysEvaluate(Lcoords, dery_1);
+                    dery_2k = m_xmap[1]->PhysEvaluate(Lcoords, dery_2);                  
+                    jac = (derx_1k*dery_2k - derx_2k*dery_1k);
+                    //invert matrix:
+                    invderx_1k = dery_2k/jac;
+                    invderx_2k = -derx_2k/jac;
+                    invdery_1k = -dery_1k/jac;
+                    invdery_2k = derx_1k/jac;
+                    //calculate the global point corresponding to Lcoords
+                    xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
+                    ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
+                    Lcoords[0] = Lcoords[0] + invderx_1k*(coords[0]-xmap) + invderx_2k*(coords[1]-ymap);
+                    Lcoords[1] = Lcoords[1] + invdery_1k*(coords[0]-xmap) + invdery_2k*(coords[1]-ymap);
+                    F1 = coords[0] - xmap;
+                    F2 = coords[1] - ymap;
+                    cnt++;
+                    if( cnt >= 21)
+                    {
+                    	Lcoords[0] = Lcoords[1] = 2.0;    
+                        break;
+                    }
+		 }		              
+           // }
+
         }
 
         //TODO: implement eight different case of face orientation

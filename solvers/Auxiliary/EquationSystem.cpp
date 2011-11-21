@@ -1025,7 +1025,28 @@ namespace Nektar
     {
         base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         int nq = m_fields[0]->GetNpoints();
-        std::string velStr[3] = {"Vx","Vy","Vz"};        
+        std::string velStr[3] = {"Vx","Vy","Vz"}; 
+
+
+
+        // Check for restart file.
+        if (m_session->GetFunctionType("BaseFlow")
+                   == LibUtilities::eFunctionTypeFile)
+        {
+             string baseflowfile
+                        = m_session->GetFunctionFilename("BaseFlow");
+             cout << "\tBaseFlow file: "<< baseflowfile << endl;
+             SetUpBaseFields(m_graph);
+             ImportFldBase(baseflowfile, m_graph);
+             for(int i=0; i<m_spacedim; ++i)
+             {
+                 base[i] = Array<OneD, NekDouble> (nq,0.0);
+                 Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
+             }
+        }
+        else
+        {    
+   /*
         if(m_session->DefinesSolverInfo("BaseFlowFile"))
         {
             std::string baseyn= m_session->GetSolverInfo("BaseFlowFile");
@@ -1042,9 +1063,10 @@ namespace Nektar
                 cout<<"Base flow from file:  "<<basename<<"-Base.fld"<<endl;
                 for(int i=0; i<m_spacedim; ++i)
                 {
-                    base[i] = Array<OneD, NekDouble> (nq,0.0);
-                    Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
-                }
+                   base[i] = Array<OneD, NekDouble> (nq,0.0);
+                   Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
+      		}
+
             }
             else
             {
@@ -1059,6 +1081,7 @@ namespace Nektar
         }
         else
         {
+*/
             for(int i = 0; i < m_spacedim; ++i)
             {
                 base[i] = Array<OneD, NekDouble> (nq,0.0);
@@ -1766,7 +1789,6 @@ namespace Nektar
             }            
         }
         m_graph->Write(outname,FieldDef,FieldData);
-
     }
 
 

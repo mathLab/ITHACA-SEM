@@ -1,4 +1,4 @@
-	#include <cstdio>
+#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <iomanip>
@@ -32,17 +32,17 @@ int main(int argc, char *argv[])
     void Extractlayerdata(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
-    	    Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldx,
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldy,
-       	       MultiRegions::ExpListSharedPtr &streak);
+    	    MultiRegions::ExpList1DSharedPtr &outfieldx,
+       	    MultiRegions::ExpList1DSharedPtr &outfieldy,
+       	    MultiRegions::ExpListSharedPtr &streak);
     void Manipulate(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
-    	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
-    	    Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldx,
+    	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &infields,  
+    	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldx,
        	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldy,
        	       MultiRegions::ExpListSharedPtr &streak);
     void WriteBcs(string variable, int region, string fieldfile, SpatialDomains::MeshGraphSharedPtr &mesh, 
-    	    MultiRegions::ExpListSharedPtr &outregionfield);
+    	    MultiRegions::ExpList1DSharedPtr &outregionfield);
     void WriteFld(string outfile, SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD,
     	                       MultiRegions::ExpListSharedPtr> &fields );
     
@@ -125,7 +125,7 @@ cout<<nfields<<endl;
     // determine the I regions
     //hypothesis: the number of I regions is the same for all the variables
     //hypothesis: all the I regions have the same nq points
-    int nIregions, lastIregion,nq1D; 
+    int nIregions, lastIregion; 
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();      
     Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
     //3 internal layers:
@@ -146,32 +146,7 @@ cout<<nfields<<endl;
 
 
 
-    //set output fields (dim=1 as the number of layers)
-    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions();   
-    Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldy= fields[1]->GetBndCondExpansions();
-
-//YOU NEED TO DEFINE THE OUTFIELDS AS ContField2D to use them in the 2D NS!!!!!!!!!!!
-//(not 3DHomogeneous1D!!!!!!!
-
-/*  
-    //define the outfields:
-    int nplanes = fielddef[0]->m_numModes[1];
-    int nzlines = fielddef[0]->m_numModes[2];    
-    //ATTENTO Polyevenlyspaced NON Fourier!!!
-    const LibUtilities::PointsKey PkeyZ(nzlines,LibUtilities::ePolyEvenlySpaced);
-    const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
-    NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
-    for(int r=0; r<nlayers; r++)
-    {
-    	    
-         bndfieldx[r]= MemoryManager<MultiRegions::ExpList2DHomogeneous1D>
-                             ::AllocateSharedPtr(vSession,BkeyZ,lz,false,graphShPt);
-cout<<"OOOK"<<endl;                               
-         bndfieldy[r]= MemoryManager<MultiRegions::ExpList2DHomogeneous1D>
-                             ::AllocateSharedPtr(vSession,BkeyZ,lz,false,graphShPt);
-    }
-    //--------------------------------------------------------
-*/
+    // import the streak 
 
 cout<<"streak"<<endl; 
     //import the streak field
@@ -238,28 +213,63 @@ cout<<"x="<<x[i+j*nq2D]<<"  y="<<y[i+j*nq2D]<<"  z="<<z[i+j*nq2D]<<"  v="<<(fiel
 cout<<"plane="<<j<<endl;
 	}
     }	
-*/      
+*/     
+/*
     //write fld file for the streak
     string   file = fieldfile.substr(0,fieldfile.find_last_of("."));
     file= file+"_streak.fld";
-/*    
+    
     Array<OneD, MultiRegions::ExpListSharedPtr> dump;
     dump = Array<OneD, MultiRegions::ExpListSharedPtr>(2);
     dump[0] =streak;
     dump[1] =streak;
-*/    
+    
  
-   //WriteFld(file,graphShPt,dump);
-   	
+   WriteFld(file,graphShPt,dump);
+*/   	
     //---------------------------------------------------------------   
 
-    //set 1D output field:
+    //set 1D output fields:
+    //Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions();   
+    //Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldy= fields[1]->GetBndCondExpansions();
+    MultiRegions::ExpList1DSharedPtr outfieldx;    		
+    MultiRegions::ExpList1DSharedPtr outfieldy;
+
+    //initialie fields
+    const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+    //declarecoeffsphysarray?????????!!!! true?!      
+    outfieldx = MemoryManager<MultiRegions::ExpList1D>
+                ::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);    
+    outfieldy = MemoryManager<MultiRegions::ExpList1D>
+    		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+//YOU NEED TO DEFINE THE OUTFIELDS AS ContField2D to use them in the 2D NS!!!!!!!!!!!
+//(not 3DHomogeneous1D!!!!!!!
+
+/*  
+    //define the outfields:
+    int nplanes = fielddef[0]->m_numModes[1];
+    int nzlines = fielddef[0]->m_numModes[2];    
+    //ATTENTO Polyevenlyspaced NON Fourier!!!
+    const LibUtilities::PointsKey PkeyZ(nzlines,LibUtilities::ePolyEvenlySpaced);
+    const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
+    NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
+    for(int r=0; r<nlayers; r++)
+    {
+    	    
+         bndfieldx[r]= MemoryManager<MultiRegions::ExpList2DHomogeneous1D>
+                             ::AllocateSharedPtr(vSession,BkeyZ,lz,false,graphShPt);
+cout<<"OOOK"<<endl;                               
+         bndfieldy[r]= MemoryManager<MultiRegions::ExpList2DHomogeneous1D>
+                             ::AllocateSharedPtr(vSession,BkeyZ,lz,false,graphShPt);
+    }
+    //--------------------------------------------------------
+*/    
     
     //manipulate data
    
     //for 2 variables(u,v) only:
     int coordim = graphShPt->GetMeshDimension();              	   
-    Extractlayerdata(Ilayers,coordim, graphShPt, bcs, fields, bndfieldx,bndfieldy,streak);       	       
+    Extractlayerdata(Ilayers,coordim, graphShPt, bcs, fields, outfieldx,outfieldy,streak);       	       
 
     //--------------------------------------------------------------------------------------
 
@@ -267,16 +277,16 @@ cout<<"plane="<<j<<endl;
   
 
     //write bcs files: one for each I region and each variable
-    for(int s=0; s<nbnd; s++)
-    {    	 
-          if(Iregions[s]!=-1)
-      	  {
+//    for(int s=0; s<nbnd; s++)
+//    {    	 
+//          if(Iregions[s]!=-1)
+//      	  {
       	        string var="u";
-      	        WriteBcs(var,Iregions[s], fieldfile,graphShPt,bndfieldx[Iregions[s]]);
+      	        WriteBcs(var,lastIregion, fieldfile,graphShPt,outfieldx);
       	        var="v";
-      	        WriteBcs(var,Iregions[s], fieldfile,graphShPt,bndfieldy[Iregions[s]]);      	      	      
-      	  }
-     }
+      	        WriteBcs(var,lastIregion, fieldfile,graphShPt,outfieldy);      	      	      
+//      	  }
+//     }
     
 }
 				
@@ -447,8 +457,8 @@ cout<<"plane="<<j<<endl;
        void  Extractlayerdata(Array<OneD, int> Iregions,int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,
        	       SpatialDomains::BoundaryConditions &bcs,
        	       Array<OneD,MultiRegions::ExpListSharedPtr> &infields, 
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldx,
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldy,
+       	       MultiRegions::ExpList1DSharedPtr &outfieldx,
+       	       MultiRegions::ExpList1DSharedPtr &outfieldy,
        	       MultiRegions::ExpListSharedPtr &streak)
         {
             //3 I regions are expected: (the layer is the last region)
@@ -472,12 +482,38 @@ cout<<"layer region="<<Ireg<<endl;
             
             
             
+            int np = streak->GetTotPoints();
+            Array<OneD, NekDouble> gradx(np);
+            Array<OneD, NekDouble> grady(np); 
+
             
+/******************************************************************************************/        
+/*
+//test gradx,grady
+            Array<OneD,NekDouble> x(np);
+            Array<OneD,NekDouble> y(np);  
+            Array<OneD,NekDouble> z(np); 
+            streak->GetCoords(x,y,z);
+                        
             
+            for(int a=0; a<np; a++)
+            {
+                streak->UpdatePhys()[a] = x[a]*( 1- x[a] );             	    
+            }
+*/
+/*****************************************************************************************/
             
-            
-            
-            
+            int totcoeffs = streak->GetNcoeffs();
+            Array<OneD, NekDouble> gradxcoeffs(totcoeffs);
+            Array<OneD, NekDouble> gradycoeffs(totcoeffs);
+
+            streak->PhysDeriv(streak->GetPhys(), gradx, grady);    
+            streak->FwdTrans_IterPerExp(gradx, gradxcoeffs);
+            streak->FwdTrans_IterPerExp(grady, gradycoeffs);
+            Array<OneD, Array<OneD, NekDouble> > normals;
+            normals = Array<OneD, Array<OneD, NekDouble> >(2);            
+            Array<OneD, Array<OneD, NekDouble> > tangents;
+	    tangents = Array<OneD, Array<OneD, NekDouble> >(2);		     
 
             int nq1D = Ilayer->GetPlane(0)->GetTotPoints();
            
@@ -485,26 +521,21 @@ cout<<"layer region="<<Ireg<<endl;
             Array<OneD,NekDouble> x1d(nq1D);  
             Array<OneD,NekDouble> x2d(nq1D); 
             Ilayer->GetPlane(0)->GetCoords(x0d,x1d,x2d);
+            Array<OneD, NekDouble> nx(nq1D);
+            Array<OneD, NekDouble> ny(nq1D);
+            Array<OneD, NekDouble> tx(nq1D);
+            Array<OneD, NekDouble> ty(nq1D);            
+            
+
             
             
-            for(int q=0; q<nq1D; q++)
-            {
-//cout<<"streak"<<Istreak[Idown]->GetPhys()[q]<<endl;            	    
-            }            
 cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
 
             //initialise the curvature array:
             Array<OneD, NekDouble> curv=Array<OneD, NekDouble>(nq1D,0.0);
             
 
-
-
-            Array<OneD, NekDouble> dtest=Array<OneD, NekDouble>(nq1D,0.0);
-
-            //outfieldx[Iregions[0]]->PhysDeriv(MultiRegions::eS,outfieldx[Iregions[0]]->GetPhys(),dtest);            
-            Array<OneD, NekDouble> tmp=Array<OneD, NekDouble>(nq1D, 0.0); 
-            //Vmath::Vcopy(nq1D,dtest,1,(outfieldx[region]->UpdatePhys()),1);
-            //Vmath::Vcopy(nq1D,tmp,1,(outfieldy[region]->UpdatePhys()),1); 
+ 
 
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -522,6 +553,12 @@ cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
   	    
   	    //Array<OneD, NekDouble> stphysup (nq1D);
   	    Array<OneD, NekDouble> stphysreg (nq1D);
+  	    Array<OneD, NekDouble> stphysgradxreg (nq1D);
+  	    Array<OneD, NekDouble> stphysgradyreg (nq1D);
+  	    
+  	    
+  	    
+  	    
   	    
             //nummodes*nedges_layerdown
             int Nregcoeffs;  
@@ -549,7 +586,15 @@ cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
             	Array<OneD, NekDouble> Imcoeffsreg (Nregcoeffs);
 
             	Array<OneD, NekDouble> stcoeffsreg (Nregcoeffs);
-            	
+
+            	//grad coeffs
+            	Array<OneD, NekDouble> stgradxcoeffsreg (Nregcoeffs);
+            	Array<OneD, NekDouble> stgradycoeffsreg (Nregcoeffs);            
+            
+            
+            
+            
+                        	
             	
 		//define nq points for each edge
             	int nqedge =nq1D/Icompreg->size();
@@ -558,12 +603,18 @@ cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
 		Array<OneD,NekDouble> x1edge(nqedge);    
                 Array<OneD, NekDouble> Rephysedgereg(nqedge);
                 Array<OneD, NekDouble> Imphysedgereg(nqedge);
+                
+
+                for(int f=0; f<2; ++f)
+                {
+                     normals[f]  = Array<OneD, NekDouble>(nqedge); 
+                     tangents[f] = Array<OneD, NekDouble>(nqedge);
+                }                
         	
                 for(int k=0; k< Icompreg->size(); k++)//loop over segments of each layer
                 {
                     
                      if(
-                     	     //!(segmentGeomup  = boost::dynamic_pointer_cast<
                              !(segmentGeomreg = boost::dynamic_pointer_cast<
                              	     SpatialDomains::SegGeom>((*Icompreg)[k]))
                      )
@@ -592,9 +643,10 @@ cout<<"edge="<<EIDreg<<"  CHECK OFFSET="<<offsetregIExp<<endl;
 			   EdgeGIDreg[id]=cnt++;		     	     
 		     }
 cout<<" GIDreg="<<elmtidreg<<"  num edges in this element="<<dimelmtreg<<endl;
-	             int localidreg = EdgeGIDreg.find(EIDreg)->second;
-	             localidreg = (*elementreg)[0]->m_EdgeIndx;
-cout<<"check map local id of Eid="<<EIDreg<<"  is="<<localidreg<<endl;	             
+	             int localidedge = EdgeGIDreg.find(EIDreg)->second;
+cout<<"locaidedge from m_EdgeInx ="<<localidedge<<endl;	             
+	             localidedge = (*elementreg)[0]->m_EdgeIndx;
+cout<<"check map local id of Eid="<<EIDreg<<"  is="<<localidedge<<endl;	             
 
 
 		     //set bmaps -------------
@@ -617,8 +669,7 @@ cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;
 		     
 
 /*********************************************************************************/
-//ADD THE 2D GRADIENT IMPLEMENTATION CALLING QUAD::PHYSDERIV OR TRI::PHYSDERIV AND THEN MULTIPLY BY
-//THE NORMAL!!!!!!!!!!!!!!!!
+
 		     int ReNumoffset = Ilayer->GetPlane(0)->GetNcoeffs();
                      int ImNumoffset = Ilayer->GetPlane(1)->GetNcoeffs();	
 //cout<<" OFFSET TEst Re="<<ReNumoffset<<"  Im="<<ImNumoffset<<endl;                     
@@ -630,6 +681,11 @@ cout<<"k="<<k<<"  Offsetedge="<<Reoffsetedgereg<<endl;
 		     Array<OneD, NekDouble> Recoeffsedgereg(bmapedgereg.num_elements());	
 		     Array<OneD, NekDouble> Imcoeffsedgereg(bmapedgereg.num_elements());
 		     Array<OneD, NekDouble> stcoeffsedgereg(bmapedgereg.num_elements());
+		     
+		     
+		     //grad edge coeffs
+		     Array<OneD, NekDouble> stgradxcoeffsedge (bmapedgereg.num_elements());
+		     Array<OneD, NekDouble> stgradycoeffsedge (bmapedgereg.num_elements());		     
 cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
 <<"  n bmapedge="<<bmapedgereg.num_elements()<<endl;	
 
@@ -638,13 +694,11 @@ cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
 /*************************************************************************************/
 
 
-            	      int nqed = Ilayer->GetPlane(0)->GetTotPoints();
-            	      Array<OneD,NekDouble> x0ed(nqed);
-            	      Array<OneD,NekDouble> x1ed(nqed);  
-            	      Array<OneD,NekDouble> x2ed(nqed); 
-            	      Ilayer->GetPlane(0)->GetExp(k)->GetCoords(x0ed,x1ed,x2ed);
-
-
+            	     int nqed = Ilayer->GetPlane(0)->GetTotPoints();
+            	     Array<OneD,NekDouble> x0ed(nqed);
+            	     Array<OneD,NekDouble> x1ed(nqed);  
+            	     Array<OneD,NekDouble> x2ed(nqed); 
+            	     Ilayer->GetPlane(0)->GetExp(k)->GetCoords(x0ed,x1ed,x2ed);
 
 
 
@@ -652,13 +706,20 @@ cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
 		     {	 
 		     	   Recoeffsedgereg[d]=Recoeffs[Reoffsetreg+bmapedgereg[d]];		
                            Imcoeffsedgereg[d]=Imcoeffs[Imoffsetreg+bmapedgereg[d]];
-
+                           
+                           //streak edge coeffs
                            stcoeffsedgereg[d] = stcoeffs[stoffsetreg + bmapedgereg[d]];
+                           stgradxcoeffsedge[d] = gradxcoeffs[stoffsetreg + bmapedgereg[d]];
+                           stgradycoeffsedge[d] = gradycoeffs[stoffsetreg + bmapedgereg[d]];
                            
 		     	   Recoeffsreg[offsetregIExp +d]  = Recoeffsedgereg[d];
 		     	   Imcoeffsreg[offsetregIExp +d]  = Imcoeffsedgereg[d];
-
+		     	   
+		     	   //streak coeffs
 		     	   stcoeffsreg[offsetregIExp +d] = stcoeffsedgereg[d];
+		     	   stgradxcoeffsreg[offsetregIExp +d] = stgradxcoeffsedge[d];
+		     	   stgradycoeffsreg[offsetregIExp +d] = stgradycoeffsedge[d];
+		     	   
 //cout<<"x="<<x0ed[d]<<"  y="<<x1ed[d]<<"  Re coeff="<<Recoeffsdown[offsetdownIExp +d]<<"  Im coeff="<<Imcoeffsdown[offsetdownIExp +d]<<endl; 		     	   
 		     }
 
@@ -667,48 +728,91 @@ cout<<"Nlayercoeffs="<<Recoeffsreg.num_elements()<<"   Nlayerphys="<<Rephysreg.n
 		     
 		     
 		     
-		     
-		     
-		     
+cout<<"extract normal for edge="<<k<<endl;	
 	     
-cout<<"extract tangent for edge="<<k<<endl;		
-                     //TANGENTS WRONG WITH 3DHOMOGENEOUS 1D...
-		     Array<OneD, Array<OneD, NekDouble> > tangents;
-		     tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);		     
-		     for(int k=0; k<coordim; ++k)
-		     {
-              	          tangents[k]= Array<OneD, NekDouble>(nqedge); 
-              	     }   		     
+cout<<"extract tangent for edge="<<k<<endl;
               	     //k is the number of the edge according to the composite list
+		     LocalRegions::Expansion1DSharedPtr edgeexp = 
+		     		boost::dynamic_pointer_cast<LocalRegions::Expansion1D>
+		       (Ilayer->GetPlane(0)->GetExp(k) );
+		     int localEid = edgeexp->GetLeftAdjacentElementEdge();
+                     normals = edgeexp->
+                            GetLeftAdjacentElementExp()->GetEdgeNormal(localEid);
 		     LocalRegions::SegExpSharedPtr  bndSegExp = 
-		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetExp(k)); 		     	     
-
+		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
 	             tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
-		     //calculate the curvature:
-		     Array<OneD, NekDouble> curv=Array<OneD, NekDouble>(nqedge,0.0);
-		     Array<OneD, NekDouble> dtx (nqedge);
-		     Array<OneD, NekDouble> dty (nqedge);
-                     for(int t=0; t<nqedge; t++)
-		     {
-			  //curv[t+offsetdownIExp]=sqrt(dtx[t]*dtx[t] +dty[t]*dty[t]);
-	             }
-           for(int w=0; w<nqedge; w++)
-           {       
-cout<<"tangent   tx="<<tangents[0][w]<<"   ty="<<tangents[1][w]<<endl;
-//cout<<"derivtangent dtx="<<dtx[w]<<" dty="<<dty[w]<<endl;	
-           }		     
-		     
+                     for(int e=0; e< nqedge; e++)
+                     {
+//cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   nedges="<<nedges<<endl; 
+//cout<<"tannn tx="<<tangents[0][e]<<"   ty="<<tangents[1][e]<<endl;
+                          nx[k*nqedge +e] = normals[0][e];
+                          ny[k*nqedge +e] = normals[1][e];
+                          tx[k*nqedge +e] = tangents[0][e];
+                          ty[k*nqedge +e] = tangents[1][e];
+                     }
+		
+ 
 
                 }
 cout<<"comp closed"<<endl;         
                 //bwd transform:
 		Ilayer->GetPlane(0)->BwdTrans(Recoeffsreg, Rephysreg);
 		Ilayer->GetPlane(1)->BwdTrans(Imcoeffsreg, Imphysreg);
-		
+		//streak phys values:
 		Ilayer->GetPlane(0)->BwdTrans(stcoeffsreg, stphysreg);
-          
+		Ilayer->GetPlane(0)->BwdTrans_IterPerExp(stgradxcoeffsreg, stphysgradxreg);
+		Ilayer->GetPlane(0)->BwdTrans_IterPerExp(stgradycoeffsreg, stphysgradyreg);
             }  
 cout<<"Dim Rephysreg="<<Rephysreg.num_elements()<<"  nq1D="<<nq1D<<endl;            
+
+
+
+
+
+
+
+
+             //TANGENTS WRONG WITH 3DHOMOGENEOUS 1D...	     
+             //calculate the curvature:
+             Array<OneD, NekDouble> dtx(nq1D);
+             Array<OneD, NekDouble> dty(nq1D);
+             Array<OneD, NekDouble> txcoeffs (Nregcoeffs);
+             Array<OneD, NekDouble> tycoeffs (Nregcoeffs);
+             Ilayer->GetPlane(0)->FwdTrans(tx, txcoeffs);
+             Ilayer->GetPlane(0)->FwdTrans(ty, tycoeffs);
+             Ilayer->GetPlane(0)->BwdTrans(txcoeffs, tx);
+             Ilayer->GetPlane(0)->BwdTrans(tycoeffs, ty);
+             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, tx, dtx);
+             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, ty, dty);
+cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;             
+             for(int t=0; t<nq1D; t++)
+	     {
+	            curv[t]=sqrt(dtx[t]*dtx[t] +dty[t]*dty[t]);     
+cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<setw(13)<<"     "<<ty[t]<<"     "
+<<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
+             }		     
+		    
+
+
+
+           //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
+           // norm = sqrt[ Area /  (\int Pquare)]
+           Array<OneD, NekDouble> P_square(np, 0.0);
+           Array<OneD, NekDouble> P_tmp(np);
+           Array<OneD, NekDouble> I (np, 1.0);             
+           NekDouble Area = pressure->GetPlane(0)->PhysIntegral(I);
+           //NekDouble IntPsquare = pressure->PhysIntegral(
+        
+           Vmath::Vmul(np, pressure->GetPlane(0)->GetPhys(),1,pressure->GetPlane(0)->GetPhys(),1,P_square,1);
+           Vmath::Vmul(np, pressure->GetPlane(0)->GetPhys(),1,pressure->GetPlane(0)->GetPhys(),1,P_tmp,1);
+           Vmath::Vadd(np, P_tmp,1,P_square,1, P_square,1);
+           NekDouble IntPsquare = pressure->L2();
+           NekDouble Int = pressure->PhysIntegral(P_square);
+           NekDouble norm = sqrt(Area/Int);
+
+cout<<" norm="<<norm<<"   IntPsquare="<<IntPsquare<<"   Area="<<Area<<"  Int="<<Int<<endl;
+
+
 
 
 
@@ -717,9 +821,9 @@ cout<<"Dim Rephysreg="<<Rephysreg.num_elements()<<"  nq1D="<<nq1D<<endl;
             //fill output fields:
             for(int g=0; g<nq1D; g++)
             {
-            	(outfieldx[Ireg]->UpdatePhys())[g] = 
+            	(outfieldx->UpdatePhys())[g] = 
             	   Rephysreg[g];
-            	(outfieldy[Ireg]->UpdatePhys())[g] =
+            	(outfieldy->UpdatePhys())[g] =
             	   Imphysreg[g];	   
 //cout<<"curvature x="<<x0d[g]<<"   k="<<curv[g]<<endl;		
             }
@@ -739,10 +843,10 @@ cout<<"derivative of the pressure"<<endl;
             Array<OneD, NekDouble> dP_im_coeffs (Nregcoeffs);   
             Vmath::Vcopy(nq1D,dP_re,1,Ilayer->GetPlane(0)->UpdatePhys(),1);
             
-	    outfieldx[Ireg]->GetPlane(0)->FwdTrans(Ilayer->GetPlane(0)->UpdatePhys(), dP_re_coeffs);
-	    outfieldx[Ireg]->GetPlane(1)->FwdTrans(dP_im, dP_im_coeffs);
-	    outfieldx[Ireg]->GetPlane(0)->BwdTrans(dP_re_coeffs, dP_re);
-	    outfieldx[Ireg]->GetPlane(1)->BwdTrans(dP_im_coeffs, dP_im);
+	    //Ilayer->GetPlane(0)->FwdTrans(Ilayer->GetPlane(0)->UpdatePhys(), dP_re_coeffs);
+	    //Ilayer->GetPlane(1)->FwdTrans(dP_im, dP_im_coeffs);
+	    //Ilayer->GetPlane(0)->BwdTrans(dP_re_coeffs, dP_re);
+	    //Ilayer->GetPlane(1)->BwdTrans(dP_im_coeffs, dP_im);
             
             Array<OneD, NekDouble> dP_square = Array<OneD, NekDouble>(nq1D, 0.0);
 cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
@@ -753,13 +857,17 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 	    }            
 cout<<"dim streak="<<stphysreg.num_elements()<<endl;
 	    Array<OneD, NekDouble> dUreg (nq1D);
-	    Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eN, stphysreg,dUreg);             
+	    //Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eN, stphysreg,dUreg);
+	    for(int w=0; w<nq1D; w++)
+	    {
+	         dUreg[w] = nx[w]*stphysgradxreg[w] +ny[w]*stphysgradyreg[w]; 	    
+	    }
 /*
 	    //attempting to smooth mu field...
 cout<<"ncoeffs="<<Ndowncoeffs<<endl;	    
 	    Array<OneD, NekDouble> dU_coeffs (Nregcoeffs);
-	    outfieldx[Idown]->GetPlane(0)->FwdTrans(dUdown, dU_coeffs);
-	    outfieldx[Idown]->GetPlane(0)->BwdTrans(dU_coeffs, dUdown);
+	    Ilayer->GetPlane(0)->FwdTrans(dUdown, dU_coeffs);
+	    Ilayer->GetPlane(0)->BwdTrans(dU_coeffs, dUdown);
 */	    
 	    Array<OneD, NekDouble> mu53  (nq1D);
 	    Array<OneD, NekDouble> d2v  (nq1D);	    
@@ -774,36 +882,41 @@ cout<<"ncoeffs="<<Ndowncoeffs<<endl;
                 
             }
 
+            
 	    //attempting to smooth field...	    
 	    Array<OneD, NekDouble> prod_coeffs (Nregcoeffs);
-	    outfieldx[Ireg]->GetPlane(0)->FwdTrans(d2v, prod_coeffs);
-	    outfieldx[Ireg]->GetPlane(0)->BwdTrans(prod_coeffs, d2v);            
+	    Ilayer->GetPlane(0)->FwdTrans(d2v, prod_coeffs);
+	    Ilayer->GetPlane(0)->BwdTrans(prod_coeffs, d2v);            
 
 	    Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, d2v ,d2v);
-	    
+	    //attempting t smooth the vjump
+	    Ilayer->GetPlane(0)->FwdTrans(d2v, prod_coeffs);
+	    Ilayer->GetPlane(0)->BwdTrans(prod_coeffs, d2v);  	    
 	    NekDouble n0 = 2.6789385347077476337;
 
-	    
+	    Array<OneD, NekDouble> pjump(nq1D);
+	    Array<OneD, NekDouble> vjump(nq1D);
 	    for(int g=0; g<nq1D; g++)
 	    {
-
                 //double po = (2.09)**0.5;
-                NekDouble pjump = n0*mu53[g]*dP_square[g] ;
-                NekDouble vjump = n0*d2v[g];
+                pjump[g] = n0*mu53[g]*dP_square[g] ;
+                vjump[g] = n0*d2v[g];
 cout<<setw(14)<<x0d[g]<<"       "<<Rephysreg[g]<<"      "<<dP_re[g]<<"     "
-<<setw(13)<<stphysreg[g]<<setw(13)<<"      "<<dUreg[g]<<"     "<<mu53[g]<<"       "<<dP_square[g]<<"     "<<
-pjump<<setw(13)<<"        "<<vjump<<endl;
-                                          
+<<setw(13)<<"      "<<stphysreg[g]<<"     "<<dUreg[g]<<"    "<<
+mu53[g]<<"       "<<setw(13)<<curv[g]<<"    "<<dP_square[g]<<"     "<<
+pjump[g]<<setw(13)<<"        "<<vjump[g]<<endl;
+//cout<<setw(14)<<x0d[g]<<"     "<<stphysgradxreg[g]<<"     "<<stphysgradyreg[g]
+//<<"     "<<dUreg[g]<<endl;                                          
 	    }
 
-
+//PAY ATTENTION to the sign (vjump -/+ pjump)*t!!!!!!!!!!
             for(int j=0; j<nq1D; j++)
             {
 /*            	              	    
-            	(outfieldx[region]->UpdatePhys())[j] = 
-            	   20*sin(2*x0[j]);
-            	(outfieldy[region]->UpdatePhys())[j] =
-            	   20*2*cos(2*x0[j])/3.14159265;		   
+            	(outfieldx->UpdatePhys())[j] = 
+            	  (vjump[j]-pjump[j])*tx[j];
+            	(outfieldy->UpdatePhys())[j] =
+            	   (vjump[j]-pjump[j])*ty[j];		   
 */		
             }
           
@@ -828,8 +941,8 @@ cout<<"tangent tx="<<tangents[0][w]<<" ty="<<tangents[1][w]<<"  x="<<x0[w]<<"  y
        void  Manipulate(Array<OneD, int> Iregions,int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,
        	       SpatialDomains::BoundaryConditions &bcs,
        	       Array<OneD,MultiRegions::ExpListSharedPtr> &infields, 
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldx,
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldy,
+       	       Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldx,
+       	       Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldy,
        	       MultiRegions::ExpListSharedPtr &streak)
        
        {
@@ -849,7 +962,7 @@ cout<<"tangent tx="<<tangents[0][w]<<" ty="<<tangents[1][w]<<"  x="<<x0[w]<<"  y
 	
 	
 	void WriteBcs(string variable, int region, string fieldfile,SpatialDomains::MeshGraphSharedPtr &mesh,
-		MultiRegions::ExpListSharedPtr &outregionfield)
+		MultiRegions::ExpList1DSharedPtr &outregionfield)
 	{			
 		string   outfile = fieldfile.substr(0,fieldfile.find_last_of("."));
 		outfile +="_"+variable+"_";
@@ -858,13 +971,22 @@ cout<<"tangent tx="<<tangents[0][w]<<" ty="<<tangents[1][w]<<"  x="<<x0[w]<<"  y
     		outfile +=ibnd;		
     		string   endfile(".bc");    		
     		outfile += endfile;
+    		Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
+                outregionfield->FwdTrans(outregionfield->GetPhys(),outregionfield->UpdateCoeffs()); 
+                fieldcoeffs[0] = outregionfield->UpdateCoeffs();		
 		std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                = outregionfield->GetFieldDefinitions();
+                = outregionfield->GetFieldDefinitions();               
                 std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-                // copy Data into FieldData and set variable                
-            	FieldDef[0]->m_fields.push_back(variable);
-            	//fields->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
-            	outregionfield->AppendFieldData(FieldDef[0], FieldData[0]);
+                // copy Data into FieldData and set variable             
+            	//for(int i = 0; i < FieldDef.size(); ++i)
+          	//{                
+            	    //FieldDef[i]->m_fields.push_back(variable);
+            	    FieldDef[0]->m_fields.push_back(variable);            	    
+            	    //outregionfield->AppendFieldData(FieldDef[i], FieldData[i]);
+            	    outregionfield->AppendFieldData(FieldDef[0], FieldData[0]);            	    
+            	    //outregionfield->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[0]);
+            	//}
+cout<<"fielddata"<<FieldDef.size()<<endl;             	
             	mesh->Write(outfile,FieldDef,FieldData);            		
 	}
     

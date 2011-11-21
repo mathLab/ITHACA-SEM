@@ -35,6 +35,14 @@ int main(int argc, char *argv[])
         	Array<OneD, int>& Vids, int v1,int v2 , NekDouble x_connect,
         	int & lastedge, 
         	Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y);
+    void Computestreakpositions(int nvertl, MultiRegions::ExpListSharedPtr &streak,
+    	        Array<OneD, NekDouble> &x,  Array<OneD, NekDouble> &y,
+    	        Array<OneD, NekDouble> &xold_up, Array<OneD, NekDouble> &yold_up,
+    	        Array<OneD, NekDouble> &xold_low, Array<OneD, NekDouble> &yold_low,
+    	        Array<OneD, NekDouble> &xold_c, Array<OneD, NekDouble> &yold_c,      	        
+    	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc); 
+    void GenerateAddPointsNewtonIt( NekDouble &xi, NekDouble &yi,NekDouble &x0, NekDouble &y0,
+    	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction);
     void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
     	    Array<OneD, NekDouble> &y_c, Array<OneD, NekDouble> &curve);
     void GenerateAddPoints(int region, SpatialDomains::MeshGraphSharedPtr &mesh,int np, int npused,    	      
@@ -53,7 +61,7 @@ int main(int argc, char *argv[])
     int i,j;
     if(argc != 4)
     {
-        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  changefile\n");
+        fprintf(stderr,"Usage: ./MoveMesh  meshfile fieldfile  changefile\n");
         exit(1);
     }
 //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
@@ -284,94 +292,14 @@ cout<<"nIregions="<<nIregions<<endl;
     Array<OneD, int> Sign (nvertl,1);   
     Array<OneD, NekDouble> Delta_c(nvertl,-200);
    
+    //calculate the dU_dy 
+    Array<OneD, NekDouble> dU(nq);
+    streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), dU);
+    Computestreakpositions(nvertl, streak, x,y,xold_up, yold_up,
+    	                   xold_low, yold_low, xold_c, yold_c, x_c, y_c);    
+    // if the curve is low the old layer point, it has to shift down    
     for(int q=0; q<nvertl; q++)
     {
-         //algorithm to determine the closest points to the streak positions 
-    
-         NekDouble streaktmppos=200;
-         NekDouble streaktmpneg=-200;
-         int ipos,ineg =0;                  
-         NekDouble weightpos, weightneg;
-/*         
-         for(int j=0; j<nq; j++)
-         {
-             if(x[j]==xold_up[q] && y[j]<= yold_up[q] && y[j]>= yold_low[q])
-             {
-                 if(streak->GetPhys()[j]< streaktmppos && streak->GetPhys()[j]>0)
-                 {	                 	      
-                      streaktmppos = streak->GetPhys()[j];
-                      ipos =j;
-                 }
-                 if(streak->GetPhys()[j]>streaktmpneg && streak->GetPhys()[j]<0)
-                 {
-              	      streaktmpneg = streak->GetPhys()[j];
-              	      ineg =j;
-                 }
-              
-//cout<<" x="<<x[j]<<"  y="<<y[j]<<"   streak="<<streak->GetPhys()[j]<<endl;
-             }
-         }
-//cout<<"closer streak points ypos="<<y[ipos]<<"   yneg="<<y[ineg]<<endl;
-	 //determine the streak y position as the result of the weighted mean
-	 x_c[q]= x[ipos];
-	 weightpos = 1/(streaktmppos*streaktmppos);
-	 weightneg = 1/(streaktmpneg*streaktmpneg);
-	 y_c[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
-cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<endl;
-*/      
-
-         //algorithm to determine the points with u of order 0.08
-         for(int j=0; j<nq; j++)
-         {
-             if(x[j]==xold_up[q] && y[j]<= yold_up[q] && y[j]>= yold_low[q])
-             {
-                  if(  streak->GetPhys()[j] >0.08  
-                  	     && abs(streak->GetPhys()[j] - 0.08) < abs(streaktmppos -0.08)   
-                    )
-                  {
-//cout<<"q="<<q<<" streakpos ="<<streak->GetPhys()[j]<<endl;                  	  
-                          streaktmppos = streak->GetPhys()[j];
-                          ipos =j;                   
-                  }
-                  
-                  if(  streak->GetPhys()[j] < 0.08  && streak->GetPhys()[j]>0 
-                  	     && abs(streak->GetPhys()[j] - 0.08) < abs(streaktmpneg -0.08)   
-                    )
-                  {
-//cout<<"q="<<q<<" streakneg ="<<streak->GetPhys()[j]<<endl;                  	  
-                          streaktmpneg = streak->GetPhys()[j];
-                          ineg =j;                   
-                  }               
-                 
-             }            
-         }
-         //determine streak position as the weghted mean         
-
-         if(streaktmppos == 200)
-         {         	 
-             y_c[q] = y[ineg];
-             x_c[q] = x[ineg];             
-         }
-         else if(streaktmpneg == -200)
-         {         	 
-             y_c[q] = y[ipos];
-             x_c[q] = x[ipos];             
-         }
-         else
-         {
-             x_c[q] = x[ipos];
-	     weightpos = 1/abs( (streaktmppos-0.08)*(streaktmppos-0.08)  );
-	     weightneg = 1/abs( (streaktmpneg-0.08)*(streaktmpneg-0.08)  );
-	     y_c[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
-	 }
-	 
-cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   streak_n="<<streaktmpneg<<endl;          
-         if(q>0 && q< nvertl-1)
-         {       	 
-            ASSERTL0(y_c[q+1] < y_c[q], " the critical layer is oscillating");         
-         }
-
-	 // if the curve is low the old layer point, it has to shift down
          if(y_c[q] < yold_c[q])
          {
              Sign[q] = -1;
@@ -394,7 +322,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
     //hypothesis: totcoeffs< 2*nvertl; ncurves< nedges;
     Array<OneD, NekDouble> totcurvecoeffs (2*nvertl,0.0);
     Array<OneD, int> ncurvepoints (nedges);
-    int ntotcurvecoeffs;
+    int ntotcurvecoeffs=0;
     //additional points arrays
     Array<OneD, NekDouble> Cpointsx (nedges);
     Array<OneD, NekDouble> Cpointsy (nedges, 0.0);
@@ -437,6 +365,7 @@ cout<<"Npoints="<<Npoints<<"  r="<<r<<endl;
                  GenerateCurve(Npoints, Npused, x_c, y_c, totcurvecoeffs);
                  GenerateAddPoints(lastIregion, graphShPt, Npoints, Npused, totcurvecoeffs,  
                  	     bndfieldx[lastIregion],    Cpointsx, Cpointsy, Eids);
+                 
               }
               else
               {
@@ -495,19 +424,77 @@ cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;
     else
     {
          ntotcurvecoeffs +=  Nplast+1;    
-cout<<"last curve   npoints="<<Nplast<<"   Npused="<<Npused<<endl;         
+cout<<"last curve   npoints="<<Nplast<<"   Npused="<<Npused<<endl; 
+cout<<"ntotcurvecoeffs="<<ntotcurvecoeffs<<endl;
       	 GenerateCurve(Nplast+1, Npused-1, x_c, y_c, totcurvecoeffs); 
          GenerateAddPoints(lastIregion, graphShPt, Nplast+1, Npused-1, totcurvecoeffs,  
                   bndfieldx[lastIregion],    Cpointsx, Cpointsy, Eids);       	 
     }  
 cout<<" final curves coeffs values"<<endl;
-    
+cout<<"ntotcurvecoeffs="<<ntotcurvecoeffs<<endl;
     ASSERTL0( ntotcurvecoeffs <= 2*nvertl, "numer of curves coeffs exceeds 2*nvertices");
     for(int u=0; u <2*nvertl; u++)
     {
 cout<<"coeffs = "<<totcurvecoeffs[u]<<endl;
     }
 
+    
+    
+    //generate additional points using the Newton iteration
+    //determine the xposition for every edge (in the middle even if it 
+    // is not necessary
+    
+    Array<OneD, NekDouble> derstreak (streak->GetTotPoints());
+    streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), derstreak);
+    
+    LocalRegions::SegExpSharedPtr bndSegExp;
+            
+    int Eid,id1,id2;
+    NekDouble x1,y1,z1;
+    NekDouble x2,y2,z2;
+    SpatialDomains::VertexComponentSharedPtr vertex1;
+    SpatialDomains::VertexComponentSharedPtr vertex2;    
+    for(int r=0; r<nedges; r++)
+    {
+    	    
+         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfieldx[lastIregion]->GetExp(r));   
+         Eid = (bndSegExp->GetGeom1D())->GetEid();
+         id1 = (bndSegExp->GetGeom1D())->GetVid(0);
+         id2 = (bndSegExp->GetGeom1D())->GetVid(1);  
+         vertex1 = graphShPt->GetVertex(id1);      
+	 vertex2 = graphShPt->GetVertex(id2);     
+	 vertex1->GetCoords(x1,y1,z1);
+	 vertex2->GetCoords(x2,y2,z2);	
+cout<<"x1="<<x1<<"  x2="<<x2<<endl;		 
+	 if(x2>x1)
+	 {
+	     Cpointsx[r] = x1 +(x2-x1)/2;
+	     if( Cpointsx[r]>x2 || Cpointsx[r]< x1)
+	     {
+	     	  Cpointsx[r] = -Cpointsx[r];
+	     }
+	 }
+	 else if(x1>x2)
+	 {	         	 
+	      Cpointsx[r] = x2+ (x1-x2)/2;
+	      if( Cpointsx[r] > x1 || Cpointsx[r] <x2)
+	      {
+	      	  Cpointsx[r] = -Cpointsx[r];
+	      }
+	 }
+	 else
+	 {
+	      ASSERTL0(false, "point not generated"); 	 
+	 }    	    
+	 
+	 
+         GenerateAddPointsNewtonIt( Cpointsx[r], Cpointsy[r],Cpointsx[r], Cpointsy[r],
+    	       streak, derstreak);    
+	 Eids[r] = Eid;
+	         
+cout<<"Newton eid="<<Eids[r]<<"  xadd="<<Cpointsx[r]<<"   yadd="<<Cpointsy[r]<<endl;      	 
+        
+    }
     //------------------------------------------------------------    
   
     //------------------------------------------------------------
@@ -870,6 +857,195 @@ cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;
         	
 	}        	
 
+	void Computestreakpositions(int nvertl, MultiRegions::ExpListSharedPtr &streak,
+    	        Array<OneD, NekDouble> &x,  Array<OneD, NekDouble> &y,
+    	        Array<OneD, NekDouble> &xold_up, Array<OneD, NekDouble> &yold_up,
+    	        Array<OneD, NekDouble> &xold_low, Array<OneD, NekDouble> &yold_low,
+    	        Array<OneD, NekDouble> &xold_c, Array<OneD, NekDouble> &yold_c,    	        
+    	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc)   	        
+	{
+    
+	     int nq = streak->GetTotPoints();	
+             Array<OneD, NekDouble> coord(2);
+             //Array<OneD, NekDouble> stvalues(nvertl,-10);
+             Array<OneD, NekDouble> derstreak(nq);
+             streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), derstreak);
+             int elmtid, offset;    
+             NekDouble U,dU;
+             NekDouble F=1000;
+             for(int q=0; q<nvertl; q++)
+             {
+
+                  NekDouble streaktmp =200;
+                  NekDouble streaktmppos=200;
+                  NekDouble streaktmpneg=-200;
+                  int ipos,ineg, it =0;                  
+                  NekDouble weightpos, weightneg;
+/*         
+           //algorithm to determine the closest streak positions using Newton iteration
+           for(int j=0; j<nq; j++)
+           {
+                if(x[j]==xold_up[q]   && y[j]<= yold_up[q] && y[j]>= yold_low[q])
+                {
+              	   if(abs(streak->GetPhys()[j])< abs(streaktmp))
+              	   {
+              	      streaktmp = streak->GetPhys()[j];
+              	      it =j;
+              	   }
+//cout<<" x="<<x[j]<<"  y="<<y[j]<<"   streak="<<streak->GetPhys()[j]<<endl;
+                   if(streak->GetPhys()[j]< streaktmppos && streak->GetPhys()[j]>0)
+                   {	                 	      
+                      streaktmppos = streak->GetPhys()[j];
+                      ipos =j;
+                   }
+                   if(streak->GetPhys()[j]>streaktmpneg && streak->GetPhys()[j]<0)
+                   {
+              	      streaktmpneg = streak->GetPhys()[j];
+              	      ineg =j;
+                   }
+                }
+            }
+            x_c[q] = x[it]; 
+           //the sign
+            
+           y_c[q]  = y[it] - (streaktmp)/dU[it];
+           ASSERTL0( y_c[q]> y[ineg] && y_c[q]<y[ipos], " wrong position");
+cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" y_pos="<<y[ipos]<<"   y_neg="<<y[ineg]<<endl;           
+*/         
+         
+         
+                    //algorithm to determine the closest points to the streak positions
+                    //using the weighted mean         
+                    for(int j=0; j<nq; j++)
+                    {
+                    	 if(x[j]==xold_up[q] && y[j]<= yold_up[q] && y[j]>= yold_low[q])
+                    	 {
+                             if(streak->GetPhys()[j]< streaktmppos && streak->GetPhys()[j]>0)
+                             {	                 	      
+                                 streaktmppos = streak->GetPhys()[j];
+                                 ipos =j;
+                             }
+                             if(streak->GetPhys()[j]>streaktmpneg && streak->GetPhys()[j]<0)
+                             {
+              	                 streaktmpneg = streak->GetPhys()[j];
+              	                 ineg =j;
+              	             }
+              
+//cout<<" x="<<x[j]<<"  y="<<y[j]<<"   streak="<<streak->GetPhys()[j]<<endl;
+			 }
+		    }
+//cout<<"closer streak points ypos="<<y[ipos]<<"   yneg="<<y[ineg]<<endl;
+	          //determine the streak y position as the result of the weighted mean
+	            xc[q]= x[ipos];
+	            weightpos = 1/(streaktmppos*streaktmppos);
+	            weightneg = 1/(streaktmpneg*streaktmpneg);
+	            yc[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
+cout<<" streak x="<<xc[q]<<"   y="<<yc[q]<<endl;
+     
+
+         //algorithm to determine the points with u of order 0.08
+/*         
+                for(int j=0; j<nq; j++)
+                {
+                       if(x[j]==xold_up[q] && y[j]<= yold_up[q] && y[j]>= yold_low[q])
+                       {
+                            if(  streak->GetPhys()[j] >0.08  
+                  	     && abs(streak->GetPhys()[j] - 0.08) < abs(streaktmppos -0.08)   
+                            )
+                           {
+//cout<<"q="<<q<<" streakpos ="<<streak->GetPhys()[j]<<endl;                  	  
+                                 streaktmppos = streak->GetPhys()[j];
+                                 ipos =j;                   
+                           }
+                  
+                           if(  streak->GetPhys()[j] < 0.08  && streak->GetPhys()[j]>0 
+                  	          && abs(streak->GetPhys()[j] - 0.08) < abs(streaktmpneg -0.08)   
+                            )
+                           {
+//cout<<"q="<<q<<" streakneg ="<<streak->GetPhys()[j]<<endl;                  	  
+                                streaktmpneg = streak->GetPhys()[j];
+                                ineg =j;                   
+                           }               
+                 
+                        }            
+                  }
+       
+                  //determine streak position as the weghted mean         
+
+                  if(streaktmppos == 200)
+                  {         	 
+                      y_c[q] = y[ineg];
+                      x_c[q] = x[ineg];             
+                  }
+                  else if(streaktmpneg == -200)
+                  {         	 
+                       y_c[q] = y[ipos];
+                       x_c[q] = x[ipos];             
+                  }
+                  else
+                  {
+                       x_c[q] = x[ipos];
+	               weightpos = 1/abs( (streaktmppos-0.08)*(streaktmppos-0.08)  );
+	               weightneg = 1/abs( (streaktmpneg-0.08)*(streaktmpneg-0.08)  );
+	               y_c[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
+	          }
+	 
+cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   streak_n="<<streaktmpneg<<endl;          
+                  if(q>0 && q< nvertl-1)
+                  {       	 
+                      ASSERTL0(y_c[q+1] < y_c[q], " the critical layer is oscillating");         
+                  }
+*/         
+              }
+              for(int e=0; e<nvertl; e++)
+              {
+              	   coord[0] =xc[e];
+              	   coord[1] =yc[e];
+                	   
+              	   elmtid = streak->GetExpIndex(coord,0.00001);
+           	   offset = streak->GetPhys_Offset(elmtid);
+           	   F = 1000;
+		   while( abs(F)> 0.00000001)
+		   {
+		   	U = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() + offset);
+		   	dU  = streak->GetExp(elmtid)->PhysEvaluate(coord, derstreak + offset);
+		   	coord[1] = coord[1] - U/dU;   
+		   	F = U;   
+		   	ASSERTL0( coord[0]==xc[e], " x coordinate must remain the same");
+              	        //stvalues[e] = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() +offset );
+//cout<<"elmtid="<<elmtid<<"  x="<<coord[0]<<"   y="<<coord[1]<<"    stvalue="<<U<<endl;
+	           }
+                   yc[e] = coord[1];
+	           //Utilities::Zerofunction(coord[0], coord[1], xtest, ytest, streak, derstreak);
+cout<<"result y="<<yc[e]<<"   streak="<<U<<endl;	           
+              }
+           
+		
+	}
+	void GenerateAddPointsNewtonIt( NekDouble &xi, NekDouble &yi,NekDouble &x0, NekDouble &y0,
+    	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction)
+	{
+		int elmtid,offset;
+		NekDouble F,U,dU;
+		Array<OneD, NekDouble> coords(2);
+		coords[0] = xi;
+		coords[1] = yi;
+		elmtid = function->GetExpIndex(coords, 0.00001);
+		offset = function->GetPhys_Offset(elmtid);
+		F =1000;
+		while( abs(F)> 0.00000001)
+	        {
+		     U = function->GetExp(elmtid)->PhysEvaluate(coords, function->GetPhys() + offset);
+		     dU  = function->GetExp(elmtid)->PhysEvaluate(coords, derfunction + offset);
+		     coords[1] = coords[1] - U/dU;   
+		     F = U;   
+		     ASSERTL0( coords[0]==xi, " x coordinate must remain the same");	             	
+	        }
+	        x0 = xi;
+	        y0 = coords[1];
+cout<<"NewtonIt result  y="<<coords[1]<<"   U="<<U<<endl;	        
+	}
+
         void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
     	    Array<OneD, NekDouble> &y_c, Array<OneD, NekDouble> &curve)
     	{
@@ -1061,6 +1237,7 @@ cout<<"coeff*x^i="<<outy[s]<<"  coeff="<<curve[g]<<"  exp="<<polorder<<endl;
                      polorder--;
 	         }
 	         Eids[s] = Eid;
+	         
 cout<<"eid="<<Eids[s]<<"  xadd="<<outx[s]<<"   yadd="<<outy[s]<<endl;            	 
             }
             
@@ -1142,7 +1319,9 @@ cout<<"eid="<<Eids[s]<<"  xadd="<<outx[s]<<"   yadd="<<outy[s]<<endl;
                    //write the new one   
 cout<<"writing.. v:"<<nextVertexNumber<<endl;	    	    	
 	    	   stringstream s;
-	    	   s << std::scientific << std::setprecision(3) <<  newx[nextVertexNumber] << "   "
+		   //we need at least 5 digits (setprecision 5) to get the streak position with
+		   // precision 10^-10
+	    	   s << std::scientific << std::setprecision(5) <<  newx[nextVertexNumber] << "   "
 	    	   << newy[nextVertexNumber] << "   " << 0.0;
 	    	   vertexnew->LinkEndChild(new TiXmlText(s.str()));      
 	    	   //TiXmlNode *newvertexBody = vertexnew->FirstChild();
@@ -1217,8 +1396,10 @@ cout<<"Eids="<<Eids[u]<<endl;
    	    	      v1 = cnt+1;
    	    	      v2 = cnt;
    	    	   }
+		   //we need at least 5 digits (setprecision 5) to get the streak position with
+		   // precision 10^-10
 	    	   stringstream s;
-	    	   s << std::scientific << std::setprecision(3) <<  x_lay[v1] << "   "
+	    	   s << std::scientific << std::setprecision(5) <<  x_lay[v1] << "   "
 	    	   << y_lay[v1] << "   " << 0.000<<"        "<< Pcurvx[indexeid]<< "   "<<
 	    	   Pcurvy[indexeid]<<"   "<<0.000 <<"       "<<x_lay[v2]<<"   "<< y_lay[v2] 
 	    	   <<"   "<< 0.000;

@@ -2230,5 +2230,7 @@ namespace Nektar
     MultiRegions::ExpListSharedPtr EquationSystem::v_GetPressure()
     {
         ASSERTL0(false, "This function is not valid for the Base class");
+		MultiRegions::ExpListSharedPtr null;
+		return null;
     }
 }

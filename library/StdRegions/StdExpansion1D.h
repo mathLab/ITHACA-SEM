@@ -140,9 +140,9 @@ namespace Nektar
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }
 			
-			virtual void v_SetUpPhysNormals(const int vertex);
+			STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int vertex);
 						
-			const NormalVector & v_GetVertexNormal(const int vertex) const;
+			STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
 
         };
 

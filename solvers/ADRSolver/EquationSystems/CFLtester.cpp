@@ -266,7 +266,9 @@ namespace Nektar
 		
 		NekDouble TimeStep;
 		int n_elements = m_fields[0]->GetExpSize();
-		NekDouble DH   = sqrt(n_elements);
+		//solve ambiguity in windows
+		NekDouble n_elem = n_elements;
+		NekDouble DH   = sqrt(n_elem);
 		int H = (int)DH;
 		int P = ExpOrder-1;
 		

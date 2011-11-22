@@ -1678,6 +1678,8 @@ namespace Nektar
 			const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
 			{
 				ASSERTL0(false, "Cannot get vertex normals for this expansion.");
+                static NormalVector result;
+                return result;
 			}	
 		
             const NormalVector & StdExpansion::v_GetSurfaceNormal() const

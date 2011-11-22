@@ -160,7 +160,8 @@ namespace Nektar
                                 bool       IsLinearNSEquation,
                                 const int  HomogeneousMode,
                                 CoupledSolverMatrices &mat,
-                                CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap);
+                                CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap,
+                                const NekDouble lambda_imag = NekConstants::kNekUnsetDouble);
 
         virtual void v_PrintSummary(std::ostream &out);
 

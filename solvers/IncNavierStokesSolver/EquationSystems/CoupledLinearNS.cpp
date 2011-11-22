@@ -156,6 +156,14 @@ namespace Nektar
         int nz;
         if(m_singleMode)
         {
+
+            NekDouble lambda_imag; 
+
+            // load imaginary componont of any potential shift
+            // Probably should be called from DriverArpack but not yet
+            // clear how to do this
+            m_session->LoadParameter("imagShift",lambda_imag,NekConstants::kNekUnsetDouble);
+            
             nz = 1;
             m_mat  = Array<OneD, CoupledSolverMatrices> (nz);
             
@@ -163,14 +171,14 @@ namespace Nektar
             
             if(m_zeroMode)
             {
-                SetUpCoupledMatrix(lambda,Advfield,IsLinearNSEquation,0,m_mat[0],m_locToGloMap[0]);
+                SetUpCoupledMatrix(lambda,Advfield,IsLinearNSEquation,0,m_mat[0],m_locToGloMap[0],lambda_imag);
             }
             else
             {
                 NekDouble beta =  2*M_PI/m_LhomZ; 
                 NekDouble lam = lambda + m_kinvis*beta*beta;
                 
-                SetUpCoupledMatrix(lam,Advfield,IsLinearNSEquation,1,m_mat[0],m_locToGloMap[0]);
+                SetUpCoupledMatrix(lam,Advfield,IsLinearNSEquation,1,m_mat[0],m_locToGloMap[0],lambda_imag);
             }
         }
         else 
@@ -339,7 +347,7 @@ namespace Nektar
      *
      */
 
-    void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap)
+    void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
         int  n,i,j,k,eid;
         int  expdim = m_graph->GetMeshDimension();
@@ -633,7 +641,16 @@ namespace Nektar
                 // space
                 
                 DNekScalMat &HelmMat = *locExp->GetLocMatrix(helmkey);
+                DNekScalMatSharedPtr MassMat;
                 
+                if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
+                {
+                    LocalRegions::MatrixKey masskey(StdRegions::eMass,
+                                                    locExp->DetExpansionType(),
+                                                    *locExp);
+                    MassMat = locExp->GetLocMatrix(masskey);
+                }
+
                 Array<OneD, NekDouble> Advtmp;
                 Array<OneD, Array<OneD, NekDouble> > AdvDeriv(nvel*nvel);
                 // Use ExpList phys array for temporaary storage
@@ -641,7 +658,7 @@ namespace Nektar
                 int phys_offset = m_fields[m_velocity[0]]->GetPhys_Offset(eid);
                 int nv;
                 int npoints = locExp->GetTotPoints();
-
+                
                 // Calculate derivative of base flow 
                 if(IsLinearNSEquation)
                 {
@@ -692,6 +709,35 @@ namespace Nektar
                         }
                     }
                     
+                    if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
+                    {
+                        for(k = 0; k < nvel; ++k)
+                        {
+                            for(j = 0; j < nbmap; ++j)
+                            {
+                                (*Ah)(i+2*k*nbmap,j+(2*k+1)*nbmap) -= lambda_imag*(*MassMat)(bmap[i],bmap[j]);
+                            }
+
+                            for(j = 0; j < nbmap; ++j)
+                            {
+                                (*Ah)(i+(2*k+1)*nbmap,j+2*k*nbmap) += lambda_imag*(*MassMat)(bmap[i],bmap[j]);
+                            }
+
+                            for(j = 0; j < nimap; ++j)
+                            {
+                                (*B)(i+2*k*nbmap,j+(2*k+1)*nimap) -= lambda_imag*(*MassMat)(bmap[i],imap[j]);
+                            }
+
+                            for(j = 0; j < nimap; ++j)
+                            {
+                                (*B)(i+(2*k+1)*nbmap,j+2*k*nimap) += lambda_imag*(*MassMat)(bmap[i],imap[j]);
+                            }
+
+                        }
+                    }
+
+
+
                     for(k = 0; k < nvel; ++k)
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
@@ -839,6 +885,32 @@ namespace Nektar
                         for(j = 0; j < nimap; ++j)
                         {
                             (*D)(i+k*nimap,j+k*nimap) += m_kinvis*HelmMat(imap[i],imap[j]);
+                        }
+                    }
+
+                    if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
+                    {
+                        for(k = 0; k < nvel; ++k)
+                        {
+                            for(j = 0; j < nbmap; ++j) // C set up as transpose
+                            {
+                                (*C)(j+2*k*nbmap,i+(2*k+1)*nimap) += lambda_imag*(*MassMat)(bmap[j],imap[i]);
+                            }
+
+                            for(j = 0; j < nbmap; ++j) // C set up as transpose
+                            {
+                                (*C)(j+(2*k+1)*nbmap,i+2*k*nimap) -= lambda_imag*(*MassMat)(bmap[j],imap[i]);
+                            }
+
+                            for(j = 0; j < nimap; ++j)
+                            {
+                                (*D)(i+2*k*nimap,j+(2*k+1)*nimap) -= lambda_imag*(*MassMat)(imap[i],imap[j]);
+                            }
+
+                            for(j = 0; j < nimap; ++j)
+                            {
+                                (*D)(i+(2*k+1)*nimap,j+2*k*nimap) += lambda_imag*(*MassMat)(imap[i],imap[j]);
+                            }
                         }
                     }
 

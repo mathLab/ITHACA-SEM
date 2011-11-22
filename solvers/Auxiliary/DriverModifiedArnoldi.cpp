@@ -73,16 +73,9 @@ namespace Nektar
             
         // Print session parameters
         out << "\tArnoldi solver type   : Modified Arnoldi" << endl;
-        if(m_TimeSteppingAlgorithm)
-        {
-            out << "\tEvolution operator    : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
-        }
-        out << "\tKrylov-space dimension: " << m_kdim << endl;
-        out << "\tNumber of vectors:      " << m_nvec << endl;
-        out << "\tMax iterations:         " << m_nits << endl;
-        out << "\tEigenvalue tolerance:   " << m_evtol << endl;
-        out << "=======================================================================" << endl;
-        
+
+        DriverArnoldi::ArnoldiSummary(out);
+
         m_equ[m_nequ - 1]->DoInitialise();
 	
         //FwdTrans Initial conditions to be in Coefficient Space
@@ -395,7 +388,7 @@ namespace Nektar
                 im_ev  = wi[i];
                 abs_ev = hypot (re_ev, im_ev);
                 ang_ev = atan2 (im_ev, re_ev);
-                re_Aev = -wr[i]/(abs_ev*abs_ev);
+                re_Aev = -wr[i]/(abs_ev*abs_ev) + m_realShift;
                 im_Aev =  wi[i]/(abs_ev*abs_ev);
                 evlout << setw(2)  << i
                        << setw(12) << abs_ev

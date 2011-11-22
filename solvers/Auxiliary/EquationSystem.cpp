@@ -95,7 +95,7 @@ namespace Nektar
         m_sessionName = m_filename;
         m_sessionName = m_sessionName.substr(0,
                                 m_sessionName.find_last_of("."));
-
+        
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_filename);
 
@@ -166,7 +166,7 @@ namespace Nektar
             {
                 m_useFFT = true;
             }
-			
+            
 			if(m_session->DefinesSolverInfo("DEALIASING"))
 			{
 				m_dealiasing = true;

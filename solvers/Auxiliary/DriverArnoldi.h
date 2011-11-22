@@ -46,6 +46,8 @@ namespace Nektar
     public:
         friend class MemoryManager<DriverArnoldi>;
 		
+        void      ArnoldiSummary(std::ostream &out);
+
     protected:
         int       m_kdim; /// Dimension of Krylov subspace
         int       m_nvec; /// Number of vectors to test 
@@ -57,6 +59,8 @@ namespace Nektar
         int       m_infosteps; /// interval to dump information if required. 
 
         int       m_nfields;
+        NekDouble m_realShift;
+        NekDouble m_imagShift;
 
         Array<OneD, NekDouble> m_real_evl;
         Array<OneD, NekDouble> m_imag_evl;

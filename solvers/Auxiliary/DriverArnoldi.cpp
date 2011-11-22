@@ -80,8 +80,48 @@ namespace Nektar
         m_session->LoadParameter("nvec",  m_nvec,  2);
         m_session->LoadParameter("nits",  m_nits,  500);
         m_session->LoadParameter("evtol", m_evtol, 1e-06);
+
+        m_session->LoadParameter("realShift", m_realShift, 0.0);
+        m_equ[0]->SetLambda(m_realShift);
+
+        m_session->LoadParameter("imagShift", m_imagShift, 0.0);
     }
 
+    void DriverArnoldi::ArnoldiSummary(std::ostream &out)
+    {
+
+        if(m_session->DefinesSolverInfo("SingleMode"))
+        {
+            out << "\tSingle Fourier mode    : true " << endl;
+            ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
+        }
+        else
+        {
+            out << "\tSingle Fourier mode    : false " << endl;
+        }
+        if(m_session->DefinesSolverInfo("BetaZero"))           
+        {
+            out << "\tBeta set to Zero       : true (overrides LHom)" << endl;
+        }
+        else
+        {
+            out << "\tBeta set to Zero       : false " << endl;
+        }
+
+        if(m_TimeSteppingAlgorithm)
+        {
+            out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
+        }
+        else
+        {
+            out << "\tShift (Real,Imag)      : " << m_realShift <<"," << m_imagShift <<  endl;
+        }
+        out << "\tKrylov-space dimension : " << m_kdim << endl;
+        out << "\tNumber of vectors      : " << m_nvec << endl;
+        out << "\tMax iterations         : " << m_nits << endl;
+        out << "\tEigenvalue tolerance   : " << m_evtol << endl;
+        out << "=======================================================================" << endl;
+    }
 
     /**
      * Copy Arnoldi array to field variables which depend from

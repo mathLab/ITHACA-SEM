@@ -66,7 +66,6 @@ namespace Nektar
         int m_maxnev;			//maximum number of eigenvalues requested
         int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
 
-        NekDouble m_realShift;
 
 //        std::string m_arpackProblemType;   //Arpack input for problem type
         /// Constructor
@@ -75,9 +74,6 @@ namespace Nektar
         /// Destructor
         virtual ~DriverArpack();
         
-
-        void ArpackSummary(std::ostream &out);
-
         /// Virtual function for initialisation implementation.
         virtual void v_InitObject(ostream &out = cout);
 

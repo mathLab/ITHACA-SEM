@@ -82,11 +82,7 @@ namespace Nektar
         m_maxn   = 1000000; // Maximum size of the problem
         m_maxnev = 200;      // maximum number of eigenvalues requested
         m_maxncv = 500;     // Largest number of basis vector used in Implicitly Restarted Arnoldi		
-	
-        m_session->LoadParameter("realShift", m_realShift, 0.0);
-        
-        m_equ[0]->SetLambda(m_realShift);
-                
+	                
         // Error alerts
         ASSERTL0(m_nvec <= m_maxnev,"NEV is greater than MAXNEV");
         ASSERTL0(m_kdim <= m_maxncv,"NEV is greater than MAXNEV");
@@ -94,7 +90,12 @@ namespace Nektar
 	
         m_equ[0]->PrintSummary(out);
         
-        ArpackSummary(out);
+        // Print session parameters
+        out << "\tArnoldi solver type    : Arpack" << endl;
+
+        out << "\tArpack problem type    : ";
+        out << ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")] << endl;
+        DriverArnoldi::ArnoldiSummary(out);
         
         m_equ[m_nequ - 1]->DoInitialise();
 		
@@ -102,40 +103,7 @@ namespace Nektar
         m_equ[m_nequ-1] ->TransPhysToCoeff();
 
     }
-    
-    void DriverArpack::ArpackSummary(std::ostream &out)
-    {
-        // Print session parameters
-        out << "\tArnoldi solver type    : Arpack" << endl;
 
-        out << "\tArpack problem type    : ";
-        out << ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")] << endl;
-
-        if(m_session->DefinesSolverInfo("SingleMode"))
-        {
-            out << "\tSingle Fourier mode    : true " << endl;
-            ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
-        }
-        else
-        {
-            out << "\tSingle Fourier mode    : false " << endl;
-        }
-        if(m_session->DefinesSolverInfo("BetaZero"))           
-        {
-            out << "\tBeta set to Zero       : true (overrides LHom)" << endl;
-        }
-        else
-        {
-            out << "\tBeta set to Zero       : false " << endl;
-        }
-        out << "\tReal Shift             : " << m_realShift << endl;
-        out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
-        out << "\tKrylov-space dimension : " << m_kdim << endl;
-        out << "\tNumber of vectors      : " << m_nvec << endl;
-        out << "\tMax iterations         : " << m_nits << endl;
-        out << "\tEigenvalue tolerance   : " << m_evtol << endl;
-        out << "=======================================================================" << endl;
-    }
 
     void DriverArpack::v_Execute(ostream &out)
         
@@ -187,7 +155,8 @@ namespace Nektar
         iparam[3] = 1;      // blocksize to be used for recurrence
         iparam[4] = 0;      // number of converged ritz eigenvalues
         iparam[5] = 0;      // (deprecated)
-        if(fabs(m_realShift) > NekConstants::kNekZeroTol) // use shift if m_realShift > 1e-12
+        if((fabs(m_realShift) > NekConstants::kNekZeroTol)|| // use shift if m_realShift > 1e-12
+           (fabs(m_imagShift) > NekConstants::kNekZeroTol))        
         {
             iparam[6] = 3;
         }
@@ -281,7 +250,7 @@ namespace Nektar
         z          = Array<OneD, NekDouble> (n*(m_nvec+1));
         
         sigmar     = m_realShift; 
-        sigmai     = 0.0;
+        sigmai     = m_imagShift;
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
         Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, 

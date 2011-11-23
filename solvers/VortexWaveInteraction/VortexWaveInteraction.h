@@ -47,13 +47,15 @@ namespace Nektar
     {
         eFixedAlphaWaveForcing,
         eFixedWaveForcing,
+        eFixedWaveForcingWithSubIterationOnAlpha,
         eVWIIterationTypeSize
     };
 
     const std::string VWIIterationTypeMap[] = 
     {
         "FixedAlphaWaveForcing",
-        "FixedWaveForcing"
+        "FixedWaveForcing",
+        "FixedWaveForcingWithSubIterationOnAlpha"
     };
 
     class VortexWaveInteraction
@@ -67,11 +69,12 @@ namespace Nektar
         void ExecuteStreak(void);
         void ExecuteWave(void);
 
-        void ExecuteLoop(void);
+        void ExecuteLoop(bool CalcWaveForce = true);
         void SaveLoopDetails(string dir, int i);
 
         void CalcNonLinearWaveForce(void);
         void SaveFile(string fileend, string dir, int n);
+        void MoveFile(string fileend, string dir, int n);
         void CopyFile(string file1end, string file2end);
 
 

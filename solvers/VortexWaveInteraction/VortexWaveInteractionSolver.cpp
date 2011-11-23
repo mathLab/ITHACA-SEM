@@ -109,6 +109,68 @@ int main(int argc, char *argv[])
                 }
             }
             break;
+        case eFixedWaveForcingWithSubIterationOnAlpha:
+            {
+                int i;
+                int nouter_iter = vwi.GetNOuterIterations();
+                bool exit_iteration = false;
+                
+                while(exit_iteration == false)
+                {
+                    bool exit_alphaIter = false;
+
+                    vwi.ExecuteLoop(false);
+
+                    // Sub iterate Alpha
+                    for(i = 0; i < vwi.GetIterEnd(); ++i)
+                    {
+                        vwi.SaveLoopDetails("Save", i);
+                                                
+                        vwi.AppendEvlToFile("AlphaIter.his",i);            
+                        
+                        exit_alphaIter = vwi.CheckIfAtNeutralPoint();
+                        if(exit_alphaIter == false)
+                        {
+                            vwi.UpdateAlpha(i+1);
+                            vwi.ExecuteWave();
+                        }
+                        else
+                        {
+                            vwi.CalcNonLinearWaveForce();
+                            break;
+                        }
+                    }
+                    
+                    // check to see if growth was converged. 
+                    if(i == vwi.GetIterEnd())
+                    {
+                        cout << "Failed to converge growth rate in" << 
+                            " inner iteration after " << vwi.GetIterEnd() 
+                             << " loops" << endl;
+                        exit(1);
+                    }
+                    
+                    vwi.MoveFile("AlphaIter.his","Save_Outer", nouter_iter);
+                    vwi.SaveLoopDetails("Save_Outer", nouter_iter);
+                    vwi.AppendEvlToFile("OuterIter.his",nouter_iter++);            
+
+                    // assume that if only previous inner loop has
+                    // only done one iteration then we are at neutral
+                    // point
+                    if (i == 1)
+                    {
+                        exit_iteration == true;
+                    }
+
+
+                    if(nouter_iter >= vwi.GetMaxOuterIterations())
+                    {
+                        cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
+                        exit_iteration == true;
+                    }
+                }
+            }
+            break;
         default:
             ASSERTL0(false,"Unknown iteration type");
         }

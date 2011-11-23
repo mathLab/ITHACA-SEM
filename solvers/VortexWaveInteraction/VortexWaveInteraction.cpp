@@ -496,7 +496,7 @@ namespace Nektar
         m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
     }
     
-    void VortexWaveInteraction::SaveFile(string fileend, string dir, int n)
+    void VortexWaveInteraction::SaveFile(string file, string dir, int n)
     {
         static map<string,int> opendir;
 
@@ -508,53 +508,74 @@ namespace Nektar
             opendir[dir] = 1;
         }
         
-        string cpfile   = m_sessionName + fileend;
-        string savefile = dir + "/" + cpfile + "." + boost::lexical_cast<std::string>(n);
-        string syscall  = "cp -f "  + cpfile + " " + savefile; 
+        string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
+        string syscall  = "cp -f "  + file + " " + savefile; 
 
-        system(syscall.c_str());
-    }
+         system(syscall.c_str());
+     }
 
-    void VortexWaveInteraction::CopyFile(string file1end, string file2end)
+
+    void VortexWaveInteraction::MoveFile(string file, string dir, int n)
     {
-        string cpfile1   = m_sessionName + file1end;
-        string cpfile2   = m_sessionName + file2end;
-        string syscall  = "cp -f "  + cpfile1 + " " + cpfile2; 
+        static map<string,int> opendir;
 
-        system(syscall.c_str());
-    }
+        if(opendir.find(dir) == opendir.end())
+        {
+            // make directory and presume will fail if it already exists
+            string mkdir = "mkdir " + dir;
+            system(mkdir.c_str());
+            opendir[dir] = 1;
+        }
+        
+        string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
+        string syscall  = "mv -f "  + file + " " + savefile; 
 
-    void VortexWaveInteraction::AppendEvlToFile(string file, int n)
-    {
-        FILE *fp;
-        fp = fopen(file.c_str(),"a");
-        fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha[0], m_leading_real_evl[0],m_leading_imag_evl[0]);
-        fclose(fp);
-    }
+         system(syscall.c_str());
+     }
 
-    void VortexWaveInteraction::SaveLoopDetails(std::string SaveDir, int i)
+     void VortexWaveInteraction::CopyFile(string file1end, string file2end)
+     {
+         string cpfile1   = m_sessionName + file1end;
+         string cpfile2   = m_sessionName + file2end;
+         string syscall  = "cp -f "  + cpfile1 + " " + cpfile2; 
 
-    {
-        // Save NS restart file
-        SaveFile(".rst",SaveDir,i);
+         system(syscall.c_str());
+     }
+
+     void VortexWaveInteraction::AppendEvlToFile(string file, int n)
+     {
+         FILE *fp;
+         fp = fopen(file.c_str(),"a");
+         fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha[0], m_leading_real_evl[0],m_leading_imag_evl[0]);
+         fclose(fp);
+     }
+
+     void VortexWaveInteraction::SaveLoopDetails(std::string SaveDir, int i)
+
+     {
+         // Save NS restart file
+        SaveFile(m_sessionName + ".rst",SaveDir,i);
         // Save Streak Solution
-        SaveFile("_streak.fld",SaveDir,i);
+        SaveFile(m_sessionName + "_streak.fld",SaveDir,i);
         // Save Wave solution output
-        SaveFile(".evl",SaveDir,i);
-        SaveFile("_eig_0",SaveDir,i);
+        SaveFile(m_sessionName + ".evl",SaveDir,i);
+        SaveFile(m_sessionName + "_eig_0",SaveDir,i);
         // Save new forcing file
-        SaveFile(".vwi",SaveDir,i+1);
+        SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
     }
 
-    void VortexWaveInteraction::ExecuteLoop(void)
+    void VortexWaveInteraction::ExecuteLoop(bool CalcWaveForce)
     {
         ExecuteRoll();
 
         ExecuteStreak();
  
         ExecuteWave();
-                   
-        CalcNonLinearWaveForce();
+
+        if(CalcWaveForce)
+        {
+            CalcNonLinearWaveForce();
+        }
     }
 
     bool VortexWaveInteraction::CheckEigIsStationary(void)
@@ -574,7 +595,7 @@ namespace Nektar
         // See if real and imaginary growth have converged to with m_eigRelTol
         if((fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_eigRelTol))
         {
-            if((fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) < m_eigRelTol)||fabs(m_leading_imag_evl[0]) < 1e-6)
+            if((fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) < m_eigRelTol)||(fabs(m_leading_imag_evl[0]) < 1e-6))
             {
                 previous_real_evl = m_leading_real_evl[0];
                 previous_imag_evl = m_leading_imag_evl[0];
@@ -597,19 +618,21 @@ namespace Nektar
     // in m_neutralPointTol
     bool VortexWaveInteraction::CheckIfAtNeutralPoint(void)
     {
-        if((m_leading_real_evl[0]*m_leading_real_evl[0] + m_leading_imag_evl[0]*m_leading_imag_evl[0]) < m_neutralPointTol*m_neutralPointTol)
+        bool returnval = false;
+
+        if((m_leading_real_evl[0]*m_leading_real_evl[0] + 
+            m_leading_imag_evl[0]*m_leading_imag_evl[0]) < 
+           m_neutralPointTol*m_neutralPointTol)
         {
-            return true;
-        }
-        else
-        {
-            if(fabs(m_leading_imag_evl[0]) > 1e-2)
-            {
-                cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
-            }
-            return false;
+            returnval = true;
         }
 
+        if(fabs(m_leading_imag_evl[0]) > 1e-2)
+        {
+            cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
+        }
+
+        return returnval;
     }
     
     void VortexWaveInteraction::UpdateAlpha(int outeriter)

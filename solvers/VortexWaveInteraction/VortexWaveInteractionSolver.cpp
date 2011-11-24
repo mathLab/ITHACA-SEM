@@ -157,16 +157,16 @@ int main(int argc, char *argv[])
                     // assume that if only previous inner loop has
                     // only done one iteration then we are at neutral
                     // point
-                    if (i == 1)
+                    if (i == 0)
                     {
-                        exit_iteration == true;
+                        exit_iteration = true;
                     }
 
 
                     if(nouter_iter >= vwi.GetMaxOuterIterations())
                     {
                         cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
-                        exit_iteration == true;
+                        exit_iteration = true;
                     }
                 }
             }

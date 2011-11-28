@@ -56,7 +56,7 @@ namespace Nektar
 
         // Create Incompressible NavierStokesSolver session reader.
         m_sessionVWI = LibUtilities::SessionReader::CreateInstance(argc, argv, VWIFilenames);
-
+        
 
         m_sessionVWI->LoadParameter("AlphaStep",m_alphaStep,0.05);
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
@@ -82,8 +82,10 @@ namespace Nektar
             m_iterEnd = 1; 
         }
 
-        m_waveForceMag = m_sessionVWI->GetParameter("WaveForceMag");
-
+        m_waveForceMag     = m_sessionVWI->GetParameter("WaveForceMag");
+        m_sessionVWI->LoadParameter("WaveForceMagStep",m_waveForceMagStep,0.01);
+        m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
+        
         m_alpha = Array<OneD, NekDouble> (storesize);
         m_leading_real_evl = Array<OneD, NekDouble> (storesize);
         m_leading_imag_evl = Array<OneD, NekDouble> (storesize);
@@ -547,6 +549,14 @@ namespace Nektar
          FILE *fp;
          fp = fopen(file.c_str(),"a");
          fprintf(fp, "%d: %lf %16.12le  %16.12le\n",n, m_alpha[0], m_leading_real_evl[0],m_leading_imag_evl[0]);
+         fclose(fp);
+     }
+
+     void VortexWaveInteraction::AppendEvlToFile(string file, NekDouble WaveForceMag)
+     {
+         FILE *fp;
+         fp = fopen(file.c_str(),"a");
+         fprintf(fp, "%lf %lf %16.12le  %16.12le\n",WaveForceMag, m_alpha[0], m_leading_real_evl[0],m_leading_imag_evl[0]);
          fclose(fp);
      }
 

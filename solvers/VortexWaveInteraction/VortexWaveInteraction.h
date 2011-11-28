@@ -83,6 +83,7 @@ namespace Nektar
         void UpdateAlpha(int n);
 
         void AppendEvlToFile(std::string file, int n);
+        void AppendEvlToFile(std::string file, NekDouble WaveForceMag);
 
         int GetIterStart()
         {
@@ -109,6 +110,27 @@ namespace Nektar
             return m_maxOuterIterations;
         }
 
+        NekDouble GetWaveForceMag(void)
+        {
+            return m_waveForceMag;
+        }
+
+        NekDouble GetWaveForceMagStep(void)
+        {
+            return m_waveForceMagStep;
+        }
+
+        int GetMaxWaveForceMagIter(void)
+        {
+            return m_maxWaveForceMagIter;
+        }
+        
+        void UpdateWaveForceMag(NekDouble mag)
+        {
+            m_waveForceMag = mag; 
+        }
+
+
         Array<OneD, int> GetReflectionIndex(void);
 
     protected:
@@ -120,7 +142,10 @@ namespace Nektar
         int m_nOuterIterations; 
         int m_maxOuterIterations; // Maximum number of outer iterations        
 
+        int m_maxWaveForceMagIter; 
+
         NekDouble m_waveForceMag;
+        NekDouble m_waveForceMagStep;
 
         Array<OneD, NekDouble> m_leading_real_evl;   /// < Leading real eigenvalue 
         Array<OneD, NekDouble> m_leading_imag_evl;   /// < Leading imaginary eigenvalue

@@ -90,10 +90,14 @@ int main(int argc, char *argv[])
 
 void Mvdir(string dir, NekDouble dir_ending)
 {
+    string saveOuterIter = "mv -r OuterIter.his "+ dir;
+    system(saveOuterIter.c_str());
+
     string newdir  = dir + boost::lexical_cast<std::string>(dir_ending);
     string syscall = "mv -f " + dir + " " + newdir;
 
     system(syscall.c_str());
+
 }
 
 void DoFixedForcingIteration(VortexWaveInteraction &vwi)

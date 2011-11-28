@@ -564,7 +564,7 @@ namespace Nektar
 
      {
          // Save NS restart file
-        SaveFile(m_sessionName + ".rst",SaveDir,i);
+        SaveFile(m_sessionName + ".rst",SaveDir,i+1);
         // Save Streak Solution
         SaveFile(m_sessionName + "_streak.fld",SaveDir,i);
         // Save Wave solution output

@@ -596,6 +596,7 @@ namespace Nektar
         if(previous_real_evl == -1.0)
         {
             previous_real_evl = m_leading_real_evl[0];
+            previous_imag_evl = m_leading_imag_evl[0];
             return false;
         }
 
@@ -605,10 +606,10 @@ namespace Nektar
         // See if real and imaginary growth have converged to with m_eigRelTol
         if((fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_eigRelTol))
         {
+            previous_real_evl = m_leading_real_evl[0];
+            previous_imag_evl = m_leading_imag_evl[0];
             if((fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) < m_eigRelTol)||(fabs(m_leading_imag_evl[0]) < 1e-6))
             {
-                previous_real_evl = m_leading_real_evl[0];
-                previous_imag_evl = m_leading_imag_evl[0];
                 return true;
             }
         }

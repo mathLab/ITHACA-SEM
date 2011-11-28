@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
                 Mvdir("Save_Outer",WaveForce);
             }
 
-            vwi.UpdateWaveForceMag(WaveForce - vwi.GetWaveForceMagStep());
+            vwi.UpdateWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
         }
     }
     catch (const std::runtime_error& e)
@@ -90,14 +90,19 @@ int main(int argc, char *argv[])
 
 void Mvdir(string dir, NekDouble dir_ending)
 {
+    // save OuterIter.his if exists
     string saveOuterIter = "mv -r OuterIter.his "+ dir;
     system(saveOuterIter.c_str());
 
+    // Mv directory
     string newdir  = dir + boost::lexical_cast<std::string>(dir_ending);
     string syscall = "mv -f " + dir + " " + newdir;
 
     system(syscall.c_str());
 
+    // make new directory
+    syscall = "mkdir " + dir;
+    system(syscall.c_str());
 }
 
 void DoFixedForcingIteration(VortexWaveInteraction &vwi)

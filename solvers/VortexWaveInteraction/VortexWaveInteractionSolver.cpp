@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
             
             vwi.AppendEvlToFile("ConvergedSolns",WaveForce);            
 
+            vwi.UpdateWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
             // Save data directories. 
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
             {
@@ -72,9 +73,10 @@ int main(int argc, char *argv[])
             else
             {
                 Mvdir("Save_Outer",WaveForce);
+	        // Execute Another loop so that not same initial conditions as last iteration
+	        vwi.ExecuteLoop();
             }
 
-            vwi.UpdateWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
         }
     }
     catch (const std::runtime_error& e)
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
 void Mvdir(string dir, NekDouble dir_ending)
 {
     // save OuterIter.his if exists
-    string saveOuterIter = "mv -r OuterIter.his "+ dir;
+    string saveOuterIter = "mv -f OuterIter.his "+ dir;
     system(saveOuterIter.c_str());
 
     // Mv directory

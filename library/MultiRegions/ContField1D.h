@@ -72,6 +72,9 @@ namespace Nektar
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ContField1D(const ContField1D &In);
 
+            /// Copy constructor.
+            MULTI_REGIONS_EXPORT ContField1D( const LibUtilities::SessionReaderSharedPtr &pSession,
+                                              const ExpList1D & In);
             /// Destructor
             MULTI_REGIONS_EXPORT ~ContField1D();
 

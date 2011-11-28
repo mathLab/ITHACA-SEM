@@ -79,6 +79,7 @@ namespace Nektar
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId);
 
+
             /// Constructor for the 2D expansion mappings with boundary
             /// conditions.
             MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(

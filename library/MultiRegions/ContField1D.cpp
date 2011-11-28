@@ -150,8 +150,25 @@ namespace Nektar
         {
         }
 
+        /**
+         * Constructs a 1D continuous field as a copy of an existing explist 1D field
+         * and adding all the boundary conditions.
+         * @param   In          Existing explist1D field .
+         */
+         ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession, const ExpList1D & In):
+            DisContField1D(In),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                ::AllocateSharedPtr(pSession,m_ncoeffs, In);
 
-
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+	}           
+            
         /**
          *
          */

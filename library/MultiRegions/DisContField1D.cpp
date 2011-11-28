@@ -151,6 +151,15 @@ namespace Nektar
 
 
         /**
+         * Constructs a field as a copy of an existing explist1D field.
+         * @param   In          Existing ExpList1D object to copy.
+         */
+        DisContField1D::DisContField1D(const ExpList1D &In):
+            ExpList1D(In)
+	{
+	}
+
+        /**
          *
          */
         DisContField1D::~DisContField1D()

@@ -61,6 +61,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap();
             /// Constructor with a communicator
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(const LibUtilities::SessionReaderSharedPtr &pSession);
+
             /// Constructor for next level in multi-level static condensation.
             MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);

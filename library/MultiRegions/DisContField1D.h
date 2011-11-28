@@ -70,6 +70,10 @@ namespace Nektar
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
 
+            /// Constructs a 1D discontinuous field based on an existing field.
+	    /// (needed in order to use ContField( const ExpList1D &In) constructor
+            MULTI_REGIONS_EXPORT DisContField1D(const ExpList1D &In);
+
             /// Destructor.
             MULTI_REGIONS_EXPORT ~DisContField1D();
 			

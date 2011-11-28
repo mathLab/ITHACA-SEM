@@ -130,7 +130,6 @@ namespace Nektar
             CalculateFullSystemBandWidth();
         }
 
-
         /**
          *
          */
@@ -233,7 +232,6 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr locSegExp;
 
             int nbnd = bndCondExp.num_elements();
-
             m_staticCondLevel                = 0;
             m_signChange                     = false;
             m_numPatches                     = locExpVector.size();

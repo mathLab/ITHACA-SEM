@@ -32,17 +32,17 @@ int main(int argc, char *argv[])
     void Extractlayerdata(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
-    	    MultiRegions::ExpList1DSharedPtr &outfieldx,
-       	    MultiRegions::ExpList1DSharedPtr &outfieldy,
+    	    MultiRegions::ContField1DSharedPtr &outfieldx,
+       	    MultiRegions::ContField1DSharedPtr &outfieldy,
        	    MultiRegions::ExpListSharedPtr &streak);
     void Manipulate(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &infields,  
     	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldx,
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &outfieldy,
+       	       Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldy,
        	       MultiRegions::ExpListSharedPtr &streak);
     void WriteBcs(string variable, int region, string fieldfile, SpatialDomains::MeshGraphSharedPtr &mesh, 
-    	    MultiRegions::ExpList1DSharedPtr &outregionfield);
+    	    MultiRegions::ContField1DSharedPtr &outregionfield);
     void WriteFld(string outfile, SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD,
     	                       MultiRegions::ExpListSharedPtr> &fields );
     
@@ -230,18 +230,38 @@ cout<<"plane="<<j<<endl;
     //---------------------------------------------------------------   
 
     //set 1D output fields:
-    //Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions();   
-    //Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldy= fields[1]->GetBndCondExpansions();
+    //initialise fields
+    const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+/*
     MultiRegions::ExpList1DSharedPtr outfieldx;    		
     MultiRegions::ExpList1DSharedPtr outfieldy;
-
-    //initialie fields
-    const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-    //declarecoeffsphysarray?????????!!!! true?!      
     outfieldx = MemoryManager<MultiRegions::ExpList1D>
                 ::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);    
     outfieldy = MemoryManager<MultiRegions::ExpList1D>
     		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+*/
+
+    MultiRegions::ExpList1DSharedPtr outfieldxtmp;    		
+    MultiRegions::ExpList1DSharedPtr outfieldytmp;
+    MultiRegions::ContField1DSharedPtr outfieldx;    		
+    MultiRegions::ContField1DSharedPtr outfieldy;
+    //initialie fields
+    //const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+    //declarecoeffsphysarray?????????!!!! true?!      
+
+    outfieldxtmp = MemoryManager<MultiRegions::ExpList1D>
+                ::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);    
+    outfieldytmp = MemoryManager<MultiRegions::ExpList1D>
+    		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+
+    outfieldx = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(vSession, *outfieldxtmp);
+
+    outfieldy = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(vSession, *outfieldytmp);    
+   int a = outfieldy->GetNcoeffs();
+   int a1 = outfieldytmp->GetNcoeffs();
+cout<<"kokok  a="<<a<<"  a1="<<a1<<endl;  
 //YOU NEED TO DEFINE THE OUTFIELDS AS ContField2D to use them in the 2D NS!!!!!!!!!!!
 //(not 3DHomogeneous1D!!!!!!!
 
@@ -457,8 +477,8 @@ cout<<"OOOK"<<endl;
        void  Extractlayerdata(Array<OneD, int> Iregions,int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,
        	       SpatialDomains::BoundaryConditions &bcs,
        	       Array<OneD,MultiRegions::ExpListSharedPtr> &infields, 
-       	       MultiRegions::ExpList1DSharedPtr &outfieldx,
-       	       MultiRegions::ExpList1DSharedPtr &outfieldy,
+       	       MultiRegions::ContField1DSharedPtr &outfieldx,
+       	       MultiRegions::ContField1DSharedPtr &outfieldy,
        	       MultiRegions::ExpListSharedPtr &streak)
         {
             //3 I regions are expected: (the layer is the last region)
@@ -743,7 +763,7 @@ cout<<"extract tangent for edge="<<k<<endl;
 	             tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
                      for(int e=0; e< nqedge; e++)
                      {
-//cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   nedges="<<nedges<<endl; 
+cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl; 
 //cout<<"tannn tx="<<tangents[0][e]<<"   ty="<<tangents[1][e]<<endl;
                           nx[k*nqedge +e] = normals[0][e];
                           ny[k*nqedge +e] = normals[1][e];
@@ -838,12 +858,12 @@ cout<<"derivative of the pressure"<<endl;
 
             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS,Rephysreg,dP_re);   
             Ilayer->GetPlane(1)->PhysDeriv(MultiRegions::eS,Imphysreg,dP_im);   
-            //try to smooth the derivative:
+            //attempt to smooth the derivative:
             Array<OneD, NekDouble> dP_re_coeffs (Nregcoeffs); 
             Array<OneD, NekDouble> dP_im_coeffs (Nregcoeffs);   
             Vmath::Vcopy(nq1D,dP_re,1,Ilayer->GetPlane(0)->UpdatePhys(),1);
             
-	    //Ilayer->GetPlane(0)->FwdTrans(Ilayer->GetPlane(0)->UpdatePhys(), dP_re_coeffs);
+	    //outfieldx->FwdTrans(Ilayer->GetPlane(0)->UpdatePhys(), dP_re_coeffs);
 	    //Ilayer->GetPlane(1)->FwdTrans(dP_im, dP_im_coeffs);
 	    //Ilayer->GetPlane(0)->BwdTrans(dP_re_coeffs, dP_re);
 	    //Ilayer->GetPlane(1)->BwdTrans(dP_im_coeffs, dP_im);
@@ -866,8 +886,8 @@ cout<<"dim streak="<<stphysreg.num_elements()<<endl;
 	    //attempting to smooth mu field...
 cout<<"ncoeffs="<<Ndowncoeffs<<endl;	    
 	    Array<OneD, NekDouble> dU_coeffs (Nregcoeffs);
-	    Ilayer->GetPlane(0)->FwdTrans(dUdown, dU_coeffs);
-	    Ilayer->GetPlane(0)->BwdTrans(dU_coeffs, dUdown);
+	    outfieldx->->FwdTrans(dUdown, dU_coeffs);
+	    outfieldx->->BwdTrans(dU_coeffs, dUdown);
 */	    
 	    Array<OneD, NekDouble> mu53  (nq1D);
 	    Array<OneD, NekDouble> d2v  (nq1D);	    
@@ -885,13 +905,13 @@ cout<<"ncoeffs="<<Ndowncoeffs<<endl;
             
 	    //attempting to smooth field...	    
 	    Array<OneD, NekDouble> prod_coeffs (Nregcoeffs);
-	    Ilayer->GetPlane(0)->FwdTrans(d2v, prod_coeffs);
-	    Ilayer->GetPlane(0)->BwdTrans(prod_coeffs, d2v);            
+	    //outfieldx->FwdTrans(d2v, prod_coeffs);
+	    //outfieldx->BwdTrans(prod_coeffs, d2v);            
 
 	    Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, d2v ,d2v);
 	    //attempting t smooth the vjump
-	    Ilayer->GetPlane(0)->FwdTrans(d2v, prod_coeffs);
-	    Ilayer->GetPlane(0)->BwdTrans(prod_coeffs, d2v);  	    
+	    outfieldx->FwdTrans(d2v, prod_coeffs);
+	    outfieldx->BwdTrans(prod_coeffs, d2v);  	    
 	    NekDouble n0 = 2.6789385347077476337;
 
 	    Array<OneD, NekDouble> pjump(nq1D);
@@ -962,7 +982,7 @@ cout<<"tangent tx="<<tangents[0][w]<<" ty="<<tangents[1][w]<<"  x="<<x0[w]<<"  y
 	
 	
 	void WriteBcs(string variable, int region, string fieldfile,SpatialDomains::MeshGraphSharedPtr &mesh,
-		MultiRegions::ExpList1DSharedPtr &outregionfield)
+		MultiRegions::ContField1DSharedPtr &outregionfield)
 	{			
 		string   outfile = fieldfile.substr(0,fieldfile.find_last_of("."));
 		outfile +="_"+variable+"_";

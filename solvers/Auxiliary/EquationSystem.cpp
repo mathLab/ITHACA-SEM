@@ -961,8 +961,18 @@ namespace Nektar
                                = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
                    }
                    m_fields[i]->SetPhysState(true);
-                   m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+		
+				   if(m_HomogeneousType != eNotHomogeneous)
+				   {
+					   m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
                                                     m_fields[i]->UpdateCoeffs());
+				   }
+				   else 
+				   {
+					   m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+														m_fields[i]->UpdateCoeffs());
+				   }
+
                    if (m_session->GetComm()->GetRank() == 0)
                    {
                        cout << "\tField "<< m_session->GetVariable(i)

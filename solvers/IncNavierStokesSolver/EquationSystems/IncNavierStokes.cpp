@@ -244,7 +244,8 @@ namespace Nektar
                     m_fields[i]->SetPhys(fields[i]);
                     m_fields[i]->SetPhysState(true);
                 }
-                Checkpoint_Output(nchk++);
+				nchk++;
+                Checkpoint_Output(nchk);
             }
 
             

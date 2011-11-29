@@ -72,6 +72,15 @@ namespace Nektar
 
             m_ny = m_homogeneousBasis_y->GetNumPoints();
 			m_nz = m_homogeneousBasis_z->GetNumPoints();
+			
+			const LibUtilities::PointsKey Ppad_y(2*m_ny,LibUtilities::eFourierEvenlySpaced);
+			const LibUtilities::BasisKey  Bpad_y(LibUtilities::eFourier,2*m_ny,Ppad_y);
+			
+			const LibUtilities::PointsKey Ppad_z(2*m_nz,LibUtilities::eFourierEvenlySpaced);
+			const LibUtilities::BasisKey  Bpad_z(LibUtilities::eFourier,2*m_nz,Ppad_z);
+			
+			m_paddingBasis_y = LibUtilities::BasisManager()[Bpad_y];
+			m_paddingBasis_z = LibUtilities::BasisManager()[Bpad_z];
 
             m_lines = Array<OneD,ExpListSharedPtr>(m_ny*m_nz);
 
@@ -117,6 +126,111 @@ namespace Nektar
 			// Backwards trans
             Homogeneous2DTrans(inarray,outarray,false, UseContCoeffs);
         }
+		
+		void ExpListHomogeneous2D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+												   Array<OneD, NekDouble> &outarray, 
+												   bool UseContCoeffs)
+		{
+			// inarray = first term of the product
+			// outarray = second term of the product
+			// dealiased product stored in outarray
+			
+			// values entering in physical space (inarray)
+			// outarray entering in physical space
+			// it must go out in physical space too
+			
+			int npoints = outarray.num_elements(); // number of total physical points
+			int nlines  = m_lines.num_elements();  // number of lines == number of Fourier modes = number of Fourier coeff = number of points per slab
+			int nslabs  = npoints/nlines;          // number of slabs = numebr of physical points per line
+			
+			/////////////////////////////////////////////////////////////////////////////
+			// Creating the padded Fourire system (2 times the original one)
+			// New system of dimension 2(N*M)= 2*(m_ny*m_nz)
+			
+			// Matrices generation
+			DNekMatSharedPtr    MatFwd;
+			DNekMatSharedPtr    MatBwd;
+			
+			StdRegions::StdQuadExp StdQuad(m_paddingBasis_y->GetBasisKey(),m_paddingBasis_z->GetBasisKey());
+			
+			StdRegions::StdMatrixKey matkey1(StdRegions::eFwdTrans,StdQuad.DetExpansionType(),StdQuad);
+			StdRegions::StdMatrixKey matkey2(StdRegions::eBwdTrans,StdQuad.DetExpansionType(),StdQuad);
+			
+			MatFwd = StdQuad.GetStdMatrix(matkey1);
+			MatBwd = StdQuad.GetStdMatrix(matkey2);
+			
+			/////////////////////////////////////////////////////////////////////////////
+			Array<OneD, NekDouble> V1(npoints);
+			Array<OneD, NekDouble> V2(npoints);
+			Array<OneD, NekDouble> V1V2(npoints);
+			
+			HomogeneousFwdTrans(inarray,V1,UseContCoeffs);
+			HomogeneousFwdTrans(outarray,V2,UseContCoeffs);
+			// now we have the two transformed vectors in Fourier space (still physical space fo the spec/hp elm part)
+			// Fourier space still of dimension N*M
+			
+			// Reordering degrees of freedom, by slabs
+			Array<OneD, NekDouble> ShufV1(npoints);
+			Array<OneD, NekDouble> ShufV2(npoints);
+			Array<OneD, NekDouble> ShufV1V2(npoints);
+			
+			ShuffleIntoHomogeneous2DClosePacked(V1,ShufV1,false);
+			ShuffleIntoHomogeneous2DClosePacked(V2,ShufV2,false);
+			/////////////////////////////////////////////////////////////////////////////
+			// Creating padded vectors for each slab
+			
+			Array<OneD, NekDouble> PadV1_slab_coeff(2*nlines,0.0);
+			Array<OneD, NekDouble> PadV2_slab_coeff(2*nlines,0.0);
+			Array<OneD, NekDouble> PadRe_slab_coeff(2*nlines,0.0);
+			
+			Array<OneD, NekDouble> PadV1_slab_phys(2*nlines,0.0);
+			Array<OneD, NekDouble> PadV2_slab_phys(2*nlines,0.0);
+			Array<OneD, NekDouble> PadRe_slab_phys(2*nlines,0.0);
+			
+			NekVector<const NekDouble> PadIN_V1(2*nlines,PadV1_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V1(2*nlines,PadV1_slab_phys,eWrapper);
+			
+			NekVector<const NekDouble> PadIN_V2(2*nlines,PadV2_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V2(2*nlines,PadV2_slab_phys,eWrapper);
+			
+			NekVector<const NekDouble> PadIN_Re(2*nlines,PadRe_slab_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(2*nlines,PadRe_slab_coeff,eWrapper);
+			
+			//Looping on the slabs
+			for(int j = 0 ; j< nslabs ; j++)
+			{
+				//Copying the j-th slab of size N*M into a bigger slab of lenght 2*N*M
+				//We are in Fourier space
+				for(int i = 0 ; i< m_nz ; i++)
+			    {
+					Vmath::Vcopy(m_ny,&(ShufV1[i*m_ny + j*nlines]),1,&(PadV1_slab_coeff[i*2*m_ny]),1);
+					Vmath::Vcopy(m_ny,&(ShufV2[i*m_ny + j*nlines]),1,&(PadV2_slab_coeff[i*2*m_ny]),1);
+				}
+				
+				//Moving to physical space using the padded system
+				PadOUT_V1 = (*MatBwd)*PadIN_V1;
+				PadOUT_V2 = (*MatBwd)*PadIN_V2;
+				
+				//Perfroming the vectors multiplication in physical space on the padded system
+				Vmath::Vmul(2*nlines,PadV1_slab_phys,1,PadV2_slab_phys,1,PadRe_slab_phys,1);
+				
+				//Moving back the result (V1*V2)_phys in Fourier space, padded system
+				PadOUT_Re = (*MatFwd)*PadIN_Re;
+				
+				//Copying the first half of the padded pencil in the full vector (Fourier space)
+				for (int i = 0; i < m_nz; i++) 
+				{
+					Vmath::Vcopy(m_ny,&(PadRe_slab_coeff[i*2*m_ny]),1,&(ShufV1V2[i*m_ny + j*nlines]),1);
+				}
+			}
+			
+			//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
+			UnshuffleFromHomogeneous2DClosePacked(ShufV1V2,V1V2,false);
+			
+			//Moving the results in physical space for the output
+			HomogeneousBwdTrans(V1V2,outarray,UseContCoeffs);
+			
+		}
 
         void ExpListHomogeneous2D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {

@@ -138,7 +138,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="#NUMMODES#" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
     
     <CONDITIONS>
@@ -148,14 +148,14 @@
       <P> TimeStep           = 0.1              </P>
       <P> IO_CheckSteps      = 100              </P>
       <P> IO_InfoSteps       = 100              </P>
-      <P> CFL                = #CFL#            </P>
-      <P> NumQuadPointsError = #NQP#            </P>
+      <P> CFL                = 1.0            </P>
+      <P> NumQuadPointsError = 60            </P>
     </PARAMETERS>
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="CFLtester"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>    
-      <I PROPERTY="TimeIntegrationMethod"  VALUE="#TimeScheme#"/>
+      <I PROPERTY="TimeIntegrationMethod"  VALUE="RungeKutta2_ImprovedEuler"/>
     </SOLVERINFO> 
 
     <VARIABLES>

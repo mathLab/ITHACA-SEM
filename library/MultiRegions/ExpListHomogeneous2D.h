@@ -97,6 +97,10 @@ namespace Nektar
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+			
+			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+									  Array<OneD, NekDouble> &outarray, 
+									  bool UseContCoeffs = false);
 
             MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous2DClosePacked(
                               const Array<OneD, const NekDouble> &inarray,
@@ -135,6 +139,8 @@ namespace Nektar
             ///  m_phys.
             LibUtilities::BasisSharedPtr    m_homogeneousBasis_y;       ///< Base expansion in y direction
 			LibUtilities::BasisSharedPtr    m_homogeneousBasis_z;       ///< Base expansion in z direction
+			LibUtilities::BasisSharedPtr    m_paddingBasis_y;       ///< Base expansion in y direction
+			LibUtilities::BasisSharedPtr    m_paddingBasis_z;       ///< Base expansion in z direction
             NekDouble                       m_lhom_y;                   ///< Width of homogeneous direction y
 			NekDouble                       m_lhom_z;                   ///< Width of homogeneous direction z
             Homo2DBlockMatrixMapShPtr       m_homogeneous2DBlockMat;
@@ -186,6 +192,10 @@ namespace Nektar
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
+			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+										 Array<OneD, NekDouble> &outarray, 
+										 bool UseContCoeffs = false);
+			
 			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
 									 Array<OneD, NekDouble> &out_d0,
 									 Array<OneD, NekDouble> &out_d1, 
@@ -207,6 +217,13 @@ namespace Nektar
         {
             v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
         }
+		
+		inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+														Array<OneD, NekDouble> &outarray, 
+														bool UseContCoeffs)
+		{
+			v_DealiasedProd(inarray,outarray,UseContCoeffs);
+		}
 
     } //end of namespace
 } //end of namespace

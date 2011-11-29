@@ -175,7 +175,7 @@ namespace Nektar
 			NekVector<NekDouble> PadOUT_V2(2*nplanes,PadV2_pencil_phys,eWrapper);
 			
 			NekVector<const NekDouble> PadIN_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
-			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_coeff,eWrapper);
 			
 			//Looping on the pencils
 			for(int i = 0 ; i< npencils ; i++)
@@ -189,7 +189,7 @@ namespace Nektar
 				PadOUT_V1 = (*MatBwd)*PadIN_V1;
 				PadOUT_V2 = (*MatBwd)*PadIN_V2;
 				
-				//Perfroming the vectors multiplication ins physical space on the padded system
+				//Perfroming the vectors multiplication in physical space on the padded system
 				Vmath::Vmul(2*nplanes,PadV1_pencil_phys,1,PadV2_pencil_phys,1,PadRe_pencil_phys,1);
 				
 				//Moving back the result (V1*V2)_phys in Fourier space, padded system

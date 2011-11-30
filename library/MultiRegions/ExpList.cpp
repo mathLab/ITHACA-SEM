@@ -1996,7 +1996,7 @@ namespace Nektar
         }
         
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
-        {
+        {     	
             int i;
             int offset = 0;
             int datalen = fielddata.size()/fielddef->m_fields.size();
@@ -2032,8 +2032,7 @@ namespace Nektar
                 }
 
                 int modes_offset = 0;
-                Array<OneD, NekDouble> coeff_tmp;
-                
+                Array<OneD, NekDouble> coeff_tmp;             
                 for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
                     int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
@@ -2053,7 +2052,7 @@ namespace Nektar
                         (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid]);
                     }
                     offset += datalen;
-                }
+                }                
             }
         }
 

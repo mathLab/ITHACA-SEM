@@ -812,7 +812,10 @@ cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<se
 <<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
              }		     
 		    
-
+             //attempt to smooth the curvature
+	     Array<OneD, NekDouble> curv_coeffs (Nregcoeffs);
+	     outfieldx->FwdTrans(curv, curv_coeffs);
+	     outfieldx->BwdTrans(curv_coeffs, curv); 
 
 
            //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
@@ -831,22 +834,12 @@ cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<se
            NekDouble norm = sqrt(Area/Int);
 
 cout<<" norm="<<norm<<"   IntPsquare="<<IntPsquare<<"   Area="<<Area<<"  Int="<<Int<<endl;
+           //norm*pressure
+	   //Vmath::Smul(nq1D,norm,Rephysreg,1,Rephysreg,1);                       
+	   //Vmath::Smul(nq1D,norm,Imphysreg,1,Imphysreg,1);      
 
 
 
-
-
-
-
-            //fill output fields:
-            for(int g=0; g<nq1D; g++)
-            {
-            	(outfieldx->UpdatePhys())[g] = 
-            	   Rephysreg[g];
-            	(outfieldy->UpdatePhys())[g] =
-            	   Imphysreg[g];	   
-//cout<<"curvature x="<<x0d[g]<<"   k="<<curv[g]<<endl;		
-            }
 
 cout<<"Down: x"<<"   y"<<"  z"<<"    Re p"<<"    Im p"<<endl;                      	    
 	    //print out the fields
@@ -855,6 +848,7 @@ cout<<"Down: x"<<"   y"<<"  z"<<"    Re p"<<"    Im p"<<endl;
 cout<<"derivative of the pressure"<<endl;
             Array<OneD, NekDouble> dP_re = Array<OneD, NekDouble>(nq1D,0.0);
             Array<OneD, NekDouble> dP_im = Array<OneD, NekDouble>(nq1D,0.0);
+            Array<OneD, NekDouble> dP_square2 = Array<OneD, NekDouble>(nq1D,0.0);
 
             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS,Rephysreg,dP_re);   
             Ilayer->GetPlane(1)->PhysDeriv(MultiRegions::eS,Imphysreg,dP_im);   
@@ -873,8 +867,14 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 	    for(int s=0; s<nq1D; s++)
             {
                 dP_square[s] = dP_re[s]*dP_re[s] +dP_im[s]*dP_im[s];
+
 //cout<<x0d[s]<<"    "<<x1d[s]<<"    "<<x2d[s]<<"   "<<Rephysdown[s]<<"   "<<dP_re[s]<<"  "<<dP_im[s]<<endl;
-	    }            
+	    }  
+	    //attempt to smooth the pressure     
+	    Array<OneD, NekDouble> dPsquare_coeffs (Nregcoeffs);
+	    outfieldx->FwdTrans(dP_square, dPsquare_coeffs);
+	    outfieldx->BwdTrans(dPsquare_coeffs, dP_square); 
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS,dP_square,dP_square2);  
 cout<<"dim streak="<<stphysreg.num_elements()<<endl;
 	    Array<OneD, NekDouble> dUreg (nq1D);
 	    //Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eN, stphysreg,dUreg);
@@ -918,13 +918,13 @@ cout<<"ncoeffs="<<Ndowncoeffs<<endl;
 	    Array<OneD, NekDouble> vjump(nq1D);
 	    for(int g=0; g<nq1D; g++)
 	    {
-                //double po = (2.09)**0.5;
-                pjump[g] = n0*mu53[g]*dP_square[g] ;
+                pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;
+                //pjump[g] = n0*mu53[g]*dP_square[g] ;
                 vjump[g] = n0*d2v[g];
-cout<<setw(14)<<x0d[g]<<"       "<<Rephysreg[g]<<"      "<<dP_re[g]<<"     "
-<<setw(13)<<"      "<<stphysreg[g]<<"     "<<dUreg[g]<<"    "<<
-mu53[g]<<"       "<<setw(13)<<curv[g]<<"    "<<dP_square[g]<<"     "<<
-pjump[g]<<setw(13)<<"        "<<vjump[g]<<endl;
+cout<<setw(14)<<x0d[g]<<"      "<<Rephysreg[g]<<"   "<<dP_re[g]<<"     "
+<<setw(13)<<"      "<<dUreg[g]<<"    "<<
+mu53[g]<<"       "<<setw(13)<<curv[g]<<"    "<<dP_square[g]<<"    "<<dP_square2[g]<<"     "<<
+pjump[g]<<setw(13)<<"        "<<vjump[g]<<"     "<<(vjump[g]-pjump[g])*tx[g]<<endl;
 //cout<<setw(14)<<x0d[g]<<"     "<<stphysgradxreg[g]<<"     "<<stphysgradyreg[g]
 //<<"     "<<dUreg[g]<<endl;                                          
 	    }
@@ -932,12 +932,12 @@ pjump[g]<<setw(13)<<"        "<<vjump[g]<<endl;
 //PAY ATTENTION to the sign (vjump -/+ pjump)*t!!!!!!!!!!
             for(int j=0; j<nq1D; j++)
             {
-/*            	              	    
+            	              	    
             	(outfieldx->UpdatePhys())[j] = 
             	  (vjump[j]-pjump[j])*tx[j];
             	(outfieldy->UpdatePhys())[j] =
             	   (vjump[j]-pjump[j])*ty[j];		   
-*/		
+		
             }
           
 

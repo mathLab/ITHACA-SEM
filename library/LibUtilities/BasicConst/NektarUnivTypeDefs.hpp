@@ -36,9 +36,7 @@
 #ifndef  NEKTARUNIVTYPEDEF_HPP
 #define  NEKTARUNIVTYPEDEF_HPP
 
-#include <boost/multi_array.hpp>
-#include <boost/shared_ptr.hpp>
-#include <vector>
+#include <map>
 
 namespace Nektar
 {
@@ -75,6 +73,38 @@ namespace Nektar
         eGmsh,
         eGnuplot
     };
+
+    /// Enumeration of flags for passing a list of options.
+    enum FlagType
+    {
+        eUseContCoeff
+    };
+
+    /// String map for FlagType enumeration.
+    const char* const FlagTypeMap[] = {
+        "UseContCoeff"
+    };
+
+    /// Defines a list of flags.
+    class FlagList
+    {
+    public:
+        void set(const FlagType &key, bool value)
+        {
+            m_data[key] = value;
+        }
+        bool isSet(const FlagType &key) const
+        {
+            std::map<FlagType, bool>::const_iterator x;
+            return ((x = m_data.find(key)) != m_data.end() && x->second);
+        }
+    private:
+        std::map<FlagType, bool> m_data;
+    };
+
+    /// An empty flag list.
+    static FlagList NullFlagList;
+
 } //end of namespace
 
 #endif

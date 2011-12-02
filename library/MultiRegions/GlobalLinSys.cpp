@@ -140,10 +140,10 @@ namespace Nektar
          */
 
 
-        GlobalLinSys::GlobalLinSys()
-        {
-
-        }
+//        GlobalLinSys::GlobalLinSys()
+//        {
+//
+//        }
 
 
         /**
@@ -189,24 +189,20 @@ namespace Nektar
             int nel = m_expList->GetOffset_Elmt_Id(n);
             DNekScalMatSharedPtr loc_mat;
 
-            StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
-            const boost::shared_ptr<GlobalMatrixKey> vMatrixKey
-                                            = m_linSysKey.GetGlobalMatrixKey();
+            LocalRegions::ExpansionSharedPtr vExp = boost::dynamic_pointer_cast<LocalRegions::Expansion>(m_expList->GetExp(nel));
 
             // need to be initialised with zero size for non variable
             // coefficient case
-            Array<OneD, Array<OneD,const NekDouble> > vVarcoeffs;
-            int vNVCoeffs = vMatrixKey->GetNvariableCoefficients();
+            StdRegions::VarCoeffMap vVarCoeffMap;
 
             // retrieve variable coefficients
-            if(vNVCoeffs > 0)
+            if(m_linSysKey.GetNVarCoeffs() > 0)
             {
+                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = m_expList->GetPhys_Offset(n);
-                vVarcoeffs
-                        = Array<OneD, Array<OneD, const NekDouble> >(vNVCoeffs);
-                for(int j = 0; j < vNVCoeffs; j++)
+                for (x = m_linSysKey.GetVarCoeffs().begin(); x != m_linSysKey.GetVarCoeffs().end(); ++x)
                 {
-                    vVarcoeffs[j] = vMatrixKey->GetVariableCoefficient(j) + cnt;
+                    vVarCoeffMap[x->first] = x->second + cnt;
                 }
             }
 
@@ -214,33 +210,32 @@ namespace Nektar
             // scalar constants
             if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
             {
-                NekDouble vFactor1, vFactor2;
-                int Nconstants = vMatrixKey->GetNconstants();
-
-                if(Nconstants>2)
-                {
-                    vFactor1 = m_linSysKey.GetConstant(nel);
-                    vFactor2 = m_linSysKey.GetConstant(Nconstants-1);
-                }
-
-                else
-                {
-                    vFactor1 = m_linSysKey.GetConstant(0);
-                    vFactor2 = m_linSysKey.GetConstant(1);
-                }
-
-                LocalRegions::MatrixKey matkey(vMatrixKey->GetMatrixType(),
+//                NekDouble vFactor1, vFactor2;
+//                int Nconstants = vMatrixKey->GetNconstants();
+//
+//                if(Nconstants>2)
+//                {
+//                    vFactor1 = m_linSysKey.GetConstant(nel);
+//                    vFactor2 = m_linSysKey.GetConstant(Nconstants-1);
+//                }
+//
+//                else
+//                {
+//                    vFactor1 = m_linSysKey.GetConstant(0);
+//                    vFactor2 = m_linSysKey.GetConstant(1);
+//                }
+                LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
                                                vExp->DetExpansionType(),
-                                               *vExp, vFactor1, vFactor2,
-                                               vVarcoeffs);
+                                               *vExp, m_linSysKey.GetConstFactors(),
+                                               vVarCoeffMap);
                 loc_mat = vExp->GetLocMatrix(matkey);
             }
             else
             {
-                LocalRegions::MatrixKey matkey(vMatrixKey->GetMatrixType(),
+                LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
                                            vExp->DetExpansionType(),
-                                           *vExp, vMatrixKey->GetConstants(),
-                                           vVarcoeffs);
+                                           *vExp, m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
                 loc_mat = vExp->GetLocMatrix(matkey);
             }
 
@@ -290,29 +285,27 @@ namespace Nektar
             DNekScalMatSharedPtr    tmp_mat;
 
             StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
-            const boost::shared_ptr<GlobalMatrixKey> vMatrixKey
-                    = m_linSysKey.GetGlobalMatrixKey();
 
-            // need to be initialised with zero size for non variable coefficient case
-            Array<OneD, Array<OneD,const NekDouble> > vVarcoeffs;
-            int vNVCoeffs = m_linSysKey.GetNvariableCoefficients();
+            // need to be initialised with zero size for non variable
+            // coefficient case
+            StdRegions::VarCoeffMap vVarCoeffMap;
 
-            if(vNVCoeffs>0)
+            // retrieve variable coefficients
+            if(m_linSysKey.GetNVarCoeffs() > 0)
             {
+                StdRegions::VarCoeffMap::const_iterator x;
                 cnt = m_expList->GetPhys_Offset(n);
-                vVarcoeffs
-                        = Array<OneD, Array<OneD, const NekDouble> >(vNVCoeffs);
-                for(int j = 0; j < vNVCoeffs; j++)
+                for (x = m_linSysKey.GetVarCoeffs().begin(); x != m_linSysKey.GetVarCoeffs().end(); ++x)
                 {
-                    vVarcoeffs[j] = vMatrixKey->GetVariableCoefficient(j) + cnt;
+                    vVarCoeffMap[x->first] = x->second + cnt;
                 }
             }
 
-            LocalRegions::MatrixKey matkey( vMatrixKey->GetMatrixType(),
+            LocalRegions::MatrixKey matkey( m_linSysKey.GetMatrixType(),
                                             vExp->DetExpansionType(),
                                             *vExp,
-                                            vMatrixKey->GetConstants(),
-                                            vVarcoeffs);
+                                            m_linSysKey.GetConstFactors(),
+                                            vVarCoeffMap);
 
             loc_mat = vExp->GetLocStaticCondMatrix(matkey);
 

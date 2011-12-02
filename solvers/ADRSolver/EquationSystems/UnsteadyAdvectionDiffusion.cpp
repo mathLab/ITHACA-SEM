@@ -137,7 +137,8 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         int nq = m_fields[0]->GetNpoints();
 		
-		NekDouble kappa = 1.0/lambda/m_epsilon;
+        StdRegions::ConstFactorMap factors;
+		factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
 		
 		Array<OneD, Array< OneD, NekDouble> > F(nvariables);
 		F[0] = Array<OneD, NekDouble> (nq*nvariables);
@@ -153,7 +154,7 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -kappa, inarray[i], 1, F[i], 1);
+            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1, F[i], 1);
 		}
             
 	    //Setting boundary conditions
@@ -162,7 +163,7 @@ namespace Nektar
 		for (int i = 0; i < nvariables; ++i)
 		{
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(F[i],m_fields[i]->UpdateCoeffs(),kappa);
+            m_fields[i]->HelmSolve(F[i],m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
     }

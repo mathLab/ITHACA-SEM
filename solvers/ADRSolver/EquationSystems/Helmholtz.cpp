@@ -52,7 +52,7 @@ namespace Nektar
 
         if (m_session->DefinesParameter("Lambda"))
         {
-            m_lambda = m_session->GetParameter("Lambda");
+            m_factors[StdRegions::eFactorLambda] = m_session->GetParameter("Lambda");
         }
     }
 

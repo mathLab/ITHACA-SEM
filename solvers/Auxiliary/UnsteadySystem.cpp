@@ -99,6 +99,7 @@ namespace Nektar
 
         // Load generic input parameters
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+        m_session->LoadParameter("IO_HistorySteps", m_historysteps, 0);
 		m_session->LoadParameter("CFL", m_cfl, 0.0);
     }
 
@@ -118,7 +119,7 @@ namespace Nektar
      */
     void UnsteadySystem::v_DoSolve()
     {
-        int i,n,nchk = 0;
+        int i,n,nchk = 1;
         int ncoeffs = m_fields[0]->GetNcoeffs();
 		int npoints = m_fields[0]->GetNpoints();
         int nvariables = m_fields.num_elements();
@@ -422,7 +423,13 @@ namespace Nektar
 					//                     << setw(8) << fixed << setprecision(2) << m_time
 					//                     << "\t " << flush;
 				}
-				
+
+	            // Write out history data to file
+	            if(m_historysteps && !((n+1)%m_historysteps))
+	            {
+	                WriteHistoryData(hisFile);
+	            }
+
 				// Write out checkpoint files.
 				if(n&&(!((n+1)%m_checksteps)))
 				{
@@ -432,17 +439,20 @@ namespace Nektar
 						m_fields[i]->SetPhysState(false);
 					}
 					Checkpoint_Output(nchk++);
-					WriteHistoryData(hisFile);
 				}
 				// step advance
 			}
 			
 			cout <<"\nCFL number              : " << m_cfl << endl;
 			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
-			
+
 			// At the end of the time integration, store final solution.
 			for(i = 0; i < nvariables; ++i)
 			{
+	            if(m_fields[i]->GetPhysState() == false)
+	            {
+	                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+	            }
 				m_fields[i]->UpdatePhys() = fields[i];
 			}
 	    }

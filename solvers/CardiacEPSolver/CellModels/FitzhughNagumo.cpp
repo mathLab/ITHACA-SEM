@@ -61,7 +61,7 @@ namespace Nektar
     }
 
 
-    void CellModelFitzHughNagumo::Update(
+    void CellModelFitzHughNagumo::v_Update(
                     const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                     const NekDouble time)

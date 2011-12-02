@@ -199,22 +199,12 @@ namespace Nektar
         }
         
         void DisContField3DHomogeneous2D::v_HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            v_HelmSolveDG(inarray, outarray, lambda, varLambda, varCoeff, 1);
-        }
-
-        void DisContField3DHomogeneous2D::v_HelmSolveDG(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                    NekDouble tau)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
             int n,m;
             int cnt = 0;
@@ -224,6 +214,7 @@ namespace Nektar
             NekDouble beta_y;
 			NekDouble beta_z;
 			NekDouble beta;
+			StdRegions::ConstFactorMap new_factors;
 			
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
@@ -237,12 +228,12 @@ namespace Nektar
 				{
 					beta_z = 2*M_PI*(n/2)/m_lhom_z;
 					beta_y = 2*M_PI*(m/2)/m_lhom_y;
-					beta = beta_y*beta_y + beta_z*beta_z;
+					new_factors = factors;
+					new_factors[StdRegions::eFactorLambda] += beta_y*beta_y + beta_z*beta_z;
 					
 					m_lines[n]->HelmSolve(fce + cnt,
                                          e_out = outarray + cnt1,
-                                         lambda + beta,varLambda,
-                                         varCoeff);
+                                         flags, new_factors, varcoeff, dirForcing);
                 
 					cnt  += m_lines[n]->GetTotPoints();
 					cnt1 += m_lines[n]->GetNcoeffs();

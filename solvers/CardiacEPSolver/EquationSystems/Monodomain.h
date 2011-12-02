@@ -94,6 +94,12 @@ namespace Nektar
     private:
         /// Cell model.
         CellModelSharedPtr m_cell;
+
+        /// Variable diffusivity
+        StdRegions::VarCoeffMap m_vardiff;
+
+        /// Stimulus current
+        int m_stimDuration;
     };
 
 }

@@ -953,22 +953,12 @@ namespace Nektar
         }
 
         void DisContField2D::v_HelmSolve(
-                                         const Array<OneD, const NekDouble> &inarray,
-                                         Array<OneD,       NekDouble> &outarray,
-                                         NekDouble lambda,
-                                         const Array<OneD, const NekDouble> &varLambda,
-                                         const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            v_HelmSolveDG(inarray, outarray, lambda, varLambda, varCoeff, 1);
-        }
-
-        void DisContField2D::v_HelmSolveDG(
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
-                                           NekDouble lambda,
-                                           const Array<OneD, const NekDouble> &varLambda,
-                                           const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                                           NekDouble tau)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -992,7 +982,7 @@ namespace Nektar
             int e_ncoeffs,id;
 
             // Retrieve block matrix of U^e
-            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,lambda,tau,varCoeff);
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullLocalToGlobalBaseMapSharedPtr,factors,varcoeff);
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
             // Retrieve global trace space storage, \Lambda, from trace expansion
@@ -1048,6 +1038,7 @@ namespace Nektar
                     {
                         id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                        cout << "Dirichlet ID: " << id << endl;
                     }
                 }
                 else
@@ -1067,26 +1058,43 @@ namespace Nektar
             //----------------------------------
             if(GloBndDofs - NumDirichlet > 0)
             {
+                cout << "Solve linear system" << endl;
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
-                                          m_traceMap,lambda,tau,
-                                          varCoeff);
+                                          m_traceMap,factors,varcoeff);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
+            cout << BndSol.num_elements() << endl;
+            cout << loc_lambda.num_elements() << endl;
 
+//cout << "Before internal solves" << endl;
+//for (i = 0; i < GloBndDofs; ++i)
+//{
+//    cout << i << ": " << BndSol[i] << endl;
+//}
             //----------------------------------
             // Internal element solves
             //----------------------------------
-            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau,varCoeff);
+            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,NullLocalToGlobalBaseMapSharedPtr,factors,varcoeff);
             const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
             Vmath::Zero(m_ncoeffs,outarray,1);
 
             // get local trace solution from BndSol
             m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
+//cout << "After trace mapping" << endl;
+//for (i = 0; i < GloBndDofs; ++i)
+//{
+//    cout << i << ": " << LocLambda[i] << endl;
+//}
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
+//cout << "After internal solves" << endl;
+//for (i = 0; i < GloBndDofs; ++i)
+//{
+//    cout << i << ": " << LocLambda[i] << endl;
+//}
         }
 
 
@@ -1231,7 +1239,7 @@ namespace Nektar
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean,  (*m_exp)[eid]->DetExpansionType(),  *(*m_exp)[eid]);
-                DNekScalMatSharedPtr lapsys = (*m_exp)[eid]->GetLocMatrix(lapkey);
+                DNekScalMatSharedPtr lapsys = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[eid])->GetLocMatrix(lapkey);
 
                 NekVector<NekDouble> in(nm_elmt,force,eWrapper);
                 NekVector<NekDouble> out(nm_elmt,tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);

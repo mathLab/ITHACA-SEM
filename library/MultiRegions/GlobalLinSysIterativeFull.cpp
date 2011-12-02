@@ -152,7 +152,7 @@ namespace Nektar
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
                     m_expList->GeneralMatrixOp(
-                                    *m_linSysKey.GetGlobalMatrixKey(),
+                                    m_linSysKey,
                                     pOutput, global_tmp, true);
 
                     Vmath::Vsub(nGlobDofs,  pInput.get(), 1,
@@ -220,8 +220,7 @@ namespace Nektar
                 Array<OneD, NekDouble> test(nGlobal, 0.0);
                 Array<OneD, NekDouble> test_local(nLocal, 0.0);
                 test[i+nDir] = 1.0;
-                m_expList->GeneralMatrixOp(*m_linSysKey.GetGlobalMatrixKey(),
-                                test, test, true);
+                m_expList->GeneralMatrixOp(m_linSysKey, test, test, true);
 
                 M.SetValue(i,i,1.0/test[i+nDir]);
             }
@@ -304,7 +303,7 @@ namespace Nektar
                       Array<OneD, NekDouble>& pOutput)
         {
             // Perform matrix-vector operation A*d_i
-            m_expList->GeneralMatrixOp(*m_linSysKey.GetGlobalMatrixKey(),
+            m_expList->GeneralMatrixOp(m_linSysKey,
                                         pInput, pOutput, true);
 
             // retrieve robin boundary condition information and apply robin

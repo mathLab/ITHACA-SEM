@@ -266,35 +266,10 @@ namespace Nektar
             inline void HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda = 0.0,
-                    const Array<OneD, const NekDouble> &varLambda
-                                                = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff
-                                                = NullNekDoubleArrayofArray);
-
-            /// Solve helmholtz problem (continuous case parameters).
-            inline void HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                          bool UseContCoeffs,
-                    const Array<OneD, const NekDouble> &dirForcing
-                                                = NullNekDouble1DArray,
-                    const Array<OneD, const NekDouble> &varLambda
-                                                = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff
-                                                = NullNekDoubleArrayofArray);
-
-            /// Solve helmholtz problem (discontinuous case parameters).
-            inline void HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                          NekDouble tau,
-                    const Array<OneD, const NekDouble> &varLambda
-                                                = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff
-                                                = NullNekDoubleArrayofArray);
+                    const FlagList &flags,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeff = StdRegions::NullVarCoeffMap,
+                    const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
             /// Solve Advection Diffusion Reaction
             inline void LinearAdvectionDiffusionReactionSolve(
@@ -959,35 +934,12 @@ namespace Nektar
                                                    bool  UseContCoeffs);
 
             virtual void v_HelmSolve(
-                                     const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     const Array<OneD, const NekDouble> &Sigma,
-                                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
-
-            virtual void v_HelmSolveCG(
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       const Array<OneD, const NekDouble> &Sigma,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
-                                       bool UseContCoeffs,
-                                       const Array<OneD, const NekDouble> &dirForcing);
-
-            virtual void v_HelmSolveDG(
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       const Array<OneD, const NekDouble> &Sigma,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
-                                       NekDouble tau);
-
-            virtual void v_HelmSolve(
-                                     const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,       NekDouble> &outarray,
-                                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                     const Array<OneD, NekDouble> &lambda,
-                                     NekDouble tau);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                    const FlagList &flags,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeff,
+                    const Array<OneD, const NekDouble> &dirForcing);
 
             virtual void v_LinearAdvectionDiffusionReactionSolve(
                                                                  const Array<OneD, Array<OneD, NekDouble> > &velocity,
@@ -1368,60 +1320,16 @@ namespace Nektar
          *
          */
         inline void ExpList::HelmSolve(
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       const Array<OneD, const NekDouble> &Sigma,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
-            // HelmSolve(inarray, outarray);
-            // HelmSolve(inarray, outarray, lambda);
-            // HelmSolve(inarray, outarray, lambda, Lambda);
-            // HelmSolve(inarray, outarray, lambda, Lambda, varcoeff);
-            v_HelmSolve(inarray, outarray, lambda, Sigma, varcoeff);
-            // v_HelmSolve -> v_HelmSolveCG or v_HelmSolveDG in derived classes
+            v_HelmSolve(inarray, outarray, flags, factors, varcoeff, dirForcing);
         }
 
-
-        /**
-         *
-         */
-        inline void ExpList::HelmSolve(
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       bool UseContCoeffs,
-                                       const Array<OneD, const NekDouble> &dirForcing,
-                                       const Array<OneD, const NekDouble> &Sigma,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
-        {
-            // HelmSolve(inarray, outarray, lambda, useContCoeff);
-            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing);
-            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing,
-            //                                              Lambda);
-            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing,
-            //                                              Lambda, varcoeff);
-            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
-                          UseContCoeffs, dirForcing);
-        }
-
-
-        /**
-         *
-         */
-        inline void ExpList::HelmSolve(
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       NekDouble tau,
-                                       const Array<OneD, const NekDouble> &Sigma,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
-        {
-            // HelmSolve(inarray, outarray, lambda, tau);
-            // HelmSolve(inarray, outarray, lambda, tau, Lambda);
-            // HelmSolve(inarray, outarray, lambda, tau, Lambda, varcoeff);
-            v_HelmSolveDG(inarray, outarray, lambda, Sigma, varcoeff, tau);
-        }
 
         /**
          *

@@ -54,6 +54,9 @@ namespace Nektar
                     const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
             : CellModel(pSession, nq)
     {
+        ASSERTL0(pSession->GetVariables().size() == 2,
+                 "Aliev-Panfilov cell model requires 2 variables.");
+
         pSession->LoadParameter("k",          m_k,         0.0);
         pSession->LoadParameter("a",          m_a,         0.0);
         pSession->LoadParameter("mu1",        m_mu1,       0.0);
@@ -68,7 +71,7 @@ namespace Nektar
     }
 
 
-    void CellModelAlievPanfilov::Update(
+    void CellModelAlievPanfilov::v_Update(
                     const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                     const NekDouble time)
@@ -117,10 +120,14 @@ namespace Nektar
         {
           Vmath::Smul(nq, m_k, &m_tmp1[0], 1, &m_tmp1[0], 1);
         }
-        // Ru = k(u*u*u - (1+a)u*u + au) + uv
+
+        // Ru = k(u*u*u - (1+a)u*u + au) + I_stim
+        Vmath::Vadd(nq, &outarray[0][0], 1, &m_tmp1[0], 1, &outarray[0][0], 1);
+
+        // Ru = k(u*u*u - (1+a)u*u + au) + uv + I_stim
         Vmath::Vvtvp(nq, &inarray[0][0], 1, &inarray[1][0], 1, &m_tmp1[0], 1,
                          &outarray[0][0], 1);
-        // Ru = -k(u*u*u - (1+a)u*u + au) - uv
+        // Ru = -k(u*u*u - (1+a)u*u + au) - uv - I_stim
         Vmath::Neg(nq, &outarray[0][0], 1);
 
 

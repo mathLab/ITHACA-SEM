@@ -30,7 +30,8 @@ int main(int argc, char *argv[])
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    NekDouble  lambda;
+    StdRegions::ConstFactorMap factors;
+    FlagList flags;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
@@ -39,8 +40,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-//    try
-//    {
+    try
+    {
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
@@ -48,13 +49,14 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Print summary of solution details
-        lambda = vSession->GetParameter("Lambda");
+        flags.set(eUseContCoeff, true);
+        factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 2D Helmholtz: " << endl;
         cout << "         Communication: " << vSession->GetComm()->GetType() << endl;
         cout << "         Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
-        cout << "         Lambda       : " << lambda << endl;
+        cout << "         Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
         cout << "         No. modes    : " << bkey0.GetNumModes() << endl;
         cout << endl;
         //----------------------------------------------
@@ -109,14 +111,14 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
 
 #ifdef TIMING
         for(i = 0; i < 1000; ++i)
         {
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
         }
 
         Timing("1000 Helmholtz Solves:... ");
@@ -179,12 +181,12 @@ int main(int argc, char *argv[])
 
         }
         //----------------------------------------------
-//    }
-//    catch (const std::runtime_error& e)
-//    {
-//        cout << "Caught an error" << endl;
-//        return 1;
-//    }
+    }
+    catch (const std::runtime_error& e)
+    {
+        cout << "Caught an error" << endl;
+        return 1;
+    }
 
     vSession->Finalise();
 

@@ -643,26 +643,12 @@ namespace Nektar
 		
 	
 		void DisContField1D::v_HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            v_HelmSolveDG(inarray, outarray, lambda, varLambda, varCoeff, 1);
-        }
-
-
-        /**
-         *
-         */
-        void DisContField1D::v_HelmSolveDG(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                          NekDouble tau)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
             int i,n,cnt,nbndry;
             int nexp = GetExpSize();
@@ -683,8 +669,7 @@ namespace Nektar
             int NumDirBCs  = m_traceMap->GetNumLocalDirBndCoeffs();
             int e_ncoeffs,id;
 
-            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,
-                                         lambda,tau);
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullLocalToGlobalBaseMapSharedPtr,factors,varcoeff);
 
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
@@ -745,7 +730,7 @@ namespace Nektar
             if(GloBndDofs - NumDirBCs > 0)
             {
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
-                                          m_traceMap,lambda,tau);
+                                          m_traceMap,factors);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
@@ -754,7 +739,8 @@ namespace Nektar
             // Internal element solves
             //----------------------------------
             GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,
-                                          lambda,tau);
+                                            NullLocalToGlobalBaseMapSharedPtr,
+                                            factors);
 
             const DNekScalBlkMatSharedPtr& InvHDGHelm
                                                 = GetBlockMatrix(invHDGhelmkey);

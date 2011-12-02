@@ -47,9 +47,9 @@ namespace Nektar
          */
 
 
-        GlobalLinSysDirect::GlobalLinSysDirect(void)
-        {
-        }
+//        GlobalLinSysDirect::GlobalLinSysDirect(void)
+//        {
+//        }
 
         /// Constructor for full direct matrix solve.
         GlobalLinSysDirect::GlobalLinSysDirect(

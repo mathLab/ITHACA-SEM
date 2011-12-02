@@ -449,7 +449,12 @@ namespace Nektar
                             {
                                 temp[i] = Array<OneD, NekDouble> (ncoeffs,0.0);
 
-                                MultiRegions::GlobalMatrixKey wkey(StdRegions::eMass,m_vellc);
+                                StdRegions::VarCoeffMap varcoeffs;
+                                varcoeffs[StdRegions::eVarCoeffMass] = m_vellc[0];
+                                MultiRegions::GlobalMatrixKey wkey(StdRegions::eMass,
+                                        MultiRegions::NullLocalToGlobalBaseMapSharedPtr,
+                                        StdRegions::NullConstFactorMap,
+                                        varcoeffs);
                                 m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(wkey, inarray[i], temp[i]);
                             }
                         }
@@ -464,7 +469,12 @@ namespace Nektar
 
                             if(m_UseDirDeriv)
                             {
-                                MultiRegions::GlobalMatrixKey key(StdRegions::eMass,m_velmagnitude);
+                                StdRegions::VarCoeffMap varcoeffs;
+                                varcoeffs[StdRegions::eVarCoeffMass] = m_velmagnitude[0];
+                                MultiRegions::GlobalMatrixKey key(StdRegions::eMass,
+                                        MultiRegions::NullLocalToGlobalBaseMapSharedPtr,
+                                        StdRegions::NullConstFactorMap,
+                                        varcoeffs);
                                 m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(key, outarray[i], outarray[i]);
 
                                 Vmath::Vadd(ncoeffs, temp[i], 1, outarray[i], 1, outarray[i], 1);
@@ -941,15 +951,18 @@ namespace Nektar
 
     void ADR2DManifold:: SolveHelmholtz(const int indx, const NekDouble kappa,const int m_UseDirDeriv)
   {
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = kappa;
       if(m_UseDirDeriv)
       {
           //  m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
-          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa,NullNekDouble1DArray,m_dirForcing);
+
+          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),NullFlagList,factors,StdRegions::NullVarCoeffMap,m_dirForcing[indx]);
       }
 
       else
       {
-          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
+          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),NullFlagList,factors);
       }
 
       m_fields[indx]->SetPhysState(false);

@@ -105,22 +105,22 @@ namespace Nektar
         }
 
 
-        GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
-                     const DNekScalBlkMatSharedPtr pSchurCompl,
-                     const DNekScalBlkMatSharedPtr pBinvD,
-                     const DNekScalBlkMatSharedPtr pC,
-                     const DNekScalBlkMatSharedPtr pInvD,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
-                     &pLocToGloMap)
-        {
-            m_schurCompl = pSchurCompl;
-            m_BinvD      = pBinvD;
-            m_C          = pC;
-            m_invD       = pInvD;
-
-            // Construct this level
-            Initialise(pLocToGloMap, eFULL);
-        }
+//        GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
+//                     const DNekScalBlkMatSharedPtr pSchurCompl,
+//                     const DNekScalBlkMatSharedPtr pBinvD,
+//                     const DNekScalBlkMatSharedPtr pC,
+//                     const DNekScalBlkMatSharedPtr pInvD,
+//                     const boost::shared_ptr<LocalToGlobalBaseMap>
+//                     &pLocToGloMap)
+//        {
+//            m_schurCompl = pSchurCompl;
+//            m_BinvD      = pBinvD;
+//            m_C          = pC;
+//            m_invD       = pInvD;
+//
+//            // Construct this level
+//            Initialise(pLocToGloMap, eFULL);
+//        }
         
 
         /**

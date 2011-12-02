@@ -53,149 +53,159 @@ namespace Nektar
          * constructors include additional parameters for customising the 
          * global operator matrix.
          */
-         
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                                    ::AllocateSharedPtr(matrixType,locToGloMap))
-        {
-        }
-        
-        
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   varcoeffs   Matrix of coefficients.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                         ::AllocateSharedPtr(matrixType,varcoeffs,locToGloMap))
-        {
-        } 
 
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varCoeffs) :
+            GlobalMatrixKey(matrixType, locToGloMap, factors, varCoeffs),
+            m_solnType(locToGloMap->GetGlobalSysSolnType())
+        {
 
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   factor      Scalar coefficient.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const NekDouble factor):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                            ::AllocateSharedPtr(matrixType,factor,locToGloMap))
-        {
-        }
-        
-        
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   factor1     Scalar coefficient.
-         * @param   factor2     Scalar coefficient.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const NekDouble factor1,
-                        const NekDouble factor2):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                            ::AllocateSharedPtr(matrixType,factor1,factor2,
-                                                locToGloMap))
-        {
         }
 
-
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   factor      Scalar coefficient.
-         * @param   varcoeffs   Matrix of coefficients.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */      
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const NekDouble factor,
-                        const Array<OneD, Array<OneD, NekDouble> >& varcoeffs):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                            ::AllocateSharedPtr(matrixType,factor,varcoeffs,
-                                                locToGloMap))
-        {
-        }     
-
-
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   factor1     Scalar factor.
-         * @param   factor2     Scalar factor.
-         * @param   varcoeffs   Matrix of coefficients.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const NekDouble factor1,
-                        const NekDouble factor2, 
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                            ::AllocateSharedPtr(matrixType,factor1,factor2,
-                                                varcoeffs,locToGloMap))
-        {
-        }   
-
-
-        /**
-         * @param   matrixType  Specify the type of global matrix to construct.
-         * @param   locToGloMap Mapping from local elements to the global 
-         *                      system.
-         * @param   solnType    Type of solution to construct from
-         *                      GlobalSysSolnType.
-         */
-        GlobalLinSysKey::GlobalLinSysKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, NekDouble> &factor1,
-                        const NekDouble factor2, 
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs):
-            m_solnType(locToGloMap->GetGlobalSysSolnType()),
-            m_globMatKey(MemoryManager<GlobalMatrixKey>
-                            ::AllocateSharedPtr(matrixType,factor1,factor2,
-                                                varcoeffs,locToGloMap))
-        {
-        }   
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                                    ::AllocateSharedPtr(matrixType,locToGloMap))
+//        {
+//        }
+//
+//
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   varcoeffs   Matrix of coefficients.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                         ::AllocateSharedPtr(matrixType,varcoeffs,locToGloMap))
+//        {
+//        }
+//
+//
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   factor      Scalar coefficient.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+//                        const NekDouble factor):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                            ::AllocateSharedPtr(matrixType,factor,locToGloMap))
+//        {
+//        }
+//
+//
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   factor1     Scalar coefficient.
+//         * @param   factor2     Scalar coefficient.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+//                        const NekDouble factor1,
+//                        const NekDouble factor2):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                            ::AllocateSharedPtr(matrixType,factor1,factor2,
+//                                                locToGloMap))
+//        {
+//        }
+//
+//
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   factor      Scalar coefficient.
+//         * @param   varcoeffs   Matrix of coefficients.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+//                        const NekDouble factor,
+//                        const Array<OneD, Array<OneD, NekDouble> >& varcoeffs):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                            ::AllocateSharedPtr(matrixType,factor,varcoeffs,
+//                                                locToGloMap))
+//        {
+//        }
+//
+//
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   factor1     Scalar factor.
+//         * @param   factor2     Scalar factor.
+//         * @param   varcoeffs   Matrix of coefficients.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+//                        const NekDouble factor1,
+//                        const NekDouble factor2,
+//                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                            ::AllocateSharedPtr(matrixType,factor1,factor2,
+//                                                varcoeffs,locToGloMap))
+//        {
+//        }
+//
+//
+//        /**
+//         * @param   matrixType  Specify the type of global matrix to construct.
+//         * @param   locToGloMap Mapping from local elements to the global
+//         *                      system.
+//         * @param   solnType    Type of solution to construct from
+//         *                      GlobalSysSolnType.
+//         */
+//        GlobalLinSysKey::GlobalLinSysKey(
+//                        const StdRegions::MatrixType matrixType,
+//                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+//                        const Array<OneD, NekDouble> &factor1,
+//                        const NekDouble factor2,
+//                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs):
+//            m_solnType(locToGloMap->GetGlobalSysSolnType()),
+//            m_globMatKey(MemoryManager<GlobalMatrixKey>
+//                            ::AllocateSharedPtr(matrixType,factor1,factor2,
+//                                                varcoeffs,locToGloMap))
+//        {
+//        }
 
 
         /**
@@ -203,7 +213,7 @@ namespace Nektar
          */
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
-            m_globMatKey(key.m_globMatKey)            
+            GlobalMatrixKey(key)
         {
         }
 
@@ -236,17 +246,8 @@ namespace Nektar
                 return false;
             }
 
-            if( *(lhs.m_globMatKey) < *(rhs.m_globMatKey))
-            {
-                return true;
-            }
-
-            if( *(rhs.m_globMatKey) < *(lhs.m_globMatKey))
-            {
-                return false;
-            }
-
-            return false;
+            return (*dynamic_cast<const GlobalMatrixKey*>(&lhs)
+                    < *dynamic_cast<const GlobalMatrixKey*>(&rhs));
         }
 
 
@@ -259,16 +260,20 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
             int i;
-            os << "MatrixType: " << rhs.GetMatrixType() << endl;
+            os << "MatrixType: " << StdRegions::MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: "
+                            << StdRegions::ExpansionTypeMap[rhs.GetExpansionType()]
+                            << std::endl;
             os << "Solution Type: " 
                << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;
-            os << "Number of constants: " << rhs.GetNconstants() << endl;
-            for(i = 0; i < rhs.GetNconstants();i++) 
+            os << "Number of constants: " << rhs.GetNConstFactors() << endl;
+            StdRegions::ConstFactorMap::const_iterator x;
+            for (x = rhs.GetConstFactors().begin(); x != rhs.GetConstFactors().end(); ++x)
             {
-                os << "  Constant " << i << ": " << rhs.GetConstant(i) << endl;
+                os << "  Constant " << StdRegions::ConstFactorTypeMap[x->first]
+                   << ": " << x->second << endl;
             }
             os << "Number of variable coefficients: " 
-               << rhs.GetNvariableCoefficients() << endl;
+               << rhs.GetNVarCoeffs() << endl;
             
             return os;
         }

@@ -203,9 +203,7 @@ namespace Nektar
             IProductWRTBase(inarray,wsp,true);
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eMass,
-                                m_locToGloMap,
-                                m_locToGloMap->GetGlobalSysSolnType());
+            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
 
             if(UseContCoeffs)
             {
@@ -261,9 +259,7 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs)
         {
-            GlobalLinSysKey key(StdRegions::eMass,
-                                m_locToGloMap,
-                                m_locToGloMap->GetGlobalSysSolnType());
+            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
             if(UseContCoeffs)
             {
                 if(inarray.data() == outarray.data())
@@ -460,17 +456,6 @@ namespace Nektar
             MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
         }
 
-        void ContField1D::v_HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            v_HelmSolveCG(inarray, outarray, lambda, varLambda, varCoeff,
-                                false, NullNekDouble1DArray);
-        }
-
         /**
          * Consider the one dimensional Helmholtz equation,
          * \f[\frac{d^2u}{dx^2}-\lambda u(x) = f(x),\f]
@@ -501,14 +486,13 @@ namespace Nektar
          * @param   UseContCoeffs   Default: false
          * @param   dirForcing  Dirichlet Forcing.
          */
-        void ContField1D::v_HelmSolveCG(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                          bool UseContCoeffs,
-                    const Array<OneD, const NekDouble> &dirForcing)
+        void ContField1D::v_HelmSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_contNcoeffs);
@@ -530,10 +514,9 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,lambda,
-                                m_locToGloMap->GetGlobalSysSolnType());
+                                m_locToGloMap,factors);
 
-            if(UseContCoeffs)
+            if(flags.isSet(eUseContCoeff))
             {
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }

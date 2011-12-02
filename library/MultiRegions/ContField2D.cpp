@@ -253,9 +253,7 @@ namespace Nektar
             IProductWRTBase(inarray,wsp,true);
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eMass,
-                                m_locToGloMap,
-                                m_locToGloMap->GetGlobalSysSolnType());
+            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
 
             if(UseContCoeffs)
             {
@@ -287,8 +285,7 @@ namespace Nektar
                                 bool  UseContCoeffs)
 
         {
-            GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap,
-                                m_locToGloMap->GetGlobalSysSolnType());
+            GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
 
             if(UseContCoeffs)
             {
@@ -406,9 +403,16 @@ namespace Nektar
                 }
             }
        
+            StdRegions::VarCoeffMap varcoeffs;
+            varcoeffs[StdRegions::eVarCoeffD00] = variablecoeffs[0];
+            varcoeffs[StdRegions::eVarCoeffD11] = variablecoeffs[3];
+            varcoeffs[StdRegions::eVarCoeffD22] = variablecoeffs[5];
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorTime] = time;
+
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,
-                                variablecoeffs);
+            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,factors,
+                                varcoeffs);
 
             if(UseContCoeffs)
             {
@@ -446,8 +450,13 @@ namespace Nektar
             vel[0] = vel_x;
             vel[1] = vel_y;
 
+            StdRegions::VarCoeffMap varcoeffs;
+            varcoeffs[StdRegions::eVarCoeffVelX] = Array<OneD, NekDouble>(m_npoints,ax);
+            varcoeffs[StdRegions::eVarCoeffVelY] = Array<OneD, NekDouble>(m_npoints,ay);
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorTime] = 0.0;
             GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap,
-                                0.0,vel);
+                                factors,varcoeffs);
 
             DNekMatSharedPtr   Gmat = GenGlobalMatrixFull(key,m_locToGloMap);
             Gmat->EigenSolve(Real,Imag,Evecs);
@@ -697,26 +706,6 @@ namespace Nektar
 
 
         /**
-         * Solve the two-dimensional Helmholtz equation.
-         * @param   inarray     Input forcing function.
-         * @param   outarray    Output solution.
-         * @param   lambda      Coefficient @f$\lambda@f$.
-         * @param   varLambda   Spatially-dependent form of coefficient.
-         * @param   varCoeff    Diffusive coefficient.
-         */
-        void ContField2D::v_HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            v_HelmSolveCG(inarray, outarray, lambda, varLambda, varCoeff,
-                              false, NullNekDouble1DArray);
-        }
-
-
-        /**
          * Consider the two dimensional Helmholtz equation,
          * \f[\nabla^2u(\boldsymbol{x})-\lambda u(\boldsymbol{x})
          * = f(\boldsymbol{x}),\f] supplemented with appropriate boundary
@@ -745,14 +734,13 @@ namespace Nektar
          * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz
          *                      equation
          */
-        void ContField2D::v_HelmSolveCG(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                          bool UseContCoeffs,
-                    const Array<OneD, const NekDouble> &dirForcing)
+        void ContField2D::v_HelmSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
             //----------------------------------
             //  Setup RHS Inner product
@@ -784,10 +772,9 @@ namespace Nektar
                 }
             }
 
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,varcoeff);
 
-            if(UseContCoeffs)
+            if(flags.isSet(eUseContCoeff))
             {
                 Vmath::Zero(m_contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
@@ -895,7 +882,12 @@ namespace Nektar
             }
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eLinearAdvectionDiffusionReaction,m_locToGloMap,lambda,velocity);
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorLambda] = lambda;
+            StdRegions::VarCoeffMap varcoeffs;
+            varcoeffs[StdRegions::eVarCoeffVelX] = velocity[0];
+            varcoeffs[StdRegions::eVarCoeffVelY] = velocity[1];
+            GlobalLinSysKey key(StdRegions::eLinearAdvectionDiffusionReaction,m_locToGloMap,factors,varcoeffs);
 
             if(UseContCoeffs)
             {
@@ -931,7 +923,12 @@ namespace Nektar
             IProductWRTBase(inarray,wsp,true);
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap,lambda,velocity);
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorLambda] = lambda;
+            StdRegions::VarCoeffMap varcoeffs;
+            varcoeffs[StdRegions::eVarCoeffVelX] = velocity[0];
+            varcoeffs[StdRegions::eVarCoeffVelY] = velocity[1];
+            GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap,factors,varcoeffs);
 
             if(UseContCoeffs)
             {

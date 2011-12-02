@@ -88,13 +88,13 @@ namespace Nektar
                         const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 
-            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
-                        const DNekScalBlkMatSharedPtr pSchurCompl,
-                        const DNekScalBlkMatSharedPtr pBinvD,
-                        const DNekScalBlkMatSharedPtr pC,
-                        const DNekScalBlkMatSharedPtr pInvD,
-                        const boost::shared_ptr<LocalToGlobalBaseMap>
-                        &pLocToGloMap);
+//            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
+//                        const DNekScalBlkMatSharedPtr pSchurCompl,
+//                        const DNekScalBlkMatSharedPtr pBinvD,
+//                        const DNekScalBlkMatSharedPtr pC,
+//                        const DNekScalBlkMatSharedPtr pInvD,
+//                        const boost::shared_ptr<LocalToGlobalBaseMap>
+//                        &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectStaticCond();
 

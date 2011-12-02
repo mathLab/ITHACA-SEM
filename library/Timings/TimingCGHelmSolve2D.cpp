@@ -352,7 +352,9 @@ int main(int argc, char *argv[])
     int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
     int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
     int nGlobDirCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalDirBndCoeffs();
-    MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,lambda,Exp->GetLocalToGlobalMap());
+    StdRegions::ConstFactorMap factors;
+    factors[StdRegions::eFactorLambda] = lambda;
+    MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,Exp->GetLocalToGlobalMap(),factors);
     int nnz            = Exp->GetGlobalMatrixNnz(key);
 
     ofstream outfile("TimingCGHelmSolve2D.dat");

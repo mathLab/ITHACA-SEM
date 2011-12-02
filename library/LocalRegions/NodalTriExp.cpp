@@ -398,7 +398,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray); 
 
             // get Mass matrix inverse
-            MatrixKey  masskey(StdRegions::eInvMass, DetExpansionType(),*this,0.0,0.0,
+            MatrixKey  masskey(StdRegions::eInvMass, DetExpansionType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,
                                m_nodalPointsKey->GetPointsType());
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
@@ -413,34 +413,8 @@ namespace Nektar
                                                 Array<OneD,NekDouble> &outarray,
                                                 const StdRegions::StdMatrixKey &mkey)
         {
-            int nConsts = mkey.GetNconstants();
-            DNekScalMatSharedPtr   mat;
-            
-            switch(nConsts)
-            {
-            case 0:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType()); 
-                }
-                break;
-            case 1:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0)); 
-                }
-                break;
-            case 2:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1)); 
-                }
-                break;
-                
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
-                }
-                break;
-            }
-            
+            DNekScalMatSharedPtr   mat = GetLocMatrix(mkey);
+
             if(inarray.get() == outarray.get())
             {
                 Array<OneD,NekDouble> tmp(m_ncoeffs);
@@ -874,7 +848,7 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);

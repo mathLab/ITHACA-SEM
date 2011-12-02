@@ -295,7 +295,7 @@ namespace Nektar
             {
             case eInvMass:
                 {
-                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),mkey.GetBase(),  mkey.GetNcoeffs(),mkey.GetNodalPointsType());
+                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr& mmat = GetStdMatrix(masskey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
                     returnval->Invert();
@@ -303,8 +303,7 @@ namespace Nektar
                 break;
             case eInvNBasisTrans:
                 {
-                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),mkey.GetBase(),
-                        mkey.GetNcoeffs(),mkey.GetNodalPointsType());
+                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr& tmpmat = GetStdMatrix(tmpkey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate  matrix.
                     returnval->Invert();
@@ -600,9 +599,9 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
 
-            if(mkey.GetNvariableCoefficients() > 0)
+            if(mkey.HasVarCoeff(eVarCoeffMass))
             {
-                Vmath::Vmul(nq, mkey.GetVariableCoefficient(0), 1, tmp, 1, tmp, 1);
+                Vmath::Vmul(nq, mkey.GetVarCoeff(eVarCoeffMass), 1, tmp, 1, tmp, 1);
             }
 
             v_IProductWRTBase(tmp, outarray);
@@ -613,125 +612,79 @@ namespace Nektar
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
         {
-            ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
-            ASSERTL1(k2 >= 0 && k2 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid second argument");
+            ASSERTL1(k1 >= 0 && k1 < GetCoordim(),"invalid first  argument");
+            ASSERTL1(k2 >= 0 && k2 < GetCoordim(),"invalid second argument");
 
             int nq = GetTotPoints();
             Array<OneD, NekDouble> tmp(nq);
             Array<OneD, NekDouble> dtmp(nq);
+            VarCoeffType varcoefftypes[3][3]
+                              = { {eVarCoeffD00, eVarCoeffD01, eVarCoeffD02},
+                                  {eVarCoeffD01, eVarCoeffD11, eVarCoeffD12},
+                                  {eVarCoeffD02, eVarCoeffD12, eVarCoeffD22}
+            };
 
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
-            if(mkey.GetNvariableLaplacianCoefficients() > 0)
+            if (mkey.GetNVarCoeff())
             {
-                Vmath::Vmul(nq, mkey.GetVariableLaplacianCoefficient(), 1, dtmp, 1, dtmp, 1);
+                if (k1 == k2)
+                {
+                    // By default, k1 == k2 has \sigma = 1 (diagonal entries)
+                    if(mkey.HasVarCoeff(varcoefftypes[k1][k1]))
+                    {
+                        Vmath::Vmul(nq, mkey.GetVarCoeff(varcoefftypes[k1][k1]), 1, dtmp, 1, dtmp, 1);
+                    }
+                    v_IProductWRTDerivBase(k1, dtmp, outarray);
+                }
+                else
+                {
+                    // By default, k1 != k2 has \sigma = 0 (off-diagonal entries)
+                    if(mkey.HasVarCoeff(varcoefftypes[k1][k2]))
+                    {
+                        Vmath::Vmul(nq, mkey.GetVarCoeff(varcoefftypes[k1][k2]), 1, dtmp, 1, dtmp, 1);
+                        v_IProductWRTDerivBase(k1, dtmp, outarray);
+                    }
+                    else
+                    {
+                        Vmath::Zero(GetNcoeffs(), outarray, 1);
+                    }
+                }
             }
-            v_IProductWRTDerivBase(k1, dtmp, outarray);
+            else
+            {
+                v_IProductWRTDerivBase(k1, dtmp, outarray);
+            }
         }
 
         void StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                                        Array<OneD,NekDouble> &outarray,
                                                                        const StdMatrixKey &mkey)
         {
-            ExpansionType etype = DetExpansionType();
-            switch(ExpansionTypeDimMap[v_DetExpansionType()])
+            const int dim = GetCoordim();
+
+            int i,j;
+
+            Array<OneD,NekDouble> store(m_ncoeffs);
+            Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
+
+            const MatrixType mtype[3][3]
+                                   = {{eLaplacian00,eLaplacian01,eLaplacian02},
+                                      {eLaplacian01,eLaplacian11,eLaplacian12},
+                                      {eLaplacian02,eLaplacian12,eLaplacian22}};
+            StdMatrixKeySharedPtr mkeyij;
+
+            for(i = 0; i < dim; i++)
             {
-            case 1:
+                for(j = 0; j < dim; j++)
                 {
-                    StdMatrixKey mkey00(eLaplacian00,etype,*this);
-                    LaplacianMatrixOp(0,0,inarray,outarray,mkey00);
+                    mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],DetExpansionType(),*this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+
+                    LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
+                    Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
                 }
-                    break;
-            case 2:
-                {
-                    if(mkey.GetNvariableLaplacianCoefficients() == 0)
-                    {
-                        Array<OneD, NekDouble> store(m_ncoeffs);
-
-                        StdMatrixKey mkey00(eLaplacian00,etype,*this);
-                        StdMatrixKey mkey11(eLaplacian11,etype,*this);
-                        LaplacianMatrixOp(0,0,inarray,store,mkey00);
-                        LaplacianMatrixOp(1,1,inarray,outarray,mkey11);
-
-                        Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
-                    }
-                    else
-                    {
-                        int i,j;
-
-                        Array<OneD,NekDouble> store(m_ncoeffs);
-                        Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
-
-                        const int dim = 2;
-                        MatrixType mtype[dim][dim] = { {eLaplacian00,eLaplacian01} ,
-                                                       {eLaplacian10,eLaplacian11} };
-
-                        StdMatrixKeySharedPtr mkeyij;
-
-                        for(i = 0; i < dim; i++)
-                        {
-                            for(j = 0; j < dim; j++)
-                            {
-                                mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(), mkey.Get2DVariableLaplacianCoefficient(i,j));
-
-                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
-                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
-                            }
-                        }
-                        Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
-                    }
-                }
-                break;
-            case 3:
-                {
-                    if(mkey.GetNvariableLaplacianCoefficients() == 0)
-                    {
-                        Array<OneD, NekDouble> store0(m_ncoeffs);
-                        Array<OneD, NekDouble> store1(m_ncoeffs);
-
-                        StdMatrixKey mkey00(eLaplacian00,etype,*this);
-                        StdMatrixKey mkey11(eLaplacian11,etype,*this);
-                        StdMatrixKey mkey22(eLaplacian22,etype,*this);
-                        LaplacianMatrixOp(0,0,inarray,store0,mkey00);
-                        LaplacianMatrixOp(1,1,inarray,store1,mkey11);
-                        LaplacianMatrixOp(2,2,inarray,outarray,mkey22);
-
-                        Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
-                        Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
-                    }
-                    else
-                    {
-                        int i,j;
-                        int cnt = 0;
-
-                        Array<OneD,NekDouble> store(m_ncoeffs);
-                        Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
-
-                        const int dim = 3;
-                        MatrixType mtype[dim][dim] = { {eLaplacian00,eLaplacian01,eLaplacian02} ,
-                                                       {eLaplacian10,eLaplacian11,eLaplacian12} ,
-                                                       {eLaplacian20,eLaplacian21,eLaplacian22} };
-
-                        StdMatrixKeySharedPtr mkeyij;
-
-                        for(i = 0; i < dim; i++)
-                        {
-                            for(j = 0; j < dim; j++)
-                            {
-                                mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(),
-                                                                                        mkey.Get3DVariableLaplacianCoefficient(i,j));
-                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
-                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
-                            }
-                        }
-                        Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
-                    }
-                }
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, "Dimension not recognised.");
-                break;
             }
+            Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
         }
 
         void StdExpansion::WeakDerivMatrixOp_MatFree(const int k1,
@@ -740,16 +693,16 @@ namespace Nektar
                                                            const StdMatrixKey &mkey)
         {
             // ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
-
             Array<OneD, NekDouble> tmp(GetTotPoints());
             int nq = GetTotPoints();
 
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k1,tmp,tmp);
 
-            if(mkey.GetNvariableCoefficients() > 0)
+            VarCoeffType keys[] = {eVarCoeffD00, eVarCoeffD11, eVarCoeffD22};
+            if(mkey.HasVarCoeff(keys[k1]) > 0)
             {
-                Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[0], 1, &tmp[0], 1, &tmp[0], 1);
+                Vmath::Vmul(nq, &(mkey.GetVarCoeff(keys[k1]))[0], 1, &tmp[0], 1, &tmp[0], 1);
             }
 
             v_IProductWRTBase(tmp, outarray);
@@ -761,21 +714,21 @@ namespace Nektar
         {
             int dim = 3;
             int nq = GetTotPoints();
-            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
+//            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
             Array<OneD, NekDouble> tmp(nq);
 
              v_BwdTrans(inarray,tmp);
             // For Deformed mesh ==============
-            if (varsize==nq)
-            {
-                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
-            }
-
-            // For Regular mesh ==========
-            else
-            {
-                ASSERTL0(false, "Wrong route");
-            }
+//            if (varsize==nq)
+//            {
+//                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
+//            }
+//
+//            // For Regular mesh ==========
+//            else
+//            {
+//                ASSERTL0(false, "Wrong route");
+//            }
 
             v_IProductWRTBase(tmp, outarray);
         }
@@ -784,50 +737,51 @@ namespace Nektar
                                                                Array<OneD,NekDouble> &outarray,
                                                                const StdMatrixKey &mkey)
       {
-          int nqtot = GetTotPoints();
-          int matrixid = mkey.GetMatrixID();
-
-          NekDouble checkweight=0.0;
-          Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
-
-          int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
-
-          v_BwdTrans(inarray,tmp);
-
-          // weight = \grad \cdot tanvec
-          for(int k = 0; k < GetCoordim(); ++k)
-          {
-              Vmath::Vcopy(nqtot, &(mkey.GetVariableCoefficient(0))[k*nqtot],
-                              1, &tan[0], 1);
-
-              // For Regular mesh ...
-              if(gmatnumber==1)
-              {
-                  // D_{/xi} and D_{/eta}
-                  v_PhysDeriv(0,tan,dtan0);
-                  v_PhysDeriv(1,tan,dtan1);
-
-                  // d v / d x_i = (d \xi / d x_i)*( d v / d \xi ) + (d \eta / d x_i)*( d v / d \eta )
-                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+1))[0],&dtan0[0],1,&weight[0],1,&weight[0],1);
-                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+2))[0],&dtan1[0],1,&weight[0],1,&weight[0],1);
-              }
-
-              // For Curved mesh ...
-              else if(gmatnumber==nqtot)
-              {
-                  // D_{x} and D_{y}
-                  v_PhysDeriv(k,tan,dtan0);
-                  Vmath::Vadd(nqtot,&dtan0[0],1,&weight[0],1,&weight[0],1);
-              }
-
-              else
-              {
-                  ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
-              }
-          }
-
-          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);
-          v_IProductWRTBase(tmp, outarray);
+///@todo fix this
+//          int nqtot = GetTotPoints();
+//          int matrixid = mkey.GetMatrixID();
+//
+//          NekDouble checkweight=0.0;
+//          Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
+//
+//          int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
+//
+//          v_BwdTrans(inarray,tmp);
+//
+//          // weight = \grad \cdot tanvec
+//          for(int k = 0; k < GetCoordim(); ++k)
+//          {
+//              Vmath::Vcopy(nqtot, &(mkey.GetVariableCoefficient(0))[k*nqtot],
+//                              1, &tan[0], 1);
+//
+//              // For Regular mesh ...
+//              if(gmatnumber==1)
+//              {
+//                  // D_{/xi} and D_{/eta}
+//                  v_PhysDeriv(0,tan,dtan0);
+//                  v_PhysDeriv(1,tan,dtan1);
+//
+//                  // d v / d x_i = (d \xi / d x_i)*( d v / d \xi ) + (d \eta / d x_i)*( d v / d \eta )
+//                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+1))[0],&dtan0[0],1,&weight[0],1,&weight[0],1);
+//                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+2))[0],&dtan1[0],1,&weight[0],1,&weight[0],1);
+//              }
+//
+//              // For Curved mesh ...
+//              else if(gmatnumber==nqtot)
+//              {
+//                  // D_{x} and D_{y}
+//                  v_PhysDeriv(k,tan,dtan0);
+//                  Vmath::Vadd(nqtot,&dtan0[0],1,&weight[0],1,&weight[0],1);
+//              }
+//
+//              else
+//              {
+//                  ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
+//              }
+//          }
+//
+//          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);
+//          v_IProductWRTBase(tmp, outarray);
       }
 
         void StdExpansion::LinearAdvectionDiffusionReactionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
@@ -837,10 +791,10 @@ namespace Nektar
         {
 
             int i;
-            int ndir = mkey.GetNvariableCoefficients(); // assume num.r consts corresponds to directions
+            int ndir = mkey.GetNVarCoeff(); // assume num.r consts corresponds to directions
             ASSERTL0(ndir,"Must define at least one advection velocity");
 
-            NekDouble   lambda = mkey.GetConstant(0);
+            NekDouble   lambda = mkey.GetConstFactor(eFactorLambda);
             int         totpts = GetTotPoints();
             Array<OneD, NekDouble> tmp(3*totpts);
             Array<OneD, NekDouble> tmp_deriv = tmp + totpts;
@@ -851,12 +805,14 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
 
+            VarCoeffType varcoefftypes[] = {eVarCoeffVelX, eVarCoeffVelY};
+
             //calculate u dx + v dy + ..
             Vmath::Zero(totpts,tmp_adv,1);
             for(i = 0; i < ndir; ++i)
             {
                 v_PhysDeriv(i,tmp,tmp_deriv);
-                Vmath::Vvtvp(totpts,mkey.GetVariableCoefficient(i),1,tmp_deriv,1,tmp_adv,1,tmp_adv,1);
+                Vmath::Vvtvp(totpts,mkey.GetVarCoeff(varcoefftypes[i]),1,tmp_deriv,1,tmp_adv,1,tmp_adv,1);
             }
 
             if(lambda) // add -lambda*u
@@ -888,7 +844,7 @@ namespace Nektar
                                                                        Array<OneD,NekDouble> &outarray,
                                                                        const StdMatrixKey &mkey)
         {
-            NekDouble lambda = mkey.GetConstant(0);
+            NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
             Array<OneD,NekDouble> tmp(m_ncoeffs);
             StdMatrixKey mkeymass(eMass,DetExpansionType(),*this);
             StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
@@ -1016,36 +972,6 @@ namespace Nektar
                                          Array<OneD,NekDouble> &outarray)
             {
                 v_AddNormTraceInt(dir,inarray,outarray);
-            }
-
-            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return NullDNekScalMatSharedPtr;
-            }
-
-            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return NullDNekScalMatSharedPtr;
-            }
-
-            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, NekDouble> &dir1Forcing,
-                                                         NekDouble lambdaval,
-                                                         NekDouble tau)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return NullDNekScalMatSharedPtr;
-            }
-
-            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                                                         NekDouble lambdaval,
-                                                         NekDouble tau)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return NullDNekScalMatSharedPtr;
             }
 
             const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)

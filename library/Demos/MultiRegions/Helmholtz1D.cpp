@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    NekDouble  lambda;
+    StdRegions::ConstFactorMap factors;
     string meshfile(vSession->GetFilename());
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
@@ -39,12 +39,12 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Print summary of solution details
-        lambda = vSession->GetParameter("Lambda");
+        factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
         const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
         cout << "Solving 1D Helmholtz: "  << endl;
         cout << "       Communication: " << vComm->GetType() << endl;
         cout << "       Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
-        cout << "       Lambda       : " << lambda << endl;
+        cout << "       Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
         //----------------------------------------------
 
         //----------------------------------------------
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
         //----------------------------------------------
 
         //----------------------------------------------

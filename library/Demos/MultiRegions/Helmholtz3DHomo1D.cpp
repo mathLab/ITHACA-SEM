@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    NekDouble  lambda;
+    StdRegions::ConstFactorMap factors;
+    FlagList flags;
 
     if( (argc != 2) && (argc != 3))
     {
@@ -49,13 +50,14 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = vSession->GetParameter("Lambda");
+    flags.set(eUseContCoeff, true);
+    factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0 
                             = expansions.begin()->second->m_basisKeyVector[0];
 
     cout << "Solving 3D Helmholtz (Homogeneous in z-direction):"  << endl;
-    cout << "         Lambda          : " << lambda << endl;
+    cout << "         Lambda          : " << factors[StdRegions::eFactorLambda] << endl;
     cout << "         Lz              : " << lz << endl;
     cout << "         No. modes       : " << bkey0.GetNumModes() << endl;
     cout << "         No. hom. modes  : " << Bkey.GetNumModes() << endl;
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
     //Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
      //----------------------------------------------
 
     //----------------------------------------------

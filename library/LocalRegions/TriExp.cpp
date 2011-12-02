@@ -124,33 +124,7 @@ namespace Nektar
                                            Array<OneD,NekDouble> &outarray,
                                            const StdRegions::StdMatrixKey &mkey)
         {
-            int nConsts = mkey.GetNconstants();
-            DNekScalMatSharedPtr   mat;
-
-            switch(nConsts)
-            {
-            case 0:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType());
-                }
-                break;
-            case 1:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
-                }
-                break;
-            case 2:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
-                }
-                break;
-
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
-                }
-                break;
-            }
+            DNekScalMatSharedPtr   mat = GetLocMatrix(mkey);
 
             if(inarray.get() == outarray.get())
             {
@@ -228,7 +202,7 @@ namespace Nektar
                                                Array<OneD,NekDouble> &outarray,
                                                const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -426,7 +400,7 @@ namespace Nektar
                 int       nmodes0 = m_base[0]->GetNumModes();
                 int       nmodes1 = m_base[1]->GetNumModes();
                 int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                NekDouble lambda  = mkey.GetConstant(0);
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -480,7 +454,7 @@ namespace Nektar
                 int       nmodes0 = m_base[0]->GetNumModes();
                 int       nmodes1 = m_base[1]->GetNumModes();
                 int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                NekDouble lambda  = mkey.GetConstant(0);
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -1038,13 +1012,6 @@ namespace Nektar
             }
         }
 
-//        void TriExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal, const int k)
-//        {
-//            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-//
-//            Vmath::Vcopy(m_num, m_metricinfo->GetNormal()[k], 1, SurfaceNormal, 1);
-//      	}
-
         void TriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
@@ -1422,7 +1389,7 @@ namespace Nektar
             case StdRegions::eMass:
                 {
                     if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
-                       (mkey.GetNvariableCoefficients()))
+                       (mkey.GetNVarCoeff()))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1461,7 +1428,7 @@ namespace Nektar
             case StdRegions::eWeakDeriv1:
             case StdRegions::eWeakDeriv2:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed || mkey.GetNVarCoeff())
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1505,110 +1472,10 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eWeakDirectionalDeriv:
-                {
-                    int dim = m_geom->GetCoordim();
-                    int nqtot   = (m_base[0]->GetNumPoints())*(m_base[1]->GetNumPoints());
-                    int nvarcoeffs = mkey.GetNvariableCoefficients();
-
-                    NekDouble jac = (m_metricinfo->GetJac())[0];
-                    Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
-
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        NekDouble one = 1.0;
-
-                        DNekMatSharedPtr WeakDirectionalDeriv = GenMatrix(mkey);
-
-                        Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
-                        Array<OneD, NekDouble> Weight_wk;
-
-                        // Store tangential basis in Weighted[0-dim]
-                        Weight[0] = mkey.GetVariableCoefficient(0);
-
-                        // Store gmat info in Weight[dim+1]
-                        for (int k=0; k < 2*dim; ++k)
-                        {
-                            Weight_wk = Array<OneD, NekDouble>(nqtot);
-                            Vmath::Vcopy(nqtot, &gmat[k][0], 1, &Weight_wk[0], 1);
-                            Weight[k+1] = Weight_wk;
-                        }
-
-                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight);
-                        DNekMatSharedPtr MassLevelCurvaturemat = GenMatrix(stdmasskey);
-
-                        (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
-
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,WeakDirectionalDeriv);
-                    }
-                    else
-                    {
-                        Array<OneD, Array<OneD, const NekDouble> > Cxi(1);
-                        Array<OneD, Array<OneD, const NekDouble> > Ceta(1);
-
-                        // Directional Forcing is applied
-                        Array<OneD, NekDouble> Cxi_wk,  Ceta_wk;
-                        Cxi_wk  = Array<OneD, NekDouble> (nqtot,0.0);
-                        Ceta_wk = Array<OneD, NekDouble> (nqtot,0.0);
-
-
-                        // Cxi = tan_{xi_x} * d \xi/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
-                        // Ceta = tan_{eta_x} * d \eta/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
-                        for (int k=0; k<dim; ++k)
-                        {
-                            Vmath::Svtvp(nqtot,gmat[2*k][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &Cxi_wk[0],1,&Cxi_wk[0],1);
-                            Vmath::Svtvp(nqtot,gmat[2*k+1][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &Ceta_wk[0],1,&Ceta_wk[0],1);
-                        }
-
-                        Cxi[0]  = Cxi_wk;
-                        Ceta[0] = Ceta_wk;
-
-                        // derivxi = Cxi * ( B * D_{\xi} *B^T )
-                        // deriveta = Ceta * ( B * D_{\eta} * B^T )
-                        MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetExpansionType(), *this, Cxi);
-                        MatrixKey derivetakey(StdRegions::eWeakDeriv1, mkey.GetExpansionType(), *this, Ceta);
-
-                        DNekMat &derivxi = *GetStdMatrix(derivxikey);
-                        DNekMat &deriveta = *GetStdMatrix(derivetakey);
-
-                        int rows = derivxi.GetRows();
-                        int cols = deriveta.GetColumns();
-
-                        DNekMatSharedPtr WeakDirectionalDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-
-                        // D_t = D_xi
-                        (*WeakDirectionalDeriv) = derivxi + deriveta;
-
-                        // Add Weighted Mass with (\grad \cdot u )
-                        Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
-                        Array<OneD, NekDouble> Weight_wk;
-
-                        // Store tangential basis in Weighted[0-dim]
-                        Weight[0] = mkey.GetVariableCoefficient(0);
-
-                        // Store gmat info in Weight[dim+1]
-                        for (int k=0; k < 2*dim; ++k)
-                        {
-                            Weight_wk = Array<OneD, NekDouble>(gmat[k].num_elements());
-                            Weight_wk[0] = gmat[k][0];
-                            Weight[k+1] = Weight_wk;
-                        }
-
-                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight);
-                        DNekMatSharedPtr MassLevelCurvaturemat = GetStdMatrix(stdmasskey);
-
-                        (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
-
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDirectionalDeriv);
-                    }
-                }
-                break;
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
-                        (mkey.GetNvariableLaplacianCoefficients() > 0) )
+                        (mkey.GetNVarCoeff() > 0) )
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1675,12 +1542,12 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this);
+                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -1762,22 +1629,7 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-                    int nvarcoeffs = mkey.GetNvariableCoefficients();
-                    Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
-
-                    if(nvarcoeffs>0)
-                    {
-                        for(int j=0; j<nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = mkey.GetVariableCoefficient(j);
-                        }
-                    }
-
-                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-                                                  DetExpansionType(),*this,
-                                                  mkey.GetConstant(0),
-                                                  mkey.GetConstant(1),
-                                                  varcoeffs);
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
 
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
@@ -1816,7 +1668,7 @@ namespace Nektar
             {
                 // this can only use stdregions statically condensed system for mass matrix
             case StdRegions::eMass:
-                if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNvariableCoefficients()))
+                if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNVarCoeff()))
                 {
                     factor = 1.0;
                     goto UseLocRegionsMatrix;

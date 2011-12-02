@@ -286,33 +286,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            int nConsts = mkey.GetNconstants();
-            DNekScalMatSharedPtr   mat;
-
-            switch(nConsts)
-            {
-            case 0:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType());
-                }
-                break;
-            case 1:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
-                }
-                break;
-            case 2:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
-                }
-                break;
-
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
-                }
-                break;
-            }
+            DNekScalMatSharedPtr   mat = GetLocMatrix(mkey);
 
             if(inarray.get() == outarray.get())
             {
@@ -791,7 +765,7 @@ namespace Nektar
                                         nquad0*nquad1*(nquad2+nmodes0)
                                             + nmodes0*nmodes1*nquad2);
 
-                NekDouble lambda  = mkey.GetConstant(0);
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -1016,7 +990,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -1282,10 +1256,10 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), *this);
+                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();

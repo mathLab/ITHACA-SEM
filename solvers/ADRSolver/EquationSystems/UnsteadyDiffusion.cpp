@@ -118,6 +118,9 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         int nq = m_fields[0]->GetNpoints();
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
+        factors[StdRegions::eFactorTau] = 1.0;
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
@@ -126,13 +129,11 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -1.0/lambda/m_epsilon, inarray[i], 1, m_fields[i]->UpdatePhys(), 1);
-
-            NekDouble kappa = 1.0/lambda/m_epsilon;
+            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1, m_fields[i]->UpdatePhys(), 1);
 
             // Solve a system of equations with Helmholtz solver
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                            m_fields[i]->UpdateCoeffs(),kappa);
+                                   m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
             m_fields[i]->SetPhysState(false);
 

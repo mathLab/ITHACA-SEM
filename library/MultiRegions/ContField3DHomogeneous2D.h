@@ -89,23 +89,10 @@ namespace Nektar
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
-
-            
-            /// Solves the three-dimensional Helmholtz equation, subject to the
-            /// boundary conditions specified (Continuous Galerkin specific
-            /// version).
-            virtual void v_HelmSolveCG(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                    bool UseContCoeffs,
+                    const FlagList &flags,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeff,
                     const Array<OneD, const NekDouble> &dirForcing);
-
         };
 
         typedef boost::shared_ptr<ContField3DHomogeneous2D>  

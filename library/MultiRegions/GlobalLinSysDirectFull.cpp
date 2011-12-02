@@ -131,7 +131,7 @@ namespace Nektar
                     int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
 
                     m_expList->GeneralMatrixOp(
-                            *m_linSysKey.GetGlobalMatrixKey(),
+                            m_linSysKey,
                             pOutput, tmp, true);
 
                     Vmath::Vsub( nGlobDofs, pInput.get(),1,

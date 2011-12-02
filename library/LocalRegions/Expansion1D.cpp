@@ -53,11 +53,12 @@ namespace Nektar
                          "HybridDGHelmholtz matrix not set up "
                          "for non boundary-interior expansions");
                     int       i;
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
+                    NekDouble lambdaval = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
                     int       ncoeffs   = GetNcoeffs();
 
                     int       coordim = GetCoordim();
+
                     DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
                     StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                            StdRegions::eWeakDeriv1,
@@ -95,8 +96,9 @@ namespace Nektar
                     int j,k;
                     int nbndry = NumDGBndryCoeffs();
                     int ncoeffs = GetNcoeffs();
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
+                    StdRegions::ConstFactorMap factors;
+                    factors[StdRegions::eFactorLambda] = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    factors[StdRegions::eFactorTau] = mkey.GetConstFactor(StdRegions::eFactorTau);
                     
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);                    
@@ -110,7 +112,7 @@ namespace Nektar
                     DNekMat &Umat = *returnval;
                     
                     // Helmholtz matrix
-                    DNekScalMat  &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
+                    DNekScalMat  &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, factors);
                     
                     // for each degree of freedom of the lambda space
                     // calculate Umat entry 
@@ -121,7 +123,7 @@ namespace Nektar
                         Vmath::Zero(ncoeffs,&f[0],1);
                         lambda[j] = 1.0;
                         
-                        AddHDGHelmholtzTraceTerms(tau,lambda,f);
+                        AddHDGHelmholtzTraceTerms(factors[StdRegions::eFactorTau],lambda,f);
                         
                         Ulam = invHmat*F; // generate Ulam from lambda
                         
@@ -149,18 +151,19 @@ namespace Nektar
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(ncoeffs);
                     DNekVec F(ncoeffs,f,eWrapper);
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
-                    
+                    StdRegions::ConstFactorMap factors;
+                    factors[StdRegions::eFactorLambda] = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    factors[StdRegions::eFactorTau] = mkey.GetConstFactor(StdRegions::eFactorTau);
+
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
                     DNekMat &Qmat = *returnval;
                     
                     // Helmholtz matrix
-                    DNekScalMat &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval,tau);
+                    DNekScalMat &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, factors);
                     
                     // Lambda to U matrix
-                    DNekScalMat &lamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval, tau);
+                    DNekScalMat &lamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, factors);
                     
                     // Inverse mass matrix 
                     DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
@@ -221,8 +224,9 @@ namespace Nektar
                     int j;
                     int nbndry = NumBndryCoeffs();
 
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
+                    StdRegions::ConstFactorMap factors;
+                    factors[StdRegions::eFactorLambda] = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    factors[StdRegions::eFactorTau] = mkey.GetConstFactor(StdRegions::eFactorTau);
 
                     Array<OneD,unsigned int> bmap;
                     Array<OneD, NekDouble>   lam(2);
@@ -233,21 +237,21 @@ namespace Nektar
                     DNekMat &BndMat = *returnval;
                     
                     // Matrix to map Lambda to U
-                    DNekScalMat &LamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval,tau);
+                    DNekScalMat &LamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, factors);
                 
                     // Matrix to map Lambda to Q
-                    DNekScalMat &LamToQ = *GetLocMatrix(StdRegions::eHybridDGLamToQ0, lambdaval,tau);
+                    DNekScalMat &LamToQ = *GetLocMatrix(StdRegions::eHybridDGLamToQ0, factors);
 
                     lam[0] = 1.0; lam[1] = 0.0;
                     for(j = 0; j < nbndry; ++j)
                     {
-                        BndMat(0,j) = -LamToQ(bmap[0],j) - tau*(LamToU(bmap[0],j) - lam[j]);
+                        BndMat(0,j) = -LamToQ(bmap[0],j) - factors[StdRegions::eFactorTau]*(LamToU(bmap[0],j) - lam[j]);
                     }
 
                     lam[0] = 0.0; lam[1] = 1.0;
                     for(j = 0; j < nbndry; ++j)
                     {
-                        BndMat(1,j) =  LamToQ(bmap[1],j) - tau*(LamToU(bmap[1],j) - lam[j]);
+                        BndMat(1,j) =  LamToQ(bmap[1],j) - factors[StdRegions::eFactorTau]*(LamToU(bmap[1],j) - lam[j]);
                     }
                 }
                 break;

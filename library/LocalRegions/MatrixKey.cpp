@@ -41,88 +41,19 @@ namespace Nektar
     namespace LocalRegions
     {
         MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType,
-                             const StdRegions::ExpansionType expansionType,
-                             const StdRegions::StdExpansion &stdExpansion,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, nodalType)
+                  const StdRegions::ExpansionType expansionType,
+                  const StdRegions::StdExpansion &stdExpansion,
+                  const StdRegions::ConstFactorMap &factorMap,
+                  const StdRegions::VarCoeffMap &varCoeffMap,
+                  LibUtilities::PointsType nodalType) :
+            StdMatrixKey(matrixType, expansionType, stdExpansion, factorMap, varCoeffMap, nodalType),
+            m_metricinfo(stdExpansion.GetMetricInfo())
         {
-            m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
-        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ExpansionType expansionType,
-                             StdRegions::StdExpansion &stdExpansion,
-                             NekDouble    scalefactor,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, scalefactor, nodalType)
+        MatrixKey::MatrixKey(const StdRegions::StdMatrixKey &mkey) :
+            StdRegions::StdMatrixKey(mkey)
         {
-            m_metricinfo  = stdExpansion.GetMetricInfo(); 
-        }
-
-        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ExpansionType expansionType,
-                             StdRegions::StdExpansion &stdExpansion,
-                             NekDouble    scalefactor,
-                             NekDouble    constant, 
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, scalefactor, constant, nodalType)
-        {
-            m_metricinfo  = stdExpansion.GetMetricInfo(); 
-        }
-
-        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ExpansionType expansionType,
-                             StdRegions::StdExpansion &stdExpansion,
-                             NekDouble    scalefactor,
-                             NekDouble    constant,
-                             const Array<OneD, const NekDouble>& varcoeffs,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, scalefactor, constant, varcoeffs, nodalType)
-        {
-            m_metricinfo  = stdExpansion.GetMetricInfo();
-        }
-
-        MatrixKey::MatrixKey(StdRegions::MatrixType matrixType,
-                             StdRegions::ExpansionType expansionType,
-                             StdRegions::StdExpansion &stdExpansion,
-                             NekDouble    scalefactor,
-                             NekDouble    constant, 
-                             const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, scalefactor, constant, varcoeffs, nodalType)
-        {
-            m_metricinfo  = stdExpansion.GetMetricInfo(); 
-        }
-
-        MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType,
-                             const StdRegions::ExpansionType expansionType,
-                             const StdRegions::StdExpansion &stdExpansion,
-                             const Array<OneD,const NekDouble>& varcoeffs,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, varcoeffs, nodalType)
-        {
-            m_metricinfo  = stdExpansion.GetMetricInfo();
-        }
-
-        MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType, 
-                             const StdRegions::ExpansionType expansionType, 
-                             const StdRegions::StdExpansion &stdExpansion,
-                             const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, varcoeffs, nodalType)
-        {
-            m_metricinfo  = stdExpansion.GetMetricInfo(); 
-        }
-
-        MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType, 
-                             const StdRegions::ExpansionType expansionType, 
-                             const StdRegions::StdExpansion &stdExpansion,
-                             const Array<OneD, NekDouble>& constants,
-                             const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                             LibUtilities::PointsType nodalType) :
-            StdRegions::StdMatrixKey(matrixType, expansionType, stdExpansion, constants, varcoeffs, nodalType)
-        {
-            m_metricinfo  = stdExpansion.GetMetricInfo(); 
         }
 
         bool MatrixKey::opLess::operator()(const MatrixKey &lhs, const MatrixKey &rhs) const

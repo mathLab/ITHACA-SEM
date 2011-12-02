@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
     string vDriverModule;
     DriverSharedPtr drv;
 
-    try
-    {
+//    try
+//    {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
@@ -68,15 +68,15 @@ int main(int argc, char *argv[])
 
         // Finalise communications
         session->Finalise();
-    }
-    catch (const std::runtime_error& e)
-    {
-        return 1;
-    }
-    catch (const std::string& eStr)
-    {
-        cout << "Error: " << eStr << endl;
-    }
+//    }
+//    catch (const std::runtime_error& e)
+//    {
+//        return 1;
+//    }
+//    catch (const std::string& eStr)
+//    {
+//        cout << "Error: " << eStr << endl;
+//    }
 
     return 0;
 }

@@ -220,11 +220,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(
                     const MatrixKey &mkey);
 
-            LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(
-                    const StdRegions::MatrixType mtype,
-                    NekDouble lambdaval,
-                    NekDouble tau);
-
             LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr&
                     v_GetLocStaticCondMatrix(const MatrixKey &mkey);
 

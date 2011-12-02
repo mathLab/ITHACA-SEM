@@ -778,27 +778,33 @@ namespace Nektar
             BlkMatrix = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
-            int totnq, nvarcoeffs = gkey.GetNvariableCoefficients();
+            int totnq, nvarcoeffs = gkey.GetNVarCoeffs();
             Array<OneD, NekDouble> varcoeffs_wk;
 
             for(i = cnt1 = 0; i < n_exp; ++i)
             {
-                totnq = GetCoordim(i)*( (*m_exp)[elmt_id.find(i)->second]->GetTotPoints() );
-
                 // need to be initialised with zero size for non variable coefficient case
-                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+                StdRegions::VarCoeffMap varcoeff;
 
                 if(nvarcoeffs>0)
                 {
-                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+                    //totnq = GetCoordim(i)*( (*m_exp)[elmt_id.find(i)->second]->GetTotPoints() );
+                    totnq = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
                     // When two varcoeffs in a specific order
-                    for(j = 0; j < nvarcoeffs; j++)
+                    StdRegions::VarCoeffMap::const_iterator x;
+                    for (x = gkey.GetVarCoeffs().begin(); x != gkey.GetVarCoeffs().end(); ++x)
                     {
                         varcoeffs_wk = Array<OneD, NekDouble>(totnq,0.0);
-                        Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs_wk[0],1);
-                        varcoeffs[j] = varcoeffs_wk;
+                        Vmath::Vcopy(totnq, &(x->second)[cnt1], 1, &varcoeffs_wk[0],1);
+                        varcoeff[x->first] = varcoeffs_wk;
                     }
+//                    for(j = 0; j < nvarcoeffs; j++)
+//                    {
+//                        varcoeffs_wk = Array<OneD, NekDouble>(totnq,0.0);
+//                        Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs_wk[0],1);
+//                        varcoeffs[j] = varcoeffs_wk;
+//                    }
 
                     cnt1  += totnq;
                 }
@@ -806,9 +812,10 @@ namespace Nektar
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
                                                (*m_exp)[elmt_id.find(i)->second]->DetExpansionType(),
                                                *(*m_exp)[elmt_id.find(i)->second],
-                                               gkey.GetConstants(),
-                                               varcoeffs );
-                loc_mat = (*m_exp)[elmt_id.find(i)->second]->GetLocMatrix(matkey);
+                                               gkey.GetConstFactors(),
+                                               varcoeff );
+
+                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[elmt_id.find(i)->second])->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
 
@@ -860,8 +867,8 @@ namespace Nektar
                 else
                 {
                     int  i,j;
-
-                    int nvarcoeffs = gkey.GetNvariableCoefficients();
+ASSERTL0(false, "FIX THIS");
+/*                    int nvarcoeffs = gkey.GetNvariableCoefficients();
 
                     for(i= 0; i < num_elmts[n]; ++i)
                     {
@@ -873,10 +880,16 @@ namespace Nektar
                         {
                             varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
 
-                            for(j = 0; j < nvarcoeffs; j++)
+                            StdRegions::VarCoeffMap::const_iterator x;
+                            for (x = gkey.GetVarCoeffs().begin(); x != gkey.GetVarCoeffs().end(); ++x)
                             {
-                                varcoeffs[j] = gkey.GetVariableCoefficient(j) + m_phys_offset[eid];
+                                varcoeffs[j] = x->second + m_phys_offset[eid];
                             }
+
+//                            for(j = 0; j < nvarcoeffs; j++)
+//                            {
+//                                varcoeffs[j] = gkey.GetVariableCoefficient(j) + m_phys_offset[eid];
+//                            }
                         }
 
                         StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
@@ -887,7 +900,7 @@ namespace Nektar
                         (*m_exp)[eid]->GeneralMatrixOp(inarray + m_coeff_offset[eid],
                                                        tmp_outarray = outarray+m_coeff_offset[eid],
                                                        mkey);
-                    }
+                    }*/
                 }
             }
         }
@@ -957,33 +970,40 @@ namespace Nektar
 
             map< pair< int,  int>, NekDouble > spcoomat;
             pair<int,int> coord;
+ASSERTL0(false, "FIX THIS");
 
-            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            int nvarcoeffs = mkey.GetNVarCoeffs();
 
             // fill global matrix
             for(n = cntdim1 = cntdim2 = 0; n < (*m_exp).size(); ++n)
             {
                 // need to be initialised with zero size for non variable coefficient case
-                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
-
+                StdRegions::VarCoeffMap varcoeffs;
+/*
                 if(nvarcoeffs>0)
                 {
                     varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
 
-                    for(j = 0; j < nvarcoeffs; j++)
+                    StdRegions::VarCoeffMap::const_iterator x;
+                    for (x = mkey.GetVarCoeffs().begin(); x != mkey.GetVarCoeffs().end(); ++x)
                     {
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[j];
+                        varcoeffs[j] = x->second + m_phys_offset[j];
                     }
-                }
 
+//                    for(j = 0; j < nvarcoeffs; j++)
+//                    {
+//                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[j];
+//                    }
+                }
+*/
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[m_offset_elmt_id[n]]->DetExpansionType(),
                                                *(*m_exp)[m_offset_elmt_id[n]],
-                                               mkey.GetConstants(),
+                                               mkey.GetConstFactors(),
                                                varcoeffs);
 
-                loc_mat = (*m_exp)[m_offset_elmt_id[n]]->GetLocMatrix(matkey);
+                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[m_offset_elmt_id[n]])->GetLocMatrix(matkey);
 
                 loc_rows = loc_mat->GetRows();
                 loc_cols = loc_mat->GetColumns();
@@ -1053,7 +1073,7 @@ namespace Nektar
             DNekMatSharedPtr Gmat;
             int bwidth = locToGloMap->GetFullSystemBandWidth();
 
-            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            int nvarcoeffs = mkey.GetNVarCoeffs();
             MatrixStorage matStorage;
 
             map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
@@ -1085,27 +1105,34 @@ namespace Nektar
             // fill global symmetric matrix
             for(n = 0; n < (*m_exp).size(); ++n)
             {
-
+ASSERTL0(false, "FIX THIS");
                 // need to be initialised with zero size for non variable coefficient case
-                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+                StdRegions::VarCoeffMap varcoeffs;
 
                 if(nvarcoeffs>0)
                 {
-                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+/// @todo Add back variable coeffs
+//                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+//
+//                    StdRegions::VarCoeffMap::const_iterator x;
+//                    for (x = mkey.GetVarCoeffs().begin(); x != mkey.GetVarCoeffs().end(); ++x)
+//                    {
+//                        varcoeffs[j] = x->second + m_phys_offset[n];
+//                    }
 
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[n];
-                    }
+//                    for(j = 0; j < nvarcoeffs; j++)
+//                    {
+//                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[n];
+//                    }
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
-                                               mkey.GetConstants(),
+                                               mkey.GetConstFactors(),
                                                varcoeffs);
 
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
+                loc_mat = boost::dynamic_pointer_cast<LocalRegions::Expansion>((*m_exp)[n])->GetLocMatrix(matkey);
 
 
                 if(RobinBCInfo.count(n) != 0) // add robin mass matrix
@@ -2165,48 +2192,12 @@ namespace Nektar
         void ExpList::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                      NekDouble lambda,
-                const Array<OneD, const NekDouble> &varLambda,
-                const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            ASSERTL0(false, "HelmSolve not implemented.");
-            // For ContFieldX classes, -> ContFieldX::v_HelmSolveCG
-            // For DisContFieldX classes, -> DisContFieldX::v_HelmSolveDG
-        }
-
-        void ExpList::v_HelmSolveCG(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray,
-                      NekDouble lambda,
-                const Array<OneD, const NekDouble> &varLambda,
-                const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                      bool UseContCoeffs,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing)
         {
-            ASSERTL0(false, "HelmSolveCG not implemented.");
-            // Only implemented in ContFieldX classes
-        }
-
-        void ExpList::v_HelmSolveDG(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray,
-                      NekDouble lambda,
-                const Array<OneD, const NekDouble> &varLambda,
-                const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                      NekDouble tau)
-        {
-            ASSERTL0(false, "HelmSolveDG not implemented.");
-            // Only implemented in DisContFieldX classes
-        }
-
-        void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray,
-                                  const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                                  const Array<OneD, NekDouble> &lambda,
-                                  NekDouble tau)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
+            ASSERTL0(false, "HelmSolve not implemented.");
         }
 		
         void ExpList::v_LinearAdvectionDiffusionReactionSolve(

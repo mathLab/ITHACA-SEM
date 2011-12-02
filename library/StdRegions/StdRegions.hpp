@@ -194,24 +194,53 @@ namespace Nektar
             "FwdTrans"
         };
 
-        enum MatrixVarCoeff
+        enum VarCoeffType
         {
+            eVarCoeffMass,
+            eVarCoeffLaplacian,
+            eVarCoeffWeakDeriv,
             eVarCoeffD00,
             eVarCoeffD11,
             eVarCoeffD22,
             eVarCoeffD01,
             eVarCoeffD02,
-            eVarCoeffD12
+            eVarCoeffD12,
+            eVarCoeffPrimative,
+            eVarCoeffVelX,
+            eVarCoeffVelY
         };
 
-        const char* const MatrixVarCoeffMap[] = {
+        const char* const VarCoeffTypeMap[] = {
+            "VarCoeffMass",
+            "VarCoeffLaplacian",
+            "VarCoeffWeakDeriv",
             "VarCoeffD00",
             "VarCoeffD11",
             "VarCoeffD22",
             "VarCoeffD01",
             "VarCoeffD02",
-            "VarCoeffD12"
+            "VarCoeffD12",
+            "VarCoeffPrimative",
+            "VarCoeffVelX",
+            "VarCoeffVelY"
         };
+        typedef std::map<StdRegions::VarCoeffType, Array<OneD, const NekDouble> > VarCoeffMap;
+        static VarCoeffMap NullVarCoeffMap;
+
+        enum ConstFactorType
+        {
+            eFactorLambda,
+            eFactorTau,
+            eFactorTime
+        };
+
+        const char* const ConstFactorTypeMap[] = {
+            "FactorLambda",
+            "FactorTau",
+            "FactorTime"
+        };
+        typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;
+        static ConstFactorMap NullConstFactorMap;
 
         /** enum list of StdExpansion regions */
         enum ExpansionType

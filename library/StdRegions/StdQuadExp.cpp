@@ -1302,7 +1302,7 @@ namespace Nektar
 				}
 				break;
 			default:
-                {                
+                {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
 				}
 				break;
@@ -1349,7 +1349,7 @@ namespace Nektar
                              Array<OneD,NekDouble> &outarray,
                              const StdMatrixKey &mkey)
         {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -1415,7 +1415,7 @@ namespace Nektar
             int       nmodes0 = m_base[0]->GetNumModes();
             int       nmodes1 = m_base[1]->GetNumModes();
             int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-            NekDouble lambda  = mkey.GetConstant(0);
+            NekDouble lambda  = mkey.GetConstFactor(eFactorLambda);
                                 
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();

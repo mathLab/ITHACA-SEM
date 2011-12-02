@@ -791,35 +791,6 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
 
-            DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype,
-                                               NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-                                               NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                return v_GetLocMatrix(mtype,lambdaval,tau);
-            }
-
-            DNekScalMatSharedPtr& GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, NekDouble> &dir1Forcing,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                return v_GetLocMatrix(mtype, dir1Forcing, lambdaval, tau);
-            }
-
-            DNekScalMatSharedPtr& GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                return v_GetLocMatrix(mtype, varcoeffs, lambdaval, tau);
-            }
-
-            DNekScalMatSharedPtr& GetLocMatrix(const LocalRegions::MatrixKey &mkey)
-            {
-                return v_GetLocMatrix(mkey);
-            }
-
-
             const Array<OneD, const NekDouble>& GetPhysNormals(void)
             {
                 return v_GetPhysNormals();
@@ -1216,19 +1187,19 @@ namespace Nektar
                 return v_GetGeom3D();
             }
 
-            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
+//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
-            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau);
-
-            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, NekDouble> &dir1Forcing,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
-
-            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
+//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau);
+//
+//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//                                                         const Array<OneD, NekDouble> &dir1Forcing,
+//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
+//
+//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
+//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
 
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 

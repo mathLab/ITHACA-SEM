@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    NekDouble  lambda;
+    StdRegions::ConstFactorMap factors;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
@@ -48,12 +48,13 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = vSession->GetParameter("Lambda");
+    factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
+    factors[StdRegions::eFactorTau] = 1.0;
     const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
     cout << "Solving 2D Helmholtz:"  << endl;
-    cout << "         Lambda     : " << lambda << endl;
+    cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
     cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
     //----------------------------------------------
 
     Timing("Helmholtz Solve ..");
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
     }
 
     Timing("100 Helmholtz Solves:... ");

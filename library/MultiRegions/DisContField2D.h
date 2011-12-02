@@ -374,17 +374,10 @@ namespace Nektar
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
-
-            virtual void v_HelmSolveDG(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                          NekDouble tau);
+                    const FlagList &flags,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeff,
+                    const Array<OneD, const NekDouble> &dirForcing);
 
             /// Calculates the result of the multiplication of a global
             /// matrix of type specified by \a mkey with a vector given by \a

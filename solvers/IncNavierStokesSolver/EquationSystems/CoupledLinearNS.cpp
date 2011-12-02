@@ -447,10 +447,12 @@ namespace Nektar
             locExp = m_fields[m_velocity[0]]->GetExp(eid);
             locExp->GetBoundaryMap(bmap);
             locExp->GetInteriorMap(imap);
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorLambda] = lambda/m_kinvis;
             LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
                                             locExp->DetExpansionType(),
                                             *locExp,
-                                            lambda/m_kinvis);
+                                            factors);
 
 
             int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
@@ -640,7 +642,7 @@ namespace Nektar
                 // the same time resusing differential of velocity
                 // space
                 
-                DNekScalMat &HelmMat = *locExp->GetLocMatrix(helmkey);
+                DNekScalMat &HelmMat = *(boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
                 if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
@@ -648,7 +650,7 @@ namespace Nektar
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
                                                     locExp->DetExpansionType(),
                                                     *locExp);
-                    MassMat = locExp->GetLocMatrix(masskey);
+                    MassMat = boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
                 }
 
                 Array<OneD, NekDouble> Advtmp;

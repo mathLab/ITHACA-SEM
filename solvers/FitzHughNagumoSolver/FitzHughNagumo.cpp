@@ -778,7 +778,9 @@ namespace Nektar
 
   void FitzHughNagumo:: SolveHelmholtz(const int indx, const NekDouble kappa)
   {
-    m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
+      StdRegions::ConstFactorMap factors;
+      factors[StdRegions::eFactorLambda] = kappa;
+    m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),NullFlagList,factors);
     m_fields[indx]->SetPhysState(false);
   }
 

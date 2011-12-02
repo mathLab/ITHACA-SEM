@@ -1539,7 +1539,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
             const StdMatrixKey                 &mkey)
         {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator
@@ -1615,7 +1615,7 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
             int    nquadmax = max(nquad0,nquad1);
-            NekDouble lambda = mkey.GetConstant(0);
+            NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
 
             Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
             Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);

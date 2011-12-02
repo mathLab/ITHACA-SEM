@@ -1660,15 +1660,15 @@ namespace Nektar
                 m_fields[i]->SetPhysState(false);
 
                 // Add weighted mass matrix = M ( \nabla \cdot Tanbasis )
-                if(m_gradtan.num_elements())
-                {
-                    MultiRegions::GlobalMatrixKey key(StdRegions::eMass,
-                                                        m_gradtan[j]);
-                    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,
-                                                        InField[i], temp);
-                    Vmath::Svtvp(ncoeffs, -1.0, temp, 1, qcoeffs, 1,
-                                                        qcoeffs, 1);
-                }
+//                if(m_gradtan.num_elements())
+//                {
+//                    MultiRegions::GlobalMatrixKey key(StdRegions::eMass,
+//                                                        m_gradtan[j]);
+//                    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,
+//                                                        InField[i], temp);
+//                    Vmath::Svtvp(ncoeffs, -1.0, temp, 1, qcoeffs, 1,
+//                                                        qcoeffs, 1);
+//                }
 
                  //Multiply by the inverse of mass matrix
                 m_fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);

@@ -524,30 +524,30 @@ namespace Nektar
             }
 
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
-                return m_matrixManager[mkey];
-            }
+//            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+//            {
+//                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
+//                return m_matrixManager[mkey];
+//            }
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-							                             const Array<OneD, NekDouble> &dir1Forcing,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing);
-		        return m_matrixManager[mkey];
-            }
+//            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+//							                             const Array<OneD, NekDouble> &dir1Forcing,
+//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+//            {
+//                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing);
+//		        return m_matrixManager[mkey];
+//            }
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,  const Array<OneD, Array<OneD, const NekDouble> >& dirForcing,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dirForcing);
-                return m_matrixManager[mkey];
-            }
+//            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,  const Array<OneD, Array<OneD, const NekDouble> >& dirForcing,
+//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
+//                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+//            {
+//                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dirForcing);
+//                return m_matrixManager[mkey];
+//            }
 
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
             {

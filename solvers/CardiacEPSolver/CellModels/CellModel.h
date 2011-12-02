@@ -61,18 +61,31 @@ namespace Nektar
         CellModel(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
         virtual ~CellModel() {}
 
-        virtual void Update(
+        void Update(
                 const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                       Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                const NekDouble time) = 0;
+                const NekDouble time)
+        {
+            v_Update(inarray, outarray, time);
+        }
 
-        virtual void v_PrintSummary(std::ostream &out) = 0;
+        void PrintSummary(std::ostream &out)
+        {
+            v_PrintSummary(out);
+        }
 
     protected:
         /// Spatially varying parameters.
         SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
         /// Number of physical points.
         int m_nq;
+
+        virtual void v_Update(
+                const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                      Array<OneD,        Array<OneD, NekDouble> >&outarray,
+                const NekDouble time) = 0;
+
+        virtual void v_PrintSummary(std::ostream &out) = 0;
     };
 
 }

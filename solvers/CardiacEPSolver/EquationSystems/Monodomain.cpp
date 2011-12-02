@@ -85,6 +85,33 @@ namespace Nektar
 
         m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]->GetNpoints());
 
+        if (m_session->DefinesParameter("d00"))
+        {
+            m_vardiff[StdRegions::eVarCoeffD00]
+                = Array<OneD, NekDouble>(GetNpoints(), m_session->GetParameter("d00"));
+        }
+        if (m_session->DefinesParameter("d11"))
+        {
+            m_vardiff[StdRegions::eVarCoeffD11]
+                = Array<OneD, NekDouble>(GetNpoints(), m_session->GetParameter("d11"));
+        }
+        if (m_session->DefinesParameter("d22"))
+        {
+            m_vardiff[StdRegions::eVarCoeffD22]
+                = Array<OneD, NekDouble>(GetNpoints(), m_session->GetParameter("d22"));
+        }
+
+        if (m_session->DefinesParameter("StimulusDuration"))
+        {
+            ASSERTL0(m_session->DefinesFunction("Stimulus", "u"),
+                    "Stimulus function not defined.");
+            m_stimDuration = m_session->GetParameter("StimulusDuration");
+        }
+        else
+        {
+            m_stimDuration = 0;
+        }
+
         if (!m_explicitDiffusion)
         {
             m_ode.DefineImplicitSolve (&Monodomain::DoImplicitSolve, this);
@@ -117,7 +144,8 @@ namespace Nektar
         int nvariables  = inarray.num_elements();
         int ncoeffs     = inarray[0].num_elements();
         int nq          = m_fields[0]->GetNpoints();
-        NekDouble kappa = 1.0/lambda/m_epsilon;
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
@@ -138,7 +166,8 @@ namespace Nektar
             // Solve a system of equations with Helmholtz solver and transform
             // back into physical space.
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(),kappa);
+                                   m_fields[i]->UpdateCoeffs(), NullFlagList,
+                                   factors, m_vardiff);
 
             m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(),
                                    m_fields[i]->UpdatePhys());
@@ -155,6 +184,23 @@ namespace Nektar
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
     {
+        if (m_stimDuration > 0 && time < m_stimDuration)
+        {
+            int nq = m_fields[0]->GetNpoints();
+            Array<OneD,NekDouble> x0(nq);
+            Array<OneD,NekDouble> x1(nq);
+            Array<OneD,NekDouble> x2(nq);
+
+            // get the coordinates
+            m_fields[0]->GetCoords(x0,x1,x2);
+
+            LibUtilities::EquationSharedPtr ifunc
+                    = m_session->GetFunction("Stimulus", "u");
+            for(int j = 0; j < nq; j++)
+            {
+                outarray[0][j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+            }
+        }
         m_cell->Update(inarray, outarray, time);
     }
 
@@ -163,35 +209,6 @@ namespace Nektar
                         bool dumpInitialConditions)
     {
         EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions);
-        /*
-        cout << "Set initial conditions." << endl;
-        int nq = m_fields[0]->GetNpoints();
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        m_fields[0]->GetCoords(x0,x1,x2);
-        NekDouble rad;
-        NekDouble mDiam = 4.0;
-        NekDouble m_x0c = 14.4;
-        NekDouble m_x1c = 65.0;
-        NekDouble m_x2c = 15.5;
-        for(int j = 0; j < nq; j++)
-        {
-            rad = sqrt( (x0[j]-m_x0c)*(x0[j]-m_x0c) + (x1[j]-m_x1c)*(x1[j]-m_x1c) + (x2[j]-m_x2c)*(x2[j]-m_x2c) );
-
-            if( rad <= mDiam )
-            {
-                (m_fields[0]->UpdatePhys())[j] = 1.0;
-            }
-        }
-
-        for(int i = 0 ; i < m_fields.num_elements(); i++)
-        {
-            m_fields[i]->SetPhysState(true);
-            m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-        }
-         */
     }
 
 
@@ -202,7 +219,11 @@ namespace Nektar
     {
         UnsteadySystem::v_PrintSummary(out);
         out << "\tEpsilon         : " << m_epsilon << endl;
-        m_cell->v_PrintSummary(out);
+        if (m_session->DefinesParameter("d00"))
+        {
+            out << "\tDiffusivity-x   : " << m_session->GetParameter("d00") << endl;
+        }
+        m_cell->PrintSummary(out);
     }
 
 }

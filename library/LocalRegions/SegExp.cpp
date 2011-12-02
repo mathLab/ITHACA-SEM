@@ -941,16 +941,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return m_matrixManager[mkey];
         }
 
-
-        DNekScalMatSharedPtr& SegExp::v_GetLocMatrix(
-                const StdRegions::MatrixType mtype,
-                NekDouble lambdaval,
-                NekDouble tau)
-        {
-            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
-            return m_matrixManager[mkey];
-        }
-
         DNekScalBlkMatSharedPtr& SegExp::v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey)
         {
@@ -1221,7 +1211,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             case StdRegions::eWeakDeriv1:
             case StdRegions::eWeakDeriv2:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed || mkey.GetNVarCoeff())
                     {
                         fac = 1.0; 
                         goto UseLocRegionsMatrix;
@@ -1278,12 +1268,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this);
+                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -1312,10 +1302,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     NekDouble one = 1.0;
 
-                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-                                                  DetExpansionType(),*this,
-                                                  mkey.GetConstant(0),
-                                                  mkey.GetConstant(1));
+//                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
+//                                                  DetExpansionType(),*this,
+//                                                  mkey.GetConstant(0),
+//                                                  mkey.GetConstant(1));
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();

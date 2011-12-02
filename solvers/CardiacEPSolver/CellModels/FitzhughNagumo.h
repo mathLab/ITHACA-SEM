@@ -56,7 +56,8 @@ namespace Nektar
         CellModelFitzHughNagumo(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
         virtual ~CellModelFitzHughNagumo() {}
 
-        virtual void Update(
+    protected:
+        virtual void v_Update(
                 const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                       Array<OneD,        Array<OneD, NekDouble> >&outarray,
                 const NekDouble time);

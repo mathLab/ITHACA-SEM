@@ -94,8 +94,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans,DetExpansionType(),
-                                *this,m_nodalPointsKey->GetPointsType());
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+                                NullConstFactorMap, NullVarCoeffMap,
+                                m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
             NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
@@ -113,8 +114,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans,DetExpansionType(),
-                                *this,m_nodalPointsKey->GetPointsType());
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+                                NullConstFactorMap, NullVarCoeffMap,
+                                m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
             NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eCopy);
@@ -131,8 +133,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey      Nkey(eNBasisTrans,DetExpansionType(),
-                                   *this,m_nodalPointsKey->GetPointsType());
+            StdMatrixKey      Nkey(eNBasisTrans, DetExpansionType(), *this,
+                                    NullConstFactorMap, NullVarCoeffMap,
+                                    m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
@@ -211,7 +214,8 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
             
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this, 
+            StdMatrixKey      masskey(eInvMass, DetExpansionType(), *this,
+                                      NullConstFactorMap, NullVarCoeffMap,
                                       m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 

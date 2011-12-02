@@ -59,7 +59,7 @@ namespace Nektar
         static std::string className;
 
     protected:
-        NekDouble m_lambda;
+        StdRegions::ConstFactorMap m_factors;
 
         Laplace(const LibUtilities::SessionReaderSharedPtr& pSession);
 

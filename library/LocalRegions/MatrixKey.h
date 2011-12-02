@@ -49,67 +49,14 @@ namespace Nektar
         class MatrixKey : public StdRegions::StdMatrixKey
         {
         public:
-            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
-                      const StdRegions::ExpansionType expansionType, 
-                      const StdRegions::StdExpansion &stdExpansion,
-                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            LOCAL_REGIONS_EXPORT MatrixKey( StdRegions::MatrixType matrixType, 
-                       StdRegions::ExpansionType expansionType, 
-                       StdRegions::StdExpansion &stdExpansion,
-                       double scalefactor,
-                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            LOCAL_REGIONS_EXPORT MatrixKey( StdRegions::MatrixType matrixType, 
-                       StdRegions::ExpansionType expansionType, 
-                       StdRegions::StdExpansion &stdExpansion,
-                       double scalefactor,
-                       double constant,
-                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
-                      StdRegions::ExpansionType expansionType,
-                      StdRegions::StdExpansion &stdExpansion,
-                      NekDouble    scalefactor,
-                      NekDouble    constant,
-                      const Array<OneD,const NekDouble>& varcoeffs,
-                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
-                      StdRegions::ExpansionType expansionType,
-                      StdRegions::StdExpansion &stdExpansion,
-                      NekDouble    scalefactor,
-                      NekDouble    constant,
-                      const Array<OneD,const NekDouble>& varcoeffs1,
-                      const Array<OneD,const NekDouble>& varcoeffs2,
-                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
-                      StdRegions::ExpansionType expansionType,
-                      StdRegions::StdExpansion &stdExpansion,
-                      NekDouble    scalefactor,
-                      NekDouble    constant,
-                      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
             LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType,
                       const StdRegions::ExpansionType expansionType,
                       const StdRegions::StdExpansion &stdExpansion,
-                      const Array<OneD,const NekDouble>& varcoeffs,
-                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
-                      const StdRegions::ExpansionType expansionType, 
-                      const StdRegions::StdExpansion &stdExpansion,
-                      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
+                      const StdRegions::ConstFactorMap &factorMap = StdRegions::NullConstFactorMap,
+                      const StdRegions::VarCoeffMap &varCoeffMap = StdRegions::NullVarCoeffMap,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
-            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
-                      const StdRegions::ExpansionType expansionType, 
-                      const StdRegions::StdExpansion &stdExpansion,
-                      const Array<OneD, NekDouble>& constants,
-                      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::StdMatrixKey &mkey);
 
             virtual ~MatrixKey()
             {

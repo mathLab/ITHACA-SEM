@@ -196,19 +196,12 @@ namespace Nektar
             // virtual functions
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
+                          Array<OneD,       NekDouble> &outarray,
+                    const FlagList &flags,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeff,
+                    const Array<OneD, const NekDouble> &dirForcing);
             
-            virtual void v_HelmSolveDG(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                    NekDouble tau);
-			
 			virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
 													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
 													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);

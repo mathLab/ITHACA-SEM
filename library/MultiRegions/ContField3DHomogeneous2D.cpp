@@ -172,26 +172,13 @@ namespace Nektar
         };
 
 
-       void ContField3DHomogeneous2D::v_HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
-        {
-            v_HelmSolveCG(inarray, outarray, lambda, varLambda, varCoeff,
-                              false, NullNekDouble1DArray);
-        }
-
-
-        void ContField3DHomogeneous2D::v_HelmSolveCG(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,       NekDouble> &outarray,
-                    NekDouble lambda,
-                    const Array<OneD, const NekDouble> &varLambda,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                    bool UseContCoeffs,
-                    const Array<OneD, const NekDouble> &dirForcing)
+        void ContField3DHomogeneous2D::v_HelmSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
         {
             int n,m;
             int cnt = 0;
@@ -200,35 +187,37 @@ namespace Nektar
 			int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
             NekDouble beta_y;
 			NekDouble beta_z;
-			NekDouble beta; 
+			NekDouble beta;
+			StdRegions::ConstFactorMap new_factors;
+
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-			HomogeneousFwdTrans(inarray,fce,UseContCoeffs);
+			HomogeneousFwdTrans(inarray,fce,flags.isSet(eUseContCoeff));
 			
-
             for(n = 0; n < nhom_modes_z; ++n)
             {
 				for(m = 0; m < nhom_modes_y; ++m)
 				{
 					beta_z = 2*M_PI*(n/2)/m_lhom_z;
 					beta_y = 2*M_PI*(m/2)/m_lhom_y;
-					beta = beta_y*beta_y + beta_z*beta_z;
+                    beta = beta_y*beta_y + beta_z*beta_z;
+                    new_factors = factors;
+					new_factors[StdRegions::eFactorLambda] += beta;
 					
 					m_lines[n]->HelmSolve(fce + cnt,
 										  e_out = outarray + cnt1,
-										  lambda + beta,UseContCoeffs,
-										  dirForcing, varLambda,varCoeff);
+										  flags, new_factors, varcoeff, dirForcing);
                 
 					cnt  += m_lines[n]->GetTotPoints();
-					if(UseContCoeffs)
+					if(flags.isSet(eUseContCoeff))
 					{
-                    cnt1 += m_lines[n]->GetContNcoeffs();
+					    cnt1 += m_lines[n]->GetContNcoeffs();
 					}
 					else
 					{
-                    cnt1 += m_lines[n]->GetNcoeffs();
+					    cnt1 += m_lines[n]->GetNcoeffs();
 					}
 				}
 			}

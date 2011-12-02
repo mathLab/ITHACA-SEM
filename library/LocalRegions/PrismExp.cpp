@@ -673,12 +673,12 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this);
+                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -708,10 +708,11 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-                                                  DetExpansionType(),*this,
-                                                  mkey.GetConstant(0),
-                                                  mkey.GetConstant(1));
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+//                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
+//                                                  DetExpansionType(),*this,
+//                                                  mkey.GetConstant(0),
+//                                                  mkey.GetConstant(1));
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();

@@ -67,8 +67,8 @@ namespace Nektar
         {
         public:
             /// Default constructor
-            MULTI_REGIONS_EXPORT
-            GlobalLinSys();
+//            MULTI_REGIONS_EXPORT
+//            GlobalLinSys();
 
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT

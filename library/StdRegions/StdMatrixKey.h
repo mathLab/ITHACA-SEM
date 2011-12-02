@@ -49,102 +49,12 @@ namespace Nektar
         class StdMatrixKey
         {
         public:
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType,
+                          const StdRegions::ExpansionType expansionType,
                           const StdRegions::StdExpansion &stdExpansion,
+                          const ConstFactorMap &factorMap = NullConstFactorMap,
+                          const VarCoeffMap &varCoeffMap = NullVarCoeffMap,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const NekDouble const0,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const Array<OneD, const NekDouble>& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const NekDouble const0,
-                          const Array<OneD, const NekDouble>& varcoeffs0,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const NekDouble const0,
-                          const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const Array<OneD, const NekDouble>& constants,
-                          const Array<OneD, const NekDouble >& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const Array<OneD, const NekDouble>& constants,
-                          const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const NekDouble const0,
-                          const NekDouble const1,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const NekDouble const0,
-                          const NekDouble const1,
-                          const Array<OneD, const NekDouble>& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                          const StdRegions::ExpansionType expansionType, 
-                          const StdRegions::StdExpansion &stdExpansion,
-                          const NekDouble const0,
-                          const NekDouble const1,
-                          const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-
-            STD_REGIONS_EXPORT StdMatrixKey(const MatrixType matrixType, 
-                         const ExpansionType expansionType,
-                         const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
-                         const int ncoeffs,
-                         LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
-            
-            STD_REGIONS_EXPORT StdMatrixKey(const MatrixType matrixType, 
-                         const ExpansionType expansionType,
-                         const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
-                         const int ncoeffs,
-                         const NekDouble const0,
-                         LibUtilities::PointsType nodalType);
-
-
-            STD_REGIONS_EXPORT StdMatrixKey(const MatrixType matrixType, 
-                         const ExpansionType expansionType,
-                         const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
-                         const int ncoeffs,
-                         const NekDouble const0,
-                         const NekDouble const1,
-                         LibUtilities::PointsType nodalType);
-
 
             STD_REGIONS_EXPORT StdMatrixKey(const StdMatrixKey& rhs);
 
@@ -182,22 +92,6 @@ namespace Nektar
                 return m_ncoeffs;
             }
 
-            int GetNconstants() const
-            {
-                return m_nconstants;
-            }
-
-            const NekDouble GetConstant(int i) const
-            {
-                ASSERTL1(i < m_nconstants,"requesting constant which has not been definied");
-                return m_constant[i];
-            }
-
-            inline const Array<OneD, const NekDouble>& GetConstants() const
-            {         
-                return m_constant;
-            }
-
             inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
             {
                 return m_base;
@@ -208,59 +102,28 @@ namespace Nektar
                 return m_matrixid;
             }
 
-            int GetNvariableCoefficients() const
-            {
-                return m_nvariablecoefficients;
-            }
-
-            int GetNvariableLaplacianCoefficients() const
-            {
-                return m_nvariablecoefficients;
-            }
-
-            inline const Array<OneD,const NekDouble>& GetVariableCoefficient(int i) const
-            {
-	      // ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");   
-	      if(m_nvariablecoefficients>0)
-		{
-                    return m_variablecoefficient[i];
-		}          
-
-	      else
-		{ 
-		  return NullNekDouble1DArray;  
-		}
-            }
-
-            inline const Array<OneD,Array<OneD, const NekDouble> >& GetVariableCoefficient() const
-            {
-                ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");                
-                return m_variablecoefficient;
-            }
-
-            inline const Array<OneD,const NekDouble>& GetVariableLaplacianCoefficient() const
-            {
-                ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");                
-                return m_variablecoefficient[0];
-            }
-
-            inline const Array<OneD,const NekDouble>& Get2DVariableLaplacianCoefficient(int i, int j) const
-            {
-                int idx = i+j;
-                ASSERTL1(idx < m_nvariablecoefficients,"requesting a coefficient which has not been defined");                
-                return m_variablecoefficient[idx];
-            }
-
-            inline const Array<OneD,const NekDouble>& Get3DVariableLaplacianCoefficient(int i, int j) const
-            {
-                int idx = (i*j)+(i+j)-( (int) ((i+j)-(i+j)%3)/3 )*(i*j-1);
-                ASSERTL1(idx < m_nvariablecoefficients,"requesting a coefficient which has not been defined");                
-                return m_variablecoefficient[idx];
-            }
-
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
             {
                 return(m_base[dir]);
+            }
+
+            inline const int GetNConstFactors() const
+            {
+                return m_factors.size();
+            }
+
+            inline const NekDouble GetConstFactor(const ConstFactorType& factor) const
+            {
+                ConstFactorMap::const_iterator x = m_factors.find(factor);
+                ASSERTL1(x != m_factors.end(),
+                        "Constant factor not defined: "
+                        + std::string(StdRegions::ConstFactorTypeMap[factor]));
+                return x->second;
+            }
+
+            inline const ConstFactorMap& GetConstFactors() const
+            {
+                return m_factors;
             }
 
             inline const int GetNVarCoeff() const
@@ -268,18 +131,30 @@ namespace Nektar
                 return m_varcoeffs.size();
             }
 
-            inline const Array<OneD, const NekDouble> &GetVarCoeff(StdRegions::MatrixVarCoeff & coeff) const
+            inline const Array<OneD, const NekDouble> &GetVarCoeff(const StdRegions::VarCoeffType & coeff) const
             {
-                std::map<StdRegions::MatrixVarCoeff, Array<OneD, const NekDouble> >::const_iterator x;
-                x = m_varcoeffs.find(coeff);
-                ASSERTL1(x != m_varcoeffs.end(), "Coeff not defined");
+                VarCoeffMap::const_iterator x = m_varcoeffs.find(coeff);
+                ASSERTL1(x != m_varcoeffs.end(),
+                        "Variable coefficient not defined: "
+                        + std::string(StdRegions::VarCoeffTypeMap[coeff]));
                 return x->second;
             }
 
-            inline void SetVarCoeff(StdRegions::MatrixVarCoeff & coeff,
-                                    Array<OneD, NekDouble> & varcoeff)
+            inline const VarCoeffMap GetVarCoeffAsMap(const VarCoeffType & coeff) const
             {
-                m_varcoeffs[coeff] = varcoeff;
+                VarCoeffMap m;
+                m[coeff] = GetVarCoeff(coeff);
+                return m;
+            }
+
+            inline const VarCoeffMap& GetVarCoeffs() const
+            {
+                return m_varcoeffs;
+            }
+
+            inline bool HasVarCoeff(const StdRegions::VarCoeffType & coeff) const
+            {
+                return (m_varcoeffs.find(coeff) != m_varcoeffs.end());
             }
 
         protected:
@@ -290,12 +165,8 @@ namespace Nektar
             MatrixType   m_matrixType;
             LibUtilities::PointsType m_nodalPointsType;
             
-            int                   m_nconstants;
-            Array<OneD,NekDouble> m_constant;
-
-            int m_nvariablecoefficients;
-            Array<OneD, Array<OneD,const NekDouble> >  m_variablecoefficient;
-            std::map<StdRegions::MatrixVarCoeff, Array<OneD, const NekDouble> > m_varcoeffs;
+            ConstFactorMap m_factors;
+            VarCoeffMap m_varcoeffs;
 
             int                   m_matrixid;
 

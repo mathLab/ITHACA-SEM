@@ -43,325 +43,33 @@ namespace Nektar
     
         static int s_matrixcnt = 99;
 
-        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
+        StdMatrixKey::StdMatrixKey(const MatrixType matrixType,
                                    const ExpansionType expansionType,
                                    const StdExpansion &stdExpansion,
+                                   const ConstFactorMap &factorMap,
+                                   const VarCoeffMap &varCoeffMap,
                                    LibUtilities::PointsType nodalType) :
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
             m_ncoeffs(stdExpansion.GetNcoeffs()),
             m_matrixType(matrixType),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_matrixid(0),
-            m_nodalPointsType(nodalType)
-        {
-        }
-
-        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                                   const ExpansionType expansionType,
-                                   const StdExpansion &stdExpansion,
-                                   const NekDouble const0,
-                                   LibUtilities::PointsType nodalType) :
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_matrixid(0),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-        }
-
-        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                                    const StdRegions::ExpansionType expansionType, 
-                                    const StdRegions::StdExpansion &stdExpansion,
-                                    const Array<OneD, const NekDouble>& varcoeffs,
-                                    LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(1),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_nodalPointsType(nodalType)
-        {
-            m_variablecoefficient[0] = varcoeffs;
-            m_matrixid = s_matrixcnt++;
-        }
-
-        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                                    const StdRegions::ExpansionType expansionType, 
-                                    const StdRegions::StdExpansion &stdExpansion,
-                                    const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                                    LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs),
-            m_nodalPointsType(nodalType)
-        {
-            if(m_nvariablecoefficients)
-            {
-                m_matrixid = s_matrixcnt++;
-            }
-            else
-            {
-                m_matrixid = 0;
-            }
-        }
-
-        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                                    const StdRegions::ExpansionType expansionType, 
-                                    const StdRegions::StdExpansion &stdExpansion,
-                                    const NekDouble const0,
-                                    const Array<OneD, const NekDouble>& varcoeffs,
-                                    LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(1),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-            m_variablecoefficient[0] = varcoeffs;
-            m_matrixid = s_matrixcnt++;
-        }
-
-        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                                    const StdRegions::ExpansionType expansionType, 
-                                    const StdRegions::StdExpansion &stdExpansion,
-                                    const NekDouble const0,
-                                    const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                                    LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-            if(m_nvariablecoefficients)
-            {
-                m_matrixid = s_matrixcnt++;
-            }
-            else
-            {
-                m_matrixid = 0;
-            }
-        }        
-
-        StdMatrixKey::StdMatrixKey(const StdRegions::MatrixType matrixType, 
-                                   const StdRegions::ExpansionType expansionType, 
-                                   const StdRegions::StdExpansion &stdExpansion,
-                                   const Array<OneD, const NekDouble>& constants,
-                                   const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                                   LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(constants.num_elements()),
-            m_constant(constants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs),
-            m_nodalPointsType(nodalType)
-        {
-            if(m_nvariablecoefficients)
-            {
-                m_matrixid = s_matrixcnt++;
-            }
-            else
-            {
-                m_matrixid = 0;
-            }
-        }
-
-        StdMatrixKey::StdMatrixKey(const StdRegions::MatrixType matrixType, 
-                                   const StdRegions::ExpansionType expansionType, 
-                                   const StdRegions::StdExpansion &stdExpansion,
-                                   const Array<OneD,const NekDouble>& constants,
-                                   const Array<OneD,const NekDouble>& varcoeffs,
-                                   LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(constants.num_elements()),
-            m_constant(constants),
-            m_nvariablecoefficients(1),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_nodalPointsType(nodalType)
-        {
-            m_variablecoefficient[0] = varcoeffs;
-            m_matrixid = s_matrixcnt++;
-        }
-
-        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                                   const ExpansionType expansionType,
-                                   const StdExpansion &stdExpansion,
-                                   const NekDouble const0,
-                                   const NekDouble const1,
-                                   LibUtilities::PointsType nodalType) :
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_matrixid(0),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-            m_constant[1] = const1;
-        }
-
-        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                                    const StdRegions::ExpansionType expansionType, 
-                                    const StdRegions::StdExpansion &stdExpansion,
-                                    const NekDouble const0,
-                                    const NekDouble const1,
-                                    const Array<OneD, const NekDouble>& varcoeffs,
-                                    LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-	    m_nvariablecoefficients(1),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-            m_constant[1] = const1;
-            m_variablecoefficient[0] = varcoeffs;
-            m_matrixid = s_matrixcnt++;
-        }   
-
-        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
-                                    const StdRegions::ExpansionType expansionType, 
-                                    const StdRegions::StdExpansion &stdExpansion,
-                                    const NekDouble const0,
-                                    const NekDouble const1,
-                                    const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
-                                    LibUtilities::PointsType nodalType):
-            m_expansionType(expansionType),
-            m_base(stdExpansion.GetBase()),
-            m_ncoeffs(stdExpansion.GetNcoeffs()),
-            m_matrixType(matrixType),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-            m_constant[1] = const1;
-            if(m_nvariablecoefficients)
-            {
-                m_matrixid = s_matrixcnt++;
-            }
-            else
-            {
-                m_matrixid = 0;
-            }
-        }       
-
-        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                                   const ExpansionType expansionType,
-                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
-                                   const int ncoeffs,
-                                   LibUtilities::PointsType nodalType) :
-            m_expansionType(expansionType),
-            m_base(base),
-            m_ncoeffs(ncoeffs),
-            m_matrixType(matrixType),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_matrixid(0),
-            m_nodalPointsType(nodalType)
+            m_nodalPointsType(nodalType),
+            m_factors(factorMap),
+            m_varcoeffs(varCoeffMap),
+            m_matrixid(0)
         {
         }
 
 
-        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                                   const ExpansionType expansionType,
-                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
-                                   const int ncoeffs,
-                                   const NekDouble const0,
-                                   LibUtilities::PointsType nodalType) :
-            m_expansionType(expansionType),
-            m_base(base),
-            m_ncoeffs(ncoeffs),
-            m_matrixType(matrixType),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_matrixid(0),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-        }
-
-        StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
-                                   const ExpansionType expansionType,
-                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
-                                   const int ncoeffs,
-                                   const NekDouble const0,
-                                   const NekDouble const1,
-                                   LibUtilities::PointsType nodalType) :
-            m_expansionType(expansionType),
-            m_base(base),
-            m_ncoeffs(ncoeffs),
-            m_matrixType(matrixType),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients),
-            m_matrixid(0),
-            m_nodalPointsType(nodalType)
-        {
-            m_constant[0] = const0;
-            m_constant[1] = const1;
-        }
-        
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
             m_expansionType(rhs.m_expansionType),
             m_base(rhs.m_base),
             m_ncoeffs(rhs.m_ncoeffs),
             m_matrixType(rhs.m_matrixType),
-            m_nconstants(rhs.m_nconstants),
-            m_constant(rhs.m_constant),
-            m_nvariablecoefficients(rhs.m_nvariablecoefficients),
-            m_variablecoefficient(rhs.m_variablecoefficient),
-            m_matrixid(rhs.m_matrixid),
-            m_nodalPointsType(rhs.m_nodalPointsType)
+            m_nodalPointsType(rhs.m_nodalPointsType),
+            m_factors(rhs.m_factors),
+            m_varcoeffs(rhs.m_varcoeffs),
+            m_matrixid(rhs.m_matrixid)
         {
         }
         
@@ -406,36 +114,37 @@ namespace Nektar
                 }
             }
 
-            if(lhs.m_nconstants < rhs.m_nconstants)
+            if(lhs.m_factors.size() < rhs.m_factors.size())
             {
                 return true;
             }
-            else if(lhs.m_nconstants > rhs.m_nconstants)
+            else if(lhs.m_factors.size() > rhs.m_factors.size())
             {
                 return false;
             }
             else 
             {
-                for(unsigned int i = 0; i < lhs.m_nconstants; ++i)
+                ConstFactorMap::const_iterator x, y;
+                for(x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
+                        x != lhs.m_factors.end(); ++x, ++y)
                 {
-                    if(lhs.m_constant[i] < rhs.m_constant[i])
+                    if (x->second < y->second)
                     {
                         return true;
                     }
-                    
-                    if(lhs.m_constant[i] > rhs.m_constant[i])
+                    if (x->second > y->second)
                     {
                         return false;
                     }
                 }
             }
 
-            if(lhs.m_nvariablecoefficients < rhs.m_nvariablecoefficients)
+            if(lhs.m_varcoeffs.size() < rhs.m_varcoeffs.size())
             {
                 return true;
             }
 
-            if(lhs.m_nvariablecoefficients > rhs.m_nvariablecoefficients)
+            if(lhs.m_varcoeffs.size() > rhs.m_varcoeffs.size())
             {
                 return false;
             }
@@ -486,12 +195,22 @@ namespace Nektar
                 << ExpansionTypeMap[rhs.GetExpansionType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
                 << std::endl;
 
-            if(rhs.GetNconstants())
+            if(rhs.GetConstFactors().size())
             {
                 os << "Constants: " << endl;
-                for(unsigned int i = 0; i < rhs.GetNconstants(); ++i)
+                ConstFactorMap::const_iterator x;
+                for(x = rhs.GetConstFactors().begin(); x != rhs.GetConstFactors().end(); ++x)
                 {
-                    os << "\t value " << i <<" : " << rhs.GetConstant(i) << endl;
+                    os << "\t value " << ConstFactorTypeMap[x->first] <<" : " << x->second << endl;
+                }
+            }
+            if(rhs.GetVarCoeffs().size())
+            {
+                os << "Variable coefficients: " << endl;
+                VarCoeffMap::const_iterator x;
+                for (x = rhs.GetVarCoeffs().begin(); x != rhs.GetVarCoeffs().end(); ++x)
+                {
+                    os << "\t Coeff defined: " << VarCoeffTypeMap[x->first] << endl;
                 }
             }
             

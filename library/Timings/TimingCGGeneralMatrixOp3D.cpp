@@ -367,7 +367,9 @@ int main(int argc, char *argv[])
     int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
     int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
     int nGlobDirCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalDirBndCoeffs();
-    MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,lambda,Exp->GetLocalToGlobalMap());
+    StdRegions::ConstFactorMap factors;
+    factors[StdRegions::eFactorLambda] = lambda;
+    MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,Exp->GetLocalToGlobalMap(),factors);
     int nnz            = Exp->GetGlobalMatrixNnz(key);
 
     ostream &outfile = cout;
@@ -442,7 +444,9 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     }
     else
     {
-        MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = lambda;
+        MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
         Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
     }
 
@@ -461,7 +465,9 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     }
     else
     {
-        MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = lambda;
+        MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
         Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
     }
     gettimeofday(&timer2, NULL);
@@ -501,7 +507,9 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     }
     else
     {
-        MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = lambda;
+        MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
         for(i = 0; i < NumCalls; ++i)
         {
             Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);

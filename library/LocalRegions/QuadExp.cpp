@@ -231,33 +231,34 @@ namespace Nektar
                                             Array<OneD,NekDouble> &outarray,
                                             const StdRegions::StdMatrixKey &mkey)
         {
-            int nConsts = mkey.GetNconstants();
-            DNekScalMatSharedPtr   mat;
+//            int nConsts = mkey.GetNconstants();
+            MatrixKey newkey(mkey);
+            DNekScalMatSharedPtr   mat = GetLocMatrix(newkey);
 
-            switch(nConsts)
-            {
-            case 0:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType());
-                }
-                break;
-            case 1:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
-                }
-                break;
-            case 2:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
-                }
-                break;
-
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
-                }
-                break;
-            }
+//            switch(nConsts)
+//            {
+//            case 0:
+//                {
+//                    mat = GetLocMatrix(mkey.GetMatrixType());
+//                }
+//                break;
+//            case 1:
+//                {
+//                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
+//                }
+//                break;
+//            case 2:
+//                {
+//                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
+//                }
+//                break;
+//
+//            default:
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
+//                }
+//                break;
+//            }
 
             if(inarray.get() == outarray.get())
             {
@@ -328,7 +329,7 @@ namespace Nektar
                                                 Array<OneD,NekDouble> &outarray,
                                                 const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator
@@ -520,7 +521,7 @@ namespace Nektar
                 int       nmodes0 = m_base[0]->GetNumModes();
                 int       nmodes1 = m_base[1]->GetNumModes();
                 int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                NekDouble lambda  = mkey.GetConstant(0);
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -592,7 +593,7 @@ namespace Nektar
                 int       nmodes0 = m_base[0]->GetNumModes();
                 int       nmodes1 = m_base[1]->GetNumModes();
                 int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                NekDouble lambda  = mkey.GetConstant(0);
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -1360,7 +1361,7 @@ namespace Nektar
             case StdRegions::eMass:
                 {
                     if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
-                       (mkey.GetNvariableCoefficients()))
+                       (mkey.GetNVarCoeff()))
                     {
                         NekDouble        one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1377,7 +1378,7 @@ namespace Nektar
             case StdRegions::eInvMass:
                 {
                     if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
-                       (mkey.GetNvariableCoefficients()))
+                       (mkey.GetNVarCoeff()))
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
@@ -1400,7 +1401,7 @@ namespace Nektar
             case StdRegions::eWeakDeriv2:
                 {
                     if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
-                       (mkey.GetNvariableCoefficients()))
+                       (mkey.GetNVarCoeff()))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1445,9 +1446,10 @@ namespace Nektar
                 break;
           case StdRegions::eWeakDirectionalDeriv:
                 {
-                    int dim = m_geom->GetCoordim();
+                    ASSERTL0(false, "Called QuadExp::eWeakDirectionalDeriv");
+/*                    int dim = m_geom->GetCoordim();
                     int nqtot   = (m_base[0]->GetNumPoints())*(m_base[1]->GetNumPoints());
-                    int nvarcoeffs = mkey.GetNvariableCoefficients();
+                    int nvarcoeffs = mkey.GetNVarCoeff();
 
                     NekDouble jac = (m_metricinfo->GetJac())[0];
                     Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
@@ -1539,13 +1541,13 @@ namespace Nektar
                         (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDirectionalDeriv);
-                    }
+                    }*/
                 }
                 break;
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
-                        (mkey.GetNvariableLaplacianCoefficients() > 0) )
+                        (mkey.GetNVarCoeff() > 0) )
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1612,12 +1614,12 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this);
+                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -1626,7 +1628,7 @@ namespace Nektar
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                     NekDouble one = 1.0;
-                    (*helm) = LapMat + factor*MassMat;
+                    (*helm) = LapMat + lambda*MassMat;
 
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);
                 }
@@ -1698,23 +1700,24 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-                    int nvarcoeffs = mkey.GetNvariableCoefficients();
-                    Array<OneD, Array<OneD, const NekDouble> > varcoeffs(nvarcoeffs);
+//                    int nvarcoeffs = mkey.GetNVarCoeff();
+//                    Array<OneD, Array<OneD, const NekDouble> > varcoeffs(nvarcoeffs);
+//
+//                    if(nvarcoeffs>0)
+//                    {
+//                        for(int j=0; j<nvarcoeffs; j++)
+//                        {
+//                            varcoeffs[j] = mkey.GetVariableCoefficient(j);
+//                        }
+//                    }
+//
+//                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
+//                                                  DetExpansionType(),*this,
+//                                                  mkey.GetConstant(0),
+//                                                  mkey.GetConstant(1),
+//                                                  varcoeffs);
 
-                    if(nvarcoeffs>0)
-                    {
-                        for(int j=0; j<nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = mkey.GetVariableCoefficient(j);
-                        }
-                    }
-
-                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-                                                  DetExpansionType(),*this,
-                                                  mkey.GetConstant(0),
-                                                  mkey.GetConstant(1),
-                                                  varcoeffs);
-
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();
@@ -1868,7 +1871,7 @@ namespace Nektar
             {
                 // this can only use stdregions statically condensed system for mass matrix 
             case StdRegions::eMass:
-                if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNvariableCoefficients()))
+                if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNVarCoeff()))
                 {
                     factor = 1.0;
                     goto UseLocRegionsMatrix;

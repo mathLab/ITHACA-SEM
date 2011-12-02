@@ -864,7 +864,7 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -1155,7 +1155,7 @@ namespace Nektar
                                         nquad0*nquad1*(nquad2+nmodes0)
                                             + nmodes0*nmodes1*nquad2);
 
-                NekDouble lambda  = mkey.GetConstant(0);
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
                 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -1279,33 +1279,33 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey)
         {
-            int nConsts = mkey.GetNconstants();
-            DNekScalMatSharedPtr   mat;
+            //int nConsts = mkey.GetNconstants();
+            DNekScalMatSharedPtr   mat = GetLocMatrix(mkey);
 
-            switch(nConsts)
-            {
-            case 0:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType());
-                }
-                break;
-            case 1:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
-                }
-                break;
-            case 2:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
-                }
-                break;
-
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
-                }
-                break;
-            }
+//            switch(nConsts)
+//            {
+//            case 0:
+//                {
+//                    mat = GetLocMatrix(mkey.GetMatrixType());
+//                }
+//                break;
+//            case 1:
+//                {
+//                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
+//                }
+//                break;
+//            case 2:
+//                {
+//                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
+//                }
+//                break;
+//
+//            default:
+//                {
+//                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
+//                }
+//                break;
+//            }
 
             if(inarray.get() == outarray.get())
             {
@@ -1388,37 +1388,37 @@ namespace Nektar
             return m_matrixManager[mkey];
         }
 
-        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
-                        const StdRegions::MatrixType mtype,
-                        NekDouble lambdaval,
-                        NekDouble tau)
-        {
-            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau );
-            return m_matrixManager[mkey];
-        }
-
-        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
-                        const StdRegions::MatrixType mtype,
-                        const Array<OneD, NekDouble> &dir1Forcing,
-                        NekDouble lambdaval,
-                        NekDouble tau)
-        {
-            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
-                            dir1Forcing);
-            return m_matrixManager[mkey];
-        }
-
-        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
-                        const StdRegions::MatrixType mtype,
-                        const Array<OneD, Array<OneD, const NekDouble> >&
-                                                                dirForcing,
-                        NekDouble lambdaval,
-                        NekDouble tau)
-        {
-            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
-                            dirForcing);
-            return m_matrixManager[mkey];
-        }
+//        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
+//                        const StdRegions::MatrixType mtype,
+//                        NekDouble lambdaval,
+//                        NekDouble tau)
+//        {
+//            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau );
+//            return m_matrixManager[mkey];
+//        }
+//
+//        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
+//                        const StdRegions::MatrixType mtype,
+//                        const Array<OneD, NekDouble> &dir1Forcing,
+//                        NekDouble lambdaval,
+//                        NekDouble tau)
+//        {
+//            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
+//                            dir1Forcing);
+//            return m_matrixManager[mkey];
+//        }
+//
+//        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
+//                        const StdRegions::MatrixType mtype,
+//                        const Array<OneD, Array<OneD, const NekDouble> >&
+//                                                                dirForcing,
+//                        NekDouble lambdaval,
+//                        NekDouble tau)
+//        {
+//            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
+//                            dirForcing);
+//            return m_matrixManager[mkey];
+//        }
 
 
         DNekScalBlkMatSharedPtr& HexExp::v_GetLocStaticCondMatrix(
@@ -1618,12 +1618,12 @@ namespace Nektar
                 break;
             case StdRegions::eHelmholtz:
                 {
-                    NekDouble factor = mkey.GetConstant(0);
+                    NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
                                       mkey.GetExpansionType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this);
+                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -1632,7 +1632,7 @@ namespace Nektar
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                     NekDouble one = 1.0;
-                    (*helm) = LapMat + factor*MassMat;
+                    (*helm) = LapMat + lambda*MassMat;
 
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);
                 }
@@ -1669,10 +1669,11 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-                                                  DetExpansionType(),*this,
-                                                  mkey.GetConstant(0),
-                                                  mkey.GetConstant(1));
+//                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
+//                                                  DetExpansionType(),*this,
+//                                                  mkey.GetConstant(0),
+//                                                  mkey.GetConstant(1));
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();

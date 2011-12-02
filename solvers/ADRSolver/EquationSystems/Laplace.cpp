@@ -42,8 +42,10 @@ namespace Nektar
     Laplace::Laplace(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : EquationSystem(pSession),
-          m_lambda(0.0)
+          m_factors()
     {
+        m_factors[StdRegions::eFactorLambda] = 0.0;
+        m_factors[StdRegions::eFactorTau] = 1.0;
     }
 
     void Laplace::v_InitObject()
@@ -58,7 +60,7 @@ namespace Nektar
 
     void Laplace::v_PrintSummary(std::ostream &out)
     {
-        out << "\tLambda          : " << m_lambda << endl;
+        out << "\tLambda          : " << m_factors[StdRegions::eFactorLambda] << endl;
     }
 
     void Laplace::v_DoSolve()
@@ -67,7 +69,8 @@ namespace Nektar
         {
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
                                    m_fields[i]->UpdateCoeffs(),
-                                   m_lambda);
+                                   NullFlagList,
+                                   m_factors);
             m_fields[i]->SetPhysState(false);
         }
     }

@@ -51,6 +51,19 @@ namespace Nektar
             public:
                 LOCAL_REGIONS_EXPORT Expansion(); // default constructor. 
 
+                DNekScalMatSharedPtr& GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+                {
+                    return v_GetLocMatrix(mkey);
+                }
+
+                DNekScalMatSharedPtr& GetLocMatrix(const StdRegions::MatrixType mtype,
+                            const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
+                            const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap)
+                {
+                    MatrixKey mkey(mtype, DetExpansionType(), *this, factors, varcoeffs);
+                    return GetLocMatrix(mkey);
+                }
+
 
             protected:
 
@@ -103,12 +116,11 @@ namespace Nektar
 //                    return false;
 //                }
 
-
-//                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
-//                {
-//                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-//                    return NullDNekScalMatSharedPtr;
-//                }
+                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+                {
+                    NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                    return NullDNekScalMatSharedPtr;
+                }
 //
 //                virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
 //                    const Array<OneD, Array<OneD, const NekDouble> >& dirForcing,

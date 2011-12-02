@@ -272,7 +272,8 @@ namespace Nektar
         int phystot = m_fields[0]->GetTotPoints();
         int ncoeffs = m_fields[0]->GetNcoeffs();
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
-        NekDouble  lambda = 1.0/aii_Dt/m_kinvis; 
+        StdRegions::ConstFactorMap factors;
+        factors[StdRegions::eFactorLambda] = 0.0;
 
         for(n = 0; n < m_nConvectiveFields; ++n)
         {
@@ -286,23 +287,27 @@ namespace Nektar
         
         // Solver Pressure Poisson Equation 
 #ifdef UseContCoeffs
-        m_pressure->HelmSolve(F[0], m_pressure->UpdateContCoeffs(),0.0,true);
+        FlagList flags;
+        flags.set(eUseContCoeff, true);
+        m_pressure->HelmSolve(F[0], m_pressure->UpdateContCoeffs(),flags,factors);
 #else
-		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(),0.0);
+		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
 #endif
 		
 
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
     
+        factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
+
         // Solve Helmholtz system and put in Physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
 #ifdef UseContCoeffs
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateContCoeffs(), lambda,true);
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateContCoeffs(),flags,factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetContCoeffs(),outarray[i],true);
 #else
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), lambda);
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 #endif
         }

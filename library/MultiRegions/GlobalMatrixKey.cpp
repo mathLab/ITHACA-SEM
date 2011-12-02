@@ -40,148 +40,16 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        // Register Global Matrix creator.
-        // Register Global Matrix creator.
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const StdRegions::ExpansionType expType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(expType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
-        {
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varCoeffs) :
             m_matrixType(matrixType),
             m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
+            m_constFactors(factors),
+            m_varCoeffs(varCoeffs)
         {
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const NekDouble factor,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
-        {
-            m_constant[0] = factor;
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const NekDouble factor1,
-                        const NekDouble factor2,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
-        {
-            m_constant[0] = factor1;
-            m_constant[1] = factor2;
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const Array<OneD,NekDouble>& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(1)
-        {
-            m_variablecoefficient[0] = varcoeffs;
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs)
-        {
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const NekDouble factor,
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs)
-        {
-            m_constant[0] = factor;
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const NekDouble factor1,
-                        const NekDouble factor2,
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs)
-        {
-            m_constant[0] = factor1;
-            m_constant[1] = factor2;
-        }
-
-        GlobalMatrixKey::GlobalMatrixKey(
-                        const StdRegions::MatrixType matrixType,
-                        const Array<OneD,NekDouble>& factor1,
-                        const NekDouble factor2,
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
-            m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(factor1.num_elements()+1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs)
-        {
-            for (int i=0; i<(m_nconstants-1); ++i)
-            {
-                m_constant[i] = factor1[i];
-            }
-
-            m_constant[m_nconstants-1] = factor2;
         }
 
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key,
@@ -189,10 +57,8 @@ namespace Nektar
             m_matrixType(key.m_matrixType),
             m_expansionType(expType),
             m_locToGloMap(key.m_locToGloMap),
-            m_nconstants(key.m_nconstants),
-            m_constant(key.m_constant),
-            m_nvariablecoefficients(key.m_nvariablecoefficients),
-            m_variablecoefficient(key.m_variablecoefficient)
+            m_constFactors(key.m_constFactors),
+            m_varCoeffs(key.m_varCoeffs)
         {
         }
 
@@ -200,10 +66,8 @@ namespace Nektar
             m_matrixType(key.m_matrixType),
             m_expansionType(key.m_expansionType),
             m_locToGloMap(key.m_locToGloMap),
-            m_nconstants(key.m_nconstants),
-            m_constant(key.m_constant),
-            m_nvariablecoefficients(key.m_nvariablecoefficients),
-            m_variablecoefficient(key.m_variablecoefficient)
+            m_constFactors(key.m_constFactors),
+            m_varCoeffs(key.m_varCoeffs)
         {
         }
 
@@ -235,55 +99,55 @@ namespace Nektar
                 return false;
             }
             
-            if(lhs.m_nconstants < rhs.m_nconstants)
+            if(lhs.m_constFactors.size() < rhs.m_constFactors.size())
             {
                 return true;
             }
-            else if(lhs.m_nconstants > rhs.m_nconstants)
+            else if(lhs.m_constFactors.size() > rhs.m_constFactors.size())
             {
                 return false;
             }
             else
             {
-                for(unsigned int i = 0; i < lhs.m_nconstants; ++i)
+                StdRegions::ConstFactorMap::const_iterator x, y;
+                for(x = lhs.m_constFactors.begin(), y = rhs.m_constFactors.begin();
+                    x != lhs.m_constFactors.end(); ++x, ++y)
                 {
-                    if(lhs.m_constant[i] < rhs.m_constant[i])
+                    if (x->second < y->second)
                     {
                         return true;
                     }
-
-                    if(lhs.m_constant[i] > rhs.m_constant[i])
+                    if (x->second > y->second)
                     {
                         return false;
                     }
                 }
             }
 
-            if(lhs.m_nvariablecoefficients < rhs.m_nvariablecoefficients)
+            if(lhs.m_varCoeffs.size() < rhs.m_varCoeffs.size())
             {
                 return true;
             }
-            else if(lhs.m_nvariablecoefficients > rhs.m_nvariablecoefficients)
+            else if(lhs.m_varCoeffs.size() > rhs.m_varCoeffs.size())
             {
                 return false;
             }
-            else
-            {
-                for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
-                {
-                    if((lhs.m_variablecoefficient[i]).get() 
-                                        < (rhs.m_variablecoefficient[i]).get())
-                    {
-                        return true;
-                    }
-
-                    if((lhs.m_variablecoefficient[i]).get() 
-                                        > (rhs.m_variablecoefficient[i]).get())
-                    {
-                        return false;
-                    }
-                }
-            }
+//            else
+//            {
+//                StdRegions::VarCoeffMap::const_iterator x, y;
+//                for (x = lhs.m_varCoeffs.begin(), y = rhs.m_varCoeffs.begin();
+//                     x != lhs.m_varCoeffs.end(); ++x, ++y)
+//                {
+//                    if (x->second.get() < y->second.get())
+//                    {
+//                        return true;
+//                    }
+//                    if (x->second.get() > y->second.get())
+//                    {
+//                        return false;
+//                    }
+//                }
+//            }
 
 
             if(lhs.m_locToGloMap.get() < rhs.m_locToGloMap.get())
@@ -298,13 +162,15 @@ namespace Nektar
         {
             int i;
             os << "MatrixType: " << rhs.GetMatrixType() << endl;
-            os << "Number of constants: " << rhs.GetNconstants() << endl;
-            for(i = 0; i < rhs.GetNconstants();i++)
+            os << "Number of constants: " << rhs.GetNConstFactors() << endl;
+            StdRegions::ConstFactorMap::const_iterator x;
+            for(x = rhs.GetConstFactors().begin(); x != rhs.GetConstFactors().end(); ++x)
             {
-                os << "  Constant " << i << ": " << rhs.GetConstant(i) << endl;
+                os << "  Constant " << StdRegions::ConstFactorTypeMap[x->first]
+                   << ": " << x->second << endl;
             }
             os << "Number of variable coefficients: " 
-               << rhs.GetNvariableCoefficients() << endl;
+               << rhs.GetNVarCoeffs() << endl;
 
             return os;
         }

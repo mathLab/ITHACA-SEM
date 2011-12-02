@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ConvertSem.h
+//  File: InputSem.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,34 +33,35 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTSEM
-#define UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTSEM
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSEM
+#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTSEM
 
-#include "Convert.h"
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /// Converter for Gmsh files.
-        class ConvertSem : public Convert
+        /**
+         * Converter for Semtex session files.
+         */
+        class InputSem : public InputModule
         {
         public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Convert> create() {
-                return MemoryManager<ConvertSem>::AllocateSharedPtr();
-            }
-            /// Name of class
-            static std::string className;
-
-            ConvertSem();
-            ConvertSem(const ConvertSem& pSrc);
-            virtual ~ConvertSem();
-
-            /// Reads the Gmsh file.
-            virtual void ReadFile(const std::string pFilename);
-            /// Populate and validate required data structures.
+            InputSem(MeshSharedPtr m);
+            virtual ~InputSem();
             virtual void Process();
+            
+            /// Creates an instance of this class
+            static ModuleSharedPtr create(MeshSharedPtr m) {
+                return MemoryManager<InputSem>::AllocateSharedPtr(m);
+            }
+            /// %ModuleKey for class.
+            static ModuleKey className;
+            
+        private:
+            /// Maps Semtex sections to positions inside the input file.
+            std::map<std::string,std::streampos> sectionMap;
         };
     }
 }

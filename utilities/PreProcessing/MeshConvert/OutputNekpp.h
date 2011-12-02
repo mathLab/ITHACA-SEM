@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Convert.h
+//  File: OutputNekpp.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,74 +29,35 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh converter base class and XML writer.
+//  Description: GMSH converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_CONVERT
-#define UTILITIES_PREPROCESSING_MESHCONVERT_CONVERT
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTNEKPP
+#define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTNEKPP
 
 #include <tinyxml/tinyxml.h>
-#include <cstring>
-#include <sstream>
-#include <vector>
-#include <list>
-
-#include <stdexcept>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <vector>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-
-#include "MeshElements.h"
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /// Base class for mesh conversions and XML writer.
-        class Convert {
+        /// Converter for Gmsh files.
+        class OutputNekpp : public OutputModule
+        {
         public:
-            /// Read a foreign-format file.
-            virtual void ReadFile(const std::string pFilename) = 0;
-            /// Process foreign-format file.
-            virtual void Process() = 0;
-            /// Write native Nektar++ XML formatted file.
-            void WriteXmlFile(const std::string pFilename);
-
-        protected:
-            /// Dimension of the expansion.
-            unsigned int                        m_expDim;
-            /// Dimension of the space in which the mesh is defined.
-            unsigned int                        m_spaceDim;
-            /// List of mesh nodes.
-            std::vector<NodeSharedPtr>          m_node;
-            /// Set of element vertices.
-            NodeSet                             m_vertexSet;
-            /// Set of element edges.
-            EdgeSet                             m_edgeSet;
-            /// Set of element faces.
-            FaceSet                             m_faceSet;
-            /// List of elements.
-            std::vector<ElementSharedPtr>       m_element;
-            /// List of composites.
-            std::vector<CompositeSharedPtr>     m_composite;
-            /// Name of convert module.
-            std::string                         m_modName;
-
-            /// Extract element vertices
-            virtual void ProcessVertices();
-            /// Extract element edges
-            virtual void ProcessEdges();
-            /// Extract element faces
-            virtual void ProcessFaces();
-            /// Generate element IDs
-            virtual void ProcessElements();
-            /// Generate composites
-            virtual void ProcessComposites();
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+                return MemoryManager<OutputNekpp>::AllocateSharedPtr(m);
+            }
+            static ModuleKey className;
+            
+            OutputNekpp(MeshSharedPtr m);
+            virtual ~OutputNekpp();
+            
+            /// Write mesh to output file.
+            virtual void Process();
 
         private:
             /// Writes the <NODES> section of the XML file.
@@ -118,10 +79,7 @@ namespace Nektar
             /// Writes the <CONDITIONS> section of the XML file.
             void WriteXmlConditions(TiXmlElement * pRoot);
         };
-        
-        typedef LibUtilities::NekFactory< std::string, Convert> ConvertFactory;
-
-        ConvertFactory& GetConvertFactory();
     }
 }
+
 #endif

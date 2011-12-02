@@ -55,6 +55,50 @@ namespace Nektar
             return Type::Instance();
         }
 
+        Element::Element(ElmtConfig   pConf,
+                         unsigned int pNumNodes,
+                         unsigned int pGotNodes) 
+            : m_conf(pConf)
+        {
+            if (pNumNodes != pGotNodes)
+            {
+                cerr << "Number of modes mismatch for type " << pConf.e << "! Should be " << pNumNodes 
+                     << " but got " << pGotNodes << " nodes." << endl;
+                abort();
+            }
+        }
+
+        Mesh::Mesh(const string pInFilename, const string pOutFilename) :
+            inFilename(pInFilename), outFilename(pOutFilename)
+        {
+            
+        }
+
+        unsigned int Mesh::GetNumElements()
+        {
+            return element[expDim].size();
+        }
+
+        unsigned int Mesh::GetNumBndryElements()
+        {
+            int i, nElmt = 0;
+            
+            for (i = 0; i < expDim; ++i)
+                nElmt += element[i].size();
+            
+            return nElmt;
+        }
+        
+        unsigned int Mesh::GetNumEntities()
+        {
+            int nEnt = 0;
+            
+            for (int d = 0; d < expDim; ++d)
+            {
+                nEnt += element[d].size();
+            }
+        }
+
         /**
          * When an edge is replaced, the element faces are also searched and
          * the corresponding face edges are updated to maintain consistency.
@@ -78,6 +122,11 @@ namespace Nektar
         bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
         {
             return p1->x == p2->x && p1->y == p2->y && p1->z == p2->z;
+        }
+
+        bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2)
+        {
+            return p1->id < p2->id;
         }
 
         bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
@@ -160,81 +209,76 @@ namespace Nektar
             return st.str();
         }
 
-        unsigned int Point::typeIds[1] = {
-                GetElementFactory().RegisterCreatorFunction(15, Point::create, "Point")
-            };
-        Point::Point(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element() {
+        ElementType Point::type = GetElementFactory().
+            RegisterCreatorFunction(ePoint, Point::create, "Point");
+        
+        Point::Point(ElmtConfig            pConf,
+                     vector<NodeSharedPtr> pNodeList, 
+                     vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+        {
             m_tag = "";
             m_dim = 0;
             m_taglist = pTagList;
             vertex.push_back(pNodeList[0]);
         }
 
+        unsigned int Point::GetNumNodes(ElmtConfig pConf)
+        {
+            return 1;
+        }
 
-        unsigned int Line::typeIds[5] = {
-                GetElementFactory().RegisterCreatorFunction(1,  Line::create, "Order 1 Line"),
-                GetElementFactory().RegisterCreatorFunction(8,  Line::create, "Order 2 Line"),
-                GetElementFactory().RegisterCreatorFunction(26, Line::create, "Order 3 Line"),
-                GetElementFactory().RegisterCreatorFunction(27, Line::create, "Order 4 Line"),
-                GetElementFactory().RegisterCreatorFunction(28, Line::create, "Order 5 Line")
-            };
-        Line::Line(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element() {
+
+        ElementType Line::type = GetElementFactory().
+            RegisterCreatorFunction(eLine, Line::create, "Line");
+        
+        Line::Line(ElmtConfig            pConf,
+                   vector<NodeSharedPtr> pNodeList, 
+                   vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+        {
             m_tag = "S";
             m_dim = 1;
             m_taglist = pTagList;
-            int n = 0;
-            switch (m_taglist.back())
-            {
-            case 1:  n = 0; break;
-            case 8:  n = 1; break;
-            case 26: n = 2; break;
-            case 27: n = 3; break;
-            case 28: n = 4; break;
-            }
-            int order = n+1;
-
+            int n = m_conf.order-1;
+            
             // Add vertices
             for (int i = 0; i < 2; ++i) {
                 vertex.push_back(pNodeList[i]);
             }
             vector<NodeSharedPtr> edgeNodes;
-            if (order > 1) {
+            if (m_conf.order > 1) {
                 for (int j = 0; j<n; ++j) {
                     edgeNodes.push_back(pNodeList[2+j]);
                 }
             }
-            edge.push_back(boost::shared_ptr<Edge>(new Edge(pNodeList[0], pNodeList[1], edgeNodes)));
-
+            edge.push_back(boost::shared_ptr<Edge>(
+                new Edge(pNodeList[0], pNodeList[1], edgeNodes, m_conf.edgeCurveType)));
+        }
+        
+        unsigned int Line::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            return pConf.order+1;
         }
 
 
-        unsigned int Triangle::typeIds[5] = {
-                GetElementFactory().RegisterCreatorFunction(2,  Triangle::create, "Order 1 Triangle"),
-                GetElementFactory().RegisterCreatorFunction(9,  Triangle::create, "Order 2 Triangle"),
-                GetElementFactory().RegisterCreatorFunction(21, Triangle::create, "Order 3 Triangle"),
-                GetElementFactory().RegisterCreatorFunction(23, Triangle::create, "Order 4 Triangle"),
-                GetElementFactory().RegisterCreatorFunction(25, Triangle::create, "Order 5 Triangle")
-            };
-        Triangle::Triangle(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element() {
+        ElementType Triangle::type = GetElementFactory().
+            RegisterCreatorFunction(eTriangle, Triangle::create, "Triangle");
+        
+        Triangle::Triangle(ElmtConfig            pConf,
+                           vector<NodeSharedPtr> pNodeList, 
+                           vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+        {
             m_tag = "T";
             m_dim = 2;
             m_taglist = pTagList;
-            int n = 0;
-            switch (m_taglist.back())
-            {
-            case 2:  n = 0; break;
-            case 9:  n = 1; break;
-            case 21: n = 2; break;
-            case 23: n = 3; break;
-            case 25: n = 4; break;
-            }
-            int order = n+1;
+            int n = m_conf.order-1;
 
-            // Create a map to relate edge nodes to a pair of vertices defining an edge
-            // This is based on the ordering produced by gmsh.
+            // Create a map to relate edge nodes to a pair of vertices
+            // defining an edge. This is based on the ordering produced by
+            // gmsh.
             map<pair<int,int>, int> edgeNodeMap;
             map<pair<int,int>, int>::iterator it;
             edgeNodeMap[pair<int,int>(1,2)] = 4;
@@ -250,39 +294,45 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (order > 1) {
+                if (m_conf.order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(EdgeSharedPtr(new Edge(  pNodeList[it->first.first-1],
-                                                        pNodeList[it->first.second-1],
-                                                        edgeNodes)));
+                edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                                      pNodeList[it->first.second-1],
+                                                      edgeNodes,
+                                                      m_conf.edgeCurveType)));
             }
         }
 
+        unsigned int Triangle::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            if (!pConf.faceNodes)
+                return (n+1)+2*(n-1)+1;
+            else
+                return (n+1)*(n+2)/2;
+        }
 
-        unsigned int Quadrilateral::typeIds[3] = {
-                GetElementFactory().RegisterCreatorFunction(3,  Quadrilateral::create, "Order 1 Quadrilateral"),
-                GetElementFactory().RegisterCreatorFunction(10, Quadrilateral::create, "Order 2 Quadrilateral"),
-                GetElementFactory().RegisterCreatorFunction(16, Quadrilateral::create, "Order 3 Quadrilateral"),
-            };
-        Quadrilateral::Quadrilateral(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element() {
+
+        ElementType Quadrilateral::type = GetElementFactory().
+            RegisterCreatorFunction(eQuadrilateral, Quadrilateral::create, 
+                                    "Quadrilateral");
+        
+        Quadrilateral::Quadrilateral(ElmtConfig            pConf,
+                                     vector<NodeSharedPtr> pNodeList,
+                                     vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+        {
             m_tag = "Q";
             m_dim = 2;
             m_taglist = pTagList;
-            int n = 0;
-            switch (m_taglist.back())
-            {
-            case 3:  n = 0; break;
-            case 10: n = 1; break;
-            case 16: n = 1; break;
-            }
-            int order = n+1;
+            int n = m_conf.order-1;
 
-            // Create a map to relate edge nodes to a pair of vertices defining an edge
-            // This is based on the ordering produced by gmsh.
+            // Create a map to relate edge nodes to a pair of vertices
+            // defining an edge. This is based on the ordering produced by
+            // gmsh.
             map<pair<int,int>, int> edgeNodeMap;
             map<pair<int,int>, int>::iterator it;
             edgeNodeMap[pair<int,int>(1,2)] = 5;
@@ -299,53 +349,52 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (order > 1) {
+                if (m_conf.order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(EdgeSharedPtr(new Edge(  pNodeList[it->first.first-1],
-                                                        pNodeList[it->first.second-1],
-                                                        edgeNodes)));
+                edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                                      pNodeList[it->first.second-1],
+                                                      edgeNodes,
+                                                      m_conf.edgeCurveType)));
             }
         }
 
+        unsigned int Quadrilateral::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            if (!pConf.faceNodes)
+                return 4*n;
+            else
+                return (n+1)*(n+1);
+        }
+        
+        
+        ElementType Tetrahedron::type = GetElementFactory().
+            RegisterCreatorFunction(eTetrahedron, Tetrahedron::create, "Tetrahedron");
 
-        unsigned int Tetrahedron::typeIds[5] = {
-                GetElementFactory().RegisterCreatorFunction(4,  Tetrahedron::create, "Order 1 Tetrahedron"),
-                GetElementFactory().RegisterCreatorFunction(11, Tetrahedron::create, "Order 2 Tetrahedron"),
-                GetElementFactory().RegisterCreatorFunction(29, Tetrahedron::create, "Order 3 Tetrahedron"),
-                GetElementFactory().RegisterCreatorFunction(30, Tetrahedron::create, "Order 4 Tetrahedron"),
-                GetElementFactory().RegisterCreatorFunction(31, Tetrahedron::create, "Order 5 Tetrahedron")
-            };
-
-        Tetrahedron::Tetrahedron(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element()
+        Tetrahedron::Tetrahedron(ElmtConfig            pConf,
+                                 vector<NodeSharedPtr> pNodeList,
+                                 vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag = "A";
             m_dim = 3;
             m_taglist = pTagList;
-            int n = 0;
-            switch (m_taglist.back())
-            {
-            case 4:  n = 0; break;
-            case 11: n = 1; break;
-            case 29: n = 2; break;
-            case 30: n = 3; break;
-            case 31: n = 4; break;
-            }
-            int order = n+1;
+            int n = m_conf.order-1;
 
-            // Create a map to relate edge nodes to a pair of vertices defining an edge
-            // This is based on the ordering produced by gmsh.
+            // Create a map to relate edge nodes to a pair of vertices
+            // defining an edge. This is based on the ordering produced by
+            // gmsh.
             map<pair<int,int>, int> edgeNodeMap;
             map<pair<int,int>, int>::iterator it;
             edgeNodeMap[pair<int,int>(1,2)] = 5;
             edgeNodeMap[pair<int,int>(2,3)] = 5 + n;
-            edgeNodeMap[pair<int,int>(3,1)] = 5 + 2*n;
-            edgeNodeMap[pair<int,int>(4,1)] = 5 + 3*n;
-            edgeNodeMap[pair<int,int>(4,3)] = 5 + 4*n;
-            edgeNodeMap[pair<int,int>(4,2)] = 5 + 5*n;
+            edgeNodeMap[pair<int,int>(1,3)] = 5 + 2*n;
+            edgeNodeMap[pair<int,int>(1,4)] = 5 + 3*n;
+            edgeNodeMap[pair<int,int>(2,4)] = 5 + 4*n;
+            edgeNodeMap[pair<int,int>(3,4)] = 5 + 5*n;
 
             // Add vertices
             for (int i = 0; i < 4; ++i) {
@@ -356,20 +405,21 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (order > 1) {
+                if (m_conf.order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(EdgeSharedPtr(new Edge(  pNodeList[it->first.first-1],
-                                                        pNodeList[it->first.second-1],
-                                                        edgeNodes)));
+                edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                                      pNodeList[it->first.second-1],
+                                                      edgeNodes,
+                                                      m_conf.edgeCurveType)));
             }
 
             // Reorient the tet to ensure collapsed coordinates align between adjacent
             // elements.
             OrientTet();
-
+            
             // Create faces
             int face_ids[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{2,0,3}};
@@ -394,88 +444,94 @@ namespace Nektar
                     }
 
                 }
-                int N = 4 + 6*n + j*n*(n-1)/2;
-                for (unsigned int i = 0; i < n*(n-1)/2; ++i)
+
+                if (m_conf.faceNodes)
                 {
-                    faceNodes.push_back(pNodeList[N+i]);
+                    int N = 4 + 6*n + j*n*(n-1)/2;
+                    for (unsigned int i = 0; i < n*(n-1)/2; ++i)
+                    {
+                        faceNodes.push_back(pNodeList[N+i]);
+                    }
                 }
-                face.push_back(FaceSharedPtr(new Face(faceVertices, faceNodes, faceEdges)));
+                face.push_back(FaceSharedPtr(
+                    new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
             }
+        }
+        
+        unsigned int Tetrahedron::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            if (pConf.volumeNodes && pConf.faceNodes)
+                return (n+1)*(n+2)*(n+3)/6;
+            else if (!pConf.volumeNodes && pConf.faceNodes)
+                return 4*(n+1)*(n+2)/2-6*(n+1)+4;
+            else
+                return 6*(n+1)-8;
         }
 
         void Tetrahedron::OrientTet() {
-            // Order vertices with lowest global vertex at top degenerate point
-            // Place second lowest global vertex at base degenerate point
+            // Order vertices with highest global vertex at top degenerate
+            // point. Place second highest global vertex at base degenerate
+            // point.
             sort(vertex.begin(), vertex.end());
-            reverse(vertex.begin(), vertex.end());
 
-            // Check orientation of tet and order remaining two points
-            double ax, ay, az, vol, vax, vay, vaz, vbx, vby, vbz, vcx, vcy, vcz;
-            vector<NodeSharedPtr> v;
-            v.push_back(vertex[0]);
-            v.push_back(vertex[1]);
-            v.push_back(vertex[2]);
-            v.push_back(vertex[3]);
-
-            // Compute cross produc (b x c)
-            vax = v[0]->x-v[2]->x;
-            vay = v[0]->y-v[2]->y;
-            vaz = v[0]->z-v[2]->z;
-            vbx = v[1]->x-v[2]->x;
-            vby = v[1]->y-v[2]->y;
-            vbz = v[1]->z-v[2]->z;
-            vcx = v[3]->x-v[2]->x;
-            vcy = v[3]->y-v[2]->y;
-            vcz = v[3]->z-v[2]->z;
-            ax = vay*vbz - vaz*vby;
-            ay = vaz*vbx - vbz*vax;
-            az = vax*vby - vbx*vay;
-            double dot = (ax*vcx + ay*vcy + az*vcz);
-
-            // If negative, reverse order of non-degenerate points to correctly
-            // orientate tet.
-            if (dot < 0)
+            // Calculate a.(b x c) to determine tet volume; if negative,
+            // reverse order of non-degenerate points to correctly orientate
+            // the tet.
+            double ax  = vertex[1]->x-vertex[0]->x;
+            double ay  = vertex[1]->y-vertex[0]->y;
+            double az  = vertex[1]->z-vertex[0]->z;
+            double bx  = vertex[2]->x-vertex[0]->x;
+            double by  = vertex[2]->y-vertex[0]->y;
+            double bz  = vertex[2]->z-vertex[0]->z;
+            double cx  = vertex[3]->x-vertex[0]->x;
+            double cy  = vertex[3]->y-vertex[0]->y;
+            double cz  = vertex[3]->z-vertex[0]->z;
+            double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
+            vol       /= 6.0;
+            
+            if (fabs(vol) <= 1e-10)
+            {
+                cerr << "Warning: degenerate tetrahedron, volume = " << vol << endl;
+            }
+            
+            if (vol < 0)
             {
                 swap(vertex[0], vertex[1]);
-                swap(v[0], v[1]);
             }
         }
 
 
-        unsigned int Prism::typeIds[3] = {
-                GetElementFactory().RegisterCreatorFunction(6,  Prism::create, "Order 1 Prism"),
-                GetElementFactory().RegisterCreatorFunction(13, Prism::create, "Order 2 Prism"),
-                GetElementFactory().RegisterCreatorFunction(18, Prism::create, "Order 3 Prism")
-            };
-
-        Prism::Prism(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element()
+        ElementType Prism::type = GetElementFactory().
+            RegisterCreatorFunction(ePrism, Prism::create, "Prism");
+        
+        Prism::Prism(ElmtConfig            pConf,
+                     vector<NodeSharedPtr> pNodeList,
+                     vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
             m_tag = "R";
             m_dim = 3;
             m_taglist = pTagList;
-            int n = 0;
-            switch (m_taglist.back())
-            {
-            case 6:  n = 0; break;
-            case 13: n = 1; break;
-            }
-            int order = n+1;
+            int n = m_conf.order-1;
 
-            // Create a map to relate edge nodes to a pair of vertices defining an edge
-            // This is based on the ordering produced by gmsh.
+            // Create a map to relate edge nodes to a pair of vertices
+            // defining an edge. This is based on the ordering produced by
+            // gmsh.
             map<pair<int,int>, int> edgeNodeMap;
             map<pair<int,int>, int>::iterator it;
+
+            // This edge-node map is based on Nektar++ ordering.
             edgeNodeMap[pair<int,int>(1,2)] = 7;
-            edgeNodeMap[pair<int,int>(1,3)] = 7 + n;
-            edgeNodeMap[pair<int,int>(1,4)] = 7 + 2*n;
-            edgeNodeMap[pair<int,int>(2,3)] = 7 + 3*n;
-            edgeNodeMap[pair<int,int>(2,5)] = 7 + 4*n;
-            edgeNodeMap[pair<int,int>(3,6)] = 7 + 5*n;
-            edgeNodeMap[pair<int,int>(4,5)] = 7 + 6*n;
+            edgeNodeMap[pair<int,int>(2,3)] = 7 + n;
+            edgeNodeMap[pair<int,int>(4,3)] = 7 + 2*n;
+            edgeNodeMap[pair<int,int>(1,4)] = 7 + 3*n;
+            edgeNodeMap[pair<int,int>(1,5)] = 7 + 4*n;
+            edgeNodeMap[pair<int,int>(2,5)] = 7 + 5*n;
+            edgeNodeMap[pair<int,int>(3,6)] = 7 + 6*n;
             edgeNodeMap[pair<int,int>(4,6)] = 7 + 7*n;
             edgeNodeMap[pair<int,int>(5,6)] = 7 + 8*n;
-            
+
             // Add vertices
             for (int i = 0; i < 6; ++i) {
                 vertex.push_back(pNodeList[i]);
@@ -485,19 +541,23 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (order > 1) {
+                if (m_conf.order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(EdgeSharedPtr(new Edge(  pNodeList[it->first.first-1],
-                                                        pNodeList[it->first.second-1],
-                                                        edgeNodes)));
+                edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                                      pNodeList[it->first.second-1],
+                                                      edgeNodes,
+                                                      m_conf.edgeCurveType)));
             }
+            
+            OrientPrism();
             
             // Create faces
             int face_ids[5][4] = {
-                {1,2,5,4},{5,4,3,-1},{0,2,5,3},{1,2,0,-1},{4,1,0,3}};
+                {0,1,2,3},{0,1,4,-1},{1,2,5,4},{3,2,5,-1},{0,3,5,4}};
+            int faceoffset = 0;
             for (int j = 0; j < 5; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
@@ -512,43 +572,114 @@ namespace Nektar
                     NodeSharedPtr b = vertex[face_ids[j][(k+1)%(j%2==0?4:3)]];
                     for (unsigned int i = 0; i < edge.size(); ++i)
                     {
-                        if ( ((*(edge[i]->n1)==*a) && (*(edge[i]->n2)==*b))
-                                || ((*(edge[i]->n1)==*b) && (*(edge[i]->n2) == *a)) )
+                        if ((edge[i]->n1 == a && edge[i]->n2 == b) || 
+                            (edge[i]->n1 == b && edge[i]->n2 == a))
                         {
                             faceEdges.push_back(edge[i]);
                             break;
                         }
                     }
-
                 }
-                int N = 4 + 6*n + j*n*(n-1)/2;
-                for (unsigned int i = 0; i < n*(n-1)/2; ++i)
+                
+                if (m_conf.faceNodes)
                 {
-                    faceNodes.push_back(pNodeList[N+i]);
+                    int facenodes = j%2==0 ? n*n : n*(n-1)/2;
+                    faceoffset   += facenodes;
+                    int N = 6 + 9*n + faceoffset;
+                    for (unsigned int i = 0; i < facenodes; ++i)
+                    {
+                        faceNodes.push_back(pNodeList[N+i]);
+                    }
                 }
-                face.push_back(FaceSharedPtr(new Face(faceVertices, faceNodes, faceEdges)));
+                face.push_back(FaceSharedPtr(
+                    new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
+            }
+        }
+
+        unsigned int Prism::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            if (pConf.faceNodes && pConf.volumeNodes)
+                return (n+1)*(n+1)*(n+2)/2;
+            else if (pConf.faceNodes && !pConf.volumeNodes)
+                return 3*(n+1)*(n+1)+2*(n+1)*(n+2)/2-9*(n+1)+6;
+            else
+                return 9*(n+1)-12;
+        }
+
+        void Prism::OrientPrism()
+        {
+            int lid[6], gid[6];
+            
+            for (int i = 0; i < 6; ++i)
+            {
+                lid[i] = i;
+                gid[i] = vertex[i]->id;
+            }
+
+            gid[0] = gid[3] = max(gid[0], gid[3]);
+            gid[1] = gid[2] = max(gid[1], gid[2]);
+            gid[4] = gid[5] = max(gid[4], gid[5]);
+            
+            for (int i = 1; i < 6; ++i)
+            {
+                if (gid[0] < gid[i])
+                {
+                    swap(gid[i], gid[0]);
+                    swap(lid[i], lid[0]);
+                }
+            }
+
+            if (lid[0] == 4 || lid[0] == 5) 
+            {
+                orientation = 0;
+            } 
+            else if (lid[0] == 1 || lid[0] == 2) 
+            {
+                // Rotate prism clockwise in p-r plane
+                vector<NodeSharedPtr> vertexmap(6);
+                vertexmap[0] = vertex[4];
+                vertexmap[1] = vertex[0];
+                vertexmap[2] = vertex[3];
+                vertexmap[3] = vertex[5];
+                vertexmap[4] = vertex[1];
+                vertexmap[5] = vertex[2];
+                vertex = vertexmap;
+                orientation = 1;
+            }
+            else if (lid[0] == 0 || lid[0] == 3)
+            {
+                // Rotate prism counter-clockwise in p-r plane
+                vector<NodeSharedPtr> vertexmap(6);
+                vertexmap[0] = vertex[1];
+                vertexmap[1] = vertex[4];
+                vertexmap[2] = vertex[5];
+                vertexmap[3] = vertex[2];
+                vertexmap[4] = vertex[0];
+                vertexmap[5] = vertex[3];
+                vertex = vertexmap;
+                orientation = 2;
+            }
+            else
+            {
+                cerr << "Warning: possible prism orientation problem." << endl;
             }
         }
 
 
-        unsigned int Hexahedron::typeIds[2] = {
-                GetElementFactory().RegisterCreatorFunction(5, Hexahedron::create, "Order 1 Hexahedron"),
-                GetElementFactory().RegisterCreatorFunction(12, Hexahedron::create, "Order 2 Hexahedron")
-            };
+        ElementType Hexahedron::type = GetElementFactory().
+            RegisterCreatorFunction(eHexahedron, Hexahedron::create, "Hexahedron");
 
-        Hexahedron::Hexahedron(vector<NodeSharedPtr> pNodeList, vector<int> pTagList)
-                : Element() {
+        Hexahedron::Hexahedron(ElmtConfig            pConf,
+                               vector<NodeSharedPtr> pNodeList,
+                               vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
+        {
             m_tag = "H";
             m_dim = 3;
             m_taglist = pTagList;
-            int n = 0;
-            switch (m_taglist.back())
-            {
-            case 5:  n = 0; break;
-            case 12: n = 1; break;
-            }
-            int order = n+1;
-
+            int n = m_conf.order-1;
+            
             // Create a map to relate edge nodes to a pair of vertices defining an edge
             // This is based on the ordering produced by gmsh.
             map<pair<int,int>, int> edgeNodeMap;
@@ -575,19 +706,20 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (order > 1) {
+                if (m_conf.order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(EdgeSharedPtr(new Edge(  pNodeList[it->first.first-1],
-                                                        pNodeList[it->first.second-1],
-                                                        edgeNodes)));
+                edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                                      pNodeList[it->first.second-1],
+                                                      edgeNodes,
+                                                      m_conf.edgeCurveType)));
             }
 
             // Create faces
             int face_ids[6][4] = {
-                        {0,1,2,3},{0,1,5,4},{1,2,6,5},{2,3,7,6},{3,0,4,7},{4,5,6,7}};
+                {0,1,2,3},{0,1,5,4},{1,2,6,5},{2,3,7,6},{3,0,4,7},{4,5,6,7}};
             for (int j = 0; j < 6; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
@@ -608,13 +740,29 @@ namespace Nektar
                         }
                     }
                 }
-                int N = 8 + 12*n + j*n*n;
-                for (unsigned int i = 0; i < n*n; ++i)
+
+                if (m_conf.faceNodes)
                 {
-                    faceNodes.push_back(pNodeList[N+i]);
+                    int N = 8 + 12*n + j*n*n;
+                    for (unsigned int i = 0; i < n*n; ++i)
+                    {
+                        faceNodes.push_back(pNodeList[N+i]);
+                    }
                 }
-                face.push_back(FaceSharedPtr(new Face(faceVertices, faceNodes, faceEdges)));
+                face.push_back(FaceSharedPtr(
+                    new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
             }
+        }
+        
+        unsigned int Hexahedron::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            if (pConf.faceNodes && pConf.volumeNodes)
+                return (n+1)*(n+1)*(n+1);
+            else if (pConf.faceNodes && !pConf.volumeNodes)
+                return 6*(n+1)*(n+1)-12*(n+1)+8;
+            else
+                return 12*(n+1)-8;
         }
     }
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ConvertPly.cpp
+//  File: InputPly.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -39,29 +39,22 @@
 using namespace std;
 
 #include "MeshElements.h"
-#include "ConvertPly.h"
+#include "InputPly.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        string ConvertPly::className = GetConvertFactory().RegisterCreatorFunction("ply", ConvertPly::create);
+        ModuleKey InputPly::className = 
+            GetModuleFactory().RegisterCreatorFunction(
+                ModuleKey("ply",eInputModule), InputPly::create);
 
-        ConvertPly::ConvertPly()
-            : Convert()
+        InputPly::InputPly(MeshSharedPtr m) : InputModule(m)
         {
 
         }
 
-
-        ConvertPly::ConvertPly(const ConvertPly& pSrc)
-            : Convert(pSrc)
-        {
-
-        }
-
-
-        ConvertPly::~ConvertPly()
+        InputPly::~InputPly()
         {
 
         }
@@ -77,26 +70,17 @@ namespace Nektar
          *
          * @param   pFilename           Filename of Gmsh file to read.
          */
-        void ConvertPly::ReadFile(const string pFilename)
+        void InputPly::Process()
         {
-            m_expDim = 0;
+            m->expDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
             int nElements = 0;
             int nBoundaryElements = 0;
-            int elm_type = 0;
+            ElementType elType = eTriangle;
 
-            fstream mshFile(pFilename.c_str());
-
-            if (!mshFile.is_open())
-            {
-                cout << "Unable to find ply file" << endl;
-                mshFile.close();
-                return;
-            }
-
-            cout << "Start reading ConvertPly..." << endl;
+            cout << "Start reading InputPly..." << endl;
             while (!mshFile.eof())
             {
                 getline(mshFile, line);
@@ -127,16 +111,16 @@ namespace Nektar
                         double x = 0, y = 0, z = 0;
                         st >> x >> y >> z;
 
-                        if ((y * y) > 0.000001 && m_spaceDim != 3)
+                        if ((y * y) > 0.000001 && m->spaceDim != 3)
                         {
-                            m_spaceDim = 2;
+                            m->spaceDim = 2;
                         }
                         if ((z * z) > 0.000001)
                         {
-                            m_spaceDim = 3;
+                            m->spaceDim = 3;
                         }
                         id -= 1; // counter starts at 0
-                        m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                        m->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
                         id++;
                     }
 
@@ -147,12 +131,11 @@ namespace Nektar
                         getline(mshFile, line);
                         stringstream st(line);
                         int id = 0, num_tag = 0, num_nodes = 0;
-                        elm_type = 2;
 
                         // Create element tags
                         vector<int> tags;
                         tags.push_back(0); // composite
-                        tags.push_back(2); // element type
+                        tags.push_back(eTriangle); // element type
 
                         // Read element node list
                         st >> id;
@@ -161,19 +144,22 @@ namespace Nektar
                         {
                             int node = 0;
                             st >> node;
-                            nodeList.push_back(m_node[node]);
+                            nodeList.push_back(m->node[node]);
                         }
 
                         // Create element
-                        ElementSharedPtr E = GetElementFactory().CreateInstance(elm_type,nodeList,tags);
+                        ElmtConfig conf(elType,1,false,false);
+                        ElementSharedPtr E = GetElementFactory().
+                            CreateInstance(elType,conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m_expDim) {
-                            m_expDim = E->GetDim();
+                        if (E->GetDim() > m->expDim) {
+                            m->expDim = E->GetDim();
                         }
-                        m_element.push_back(E);
+                        m->element[E->GetDim()].push_back(E);
                     }
 
+                    /*
                     // Compute the number of full-dimensional elements and
                     // boundary elements.
                     for (int i = 0; i < m_element.size(); ++i) {
@@ -190,17 +176,11 @@ namespace Nektar
                     cout << "Read " << m_element.size() << " geometric entities" << endl;
                     cout << "Read " << nElements << " " << m_expDim << "-D elements" << endl;
                     cout << "Read " << nBoundaryElements << " boundary entities" << endl;
+                    */
                 }
             }
             mshFile.close();
-        }
 
-
-        /**
-         *
-         */
-        void ConvertPly::Process()
-        {
             ProcessVertices();
             ProcessEdges();
             ProcessFaces();

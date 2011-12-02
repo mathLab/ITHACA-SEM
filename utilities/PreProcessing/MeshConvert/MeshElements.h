@@ -45,50 +45,25 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
 
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /*
-        /// Defines a less-than operator between objects referred to using
-        /// shared pointers.
-        template <typename T>
-        struct shared_ptr_less_than
-        {
-            typedef boost::shared_ptr<T> pT;
-            const bool operator()(const pT a, const pT b) const {
-                // check for 0
-                if (a.get() == 0)
-                {
-                    // if b is also 0, then they are equal, hence a is not
-                    // less than b
-                    return b.get() != 0;
-                }
-                else if (b.get() == 0)
-                {
-                    return false;
-                }
-                else
-                {
-                    return *a < *b;
-                }
-            }
+        enum ElementType {
+            ePoint,
+            eLine,
+            eTriangle,
+            eQuadrilateral,
+            eTetrahedron,
+            ePyramid,
+            ePrism,
+            eHexahedron,
+            SIZE_ElementType
         };
-
-        /// Defines an equality operator between objects referred to using
-        /// shared pointers.
-        template <typename T>
-        struct shared_ptr_equality
-        {
-            typedef boost::shared_ptr<T> pT;
-            const bool operator()(const pT a, const pT b) const {
-                return *a == *b;
-            }
-        };
-        */
-
+        
         /**
          * @brief Represents a point in the domain.
          *
@@ -100,7 +75,7 @@ namespace Nektar
         public:
             /// Create a new node at a specified coordinate.
             Node(unsigned int pId, double pX, double pY, double pZ)
-                : id(pId), oId(pId), x(pX), y(pY), z(pZ) {}
+                : id(pId), x(pX), y(pY), z(pZ) {}
             /// Copy an existing node.
             Node(const Node& pSrc)
                 : id(pSrc.id), x(pSrc.x), y(pSrc.y), z(pSrc.z) {}
@@ -117,8 +92,6 @@ namespace Nektar
                 return ((x==pSrc.x) && (y==pSrc.y) && (z==pSrc.z));
             }
 
-            /// Original ID of node
-            unsigned int oId;
             /// ID of node.
             unsigned int id;
             /// X-coordinate.
@@ -132,12 +105,17 @@ namespace Nektar
         typedef boost::shared_ptr<Node> NodeSharedPtr;
 
         bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+        bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
         
         struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
         {
             std::size_t operator()(NodeSharedPtr const& p) const
             {
-                return boost::hash_value(p->oId);
+                std::size_t seed = 0;
+                boost::hash_combine(seed, p -> x);
+                boost::hash_combine(seed, p -> y);
+                boost::hash_combine(seed, p -> z);
+                return seed;
             }
         };
         typedef boost::unordered_set<NodeSharedPtr, NodeHash> NodeSet;
@@ -152,21 +130,17 @@ namespace Nektar
         class Edge {
         public:
             /// Creates a new edge.
-            Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2, std::vector<NodeSharedPtr> pEdgeNodes)
-                : n1(pVertex1), n2(pVertex2), edgeNodes(pEdgeNodes) {}
+            Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2, 
+                 std::vector<NodeSharedPtr> pEdgeNodes,
+                 LibUtilities::PointsType pCurveType) 
+                : n1(pVertex1), n2(pVertex2), edgeNodes(pEdgeNodes),
+                  curveType(pCurveType) {}
             /// Copies an existing edge.
             Edge(const Edge& pSrc)
-                : n1(pSrc.n1), n2(pSrc.n2), edgeNodes(pSrc.edgeNodes) {}
+                : n1(pSrc.n1), n2(pSrc.n2), edgeNodes(pSrc.edgeNodes),
+                  curveType(pSrc.curveType){}
             ~Edge() {}
 
-            /// Equality is defined based on the vertices.
-            /*
-            bool operator==(const Edge& pSrc)
-            {
-                return ( ((*n1 == *(pSrc.n1)) && (*n2 == *(pSrc.n2)))
-                        || ((*n2 == *(pSrc.n1)) && (*n1 == *(pSrc.n2))));
-            }
-            */
             /// Returns the total number of nodes defining the edge.
             unsigned int GetNodeCount() const
             {
@@ -198,6 +172,8 @@ namespace Nektar
             NodeSharedPtr n2;
             /// List of control nodes between the first and second vertices.
             std::vector<NodeSharedPtr> edgeNodes;
+            /// Distributions of points along edge.
+            LibUtilities::PointsType curveType;
         };
         /// Shared pointer to an edge.
         typedef boost::shared_ptr<Edge> EdgeSharedPtr;
@@ -229,12 +205,18 @@ namespace Nektar
         class Face {
         public:
             /// Create a new face.
-            Face(std::vector<NodeSharedPtr> pVertexList, std::vector<NodeSharedPtr> pFaceNodes,
-                 std::vector<EdgeSharedPtr> pEdgeList)
-                : vertexList(pVertexList), faceNodes(pFaceNodes), edgeList(pEdgeList) {}
+            Face(std::vector<NodeSharedPtr> pVertexList, 
+                 std::vector<NodeSharedPtr> pFaceNodes,
+                 std::vector<EdgeSharedPtr> pEdgeList,
+                 LibUtilities::PointsType   pCurveType)
+                : vertexList(pVertexList), 
+                  faceNodes (pFaceNodes), 
+                  edgeList  (pEdgeList),
+                  curveType (pCurveType){}
             /// Copy an existing face.
             Face(const Face& pSrc)
-                : vertexList (pSrc.vertexList), faceNodes(pSrc.faceNodes), edgeList(pSrc.edgeList) {}
+                : vertexList(pSrc.vertexList), faceNodes(pSrc.faceNodes), 
+                  edgeList  (pSrc.edgeList),   curveType(pSrc.curveType) {}
             ~Face() {}
 
             /// Equality is defined by matching all vertices.
@@ -273,21 +255,21 @@ namespace Nektar
                 std::stringstream s;
                 std::string str;
                 for (int k = 0; k < vertexList.size(); ++k) {
-                    s << std::scientific << std::setprecision(3) << "     "
+                    s << std::scientific << std::setprecision(4) << "    "
                       <<  vertexList[k]->x << "  " << vertexList[k]->y
-                      << "  " << vertexList[k]->z << "     ";
+                      << "  " << vertexList[k]->z << "    ";
                 }
                 for (int k = 0; k < edgeList.size(); ++k) {
                     for (int i = 0; i < edgeList[k]->edgeNodes.size(); ++i)
-                    s << std::scientific << std::setprecision(3) << "     "
+                    s << std::scientific << std::setprecision(4) << "    "
                       << edgeList[k]->edgeNodes[i]->x << "  "
                       << edgeList[k]->edgeNodes[i]->y << "  "
-                      << edgeList[k]->edgeNodes[i]->z << "     ";
+                      << edgeList[k]->edgeNodes[i]->z << "    ";
                 }
                 for (int k = 0; k < faceNodes.size(); ++k) {
-                    s << std::scientific << std::setprecision(3) << "     "
+                    s << std::scientific << std::setprecision(4) << "    "
                       <<  faceNodes[k]->x << "  " << faceNodes[k]->y
-                      << "  " << faceNodes[k]->z << "     ";
+                      << "  " << faceNodes[k]->z << "    ";
                 }
                 return s.str();
             }
@@ -300,6 +282,8 @@ namespace Nektar
             std::vector<EdgeSharedPtr> edgeList;
             /// List of face-interior nodes defining the shape of the face.
             std::vector<NodeSharedPtr> faceNodes;
+            /// Distribution of points in this face.
+            LibUtilities::PointsType   curveType;
         };
         /// Shared pointer to a face.
         typedef boost::shared_ptr<Face> FaceSharedPtr;
@@ -310,22 +294,61 @@ namespace Nektar
         {
             std::size_t operator()(FaceSharedPtr const& p) const
             {
-                std::size_t seed = 0;
-                std::vector<unsigned int> ids;
-                for (int i = 0; i < p->vertexList.size(); ++i)
+                unsigned int              nVert = p->vertexList.size();
+                std::size_t               seed  = 0;
+                std::vector<unsigned int> ids(nVert);
+                
+                for (int i = 0; i < nVert; ++i)
                 {
-                    ids.push_back(p->vertexList[i]->id);
+                    ids[i] = p->vertexList[i]->id;
                 }
+                
                 std::sort(ids.begin(), ids.end());
+                
                 for (int i = 0; i < ids.size(); ++i)
                 {
                     boost::hash_combine(seed, ids[i]);
                 }
+                
                 return seed;
             }
         };
         typedef boost::unordered_set<FaceSharedPtr, FaceHash> FaceSet;
 
+        
+        /**
+         * @brief Basic information about an element.
+         *
+         * ElmtConfig contains four member variables which denote the
+         * properties of an element when it is created.
+         */
+        struct ElmtConfig
+        {
+            ElmtConfig(ElementType pE, unsigned int pOrder, 
+                       bool pFn, bool pVn, 
+                       LibUtilities::PointsType pECt=LibUtilities::ePolyEvenlySpaced,
+                       LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced): 
+            e(pE), faceNodes(pFn), volumeNodes(pVn), order(pOrder),
+                edgeCurveType(pECt), faceCurveType(pFCt) {}
+            ElmtConfig() {}
+
+            /// Element type (e.g. triangle, quad, etc).
+            ElementType              e;
+            /// Denotes whether the element contains face nodes. For 2D
+            /// elements, if this is true then the element contains interior
+            /// nodes.
+            bool                     faceNodes;
+            /// Denotes whether the element contains volume (i.e. interior)
+            /// nodes. These are not supported by either the mesh converter or
+            /// Nektar++ but are included for completeness.
+            bool                     volumeNodes;
+            /// Order of the element.
+            unsigned int             order;
+            /// Distribution of points in edges.
+            LibUtilities::PointsType edgeCurveType;
+            /// Distribution of points in faces.
+            LibUtilities::PointsType faceCurveType;
+        };
 
         /**
          * @brief Base class for element definitions.
@@ -336,6 +359,10 @@ namespace Nektar
          */
         class Element {
         public:
+            Element(ElmtConfig   pConf,
+                    unsigned int pNumNodes,
+                    unsigned int pGotNodes);
+            
             /// Returns the ID of the element (or associated edge or face for
             /// boundary elements).
             unsigned int GetId() const {
@@ -346,6 +373,10 @@ namespace Nektar
             /// Returns the expansion dimension of the element.
             unsigned int GetDim() const {
                 return m_dim;
+            }
+            /// Returns the configuration of the element.
+            ElmtConfig GetConf() const {
+                return m_conf;
             }
             /// Returns the tag which defines the element shape.
             std::string GetTag() const {
@@ -440,6 +471,8 @@ namespace Nektar
             unsigned int m_id;
             /// Dimension of the element.
             unsigned int m_dim;
+            /// Contains configuration of the element.
+            ElmtConfig   m_conf;
             /// Tag character describing the element.
             std::string m_tag;
             /// List of integers specifying properties of the element.
@@ -458,9 +491,12 @@ namespace Nektar
         };
         /// Shared pointer to an element.
         typedef boost::shared_ptr<Element> ElementSharedPtr;
+        /// Container for elements; key is expansion dimension, value is
+        /// vector of elements of that dimension.
+        typedef std::map<unsigned int, std::vector<ElementSharedPtr> > ElementMap;
         /// Element factory definition.
-        typedef Nektar::LibUtilities::NekFactory< unsigned int, Element,
-                std::vector<NodeSharedPtr>, std::vector<int> > ElementFactory;
+        typedef Nektar::LibUtilities::NekFactory<ElementType, Element,
+            ElmtConfig, std::vector<NodeSharedPtr>, std::vector<int> > ElementFactory;
         ElementFactory& GetElementFactory();
 
         /// Define element ordering based on ID.
@@ -507,6 +543,47 @@ namespace Nektar
         };
         /// Shared pointer to a composite.
         typedef boost::shared_ptr<Composite> CompositeSharedPtr;
+        /// Container of composites; key is the composite id, value is the
+        /// composite.
+        typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;
+
+        class Mesh
+        {
+        public:
+            Mesh(const std::string inFilename, 
+                 const std::string outFilename);
+
+            /// Dimension of the expansion.
+            unsigned int                        expDim;
+            /// Dimension of the space in which the mesh is defined.
+            unsigned int                        spaceDim;
+            /// List of mesh nodes.
+            std::vector<NodeSharedPtr>          node;
+            /// Set of element vertices.
+            NodeSet                             vertexSet;
+            /// Set of element edges.
+            EdgeSet                             edgeSet;
+            /// Set of element faces.
+            FaceSet                             faceSet;
+            /// Map for elements.
+            ElementMap                          element;
+            /// Map for composites.
+            CompositeMap                        composite;
+            /// Original filename.
+            std::string                         inFilename;
+            /// Intended target.
+            std::string                         outFilename;
+            /// Returns the total number of elements in the mesh with
+            /// dimension expDim.
+            unsigned int                        GetNumElements();
+            /// Returns the total number of elements in the mesh with
+            /// dimension < expDim.
+            unsigned int                        GetNumBndryElements();
+            /// Returns the total number of entities in the mesh.
+            unsigned int                        GetNumEntities();
+        };
+        /// Shared pointer to a mesh.
+        typedef boost::shared_ptr<Mesh> MeshSharedPtr;
 
 
         /**
@@ -515,15 +592,24 @@ namespace Nektar
         class Point : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Point(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList, 
+                std::vector<int>           pTagList) 
+            {
+                return boost::shared_ptr<Element>(
+                    new Point(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Point(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Point(ElmtConfig                 pConf,
+                  std::vector<NodeSharedPtr> pNodeList, 
+                  std::vector<int>           pTagList);
             Point(const Point& pSrc);
             virtual ~Point() {}
+            
+            static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
 
@@ -533,15 +619,24 @@ namespace Nektar
         class Line : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Line(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList, 
+                std::vector<int>           pTagList) 
+            {
+                return boost::shared_ptr<Element>(
+                    new Line(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Line(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Line(ElmtConfig                 pConf,
+                 std::vector<NodeSharedPtr> pNodeList, 
+                 std::vector<int>           pTagList);
             Line(const Point& pSrc);
             virtual ~Line() {}
+            
+            static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
 
@@ -551,15 +646,24 @@ namespace Nektar
         class Triangle : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Triangle(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList,
+                std::vector<int>           pTagList) 
+            {
+                return boost::shared_ptr<Element>(
+                    new Triangle(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Triangle(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Triangle(ElmtConfig                 pConf,
+                     std::vector<NodeSharedPtr> pNodeList, 
+                     std::vector<int>           pTagList);
             Triangle(const Triangle& pSrc);
             virtual ~Triangle() {}
+            
+            static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
 
@@ -569,15 +673,24 @@ namespace Nektar
         class Quadrilateral : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Quadrilateral(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList, 
+                std::vector<int>           pTagList) 
+            {
+                return boost::shared_ptr<Element>(
+                    new Quadrilateral(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Quadrilateral(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Quadrilateral(ElmtConfig                 pConf,
+                          std::vector<NodeSharedPtr> pNodeList,
+                          std::vector<int>           pTagList);
             Quadrilateral(const Quadrilateral& pSrc);
             virtual ~Quadrilateral() {}
+
+            static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
 
@@ -587,15 +700,24 @@ namespace Nektar
         class Tetrahedron : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Tetrahedron(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList, 
+                std::vector<int>           pTagList)
+            {
+                return boost::shared_ptr<Element>(
+                    new Tetrahedron(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Tetrahedron(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Tetrahedron(ElmtConfig                 pConf,
+                        std::vector<NodeSharedPtr> pNodeList,
+                        std::vector<int>           pTagList);
             Tetrahedron(const Tetrahedron& pSrc);
             virtual ~Tetrahedron() {}
+
+            static unsigned int GetNumNodes(ElmtConfig pConf);
 
         protected:
             void OrientTet();
@@ -609,15 +731,33 @@ namespace Nektar
         class Prism : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Prism(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList,
+                std::vector<int>           pTagList)
+            {
+                return boost::shared_ptr<Element>(
+                    new Prism(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Prism(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Prism(ElmtConfig                 pConf,
+                  std::vector<NodeSharedPtr> pNodeList,
+                  std::vector<int>           pTagList);
             Prism(const Prism& pSrc);
             virtual ~Prism() {}
+
+            static unsigned int GetNumNodes(ElmtConfig pConf);
+
+            /**
+             * Orientation of prism; unchanged = 0; clockwise = 1;
+             * counter-clockwise = 2. This is set by OrientPrism.
+             */
+            unsigned int orientation;
+
+        protected:
+            void OrientPrism();
         };
 
 
@@ -627,15 +767,24 @@ namespace Nektar
         class Hexahedron : public Element {
         public:
             /// Creates an instance of this class
-            static ElementSharedPtr create(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList) {
-                return boost::shared_ptr<Element>(new Hexahedron(pNodeList, pTagList));
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList,
+                std::vector<int>           pTagList)
+            {
+                return boost::shared_ptr<Element>(
+                    new Hexahedron(pConf, pNodeList, pTagList));
             }
-            /// Gmsh IDs
-            static unsigned int typeIds[];
+            /// Element type
+            static ElementType type;
 
-            Hexahedron(std::vector<NodeSharedPtr> pNodeList, std::vector<int> pTagList);
+            Hexahedron(ElmtConfig                 pConf,
+                       std::vector<NodeSharedPtr> pNodeList,
+                       std::vector<int>           pTagList);
             Hexahedron(const Hexahedron& pSrc);
             virtual ~Hexahedron() {}
+            
+            static unsigned int GetNumNodes(ElmtConfig pConf);
         };
     }
 }

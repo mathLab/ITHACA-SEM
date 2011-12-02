@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ConvertGmsh.h
+//  File: InputPly.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,42 +29,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: GMSH converter.
+//  Description: PLY converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTGMSH
-#define UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTGMSH
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTPLY
+#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTPLY
 
-#include "Convert.h"
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /// Converter for Gmsh files.
-        class ConvertGmsh : public Convert
+        /// Converter for Ply files.
+        class InputPly : public InputModule
         {
         public:
             /// Creates an instance of this class
-            static boost::shared_ptr<Convert> create() {
-                return MemoryManager<ConvertGmsh>::AllocateSharedPtr();
+            static ModuleSharedPtr create(MeshSharedPtr m) {
+                return MemoryManager<InputPly>::AllocateSharedPtr(m);
             }
-            /// Name of class
-            static std::string className;
+            static ModuleKey className;
 
-            ConvertGmsh();
-            ConvertGmsh(const ConvertGmsh& pSrc);
-            virtual ~ConvertGmsh();
+            InputPly(MeshSharedPtr m);
+            virtual ~InputPly();
 
-            /// Reads the Gmsh file.
-            virtual void ReadFile(const std::string pFilename);
             /// Populate and validate required data structures.
             virtual void Process();
-
-        private:
-            /// Returns the number of nodes in a given Gmsh entity.
-            int GetNnodes(int GmshEntity);
         };
     }
 }

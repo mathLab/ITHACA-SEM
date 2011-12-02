@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ConvertPly.h
+//  File: InputGmsh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,38 +29,43 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: PLY converter.
+//  Description: GMSH converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTPLY
-#define UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTPLY
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
+#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
 
-#include "Convert.h"
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /// Converter for Gmsh files.
-        class ConvertPly : public Convert
+        /**
+         * Converter for Gmsh files.
+         */
+        class InputGmsh : public InputModule
         {
         public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Convert> create() {
-                return MemoryManager<ConvertPly>::AllocateSharedPtr();
-            }
-            /// Name of class
-            static std::string className;
-
-            ConvertPly();
-            ConvertPly(const ConvertPly& pSrc);
-            virtual ~ConvertPly();
-
-            /// Reads the Gmsh file.
-            virtual void ReadFile(const std::string pFilename);
-            /// Populate and validate required data structures.
+            InputGmsh(MeshSharedPtr m);
+            virtual ~InputGmsh();
             virtual void Process();
+
+            /// Creates an instance of this class
+            static ModuleSharedPtr create(MeshSharedPtr m) {
+                return MemoryManager<InputGmsh>::AllocateSharedPtr(m);
+            }
+            /// %ModuleKey for class.
+            static ModuleKey className;
+            
+        private:
+            int GetNnodes(unsigned int InputGmshEntity);
+            
+            /**
+             * Element map; takes a msh id to an %ElmtConfig object.
+             */
+            std::map<unsigned int, ElmtConfig> elmMap;
         };
     }
 }

@@ -29,8 +29,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    int nExtraPoints;
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+
+    vSession->LoadParameter("OutputExtraPoints",nExtraPoints,0);
 
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
@@ -47,18 +51,39 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up Expansion information
-    vector< vector<LibUtilities::PointsType> > pointstype;
     for(i = 0; i < fielddef.size(); ++i)
     {
         vector<LibUtilities::PointsType> ptype;
-        for(j = 0; j < 2; ++j)
+        for(j = 0; j < 3; ++j)
         {
             ptype.push_back(LibUtilities::ePolyEvenlySpaced);
         }
-        pointstype.push_back(ptype);
+
+        fielddef[i]->m_pointsDef = true;
+        fielddef[i]->m_points    = ptype; 
+
+        vector<unsigned int> porder;
+        if(fielddef[i]->m_numPointsDef == false)
+        {
+            for(j = 0; j < fielddef[i]->m_numModes.size(); ++j)
+            {
+                porder.push_back(fielddef[i]->m_numModes[j]+nExtraPoints);
+            }
+            
+            fielddef[i]->m_numPointsDef = true;
+        }
+        else
+        {
+            for(j = 0; j < fielddef[i]->m_numPoints.size(); ++j)
+            {
+                porder.push_back(fielddef[i]->m_numPoints[j]+nExtraPoints);
+            }
+        }
+        fielddef[i]->m_numPoints = porder;
     }
-    graphShPt->SetExpansions(fielddef,pointstype);
-	bool useFFT = false;
+
+    graphShPt->SetExpansions(fielddef);
+    bool useFFT = false;
     //----------------------------------------------
 
 
@@ -196,7 +221,8 @@ int main(int argc, char *argv[])
     {
         for(int i = 0; i < fielddata.size(); ++i)
         {
-            Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+            Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],
+                                        fielddef[i]->m_fields[j]);
         }
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
@@ -210,13 +236,13 @@ int main(int argc, char *argv[])
     for(int j = 0; j < Exp.num_elements(); ++j)
     {
 	var = var + ", " + fielddef[0]->m_fields[j];
-      }
+    }
 
     string   outname(strtok(argv[argc-1],"."));
     outname += ".dat";
     ofstream outfile(outname.c_str());
     cout << "Writing file: " << outname << " ... ";
-
+    
     Exp[0]->WriteTecplotHeader(outfile,var);
     for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
     {

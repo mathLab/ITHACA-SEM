@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     if(argc != 3)
     {
-        fprintf(stderr,"Usage: FldToVtk  meshfile fieldfile\n");
+        fprintf(stderr,"Usage: FldAddField  meshfile fieldfile\n");
         exit(1);
     }
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
                     Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
                 }
             }
-			else if(fielddef[0]->m_numHomogeneousDir == 2)
+            else if(fielddef[0]->m_numHomogeneousDir == 2)
             {
                 MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
 				
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Compute gradients of fields and compute reentricity
-    ASSERTL0(nfields == 2, "Need two fields (u,v) to add reentricity");
+    ASSERTL0(nfields >= 2, "Need two fields (u,v) to add reentricity");
     int nq = Exp[0]->GetNpoints();
     Array<OneD, NekDouble> grad_u[2], grad_v[2];
     Array<OneD, NekDouble> mag_cross(nq);

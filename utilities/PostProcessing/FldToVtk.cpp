@@ -31,8 +31,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+
+    int nExtraPoints;
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    vSession->LoadParameter("OutputExtraPoints",nExtraPoints,0);
 
     //----------------------------------------------
     // Read in mesh from input file
@@ -69,12 +73,11 @@ int main(int argc, char *argv[])
         vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
         vector<vector<NekDouble> > fielddata;
         graphShPt->Import(fieldfile,fielddef,fielddata);
-		bool useFFT = false;
+        bool useFFT = false;
         //----------------------------------------------
 
         //----------------------------------------------
         // Set up Expansion information
-        vector< vector<LibUtilities::PointsType> > pointstype;
         for(i = 0; i < fielddef.size(); ++i)
         {
             vector<LibUtilities::PointsType> ptype;
@@ -82,9 +85,31 @@ int main(int argc, char *argv[])
             {
                 ptype.push_back(LibUtilities::ePolyEvenlySpaced);
             }
-            pointstype.push_back(ptype);
+            
+            fielddef[i]->m_pointsDef = true;
+            fielddef[i]->m_points    = ptype; 
+            
+            vector<unsigned int> porder;
+            if(fielddef[i]->m_numPointsDef == false)
+            {
+                for(j = 0; j < fielddef[i]->m_numModes.size(); ++j)
+                {
+                    porder.push_back(fielddef[i]->m_numModes[j]+nExtraPoints);
+                }
+                
+                fielddef[i]->m_numPointsDef = true;
+            }
+            else
+            {
+                for(j = 0; j < fielddef[i]->m_numPoints.size(); ++j)
+                {
+                    porder.push_back(fielddef[i]->m_numPoints[j]+nExtraPoints);
+                }
+            }
+            fielddef[i]->m_numPoints = porder;
+            
         }
-        graphShPt->SetExpansions(fielddef,pointstype);
+        graphShPt->SetExpansions(fielddef);
         //----------------------------------------------
 
 

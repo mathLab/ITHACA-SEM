@@ -197,7 +197,8 @@ namespace Nektar
                 for(j=0; j< basis.size(); ++j)
                 {
                     if( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-                        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) )
+                        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
+                        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) )
                     {
                         check++;
                     }
@@ -453,6 +454,7 @@ namespace Nektar
 //                                }
 //                            }
 //                            ASSERTL0(k != m_segGeoms.size(),"Failed to find geometry with same global id");
+
                             const LibUtilities::PointsKey pkey(nmodes[cnt],pointstype[i][0]);
                             LibUtilities::BasisKey bkey(basis[0],nmodes[cnt],pkey);
                             if(!UniOrder)
@@ -2746,225 +2748,224 @@ namespace Nektar
          * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
          */
         void MeshGraph::ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs, bool expChild)
-          {
-              ASSERTL1(fielddefs.size() == 0, "Expected an empty fielddefs vector.");
+        {
+            ASSERTL1(fielddefs.size() == 0, "Expected an empty fielddefs vector.");
+            
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+            
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+            std::string strLoop = "NEKTAR";
+            TiXmlElement* loopXml = master;
+            
+            TiXmlElement *expansionTypes;
+            if(expChild)
+            {
+                expansionTypes = master->FirstChildElement("EXPANSIONS");
+                ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
+                loopXml = expansionTypes;
+                strLoop = "EXPANSIONS";
+            }
+            
+            // Loop through all nektar tags, finding all of the element tags.
+            while (loopXml)
+            {
+                TiXmlElement* element = loopXml->FirstChildElement("ELEMENTS");
+                ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
+                
+                while (element)
+                {
+                    // Extract the attributes.
+                    std::string idString;
+                    std::string shapeString;
+                    std::string basisString;
+                    std::string homoLengthsString;
+                    std::string numModesString;
+                    std::string numPointsString;
+                    std::string fieldsString;
+                    std::string pointsString;
+                    bool pointDef = false;
+                    bool numPointDef = false;
+                    TiXmlAttribute *attr = element->FirstAttribute();
+                    while (attr)
+                    {
+                        std::string attrName(attr->Name());
+                        if (attrName == "FIELDS")
+                        {
+                            fieldsString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "SHAPE")
+                        {
+                            shapeString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "BASIS")
+                        {
+                            basisString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "HOMOGENEOUSLENGTHS")
+                        {
+                            homoLengthsString.insert(0,attr->Value());
+                        }
+                        else if (attrName == "NUMMODESPERDIR")
+                        {
+                            numModesString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "ID")
+                        {
+                            idString.insert(0, attr->Value());
+                        }
+                        else if (attrName == "POINTSTYPE")
+                        {
+                            pointsString.insert(0, attr->Value());
+                            pointDef = true;
+                        }
+                        else if (attrName == "NUMPOINTSPERDIR")
+                        {
+                            numPointsString.insert(0, attr->Value());
+                            numPointDef = true;
+                        }
+                        else
+                        {
+                            std::string errstr("Unknown attribute: ");
+                            errstr += attrName;
+                            ASSERTL1(false, errstr.c_str());
+                        }
+                        
+                        // Get the next attribute.
+                        attr = attr->Next();
+                    }
 
-              TiXmlHandle docHandle(&doc);
-              TiXmlElement* master = NULL;    // Master tag within which all data is contained.
-
-              master = doc.FirstChildElement("NEKTAR");
-              ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-              std::string strLoop = "NEKTAR";
-              TiXmlElement* loopXml = master;
-
-              TiXmlElement *expansionTypes;
-              if(expChild)
-              {
-                  expansionTypes = master->FirstChildElement("EXPANSIONS");
-                  ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
-                  loopXml = expansionTypes;
-                  strLoop = "EXPANSIONS";
-              }
-
-              // Loop through all nektar tags, finding all of the element tags.
-              while (loopXml)
-              {
-                  TiXmlElement* element = loopXml->FirstChildElement("ELEMENTS");
-                  ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
-
-                  while (element)
-                  {
-                      // Extract the attributes.
-                      std::string idString;
-                      std::string shapeString;
-                      std::string basisString;
-                      std::string homoLengthsString;
-                      std::string numModesString;
-                      std::string numPointsString;
-                      std::string fieldsString;
-                      std::string pointsString;
-                      bool pointDef = false;
-                      bool numPointDef = false;
-                      TiXmlAttribute *attr = element->FirstAttribute();
-                      while (attr)
-                      {
-                          std::string attrName(attr->Name());
-                          if (attrName == "FIELDS")
-                          {
-                              fieldsString.insert(0, attr->Value());
-                          }
-                          else if (attrName == "SHAPE")
-                          {
-                              shapeString.insert(0, attr->Value());
-                          }
-                          else if (attrName == "BASIS")
-                          {
-                              basisString.insert(0, attr->Value());
-                          }
-                          else if (attrName == "HOMOGENEOUSLENGTHS")
-                          {
-                              homoLengthsString.insert(0,attr->Value());
-                          }
-                          else if (attrName == "NUMMODESPERDIR")
-                          {
-                              numModesString.insert(0, attr->Value());
-                          }
-                          else if (attrName == "ID")
-                          {
-                              idString.insert(0, attr->Value());
-                          }
-                          else if (attrName == "POINTSTYPE")
-                          {
-                              pointsString.insert(0, attr->Value());
-                              pointDef = true;
-                          }
-                          else if (attrName == "NUMPOINTSPERDIR")
-                          {
-                              numPointsString.insert(0, attr->Value());
-                              numPointDef = true;
-                          }
-                          else
-                          {
-                              std::string errstr("Unknown attribute: ");
-                              errstr += attrName;
-                              ASSERTL1(false, errstr.c_str());
-                          }
-
-                          // Get the next attribute.
-                          attr = attr->Next();
-                      }
-
-                      // Check to see if homogeneous expansion and if so
-                      // strip down the shapeString definition
-                      int numHomoDir = 0;
-                      size_t loc;
-                      //---> This finds the first location of  'n'!
-                      if((loc = shapeString.find_first_of("-"))!=string::npos)
-                      {
-                          if(shapeString.find("Exp1D")!=string::npos)
-                          {
-                              numHomoDir = 1;
-                          }
-                          else // HomogeneousExp1D
-                          {
-                              numHomoDir = 2;
-                          }
-
-                          shapeString.erase(loc,shapeString.length());
-                      }
-
-                      // Reconstruct the fielddefs.
-                      std::vector<unsigned int> elementIds;
-                      {
-                          bool valid = ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
-                          ASSERTL0(valid, "Unable to correctly parse the element ids.");
-                      }
-
-                      // Get the geometrical shape
-                      SpatialDomains::GeomShapeType shape;
-                      bool valid = false;
-                      for (unsigned int j = 0; j < SpatialDomains::SIZE_GeomShapeType; j++)
-                      {
-                          if (SpatialDomains::GeomShapeTypeMap[j] == shapeString)
-                          {
-                              shape = (SpatialDomains::GeomShapeType) j;
-                              valid = true;
-                              break;
-                          }
-                      }
-
-                      ASSERTL0(valid, std::string("Unable to correctly parse the shape type: ").append(shapeString).c_str());
-
-                      // Get the basis
-                      std::vector<std::string> basisStrings;
-                      std::vector<LibUtilities::BasisType> basis;
-                      valid = ParseUtils::GenerateOrderedStringVector(basisString.c_str(), basisStrings);
-                      ASSERTL0(valid, "Unable to correctly parse the basis types.");
-                      for (std::vector<std::string>::size_type i = 0; i < basisStrings.size(); i++)
-                      {
-                          valid = false;
-                          for (unsigned int j = 0; j < LibUtilities::SIZE_BasisType; j++)
-                          {
-                              if (LibUtilities::BasisTypeMap[j] == basisStrings[i])
-                              {
-                                  basis.push_back((LibUtilities::BasisType) j);
-                                  valid = true;
-                                  break;
-                              }
-                          }
-                          ASSERTL0(valid, std::string("Unable to correctly parse the basis type: ").append(basisStrings[i]).c_str());
-                      }
-
-                      // Get homoLengths
-                      std::vector<NekDouble> homoLengths;
-                      if(numHomoDir)
-                      {
-                          valid = ParseUtils::GenerateUnOrderedVector(homoLengthsString.c_str(), homoLengths);
-                          ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
-                      }
-
-
-                      // Get points type
-                      std::vector<LibUtilities::PointsType> points;
-
-                      if(pointDef)
-                      {
-                          std::vector<std::string> pointsStrings;
-                          valid = ParseUtils::GenerateOrderedStringVector(pointsString.c_str(), pointsStrings);
-                          ASSERTL0(valid, "Unable to correctly parse the points types.");
-                          for (std::vector<std::string>::size_type i = 0; i < pointsStrings.size(); i++)
-                          {
-                              valid = false;
-                              for (unsigned int j = 0; j < LibUtilities::SIZE_PointsType; j++)
-                              {
-                                  if (LibUtilities::kPointsTypeStr[j] == pointsStrings[i])
-                                  {
-                                      points.push_back((LibUtilities::PointsType) j);
-                                      valid = true;
-                                      break;
-                                  }
-                              }
-
-                              ASSERTL0(valid, std::string("Unable to correctly parse the points type: ").append(pointsStrings[i]).c_str());
-                          }
-                      }
-
-                      // Get numModes
-                      std::vector<unsigned int> numModes;
-                      bool UniOrder = false;
-
-                      if(strstr(numModesString.c_str(),"UNIORDER:"))
-                      {
-                          UniOrder  = true;
-                      }
-
-                      valid = ParseUtils::GenerateOrderedVector(numModesString.c_str()+9, numModes);
-                      ASSERTL0(valid, "Unable to correctly parse the number of modes.");
-
-                      // Get numPoints
-                      std::vector<unsigned int> numPoints;
-                      if(numPointDef)
-                      {
-                          valid = ParseUtils::GenerateOrderedVector(numPointsString.c_str(), numPoints);
-                          ASSERTL0(valid, "Unable to correctly parse the number of points.");
-                      }
-
-                      // Get fields names
-                      std::vector<std::string> Fields;
-                      valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
-                      ASSERTL0(valid, "Unable to correctly parse the number of fields.");
-
-                      SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, points, pointDef, numPoints, numPointDef);
-                      int datasize = CheckFieldDefinition(fielddef);
-
-                      fielddefs.push_back(fielddef);
-
-                      element = element->NextSiblingElement("ELEMENTS");
-                  }
-                  loopXml = loopXml->NextSiblingElement(strLoop);
-              }
-          }
-
+                    // Check to see if homogeneous expansion and if so
+                    // strip down the shapeString definition
+                    int numHomoDir = 0;
+                    size_t loc;
+                    //---> This finds the first location of  'n'!
+                    if((loc = shapeString.find_first_of("-"))!=string::npos)
+                    {
+                        if(shapeString.find("Exp1D")!=string::npos)
+                        {
+                            numHomoDir = 1;
+                        }
+                        else // HomogeneousExp1D
+                        {
+                            numHomoDir = 2;
+                        }
+                        
+                        shapeString.erase(loc,shapeString.length());
+                    }
+                    
+                    // Reconstruct the fielddefs.
+                    std::vector<unsigned int> elementIds;
+                    {
+                        bool valid = ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
+                        ASSERTL0(valid, "Unable to correctly parse the element ids.");
+                    }
+                    
+                    // Get the geometrical shape
+                    SpatialDomains::GeomShapeType shape;
+                    bool valid = false;
+                    for (unsigned int j = 0; j < SpatialDomains::SIZE_GeomShapeType; j++)
+                    {
+                        if (SpatialDomains::GeomShapeTypeMap[j] == shapeString)
+                        {
+                            shape = (SpatialDomains::GeomShapeType) j;
+                            valid = true;
+                            break;
+                        }
+                    }
+                    
+                    ASSERTL0(valid, std::string("Unable to correctly parse the shape type: ").append(shapeString).c_str());
+                    
+                    // Get the basis
+                    std::vector<std::string> basisStrings;
+                    std::vector<LibUtilities::BasisType> basis;
+                    valid = ParseUtils::GenerateOrderedStringVector(basisString.c_str(), basisStrings);
+                    ASSERTL0(valid, "Unable to correctly parse the basis types.");
+                    for (std::vector<std::string>::size_type i = 0; i < basisStrings.size(); i++)
+                    {
+                        valid = false;
+                        for (unsigned int j = 0; j < LibUtilities::SIZE_BasisType; j++)
+                        {
+                            if (LibUtilities::BasisTypeMap[j] == basisStrings[i])
+                            {
+                                basis.push_back((LibUtilities::BasisType) j);
+                                valid = true;
+                                break;
+                            }
+                        }
+                        ASSERTL0(valid, std::string("Unable to correctly parse the basis type: ").append(basisStrings[i]).c_str());
+                    }
+                    
+                    // Get homoLengths
+                    std::vector<NekDouble> homoLengths;
+                    if(numHomoDir)
+                    {
+                        valid = ParseUtils::GenerateUnOrderedVector(homoLengthsString.c_str(), homoLengths);
+                        ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
+                    }
+                    
+                    // Get points type
+                    std::vector<LibUtilities::PointsType> points;
+                    
+                    if(pointDef)
+                    {
+                        std::vector<std::string> pointsStrings;
+                        valid = ParseUtils::GenerateOrderedStringVector(pointsString.c_str(), pointsStrings);
+                        ASSERTL0(valid, "Unable to correctly parse the points types.");
+                        for (std::vector<std::string>::size_type i = 0; i < pointsStrings.size(); i++)
+                        {
+                            valid = false;
+                            for (unsigned int j = 0; j < LibUtilities::SIZE_PointsType; j++)
+                            {
+                                if (LibUtilities::kPointsTypeStr[j] == pointsStrings[i])
+                                {
+                                    points.push_back((LibUtilities::PointsType) j);
+                                    valid = true;
+                                    break;
+                                }
+                            }
+                            
+                            ASSERTL0(valid, std::string("Unable to correctly parse the points type: ").append(pointsStrings[i]).c_str());
+                        }
+                    }
+                    
+                    // Get numModes
+                    std::vector<unsigned int> numModes;
+                    bool UniOrder = false;
+                    
+                    if(strstr(numModesString.c_str(),"UNIORDER:"))
+                    {
+                        UniOrder  = true;
+                    }
+                    
+                    valid = ParseUtils::GenerateOrderedVector(numModesString.c_str()+9, numModes);
+                    ASSERTL0(valid, "Unable to correctly parse the number of modes.");
+                    
+                    // Get numPoints
+                    std::vector<unsigned int> numPoints;
+                    if(numPointDef)
+                    {
+                        valid = ParseUtils::GenerateOrderedVector(numPointsString.c_str(), numPoints);
+                        ASSERTL0(valid, "Unable to correctly parse the number of points.");
+                    }
+                    
+                    // Get fields names
+                    std::vector<std::string> Fields;
+                    valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
+                    ASSERTL0(valid, "Unable to correctly parse the number of fields.");
+                    
+                    SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, points, pointDef, numPoints, numPointDef);
+                    int datasize = CheckFieldDefinition(fielddef);
+                    
+                    fielddefs.push_back(fielddef);
+                    
+                    element = element->NextSiblingElement("ELEMENTS");
+                }
+                loopXml = loopXml->NextSiblingElement(strLoop);
+            }
+        }
+        
         void MeshGraph::ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
         {
             int cntdumps = 0;

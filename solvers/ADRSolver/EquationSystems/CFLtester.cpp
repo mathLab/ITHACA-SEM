@@ -273,11 +273,7 @@ namespace Nektar
 		int P = ExpOrder-1;
 		
 		//Regular meshes
-		//TimeStep = (TimeStability/EigenvaluesRegMeshes[H-1][P-1])*CFL;
-		
-		//Anisotropic meshes
-		int eigenmap[10] = {0, 0, 0, 0, 0, 1, 0, 2, 0, 3};
-		TimeStep = (TimeStability/EigenvaluesAnaMeshes[eigenmap[H]][P-1])*CFL;
+		TimeStep = (TimeStability/EigenvaluesRegMeshes[H-1][P-1])*CFL;
 		
 		return TimeStep;
 	}

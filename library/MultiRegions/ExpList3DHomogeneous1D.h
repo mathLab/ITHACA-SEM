@@ -128,6 +128,8 @@ namespace Nektar
 
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+			
+			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
 
             virtual void v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
                                             const SpatialDomains::BoundaryConditions &bcs,

@@ -474,6 +474,13 @@ namespace Nektar
             {
                 return v_L2();
             }
+			
+			/// This function calculates the energy associated with each one of the modes
+			/// of a 3D homogeneous nD expansion
+            Array<OneD, NekDouble> HomogeneousEnergy (void)
+            {
+                return v_HomogeneousEnergy();
+            }
 
             /// Calculates the \f$H^1\f$ error of the global spectral/hp
             /// element approximation.
@@ -1081,6 +1088,7 @@ namespace Nektar
 
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
 
             virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 

@@ -1833,6 +1833,15 @@ ASSERTL0(false, "FIX THIS");
             m_comm->AllReduce(err, LibUtilities::ReduceSum);
             return sqrt(err);
         }
+		
+		Array<OneD, NekDouble> ExpList::v_HomogeneousEnergy (void)
+        {
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+			Array<OneD, NekDouble> NoEnergy(1,0.0);
+            return NoEnergy;
+        }
+		
 
         /**
          * Given a spectral/hp approximation

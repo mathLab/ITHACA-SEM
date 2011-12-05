@@ -379,8 +379,7 @@ namespace Nektar
 
             return sqrt(err);
         }
-
-
+		
         NekDouble ExpList3DHomogeneous1D::v_L2(void)
         {
             NekDouble errL2,err = 0;
@@ -393,6 +392,24 @@ namespace Nektar
             }
 
             return sqrt(err);
+        }
+		
+		Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
+        {
+            int cnt = 0;
+			int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
+			
+			Array<OneD, NekDouble> Energy(m_planes.num_elements(),0.0);
+			
+			for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+				for(int i = 0; i < ncoeffs_per_plane; i++)
+				{
+					Energy[n] += (m_coeffs[i+n*ncoeffs_per_plane]*m_coeffs[i+n*ncoeffs_per_plane])/ncoeffs_per_plane;
+				}
+			}
+			
+            return Energy;
         }
     } //end of namespace
 } //end of namespace

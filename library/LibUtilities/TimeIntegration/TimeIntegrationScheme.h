@@ -71,22 +71,43 @@ namespace Nektar
             eNoTimeIntegrationMethod,
             eAdamsBashforthOrder1,            //!< Adams-Bashforth Forward multi-step scheme of order 1
             eAdamsBashforthOrder2,            //!< Adams-Bashforth Forward multi-step scheme of order 2
+            eAdamsBashforthOrder3,            //!< Adams-Bashforth Forward multi-step scheme of order 3
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
             eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
-			eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
+            eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme 4th order explicit
-			eRungeKutta2_ModifiedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
-			eRungeKutta2_ImprovedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
+            eRungeKutta2_ModifiedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
+            eRungeKutta2_ImprovedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
             eForwardEuler,                    //!< Forward euler scheme
             eBackwardEuler,                   //!< Backward euler scheme
             eIMEXOrder1,                      //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
             eIMEXOrder2,                      //!< IMEX 2nd order scheme using Backward Different Formula & Extrapolation
             eIMEXOrder3,                      //!< IMEX 3rd order scheme using Backward Different Formula & Extrapolation
+            eFEBE,                            //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
+            eARW2,                            //!< IMEX 2nd order scheme using Backward Different Formula & Extrapolation
+            eARW3,                            //!< IMEX 3rd order scheme using Backward Different Formula & Extrapolation
             eMidpoint,                        //!< midpoint method
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
+            eCNAB,		                      //!< Crank-Nicolson/Adams-Bashforth Order 2 (CNAB)
+            eIMEXGear,		                  //!< IMEX Gear Order 2
+            eMCNAB,		                      //!< Modified Crank-Nicolson/Adams-Bashforth Order 2 (MCNAB)
+            eARS_1_1_1,		      	          //!< Forward-Backward Euler IMEX DIRK(1,1,1)
+            eARS_1_2_1,		      	          //!< Forward-Backward Euler IMEX DIRK(1,2,1)
+            eARS_1_2_2,		      	          //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
+            eARS_2_2_2,		                  //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
+            eARS_2_3_2,                       //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
+            eARS_2_3_3,		      	          //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
+            eARS_3_4_3,                       //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
+            eARS_4_4_3,		      	          //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
+            eIMEXdirk_1_1_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,1,1)
+            eIMEXdirk_1_2_1,		      	  //!< Forward-Backward Euler IMEX DIRK(1,2,1)
+            eIMEXdirk_1_2_2,		      	  //!< Implicit-Explicit Midpoint IMEX DIRK(1,2,2)
+            eIMEXdirk_2_2_2,		          //!< L-stable, two stage, second order IMEX DIRK(2,2,2)
             eIMEXdirk_2_3_2,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
+            eIMEXdirk_2_3_3,		      	  //!< L-stable, two stage, third order IMEX DIRK(2,3,3)
             eIMEXdirk_3_4_3,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
+            eIMEXdirk_4_4_3,		      	  //!< L-stable, four stage, third order IMEX DIRK(4,4,3)
             SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
 
@@ -94,23 +115,44 @@ namespace Nektar
         {
             "NoTimeIntegrationMethod",
             "AdamsBashforthOrder1",            
-            "AdamsBashforthOrder2",          
+            "AdamsBashforthOrder2",
+            "AdamsBashforthOrder3",                    
             "AdamsMoultonOrder1",           
             "AdamsMoultonOrder2",
-			"BDFImplicitOrder2",
+            "BDFImplicitOrder2",
             "ClassicalRungeKutta4",
-			"RungeKutta2_ModifiedEuler",
-			"RungeKutta2_ImprovedEuler",
+            "RungeKutta2_ModifiedEuler",
+            "RungeKutta2_ImprovedEuler",
             "ForwardEuler",                    
             "BackwardEuler",                  
             "IMEXOrder1",
             "IMEXOrder2",
             "IMEXOrder3",
+            "FEBE",
+            "ARW2",
+            "ARW3",	    
             "Midpoint",                       
             "DIRKOrder2",                     
             "DIRKOrder3",    
+            "CNAB",
+            "IMEXGear",
+            "MCNAB",
+            "ARS_1_1_1",
+            "ARS_1_2_1",
+            "ARS_1_2_2",
+            "ARS_2_2_2",
+            "ARS_2_3_2",                                
+            "ARS_2_3_3",
+            "ARS_3_4_3",
+            "ARS_4_4_3",
+            "IMEXdirk_1_1_1",
+            "IMEXdirk_1_2_1",
+            "IMEXdirk_1_2_2",
+            "IMEXdirk_2_2_2",
             "IMEXdirk_2_3_2",                                
+            "IMEXdirk_2_3_3",
             "IMEXdirk_3_4_3"                
+            "IMEXdirk_4_4_3",
         };
 
         enum TimeIntegrationSchemeType

@@ -200,6 +200,43 @@ namespace Nektar
                     m_timeLevelOffset[1] = 1;
                 }
                 break;
+            case eAdamsBashforthOrder3:
+                {
+                    m_numsteps = 4;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,0.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps,0.0);
+
+                    m_B[0][1][0] = 1.0;
+
+                    m_U[0][0] = 1.0;
+                    m_U[0][1] = 23.0/12.0;
+                    m_U[0][2] = -4.0/3.0;
+                    m_U[0][3] = 5.0/12.0;
+
+                    m_V[0][0] = 1.0;
+                    m_V[0][1] = 23.0/12.0;
+                    m_V[0][2] = -4.0/3.0;
+                    m_V[0][3] = 5.0/12.0;
+                    m_V[2][1] = 1.0;
+                    m_V[3][2] = 1.0;
+
+                    m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 3;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 1;
+		    		m_timeLevelOffset[2] = 2;
+                    m_timeLevelOffset[3] = 3;
+                }
+                break;
             case eBackwardEuler:
             case eAdamsMoultonOrder1:
                 {
@@ -221,6 +258,7 @@ namespace Nektar
                 }
                 break;
             case eIMEXOrder1:
+            case eFEBE:
                 {
                     m_numsteps  = 2;
                     m_numstages = 1;
@@ -249,6 +287,7 @@ namespace Nektar
                 }
                 break;
             case eIMEXOrder2:
+            case eARW2:
                 {
                     NekDouble third = 1.0/3.0;
                     m_numsteps  = 4;
@@ -287,6 +326,7 @@ namespace Nektar
                 }
                 break;
             case eIMEXOrder3:
+            case eARW3:
                 {
                     NekDouble eleventh = 1.0/11.0;
                     m_numsteps  = 6;
@@ -556,8 +596,8 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-
             case eIMEXdirk_2_3_2:
+            case eARS_2_3_2:
                 {
                     m_numsteps  = 1;
                     m_numstages = 3;
@@ -596,8 +636,8 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-
             case eIMEXdirk_3_4_3:
+			case eARS_3_4_3:
                 {
                     m_numsteps  = 1;
                     m_numstages = 4;
@@ -635,6 +675,351 @@ namespace Nektar
                     m_B[1][0][1] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
                     m_B[1][0][2] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
                     m_B[1][0][3] = lambda;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
+			case eCNAB:
+                {
+                    NekDouble secondth = 1.0/2.0;
+                    m_numsteps  = 4;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,secondth);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,secondth);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
+                    
+                    m_B[0][0][0] = secondth;
+                    m_B[0][1][0] = 1.0;		
+                    m_B[1][2][0] = 1.0;
+                    m_U[0][0] = 2*secondth;
+                    m_U[0][2] = 3*secondth;
+                    m_U[0][3] = -1*secondth;
+
+                    m_V[0][0] = 2*secondth;
+                    m_V[0][1] = secondth;
+                    m_V[0][2] = 3*secondth;
+                    m_V[0][3] = -1*secondth;
+                    m_V[3][2] =  1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 3;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 0;
+                    m_timeLevelOffset[2] = 0;
+                    m_timeLevelOffset[3] = 1;
+                }
+                break;
+			case eIMEXGear:
+                {
+                    NekDouble twothirdth = 2.0/3.0;
+		    		m_numsteps  = 2;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,twothirdth);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps,twothirdth);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
+                    
+                    m_B[0][0][0] = twothirdth;	
+                    m_B[1][0][0] = twothirdth;
+                    m_U[0][0] = 2*twothirdth;
+                    m_U[0][1] = -0.5*twothirdth;
+
+                    m_V[0][0] = 2*twothirdth;
+                    m_V[0][1] = -0.5*twothirdth;
+                    m_V[1][0] = 1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 2;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 1;
+                }
+                break;
+			case eMCNAB:
+                {
+                    NekDouble sixthx = 9.0/16.0;
+		    		m_numsteps  = 5;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,sixthx);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 0.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
+                    
+                    m_B[0][0][0] = sixthx;
+                    m_B[0][1][0] = 1.0;		
+                    m_B[1][3][0] = 1.0;
+                    m_U[0][0] = 1.0;
+                    m_U[0][1] = 6.0/16.0;
+                    m_U[0][2] = 1.0/16.0;
+                    m_U[0][3] = 1.5;
+                    m_U[0][4] = -0.5;
+
+                    m_V[0][0] = 1.0;
+                    m_V[0][1] = 6.0/16.0;
+                    m_V[0][2] = 1.0/16.0;
+                    m_V[0][3] = 1.5;
+                    m_V[0][4] = -0.5;
+                    m_V[2][1] = 1.0;
+                    m_V[4][3] = 1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 4;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 0;
+                    m_timeLevelOffset[2] = 1;
+                    m_timeLevelOffset[3] = 0;
+                    m_timeLevelOffset[4] = 1;
+                }
+                break;
+            case eIMEXdirk_2_2_2:		
+            case eARS_2_2_2:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 3;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    NekDouble glambda =  0.788675134594813;
+		    		NekDouble gdelta =  0.366025403784439;
+
+                    m_A[0][1][1] = glambda;
+                    m_A[0][2][1] = 1.0 - glambda;
+                    m_A[0][2][2] = glambda;
+
+                    m_B[0][0][1] = 1.0 - glambda;
+                    m_B[0][0][2] = glambda;
+
+                    m_A[1][1][0] = glambda;
+                    m_A[1][2][0] = gdelta;
+                    m_A[1][2][1] = 1.0 - gdelta;
+
+                    m_B[1][0][0] = gdelta;
+                    m_B[1][0][1] = 1.0 - gdelta;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
+			case eIMEXdirk_2_3_3:		
+			case eARS_2_3_3:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 3;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    NekDouble glambda =  0.788675134594813;
+
+                    m_A[0][1][1] = glambda;
+                    m_A[0][2][1] = 1.0 - 2.0*glambda;
+                    m_A[0][2][2] = glambda;
+
+                    m_B[0][0][1] = 0.5;
+                    m_B[0][0][2] = 0.5;
+
+                    m_A[1][1][0] = glambda;
+                    m_A[1][2][0] = glambda - 1.0;
+                    m_A[1][2][1] = 2.0*(1-glambda);
+
+                    m_B[1][0][1] = 0.5;
+                    m_B[1][0][2] = 0.5;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
+			case eIMEXdirk_1_1_1:		
+			case eARS_1_1_1:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 2;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    m_A[0][1][1] = 1.0;
+
+                    m_B[0][0][1] = 1.0;
+
+                    m_A[1][1][0] = 1.0;
+
+                    m_B[1][0][0] = 1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
+			case eIMEXdirk_1_2_1:		
+			case eARS_1_2_1:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 2;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+
+                    m_A[0][1][1] = 1.0;
+
+                    m_B[0][0][1] = 1.0;
+
+                    m_A[1][1][0] = 1.0;
+
+                    m_B[1][0][1] = 1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
+			case eIMEXdirk_1_2_2:		
+			case eARS_1_2_2:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 2;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    m_A[0][1][1] = 1.0/2.0;
+
+                    m_B[0][0][1] = 1.0;
+
+                    m_A[1][1][0] = 1.0/2.0;
+
+                    m_B[1][0][1] = 1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;	
+			case eIMEXdirk_4_4_3:		
+			case eARS_4_4_3:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 5;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    m_A[0][1][1] = 1.0/2.0;
+                    m_A[0][2][1] = 1.0/6.0;
+                    m_A[0][2][2] = 1.0/2.0;
+                    m_A[0][3][1] = -1.0/2.0;
+                    m_A[0][3][2] = 1.0/2.0;
+                    m_A[0][3][3] = 1.0/2.0;
+                    m_A[0][4][1] = 3.0/2.0;
+                    m_A[0][4][2] = -3.0/2.0;
+                    m_A[0][4][3] = 1.0/2.0;
+                    m_A[0][4][4] = 1.0/2.0;		    
+		    
+		    
+                    m_B[0][0][1] = 3.0/2.0;
+                    m_B[0][0][2] = -3.0/2.0;
+                    m_B[0][0][3] = 1.0/2.0;
+                    m_B[0][0][4] = 1.0/2.0;		    
+
+                    m_A[1][1][0] = 1.0/2.0;
+                    m_A[1][2][0] = 11.0/18.0;
+                    m_A[1][2][1] = 1.0/18.0;
+                    m_A[1][3][0] = 5.0/6.0;
+                    m_A[1][3][1] = -5.0/6.0;
+                    m_A[1][3][2] = 1.0/2.0;
+                    m_A[1][4][0] = 1.0/4.0;
+                    m_A[1][4][1] = 7.0/4.0;
+                    m_A[1][4][2] = 3.0/4.0;
+                    m_A[1][4][3] = -7.0/4.0;
+
+                    m_B[1][0][0] = 1.0/4.0;
+                    m_B[1][0][1] = 7.0/4.0;
+                    m_B[1][0][2] = 3.0/4.0;
+                    m_B[1][0][3] = -7.0/4.0;
 
                     m_schemeType = eIMEX;
                     m_numMultiStepValues = 1;

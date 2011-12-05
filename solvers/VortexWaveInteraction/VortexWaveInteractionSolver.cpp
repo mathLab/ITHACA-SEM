@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
                 Mvdir("Save_Outer",WaveForce);
 	        // Execute Another loop so that not same initial conditions as last iteration
 	        vwi.ExecuteLoop();
+                sleep(10);
             }
 
         }
@@ -117,6 +118,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
         for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
         {
             vwi.ExecuteLoop();
+            sleep(10);
             vwi.SaveLoopDetails("Save",i);
             vwi.AppendEvlToFile("conv.his",i);            
         }
@@ -132,6 +134,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
                 {
                     vwi.ExecuteLoop();
+                    sleep(10);
                     vwi.SaveLoopDetails("Save", i);
                     vwi.AppendEvlToFile("conv.his",i);            
                         
@@ -177,7 +180,8 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 bool exit_alphaIter = false;
                 
                 vwi.ExecuteLoop(false);
-                
+                sleep(10);
+
                 // Sub iterate Alpha
                 for(i = 0; i < vwi.GetIterEnd(); ++i)
                 {
@@ -194,6 +198,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     else
                     {
                         vwi.CalcNonLinearWaveForce();
+                        sleep(10);
                         break;
                     }
                 }

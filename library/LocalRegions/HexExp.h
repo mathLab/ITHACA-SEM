@@ -157,8 +157,8 @@ namespace Nektar
             //Extract physical values on a face
             virtual void v_GetFacePhysVals(
                             const int face,
-                            const Array<OneD,
-                            const NekDouble> &inarray,
+                            const StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                            const Array<OneD,const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray);
 
             //------------------------------

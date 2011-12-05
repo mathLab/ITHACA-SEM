@@ -1407,7 +1407,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-            void StdExpansion::v_GetFacePhysVals(const int face, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void StdExpansion::v_GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion2D>   &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }

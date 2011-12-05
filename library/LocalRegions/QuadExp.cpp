@@ -2195,14 +2195,11 @@ namespace Nektar
             Array<OneD, NekDouble > Fn(nq);
 
             const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetFaceNormal(GetLeftAdjacentElementFace());
-            //for(int i=0; i<nq; i++)
-            //{
-            //cout<<"nx= "<<normals[0][i]<<"  ny="<<normals[1][i]<<"  nz="<<normals[2][i]<<endl;
-            //}
+
             Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
-            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
-            Vmath::Vvtvp(nq,&Fz[0],1,&normals[0][3],1,&Fn[0],1,&Fn[0],1);
-            //cout<<"NegateNormal =  "<<NegateNormal<<endl;
+            Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fz[0],1,&normals[2][0],1,&Fn[0],1,&Fn[0],1);
+
             if(NegateNormal == true)
             {
                 Vmath::Neg(nq,Fn,1);

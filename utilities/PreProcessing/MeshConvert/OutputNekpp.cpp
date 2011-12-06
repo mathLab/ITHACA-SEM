@@ -96,7 +96,7 @@ namespace Nektar
             {
                 NodeSharedPtr n = *it;
                 stringstream s;
-                s << scientific << setprecision(3) 
+                s << scientific << setprecision(8) 
                   << n->x << " " << n->y << " " << n->z;
                 TiXmlElement * v = new TiXmlElement( "V" );
                 v->SetAttribute("ID",n->id);

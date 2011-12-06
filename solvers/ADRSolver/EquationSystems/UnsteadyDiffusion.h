@@ -80,6 +80,7 @@ namespace Nektar
     private:
         NekDouble m_waveFreq;
         NekDouble m_epsilon;
+        StdRegions::VarCoeffMap m_varcoeff;
     };
 }
 

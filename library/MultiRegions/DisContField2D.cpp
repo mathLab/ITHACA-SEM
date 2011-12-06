@@ -1038,7 +1038,6 @@ namespace Nektar
                     {
                         id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
                         BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
-                        cout << "Dirichlet ID: " << id << endl;
                     }
                 }
                 else
@@ -1058,20 +1057,12 @@ namespace Nektar
             //----------------------------------
             if(GloBndDofs - NumDirichlet > 0)
             {
-                cout << "Solve linear system" << endl;
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
                                           m_traceMap,factors,varcoeff);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
-            cout << BndSol.num_elements() << endl;
-            cout << loc_lambda.num_elements() << endl;
 
-//cout << "Before internal solves" << endl;
-//for (i = 0; i < GloBndDofs; ++i)
-//{
-//    cout << i << ": " << BndSol[i] << endl;
-//}
             //----------------------------------
             // Internal element solves
             //----------------------------------
@@ -1082,19 +1073,9 @@ namespace Nektar
 
             // get local trace solution from BndSol
             m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
-//cout << "After trace mapping" << endl;
-//for (i = 0; i < GloBndDofs; ++i)
-//{
-//    cout << i << ": " << LocLambda[i] << endl;
-//}
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
-//cout << "After internal solves" << endl;
-//for (i = 0; i < GloBndDofs; ++i)
-//{
-//    cout << i << ": " << LocLambda[i] << endl;
-//}
         }
 
 

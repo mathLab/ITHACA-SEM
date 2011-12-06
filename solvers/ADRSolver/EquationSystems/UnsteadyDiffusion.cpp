@@ -54,6 +54,23 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
+        int nq = m_fields[0]->GetNpoints();
+        if(m_session->DefinesParameter("d00"))
+        {
+            m_varcoeff[StdRegions::eVarCoeffD00]
+                   = Array<OneD, NekDouble>(nq, m_session->GetParameter("d00"));
+        }
+        if(m_session->DefinesParameter("d11"))
+        {
+            m_varcoeff[StdRegions::eVarCoeffD11]
+                   = Array<OneD, NekDouble>(nq, m_session->GetParameter("d11"));
+        }
+        if(m_session->DefinesParameter("d22"))
+        {
+            m_varcoeff[StdRegions::eVarCoeffD22]
+                   = Array<OneD, NekDouble>(nq, m_session->GetParameter("d22"));
+        }
+
         if (m_explicitDiffusion)
         {
             m_ode.DefineOdeRhs        (&UnsteadyDiffusion::DoOdeRhs,        this);
@@ -133,7 +150,7 @@ namespace Nektar
 
             // Solve a system of equations with Helmholtz solver
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
+                                   m_fields[i]->UpdateCoeffs(),NullFlagList,factors,m_varcoeff);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
             m_fields[i]->SetPhysState(false);
 

@@ -216,15 +216,9 @@ namespace Nektar
                         {
                         case eSegment:
                             {
-                                for(k = 0; k < m_segGeoms.size();++k)
-                                {
-                                    if(m_segGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                    {
-                                        geom = m_segGeoms[k];
-                                        break;
-                                    }
-                                }
-                                ASSERTL0(k != m_segGeoms.size(),"Failed to find geometry with same global id");
+                                ASSERTL0(m_segGeoms.count(fielddef[i]->m_elementIDs[j]),
+                                        "Failed to find geometry with same global id");
+                                geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
 
                                 LibUtilities::PointsKey pkey(nmodes[cnt]+1,LibUtilities::eGaussLobattoLegendre);
 
@@ -255,15 +249,9 @@ namespace Nektar
                             break;
                         case eTriangle:
                             {
-                                for(k = 0; k < m_triGeoms.size();++k)
-                                {
-                                    if(m_triGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                    {
-                                        geom = m_triGeoms[k];
-                                        break;
-                                    }
-                                }
-                                ASSERTL0(k != m_triGeoms.size(),"Failed to find geometry with same global id");
+                                ASSERTL0(m_triGeoms.count(fielddef[i]->m_elementIDs[j]),
+                                        "Failed to find geometry with same global id");
+                                geom = m_triGeoms[fielddef[i]->m_elementIDs[j]];
 
                                 LibUtilities::PointsKey pkey(nmodes[cnt]+1,LibUtilities::eGaussLobattoLegendre);
                                 if(numPointDef&&pointDef)
@@ -312,15 +300,10 @@ namespace Nektar
                             break;
                         case eQuadrilateral:
                             {
-                                for(k = 0; k < m_quadGeoms.size();++k)
-                                {
-                                    if(m_quadGeoms[k]->GetGlobalID() == fielddef[i]->m_elementIDs[j])
-                                    {
-                                        geom = m_quadGeoms[k];
-                                        break;
-                                    }
-                                }
-                                ASSERTL0(k != m_quadGeoms.size(),"Failed to find geometry with same global id");
+                                ASSERTL0(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]),
+                                        "Failed to find geometry with same global id");
+                                geom = m_quadGeoms[fielddef[i]->m_elementIDs[j]];
+
                                 for(int b = 0; b < 2; ++b)
                                 {
                                     LibUtilities::PointsKey pkey(nmodes[cnt+b]+1,LibUtilities::eGaussLobattoLegendre);

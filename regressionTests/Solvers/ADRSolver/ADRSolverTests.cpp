@@ -130,6 +130,8 @@ int main(int argc, char* argv[])
 
     Execute("ADRSolver","Test_ImDiffusion_m12.xml","2D unsteady DG implicit diffusion, order 3, P=12");
 
+    Execute("ADRSolver","Test_ImDiffusion_VarCoeff.xml","2D unsteady CG implicit diffusion, variable coeffs.");
+
     Execute("ADRSolver","Test_ExDiffusion_m3.xml","2D unsteady DG explicit diffusion, order 4, P=3");
 
     Execute("ADRSolver","Test_ExDiffusion_m8.xml","2D unsteady DG explicit diffusion, order 4, P=8");

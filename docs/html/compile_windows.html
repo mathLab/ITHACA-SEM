@@ -63,6 +63,13 @@ Material</a></p>
             <li>
               <h3 align="left">
                 <small>
+                  <a href="#Setting_up_Python_Compiler_(2.7.2+_required)">Setting up Python Compiler (2.7.2+ required)</a>
+                </small>
+              </h3>
+            </li>
+            <li>
+              <h3 align="left">
+                <small>
                   <a href="#Setting_up_CMake_(2.8+_required)">Setting up CMake (2.8+ required)</a>
                 </small>
               </h3>
@@ -105,6 +112,14 @@ Material</a></p>
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
     <h3 align="left">
+      <a name="Setting_up_Python_Compiler_(2.7.2+_required)"></a>Setting up Python Compiler (2.7.2+ required)
+    </h3>
+    <p align="left">In order to successfully compile Visual Studio a python compiler is needed. We tested the version 2.7.2 so it would not be a problem if the installed version is greater. 
+    <ol>
+      <li>Go to the <a href="http://www.http://python.org/download/" target="_blank">Python Website</a> and download the Windows Installer.</li>
+      <li>Run the installer and click the <em>Next</em>, and then <em>I Agree</em>.</li>
+    </ol>
+    <h3 align="left">
       <a name="Setting_up_CMake_(2.8+_required)"></a>Setting up CMake (2.8+ required)
     </h3>
             
@@ -120,7 +135,8 @@ Material</a></p>
       <a name="Organizing_the_ThirdParty_Source_Files"></a> Organizing  the ThirdParty Source Files</h3>
     <p align="left">You will be given a Nektar++ directory and a ThirdParty directory (includes needed libraries from output sources). These need to be organized into the correct directory heirarchy for CMake to find all of the required files. I will indicate a directory by following its name with a backslash.</p>
     <ol>
-        <li>Unpack the <em>ThirdParty-3.x.x.tar.gz</em> file and rename the resulting directory to <em>ThirdParty</em>. Put the ThirdParty directory in <em>Nektar++\</em>. (This will mean <em>library\</em> and <em>ThirdParty\</em> are both sub-directories of the original <em>Nektar++\</em>.)</li>
+        <li>Unpack the <em>Nektar++-3.x.x.tar.gz</em> file and rename the resulting directory to <em>Nektar</em>. Put the Nektar directory in <em>C:\</em>. Some windows version do not recognise the path of a folder which has '++' in the name. If you think that your windows version can handle path containing special characters, you do not need to rename <em>Nektar++</em> <em>Nektar</em>. </li>
+        <li>Unpack the <em>ThirdParty-3.x.x.tar.gz</em> file and rename the resulting directory to <em>ThirdParty</em>. Put the ThirdParty directory in <em>Nektar\</em>. (This will mean <em>library\</em> and <em>ThirdParty\</em> are both sub-directories of the original <em>Nektar\</em>.)</li>
       <li>In <em>ThirdParty\</em>, extract the tinyxml_2_4_3.zip archive. This will create <em>tinyxml\</em>. </li>
       <li>
         Extract the loki-0.1.3.tar.bz2 archive. This will create <em>loki-0.1.3\</em>.
@@ -154,14 +170,14 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
 (with the quotes).</li>
           </ul>
         </li>
-        <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\spblastk0.9\</em> directory. For example, <em>C:\Nektar++\ThirdParty\spblastk0.9</em>
+        <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\spblastk0.9\</em> directory. For example, <em>C:\Nektar\ThirdParty\spblastk0.9</em>
         </li>
-        <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\spblastk0.9\build\</em> directory. For example, <em>C:\Nektar++\ThirdParty\spblastk0.9\build</em>. The Visual Studio solution files will be placed here.
+        <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\spblastk0.9\build\</em> directory. For example, <em>C:\Nektar\ThirdParty\spblastk0.9\build</em>. The Visual Studio solution files will be placed here.
         </li>
         <li>
-          Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>.
+          Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>Generate</em>.
         </li>
-        <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created. </li>
+        <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;Generate&quot; button, and the Visual Studio solution will be created. </li>
         </li>
         <li>Open the solution file with Visual Studio.From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu.</li>
         <li>
@@ -185,14 +201,14 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
 <div class="code"><pre>"C:\Program Files\CMake 2.8\bin\CMakeSetup.exe"</pre></div> (with the quotes).</li>
           </ul>
         </li>
-        <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\modmetis-4.0\</em> directory. For example, <em>C:\Nektar++\ThirdParty\modmetis-4.0</em>
+        <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\modmetis-4.0\</em> directory. For example, <em>C:\Nektar\ThirdParty\modmetis-4.0</em>
         </li>
-        <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\modmetis-4.0\build\</em> directory. For example, <em>C:\Nektar++\ThirdParty\modmetis-4.0\build</em>. The Visual Studio solution files will be placed here.
+        <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\modmetis-4.0\build\</em> directory. For example, <em>C:\Nektar\ThirdParty\modmetis-4.0\build</em>. The Visual Studio solution files will be placed here.
         </li>
         <li>
-          Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>.
+          Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>Generate</em>.
         </li>
-        <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created. </li>
+        <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;Generate&quot; button, and the Visual Studio solution will be created. </li>
         </li>
         <li>Open the solution file with Visual Studio.From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu.</li>
         <li>
@@ -203,7 +219,7 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
      </ol>
     <h3>
       <a name="Generating_the_Visula_Studio_Solution_Files_with_CMake"></a> Generating the Visual Studio Solution Files with CMake</h3>
-    <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the solution files that Visual Studio requires. We will be doing similar steps to instrction <em>#7</em> mentioned in the previous section to generate solutions files for the Nektar++ library.
+    <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the solution files that Visual Studio requires. We will be doing similar steps to instruction <em>#7</em> mentioned in the previous section to generate solutions files for the Nektar++ library.
   </p>
     <ol>
       <li> Launch the previously installed <em>CMake</em> by typing 
@@ -213,9 +229,10 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
 <div class="code"><pre>"C:\Program Files\CMake 2.8\bin\CMakeSetup.exe"</pre></div> (with the quotes).</li>
       </ul>
       </li>
-      <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\library\</em> directory. For example, <em>C:\Nektar++\library</em>.</li>
-      <li>Fill in the &quot;Where to build the binaries:&quot; field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to <em>Nektar++\builds\</em> directory. For example, <em>C:\Nektar++\builds</em>.</li>
-      <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>. CMake will now search for the paths to the ThirdParty files that were setup in the previous section. It should find all of the library and include paths automatically.</li>
+      <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar\library\</em> directory. </li>
+      <li>Fill in the &quot;Where to build the binaries:&quot; field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to <em>Nektar\builds\</em> directory. For example, <em>C:\Nektar\builds</em>.</li>
+      <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>Generate</em>. CMake will now search for the paths to the ThirdParty files that were setup in the previous section. It should find all of the library and include paths automatically.</li>
+<!--
       <li> You must now change some of the CMake settings:<ul><li><strong>CMAKE_INSTALL_PREFIX</strong>
                 <ul>
                   <li>This is the path where Visual Studio will put the *.exe executable files after they are compiled. This can be any directory you please.</li>
@@ -228,7 +245,8 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
           </li>
           </ul>
       </li>
-      <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created.</li>
+-->
+      <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;Generate&quot; button, and the Visual Studio solution will be created.</li>
      
     </ol>
     <h3>
@@ -242,10 +260,17 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
       <li>The executable files will be located in the path you specified in the CMake utility.</li>
       <li>In order to run the executable files, they need to find the appropriate library files (*.dll).
         <ul>
-            <li>Put the <em>Nektar++\ThirdParty\boost\lib\</em> and <em>Nektar++\ThirdParty\</em> directories in your PATH.</li>
+            <li>Put the <em>Nektar\ThirdParty\boost\lib\</em> and <em>Nektar\ThirdParty\</em> directories in your ENVIROMENT VARIABLES PATH.</li>
+              <ul>
+                <li></li>Right-click on <em>My Computer</em> and choose "Properties"
+                <li></li>In the box that opens, click the "Advanced" tab to obtain another dialog box
+                <li></li>Click the button "Environment Variables"
+                <li></li>In the list of system variables, double click on the <em>Pat</em>h variable for editing it
+                <li></li>Add the following line: C:\Nektar\ThirdParty\boost\lib\; C:\Nektar\ThirdParty\
+              </ul>
             <li><em>Alternatively</em>, copy the following files into your Release executable output directory. (Or the ones with &quot;-gd&quot; in the name if you are using debug mode.)
               <ul>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_thread-vc90-mt-1_40_0.dll</em></li>
+                <li><em>N</em><em>ektar\ThirdParty\boost\lib\boost_thread-vc90-mt-1_40_0.dll</em></li>
                 <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_filesystem-vc90-mt-1_40_0.dll</em></li>
                 <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_iostreams-vc90-mt-1_40_0.dll</em></li>
                 <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_zlib-vc90-mt-1_40_0.dll</em></li>
@@ -276,10 +301,10 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
         </li>
           <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to the <em>solvers\builds\</em> directory. For example, <em>C:\Nektar++\solvers\builds</em>.</li>
           <li>
-            Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Answer <em>OK</em>.It should find all of the library and include paths automatically.
+            Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Answer <em>Generate</em>.It should find all of the library and include paths automatically.
           </li>
           <li>Set the <b>EXECUTABLE_OUTPUT_PATH</b>. This can be any directory you please.</li>
-          <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created.</li>
+          <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;Generate&quot; button, and the Visual Studio solution will be created.</li>
           <li>Open the solution file in Visual Studio. From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu. </li>
           <li>To build the solution, select &quot;Build Solution&quot; from the &quot;Build&quot; menu.</li>
           <li>The executable files will be located in the path you specified in the CMake utility. </li>
@@ -297,9 +322,9 @@ compiled the Nektar++ library and Solvers </br>
     <li>Launch <em>CMake</em></li>
     <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\regressionTests</em> directory. For example, <em>C:\Nektar++\regressionTests</em></li>
     <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to the <em>regressionTests\builds\</em> directory. For example, <em>C:\Nektar++\regressionTests\builds</em>.</li>
-    <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Answer <em>OK</em>.It should find all of the library and include paths automatically.</li>
+    <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Answer <em>Generate</em>.It should find all of the library and include paths automatically.</li>
     <li>Set the <b>EXECUTABLE_OUTPUT_PATH</b>. This can be any directory you please.</li>
-    <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created.<br/>
+    <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;Generate&quot; button, and the Visual Studio solution will be created.<br/>
     <b>Note:</b> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files.
     <li>Open the solution file in Visual Studio. From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu. </li>
     <li>To build the solution, select &quot;Build Solution&quot; from the &quot;Build&quot; menu.</li>

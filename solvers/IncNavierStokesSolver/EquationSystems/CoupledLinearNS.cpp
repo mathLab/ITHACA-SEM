@@ -1281,7 +1281,9 @@ namespace Nektar
                 m_integrationOps.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
 
                 // Set initial condition using time t=0
+				
                 SetInitialConditions(0.0);
+
             }
         case eSteadyStokes:
             SetUpCoupledMatrix(0.0);
@@ -1310,7 +1312,8 @@ namespace Nektar
             break;
         case eSteadyLinearisedNS:
             {                
-                
+				SetInitialConditions(0.0);
+
                 Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
                 for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {

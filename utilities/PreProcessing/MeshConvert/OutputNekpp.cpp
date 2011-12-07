@@ -306,7 +306,60 @@ namespace Nektar
         
         void OutputNekpp::WriteXmlConditions(TiXmlElement * pRoot)
         {
-            TiXmlElement * conditions = new TiXmlElement ("CONDITIONS");
+            TiXmlElement *conditions = new TiXmlElement ("CONDITIONS");
+            ConditionMap::iterator it;
+
+            TiXmlElement *boundaryregions = new TiXmlElement("BOUNDARYREGIONS");
+            TiXmlElement *boundaryconditions = 
+                new TiXmlElement("BOUNDARYCONDITIONS");
+            
+            for (it = m->condition.begin(); it != m->condition.end(); ++it)
+            {
+                ConditionSharedPtr c = it->second;
+                string tmp;
+                
+                // First set up boundary regions.
+                TiXmlElement *b = new TiXmlElement("B");
+                b->SetAttribute("ID", boost::lexical_cast<string>(it->first));
+                
+                for (int i = 0; i < c->composite.size(); ++i)
+                {
+                    tmp += boost::lexical_cast<string>(c->composite[i]) + ",";
+                }
+                
+                tmp = tmp.substr(0, tmp.length()-1);
+
+                TiXmlText *t0 = new TiXmlText("C["+tmp+"]");
+                b->LinkEndChild(t0);
+                boundaryregions->LinkEndChild(b);
+                
+                TiXmlElement *region = new TiXmlElement("REGION");
+                region->SetAttribute("REF", boost::lexical_cast<string>(it->first));
+                
+                for (int i = 0; i < c->type.size(); ++i)
+                {
+                    string tagId;
+                    
+                    switch(c->type[i])
+                    {
+                        case eDirichlet:    tagId = "D"; break;
+                        case eNeumann:      tagId = "N"; break;
+                        case ePeriodic:     tagId = "P"; break;
+                        case eHOPCondition: tagId = "D"; break;
+                    }
+                    
+                    TiXmlElement *tag = new TiXmlElement(tagId);
+                    tag->SetAttribute("VAR", c->field[i]);
+                    tag->SetAttribute("VALUE", c->value[i]);
+                    
+                    region->LinkEndChild(tag);
+                }
+                
+                boundaryconditions->LinkEndChild(region);
+            }
+            
+            conditions->LinkEndChild(boundaryregions);
+            conditions->LinkEndChild(boundaryconditions);
             pRoot->LinkEndChild(conditions);
         }   
     }

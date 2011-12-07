@@ -60,6 +60,8 @@ namespace Nektar
             static ModuleKey className;
             
         private:
+            void insertEdge(int elmt, int side, int tagId);
+            
             /// Maps Semtex sections to positions inside the input file.
             std::map<std::string,std::streampos> sectionMap;
         };

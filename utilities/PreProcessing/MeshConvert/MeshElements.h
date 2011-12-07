@@ -152,14 +152,14 @@ namespace Nektar
             {
                 std::stringstream s;
                 std::string str;
-                s << std::scientific << std::setprecision(3) << "     "
+                s << std::scientific << std::setprecision(8) << "     "
                   <<  n1->x << "  " << n1->y << "  " << n1->z << "     ";
                 for (int k = 0; k < edgeNodes.size(); ++k) {
-                    s << std::scientific << std::setprecision(3) << "     "
+                    s << std::scientific << std::setprecision(8) << "     "
                       <<  edgeNodes[k]->x << "  " << edgeNodes[k]->y
                       << "  " << edgeNodes[k]->z << "     ";
                 }
-                s << std::scientific << std::setprecision(3) << "     "
+                s << std::scientific << std::setprecision(8) << "     "
                   <<  n2->x << "  " << n2->y << "  " << n2->z;
                 return s.str();
             }
@@ -255,19 +255,19 @@ namespace Nektar
                 std::stringstream s;
                 std::string str;
                 for (int k = 0; k < vertexList.size(); ++k) {
-                    s << std::scientific << std::setprecision(4) << "    "
+                    s << std::scientific << std::setprecision(8) << "    "
                       <<  vertexList[k]->x << "  " << vertexList[k]->y
                       << "  " << vertexList[k]->z << "    ";
                 }
                 for (int k = 0; k < edgeList.size(); ++k) {
                     for (int i = 0; i < edgeList[k]->edgeNodes.size(); ++i)
-                    s << std::scientific << std::setprecision(4) << "    "
+                    s << std::scientific << std::setprecision(8) << "    "
                       << edgeList[k]->edgeNodes[i]->x << "  "
                       << edgeList[k]->edgeNodes[i]->y << "  "
                       << edgeList[k]->edgeNodes[i]->z << "    ";
                 }
                 for (int k = 0; k < faceNodes.size(); ++k) {
-                    s << std::scientific << std::setprecision(4) << "    "
+                    s << std::scientific << std::setprecision(8) << "    "
                       <<  faceNodes[k]->x << "  " << faceNodes[k]->y
                       << "  " << faceNodes[k]->z << "    ";
                 }
@@ -547,6 +547,28 @@ namespace Nektar
         /// composite.
         typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;
 
+        enum ConditionType
+        {
+            eDirichlet,
+            eNeumann,
+            eRobin,
+            ePeriodic,
+            eHOPCondition,
+            SIZE_ConditionType
+        };
+
+        struct Condition
+        {
+            Condition() : type(), field(), value(), composite() {}
+            std::vector<ConditionType> type;
+            std::vector<std::string>   field;
+            std::vector<std::string>   value;
+            std::vector<int>           composite;
+        };
+
+        typedef boost::shared_ptr<Condition> ConditionSharedPtr;
+        typedef std::map<int,ConditionSharedPtr> ConditionMap;
+
         class Mesh
         {
         public:
@@ -569,6 +591,8 @@ namespace Nektar
             ElementMap                          element;
             /// Map for composites.
             CompositeMap                        composite;
+            /// Boundary conditions maps tag to condition.
+            ConditionMap                        condition;
             /// Original filename.
             std::string                         inFilename;
             /// Intended target.

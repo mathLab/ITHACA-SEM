@@ -67,6 +67,8 @@ namespace Nektar
             sectionMap["ELEMENTS"] = 0;
             sectionMap["CURVES"]   = 0;
             sectionMap["SURFACES"] = 0;
+            sectionMap["GROUPS"]   = 0;
+            sectionMap["BCS"]      = 0;
             
             while (!mshFile.eof())
             {
@@ -103,6 +105,21 @@ namespace Nektar
                 cerr << "Unable to locate ELEMENTS section in session file." << endl;
                 abort();
             }
+
+            if (sectionMap["SURFACES"] != 0)
+            {
+                if (sectionMap["BCS"] == 0)
+                {
+                    cerr << "SURFACES section defined but BCS section not found." << endl;
+                    abort();
+                }
+                
+                if (sectionMap["GROUPS"] == 0)
+                {
+                    cerr << "SURFACES section defined but GROUPS section not found." << endl;
+                    abort();
+                }
+            }
         }
 
         InputSem::~InputSem()
@@ -127,14 +144,14 @@ namespace Nektar
         {
             m->expDim = 0;
             string line, word, tag;
-            int start, end, nVertices, nEntities, nCurves, nSurfaces;
+            int start, end, nVertices, nEntities, nCurves, nSurfaces, nGroups, nBCs;
             int id, i, j, k;
             vector<double> hoXData, hoYData;
             ElementType elType = eQuadrilateral;
             ifstream homeshFile;
             stringstream ss;
 
-            cout << "Start reading InputSem..." << endl;
+            cerr << "Start reading InputSem..." << endl;
             
             // Begin by reading in list of nodes which define the linear
             // elements.
@@ -370,6 +387,117 @@ namespace Nektar
             // to ensure high-order points are preserved.
             if (sectionMap["SURFACES"] != 0)
             {
+                map<string,int> conditionMap;
+                int             maxTag = -1;
+                
+                // First read in list of groups, which defines each condition tag.
+                mshFile.seekg(sectionMap["GROUPS"]);
+                getline(mshFile, line);
+                ss.clear(); ss.str(line);
+                ss >> word;
+                
+                tag     = ss.str();
+                start   = tag.find_first_of('=');
+                end     = tag.find_first_of('>');
+                nGroups = atoi(tag.substr(start+1,end).c_str());
+                
+                i = id = 0;
+                while (i < nGroups)
+                {
+                    getline(mshFile, line);
+                    ss.clear(); ss.str(line);
+                    ss >> id >> tag;
+                    conditionMap[tag] = id;
+                    if (maxTag < id)
+                        maxTag = id;
+                    ++i;
+                }
+
+                // Now read in actual values for boundary conditions from BCS
+                // section.
+                mshFile.seekg(sectionMap["BCS"]);
+                getline(mshFile, line);
+                ss.clear(); ss.str(line);
+                ss >> word;
+                
+                tag   = ss.str();
+                start = tag.find_first_of('=');
+                end   = tag.find_first_of('>');
+                nBCs  = atoi(tag.substr(start+1,end).c_str());
+                
+                i = id = 0;
+                while (i < nBCs)
+                {
+                    int                nF;
+                    string             tmp;
+                    ConditionSharedPtr p;
+                    getline(mshFile, line);
+                    ss.clear(); ss.str(line);
+                    ss >> id >> tag >> nF;
+
+                    p = ConditionSharedPtr(new Condition());
+                    m->condition[conditionMap[tag]] = p;
+                    
+                    // Read boundary condition.
+                    j = 0;
+                    while (j < nF)
+                    {
+                        getline(mshFile, line);
+                        ss.clear(); ss.str(line);
+                        ss >> tmp;
+                        
+                        // First string should be condition type.
+                        if (tmp == "<D>")
+                        {
+                            p->type.push_back(eDirichlet);
+                        }
+                        else if (tmp == "<N>")
+                        {
+                            p->type.push_back(eNeumann);
+                        }
+                        else if (tmp == "<H>")
+                        {
+                            p->type.     push_back(eHOPCondition);
+                            p->value.    push_back("0");
+                            p->field.    push_back("p");
+                            ++j;
+                            continue;
+                        }
+                        else
+                        {
+                            cerr << "Unsupported boundary condition type " << tmp << endl;
+                            abort();
+                        }
+                        
+                        // Second string should be field.
+                        ss >> tmp;
+                        p->field.push_back(tmp);
+                        
+                        // Third string should be equals sign.
+                        ss >> tmp;
+                        if (tmp != "=")
+                        {
+                            cerr << "Couldn't read boundary condition type " << tag << endl;
+                            abort();
+                        }
+                        
+                        // Fourth string should be value. CAUTION: Assumes
+                        // expression is defined without any spaces in it!
+                        ss >> tmp;
+                        p->value.push_back(tmp);
+
+                        ++j;
+                    }
+                    
+                    // Finally set composite for condition. In this case, all
+                    // composites will be lines so there is one set per
+                    // composite.
+                    p->composite.push_back(conditionMap[tag]);
+                    
+                    ++i;
+                }
+                
+                // Finally read surface information.
                 mshFile.seekg(sectionMap["SURFACES"]);
                 getline(mshFile, line);
                 ss.clear(); ss.str(line);
@@ -382,32 +510,55 @@ namespace Nektar
                 
                 i = id = 0;
                 int elmt, side;
+                int periodicTagId = -1;
                 
                 while (i < nSurfaces)
                 {
                     getline(mshFile, line);
                     ss.clear(); ss.str(line);
-                    ss >> id >> elmt >> side >> word >> tag;
+                    ss >> id >> elmt >> side >> word;
                     elmt--;
                     side--;
                     
-                    EdgeSharedPtr edge = m->element[2][elmt]->GetEdge(side);
-                    vector<NodeSharedPtr> edgeNodes = edge->edgeNodes;
-                    edgeNodes.insert(edgeNodes.begin(),edge->n2);
-                    edgeNodes.insert(edgeNodes.begin(),edge->n1);
-                    int order = edgeNodes.size()-1;
-
-                    vector<int> tags;
-                    tags.push_back(1);
-                    tags.push_back(eLine);
-                    
-                    ElementType seg = eLine;
-                    ElmtConfig conf(eLine,order,true,false,
-                                    LibUtilities::eGaussLobattoLegendre);
-                    ElementSharedPtr E = GetElementFactory().
-                        CreateInstance(eLine,conf,edgeNodes,tags);
-                    m->element[1].push_back(E);
-                    
+                    if (word == "<P>")
+                    {
+                        // If this is the first periodic boundary condition
+                        // encountered, then set up m->condition with two
+                        // periodic conditions.
+                        if (periodicTagId == -1)
+                        {
+                            periodicTagId = maxTag+1;
+                            ConditionSharedPtr in  = ConditionSharedPtr(new Condition());
+                            ConditionSharedPtr out = ConditionSharedPtr(new Condition());
+                            in-> type.push_back(ePeriodic);
+                            out->type.push_back(ePeriodic);
+                            in-> field.push_back("");
+                            out->field.push_back("");
+                            in-> value.push_back("["+boost::lexical_cast<string>(periodicTagId+1)+"]");
+                            out->value.push_back("["+boost::lexical_cast<string>(periodicTagId)+"]");
+                            in-> composite.push_back(periodicTagId);
+                            out->composite.push_back(periodicTagId+1);
+                            m->condition[periodicTagId]   = in;
+                            m->condition[periodicTagId+1] = out;
+                        }
+                        
+                        int elmtB, sideB;
+                        
+                        ss >> elmtB >> sideB;
+                        
+                        insertEdge(elmt,  side,  periodicTagId);
+                        insertEdge(elmtB, sideB, periodicTagId+1);
+                    }
+                    else if (word == "<B>")
+                    {
+                        ss >> tag;
+                        insertEdge(elmt, side, conditionMap[tag]);
+                    }
+                    else
+                    {
+                        cerr << "Unrecognised or unsupported tag " << word << endl;
+                        abort();
+                    }
                     ++i;
                 }
             }
@@ -421,6 +572,26 @@ namespace Nektar
             ProcessFaces();
             ProcessElements();
             ProcessComposites();
+        }
+        
+        void InputSem::insertEdge(int elmt, int side, int tagId)
+        {
+            EdgeSharedPtr edge = m->element[2][elmt]->GetEdge(side);
+            vector<NodeSharedPtr> edgeNodes = edge->edgeNodes;
+            edgeNodes.insert(edgeNodes.begin(),edge->n2);
+            edgeNodes.insert(edgeNodes.begin(),edge->n1);
+            int order = edgeNodes.size()-1;
+            
+            vector<int> tags;
+            tags.push_back(tagId);
+            tags.push_back(eLine);
+            
+            ElementType seg = eLine;
+            ElmtConfig conf(eLine,order,true,false,
+                            LibUtilities::eGaussLobattoLegendre);
+            ElementSharedPtr E = GetElementFactory().
+                CreateInstance(eLine,conf,edgeNodes,tags);
+            m->element[1].push_back(E);
         }
     }
 }

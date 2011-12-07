@@ -133,10 +133,10 @@ L 2 error (variable p) : 0.0178261
 L inf error (variable p) : 0
 ----------------------------------------
 ChanStability_Coupled.xml
-L 2 error (variable u) : 2.58914
-L inf error (variable u) : 1.00001
-L 2 error (variable v) : 7.1786e-05
-L inf error (variable v) : 0.00866667
+L 2 error (variable u) : 2.58948
+L inf error (variable u) : 1.01298
+L 2 error (variable v) : 0.000352934
+L inf error (variable v) : 0.000295924
 ----------------------------------------
 Test_SinCos_LinNS_3DHom1D.xml
 L 2 error (variable u) : 6.39607e-16

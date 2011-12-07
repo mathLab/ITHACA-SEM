@@ -252,7 +252,6 @@
             <I PROPERTY="Projection" VALUE="Galerkin" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
             <I PROPERTY="Driver" VALUE="Arpack" />
-            <I PROPERTY="InitialVector" VALUE="Random" />
             <I PROPERTY="ArpackProblemType" VALUE="LargestImag" />
         </SOLVERINFO>
 
@@ -296,7 +295,11 @@
             <E VAR="u" VALUE="cos(y)" />
             <E VAR="v" VALUE="sin(y)" />
         </FUNCTION>
-
+        
+         <FUNCTION NAME="InitialConditions">
+         <F FILE="ChanStability_Coupled.rst" />
+        </FUNCTION>
+        
         <FUNCTION NAME="AdvectionVelocity">
             <E VAR="u" VALUE="1-y*y" />
             <E VAR="v" VALUE="0" />

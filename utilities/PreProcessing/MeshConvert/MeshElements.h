@@ -593,6 +593,8 @@ namespace Nektar
             CompositeMap                        composite;
             /// Boundary conditions maps tag to condition.
             ConditionMap                        condition;
+            /// List of fields names.
+            std::vector<std::string>            fields;
             /// Original filename.
             std::string                         inFilename;
             /// Intended target.

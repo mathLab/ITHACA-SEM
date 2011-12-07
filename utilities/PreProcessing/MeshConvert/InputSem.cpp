@@ -63,12 +63,13 @@ namespace Nektar
             stringstream                    ss;
             streampos                       linePos;
             
-            sectionMap["NODES"]    = 0;
-            sectionMap["ELEMENTS"] = 0;
-            sectionMap["CURVES"]   = 0;
-            sectionMap["SURFACES"] = 0;
-            sectionMap["GROUPS"]   = 0;
-            sectionMap["BCS"]      = 0;
+            sectionMap["NODES"]    = -1;
+            sectionMap["ELEMENTS"] = -1;
+            sectionMap["CURVES"]   = -1;
+            sectionMap["SURFACES"] = -1;
+            sectionMap["GROUPS"]   = -1;
+            sectionMap["BCS"]      = -1;
+            sectionMap["FIELDS"]   = -1;
             
             while (!mshFile.eof())
             {
@@ -82,7 +83,7 @@ namespace Nektar
                 // line.
                 for (it = sectionMap.begin(); it != sectionMap.end(); ++it)
                 {
-                    if (word == "<"+it->first)
+                    if (word == "<"+it->first || word == "<"+it->first+">")
                     {
                         sectionMap[it->first] = linePos;
                     }
@@ -94,29 +95,35 @@ namespace Nektar
             mshFile.seekg(0);
 
             // Check that required sections exist in the file.
-            if (sectionMap["NODES"] == 0)
+            if (sectionMap["NODES"] == -1)
             {
                 cerr << "Unable to locate NODES section in session file." << endl;
                 abort();
             }
             
-            if (sectionMap["ELEMENTS"] == 0)
+            if (sectionMap["ELEMENTS"] == -1)
             {
                 cerr << "Unable to locate ELEMENTS section in session file." << endl;
                 abort();
             }
 
-            if (sectionMap["SURFACES"] != 0)
+            if (sectionMap["SURFACES"] != -1)
             {
-                if (sectionMap["BCS"] == 0)
+                if (sectionMap["BCS"] == -1)
                 {
                     cerr << "SURFACES section defined but BCS section not found." << endl;
                     abort();
                 }
                 
-                if (sectionMap["GROUPS"] == 0)
+                if (sectionMap["GROUPS"] == -1)
                 {
                     cerr << "SURFACES section defined but GROUPS section not found." << endl;
+                    abort();
+                }
+
+                if (sectionMap["FIELDS"] == -1)
+                {
+                    cerr << "SURFACES section defined but FIELDS section not found." << endl;
                     abort();
                 }
             }
@@ -238,7 +245,7 @@ namespace Nektar
             }
         
             // Finally, process curves.
-            if (sectionMap["CURVES"] != 0)
+            if (sectionMap["CURVES"] != -1)
             {
                 int np, nel, nodeId = m->node.size();
                 
@@ -380,12 +387,24 @@ namespace Nektar
                     ++i;
                 }
             }
+
+            // Process field names
+            if (sectionMap["FIELDS"] != -1)
+            {
+                mshFile.seekg(sectionMap["FIELDS"]);
+                getline(mshFile, line);
+                getline(mshFile, line);
+                ss.clear(); ss.str(line);
+                
+                while (ss >> tag)
+                {
+                    m->fields.push_back(tag);
+                }
+            }
             
-            // Process surfaces if they exist. Surface support is fairly
-            // rudimentary and does not distinguish between different types of
-            // boundary condition yet. This is deliberately done after curves
-            // to ensure high-order points are preserved.
-            if (sectionMap["SURFACES"] != 0)
+            // Process surfaces if they exist. This is deliberately done after
+            // curves to ensure high-order points are preserved.
+            if (sectionMap["SURFACES"] != -1)
             {
                 map<string,int> conditionMap;
                 int             maxTag = -1;
@@ -457,9 +476,9 @@ namespace Nektar
                         }
                         else if (tmp == "<H>")
                         {
-                            p->type.     push_back(eHOPCondition);
-                            p->value.    push_back("0");
-                            p->field.    push_back("p");
+                            p->type. push_back(eHOPCondition);
+                            p->value.push_back("0");
+                            p->field.push_back("p");
                             ++j;
                             continue;
                         }
@@ -530,12 +549,15 @@ namespace Nektar
                             periodicTagId = maxTag+1;
                             ConditionSharedPtr in  = ConditionSharedPtr(new Condition());
                             ConditionSharedPtr out = ConditionSharedPtr(new Condition());
-                            in-> type.push_back(ePeriodic);
-                            out->type.push_back(ePeriodic);
-                            in-> field.push_back("");
-                            out->field.push_back("");
-                            in-> value.push_back("["+boost::lexical_cast<string>(periodicTagId+1)+"]");
-                            out->value.push_back("["+boost::lexical_cast<string>(periodicTagId)+"]");
+                            for (j = 0; j < m->fields.size(); ++j)
+                            {
+                                in-> type.push_back(ePeriodic);
+                                out->type.push_back(ePeriodic);
+                                in-> field.push_back(m->fields[j]);
+                                out->field.push_back(m->fields[j]);
+                                in-> value.push_back("["+boost::lexical_cast<string>(periodicTagId+1)+"]");
+                                out->value.push_back("["+boost::lexical_cast<string>(periodicTagId)+"]");
+                            }
                             in-> composite.push_back(periodicTagId);
                             out->composite.push_back(periodicTagId+1);
                             m->condition[periodicTagId]   = in;

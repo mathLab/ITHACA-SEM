@@ -296,8 +296,23 @@ namespace Nektar
                         + boost::lexical_cast<std::string>(it->second->id)
                         + "]");
                     exp->SetAttribute("NUMMODES",7);
-                    exp->SetAttribute("FIELDS","u");
                     exp->SetAttribute("TYPE","MODIFIED");
+                    
+                    if (m->fields.size() == 0)
+                    {
+                        exp->SetAttribute("FIELDS","u");
+                    }
+                    else
+                    {
+                        string fstr;
+                        for (int i = 0; i < m->fields.size(); ++i)
+                        {
+                            fstr += m->fields[i]+",";
+                        }
+                        fstr = fstr.substr(0,fstr.length()-1);
+                        exp->SetAttribute("FIELDS", fstr);
+                    }
+                    
                     expansions->LinkEndChild(exp);
                 }
             }
@@ -345,19 +360,36 @@ namespace Nektar
                         case eDirichlet:    tagId = "D"; break;
                         case eNeumann:      tagId = "N"; break;
                         case ePeriodic:     tagId = "P"; break;
-                        case eHOPCondition: tagId = "D"; break;
+                        case eHOPCondition: tagId = "N"; break;
                     }
                     
                     TiXmlElement *tag = new TiXmlElement(tagId);
                     tag->SetAttribute("VAR", c->field[i]);
                     tag->SetAttribute("VALUE", c->value[i]);
                     
+                    if (c->type[i] == eHOPCondition)
+                    {
+                        tag->SetAttribute("USERDEFINEDTYPE", "H");
+                    }
+                    
                     region->LinkEndChild(tag);
                 }
                 
                 boundaryconditions->LinkEndChild(region);
             }
+
+            TiXmlElement *variables = new TiXmlElement("VARIABLES");
             
+            for (int i = 0; i < m->fields.size(); ++i)
+            {
+                TiXmlElement *v = new TiXmlElement("V");
+                v->SetAttribute("ID", boost::lexical_cast<std::string>(i));
+                TiXmlText *t0 = new TiXmlText(m->fields[i]);
+                v->LinkEndChild(t0);
+                variables->LinkEndChild(v);
+            }
+            
+            conditions->LinkEndChild(variables);
             conditions->LinkEndChild(boundaryregions);
             conditions->LinkEndChild(boundaryconditions);
             pRoot->LinkEndChild(conditions);

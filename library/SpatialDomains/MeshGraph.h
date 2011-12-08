@@ -290,7 +290,7 @@ namespace Nektar
                     std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
                     &fielddef,
                     std::vector< std::vector<LibUtilities::PointsType> >
-                    &pointstype);
+                    &pointstype );
 
                 /// This function sets the expansion giving the definition of the
                 /// field. The quadrature points type and number is defined as

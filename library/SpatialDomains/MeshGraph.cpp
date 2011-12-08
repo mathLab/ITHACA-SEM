@@ -198,6 +198,7 @@ namespace Nektar
                 {
                     if( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
+                        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) )
                     {
                         check++;
@@ -333,11 +334,124 @@ namespace Nektar
                                 }
                             }
                             break;
+
+                    case eTetrahedron:
+                        {
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_tetGeoms.find(k) != m_tetGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_tetGeoms[k];
+                            
+                            for(int b = 0; b < 3; ++b)
+                            {
+                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+                                
+                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+
+                                bkeyvec.push_back(bkey);
+                            }
+
+                            if(!UniOrder)
+                            {
+                                cnt += 3;
+                            }
+                        }
+                        break;
+                    case ePrism:
+                        {
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_prismGeoms.find(k) != m_prismGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_prismGeoms[k];
+
+                            for(int b = 0; b < 3; ++b)
+                            {
+                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+                            
+                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                                bkeyvec.push_back(bkey);
+                            }
+                            
+                            if(!UniOrder)
+                            {
+                                cnt += 3;
+                            }
+                        }
+                        break;
+                    case eHexahedron:
+                        {
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_hexGeoms.find(k) != m_hexGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_hexGeoms[k];
+
+                            for(int b = 0; b < 3; ++b)
+                            {
+                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+                                
+                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                                bkeyvec.push_back(bkey);
+                            }
+
+                            if(!UniOrder)
+                            {
+                                cnt += 3;
+                            }
+                        }
+                        break;
                         default:
-                            ASSERTL0(false,"Need to set up for 3D Expansions");
+                            ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
                             break;
                         }
-
+                        
                         for(k = 0; k < fields.size(); ++k)
                         {
                             expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;

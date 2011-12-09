@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 	Execute("IncNavierStokesSolver","bfs_tg-AR.xml","Transient Growth (Arpack): Backward-facing step");
 
 	//Test Modified Arnoldi direct stability  (CoupledSolver)
-	Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
+	//Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
 #endif
     if (tests_failed && !quiet)
     {

@@ -459,7 +459,7 @@ namespace Nektar
             NekDouble sign;
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                     {

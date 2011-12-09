@@ -344,7 +344,7 @@ namespace Nektar
                             
                             for(int b = 0; b < 3; ++b)
                             {
-                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
 
                                 if(numPointDef&&pointDef)
                                 {
@@ -382,7 +382,7 @@ namespace Nektar
 
                             for(int b = 0; b < 3; ++b)
                             {
-                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
                                 
                                 if(numPointDef&&pointDef)
                                 {
@@ -419,7 +419,7 @@ namespace Nektar
 
                             for(int b = 0; b < 3; ++b)
                             {
-                                const LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
 
                                 if(numPointDef&&pointDef)
                                 {

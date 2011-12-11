@@ -83,8 +83,10 @@ namespace Nektar
         }
 
         m_waveForceMag     = m_sessionVWI->GetParameter("WaveForceMag");
+
         m_sessionVWI->LoadParameter("WaveForceMagStep",m_waveForceMagStep,0.01);
         m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
+        m_sessionVWI->LoadParameter("RollForceScale",m_rollForceScale,1.0);
         
         m_alpha = Array<OneD, NekDouble> (storesize);
         m_leading_real_evl = Array<OneD, NekDouble> (storesize);
@@ -249,7 +251,15 @@ namespace Nektar
         if(forcefile != "")
         {
             m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+
+            // Scale forcing
+            int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+            for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
+            {
+                Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+            }
         }
+
 
         // Execute Roll 
         cout << "Executing Roll solver" << endl;
@@ -460,14 +470,14 @@ namespace Nektar
         {
             val[i] = 0.5*(der1[i] - der1[index[i]]);
         }
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1, m_vwiForcing[0]);
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
 
         m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
         for(i = 0; i < npts; ++i)
         {
             val[i] = 0.5*(der1[i] - der1[index[i]]);
         }
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1, m_vwiForcing[1]);
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
 #endif
 
 

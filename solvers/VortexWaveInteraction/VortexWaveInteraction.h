@@ -147,6 +147,8 @@ namespace Nektar
         NekDouble m_waveForceMag;
         NekDouble m_waveForceMagStep;
 
+        NekDouble m_rollForceScale; 
+
         Array<OneD, NekDouble> m_leading_real_evl;   /// < Leading real eigenvalue 
         Array<OneD, NekDouble> m_leading_imag_evl;   /// < Leading imaginary eigenvalue
 

@@ -400,6 +400,8 @@ namespace Nektar
         Vmath::Smul (npts,2.0,val,1,val,1);
         m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
         
+        Vmath::Vadd(npts,der1,1,der2,1,der1,1);
+
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
         Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[1],1,m_vwiForcing[1],1);
         
@@ -472,6 +474,7 @@ namespace Nektar
         }
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
 
+
         m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
         for(i = 0; i < npts; ++i)
         {
@@ -494,8 +497,7 @@ namespace Nektar
             Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[3],1,
                           m_vwiForcing[1],1,m_vwiForcing[1],1);
         }
-
-
+        
         // dump output
         Array<OneD, std::string> variables(2);
         Array<OneD, Array<OneD, NekDouble> > outfield(2);
@@ -786,23 +788,39 @@ namespace Nektar
         NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
         NekDouble xnew,ynew;
 
+        int start  = npts-1; 
         for(i = 0; i < npts; ++i)
         {
             xnew = - coord_x[i]  + xmax;
             ynew = - coord_y[i];
 
-            for(j = 0; j < npts; ++j)
+            for(j = start; j >=0 ; --j)
             {
                 if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
                 {
                     index[i] = j;
+                    start = j;
                     break;
                 }
             }
-            ASSERTL0(j != npts,"Failsed to find matching point");
+            
+            if(j == -1)
+            {
+                
+                for(j = npts-1; j > start; --j)
+                {
+                    
+                    if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
+                    {
+                        index[i] = j;
+                        break;
+                    }
+                }
+                ASSERTL0(j != start,"Failsed to find matching point");
+            }
         }
-        
         return index;
     }
-
+    
 }
+    

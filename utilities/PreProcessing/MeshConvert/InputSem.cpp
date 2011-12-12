@@ -567,6 +567,8 @@ namespace Nektar
                         int elmtB, sideB;
                         
                         ss >> elmtB >> sideB;
+                        elmtB--;
+                        sideB--;
                         
                         insertEdge(elmt,  side,  periodicTagId);
                         insertEdge(elmtB, sideB, periodicTagId+1);

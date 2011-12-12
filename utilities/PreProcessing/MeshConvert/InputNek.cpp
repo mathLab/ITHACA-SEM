@@ -462,6 +462,11 @@ namespace Nektar
                         {
                             reverse(edge->edgeNodes.begin(), edge->edgeNodes.end());
                         }
+                        
+                        for (int k = 3+3*(N-2); k < Ntot; ++k)
+                        {
+                            f->faceNodes.push_back((*hoIt)->surfVerts[k]);
+                        }
                     }
                 }
             }

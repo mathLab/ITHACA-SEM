@@ -325,8 +325,8 @@ namespace Nektar
             ConditionMap::iterator it;
 
             TiXmlElement *boundaryregions = new TiXmlElement("BOUNDARYREGIONS");
-            TiXmlElement *boundaryconditions = 
-                new TiXmlElement("BOUNDARYCONDITIONS");
+            TiXmlElement *boundaryconditions = new TiXmlElement("BOUNDARYCONDITIONS");
+            TiXmlElement *variables = new TiXmlElement("VARIABLES");
             
             for (it = m->condition.begin(); it != m->condition.end(); ++it)
             {
@@ -378,8 +378,6 @@ namespace Nektar
                 boundaryconditions->LinkEndChild(region);
             }
 
-            TiXmlElement *variables = new TiXmlElement("VARIABLES");
-            
             for (int i = 0; i < m->fields.size(); ++i)
             {
                 TiXmlElement *v = new TiXmlElement("V");
@@ -389,9 +387,17 @@ namespace Nektar
                 variables->LinkEndChild(v);
             }
             
-            conditions->LinkEndChild(variables);
-            conditions->LinkEndChild(boundaryregions);
-            conditions->LinkEndChild(boundaryconditions);
+            if (m->fields.size() > 0)
+            {
+                conditions->LinkEndChild(variables);
+            }
+            
+            if (m->condition.size() > 0)
+            {
+                conditions->LinkEndChild(boundaryregions);
+                conditions->LinkEndChild(boundaryconditions);
+            }
+            
             pRoot->LinkEndChild(conditions);
         }   
     }

@@ -69,10 +69,12 @@ int main(int argc, char *argv[])
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
             {
                 Mvdir("Save",WaveForce);
+	        sleep(10);
             }
             else
             {
                 Mvdir("Save_Outer",WaveForce);
+	        sleep(10);
 	        // Execute Another loop so that not same initial conditions as last iteration
 	        vwi.ExecuteLoop();
                 sleep(10);
@@ -219,16 +221,16 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 // assume that if only previous inner loop has
                 // only done one iteration then we are at neutral
                 // point
-                if (i == 1)
+                if (i == 0)
                 {
-                    exit_iteration == true;
+                    exit_iteration = true;
                 }
                 
                 
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
-                    exit_iteration == true;
+                    exit_iteration = true;
                 }
             }
         }

@@ -335,7 +335,7 @@ namespace Nektar
         }
         
         m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
-                                 m_velocity,inarray,outarray,Deriv);
+                                 m_velocity,inarray,outarray,m_time,Deriv);
     }
 	
     //time dependent boundary conditions updating

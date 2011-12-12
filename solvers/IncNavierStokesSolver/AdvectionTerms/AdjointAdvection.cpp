@@ -66,8 +66,109 @@ namespace Nektar
 				 == LibUtilities::eFunctionTypeFile,
 				 "Base flow must be provided in a file.");
 		string file = m_session->GetFunctionFilename("BaseFlow");
-		ImportFldBase(file,m_graph);
+		
+		//Periodic base flows
+		if(m_session->DefinesParameter("N_slices"))
+		{
+			m_slices=m_session->GetParameter("N_slices");			
+			if(m_slices>1)
+			{
+				
+				int npoints=m_base[0]->GetTotPoints();
+				Array<OneD, NekDouble> fft_in(npoints*m_slices);
+				Array<OneD, NekDouble> fft_out(npoints*m_slices);
+				
+				Array<OneD, NekDouble> m_tmpIN(m_slices);
+				Array<OneD, NekDouble> m_tmpOUT(m_slices);
+				
+				//Convected fields
+				int ConvectedFields=m_base.num_elements()-1;
+				
+				m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
+				for(int i=0; i<ConvectedFields;++i)
+				{
+					m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
+				}
+				
+				cout << "file " << file << endl;
+				
+				//Import the slides into auxiliary vector
+				for (int i=0; i< m_slices; ++i)
+				{
+					char chkout[16] = "";
+					sprintf(chkout, "%d", i);
+					ImportFldBase(file+"_"+chkout+".fld",m_graph,i);
+				} 
+				
+				m_useFFTW=false;
+				if(m_session->DefinesSolverInfo("USEFFT"))
+				{
+					m_useFFTW = true;
+				}
+				
+				//Factory for FFT transformation
+				if(m_useFFTW)
+				{
+					m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
+				}
+				else 
+				{
+					ASSERTL0(false, "Time interpolation not implemented");
+				}
+				
+				// Discrete Fourier Transform of the fields
+				for(int k=0; k< ConvectedFields;++k)
+				{
+					//Shuffle the data
+					for(int j= 0; j < m_slices; ++j)
+					{
+						Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
+					}
+					
+					//FFT Transform
+					for(int i=0; i<npoints; i++)
+					{
+						m_FFT->FFTFwdTrans(m_tmpIN =fft_in + i*m_slices, m_tmpOUT =fft_out + i*m_slices);
+					}
+					
+					//Reshuffle data
+					for(int s = 0; s < m_slices; ++s)
+					{						
+						Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
+						
+					}
+					
+					for(int r=0; r<fft_in.num_elements();++r)
+					{
+						fft_in[0]=0;
+						fft_out[0]=0;
+					}
+					
+				}
+				
+				if(m_session->DefinesParameter("period"))
+				{
+					m_period=m_session->GetParameter("period");
+				}
+				else 
+				{
+					m_period=(m_session->GetParameter("TimeStep")*m_slices)/(m_slices-1.);
+				}
+			}
+			else{
+				
+				ASSERTL0(false,"Number of slices must be a positive number");
+			}
+		}
+		//Steady base-flow
+		else
+		{
+			m_slices=1;
+			ImportFldBase(file,m_graph,1);
+		}
+		
 	}
+	
 
     AdjointAdvection::~AdjointAdvection()
     {
@@ -173,10 +274,12 @@ namespace Nektar
      * @param   infile          Filename to read.
      */
     void AdjointAdvection::ImportFldBase(std::string pInfile,
-            SpatialDomains::MeshGraphSharedPtr pGraph)
+            SpatialDomains::MeshGraphSharedPtr pGraph, int cnt)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
+		int numfields=m_base.num_elements();
+		int nqtot = m_base[0]->GetTotPoints();
 
         pGraph->Import(pInfile,FieldDef,FieldData);
 
@@ -198,7 +301,18 @@ namespace Nektar
             }
             m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
                                 m_base[j]->UpdatePhys());
-        }
+		}
+			
+			if(m_session->DefinesParameter("N_slices"))
+			{
+				
+				for(int i=0; i<m_nConvectiveFields;++i)
+				{
+					
+					Vmath::Vcopy(nqtot, &m_base[i]->GetPhys()[0], 1, &m_interp[i][cnt*nqtot], 1);				
+				}
+				
+			}
     }
         
    
@@ -209,6 +323,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &pU,
             Array<OneD, NekDouble> &pOutarray,
             int pVelocityComponent,
+			NekDouble m_time,
             Array<OneD, NekDouble> &pWk)
     {
         int ndim       = m_nConvectiveFields;
@@ -228,6 +343,15 @@ namespace Nektar
         grad_base_u0 = Array<OneD, NekDouble> (ndim*nPointsTot, 0.0);
         grad_base_v0 = Array<OneD, NekDouble> (ndim*nPointsTot, 0.0);
         grad_base_w0 = Array<OneD, NekDouble> (ndim*nPointsTot, 0.0);
+		
+		//Evaluation of the base flow for periodic cases
+		if(m_slices>1)
+		{
+			for(int i=0; i<m_nConvectiveFields;++i)
+			{
+				UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),m_time,m_period);
+			}
+		}
 	
 		//Evaluate the Adjoint advection term
         switch(ndim) 
@@ -368,6 +492,32 @@ namespace Nektar
             ASSERTL0(false,"dimension unknown");
         }
     }
+		
+		void AdjointAdvection::UpdateBase( const NekDouble m_slices,
+											 Array<OneD, const NekDouble> &inarray,
+											 Array<OneD, NekDouble> &outarray,
+											 const NekDouble m_time,
+											 const NekDouble m_period)
+		{
+			
+			int npoints=m_base[0]->GetTotPoints();
+			
+			NekDouble BetaT=2*M_PI*fmod (m_time, m_period) / m_period;
+			NekDouble phase;
+			Array<OneD, NekDouble> auxiliary(npoints);
+			
+			Vmath::Vcopy(npoints,&inarray[0],1,&outarray[0],1);
+			Vmath::Svtvp(npoints, cos(0.5*m_slices*BetaT),&inarray[npoints],1,&outarray[0],1,&outarray[0],1);
+			
+			for (int i = 2; i < m_slices; i += 2) 
+			{
+				phase = (i>>1) * BetaT;
+				Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
+				Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+			}
+			
+		}
+		
 	
 } //end of namespace
 

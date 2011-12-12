@@ -243,7 +243,7 @@ namespace Nektar
     {
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
-                                 inarray, outarray);
+                                 inarray, outarray,m_time);
 
         //add the force
         if(m_session->DefinesFunction("BodyForce"))

@@ -100,6 +100,7 @@ namespace Nektar
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,
                          int pVelocityComponent,
+						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk);
 
 	};

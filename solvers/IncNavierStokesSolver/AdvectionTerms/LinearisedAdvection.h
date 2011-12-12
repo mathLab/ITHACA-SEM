@@ -51,6 +51,8 @@
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
+#include <Auxiliary/EquationSystem.h>
+
 
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 
@@ -85,7 +87,20 @@ namespace Nektar
 	protected:
         //Storage of the base flow
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
+		//number of slices
+		NekDouble                                       m_slices;
+		//period length
+		NekDouble										m_period;
+		//interpolation vector
+		Array<OneD, Array<OneD, NekDouble> >			m_interp;
+		//auxiliary variables
+		LibUtilities::NektarFFTSharedPtr				m_FFT;
+		Array<OneD,NekDouble>							m_tmpIN;
+		Array<OneD,NekDouble>							m_tmpOUT;
+		bool											m_useFFTW;
 
+
+		
         LinearisedAdvection(
                 const LibUtilities::SessionReaderSharedPtr&        pSession,
                 const SpatialDomains::MeshGraphSharedPtr&          pGraph);
@@ -95,12 +110,29 @@ namespace Nektar
         virtual void v_InitObject();
 
         void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
+		void UpdateBase(const NekDouble m_slices,
+						Array<OneD, const NekDouble> &inarray,
+						Array<OneD, NekDouble> &outarray,
+						const NekDouble m_time,
+						const NekDouble m_period);
+		
 
         /// Import Base flow
+		void ImportFldBase(std::string pInfile,
+						   SpatialDomains::MeshGraphSharedPtr pGraph, int cnt);
         void ImportFldBase(std::string pInfile,
                 SpatialDomains::MeshGraphSharedPtr pGraph);
-
-
+		
+		/// Write field data to the given filename.
+        void WriteFldBase(std::string &outname);
+		
+        /// Write input fields to the given filename.
+        void WriteFldBase(
+					  std::string &outname,
+					  MultiRegions::ExpListSharedPtr &field,
+					  Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs,
+					  Array<OneD, std::string> &variables);
+		
     private:
         //Function for the evaluation of the linearised advective terms
         virtual void v_ComputeAdvectionTerm(
@@ -109,7 +141,11 @@ namespace Nektar
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,
                          int pVelocityComponent,
+						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk);
+
+		SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
+
     };
     
     

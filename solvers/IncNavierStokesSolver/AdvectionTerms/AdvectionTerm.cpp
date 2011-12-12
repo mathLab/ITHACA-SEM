@@ -119,7 +119,8 @@ namespace Nektar
 									const int nConvectiveFields, 
 									const Array<OneD, int> &vel_loc, 
 									const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
-									Array<OneD, Array<OneD, NekDouble> > &pOutarray,  
+									Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+									NekDouble m_time,
 									Array<OneD, NekDouble> &pWk)
     {
         int i,j;
@@ -148,7 +149,7 @@ namespace Nektar
         
         for(i=0; i< m_nConvectiveFields; ++i)
         {
-            v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,Deriv);
+            v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,m_time,Deriv);
             Vmath::Neg(nqtot,pOutarray[i],1);
         }
     }

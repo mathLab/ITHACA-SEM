@@ -95,10 +95,29 @@ namespace Nektar
         virtual void v_InitObject();
 
         void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
+		void UpdateBase(const NekDouble m_slices,
+						Array<OneD, const NekDouble> &inarray,
+						Array<OneD, NekDouble> &outarray,
+						const NekDouble m_time,
+						const NekDouble m_period);
+		
 
         /// Import Base flow
         void ImportFldBase(std::string pInfile,
-                SpatialDomains::MeshGraphSharedPtr pGraph);
+                SpatialDomains::MeshGraphSharedPtr pGraph,int cnt);
+		void ImportFldBase(std::string pInfile,
+						   SpatialDomains::MeshGraphSharedPtr pGraph);
+		
+		/// Write field data to the given filename.
+        void WriteFldBase(std::string &outname);
+		
+        /// Write input fields to the given filename.
+        void WriteFldBase(
+						  std::string &outname,
+						  MultiRegions::ExpListSharedPtr &field,
+						  Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs,
+						  Array<OneD, std::string> &variables);
+		
 
 
     private:
@@ -109,6 +128,7 @@ namespace Nektar
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,
                          int pVelocityComponent,
+						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk);
     };
     

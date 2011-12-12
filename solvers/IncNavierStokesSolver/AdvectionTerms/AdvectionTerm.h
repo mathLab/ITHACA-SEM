@@ -87,6 +87,7 @@ namespace Nektar
                          const Array<OneD, int>  &vel_loc,
                          const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
                          Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
         
 
@@ -108,6 +109,19 @@ namespace Nektar
         int nvariables;              ///< Number of variables
         
         int m_nConvectiveFields;     /// Number of fields to be convected;
+		
+		//number of slices
+		NekDouble                                       m_slices;
+		//period length
+		NekDouble										m_period;
+		//interpolation vector
+		Array<OneD, Array<OneD, NekDouble> >			m_interp;
+		//auxiliary variables for time depedent base flows
+		LibUtilities::NektarFFTSharedPtr				m_FFT;
+		Array<OneD,NekDouble>							m_tmpIN;
+		Array<OneD,NekDouble>							m_tmpOUT;
+		bool											m_useFFTW;
+		
         
         /// Constructor
         AdvectionTerm(
@@ -121,11 +135,12 @@ namespace Nektar
                                             const Array<OneD, const NekDouble> &pU,
                                             Array<OneD, NekDouble> &pOutarray,
                                             int pVelocityComponent,
+											NekDouble m_time,
                                             Array<OneD, NekDouble> &pWk)
         {
             ASSERTL0(false,"This function is not defined in parent class");
         };
-	
+		
         int NoCaseStringCompare(const string & s1, const string& s2);
         
     };

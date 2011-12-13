@@ -442,7 +442,7 @@ namespace Nektar
          * I_{pq} = (\phi^A_q \phi^B_{pq}, u) &=& 
          * \sum_{i=0}^{nq_0}\sum_{j=0}^{nq_1}
          * \phi^A_p(\eta_{0,i})\phi^B_{pq}(\eta_{1,j}) w^0_i w^1_j 
-         * u(\xi_{0,i} \xi_{1,j})\                             \
+         * u(\xi_{0,i} \xi_{1,j}) \\
          * & = & \sum_{i=0}^{nq_0} \phi^A_p(\eta_{0,i})
          * \sum_{j=0}^{nq_1} \phi^B_{pq}(\eta_{1,j}) \tilde{u}_{i,j} 
          * \end{array}

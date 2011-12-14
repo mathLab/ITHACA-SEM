@@ -60,7 +60,7 @@ namespace Nektar
         {
             return NEKTAR_MATH_NAME(yn) ((int) i, x);
         }
-
+		
         // ---------------------------------------------------------------------
         //        Definition of the Customized Function Parser for Spirit
         // ---------------------------------------------------------------------

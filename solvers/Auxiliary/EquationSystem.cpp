@@ -950,7 +950,7 @@ namespace Nektar
                // get the coordinates (assuming all fields have the same
                // discretisation)
                m_fields[0]->GetCoords(x0,x1,x2);
-
+			   
                for(unsigned int i = 0 ; i < m_fields.num_elements(); i++)
                {
                    LibUtilities::EquationSharedPtr ifunc
@@ -958,7 +958,7 @@ namespace Nektar
                    for(int j = 0; j < nq; j++)
                    {
                        (m_fields[i]->UpdatePhys())[j]
-                               = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
+					   = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
                    }
                    m_fields[i]->SetPhysState(true);
 		

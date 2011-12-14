@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="1" SPACE="1">
+        <VERTEX>
+            <V ID="0"> -1.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="1"> -0.800e+00 0.000e+00 0.000e+00</V>
+            <V ID="2"> -0.600e+00 0.000e+00 0.000e+00</V>
+            <V ID="3"> -0.400e+00 0.000e+00 0.000e+00</V>
+            <V ID="4"> -0.200e+00 0.000e+00 0.000e+00</V>
+            <V ID="5">  0.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="6">  0.200e+00 0.000e+00 0.000e+00</V>
+            <V ID="7">  0.400e+00 0.000e+00 0.000e+00</V>
+            <V ID="8">  0.600e+00 0.000e+00 0.000e+00</V>
+            <V ID="9">  0.800e+00 0.000e+00 0.000e+00</V>
+            <V ID="10"> 1.000e+00 0.000e+00 0.000e+00</V>
+        </VERTEX>
+        
+        <ELEMENT>
+            <S ID="0">    0     1 </S>
+            <S ID="1">    1     2 </S>
+            <S ID="2">    2     3 </S>
+            <S ID="3">    3     4 </S>
+            <S ID="4">    4     5 </S>
+            <S ID="5">    5     6 </S>
+            <S ID="6">    6     7 </S>
+            <S ID="7">    7     8 </S>
+            <S ID="8">    8     9 </S>
+            <S ID="9">    9    10 </S>
+        </ELEMENT>
+        
+        <COMPOSITE>
+            <C ID="0"> S[0-9] </C>
+            <C ID="1"> V[0]   </C>
+            <C ID="2"> V[10]  </C>
+        </COMPOSITE>
+        
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" FIELDS="u" BASISTYPE="GLL_Lagrange" NUMMODES="3" POINTSTYPE="GaussGaussLegendre" NUMPOINTS="4"/>
+    </EXPANSIONS>
+    
+    <CONDITIONS>
+    
+    <SOLVERINFO>
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+        <I PROPERTY="ReimannSolver" VALUE="Up-Wind" />
+    </SOLVERINFO>
+
+    <PARAMETERS>
+        <P> TimeStep = 0.0001 </P>
+        <P> NumSteps = 2000 </P>
+    </PARAMETERS>
+
+    <VARIABLES>
+        <V ID="0"> u </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+        <B ID="0"> C[1] </B>
+        <B ID="1"> C[2] </B>
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+        <REGION REF="0">
+            <P VAR="u" VALUE="[1]" />
+        </REGION>
+        <REGION REF="1">
+            <P VAR="u" VALUE="[0]" />
+        </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <FUNCTION NAME="Advection">
+        <E VAR="u" VALUE="1.0" />
+    </FUNCTION>
+        
+    <FUNCTION NAME="InitialConditions">
+        <E VAR="u" VALUE="exp(-20.0*x*x)" />
+    </FUNCTION>
+
+    <FUNCTION NAME="ExactSolution">
+        <E VAR="u" VALUE="exp(-20.0*(x-t)*(x-t))" />
+    </FUNCTION>
+
+    </CONDITIONS>
+    
+    <CONDITIONS />
+</NEKTAR>

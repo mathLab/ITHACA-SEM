@@ -2005,7 +2005,7 @@ namespace Nektar
                     //Direction A positive and B negative
                     for (int j=0; j<nquad1; j++)
                     {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*nquad2-1-j*nquad0),1,o_tmp=outarray+(j*nquad0),1);
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+((nquad0*nquad1*nquad2-1)-(nquad0-1)-j*nquad0),1,o_tmp=outarray+(j*nquad0),1);
                     }
                 }
                 else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
@@ -2013,7 +2013,7 @@ namespace Nektar
                     //Direction A negative and B negative
                     for (int j=0; j<nquad1; j++)
                     {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*nquad2-1-j*nquad1),-1,o_tmp=outarray+(j*nquad0),1);
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*nquad2-1-j*nquad0),-1,o_tmp=outarray+(j*nquad0),1);
                     }
                 }
                 break;
@@ -2098,73 +2098,6 @@ namespace Nektar
                     Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
                 }
 		
-                //reverse
-                switch(face)
-                {
-                case 0:
-		  if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-		    || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2))
-                   {
-                       for (i = 0; i < vCoordDim; ++i)
-                       {
-                           Vmath::Neg(nqe,normal[i],1);                 
-                       }
-		   }
-                   break;
-                case 1:
-		  if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-		      || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2))
-                   {
-                       for (i = 0; i < vCoordDim; ++i)
-                       {
-                           Vmath::Neg(nqe,normal[i],1);                 
-                       }
-		   }
-                   break;
-                case 2:
-		  if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-		    || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2)) 
-                   {
-                       for (i = 0; i < vCoordDim; ++i)
-                       {
-                           Vmath::Neg(nqe,normal[i],1);                 
-                       }
-		   }
-                   break;
-                case 3:
-		  if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-		      || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2)) 
-                   {
-                       for (i = 0; i < vCoordDim; ++i)
-                       {
-                           Vmath::Neg(nqe,normal[i],1);                 
-                       }
-		   }
-                   break;
-                case 4:
-		  if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-		    || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2)) 
-                   {
-                       for (i = 0; i < vCoordDim; ++i)
-                       {
-                           Vmath::Neg(nqe,normal[i],1);                 
-                       }
-		   }
-                   break;
-                case 5:
-		  if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-		      || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2)) 
-                   {
-                       for (i = 0; i < vCoordDim; ++i)
-                       {
-                           Vmath::Neg(nqe,normal[i],1);                 
-                       }
-		   }
-                   break;
-                default:
-                   ASSERTL0(false,"face value (> 5) is out of range");
-                   break;               
-                }
 	    }
             else   // Set up deformed normals
             {
@@ -2350,7 +2283,75 @@ namespace Nektar
                 {
                     Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
 		}
-            }        
+            }
+ 
+            switch(face)
+            {
+            case 0:
+                if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2))
+                {
+                    for (i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Neg(nqe,normal[i],1);                 
+                    }
+                }
+                break;
+            case 1:
+                if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2))
+                {
+                    for (i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Neg(nqe,normal[i],1);                 
+                    }
+                }
+                break;
+            case 2:
+                if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2)) 
+                {
+                    for (i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Neg(nqe,normal[i],1);                 
+                    }
+                }
+                break;
+            case 3:
+                if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2)) 
+                {
+                    for (i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Neg(nqe,normal[i],1);                 
+                    }
+                }
+                break;
+            case 4:
+                if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2)) 
+                {
+                    for (i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Neg(nqe,normal[i],1);                 
+                    }
+                }
+                break;
+            case 5:
+                if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2)) 
+                {
+                    for (i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Neg(nqe,normal[i],1);                 
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"face value (> 5) is out of range");
+                break;               
+            }
+        
         }
 
 

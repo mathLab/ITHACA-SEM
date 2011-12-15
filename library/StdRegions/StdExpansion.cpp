@@ -1389,8 +1389,9 @@ namespace Nektar
             }
 
             void StdExpansion::v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
-                                               Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray)
+                                                     Array<OneD, unsigned int> &maparray,
+                                                     Array<OneD, int> &signarray,
+                                                     int nummodesA, int nummodesB)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }

@@ -92,13 +92,13 @@ namespace Nektar
                      "Cannot call function with dim == 1");
 
             int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
-                             edges[2]->GetBasis(0,0)->GetNumModes());
+                              edges[2]->GetBasis(0,0)->GetNumModes());
             int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
-                             edges[2]->GetBasis(0,0)->GetNumPoints());
-            int order1 = max(edges[1]->GetBasis(0,0)->GetNumModes(),
-                             edges[3]->GetBasis(0,0)->GetNumModes());
+                              edges[2]->GetBasis(0,0)->GetNumPoints());
+            int order1  = max(edges[1]->GetBasis(0,0)->GetNumModes(),
+                              edges[3]->GetBasis(0,0)->GetNumModes());
             int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
-                             edges[3]->GetBasis(0,0)->GetNumPoints());
+                              edges[3]->GetBasis(0,0)->GetNumPoints());
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
                   LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
@@ -110,6 +110,94 @@ namespace Nektar
             for(int i = 0; i < m_coordim; ++i)
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            }
+        }
+
+        QuadGeom::QuadGeom(const int id,
+                           const SegGeomSharedPtr edges[],
+                           const StdRegions::EdgeOrientation eorient[],
+                           const CurveSharedPtr &curve) :
+            Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
+            m_fid(id)
+        {
+            int j;
+
+            m_geomShapeType = eQuadrilateral;
+
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
+
+            for(j=0; j <kNedges; ++j)
+            {
+                if(eorient[j] == StdRegions::eForwards)
+                {
+                    m_verts.push_back(edges[j]->GetVertex(0));
+                }
+                else
+                {
+                    m_verts.push_back(edges[j]->GetVertex(1));
+                }
+            }
+
+            for (j=0; j<kNedges; ++j)
+            {
+                m_eorient[j] = eorient[j];
+            }
+
+            m_coordim = edges[0]->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 1,
+                "Cannot call function with dim == 1");
+
+            int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
+                              edges[2]->GetBasis(0,0)->GetNumModes());
+            int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
+                              edges[2]->GetBasis(0,0)->GetNumPoints());
+            int order1  = max(edges[1]->GetBasis(0,0)->GetNumModes(),
+                              edges[3]->GetBasis(0,0)->GetNumModes());
+            int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
+                              edges[3]->GetBasis(0,0)->GetNumPoints());
+
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
+                  LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
+                  LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                int npts = curve->m_points.size();
+                int nEdgePts = (int)sqrt(npts);
+                Array<OneD,NekDouble> tmp(npts);
+                LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
+
+                // Sanity checks:
+                // - Curved faces should have square number of points;
+                // - Each edge should have sqrt(npts) points.
+                ASSERTL0(nEdgePts*nEdgePts == npts,
+                         "NUMPOINTS should be a square number");
+                
+                for (j = 0; j < kNedges; ++j)
+                {
+                    ASSERTL0(edges[j]->GetXmap(i)->GetNcoeffs() == nEdgePts,
+                             "Number of edge points does not correspond "
+                             "to number of face points.");
+                }
+                
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+
+                for (j = 0; j < npts; ++j)
+                {
+                    tmp[j] = (curve->m_points[j]->GetPtr())[i];
+                }
+                
+                // Interpolate curve points to GLL points
+                LibUtilities::Interp2D(curveKey,curveKey,tmp,
+                                       B0.GetPointsKey(),B1.GetPointsKey(),
+                                       m_xmap[i]->UpdatePhys());
+                
+                // Forwards transform to get coefficient space.
+                m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(),m_xmap[i]->UpdateCoeffs());
             }
         }
 

@@ -195,6 +195,13 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find FACE tag in file.");
 
+            // Curved faces
+            map<int, int> face_curved;
+            for (int i = 0; i < m_curvedFaces.size(); ++i)
+            {
+                face_curved[m_curvedFaces[i]->m_curveID] = i;
+            }
+            
             int nextFaceNumber = -1;
 
             /// All faces are of the form: "<? ID="#"> ... </?>", with
@@ -261,8 +268,18 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
-
-                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient));
+                        
+                        TriGeomSharedPtr trigeom;
+                        
+                        if (face_curved.count(indx) == 0)
+                        {
+                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                        }
+                        else
+                        {
+                            trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                        }
+                        
                         trigeom->SetGlobalID(indx);
 
                         m_triGeoms[indx] = trigeom;
@@ -301,7 +318,14 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
-                        QuadGeomSharedPtr quadgeom(MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient));
+                        QuadGeomSharedPtr quadgeom;
+
+                        if (face_curved.count(indx) == 0)
+                        {
+                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                        } else {
+                            quadgeom = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                        }
                         quadgeom->SetGlobalID(indx);
 
                         m_quadGeoms[indx] = quadgeom;

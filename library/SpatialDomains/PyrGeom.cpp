@@ -60,6 +60,9 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
+            /// TODO: When pyramid is implemented, determine correct order for
+            /// standard region here.
+            
             // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
             //PointsKey (const int &numpoints, const PointsType &pointstype)
             const LibUtilities::BasisKey A(LibUtilities::eModified_A, 2,
@@ -671,18 +674,18 @@ namespace Nektar
                 for(i = 0; i < kNfaces; i++)
                 {
                     m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
+                    nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
+                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
+                                                   m_faces[i]->GetEdge(0)->GetBasis(0,0)->GetNumModes(),
+                                                   m_faces[i]->GetEdge(1)->GetBasis(0,0)->GetNumModes());
 
-                    nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
 
                     for(j = 0 ; j < m_coordim; j++)
                     {
                         for(k = 0; k < nFaceCoeffs; k++)
                         {
-//                             const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs(); //TODO fix this
-//                             double v = signArray[k]* coeffs[k];
-//                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-
+                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();                            double v = signArray[k]* coeffs[k];
+                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
                         }
                     }
                 }
@@ -691,12 +694,12 @@ namespace Nektar
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
-
+                
                 m_state = ePtsFilled;
             }
-
-		}
-
+            
+                }
+        
         void PyrGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
             FillGeom();

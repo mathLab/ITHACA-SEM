@@ -1453,13 +1453,11 @@ namespace Nektar
             const int                  fid, 
             const FaceOrientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray)
+            Array<OneD,          int> &signarray,
+            int                        nummodesA,
+            int                        nummodesB)
         {
-            const int nummodes0 = m_base[0]->GetNumModes();
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nummodes2 = m_base[2]->GetNumModes();
-
-            int nummodesA, nummodesB, P, Q, i, j, k, idx;
+            int P, Q, i, j, k, idx;
 
             ASSERTL1(v_IsBoundaryInteriorExpansion(),
                      "Method only implemented for Modified_A BasisType (x "
@@ -1467,26 +1465,32 @@ namespace Nektar
                      "Modified_C BasisType(z direction)");
 
             int nFaceCoeffs = 0;
-            if (fid == 0)
+
+            if (nummodesA == -1)
             {
-                nummodesA = nummodes0;
-                nummodesB = nummodes1;
+                switch(fid)
+                {
+                    case 0:
+                        nummodesA = m_base[0]->GetNumModes();
+                        nummodesB = m_base[1]->GetNumModes();
+                        break;
+                    case 1:
+                        nummodesA = m_base[0]->GetNumModes();
+                        nummodesB = m_base[2]->GetNumModes();
+                        break;
+                    case 2:
+                    case 3:
+                        nummodesA = m_base[1]->GetNumModes();
+                        nummodesB = m_base[2]->GetNumModes();
+                        break;
+                }
             }
-            else if (fid == 1)
-            {
-                nummodesA = nummodes0;
-                nummodesB = nummodes2;
-            }
-            else
-            {
-                nummodesA = nummodes1;
-                nummodesB = nummodes2;
-            }
+            
             P = nummodesA;
             Q = nummodesB;
 
             nFaceCoeffs = Q + ((P-1)*(1 + 2*(Q-1) - (P-1)))/2;
-
+            
             // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
             {

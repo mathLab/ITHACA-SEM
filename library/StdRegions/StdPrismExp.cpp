@@ -45,10 +45,19 @@ namespace Nektar
         {
         }
 
-        StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc) 
-            : StdExpansion(StdPrismData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),3,Ba,Bb,Bc),
-              StdExpansion3D(StdPrismData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
-              //  : StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), Ba, Bb, Bc)
+        StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba, 
+                                 const LibUtilities::BasisKey &Bb, 
+                                 const LibUtilities::BasisKey &Bc) 
+            : StdExpansion  (StdPrismData::getNumberOfCoefficients(
+                                 Ba.GetNumModes(), 
+                                 Bb.GetNumModes(), 
+                                 Bc.GetNumModes()),
+                             3,Ba,Bb,Bc),
+              StdExpansion3D(StdPrismData::getNumberOfCoefficients(
+                                 Ba.GetNumModes(), 
+                                 Bb.GetNumModes(), 
+                                 Bc.GetNumModes()), 
+                             Ba,Bb,Bc)
         {
             ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), 
                      "order in 'a' direction is higher than order in 'c' direction");
@@ -68,13 +77,61 @@ namespace Nektar
 
 
         //---------------------------------------
-        // Integration/public 3D methods
+        // Miscellaneous public 3D function
         //---------------------------------------
+        
+        void StdPrismExp::WriteCoeffsToFile(std::ofstream &outfile)
+        {
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+            int order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
+
+            NekDouble *mat = wsp.get(); 
+
+            // put coeffs into matrix and reverse order so that r index is
+            // fastest for Prism
+            Vmath::Zero(order0*order1*order2, mat, 1);
+
+            for(int i = 0, cnt=0; i < order0; ++i)
+            {
+                for(int j = 0; j < order1-i; ++j)
+                {
+                    for(int k = 0; k < order2-i-j; ++k, cnt++)
+                    {
+                        // mat[i+j*order1] = m_coeffs[cnt];
+                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
+                    }
+                }
+            }
+
+            outfile <<"Coeffs = [" << " "; 
+
+            for(int k = 0; k < order2; ++k)
+            {            
+                for(int j = 0; j < order1; ++j)
+                {
+                    for(int i = 0; i < order0; ++i)
+                    {
+                        outfile << mat[i + order0*(j + order1*k)] << " ";
+                    }
+                    outfile << std::endl; 
+                }
+            }
+            outfile << "]"; 
+        }
+        
+        
+        //---------------------------------------
+        // Integration Methods
+        //---------------------------------------
+        
         void StdPrismExp::TripleTensorProduct(const Array<OneD, const NekDouble>& fx, 
                                               const Array<OneD, const NekDouble>& gy, 
                                               const Array<OneD, const NekDouble>& hz, 
                                               const Array<OneD, const NekDouble>& inarray, 
-                                              Array<OneD, NekDouble> & outarray)
+                                                    Array<OneD,       NekDouble>& outarray)
         {
             // Using matrix operation, not sum-factorization.  Regarding the
             // 3D array, inarray[k][j][i], x is changing the fastest and z the
@@ -192,54 +249,75 @@ namespace Nektar
         {
             return TripleInnerProduct(inarray, wx, wy, wz);
         }
-        
-        void StdPrismExp::WriteCoeffsToFile(std::ofstream &outfile)
+
+        /** 
+         * \brief Integrate the physical point list \a inarray over prismatic
+         * region and return the value.
+         *
+         * Inputs:\n
+         *
+         * - \a inarray: definition of function to be returned at quadrature
+         *    point of expansion.
+         *
+         * Outputs:\n
+         *
+         * - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1,
+         * \xi_2, \xi_3) J[i,j,k] d \bar \eta_1 d \xi_2 d \xi_3 \f$ \n \f$ =
+         * \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1}
+         * u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0})w_{i}^{0,0}
+         * w_{j}^{0,0} \hat w_{k}^{1,0} \f$ \n where \f$ inarray[i,j, k] =
+         * u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0}) \f$, \n
+         * \f$\hat w_{i}^{1,0} = \frac {w_{j}^{1,0}} {2} \f$ \n and \f$
+         * J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
+         */
+        NekDouble StdPrismExp::v_Integral(
+            const Array<OneD, const NekDouble>& inarray)
         {
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
+            // Using implementation from page 146 of Spencer Sherwin's book.
+            int Qy = m_base[1]->GetNumPoints();
+            int Qz = m_base[2]->GetNumPoints();
 
-            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
+            // Get the point distributions:
+            // * x is assumed to be Gauss-Lobatto-Legendre (incl. -1 and 1)
+            // * y is assumed to be Gauss-Lobatto-Legendre (incl. -1 and 1)
+            Array<OneD, const NekDouble> z, wx, wy, wz;
+            wx = m_base[0]->GetW();
+            wy = m_base[1]->GetW();
+            m_base[2]->GetZW(z,wz);
 
-            NekDouble *mat = wsp.get(); 
+            Array<OneD, NekDouble> wz_hat = Array<OneD, NekDouble>(Qz, 0.0);
 
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
+            // Convert wz into wz_hat, which includes the 1/2 scale factor.
+            // Nothing else need be done if the point distribution is Jacobi
+            // (1,0) since (1 - xi_z) is already factored into the weights.
+            // Note by coincidence, xi_y = eta_y, xi_z = eta_z (xi_z = z
+            // according to our notation)
+            switch(m_base[2]->GetPointsType())
             {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
+                // Common case
+                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
+                    Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
+                    break;
+                
+                // Corner cases
+                case LibUtilities::eGaussLobattoLegendre:
+                case LibUtilities::eGaussRadauMLegendre:
+                    for (int k = 0; k < Qz; ++k)
                     {
-                        // mat[i+j*order1] = m_coeffs[cnt];
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
+                        wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
                     }
-                }
+                    break;
             }
 
-            outfile <<"Coeffs = [" << " "; 
 
-            for(int k = 0; k < order2; ++k)
-            {            
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] << " ";
-                    }
-                    outfile << std::endl; 
-                }
-            }
-            outfile << "]"; 
+            return Integral3D(inarray, wx, wy, wz_hat);
         }
 
 
         //---------------------------------------
-        // Differentiation/integration Methods
+        // Differentiation Methods
         //---------------------------------------
-        
+
         /**
          * \brief Calculate the derivative of the physical points 
          *  
@@ -327,76 +405,12 @@ namespace Nektar
             }
         }
 
-
         void StdPrismExp::v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                                         Array<OneD, NekDouble> &out_d0,
-                                         Array<OneD, NekDouble> &out_d1,
-                                         Array<OneD, NekDouble> &out_d2)
+                                               Array<OneD,       NekDouble>& out_d0,
+                                               Array<OneD,       NekDouble>& out_d1,
+                                               Array<OneD,       NekDouble>& out_d2)
         {
             v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
-        }
-        
-        /** 
-         * \brief Integrate the physical point list \a inarray over prismatic
-         * region and return the value.
-         *
-         * Inputs:\n
-         *
-         * - \a inarray: definition of function to be returned at quadrature
-         *    point of expansion.
-         *
-         * Outputs:\n
-         *
-         * - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\bar \eta_1,
-         * \xi_2, \xi_3) J[i,j,k] d \bar \eta_1 d \xi_2 d \xi_3 \f$ \n \f$ =
-         * \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1}
-         * u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0})w_{i}^{0,0}
-         * w_{j}^{0,0} \hat w_{k}^{1,0} \f$ \n where \f$ inarray[i,j, k] =
-         * u(\bar \eta_{1i}^{0,0}, \xi_{2j}^{0,0},\xi_{3k}^{1,0}) \f$, \n
-         * \f$\hat w_{i}^{1,0} = \frac {w_{j}^{1,0}} {2} \f$ \n and \f$
-         * J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
-         */
-        NekDouble StdPrismExp::v_Integral(
-            const Array<OneD, const NekDouble>& inarray)
-        {
-            // Using implementation from page 146 of Spencer Sherwin's book.
-            int Qy = m_base[1]->GetNumPoints();
-            int Qz = m_base[2]->GetNumPoints();
-
-            // Get the point distributions:
-            // * x is assumed to be Gauss-Lobatto-Legendre (incl. -1 and 1)
-            // * y is assumed to be Gauss-Lobatto-Legendre (incl. -1 and 1)
-            Array<OneD, const NekDouble> z, wx, wy, wz;
-            wx = m_base[0]->GetW();
-            wy = m_base[1]->GetW();
-            m_base[2]->GetZW(z,wz);
-
-            Array<OneD, NekDouble> wz_hat = Array<OneD, NekDouble>(Qz, 0.0);
-
-            // Convert wz into wz_hat, which includes the 1/2 scale factor.
-            // Nothing else need be done if the point distribution is Jacobi
-            // (1,0) since (1 - xi_z) is already factored into the weights.
-            // Note by coincidence, xi_y = eta_y, xi_z = eta_z (xi_z = z
-            // according to our notation)
-            switch(m_base[2]->GetPointsType())
-            {
-                // Common case
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                    Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
-                    break;
-                
-                // Corner cases
-                case LibUtilities::eGaussLobattoLegendre:
-                case LibUtilities::eGaussRadauMLegendre:
-                    for (int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
-                    }
-                    break;
-            }
-
-
-            return Integral3D(inarray, wx, wy, wz_hat);
         }
         
         
@@ -431,7 +445,7 @@ namespace Nektar
          *  (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).  \f$
          */
         void StdPrismExp::v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                                     Array<OneD, NekDouble>& outarray)
+                                           Array<OneD,       NekDouble>& outarray)
         {
             ASSERTL1((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
@@ -457,7 +471,7 @@ namespace Nektar
         }
 
         void StdPrismExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                            Array<OneD, NekDouble>& outarray)
+                                                  Array<OneD,       NekDouble>& outarray)
         {
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
@@ -469,21 +483,21 @@ namespace Nektar
             
             Array<OneD, NekDouble> wsp(nquad2*order1*order0 +
                                        nquad1*nquad2*order0);
-
-            v_BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
-                                    m_base[1]->GetBdata(),
-                                    m_base[2]->GetBdata(),
-                                    inarray,outarray,wsp,true,true,true);
+            
+            BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
+                                  m_base[1]->GetBdata(),
+                                  m_base[2]->GetBdata(),
+                                  inarray,outarray,wsp,true,true,true);
         }
 
 
-        void StdPrismExp::v_BwdTrans_SumFacKernel(
+        void StdPrismExp::BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble> &base0,
             const Array<OneD, const NekDouble> &base1,
             const Array<OneD, const NekDouble> &base2,
             const Array<OneD, const NekDouble> &inarray,
-            Array<OneD, NekDouble>             &outarray,
-            Array<OneD, NekDouble>             &wsp,
+                  Array<OneD,       NekDouble> &outarray,
+                  Array<OneD,       NekDouble> &wsp,
             bool                                doCheckCollDir0,
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
@@ -542,7 +556,7 @@ namespace Nektar
          *  - (this)->_coeffs: updated array of expansion coefficients. 
          */
         void StdPrismExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &outarray)
+                                           Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase(inarray, outarray);
 
@@ -556,161 +570,12 @@ namespace Nektar
 
             out = (*matsys)*in;
         }
-
         
-
-        //----------------------------
+        
+        //---------------------------------------
         // Inner product functions
-        //----------------------------
+        //---------------------------------------
         
-        /** 
-            \brief Calculate the inner product of inarray with respect to
-            the basis B=base0*base1*base2 and put into outarray:
-            
-            \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
-            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2} \psi_{p}^{a}
-            (\bar \eta_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{pr}^{b} (\xi_{3k})
-            w_i w_j w_k u(\bar \eta_{1,i} \xi_{2,j} \xi_{3,k}) J_{i,j,k}\\ & =
-            & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i}) \sum_{j=0}^{nq_1}
-            \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{pr}^b u(\bar
-            \eta_{1i},\xi_{2j},\xi_{3k}) J_{i,j,k} \end{array} \f$ \n
-            
-            where
-            
-            \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1)
-            \psi_{q}^a (\xi_2) \psi_{pr}^b (\xi_3) \f$ \n
-            
-            which can be implemented as \n 
-            
-            \f$f_{pr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pr}^b u(\bar
-            \eta_{1i},\xi_{2j},\xi_{3k}) J_{i,j,k} = {\bf B_3 U} \f$ \n \f$
-            g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pr}
-            (\xi_{3k}) = {\bf B_2 F} \f$ \n \f$ (\phi_{pqr}, u)_{\delta} =
-            \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k}) = {\bf
-            B_1 G} \f$
-        **/
-        void StdPrismExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& bx,
-                                            const Array<OneD, const NekDouble>& by,
-                                            const Array<OneD, const NekDouble>& bz,
-                                            const Array<OneD, const NekDouble>& inarray,
-                                            Array<OneD, NekDouble> & outarray)
-        {
-            // Interior prism implementation based on Spen's book page 119. and 608.  
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-            
-#if 1
-            Array<OneD,NekDouble> tmpin(nquad0*nquad1*nquad2);
-            Array<OneD,NekDouble> f(nquad1*nquad2);
-            Array<OneD,NekDouble> fb(nquad2);
-            MultiplyByQuadratureMetric(inarray,tmpin);
-            
-            int p, q, r, i, j, k, s, mode;
-            
-            for (p = mode = 0; p < order0; ++p) {
-                for (k = 0; k < nquad2; ++k) {
-                    for (j = 0; j < nquad1; ++j) {
-                        double tmp = 0.0;
-                        for (i = 0; i < nquad0; ++i) {
-                            s = i + nquad0*(j + nquad1*k);
-                            tmp += bx[i+nquad0*p]*tmpin[s];
-                            if (p == 0)
-                                tmp += bx[i+nquad0]*tmpin[s];
-                        }
-                        f[j+nquad1*k] = tmp;
-                    }
-                }
-                
-                for (q = 0; q < order1; ++q) {
-                    for (k = 0; k < nquad2; ++k) {
-                        double tmp = 0.0;
-                        for (j = 0; j < nquad1; ++j) {
-                            tmp += by[j+nquad1*q]*f[j+nquad1*k];
-                        }
-                        fb[k] = tmp;
-                    }
-                    
-                    for (r = 0; r < order2-p; ++r, ++mode) {
-                        double tmp = 0.0;
-                        s = r + p*(2*order2+1-p)/2;
-                        for (k = 0; k < nquad2; ++k) {
-                            tmp += bz[k+nquad2*s]*fb[k];
-                        }
-                        outarray[mode] = tmp;
-                    }
-                }
-            }
-            
-#else
-            // TODO: This BLAS code doesn't work yet!
-            
-            int i, mode;
-
-            Array<OneD, NekDouble> base0 = m_base[0]->GetZ();
-            Array<OneD, NekDouble> base1 = m_base[1]->GetZ();
-            Array<OneD, NekDouble> base2 = m_base[2]->GetZ();
-            
-            // Multiply by quadrature metric.
-            Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
-            Array<OneD, NekDouble> tmp1(nquad1*nquad2*order0);
-            Array<OneD, NekDouble> tmp2(nquad2*order0*order1);
-            MultiplyByQuadratureMetric(inarray, tmp);
-
-            // Inner product with respect to the '0' direction
-            Blas::Dgemm('T','N', nquad1*nquad2, order0, nquad0, 
-                        1.0, tmp.get(),   nquad0, 
-                             base0.get(), nquad0,
-                        0.0, tmp1.get(),  nquad1*nquad2);
-            
-            // Inner product with respect to the '1' direction
-            Blas::Dgemm('T', 'N', nquad2*order0, order1, nquad1,
-                        1.0, tmp1.get(),     nquad1,
-                             base1.get(),    nquad1,
-                        0.0, tmp2.get(),     nquad2*order0);
-            
-            // Inner product with respect to the '2' direction
-            for (mode=i=0; i < order0; ++i)
-            {
-                Blas::Dgemm('T','N', order0, order2-i, nquad2,
-                            1.0, tmp2.get()+i*order0*nquad2, nquad2,
-                            base2.get()+mode*nquad2,    nquad2,
-                            0.0, outarray.get()+mode*order0, order0);
-                mode  += order2-i;
-            }
-            
-            // fix for modified basis for base singular vertex
-            //if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            //{
-            //    //base singular vertex and singular edge (1+b)/2
-            //    //(1+a)/2 components (makes tmp[nquad2] entry into (1+b)/2)
-            //    Blas::Dgemv('T', nquad1,nquad2, 1.0, &tmp1[0]+nquad1*nquad2,
-            //                nquad1, base1.get()+nquad1,1, 1.0, &outarray[nquad2],1);
-            //}
-            
-            for (int q = 0; q < order1; ++q) {
-                Array<OneD, NekDouble> g_pqr = 
-                    Array<OneD, NekDouble>(nquad0*nquad1*nquad2, 0.0);
-                for (int k = 0; k < nquad2; ++k) {
-                    for (int j = 0; j < nquad1; ++j) {
-                        for (int i = 0; i < nquad0; ++i) {
-                            int s = i + nquad0*(j + nquad1*k);
-                            g_pqr[s] += inarray[s] * 
-                                bx[i + nquad0] *
-                                by[j + nquad1*q] *
-                                bz[k + nquad2];
-                        }
-                    }
-                }
-                outarray[GetMode(0,q,1)] += Integral( g_pqr );
-            }
-#endif
-        }
-
         /**
          * \brief Inner product of \a inarray over region with respect to the
          * expansion basis m_base[0]->GetBdata(), m_base[1]->GetBdata(), *
@@ -728,26 +593,216 @@ namespace Nektar
          * - \a outarray: array of inner product with respect to each basis
          *   over region
          */
-        void StdPrismExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                            Array<OneD, NekDouble> &outarray)
+        void StdPrismExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
-            v_IProductWRTBase(m_base[0] -> GetBdata(),
-                              m_base[1] -> GetBdata(),
-                              m_base[2] -> GetBdata(),
-                              inarray, outarray);
+            StdPrismExp::v_IProductWRTBase(m_base[0]->GetBdata(),
+                                           m_base[1]->GetBdata(),
+                                           m_base[2]->GetBdata(),
+                                           inarray,outarray,1);
         }
 
+        /** 
+         * \brief Calculate the inner product of inarray with respect to the
+         * basis B=base0*base1*base2 and put into outarray:
+         * 
+         * \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
+         * \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2} \psi_{p}^{a}
+         * (\bar \eta_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{pr}^{b} (\xi_{3k})
+         * w_i w_j w_k u(\bar \eta_{1,i} \xi_{2,j} \xi_{3,k}) J_{i,j,k}\\ & =
+         * & \sum_{i=0}^{nq_0} \psi_p^a(\bar \eta_{1,i}) \sum_{j=0}^{nq_1}
+         * \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2} \psi_{pr}^b u(\bar
+         * \eta_{1i},\xi_{2j},\xi_{3k}) J_{i,j,k} \end{array} \f$ \n
+         *  
+         * where
+         *
+         * \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1)
+         * \psi_{q}^a (\xi_2) \psi_{pr}^b (\xi_3) \f$ \n
+         * 
+         * which can be implemented as \n 
+         *  
+         * \f$f_{pr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pr}^b u(\bar
+         * \eta_{1i},\xi_{2j},\xi_{3k}) J_{i,j,k} = {\bf B_3 U} \f$ \n \f$
+         * g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j}) f_{pr}
+         * (\xi_{3k}) = {\bf B_2 F} \f$ \n \f$ (\phi_{pqr}, u)_{\delta} =
+         * \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k}) = {\bf B_1
+         * G} \f$
+         */
+        void StdPrismExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &bx,
+            const Array<OneD, const NekDouble> &by,
+            const Array<OneD, const NekDouble> &bz,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            int                                 coll_check)
+        {
+            if(m_base[0]->Collocation() && m_base[1]->Collocation())
+            {
+                MultiplyByQuadratureMetric(inarray,outarray);
+            }
+            else
+            {
+                v_IProductWRTBase_SumFac(inarray,outarray);
+            }
+        }
+
+        /**
+         * Implementation of the local matrix inner product operation.
+         */
+        void StdPrismExp::v_IProductWRTBase_MatOp(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int nq = GetTotPoints();
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+        }
+
+        void StdPrismExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> tmp(inarray.num_elements());
+            Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
+            
+            MultiplyByQuadratureMetric(inarray,tmp);
+            
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp,outarray,wsp,
+                                         true,true,true);
+        }
+        
+        void StdPrismExp::IProductWRTBase_SumFacKernel(
+            const Array<OneD, const NekDouble>& base0,
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& base2,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble> &outarray,
+                  Array<OneD,       NekDouble> &wsp,
+            bool                                doCheckCollDir0,
+            bool                                doCheckCollDir1,
+            bool                                doCheckCollDir2)
+        {
+            // Interior prism implementation based on Spen's book page
+            // 119. and 608.
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+            int order2 = m_base[2]->GetNumModes();
+            
+            int i, mode;
+            
+            //Array<OneD, NekDouble> tmp1(nquad1*nquad2*order0);
+            //Array<OneD, NekDouble> tmp2(nquad2*order0*order1);
+            
+            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 + 
+                                           nquad2*order0*order1,
+                     "Insufficient workspace size");
+            
+            Array<OneD, NekDouble> tmp0 = wsp;
+            Array<OneD, NekDouble> tmp1 = wsp + nquad1*nquad2*order0;
+            
+            // Inner product with respect to the '0' direction
+            Blas::Dgemm('T', 'N', nquad1*nquad2, order0, nquad0, 
+                        1.0, inarray.get(), nquad0,
+                             base0.get(),   nquad0,
+                        0.0, tmp0.get(),    nquad1*nquad2);
+            
+            // fix for modified basis for base singular vertex
+            
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                //base singular vertex and singular edge (1+b)/2
+                //(1+a)/2 components (makes tmp[nquad2] entry into (1+b)/2)
+                Blas::Dgemv('T', nquad0, nquad1*nquad2, 
+                            1.0, inarray.get(),      nquad0, 
+                                 base0.get()+nquad0, 1,
+                            1.0, tmp0.get(),         1);
+            }
+
+            // Inner product with respect to the '1' direction
+            Blas::Dgemm('T', 'N', nquad2*order0, order1, nquad1,
+                        1.0, tmp0.get(),  nquad1,
+                             base1.get(), nquad1,
+                        0.0, tmp1.get(),  nquad2*order0);
+
+            // Inner product with respect to the '2' direction
+            for (mode=i=0; i < order0; ++i)
+            {
+                Blas::Dgemm('T', 'N', order2-i, order1, nquad2,
+                            1.0, base2.get() + mode*nquad2,  nquad2,
+                                 tmp1.get() + i*nquad2,      nquad2*order0,
+                            0.0, outarray.get()+mode*order1, order2-i);
+                mode  += order2-i;
+            }
+        }
 
         /** 
          * \brief Inner product of \a inarray over region with respect to the
          * object's default expansion basis; output in \a outarray.
          */
         void StdPrismExp::v_IProductWRTDerivBase(
-            const int dir,
-            const Array<OneD, const NekDouble> &inarray,
-            Array<OneD, NekDouble> &outarray)
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
+            v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+        }
+
+        void StdPrismExp::v_IProductWRTDerivBase_MatOp(
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            ASSERTL0(dir >= 0 && dir <= 2, "input dir is out of range");
+            
+            int nq = GetTotPoints();
+            MatrixType mtype;
+
+            switch (dir)
+            {
+                case 0:
+                    mtype = eIProductWRTDerivBase0;
+                    break;
+                case 1:
+                    mtype = eIProductWRTDerivBase1;
+                    break;
+                case 2:
+                    mtype = eIProductWRTDerivBase2;
+                    break;
+            }
+
+            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+        }
+
+        void StdPrismExp::v_IProductWRTDerivBase_SumFac(
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            ASSERTL0(dir >= 0 && dir <= 2, "input dir is out of range");
+            
             int i;
+            int order0  = m_base[0]->GetNumModes ();
+            int order1  = m_base[1]->GetNumModes ();
             int nquad0  = m_base[0]->GetNumPoints();
             int nquad1  = m_base[1]->GetNumPoints();
             int nquad2  = m_base[2]->GetNumPoints();
@@ -757,6 +812,7 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nquad0);
             Array<OneD, NekDouble> gfac2(nquad2);
             Array<OneD, NekDouble> tmp0 (nquad0*nquad1*nquad2);
+            Array<OneD, NekDouble> wsp  (order0*nquad2*(nquad1+order1));
 
             // set up geometric factor: (1+z0)/2
             for (i = 0; i < nquad0; ++i)
@@ -779,25 +835,29 @@ namespace Nektar
                                 &inarray[0]+i*nquad0*nquad1,1,
                                 &tmp0   [0]+i*nquad0*nquad1,1);
                 }
+                MultiplyByQuadratureMetric(tmp0,tmp0);
             }
 
             switch (dir)
             {
                 case 0:
                 {
-                    v_IProductWRTBase(m_base[0]->GetDbdata(),
-                                      m_base[1]->GetBdata(),
-                                      m_base[2]->GetBdata(),
-                                      tmp0, outarray);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata (),
+                                                 m_base[2]->GetBdata (),
+                                                 tmp0,outarray,wsp,
+                                                 true,true,true);
                     break;
                 }
 
                 case 1:
                 {
-                    v_IProductWRTBase(m_base[0]->GetBdata(),
-                                      m_base[1]->GetDbdata(),
-                                      m_base[2]->GetBdata(),
-                                      inarray, outarray);
+                    MultiplyByQuadratureMetric(inarray,tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
+                                                 m_base[1]->GetDbdata(),
+                                                 m_base[2]->GetBdata (),
+                                                 tmp0,outarray,wsp,
+                                                 true,true,true);
                     break;
                 }
 
@@ -811,15 +871,18 @@ namespace Nektar
                         Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
                     }
                     
-                    v_IProductWRTBase(m_base[0]->GetDbdata(),
-                                      m_base[1]->GetBdata(),
-                                      m_base[2]->GetBdata(),
-                                      tmp0,tmp1);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp0,tmp1,wsp,
+                                                 true,true,true);
                     
-                    v_IProductWRTBase(m_base[0]->GetBdata(),
-                                      m_base[1]->GetBdata(),
-                                      m_base[2]->GetDbdata(),
-                                      inarray,outarray);
+                    MultiplyByQuadratureMetric(inarray, tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetDbdata(),
+                                                 tmp0,outarray,wsp,
+                                                 true,true,true);
 
                     Vmath::Vadd(m_ncoeffs,&tmp1[0],1,&outarray[0],1,&outarray[0],1);
                     break;
@@ -827,11 +890,20 @@ namespace Nektar
             }
         }
         
+        
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi)
+        NekDouble StdPrismExp::v_PhysEvaluate(
+            const Array<OneD, const NekDouble>& xi)
+        {
+            return StdPrismExp::v_PhysEvaluate(xi,m_phys);
+        }
+
+        NekDouble StdPrismExp::v_PhysEvaluate(
+            const Array<OneD, const NekDouble>& xi,
+            const Array<OneD, const NekDouble>& physvals)
         {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
@@ -851,9 +923,9 @@ namespace Nektar
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
             } 
 
-            return StdExpansion3D::v_PhysEvaluate(eta);
+            return StdExpansion3D::v_PhysEvaluate(eta,physvals);
         }
-
+        
  
         void StdPrismExp::v_GetCoords(Array<OneD, NekDouble>& xi_x,
                                       Array<OneD, NekDouble>& xi_y,
@@ -1148,15 +1220,19 @@ namespace Nektar
         // Mappings
         //---------------------------------------
 
-        void StdPrismExp::v_GetFaceToElementMap(const int fid,
-                                                const FaceOrientation faceOrient,
-                                                Array<OneD, unsigned int> &maparray,
-                                                Array<OneD, int>& signarray)
+
+        void StdPrismExp::v_GetFaceToElementMap(
+            const int                  fid,
+            const FaceOrientation      faceOrient,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD,          int> &signarray,
+            int                        nummodesA,
+            int                        nummodesB)
         {
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
             const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-
+            
             ASSERTL1(bType0 == bType1,
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
@@ -1165,11 +1241,37 @@ namespace Nektar
                      "Method only implemented for Modified_A BasisType"
                      "(x and y direction) and Modified_B BasisType (z direction)");
 
-            const int P = m_base[0] -> GetNumModes() - 1;
-            const int Q = m_base[1] -> GetNumModes() - 1;
-            const int R = m_base[2] -> GetNumModes() - 1;
-            int i, j, p, q, r, nFaceCoeffs = GetFaceNcoeffs(fid), idx = 0;
-            int nummodesA = 0, nummodesB = 0;
+            int i, j, p, q, r, nFaceCoeffs, idx = 0;
+
+            if (nummodesA == -1)
+            {
+                switch (fid)
+                {
+                    case 0:
+                    case 2:
+                        nummodesA = m_base[0]->GetNumModes();
+                        nummodesB = m_base[1]->GetNumModes();
+                        break;
+                    case 1:
+                    case 3:
+                        nummodesA = m_base[0]->GetNumModes();
+                        nummodesB = m_base[2]->GetNumModes();
+                        break;
+                    case 4:
+                        nummodesA = m_base[1]->GetNumModes();
+                        nummodesB = m_base[2]->GetNumModes();
+                        break;
+                }
+                nFaceCoeffs = GetFaceNcoeffs(fid);
+            }
+            else if (fid == 1 || fid == 3)
+            {
+                nFaceCoeffs = nummodesB + (nummodesA-1)*(1+2*(nummodesB-1)-(nummodesA-1))/2;
+            }
+            else
+            {
+                nFaceCoeffs = nummodesA*nummodesB;
+            }
 
             // Allocate the map array and sign array; set sign array to ones (+)
             if (maparray.num_elements() != nFaceCoeffs)
@@ -1185,24 +1287,13 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get() + nFaceCoeffs, 1);
             }
-
+            
             // Set up an array indexing for quads, since the ordering may need
             // to be transposed.
-            Array<OneD, int> arrayindx(nFaceCoeffs);
-
+            Array<OneD, int> arrayindx(nFaceCoeffs,-1);
+            
             if (fid != 1 && fid != 3) 
             {
-                if (fid == 0) // Base quad 
-                {
-                    nummodesA = P+1;
-                    nummodesB = Q+1;
-                }
-                else if (fid == 2 || fid == 4) // front and back quad
-                {
-                    nummodesA = Q+1;
-                    nummodesB = R+1;
-                }
-                
                 for (i = 0; i < nummodesB; i++)
                 {
                     for (j = 0; j < nummodesA; j++)
@@ -1218,73 +1309,71 @@ namespace Nektar
                     }
                 }
             }
-
+            
             // Set up ordering inside each 2D face. Also for triangular faces,
             // populate signarray.
             switch (fid) 
             {
                 case 0: // Bottom quad
-                    for (q = 0; q <= Q; ++q)
+                    for (q = 0; q < nummodesB; ++q)
                     {
-                        for (p = 0; p <= P; ++p)
+                        for (p = 0; p < nummodesA; ++p)
                         {
-                            maparray[arrayindx[q*nummodesA+p]] = GetMode(p, q, 0);
+                            maparray[arrayindx[q*nummodesA+p]] = GetMode(p,q,0);
                         }
                     }
                     break;
                     
                 case 1: // Left triangle
-                    for (p = 0; p <= P; ++p)
+                    for (p = 0; p < nummodesA; ++p)
                     {
-                        for (r = 0; r <= R-p; ++r)
+                        for (r = 0; r < nummodesB-p; ++r)
                         {
                             if ((int)faceOrient == 2 && p > 1)
                             {
                                 signarray[idx] = p % 2 ? -1 : 1;
                             }
-
-                            maparray[idx++] = GetMode(p, 0, r);
+                            maparray[idx++] = GetMode(p,0,r);
                         }
                     }
                     break;
 
                 case 2: // Slanted quad
-                    for (q = 0; q <= Q; ++q)
+                    for (q = 0; q < nummodesA; ++q)
                     {
-                        maparray[arrayindx[q]] = GetMode(1, q, 0);
+                        maparray[arrayindx[q]] = GetMode(1,q,0);
                     }
-                    for (q = 0; q <= Q; ++q)
+                    for (q = 0; q < nummodesA; ++q)
                     {
-                        maparray[arrayindx[nummodesA+q]] = GetMode(0, q, 1);
+                        maparray[arrayindx[nummodesA+q]] = GetMode(0,q,1);
                     }
-                    for (r = 1; r <= R-1; ++r)
+                    for (r = 1; r < nummodesB-1; ++r)
                     {
-                        for (q = 0; q <= Q; ++q) 
+                        for (q = 0; q < nummodesA; ++q) 
                         {
-                            maparray[arrayindx[(r+1)*nummodesA+q]] = GetMode(1, q, r);
+                            maparray[arrayindx[(r+1)*nummodesA+q]] = GetMode(1,q,r);
                         }
                     }
                     break;
 
                 case 3: // Right triangle
-                    for (p = 0; p <= P; ++p)
+                    for (p = 0; p < nummodesA; ++p)
                     {
-                        for (r = 0; r <= R-p; ++r)
+                        for (r = 0; r < nummodesB-p; ++r)
                         {
                             if ((int)faceOrient == 2 && p > 1)
                             {
-                                signarray[idx] = (p+1) % 2 ? -1 : 1;
+                                signarray[idx] = p % 2 ? -1 : 1;
                             }
-
                             maparray[idx++] = GetMode(p, 1, r);
                         }
                     }
                     break;
 
                 case 4: // Rear quad
-                    for (r = 0; r <= R; ++r)
+                    for (r = 0; r < nummodesB; ++r)
                     {
-                        for (q = 0; q <= Q; ++q)
+                        for (q = 0; q < nummodesA; ++q)
                         {
                             maparray[arrayindx[r*nummodesA+q]] = GetMode(0, q, r);
                         }
@@ -1301,10 +1390,10 @@ namespace Nektar
                 // direction reversed); swap edge modes.
                 if ((int)faceOrient == 2)
                 {
-                    swap(maparray[0], maparray[Q+1]);
-                    for (i = 1; i < Q; ++i)
+                    swap(maparray[0], maparray[nummodesA]);
+                    for (i = 1; i < nummodesA-1; ++i)
                     {
-                        swap(maparray[i+1], maparray[Q+1+i]);
+                        swap(maparray[i+1], maparray[nummodesA+i]);
                     }
                 }
             }
@@ -1475,7 +1564,7 @@ namespace Nektar
                     
                 case 2:
                     // Base quad; reverse direction.
-                    signChange = !signChange;
+                    //signChange = !signChange;
                     for (i = 2; i <= P; ++i)
                     {
                         maparray[i-2] = GetMode(i,1,0);
@@ -1484,7 +1573,7 @@ namespace Nektar
 
                 case 3:
                     // Base quad; reverse direction.
-                    signChange = !signChange;
+                    //signChange = !signChange;
                     for (i = 2; i <= Q; ++i)
                     {
                         maparray[i-2] = GetMode(0,i,0);
@@ -1719,6 +1808,8 @@ namespace Nektar
             }
         }
         
+
+
         void StdPrismExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||

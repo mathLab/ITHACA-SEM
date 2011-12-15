@@ -1107,17 +1107,18 @@ namespace Nektar
         /**
          * Only for basis type Modified_A in all directions.
          */
-        void StdHexExp::v_GetFaceToElementMap(const int fid,
-                                const FaceOrientation faceOrient,
-                                Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int>& signarray)
+        void StdHexExp::v_GetFaceToElementMap(
+            const int                  fid,
+            const FaceOrientation      faceOrient,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD,          int> &signarray,
+            int                        nummodesA,
+            int                        nummodesB)
         {
             int i,j;
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
-            int nummodesA;
-            int nummodesB;
 
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
@@ -1129,21 +1130,26 @@ namespace Nektar
             ASSERTL1( bType0==LibUtilities::eModified_A,
                       "Method only implemented for Modified_A BasisType");
 
-
-            if((fid == 0) || (fid == 5))
+            if (nummodesA == -1)
             {
-                nummodesA = nummodes0;
-                nummodesB = nummodes1;
-            }
-            else if((fid == 1) || (fid == 3))
-            {
-                nummodesA = nummodes0;
-                nummodesB = nummodes2;
-            }
-            else
-            {
-                nummodesA = nummodes1;
-                nummodesB = nummodes2;
+                switch(fid)
+                {
+                    case 0:
+                    case 5:
+                        nummodesA = nummodes0;
+                        nummodesB = nummodes1;
+                        break;
+                    case 1:
+                    case 3:
+                        nummodesA = nummodes0;
+                        nummodesB = nummodes2;
+                        break;
+                    case 2:
+                    case 4:
+                        nummodesA = nummodes1;
+                        nummodesB = nummodes2;
+                        break;
+                }
             }
 
             int nFaceCoeffs = nummodesA*nummodesB;

@@ -206,7 +206,7 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
-			void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
  

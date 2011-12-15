@@ -658,7 +658,6 @@ namespace Nektar
                             {
                                 const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
                                 LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
-                                cout << "bkey " << b << ": " <<bkey;
                                 bkeyvec.push_back(bkey);
                             }
 
@@ -1554,6 +1553,7 @@ namespace Nektar
                     // Make sure we only have one instance of the
                     // GeometrySharedPtr stored in the list.
                     ExpansionMap::iterator elemIter;
+
                     for (elemIter = returnval->begin(); elemIter != returnval->end(); ++elemIter)
                     {
                         if (elemIter->second->m_geomShPtr == *geomIter)

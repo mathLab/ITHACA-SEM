@@ -941,9 +941,11 @@ namespace Nektar
 
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int> &signarray)
+                                     Array<OneD, int> &signarray,
+                                     int nummodesA = -1, int nummodesB = -1)
             {
-                v_GetFaceToElementMap(fid,faceOrient,maparray,signarray);
+                v_GetFaceToElementMap(fid,faceOrient,maparray,signarray,
+                                      nummodesA,nummodesB);
             }
 
             void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
@@ -1629,7 +1631,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray);
+                                               Array<OneD, int> &signarray,
+                                               int nummodesA = -1, int nummodesB = -1);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 

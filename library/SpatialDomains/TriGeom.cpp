@@ -36,6 +36,8 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/TriGeom.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -88,15 +90,16 @@ namespace Nektar
             m_coordim = verts[0]->GetCoordim();
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
+
             int order0  = edges[0]->GetBasis(0,0)->GetNumModes();
             int points0 = edges[0]->GetBasis(0,0)->GetNumPoints();
-
-            int order1  = max(order0,max(edges[1]->GetBasis(0,0)->GetNumModes(),
+            int order1  = max(order0,
+                              max(edges[1]->GetBasis(0,0)->GetNumModes(),
                                   edges[2]->GetBasis(0,0)->GetNumModes()));
             int points1 = max(points0,
                               max(edges[1]->GetBasis(0,0)->GetNumPoints(),
                                   edges[2]->GetBasis(0,0)->GetNumPoints()));
-
+            
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
                                             LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
@@ -143,7 +146,6 @@ namespace Nektar
 
             int order0  = edges[0]->GetBasis(0,0)->GetNumModes();
             int points0 = edges[0]->GetBasis(0,0)->GetNumPoints();
-
             int order1  = max(order0,
                               max(edges[1]->GetBasis(0,0)->GetNumModes(),
                                   edges[2]->GetBasis(0,0)->GetNumModes()));
@@ -151,6 +153,7 @@ namespace Nektar
                               max(edges[1]->GetBasis(0,0)->GetNumPoints(),
                                   edges[2]->GetBasis(0,0)->GetNumPoints()));
 
+            
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
                                             LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
@@ -164,6 +167,152 @@ namespace Nektar
                 m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             }
         }
+
+        TriGeom::TriGeom(const int id,
+                         const SegGeomSharedPtr edges[],
+                         const StdRegions::EdgeOrientation eorient[],
+                         const CurveSharedPtr &curve) :
+            Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
+            m_fid(id)
+        {
+            ASSERTL0(false, "2D triangle face nodes not working yet.");
+            m_geomShapeType = eTriangle;
+
+            /// Copy the edge shared pointers.
+            m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
+
+            for(int j=0; j <kNedges; ++j)
+            {
+                if(eorient[j] == StdRegions::eForwards)
+                {
+                    m_verts.push_back(edges[j]->GetVertex(0));
+                }
+                else
+                {
+                    m_verts.push_back(edges[j]->GetVertex(1));
+                }
+            }
+
+            for (int j=0; j<kNedges; ++j)
+            {
+                m_eorient[j] = eorient[j];
+            }
+
+            m_coordim = edges[0]->GetVertex(0)->GetCoordim();
+            ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
+
+            int order0  = edges[0]->GetBasis(0,0)->GetNumModes();
+            int points0 = edges[0]->GetBasis(0,0)->GetNumPoints();
+            int order1  = max(order0,
+                              max(edges[1]->GetBasis(0,0)->GetNumModes(),
+                                  edges[2]->GetBasis(0,0)->GetNumModes()));
+            int points1 = max(points0,
+                              max(edges[1]->GetBasis(0,0)->GetNumPoints(),
+                                  edges[2]->GetBasis(0,0)->GetNumPoints()));
+
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
+                                            LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
+                                            LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+                
+                int pdim = LibUtilities::PointsManager()[LibUtilities::PointsKey(2, curve->m_ptype)]->GetPointsDim();
+                
+                // Deal with 2D points type separately (e.g. electrostatic or
+                // Fekete points).
+                if (pdim == 2)
+                {
+                    int N = curve->m_points.size();
+                    int nEdgePts = (-1+(int)sqrt(8*N+1))/2;
+                    
+                    ASSERTL0(nEdgePts*(nEdgePts+1)/2 == N,
+                             "NUMPOINTS must be a triangle number for 2D basis.");
+                    
+                    for (int j = 0; j < kNedges; ++j)
+                    {
+                        ASSERTL0(edges[j]->GetXmap(i)->GetNcoeffs() == nEdgePts,
+                                 "Number of edge points does not correspond "
+                                 "to number of face points.");
+                    }
+
+                    // Create a StdNodalTriExp.
+                    const LibUtilities::PointsKey P0(
+                        nEdgePts, LibUtilities::eGaussLobattoLegendre);
+                    const LibUtilities::PointsKey P1(
+                        nEdgePts, LibUtilities::eGaussRadauMAlpha1Beta0);
+                    const LibUtilities::BasisKey  T0(
+                        LibUtilities::eOrtho_A, nEdgePts, P0);
+                    const LibUtilities::BasisKey  T1(
+                        LibUtilities::eOrtho_B, nEdgePts, P1);
+                    
+                    StdRegions::StdNodalTriExpSharedPtr t = 
+                        MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(T0,T1,curve->m_ptype);
+                    
+                    Array<OneD, NekDouble> x;
+                    Array<OneD, NekDouble> y;
+
+                    t->GetNodalPoints(x,y);
+                    
+                    for (int j = 0; j < x.num_elements(); ++j)
+                    {
+                        cout << x[j] << " " << y[j] << endl;
+                    }
+                    cout << endl;
+                    
+                    for (int j = 0; j < N; ++j)
+                    {
+                        cout << curve->m_points[j]->GetPtr()[0] << " "
+                             << curve->m_points[j]->GetPtr()[1] << endl;
+                    }
+                    
+
+                    Array<OneD, NekDouble> tmp1(N);
+                    
+                    for (int j = 0; j < N; ++j)
+                    {
+                        t->UpdatePhys()[j] = (curve->m_points[j]->GetPtr())[i];
+                    }
+                    
+                    Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts, -10);
+                    t->NodalToModal();
+                    //t->NodalModalInterp(tmp1, tmp);
+
+                    cout << "numels: " << t->GetPhys().num_elements() << endl;
+                    
+                    // Forward transform coordinate data, convert nodal->modal
+                    // and backwards transform.
+                    //Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
+
+                    for (int j = 0; j < tmp.num_elements(); ++j)
+                    {
+                        cout << tmp[j] << endl;
+                    }
+                    cout << endl;
+
+                    // Interpolate points to standard region.
+                    LibUtilities::Interp2D(P0, P1, tmp,
+                                           B0.GetPointsKey(),B1.GetPointsKey(),
+                                           m_xmap[i]->UpdatePhys());
+
+                    /*
+                    for (int j = 0; j < tmp.num_elements(); ++j)
+                    {
+                        cout << m_xmap[i]->GetPhys()[j] << endl;
+                    }
+                    cout << endl;
+                    */
+                    
+                    // Forwards transform to get coefficient space.
+                    m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(), m_xmap[i]->UpdateCoeffs());
+                }
+            }
+        }
+
 
         TriGeom::TriGeom(const TriGeom &in)
         {

@@ -85,116 +85,134 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdPrismExp();
 
-
+            
             //---------------------------------------
-            // Integration/public 3D methods
+            // Miscellaneous public 3D function
+            //---------------------------------------
+            STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
+
+        protected:
+            //---------------------------------------
+            // Integration Methods
             //---------------------------------------
             STD_REGIONS_EXPORT void TripleTensorProduct(
                 const Array<OneD, const NekDouble>& fx, 
                 const Array<OneD, const NekDouble>& gy, 
                 const Array<OneD, const NekDouble>& hz, 
                 const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> & outarray);
-
+                      Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
                 const Array<OneD, const NekDouble>& fxyz,
                 const Array<OneD, const NekDouble>& wx,
                 const Array<OneD, const NekDouble>& wy,
                 const Array<OneD, const NekDouble>& wz);
-
             STD_REGIONS_EXPORT NekDouble Integral3D(
                 const Array<OneD, const NekDouble>& inarray,
                 const Array<OneD, const NekDouble>& wx,
                 const Array<OneD, const NekDouble>& wy,
                 const Array<OneD, const NekDouble>& wz);
+            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
+                const Array<OneD, const NekDouble>& inarray);
+            
 
-            STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
-
-        protected:
             //---------------------------------------
-            // Differentiation/integration Methods
+            // Differentiation Methods
             //---------------------------------------
-
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2);
-
+                      Array<OneD,       NekDouble> &out_d0,
+                      Array<OneD,       NekDouble> &out_d1,
+                      Array<OneD,       NekDouble> &out_d2);
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
                 const int dir,
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble>& outarray);
-
+                      Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2);
-
-            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
-                const Array<OneD, const NekDouble>& inarray);
+                      Array<OneD,       NekDouble>& out_d0,
+                      Array<OneD,       NekDouble>& out_d1,
+                      Array<OneD,       NekDouble>& out_d2);
 
 
             //---------------------------------------
             // Transforms
             //---------------------------------------
-
             STD_REGIONS_EXPORT virtual void v_BwdTrans(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void v_BwdTrans_SumFac(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
                 const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble>& outarray);
-
-            STD_REGIONS_EXPORT void v_BwdTrans_SumFacKernel(
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT void BwdTrans_SumFacKernel(
                 const Array<OneD, const NekDouble> &base0,
                 const Array<OneD, const NekDouble> &base1,
                 const Array<OneD, const NekDouble> &base2,
                 const Array<OneD, const NekDouble> &inarray,
-                Array<OneD, NekDouble>             &outarray,
-                Array<OneD, NekDouble>             &wsp,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp,
                 bool                                doCheckCollDir0,
                 bool                                doCheckCollDir1,
                 bool                                doCheckCollDir2);
-
             STD_REGIONS_EXPORT virtual void v_FwdTrans(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray);
 
 
             //---------------------------------------
             // Inner product functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble>& bx, 
                 const Array<OneD, const NekDouble>& by, 
                 const Array<OneD, const NekDouble>& bz, 
                 const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> & outarray); 
-
-            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                      Array<OneD,       NekDouble>& outarray,
+                int                                 coll_check);
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray);
-
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp,
+                bool                                doCheckCollDir0,
+                bool                                doCheckCollDir1,
+                bool                                doCheckCollDir2);
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> & outarray); 
-
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_MatOp(
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            
 
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& xi);
-
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+                const Array<OneD, const NekDouble>& Lcoords,
+                const Array<OneD, const NekDouble>& physvals);
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> & xi_x, 
                 Array<OneD, NekDouble> & xi_y, 
                 Array<OneD, NekDouble> & xi_z);
-
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
@@ -227,10 +245,12 @@ namespace Nektar
             // Mappings
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
-                const int fid,
-                const FaceOrientation faceOrient,
+                const int                  fid,
+                const FaceOrientation      faceOrient,
                 Array<OneD, unsigned int> &maparray,
-                Array<OneD, int>& signarray);
+                Array<OneD,          int> &signarray,
+                int                        nummodesA = -1,
+                int                        nummodesB = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId);
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
                 const int eid,
@@ -251,9 +271,11 @@ namespace Nektar
             //---------------------------------------
             // Wrapper functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
-            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey);
-
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(
+                const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
+                const StdMatrixKey &mkey);
+            
 
         private:
             //---------------------------------------
@@ -262,7 +284,7 @@ namespace Nektar
             STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
             STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray);
+                      Array<OneD,       NekDouble>& outarray);
         };
 
         typedef boost::shared_ptr<StdPrismExp> StdPrismExpSharedPtr;

@@ -63,21 +63,52 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
-            int order0  = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumModes();
-            int points0 = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumPoints();
-            int order1  = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
-            int points1 = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
-            int order2  = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
-            int points2 = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+            /// Determine necessary order for standard region.
+            vector<int> tmp;
+
+            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
+            int order0 = *max_element(tmp.begin(), tmp.end());
+
+            tmp.clear();
+            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
+            int points0 = *max_element(tmp.begin(), tmp.end());
+
+            tmp.clear();
+            tmp.push_back(order0);
+            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
+            int order1 = *max_element(tmp.begin(), tmp.end());
+
+            tmp.clear();
+            tmp.push_back(points0);
+            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
+            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+            int points1 = *max_element(tmp.begin(), tmp.end());
+
+            tmp.clear();
+            tmp.push_back(order0);
+            tmp.push_back(order1);
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(2));
+            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs(1));
+            int order2 = *max_element(tmp.begin(), tmp.end());
+
+            tmp.clear();
+            tmp.push_back(points0);
+            tmp.push_back(points1);
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(1));
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
+            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(1));
+            int points2 = *max_element(tmp.begin(), tmp.end());
 
             // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
             //PointsKey (const int &numpoints, const PointsType &pointstype)
             const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B(LibUtilities::eModified_B, order1,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+                                           LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
             const LibUtilities::BasisKey C(LibUtilities::eModified_C, order2,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
+                                           LibUtilities::PointsKey(points2,LibUtilities::eGaussRadauMAlpha2Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
@@ -646,17 +677,19 @@ namespace Nektar
             if(m_state != ePtsFilled)
             {
                 int i,j,k;
-                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0);
-
-                Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-                Array<OneD, int>    signArray(nFaceCoeffs);
 
                 for(i = 0; i < kNfaces; i++)
                 {
+                    int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();;
+                    Array<OneD, unsigned int> mapArray (nFaceCoeffs);
+                    Array<OneD,          int> signArray(nFaceCoeffs);
+                    
                     m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
-                    nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
-                    for(j = 0 ; j < m_coordim; j++)
+                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
+                                                   m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
+                                                   m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
+                    
+                    for(j = 0; j < m_coordim; j++)
                     {
                     	const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
                         for(k = 0; k < nFaceCoeffs; k++)

@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
+        
         PrismGeom::PrismGeom()
         {
             m_geomShapeType = ePrism;
@@ -60,21 +60,91 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
-            int order0  = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumModes();
-            int points0 = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumPoints();
-            int order1  = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
-            int points1 = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
-            int order2  = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
-            int points2 = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+            /// Determine necessary order for standard region.
+            vector<int> tmp;
 
-            // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
-            //PointsKey (const int &numpoints, const PointsType &pointstype)
+            int order0, points0, order1, points1;
+            
+            if (m_forient[0] < 4)
+            {
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
+                order0 = *max_element(tmp.begin(), tmp.end());
+
+                tmp.clear();
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                points0 = *max_element(tmp.begin(), tmp.end());
+            }
+            else
+            {
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(3));
+                order0 = *max_element(tmp.begin(), tmp.end());
+
+                tmp.clear();
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                points0 = *max_element(tmp.begin(), tmp.end());
+            }
+            
+            if (m_forient[0] < 4)
+            {
+                tmp.clear();
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(3));
+                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNcoeffs(2));
+                order1 = *max_element(tmp.begin(), tmp.end());
+                
+                tmp.clear();
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNumPoints(2));
+                points1 = *max_element(tmp.begin(), tmp.end());
+            }
+            else
+            {
+                tmp.clear();
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
+                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNcoeffs(2));
+                order1 = *max_element(tmp.begin(), tmp.end());
+                
+                tmp.clear();
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
+                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNumPoints(2));
+                points1 = *max_element(tmp.begin(), tmp.end());
+            }
+            
+            tmp.clear();
+            tmp.push_back(order0);
+            tmp.push_back(order1);
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(2));
+            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs(2));
+            int order2 = *max_element(tmp.begin(), tmp.end());
+            
+            tmp.clear();
+            tmp.push_back(points0);
+            tmp.push_back(points1);
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(1));
+            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
+            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(1));
+            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(2));
+            tmp.push_back(faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints());
+            tmp.push_back(faces[1]->GetEdge(2)->GetBasis(0,0)->GetNumPoints());
+            tmp.push_back(faces[3]->GetEdge(1)->GetBasis(0,0)->GetNumPoints());
+            tmp.push_back(faces[3]->GetEdge(2)->GetBasis(0,0)->GetNumPoints());
+            int points2 = *max_element(tmp.begin(), tmp.end());
+            
             const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, order1,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey C(LibUtilities::eModified_B, order2,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
+                                           LibUtilities::PointsKey(points2,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
@@ -367,8 +437,8 @@ namespace Nektar
             const unsigned int edgeVerts[kNedges][2] =
                 { {0,1} ,
                   {1,2} ,
-                  {2,3} ,
-                  {3,0} ,
+                  {3,2} ,
+                  {0,3} ,
                   {0,4} ,
                   {1,4} ,
                   {2,5} ,
@@ -654,7 +724,7 @@ namespace Nektar
         {
             GeomType Gtype = eRegular;
             GeomShapeType GSType = eQuadrilateral;
-
+            
             FillGeom();
 
             // check to see if expansions are linear
@@ -667,7 +737,6 @@ namespace Nektar
                     Gtype = eDeformed;
                 }
             }
-
             // check to see if all necessary angles are 90 degrees
 //             if(Gtype == eRegular){
 //
@@ -724,13 +793,25 @@ namespace Nektar
                 for(i = 0; i < kNfaces; i++)
                 {
                     m_faces[i]->FillGeom();
-                    int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
+                    
+                    int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
                     Array<OneD, unsigned int> mapArray (nFaceCoeffs,1);
                     Array<OneD, int>          signArray(nFaceCoeffs,1);
                     
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
-
-                    for(j = 0 ; j < m_coordim; j++)
+                    if (m_forient[i] < 4)
+                    {
+                        m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
+                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
+                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
+                    }
+                    else
+                    {
+                        m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
+                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1),
+                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0));
+                    }
+                    
+                    for(j = 0; j < m_coordim; j++)
                     {
                     	const Array<OneD, const NekDouble> &coeffs = (*m_faces[i])[j]->GetCoeffs();
                         for(k = 0; k < nFaceCoeffs; k++)

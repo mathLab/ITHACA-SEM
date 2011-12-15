@@ -275,10 +275,12 @@ namespace Nektar
             // Mappings
             //--------------------------
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
-                    const int fid,
-                    const FaceOrientation faceOrient,
+                    const int                  fid,
+                    const FaceOrientation      faceOrient,
                     Array<OneD, unsigned int> &maparray,
-                    Array<OneD, int>& signarray);
+                    Array<OneD,          int> &signarray,
+                    int                        nummodesA = -1,
+                    int                        nummodesB = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId);
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
                     const EdgeOrientation edgeOrient,

@@ -61,6 +61,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT TriGeom(int id, const int coordim);
                 SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[], const CurveSharedPtr &curve);
                 SPATIAL_DOMAINS_EXPORT TriGeom(const TriGeom &in);
                 SPATIAL_DOMAINS_EXPORT ~TriGeom();
 

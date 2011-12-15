@@ -82,8 +82,9 @@ namespace Nektar
 		}
 		
 		//filling the correction function array
-		dgL = Array<OneD,double>(nq/ne+2);
-		dgR = Array<OneD,double>(nq/ne+2);
+		GFtype = vSession->GetSolverInfo("Gfunctions");
+		dgL = Array<OneD,double>(nq/ne);
+		dgR = Array<OneD,double>(nq/ne);
 		GFunctionsGrad(dgL,dgR);
 		
 		// Loading from the session file the functions describing the advection term,
@@ -145,42 +146,38 @@ namespace Nektar
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// switching to Peter nomenclature where inarray = Ud
 		
-		Array<OneD,double> gradUd(nq,0.0);
 		Array<OneD,double> fd(nq,0.0);
+		Array<OneD,double> gradfd(nq,0.0);
+		
 		Array<OneD,double> udi(2*ni-2,0.0);
 		Array<OneD,double> fdi(2*ni-2,0.0);
 		Array<OneD,double> fi(ni,0.0);
 		
 		Array<OneD,double> tmp1,tmp2;
 		
-		// Taking the gradient of gradUd = dUd/dx elemetally
-		//for(int i=0; i<ne; i++)
-		//{
-		//	Domain->GetExp(i)->PhysDeriv(tmp1 = inarray[0]+i*nq/ne, tmp2 = gradUd+i*nq/ne);
-		//}
-		
-		// Taking the gradient of gradUd = dUd/dx
-		Domain->PhysDeriv(inarray[0],gradUd);
-		
+		// recalculating the advection coefficient a in case is time-dependent
 		for(int i = 0; i < nq; ++i)
 		{
 			Adv[0][i] = AdveFunc->Evaluate(x[i],y[i],z[i],time);
 		}
 		
-		//calculating the discontinous flux fd = Adv*gradUd
-		Vmath::Vmul(nq,Adv[0],1,gradUd,1,fd,1);
+		//calculating the discontinous flux fd = Adv*Ud
+		Vmath::Vmul(nq,Adv[0],1,inarray[0],1,fd,1);
 		
-		//calculate the value of the fd at the interface points
+		// Taking the gradient of gradfd = dfd/dx
+		Domain->PhysDeriv(fd,gradfd);
+		
+		//calculate the value of the fd at the interface points ==> fdi
 		InterpToInterface(fd,fdi);
 		
-		//calculate the value of the ud at the interface points
+		//calculate the value of ud at the interface points ==> udi
 		InterpToInterface(inarray[0],udi);
 		
 		//calculate the interface fluxes fi
 		ReimannSolver(udi,fi);
 		
-		//calculate correction fluxes
-		FluxesReconstruction(fd,fdi,fi,outarray[0]);
+		//calculate correction final flux gradient df/dx and putting it into the output vector ==> outarray
+		FluxesReconstruction(gradfd,fdi,fi,outarray[0]);
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void Advection1DFR::Projection(const Array<OneD, Array<OneD, double> > & inarray,
@@ -245,8 +242,8 @@ namespace Nektar
 
 		for(int i = 0; i < ne; i++)
 		{
-			Vmath::Smul(nq/ne,jL[i],tmp = dgL + 1,1,tmpDGL,1);
-			Vmath::Smul(nq/ne,jR[i],tmp = dgR+1,1,tmpDGR,1);
+			Vmath::Smul(nq/ne,jL[i],tmp = dgL,1,tmpDGL,1);
+			Vmath::Smul(nq/ne,jR[i],tmp = dgR,1,tmpDGR,1);
 			Vmath::Vadd(nq/ne,tmp = fd+i*nq/ne,1,tmpDGL,1,tmparray = outarray +i*nq/ne,1);
 			Vmath::Vadd(nq/ne,tmparray = outarray +i*nq/ne,1,tmpDGR,1,tmparray = outarray +i*nq/ne,1);
 		}
@@ -255,118 +252,50 @@ namespace Nektar
 	void Advection1DFR::GFunctionsGrad(Array<OneD, double> & dGL,
 									   Array<OneD, double> & dGR)
 	{	
-		int np = nq/ne; // number of points per element
+		LibUtilities::BasisSharedPtr Basis;
 		
-		int k = np-1;  // expansion order
+		Basis = Domain->GetExp(0)->GetBasis(0);
 		
-		double sign = pow(-1.0,double(k));
+		int k  = Basis->GetNumModes();
+		int np = Basis->GetNumPoints();
 		
 		Array<OneD,double> zeros(np,0.0);
-		Array<OneD,double> dump(np,0.0);
-		//Gauss points
-		Polylib::zwgj(&zeros[0],&dump[0],np,0.0,0.0);
 		
-		// adding the ends point z = -1 & +1
-		Array<OneD,double> points(np+2,0.0);
+		zeros = Basis->GetZ();
 		
-		points[0] = -1.0;
-		points[np+1] = 1.0;
+		double sign = pow(-1.0,double(k));
+		double etak;
 		
-		for(int i=1; i<np+1; i++)
-		{
-			points[i] = zeros[i-1]; 
-		}
+		if(GFtype == "DG"){ etak = 0.0; }
+		else if(GFtype == "SD"){ etak = k/(1.0+k); }
+		else if(GFtype == "HU"){ etak = (1.0+k)/k; }
+		else {ASSERTL0(false,"options for the g functions are DG, SD and HU");}
 		
-		Array<OneD,double> Lk(np+2,0.0);
-		Array<OneD,double> dLk(np+2,0.0);
-		Array<OneD,double> Lk1(np+2,0.0);
-		Array<OneD,double> dLk1(np+2,0.0);
-
-		Array<OneD,double> GL(np+2,0.0);
-		Array<OneD,double> GR(np+2,0.0);
+		double overeta = 1.0/(1.0+etak);
+						
+		Array<OneD,double> Lk(np,0.0);
+		Array<OneD,double> dLk(np,0.0);
+		Array<OneD,double> Lkp1(np,0.0);
+		Array<OneD,double> dLkp1(np,0.0);
+		Array<OneD,double> Lkm1(np,0.0);
+		Array<OneD,double> dLkm1(np,0.0);
 		
-		Polylib::jacobfd(np+2,&(points[0]),&(Lk[0]),&(dLk[0]),k,0.0,0.0);
-		Polylib::jacobfd(np+2,&(points[0]),&(Lk1[0]),&(dLk1[0]),k+1,0.0,0.0);
-		
-		Vmath::Vsub(np+2,Lk,1,Lk1,1,GL,1);
-		Vmath::Smul(np+2,0.5*sign,GL,1,GL,1);
-		
-		Vmath::Vadd(np+2,Lk,1,Lk1,1,GR,1);
-		Vmath::Smul(np+2,0.5,GR,1,GR,1);
-		
-		Vmath::Vsub(np+2,dLk,1,dLk1,1,dGL,1);
-		Vmath::Smul(np+2,0.5*sign,dGL,1,dGL,1);
-		
-		Vmath::Vadd(np+2,dLk,1,dLk1,1,dGR,1);
-		Vmath::Smul(np+2,0.5,dGR,1,dGR,1);
-		//-------------------------------------------------------------------------------
-		// Plot gL and gR
-		
-		// Plotting G functions
-		int numpoints = 1000;
-		
-		Array<OneD,double> Lkplot(numpoints,0.0);
-		Array<OneD,double> dLkplot(numpoints,0.0);
-		
-		Array<OneD,double> Lk1plot(numpoints,0.0);
-		Array<OneD,double> dLk1plot(numpoints,0.0);
-		
-		Array<OneD,double> GLplot(numpoints,0.0);
-		Array<OneD,double> GRplot(numpoints,0.0);
-		
-		double dx = 2.0/(numpoints-1);
-		
-		Array<OneD,double> plot(numpoints,0.0);
-		plot[0] = -1.0;
-		for(int i=1; i< numpoints; i++)
-		{
-			plot[i] = plot[i-1] + dx; 
-		}
-		
-		
-		Polylib::jacobfd(numpoints,&(plot[0]),&(Lkplot[0]),&(dLkplot[0]),k,0.0,0.0);
-		Polylib::jacobfd(numpoints,&(plot[0]),&(Lk1plot[0]),&(dLk1plot[0]),k+1,0.0,0.0);
-		
-		Vmath::Vsub(numpoints,Lkplot,1,Lk1plot,1,GLplot,1);
-		Vmath::Smul(numpoints,0.5*sign,GLplot,1,GLplot,1);
-		
-		Vmath::Vadd(numpoints,Lkplot,1,Lk1plot,1,GRplot,1);
-		Vmath::Smul(numpoints,0.5,GRplot,1,GRplot,1);
-			
-		ofstream outfile1;
-		outfile1.open("GLGR.dat");
-		for(int i=0; i < numpoints; i++)
-		{
-			outfile1 << scientific
-			<< setw (17) 
-			<< setprecision(10) 
-			<< plot[i]
-			<< "  " 
-			<< GLplot[i] 
-			<< "  " 
-			<< GRplot[i]
-			<< endl;
-		}
-		outfile1 << endl << endl;
-		outfile1.close();
-		ofstream outfile2;
-		outfile2.open("PlotGfunc.p");
-		outfile2 << "# Gnuplot script file" << endl;
-		outfile2 << "set   autoscale" << endl;                       
-		outfile2 << "unset log" << endl;                           
-		outfile2 << "unset label" << endl;                          
-		outfile2 << "set xtic auto" << endl;                    
-		outfile2 << "set ytic auto" << endl;                        
-		outfile2 << "set xlabel \"x\"" << endl;
-		outfile2 << "set ylabel \"g\"" << endl;
-		outfile2 << "plot    \"GLGR.dat\" ";
-		outfile2 << "using 1:2 index 0 ";
-		outfile2 << " title 'gL' with linespoints lt 3, ";
-		outfile2 << "\"GLGR.dat\" ";
-		outfile2 << "using 1:3 index 0 ";
-		outfile2 << " title 'gR' with linespoints lt 1" << endl;
-		outfile2.close();
-		
+		Polylib::jacobfd(np,&(zeros[0]),&(Lk[0]),&(dLk[0]),k,0.0,0.0);
+		Polylib::jacobfd(np,&(zeros[0]),&(Lkm1[0]),&(dLkm1[0]),k-1,0.0,0.0);
+		Polylib::jacobfd(np,&(zeros[0]),&(Lkp1[0]),&(dLkp1[0]),k+1,0.0,0.0);
+	
+		//dgL
+		Vmath::Smul(np,etak,dLkm1,1,dGL,1);
+		Vmath::Vadd(np,dGL,1,dLkp1,1,dGL,1);
+		Vmath::Smul(np,overeta,dGL,1,dGL,1);
+		Vmath::Vsub(np,dLk,1,dGL,1,dGL,1);
+		Vmath::Smul(np,0.5*sign,dGL,1,dGL,1);
+		//dgR
+		Vmath::Smul(np,etak,dLkm1,1,dGR,1);
+		Vmath::Vadd(np,dGR,1,dLkp1,1,dGR,1);
+		Vmath::Smul(np,overeta,dGR,1,dGR,1);
+		Vmath::Vadd(np,dLk,1,dGR,1,dGR,1);
+		Vmath::Smul(np,0.5,dGR,1,dGR,1);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////

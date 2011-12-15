@@ -38,7 +38,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
-#include <fstream>
 #include <iomanip>
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>

@@ -232,8 +232,6 @@ namespace Nektar
 
 
     template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekDouble, StandardMatrixTag>, ScaledMatrixTag>;
-    template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>;
-    //template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekDouble, NekMatrix< NekDouble, StandardMatrixTag> >, ScaledMatrixTag>::const_iterator;
 
     template
     LIB_UTILITIES_EXPORT NekMatrix< NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>

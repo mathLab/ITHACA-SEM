@@ -828,8 +828,6 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT NekMatrix<NekDouble, StandardMatrixTag> Transpose(NekMatrix<NekDouble, StandardMatrixTag>& rhs);
 
     template LIB_UTILITIES_EXPORT class NekMatrix<NekDouble, StandardMatrixTag>;
-    template LIB_UTILITIES_EXPORT class NekMatrix<NekDouble, StandardMatrixTag>;
-
 
 //    template<typename DataType>
 //    template<typename T, typename MatrixType>

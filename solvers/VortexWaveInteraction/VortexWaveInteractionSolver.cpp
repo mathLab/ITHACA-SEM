@@ -40,6 +40,11 @@ using namespace Nektar;
 
 #include<VortexWaveInteraction/VortexWaveInteraction.h>
 
+#if defined(_MSC_VER) && BOOST_VERSION > 104700
+#include <windows.h>
+#undef MoveFile
+#endif
+
 void DoFixedForcingIteration(VortexWaveInteraction &vwi);
 void Mvdir(string dir, NekDouble dir_ending);
 
@@ -69,15 +74,27 @@ int main(int argc, char *argv[])
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
             {
                 Mvdir("Save",WaveForce);
-	        sleep(10);
+                #ifdef _MSC_VER
+                Sleep(10000);
+                #else
+                sleep(10);
+                #endif
             }
             else
             {
                 Mvdir("Save_Outer",WaveForce);
-	        sleep(10);
-	        // Execute Another loop so that not same initial conditions as last iteration
-	        vwi.ExecuteLoop();
+                #ifdef _MSC_VER
+                Sleep(10000);
+                #else
                 sleep(10);
+                #endif
+                // Execute Another loop so that not same initial conditions as last iteration
+                vwi.ExecuteLoop();
+                #ifdef _MSC_VER
+                Sleep(10000);
+                #else
+                sleep(10);
+                #endif
             }
 
         }
@@ -120,7 +137,11 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
         for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
         {
             vwi.ExecuteLoop();
+            #ifdef _MSC_VER
+            Sleep(10000);
+            #else
             sleep(10);
+            #endif
             vwi.SaveLoopDetails("Save",i);
             vwi.AppendEvlToFile("conv.his",i);            
         }
@@ -136,7 +157,11 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
                 {
                     vwi.ExecuteLoop();
+                    #ifdef _MSC_VER
+                    Sleep(10000);
+                    #else
                     sleep(10);
+                    #endif
                     vwi.SaveLoopDetails("Save", i);
                     vwi.AppendEvlToFile("conv.his",i);            
                         
@@ -166,7 +191,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
-                    exit_iteration == true;
+                    exit_iteration = true;
                 }
             }
         }
@@ -182,7 +207,11 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 bool exit_alphaIter = false;
                 
                 vwi.ExecuteLoop(false);
+                #ifdef _MSC_VER
+                Sleep(10000);
+                #else
                 sleep(10);
+                #endif
 
                 // Sub iterate Alpha
                 for(i = 0; i < vwi.GetIterEnd(); ++i)
@@ -200,7 +229,11 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     else
                     {
                         vwi.CalcNonLinearWaveForce();
+                        #ifdef _MSC_VER
+                        Sleep(10000);
+                        #else
                         sleep(10);
+                        #endif
                         break;
                     }
                 }

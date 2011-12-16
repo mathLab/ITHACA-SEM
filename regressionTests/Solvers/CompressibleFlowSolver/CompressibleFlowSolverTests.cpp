@@ -112,8 +112,8 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/CompressibleFlowSolver/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + filePath.string() + "xml .";
-	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.string() + "rst .";
+    std::string syscommand = std::string(COPY_COMMAND) + PortablePath(filePath) + "xml .";
+	std::string syscommand2 = std::string(COPY_COMMAND) + PortablePath(filePath) + "rst .";
 
 	int status = system(syscommand.c_str());
     if(status)
@@ -124,15 +124,15 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
     //Restart files just needed for the Cylinder Flow so far
     if(input=="Test_CylinderSubsonic_m3." || input=="Test_CylinderSubsonic_m8." || input=="Test_CylinderSubsonicMix." || input=="Test_RinglebFlow_m3." || input=="Test_RinglebFlow_m8.")
-      {
-	int status2 = system(syscommand2.c_str());
-    	if(status2)
-	  {
+    {
+        int status2 = system(syscommand2.c_str());
+        if(status2)
+        {
 	    std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-	    exit(2);
-	  }
+            exit(2);
+        }
 
-      }
+    }
 
     input = input+"xml";
 
@@ -158,7 +158,8 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
         {
             // print nothing
         }
-        else {
+        else 
+        {
             std::cout << "\rPASSED: " << Demo << " (" << info << ")" << std::endl;
         }
         tests_passed++;
@@ -184,8 +185,8 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
     // Copy input file to current location
 	input.erase(input.end()-3,input.end());
 	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/CompressibleFlowSolver/InputFiles/" + input);
-	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.string() + "xml .";
-	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.string() + "rst .";
+	std::string syscommand1 = std::string(COPY_COMMAND) + PortablePath(filePath) + "xml .";
+	std::string syscommand2 = std::string(COPY_COMMAND) + PortablePath(filePath) + "rst .";
 
     int status1 = system(syscommand1.c_str());
     if(status1)
@@ -196,15 +197,15 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info)
 
     //Restart files just needed for the Cylinder Flow so far
     if(input=="Test_CylinderSubsonic_m3." || input=="Test_CylinderSubsonic_m8." || input=="Test_CylinderSubsonicMix." || input=="Test_RinglebFlow_m3." || input=="Test_RinglebFlow_m8.")
-      {
-	int status2 = system(syscommand2.c_str());
-    	if(status2)
-	  {
+    {
+        int status2 = system(syscommand2.c_str());
+        if(status2)
+        {
 	    std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
-	    exit(2);
-	  }
+            exit(2);
+        }
 
-      }
+    }
     
     input = input+"xml";
     

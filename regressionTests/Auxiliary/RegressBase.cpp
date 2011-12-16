@@ -43,7 +43,7 @@
 #include <sys/stat.h>
 #include "RegressBase.h"
 
-#include "boost/lexical_cast.hpp"
+#include <boost/lexical_cast.hpp>
 
 RegressBase::RegressBase(){
     m_prog="";
@@ -759,4 +759,16 @@ void RegressBase::ClearBuffer(char* buf, int bSize)
         *bufArray=empty;
         ++bufArray;
     }
+}
+
+std::string PortablePath(const boost::filesystem::path& path)
+{
+    boost::filesystem::path temp = path;
+    #if defined(_WINDOWS) && BOOST_VERSION > 104000
+    temp.make_preferred();
+    return temp.string();
+    #else
+    return temp.file_string();
+    #endif
+    
 }

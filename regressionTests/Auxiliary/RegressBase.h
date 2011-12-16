@@ -51,6 +51,8 @@
 
 #define REGRESS_DOUBLE_TOL 1e-9
 
+#include <boost/filesystem.hpp>
+
 //header of class RegressBase
 class RegressBase
 {
@@ -207,4 +209,7 @@ protected:
     
     void ClearBuffer(char*,int);
 };
+
+std::string PortablePath(const boost::filesystem::path& path);
+
 #endif // RegressBase_H

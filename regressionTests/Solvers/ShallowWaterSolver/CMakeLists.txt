@@ -29,3 +29,4 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/ShallowWaterSolver/OkFiles COMPONENT test)
 
+ADD_TEST(NAME ShallowWaterSolverTest WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/dist/bin COMMAND ShallowWaterSolverTest)

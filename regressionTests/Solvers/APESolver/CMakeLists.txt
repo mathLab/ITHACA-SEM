@@ -29,3 +29,4 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/APEAPEAPEAPEAPESolver/OkFiles COMPONENT test)
 
+ADD_TEST(NAME APESolverTest WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/dist/bin COMMAND APESolverTest)

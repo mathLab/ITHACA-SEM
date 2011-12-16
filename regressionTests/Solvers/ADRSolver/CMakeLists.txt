@@ -28,3 +28,5 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/ADRSolver/OkFiles COMPONENT test)
 
+
+ADD_TEST(NAME ADRSolverTest WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/dist/bin COMMAND ADRSolverTest)

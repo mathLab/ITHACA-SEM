@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(REGRESSION)
 
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
+ENABLE_TESTING()
 
 # Look for Nektar++ in the standard location (Nektar++/builds) 
 # This will work no matter where the regression build is.

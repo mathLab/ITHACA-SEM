@@ -300,7 +300,7 @@ namespace Nektar
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void Advection1DFR::InterpToInterface(const Array<OneD, double> & total,
-										  Array<OneD, double> & interface)
+										  Array<OneD, double> & interfaceValue)
 	{
 		LibUtilities::PointsKey InteriorPoints(nq/ne,LibUtilities::eGaussGaussLegendre);
 		LibUtilities::BasisKey  ProblemBase(LibUtilities::eGLL_Lagrange,nq/ne-1,InteriorPoints);
@@ -310,7 +310,7 @@ namespace Nektar
 		
 		for(int i=0; i < ne; i++)
 		{
-			LibUtilities::Interp1D(ProblemBase,&(total[i*nq/ne]),LocalBase,&(interface[2*i]));
+			LibUtilities::Interp1D(ProblemBase,&(total[i*nq/ne]),LocalBase,&(interfaceValue[2*i]));
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////

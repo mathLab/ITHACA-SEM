@@ -87,7 +87,7 @@ namespace Nektar
 		
 		// function which interpolate the total value (total) to the interface value (interface)
 		void InterpToInterface(const Array<OneD, double> & total,
-							   Array<OneD, double> & interface);
+							   Array<OneD, double> & interfaceValue);
 		
 		//Print out a summary and the results (the solution to file and the error to screen)
 		void SolutionPrint();

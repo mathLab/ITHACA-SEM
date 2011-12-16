@@ -45,6 +45,10 @@
 
 #include <boost/lexical_cast.hpp>
 
+#ifdef max
+#undef max
+#endif
+
 namespace Nektar
 {    
     template<typename DataType>

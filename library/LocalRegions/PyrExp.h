@@ -68,14 +68,6 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT ~PyrExp();
 
-            
-            LOCAL_REGIONS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords_0,
-                                                Array<OneD,NekDouble> &coords_1,
-                                                Array<OneD,NekDouble> &coords_2);
-
-            LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
-                          Array<OneD,NekDouble> &coords);
-
         protected:
             //-------------------------------
             // Integration Methods

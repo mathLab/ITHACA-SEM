@@ -38,12 +38,17 @@
 
 #include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 
 #include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
+#include <LibUtilities/LinearAlgebra/PointerWrapper.h>
+
+#include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
 
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
@@ -54,319 +59,429 @@
 #include <boost/call_traits.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/shared_array.hpp>
+#include <boost/typeof/typeof.hpp>
 
+#include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
 namespace Nektar
 {
-           
-    template<typename DataType, typename dim, typename space>
-    void Add(NekVector<DataType, dim, space>& result,
-           const NekVector<const DataType, dim, space>& lhs,
-           const NekVector<const DataType, dim, space>& rhs)
+    template<typename DataType>
+    class NekVector
     {
-        DataType* r_buf = result.GetRawPtr();
-        const DataType* lhs_buf = lhs.GetRawPtr();
-        const DataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < lhs.GetDimension(); ++i)
-        {
-            r_buf[i] = lhs_buf[i] + rhs_buf[i];
-        }
-    }
-    
-    template<typename DataType, typename dim, typename space>
-    void AddEqual(NekVector<DataType, dim, space>& result,
-           const NekVector<const DataType, dim, space>& rhs)
-    {
-        DataType* r_buf = result.GetRawPtr();
-        const DataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < rhs.GetDimension(); ++i)
-        {
-            r_buf[i] += rhs_buf[i];
-        }
-    }
-    
-    template<typename LhsDataType, typename LhsDim, typename LhsSpace,
-             typename RhsDataType, typename RhsDim, typename RhsSpace>
-    NekVector<LhsDataType, LhsDim, LhsSpace> Add(const NekVector<LhsDataType, LhsDim, LhsSpace>& lhs, 
-                                                 const NekVector<RhsDataType, RhsDim, RhsSpace>& rhs)
-    {
-        NekVector<LhsDataType, LhsDim, LhsSpace> result(lhs.GetDimension());
-        Add(result, lhs, rhs);
-        return result;
-    }
-    
-    template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void Subtract(NekVector<ResultDataType, dim, space>& result,
-           const NekVector<InputDataType, dim, space>& lhs,
-           const NekVector<InputDataType, dim, space>& rhs)
-    {
-        ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < lhs.GetDimension(); ++i)
-        {
-            r_buf[i] = lhs_buf[i] - rhs_buf[i];
-        }
-    }
-    
-    template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void SubtractEqual(NekVector<ResultDataType, dim, space>& result,
-           const NekVector<InputDataType, dim, space>& rhs)
-    {
-        ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < rhs.GetDimension(); ++i)
-        {
-            r_buf[i] -= rhs_buf[i];
-        }
-    }
-    
-    template<typename DataType, typename dim, typename space>
-    NekVector<typename boost::remove_const<DataType>::type, dim, space>
-    Subtract(const NekVector<DataType, dim, space>& lhs,
-                const NekVector<DataType, dim, space>& rhs)
-    {
-        NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
-        Subtract(result, lhs, rhs);
-        return result;
-    }
+        public:
+            /// \brief Creates an empty vector.
+            LIB_UTILITIES_EXPORT NekVector();
+
+            /// \brief Creates a vector of given size.  The elements are not initialized.
+            LIB_UTILITIES_EXPORT explicit NekVector(unsigned int size);
+
+            /// \brief Creates a vector with given size and initial value.
+            LIB_UTILITIES_EXPORT NekVector(unsigned int size, typename boost::call_traits<DataType>::const_reference a);
 
 
+            LIB_UTILITIES_EXPORT explicit NekVector(const std::string& vectorValues);
+
+            LIB_UTILITIES_EXPORT NekVector(typename boost::call_traits<DataType>::const_reference x,
+                      typename boost::call_traits<DataType>::const_reference y,
+                      typename boost::call_traits<DataType>::const_reference z);
+
+            LIB_UTILITIES_EXPORT NekVector(const NekVector<DataType>& rhs);
+
+            LIB_UTILITIES_EXPORT NekVector(unsigned int size, const DataType* const ptr);
+            LIB_UTILITIES_EXPORT explicit NekVector(const Array<OneD, DataType>& ptr, PointerWrapper h = eCopy);
+            LIB_UTILITIES_EXPORT NekVector(unsigned int size, Array<OneD, DataType>& ptr, PointerWrapper h = eCopy);
+
+            LIB_UTILITIES_EXPORT NekVector(unsigned int size, const Array<OneD, const DataType>& ptr, PointerWrapper h = eCopy);
+
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+                template<typename L, typename Op, typename R>
+                NekVector(const expt::Node<L, Op, R>& rhs) :
+                    m_size(),
+                    m_data(),
+                    m_wrapperType(eCopy)
+                {
+                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
+                        MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    m_size = sizes.get<0>();
+                    m_data = Array<OneD, DataType>(m_size);
+
+                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
+                }
+
+                template<typename L, typename Op, typename R>
+                NekVector<DataType>& operator=(const expt::Node<L, Op, R>& rhs)
+                {
+                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
+                            MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    unsigned int newRows = sizes.get<0>();
+
+                    this->SetSize(newRows);
+                    if( this->GetWrapperType() == eCopy )
+                    {
+                        if( this->GetData().num_elements() < newRows )
+                        {
+                            this->SetData(Array<OneD, DataType>(newRows));
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(this->GetData().num_elements() >= newRows,
+                                 "Attempting to store too many elements in a wrapped vector.");
+                    }
+
+                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
+                    return *this;
+                }
+            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+
+            LIB_UTILITIES_EXPORT ~NekVector();
+
+            LIB_UTILITIES_EXPORT NekVector<DataType>& operator=(const NekVector<DataType>& rhs);
 
 
+            /// \brief Returns the number of dimensions for the point.
+            LIB_UTILITIES_EXPORT unsigned int GetDimension() const;
 
-	template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void Divide(NekVector<ResultDataType, dim, space>& result,
-           const NekVector<InputDataType, dim, space>& lhs,
-           const NekDouble& rhs)
-    {
-        ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
-        
-        for(int i = 0; i < lhs.GetDimension(); ++i)
-        {
-            r_buf[i] = lhs_buf[i] / rhs;
-        }
-    }
-    
-    template<typename ResultDataType, typename dim, typename space>
-    void DivideEqual(NekVector<ResultDataType, dim, space>& result,
-           const NekDouble& rhs)
-    {
-        ResultDataType* r_buf = result.GetRawPtr();
-        for(int i = 0; i < result.GetDimension(); ++i)
-        {
-            r_buf[i] /= rhs;
-        }
-    }
-    
-    template<typename DataType, typename dim, typename space>
-    NekVector<typename boost::remove_const<DataType>::type, dim, space>
-    Divide(const NekVector<DataType, dim, space>& lhs,
-                const NekDouble& rhs)
-    {
-        NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
-        Divide(result, lhs, rhs);
-        return result;
-    }
+            LIB_UTILITIES_EXPORT unsigned int GetRows() const;
 
+            LIB_UTILITIES_EXPORT DataType* GetRawPtr();
 
-	template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void Multiply(NekVector<ResultDataType, dim, space>& result,
-           const NekVector<InputDataType, dim, space>& lhs,
-           const NekDouble& rhs)
-    {
-        ResultDataType* r_buf = result.GetRawPtr();
-        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
-        
-        for(int i = 0; i < lhs.GetDimension(); ++i)
-        {
-            r_buf[i] = lhs_buf[i] * rhs;
-        }
-    }
-    
-    template<typename ResultDataType, typename dim, typename space>
-    void MultiplyEqual(NekVector<ResultDataType, dim, space>& result,
-           const NekDouble& rhs)
-    {
-        ResultDataType* r_buf = result.GetRawPtr();
-        for(int i = 0; i < result.GetDimension(); ++i)
-        {
-            r_buf[i] *= rhs;
-        }
-    }
-    
-    template<typename DataType, typename dim, typename space>
-    NekVector<typename boost::remove_const<DataType>::type, dim, space>
-    Multiply(const NekVector<DataType, dim, space>& lhs,
-                const NekDouble& rhs)
-    {
-        NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
-        Multiply(result, lhs, rhs);
-        return result;
-    }
+            LIB_UTILITIES_EXPORT Array<OneD, DataType>& GetPtr();
 
-	template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void Multiply(NekVector<ResultDataType, dim, space>& result,
-			const NekDouble& lhs,   
-			const NekVector<InputDataType, dim, space>& rhs)
-    {
-		Multiply(result, rhs, lhs);
-    }
-        
-    template<typename DataType, typename dim, typename space>
-    NekVector<typename boost::remove_const<DataType>::type, dim, space>
-	Multiply(const NekDouble& lhs,
-			 const NekVector<DataType, dim, space>& rhs)
-    {
-		return Multiply(rhs, lhs);
-    }
+            LIB_UTILITIES_EXPORT const DataType* GetRawPtr() const;
 
-    GENERATE_MULTIPLICATION_OPERATOR(NekVector, 3, NekDouble, 0);
-    GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekVector, 3);
-    
-    GENERATE_DIVISION_OPERATOR(NekVector, 3, NekDouble, 0);
-    GENERATE_ADDITION_OPERATOR(NekVector, 3, NekVector, 3);
-    GENERATE_SUBTRACTION_OPERATOR(NekVector, 3, NekVector, 3);
+            LIB_UTILITIES_EXPORT const Array<OneD, const DataType>& GetPtr() const;
+
+            typedef DataType* iterator;
+            LIB_UTILITIES_EXPORT iterator begin();
+            LIB_UTILITIES_EXPORT iterator end();
+
+            typedef const DataType* const_iterator;
+            LIB_UTILITIES_EXPORT const_iterator begin() const;
+            LIB_UTILITIES_EXPORT const_iterator end() const;
+
+            /// \brief Returns i^{th} element.
+            /// \param i The element to return.
+            /// \pre i < dim
+            /// \return A reference to the i^{th} element.
+            ///
+            /// Retrieves the i^{th} element.  Since it returns a reference you may
+            /// assign a new value (i.e., p(2) = 3.2;)
+            ///
+            /// This operator performs range checking.
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::reference operator()(unsigned int i);
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::reference operator[](unsigned int i);
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::reference x();
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::reference y();
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::reference z();
+
+            LIB_UTILITIES_EXPORT void SetX(typename boost::call_traits<DataType>::const_reference val);
+
+            LIB_UTILITIES_EXPORT void SetY(typename boost::call_traits<DataType>::const_reference val);
+
+            LIB_UTILITIES_EXPORT void SetZ(typename boost::call_traits<DataType>::const_reference val);
+
+            LIB_UTILITIES_EXPORT NekVector<DataType>& operator+=(const NekVector<DataType>& rhs);
+
+            LIB_UTILITIES_EXPORT NekVector<DataType>& operator-=(const NekVector<DataType>& rhs);
+
+            LIB_UTILITIES_EXPORT NekVector<DataType>& operator*=(typename boost::call_traits<DataType>::const_reference rhs);
+
+            LIB_UTILITIES_EXPORT NekVector<DataType>& operator/=(typename boost::call_traits<DataType>::const_reference rhs);
+
+            LIB_UTILITIES_EXPORT void Normalize();
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference operator()(unsigned int i) const;
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference operator[](unsigned int i) const;
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference x() const;
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference y() const;
+
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference z() const;
+
+            //#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+            //expt::Node<NekVector<DataType>, expt::NegateOp, void > operator-() const
+            //{
+            //    return expt::Node<NekVector<DataType> >(*this);
+            //}
+            //#else
+            LIB_UTILITIES_EXPORT NekVector<DataType> operator-() const;
+            //#endif
+
+            LIB_UTILITIES_EXPORT DataType Magnitude() const;
+            LIB_UTILITIES_EXPORT DataType Dot(const NekVector<DataType>& rhs) const;
+
+            LIB_UTILITIES_EXPORT NekVector<DataType> Cross(const NekVector<DataType>& rhs) const;
+
+            LIB_UTILITIES_EXPORT std::string AsString() const;
+
+            // Norms
+            LIB_UTILITIES_EXPORT DataType L1Norm() const;
+            LIB_UTILITIES_EXPORT DataType L2Norm() const;
+            LIB_UTILITIES_EXPORT DataType InfinityNorm() const;
 
 
-    template<typename DataType, typename dim, typename space>
-    std::ostream& operator<<(std::ostream& os, const NekVector<DataType, dim, space>& rhs)
-    {
-        os << rhs.AsString();
-        return os;
-    }
+            LIB_UTILITIES_EXPORT PointerWrapper GetWrapperType() const;
 
-    template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space> createVectorFromPoints(const NekPoint<DataType, dim, space>& source,
-                                                           const NekPoint<DataType, dim, space>& dest)
-    {
-        NekVector<DataType, dim, space> result;
-        for(unsigned int i = 0; i < dim::Value; ++i)
-        {
-            result[i] = dest[i]-source[i];
-        }
-        return result;
-    }
+        protected:
 
-    template<typename DataType, typename dim, typename space>
-    NekPoint<DataType, dim, space> findPointAlongVector(const NekVector<DataType, dim, space>& lhs,
-                                                        typename boost::call_traits<DataType>::const_reference t)
-    {
-        NekPoint<DataType, dim, space> result;
-        for(unsigned int i = 0; i < dim::Value; ++i)
-        {
-            result[i] = lhs[i]*t;
-        }
+            LIB_UTILITIES_EXPORT inline Array<OneD, DataType>& GetData();
+            LIB_UTILITIES_EXPORT inline void SetSize(unsigned int s);
+            LIB_UTILITIES_EXPORT inline void SetWrapperType(PointerWrapper p);
+            LIB_UTILITIES_EXPORT inline void SetData(const Array<OneD, DataType>& newData);
+            LIB_UTILITIES_EXPORT inline void Resize(unsigned int newSize);
 
-        return result;
-    }
+        private:
+            // Prevents accidental use of wrapped mode around ConstArrays.
+            NekVector(const Array<OneD, const DataType>& ptr, PointerWrapper h);
 
-    template<typename DataType, typename lhsDim, typename rhsDim, typename space>
-    bool operator==(const NekVector<const DataType, lhsDim, space>& lhs,
-                    const NekVector<const DataType, rhsDim, space>& rhs)
-    {
-        if( lhs.GetDimension() != rhs.GetDimension() )
-        {
-            return false;
-        }
-        
-        return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-    }
-
-    template<typename DataType, typename lhsDim, typename rhsDim, typename space>
-    bool operator!=(const NekVector<DataType, lhsDim, space>& lhs,
-                    const NekVector<DataType, rhsDim, space>& rhs)
-    {
-        return !(lhs == rhs);
-    }
-
-    template<typename T>
-    struct RemoveVectorConst;
-    
-    template<typename DataType, typename Dim, typename Space>
-    struct RemoveVectorConst<NekVector<DataType, Dim, Space> >
-    {
-        typedef NekVector<DataType, Dim, Space> type;
+            unsigned int m_size;
+            Array<OneD, DataType> m_data;
+            PointerWrapper m_wrapperType;
     };
+
+    BOOST_TYPEOF_REGISTER_TEMPLATE(NekVector, 1);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void Add(NekVector<DataType>& result,
+           const NekVector<DataType>& lhs,
+           const NekVector<DataType>& rhs);
     
-    template<typename DataType, typename Dim, typename Space>
-    struct RemoveVectorConst<NekVector<const DataType, Dim, Space> >
-    {
-        typedef NekVector<DataType, Dim, Space> type;
-    };
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void AddEqual(NekVector<DataType>& result,
+           const NekVector<DataType>& rhs);
+    
+    template<typename LhsDataType,
+             typename RhsDataType>
+    LIB_UTILITIES_EXPORT NekVector<LhsDataType> Add(const NekVector<LhsDataType>& lhs,
+                               const NekVector<RhsDataType>& rhs);
+    
+
+
+    template<typename ResultDataType, typename InputDataType>
+    LIB_UTILITIES_EXPORT void Subtract(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
+           const NekVector<InputDataType>& rhs);
+    
+    template<typename ResultDataType, typename InputDataType>
+    LIB_UTILITIES_EXPORT void SubtractEqual(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& rhs);
+    
+    template<typename DataType>
+    NekVector<DataType>
+    LIB_UTILITIES_EXPORT Subtract(const NekVector<DataType>& lhs,
+                const NekVector<DataType>& rhs);
+
+
+
+
+
+    template<typename ResultDataType, typename InputDataType>
+    void LIB_UTILITIES_EXPORT Divide(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
+           const NekDouble& rhs);
+    
+    template<typename ResultDataType>
+    void LIB_UTILITIES_EXPORT DivideEqual(NekVector<ResultDataType>& result,
+           const NekDouble& rhs);
+    
+    template<typename DataType>
+    NekVector<DataType>
+    LIB_UTILITIES_EXPORT Divide(const NekVector<DataType>& lhs,
+                const NekDouble& rhs);
+
+
+    template<typename ResultDataType, typename InputDataType>
+    void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
+           const NekDouble& rhs);
+    
+    template<typename ResultDataType>
+    void LIB_UTILITIES_EXPORT MultiplyEqual(NekVector<ResultDataType>& result,
+           const NekDouble& rhs);
+    
+    template<typename DataType>
+    NekVector<DataType>
+    LIB_UTILITIES_EXPORT Multiply(const NekVector<DataType>& lhs,
+                const NekDouble& rhs);
+
+    template<typename ResultDataType, typename InputDataType>
+    void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
+                  const NekDouble& lhs,
+                  const NekVector<InputDataType>& rhs);
         
+    template<typename DataType>
+    NekVector<DataType>
+    LIB_UTILITIES_EXPORT Multiply(const DataType& lhs,
+                  const NekVector<DataType>& rhs);
+
+    GENERATE_MULTIPLICATION_OPERATOR(NekVector, 1, NekDouble, 0);
+    GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekVector, 1);
+    
+    GENERATE_DIVISION_OPERATOR(NekVector, 1, NekDouble, 0);
+    GENERATE_ADDITION_OPERATOR(NekVector, 1, NekVector, 1);
+    GENERATE_SUBTRACTION_OPERATOR(NekVector, 1, NekVector, 1);
+
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const NekVector<DataType>& rhs);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT NekVector<DataType> createVectorFromPoints(const NekPoint<DataType>& source, const NekPoint<DataType>& dest);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT NekPoint<DataType> findPointAlongVector(const NekVector<DataType>& lhs, const DataType& t);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT bool operator==(const NekVector<DataType>& lhs, const NekVector<DataType>& rhs);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT bool operator!=(const NekVector<DataType>& lhs, const NekVector<DataType>& rhs);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT DataType Magnitude(const NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT DataType Dot(const NekVector<DataType>& lhs,
+                 const NekVector<DataType>& rhs);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT std::vector<DataType> FromString(const std::string& str);
+
+    /// \todo Do the Norms with Blas where applicable.
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT DataType L1Norm(const NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT DataType L2Norm(const NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT DataType InfinityNorm(const NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT NekVector<DataType> Negate(const NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void NegateInPlace(NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void Normalize(NekVector<DataType>& v);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT NekVector<DataType> Cross(const NekVector<DataType>& lhs,
+                                          const NekVector<DataType>& rhs);
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT std::string AsString(const NekVector<DataType>& v);
+
 }
 
-    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 namespace expt
 {
-        // Override default expression handling for addition/subtraction of vectors.
-        // Optimal execution is obtained by loop unrolling.
+    template<typename DataType, typename L, typename Op, typename R>
+    DataType Dot(const Nektar::NekVector<DataType>& lhs,
+                 const expt::Node<L, Op, R>& expr)
+    {
+        // Evalaute the expression first, expression templates don't chain past
+        // this point since the return value is a scalar.
+        typename expt::Node<L, Op, R>::ResultType rhs = expt::ExpressionEvaluator::Evaluate(expr);
+        return Dot(lhs, rhs);
+    }
 
-        template<typename NodeType, typename enabled = void>
-        struct NodeCanUnroll : public boost::false_type
+    template<typename DataType>
+    struct IsAlias<Nektar::NekVector<DataType>, Nektar::NekVector<DataType> >
+    {
+        static bool Apply(const Nektar::NekVector<DataType>& lhs, const Nektar::NekVector<DataType>& rhs)
         {
-        };
+            return lhs.GetPtr().Overlaps(rhs.GetPtr());
+        }
+    };
 
-        template<typename Type>
+    template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
+    struct CreateFromTree<Nektar::NekVector<DataType>, NodeType, Indices, StartIndex>
+    {
+        template<typename ArgVectorType>
+        static Nektar::NekVector<DataType> Apply(const ArgVectorType& tree)
+        {
+            boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
+                Nektar::MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
+
+            unsigned int rows = sizes.get<0>();
+            return Nektar::NekVector<DataType>(rows);
+        }
+    };
+
+    // Override default expression handling for addition/subtraction of vectors.
+    // Optimal execution is obtained by loop unrolling.
+
+    template<typename NodeType, typename enabled = void>
+    struct NodeCanUnroll : public boost::false_type
+    {
+    };
+
+    template<typename Type>
     struct NodeCanUnroll<expt::Node<Type, void, void>,
-            typename boost::enable_if
-            <
+        typename boost::enable_if
+        <
             Nektar::IsVector<typename expt::Node<Type, void, void>::ResultType>
-            >::type > : public boost::true_type
-        {
-        };
+        >::type > : public boost::true_type
+    {
+    };
         
-        template<typename LhsType, typename OpType, typename RhsType>
+    template<typename LhsType, typename OpType, typename RhsType>
     struct NodeCanUnroll<expt::Node<LhsType, OpType, RhsType>,
-            typename boost::enable_if
+        typename boost::enable_if
+        <
+            boost::mpl::and_
             <
-                boost::mpl::and_
-                <
                 Nektar::IsVector<typename LhsType::ResultType>,
                 Nektar::IsVector<typename RhsType::ResultType>,
-                    NodeCanUnroll<LhsType>,
-                    NodeCanUnroll<RhsType>,
-                    boost::mpl::or_
-                    <
-                    boost::is_same<OpType, expt::AddOp>,
-                    boost::is_same<OpType, expt::SubtractOp>
-                    >
-                >
-            >::type >: public boost::true_type
-        {
-        };
+                NodeCanUnroll<LhsType>,
+                NodeCanUnroll<RhsType>,
+                boost::mpl::or_
+            <
+                boost::is_same<OpType, expt::AddOp>,
+                boost::is_same<OpType, expt::SubtractOp>
+            >
+        > >::type >: public boost::true_type
+    {
+    };
 
-        template<typename NodeType, typename IndicesType, unsigned int index>
-        struct Accumulate;
+    template<typename NodeType, typename IndicesType, unsigned int index>
+    struct Accumulate;
 
-        template<typename LhsType, typename IndicesType, unsigned int index>
+    template<typename LhsType, typename IndicesType, unsigned int index>
     struct Accumulate<expt::Node<LhsType, void, void>, IndicesType, index>
+    {
+        static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
+
+        template<typename ResultType, typename ArgumentVectorType>
+        static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
         {
-            static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
+            accumulator = boost::fusion::at_c<MappedIndex>(args)[i];
+        }
+    };
 
-            template<typename ResultType, typename ArgumentVectorType>
-            static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
-            {
-                accumulator = boost::fusion::at_c<MappedIndex>(args)[i];
-            }
-        };
-
-        template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
+    template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
     struct Accumulate<expt::Node<LhsType, Op, RhsType>, IndicesType, index>
-        {
-            static const int rhsNodeIndex = index + LhsType::TotalCount;
+    {
+        static const int rhsNodeIndex = index + LhsType::TotalCount;
 
-            template<typename ResultType, typename ArgumentVectorType>
-            static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
-            {
-                Accumulate<LhsType, IndicesType, index>::Execute(accumulator, args, i);
-                ResultType rhs;
-                Accumulate<RhsType, IndicesType, rhsNodeIndex>::Execute(rhs, args, i);
-                Op::OpEqual(accumulator, rhs);
-            }
-        };
+        template<typename ResultType, typename ArgumentVectorType>
+        static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
+        {
+            Accumulate<LhsType, IndicesType, index>::Execute(accumulator, args, i);
+            ResultType rhs;
+            Accumulate<RhsType, IndicesType, rhsNodeIndex>::Execute(rhs, args, i);
+            Op::OpEqual(accumulator, rhs);
+        }
+    };
 
 
 
@@ -515,7 +630,7 @@ namespace expt
                 }
     };
             }
-    #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 
 #endif // NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP

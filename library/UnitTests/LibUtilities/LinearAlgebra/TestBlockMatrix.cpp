@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -112,11 +112,11 @@ namespace Nektar
             double m01_buf[] = {9, 10,
                                 11, 12,
                                 13, 14,
-                                15, 16, 
+                                15, 16,
                                 17, 18};
             double m02_buf[] = {19, 20,
                                 21, 22,
-                                23, 24, 
+                                23, 24,
                                 25, 26,
                                 27, 28,
                                 29, 30};
@@ -130,8 +130,8 @@ namespace Nektar
                                 52, 53, 54,
                                 55, 56, 57};
             double m12_buf[] = { 58, 59, 60,
-                                61, 62, 63, 
-                                64, 65, 66, 
+                                61, 62, 63,
+                                64, 65, 66,
                                 67, 68, 69,
                                 70, 71, 72,
                                 73, 74, 75};
@@ -257,160 +257,9 @@ namespace Nektar
             BOOST_CHECK_EQUAL(7080, globalResult[2]);
             BOOST_CHECK_EQUAL(7200, globalResult[3]);
             BOOST_CHECK_EQUAL(7320, globalResult[4]);
-            // 
+            //
         }
         
-        BOOST_AUTO_TEST_CASE(TestBlockMatrixTransposeInteger)
-        {
-            typedef NekMatrix<int> InnerType;
-            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
-
-            int m00_buf[] = {1, 2,
-                                3, 4,
-                                5, 6,
-                                7, 8};
-            int m01_buf[] = {9, 10,
-                                11, 12,
-                                13, 14,
-                                15, 16, 
-                                17, 18};
-            int m02_buf[] = {19, 20,
-                                21, 22,
-                                23, 24, 
-                                25, 26,
-                                27, 28,
-                                29, 30};
-            int m10_buf[] = {31, 32, 33,
-                                34, 35, 36,
-                                37, 38, 39,
-                                40, 41, 42};
-            int m11_buf[] = {43, 44, 45,
-                                46, 47, 48,
-                                49, 50, 51,
-                                52, 53, 54,
-                                55, 56, 57};
-            int m12_buf[] = { 58, 59, 60,
-                                61, 62, 63, 
-                                64, 65, 66, 
-                                67, 68, 69,
-                                70, 71, 72,
-                                73, 74, 75};
-
-            boost::shared_ptr<InnerType> m00(new InnerType(2, 4, m00_buf));
-            boost::shared_ptr<InnerType> m01(new InnerType(2, 5, m01_buf));
-            boost::shared_ptr<InnerType> m02(new InnerType(2, 6, m02_buf));
-            boost::shared_ptr<InnerType> m10(new InnerType(3, 4, m10_buf));
-            boost::shared_ptr<InnerType> m11(new InnerType(3, 5, m11_buf));
-            boost::shared_ptr<InnerType> m12(new InnerType(3, 6, m12_buf));
-
-            unsigned int rowCounts[] = {2, 3};
-            unsigned int colCounts[] = {4, 5, 6};
-
-            BlockType b(2, 3, rowCounts, colCounts);
-            b.SetBlock(0, 0, m00);
-            b.SetBlock(0, 1, m01);
-            b.SetBlock(0, 2, m02);
-            b.SetBlock(1, 0, m10);
-            b.SetBlock(1, 1, m11);
-            b.SetBlock(1, 2, m12);
-
-            BOOST_CHECK_EQUAL(2, b.GetNumberOfBlockRows());
-            BOOST_CHECK_EQUAL(3, b.GetNumberOfBlockColumns());
-            BOOST_CHECK_EQUAL(2, b.GetNumberOfRowsInBlockRow(0));
-            BOOST_CHECK_EQUAL(3, b.GetNumberOfRowsInBlockRow(1));
-            BOOST_CHECK_EQUAL(4, b.GetNumberOfColumnsInBlockColumn(0));
-            BOOST_CHECK_EQUAL(5, b.GetNumberOfColumnsInBlockColumn(1));
-            BOOST_CHECK_EQUAL(6, b.GetNumberOfColumnsInBlockColumn(2));
-            
-            BOOST_CHECK_EQUAL(0, b.CalculateBlockIndex(0,0));
-            BOOST_CHECK_EQUAL(1, b.CalculateBlockIndex(1,0));
-            BOOST_CHECK_EQUAL(2, b.CalculateBlockIndex(0,1));
-            BOOST_CHECK_EQUAL(3, b.CalculateBlockIndex(1,1));
-            BOOST_CHECK_EQUAL(4, b.CalculateBlockIndex(0,2));
-            BOOST_CHECK_EQUAL(5, b.CalculateBlockIndex(1,2));
-            
-            BOOST_CHECK_EQUAL(m00->GetRawPtr(), b.GetBlock(0,0)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m01->GetRawPtr(), b.GetBlock(0,1)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m02->GetRawPtr(), b.GetBlock(0,2)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m10->GetRawPtr(), b.GetBlock(1,0)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m11->GetRawPtr(), b.GetBlock(1,1)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m12->GetRawPtr(), b.GetBlock(1,2)->GetRawPtr());
-            
-            BOOST_CHECK_EQUAL('N', b.GetBlock(0,0)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('N', b.GetBlock(0,1)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('N', b.GetBlock(0,2)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('N', b.GetBlock(1,0)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('N', b.GetBlock(1,1)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('N', b.GetBlock(1,2)->GetTransposeFlag());
-            
-            int v_buf[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-            NekVector<int> v(15, v_buf);
-            NekVector<int> result = b*v;
-            
-            BOOST_CHECK_EQUAL(5, result.GetRows());
-            BOOST_CHECK_EQUAL(2360, result[0]);
-            BOOST_CHECK_EQUAL(2480, result[1]);
-            BOOST_CHECK_EQUAL(7080, result[2]);
-            BOOST_CHECK_EQUAL(7200, result[3]);
-            BOOST_CHECK_EQUAL(7320, result[4]);
-            
-            
-            
-            b.Transpose();
-            
-            BOOST_CHECK_EQUAL(3, b.GetNumberOfBlockRows());
-            BOOST_CHECK_EQUAL(2, b.GetNumberOfBlockColumns());
-            
-            BOOST_CHECK_EQUAL(2, b.GetNumberOfColumnsInBlockColumn(0));
-            BOOST_CHECK_EQUAL(3, b.GetNumberOfColumnsInBlockColumn(1));
-            BOOST_CHECK_EQUAL(4, b.GetNumberOfRowsInBlockRow(0));
-            BOOST_CHECK_EQUAL(5, b.GetNumberOfRowsInBlockRow(1));
-            BOOST_CHECK_EQUAL(6, b.GetNumberOfRowsInBlockRow(2));
-            
-            BOOST_CHECK_EQUAL(0, b.CalculateBlockIndex(0,0));
-            BOOST_CHECK_EQUAL(1, b.CalculateBlockIndex(0,1));
-            BOOST_CHECK_EQUAL(2, b.CalculateBlockIndex(1,0));
-            BOOST_CHECK_EQUAL(3, b.CalculateBlockIndex(1,1));
-            BOOST_CHECK_EQUAL(4, b.CalculateBlockIndex(2,0));
-            BOOST_CHECK_EQUAL(5, b.CalculateBlockIndex(2,1));
-            
-            BOOST_CHECK_EQUAL(m00->GetRawPtr(), b.GetBlock(0,0)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m01->GetRawPtr(), b.GetBlock(1,0)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m02->GetRawPtr(), b.GetBlock(2,0)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m10->GetRawPtr(), b.GetBlock(0,1)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m11->GetRawPtr(), b.GetBlock(1,1)->GetRawPtr());
-            BOOST_CHECK_EQUAL(m12->GetRawPtr(), b.GetBlock(2,1)->GetRawPtr());
-            
-            BOOST_CHECK_EQUAL('T', b.GetBlock(0,0)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('T', b.GetBlock(1,0)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('T', b.GetBlock(2,0)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('T', b.GetBlock(0,1)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('T', b.GetBlock(1,1)->GetTransposeFlag());
-            BOOST_CHECK_EQUAL('T', b.GetBlock(2,1)->GetTransposeFlag());
-
-            int v_transpose_buf[] = {1, 2, 3, 4, 5};
-            NekVector<int> v_transpose(5, v_transpose_buf);
-            NekVector<int> result_transpose = b*v_transpose;
-            
-            BOOST_CHECK_EQUAL(15, result_transpose.GetRows());
-            BOOST_CHECK_EQUAL(391, result_transpose[0]);
-            BOOST_CHECK_EQUAL(433, result_transpose[1]);
-            BOOST_CHECK_EQUAL(475, result_transpose[2]);
-            BOOST_CHECK_EQUAL(517, result_transpose[3]);
-            BOOST_CHECK_EQUAL(559, result_transpose[4]);
-            BOOST_CHECK_EQUAL(601, result_transpose[5]);
-            BOOST_CHECK_EQUAL(643, result_transpose[6]);
-            BOOST_CHECK_EQUAL(685, result_transpose[7]);
-            BOOST_CHECK_EQUAL(727, result_transpose[8]);
-            BOOST_CHECK_EQUAL(769, result_transpose[9]);
-            BOOST_CHECK_EQUAL(811, result_transpose[10]);
-            BOOST_CHECK_EQUAL(853, result_transpose[11]);
-            BOOST_CHECK_EQUAL(895, result_transpose[12]);
-            BOOST_CHECK_EQUAL(937, result_transpose[13]);
-            BOOST_CHECK_EQUAL(979, result_transpose[14]);
-            
-            // 
-        }
         
         BOOST_AUTO_TEST_CASE(TestBlockScaledMatrix)
         {
@@ -424,11 +273,11 @@ namespace Nektar
             double m01_buf[] = {9, 10,
                                 11, 12,
                                 13, 14,
-                                15, 16, 
+                                15, 16,
                                 17, 18};
             double m02_buf[] = {19, 20,
                                 21, 22,
-                                23, 24, 
+                                23, 24,
                                 25, 26,
                                 27, 28,
                                 29, 30};
@@ -442,8 +291,8 @@ namespace Nektar
                                 52, 53, 54,
                                 55, 56, 57};
             double m12_buf[] = { 58, 59, 60,
-                                61, 62, 63, 
-                                64, 65, 66, 
+                                61, 62, 63,
+                                64, 65, 66,
                                 67, 68, 69,
                                 70, 71, 72,
                                 73, 74, 75};
@@ -580,21 +429,21 @@ namespace Nektar
                                   5, 6};
             double m_01_buf[] = {7, 8,
                                  9, 10,
-                                11, 12, 
+                                11, 12,
                                 13, 14};
-            double m_10_buf[] = {15, 16, 
+            double m_10_buf[] = {15, 16,
                                  17, 18,
                                  19, 20};
-            double m_11_buf[] = {21, 22, 
-                                 23, 24, 
-                                 25, 26, 
+            double m_11_buf[] = {21, 22,
+                                 23, 24,
+                                 25, 26,
                                  27, 28};
             double m_20_buf[] = {29, 30,
-                                 31, 32, 
+                                 31, 32,
                                  33, 34};
-            double m_21_buf[] = {35, 36, 
+            double m_21_buf[] = {35, 36,
                                  37, 38,
-                                 39, 40, 
+                                 39, 40,
                                  41, 42};
             boost::shared_ptr<Matrix> m00(new Matrix(2, 3, m_00_buf));
             boost::shared_ptr<Matrix> m01(new Matrix(2, 4, m_01_buf));
@@ -682,21 +531,21 @@ namespace Nektar
                                   5, 6};
             double m_01_buf[] = {7, 8,
                                  9, 10,
-                                11, 12, 
+                                11, 12,
                                 13, 14};
-            double m_10_buf[] = {15, 16, 
+            double m_10_buf[] = {15, 16,
                                  17, 18,
                                  19, 20};
-            double m_11_buf[] = {21, 22, 
-                                 23, 24, 
-                                 25, 26, 
+            double m_11_buf[] = {21, 22,
+                                 23, 24,
+                                 25, 26,
                                  27, 28};
             double m_20_buf[] = {29, 30,
-                                 31, 32, 
+                                 31, 32,
                                  33, 34};
-            double m_21_buf[] = {35, 36, 
+            double m_21_buf[] = {35, 36,
                                  37, 38,
-                                 39, 40, 
+                                 39, 40,
                                  41, 42};
             boost::shared_ptr<Matrix> m00(new Matrix(2, 3, m_00_buf));
             boost::shared_ptr<Matrix> m01(new Matrix(2, 4, m_01_buf));
@@ -776,7 +625,7 @@ namespace Nektar
             typedef NekMatrix<double> InnerType;
             typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
 
-            double m_00_buf[] = {3, 1, 
+            double m_00_buf[] = {3, 1,
                                  5, 5};
             double m_01_buf[] = {2, 4,
                                  4, 1,
@@ -785,7 +634,7 @@ namespace Nektar
                                  2, 2,
                                  4, 1,
                                  4, 2};
-            
+
             double m_10_buf[] = {1, 3, 5,
                                  1, 4, 2};
             double m_11_buf[] = {4, 4, 1,
@@ -809,11 +658,11 @@ namespace Nektar
             double m_30_buf[] = {2, 2, 1,
                                  4, 5, 5};
             double m_31_buf[] = {1, 1, 3,
-                                 2, 1, 2, 
+                                 2, 1, 2,
                                  3, 3, 2};
             double m_32_buf[] = {3, 1, 3,
                                  1, 2, 2,
-                                 4, 2, 5, 
+                                 4, 2, 5,
                                  5, 1, 1};
 
 
@@ -849,7 +698,7 @@ namespace Nektar
             b.SetBlock(3, 0, m30);
             b.SetBlock(3, 1, m31);
             b.SetBlock(3, 2, m32);
-            
+
             Array<OneD, unsigned int> arrayRowCounts(4, rowCounts);
             Array<OneD, unsigned int> arrayColCounts(3, colCounts);
             BlockType b_initializedWithArray(arrayRowCounts, arrayColCounts);
@@ -878,7 +727,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
             BOOST_CHECK_EQUAL(expected_result, result1);
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestDiagonalBlockMatrixMultiplication)
         {
             typedef NekMatrix<double> InnerType;
@@ -938,7 +787,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
 
         }
-        
+
         BOOST_AUTO_TEST_CASE(TestBlockMatrixMultiplicationWith0SizeBlocks)
         {
             typedef NekMatrix<double> InnerType;
@@ -966,37 +815,6 @@ namespace Nektar
 
         }
 
-        class Test
-        {
-            public:
-                Test(double initValue = 0.0) 
-                {
-                    m_value = initValue;
-                }
-                
-                Test(const Test& rhs)
-                {
-                    m_value = rhs.m_value;
-                }
-                
-                Test& operator=(const Test& rhs)
-                {
-                    m_value = rhs.m_value;
-                    return *this;
-                }
-                
-            private:
-                double m_value;
-        };
-        
-        BOOST_AUTO_TEST_CASE(TestBlockMatrixReturnValue)
-        {
-            NekMatrix<NekMatrix<Test>, BlockMatrixTag> m(2, 2, 2, 2);
-            boost::shared_ptr<NekMatrix<Test> > inner1(new NekMatrix<Test>(2, 2));
-            m.SetBlock(0, 0, inner1);
-            const Test& value = m(0,0);
-            
-        }
 
         BOOST_AUTO_TEST_CASE(TestBlockMatrixErrorFrom6_10)
         {
@@ -1052,7 +870,6 @@ namespace Nektar
             matrix->SetBlock(1,1, blockMatrices[3]);
             matrix->SetBlock(2,0, blockMatrices[4]);
             matrix->SetBlock(2,1, blockMatrices[5]);
-            std::cout << *matrix << std::endl;
 
             double b_buf[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
             NekVector<double> b(12, b_buf);
@@ -1129,11 +946,11 @@ namespace Nektar
 //            }
 //#endif
 //
-//            F_int = (F_int + Transpose(*m_D_int)*F_p);                   
+//            F_int = (F_int + Transpose(*m_D_int)*F_p);
 //
 //#if 0
 //            F_int = (*m_Cinv)*F_int;
-//#else        
+//#else
 //            Array<OneD, NekDouble> ftmp(F_int.GetDimension(),0.0);
 //            for(i = 0; i < m_Cinv->GetRows(); ++i)
 //            {

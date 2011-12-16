@@ -49,10 +49,10 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/eat.hpp>
 
+#include <ExpressionTemplates/Operators.hpp>
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 #include <ExpressionTemplates/Node.hpp>
-#include <ExpressionTemplates/Operators.hpp>
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 namespace Nektar

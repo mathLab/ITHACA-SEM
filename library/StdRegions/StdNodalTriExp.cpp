@@ -99,7 +99,7 @@ namespace Nektar
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
-            NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
+            NekVector<NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = (*inv_vdm) * nodal;
         }
@@ -119,7 +119,7 @@ namespace Nektar
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
 
-            NekVector<const NekDouble> nodal(m_ncoeffs,inarray,eCopy);
+            NekVector<NekDouble> nodal(m_ncoeffs,inarray,eCopy);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = Transpose(*inv_vdm) * nodal;
         }
@@ -139,7 +139,7 @@ namespace Nektar
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
 
             // Multiply out matrix
-            NekVector<const NekDouble> modal(m_ncoeffs,inarray,eWrapper);
+            NekVector<NekDouble> modal(m_ncoeffs,inarray,eWrapper);
             NekVector<NekDouble> nodal(m_ncoeffs,outarray,eWrapper);
             nodal = (*vdm)*modal;
         }
@@ -220,7 +220,7 @@ namespace Nektar
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
-            NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
+            NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             
             out = (*matsys)*in;
@@ -390,7 +390,7 @@ namespace Nektar
 
                 vdm.Invert();  
 
-                NekVector<const NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
+                NekVector<NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
                 NekVector<NekDouble> out(GetNcoeffs());
                 out = vdm*in;
 

@@ -560,7 +560,7 @@ namespace Nektar
             using BaseType::data;
             element* data() { return this->m_data + 1 +this->m_offset; }
 
-            template<typename T1, typename dim, typename space>
+            template<typename T1>
             friend class NekVector;
 
             template<typename T1, typename T3>

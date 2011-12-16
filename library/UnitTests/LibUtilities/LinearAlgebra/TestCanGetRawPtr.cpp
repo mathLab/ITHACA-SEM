@@ -51,7 +51,6 @@ namespace Nektar
     BOOST_AUTO_TEST_CASE(TestCanGetRawPtr)
     {
         BOOST_MPL_ASSERT(( CanGetRawPtr<NekMatrix<double> > ));
-        BOOST_MPL_ASSERT(( CanGetRawPtr<NekMatrix<int> > ));
         BOOST_MPL_ASSERT(( CanGetRawPtr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > ));
         BOOST_MPL_ASSERT(( boost::mpl::not_<CanGetRawPtr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > > ));
     }

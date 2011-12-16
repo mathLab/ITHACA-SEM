@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP
 
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
@@ -58,227 +60,199 @@ namespace Nektar
     /// Matrices are stored in column major order to make it easier to interoperate with 
     /// Blas and Lapack.
     template<typename DataType>
-    class NekMatrix<const DataType, StandardMatrixTag> : public Matrix<DataType>
+    class NekMatrix<DataType, StandardMatrixTag> : public Matrix<DataType>
     {
         public:
             typedef Matrix<DataType> BaseType;
-            typedef NekMatrix<const DataType, StandardMatrixTag> ThisType;
-            typedef const DataType NumberType;
+            typedef NekMatrix<DataType, StandardMatrixTag> ThisType;
+            typedef DataType NumberType;
             typedef const DataType& ConstGetValueType;
+            typedef DataType GetValueType;
           
-            public:
+        public:
                             
-                template<typename T, typename MatrixType>
-                class iterator_impl
-                {
-                    public:
-                        typedef T value_type;
+            template<typename T, typename MatrixType>
+            class iterator_impl
+            {
+                public:
+                    typedef T value_type;
 
-                        template<typename Z>
-                        struct TagType
+                    template<typename Z>
+                    struct TagType
+                    {
+                        typedef std::forward_iterator_tag type;
+                    };
+
+                    template<typename Z>
+                    struct TagType<const Z>
+                    {
+                        typedef std::input_iterator_tag type;
+                    };
+
+                    typedef typename TagType<T>::type iterator_category;
+                    typedef unsigned int difference_type;
+                    typedef typename boost::call_traits<value_type>::reference reference;
+                    typedef typename boost::call_traits<value_type>::const_reference const_reference;
+                    typedef typename boost::remove_reference<value_type>::type* pointer;
+
+                public:
+                    iterator_impl(pointer d, pointer e, bool isEnd = false) :
+                        m_data(d),
+                        m_end(e),
+                        m_curRow(std::numeric_limits<unsigned int>::max()),
+                        m_curColumn(std::numeric_limits<unsigned int>::max()),
+                        m_matrix(NULL),
+                        m_curIndex(std::numeric_limits<unsigned int>::max()),
+                        m_transpose('N')
+                    {
+                        if( isEnd )
                         {
-                            typedef std::forward_iterator_tag type;
-                        };
+                            m_data = m_end;
+                        }
+                    }
 
-                        template<typename Z>
-                        struct TagType<const Z>
+                    iterator_impl(MatrixType* m, char transpose, bool isEnd = false) :
+                        m_data(NULL),
+                        m_end(NULL),
+                        m_curRow(0),
+                        m_curColumn(0),
+                        m_matrix(m),
+                        m_curIndex(0),
+                        m_transpose(transpose)
+                    {
+                        if( isEnd )
                         {
-                            typedef std::input_iterator_tag type;
-                        };
+                            m_curRow = std::numeric_limits<unsigned int>::max();
+                            m_curColumn = std::numeric_limits<unsigned int>::max();
+                            m_curIndex = std::numeric_limits<unsigned int>::max();
+                        }
+                    }
 
-                        typedef typename TagType<T>::type iterator_category;
-                        typedef unsigned int difference_type;
-                        typedef typename boost::call_traits<value_type>::reference reference;
-                        typedef typename boost::call_traits<value_type>::const_reference const_reference;
-                        typedef typename boost::remove_reference<value_type>::type* pointer;
+                    iterator_impl(const iterator_impl<T, MatrixType>& rhs) :
+                        m_data(rhs.m_data),
+                        m_end(rhs.m_end),
+                        m_curRow(rhs.m_curRow),
+                        m_curColumn(rhs.m_curColumn),
+                        m_matrix(rhs.m_matrix),
+                        m_curIndex(rhs.m_curIndex),
+                        m_transpose(rhs.m_transpose)
+                    {
+                    }
 
-                    public:
-                        iterator_impl(pointer d, pointer e, bool isEnd = false) :
-                            m_data(d),
-                            m_end(e),
-                            m_curRow(std::numeric_limits<unsigned int>::max()),
-                            m_curColumn(std::numeric_limits<unsigned int>::max()),
-                            m_matrix(NULL),
-                            m_curIndex(std::numeric_limits<unsigned int>::max()),
-                            m_transpose('N')
+                    iterator_impl<T, MatrixType>& operator=(const iterator_impl<T, MatrixType>& rhs)
+                    {
+                        m_data = rhs.m_data;
+                        m_end = rhs.m_end;
+                        m_curRow = rhs.m_curRow;
+                        m_curColumn = rhs.m_curColumn;
+                        m_matrix = rhs.m_matrix;
+                        m_curIndex = rhs.m_curIndex;
+                        m_transpose = rhs.m_transpose;
+                        return *this;
+                    }
+
+                    reference operator*()
+                    {
+                        if( m_data )
                         {
-                            if( isEnd )
+                            ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
+                            return *m_data;
+                        }
+                        else
+                        {
+                            return m_matrix->GetPtr()[m_curIndex];
+                        }
+                    }
+
+                    const_reference operator*() const
+                    {
+                        if( m_data )
+                        {
+                            ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
+                            return *m_data;
+                        }
+                        else
+                        {
+                            return m_matrix->GetPtr()[m_curIndex];
+                        }
+                    }
+
+                    /// \brief Prefix increment operator.
+                    iterator_impl<T, MatrixType>& operator++()
+                    {
+                        if( m_data )
+                        {
+                            ++m_data;
+                        }
+                        else
+                        {
+                            boost::tie(m_curRow, m_curColumn) =
+                                m_matrix->Advance(m_curRow, m_curColumn, m_transpose);
+                            if( m_curRow == std::numeric_limits<unsigned int>::max() )
                             {
-                                m_data = m_end;
-                            }
-                        }
-
-                        iterator_impl(MatrixType* m, char transpose, bool isEnd = false) :
-                            m_data(NULL),
-                            m_end(NULL),
-                            m_curRow(0),
-                            m_curColumn(0),
-                            m_matrix(m),
-                            m_curIndex(0),
-                            m_transpose(transpose)
-                        {
-                            if( isEnd )
-                            {
-                                m_curRow = std::numeric_limits<unsigned int>::max();
-                                m_curColumn = std::numeric_limits<unsigned int>::max();
-                                m_curIndex = std::numeric_limits<unsigned int>::max();
-                            }
-                        }
-                        
-                        iterator_impl(const iterator_impl<T, MatrixType>& rhs) :
-                            m_data(rhs.m_data),
-                            m_end(rhs.m_end),
-                            m_curRow(rhs.m_curRow),
-                            m_curColumn(rhs.m_curColumn),
-                            m_matrix(rhs.m_matrix),
-                            m_curIndex(rhs.m_curIndex),
-                            m_transpose(rhs.m_transpose)
-                        {
-                        }
-
-                        iterator_impl<T, MatrixType>& operator=(const iterator_impl<T, MatrixType>& rhs)
-                        {
-                            m_data = rhs.m_data;
-                            m_end = rhs.m_end;
-                            m_curRow = rhs.m_curRow;
-                            m_curColumn = rhs.m_curColumn;
-                            m_matrix = rhs.m_matrix;
-                            m_curIndex = rhs.m_curIndex;
-                            m_transpose = rhs.m_transpose;
-                            return *this;
-                        }
-
-                        reference operator*()
-                        {
-                            if( m_data )
-                            {
-                                ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
-                                return *m_data;
+                                m_curIndex = m_curRow;
                             }
                             else
                             {
-                                return m_matrix->GetPtr()[m_curIndex];
+                                m_curIndex = m_matrix->CalculateIndex(m_curRow, m_curColumn, m_transpose);
                             }
                         }
+                        return *this;
+                    }
 
-                        const_reference operator*() const
-                        {
-                            if( m_data )
-                            {
-                                ASSERTL1(m_data < m_end, "Attempt to dereference matrix iterator after its end.");
-                                return *m_data;
-                            }
-                            else
-                            {
-                                return m_matrix->GetPtr(m_curIndex);
-                            }
-                        }
+                    /// \postfix increment operator.
+                    iterator_impl<T, MatrixType> operator++(int)
+                    {
+                        iterator_impl<T, MatrixType> result = *this;
+                        ++(*this);
+                        return result;
+                    }
 
-                        /// \brief Prefix increment operator.
-                        iterator_impl<T, MatrixType>& operator++()
-                        {
-                            if( m_data )
-                            {
-                                ++m_data;
-                            }
-                            else
-                            {
-                                boost::tie(m_curRow, m_curColumn) = 
-                                    m_matrix->Advance(m_curRow, m_curColumn, m_transpose);
-                                if( m_curRow == std::numeric_limits<unsigned int>::max() )
-                                {
-                                    m_curIndex = m_curRow;
-                                }
-                                else
-                                {
-                                    m_curIndex = m_matrix->CalculateIndex(m_curRow, m_curColumn, m_transpose);
-                                }
-                            }
-                            return *this;
-                        }
+                    bool operator==(const iterator_impl<T, MatrixType>& rhs)
+                    {
+                        return m_data == rhs.m_data &&
+                               m_end == rhs.m_end &&
+                               m_curRow == rhs.m_curRow &&
+                               m_curColumn == rhs.m_curColumn &&
+                               m_matrix == rhs.m_matrix &&
+                               m_curIndex == rhs.m_curIndex &&
+                               m_transpose == rhs.m_transpose;
+                    }
 
-                        /// \postfix increment operator.
-                        iterator_impl<T, MatrixType> operator++(int)
-                        {
-                            iterator_impl<T, MatrixType> result = *this;
-                            ++(*this);
-                            return result;
-                        }
+                    bool operator!=(const iterator_impl<T, MatrixType>& rhs)
+                    {
+                        return !(*this == rhs);
+                    }
 
-                        bool operator==(const iterator_impl<T, MatrixType>& rhs)
-                        {
-                            return m_data == rhs.m_data &&
-                                   m_end == rhs.m_end &&
-                                   m_curRow == rhs.m_curRow &&
-                                   m_curColumn == rhs.m_curColumn &&
-                                   m_matrix == rhs.m_matrix &&
-                                   m_curIndex == rhs.m_curIndex &&
-                                   m_transpose == rhs.m_transpose;
-                        }
+                private:
+                    // Used when the matrix is not transposed
+                    T* m_data;
+                    T* m_end;
 
-                        bool operator!=(const iterator_impl<T, MatrixType>& rhs)
-                        {
-                            return !(*this == rhs);
-                        }
-
-                    private:
-                        // Used when the matrix is not transposed
-                        T* m_data;
-                        T* m_end;
-
-                        // Used when the matrix is transposed.
-                        unsigned int m_curRow;
-                        unsigned int m_curColumn;
-                        MatrixType* m_matrix;
-                        unsigned int m_curIndex;
-                        char m_transpose;
+                    // Used when the matrix is transposed.
+                    unsigned int m_curRow;
+                    unsigned int m_curColumn;
+                    MatrixType* m_matrix;
+                    unsigned int m_curIndex;
+                    char m_transpose;
             };
 
         public:
             /// \brief Creates an empty matrix.
-            NekMatrix() :
-                BaseType(0, 0),
-                m_data(),
-                m_wrapperType(eCopy),
-                m_storagePolicy(eFULL),
-                m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
-                m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
-            {
-                m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-            }
+            LIB_UTILITIES_EXPORT NekMatrix() ;
             
             /// \brief Creates a rows by columns matrix.
             /// \brief rows The number of rows in the matrix.
             /// \brief columns The number of columns in the matrix.
-            NekMatrix(unsigned int rows, unsigned int columns, MatrixStorage policy = eFULL,
+            LIB_UTILITIES_EXPORT NekMatrix(unsigned int rows, unsigned int columns, MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns),
-                m_data(),
-                m_wrapperType(eCopy),
-                m_storagePolicy(policy),
-                m_numberOfSuperDiagonals(superDiagonals),
-                m_numberOfSubDiagonals(subDiagonals)
-            {
-                m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-            }
+                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max());
 
-            NekMatrix(unsigned int rows, unsigned int columns, 
+            LIB_UTILITIES_EXPORT NekMatrix(unsigned int rows, unsigned int columns, 
                       MatrixStorage policy,
                       unsigned int subDiagonals,
                       unsigned int superDiagonals,
-                      unsigned int capacity) :
-                BaseType(rows, columns),
-                m_data(),
-                m_wrapperType(eCopy),
-                m_storagePolicy(policy),
-                m_numberOfSuperDiagonals(superDiagonals),
-                m_numberOfSubDiagonals(subDiagonals)
-            {
-                unsigned int requiredStorage = this->GetRequiredStorageSize();
-                unsigned int actualSize = std::max(requiredStorage, capacity);
-                m_data = Array<OneD, DataType>(actualSize);
-            }
+                      unsigned int capacity);
             
             /// \brief Creates a rows by columns matrix.
             /// \brief rows The number of rows in the matrix.
@@ -287,20 +261,10 @@ namespace Nektar
             /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
             ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
             ///                           for this matrix has policy specific data.
-            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue,
+            LIB_UTILITIES_EXPORT NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue,
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns),
-                m_data(),
-                m_wrapperType(eCopy),
-                m_storagePolicy(policy),
-                m_numberOfSuperDiagonals(superDiagonals),
-                m_numberOfSubDiagonals(subDiagonals)
-            {
-                m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-                std::fill(m_data.begin(), m_data.end(), initValue);
-            }
+                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max());
             
             /// \brief Creates a rows by columns matrix.
             /// \brief rows The number of rows in the matrix.
@@ -309,21 +273,10 @@ namespace Nektar
             /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
             ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
             ///                           for this matrix has policy specific data.
-            NekMatrix(unsigned int rows, unsigned int columns, const DataType* data,
+            LIB_UTILITIES_EXPORT NekMatrix(unsigned int rows, unsigned int columns, const DataType* data,
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns),
-                m_data(),
-                m_wrapperType(eCopy),
-                m_storagePolicy(policy),
-                m_numberOfSuperDiagonals(superDiagonals),
-                m_numberOfSubDiagonals(subDiagonals)
-            {
-                unsigned int size = GetRequiredStorageSize();
-                m_data = Array<OneD, DataType>(size);
-                std::copy(data, data + size, m_data.begin());
-            }
+                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max());
             
             /// \brief Creates a rows by columns matrix.
             /// \brief rows The number of rows in the matrix.
@@ -332,20 +285,10 @@ namespace Nektar
             /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
             ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
             ///                           for this matrix has policy specific data.
-            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d,
+            LIB_UTILITIES_EXPORT NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d,
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns),
-                m_data(),
-                m_wrapperType(eCopy),
-                m_storagePolicy(policy),
-                m_numberOfSuperDiagonals(superDiagonals),
-                m_numberOfSubDiagonals(subDiagonals)
-            {
-                m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-                CopyArrayN(d, m_data, m_data.size());
-            }
+                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max());
             
             /// \brief Creates a rows by columns matrix.
             /// \brief rows The number of rows in the matrix.
@@ -356,39 +299,12 @@ namespace Nektar
             /// \brief policySpecificData Data the is specific to the storage type assigned to this matrix.
             ///                           Check MatrixStoragePolicy<StorageType> to see if the StoragePolicy
             ///                           for this matrix has policy specific data.
-            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d, PointerWrapper wrapperType = eCopy,
+            LIB_UTILITIES_EXPORT NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, DataType>& d, PointerWrapper wrapperType = eCopy,
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns),
-                m_data(),
-                m_wrapperType(wrapperType),
-                m_storagePolicy(policy),
-                m_numberOfSuperDiagonals(superDiagonals),
-                m_numberOfSubDiagonals(subDiagonals)
-            {
-                if( wrapperType == eWrapper )
-                {
-                     m_data = Array<OneD, DataType>(d, eVECTOR_WRAPPER);
-                }
-                else
-                {
-                    m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-                    CopyArrayN(d, m_data, m_data.num_elements());
-                }
-            }
+                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max());
             
-            NekMatrix(const ThisType& rhs) :
-                BaseType(rhs),
-                m_data(),
-                m_wrapperType(rhs.m_wrapperType),
-                m_storagePolicy(rhs.m_storagePolicy),
-                m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
-                m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals)
-            {
-                PerformCopyConstruction(rhs);
-            }
-
+            LIB_UTILITIES_EXPORT NekMatrix(const ThisType& rhs);
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
@@ -397,7 +313,8 @@ namespace Nektar
                     m_wrapperType(eCopy),
                     m_storagePolicy(eFULL),
                     m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
-                    m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
+                    m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
+                    m_tempSpace()
                 {
                     boost::tuple<unsigned int, unsigned int, unsigned int> sizes  =
                             MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
@@ -412,31 +329,14 @@ namespace Nektar
                     expt::ExpressionEvaluator::Evaluate(rhs, *this);
                     this->RemoveExcessCapacity();
                 }
+
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
             
-            MatrixStorage GetType() const { return m_storagePolicy; }
+            LIB_UTILITIES_EXPORT MatrixStorage GetType() const;
            
-            ThisType& operator=(const ThisType& rhs)
-            {
-                if( this == &rhs )
-                {
-                    return *this;
-                }
+            LIB_UTILITIES_EXPORT ThisType& operator=(const ThisType& rhs);
 
-                BaseType::operator=(rhs);
-                m_storagePolicy = rhs.m_storagePolicy;
-                m_numberOfSubDiagonals = rhs.m_numberOfSubDiagonals;
-                m_numberOfSuperDiagonals = rhs.m_numberOfSuperDiagonals;
-                
-                ResizeDataArrayIfNeeded();
-                
-                unsigned int requiredStorageSize = GetRequiredStorageSize();
-                std::copy(rhs.m_data.data(), rhs.m_data.data() + requiredStorageSize, m_data.data());
-                
-                return *this;
-            }
-            
             template<typename InnerMatrixType>
             ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
             {
@@ -462,6 +362,7 @@ namespace Nektar
 
             }
             
+
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 //template<typename ExpressionPolicyType>
                 //ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
@@ -503,532 +404,6 @@ namespace Nektar
                 //    }
                 //    return *this;
                 //}
-            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-            
-            /// \brief Returns the element value at the given row and column.
-            ConstGetValueType operator()(unsigned int row, unsigned int column) const
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                
-                return this->GetValue(row, column, this->GetTransposeFlag());
-            }
-
-            /// \brief Returns the element value at the given row and column.  
-            /// \brief row The element's row.
-            /// \brief column The element's column.
-            /// \brief transpose If transpose = 'N', then the return value is element [row, column].
-            ///                  If transpose = 'T', then the return value is element [column, row].
-            ConstGetValueType operator()(unsigned int row, unsigned int column, char transpose) const
-            {    
-                return this->GetValue(row, column, transpose);
-            }
-            
-            unsigned int GetRequiredStorageSize() const
-            {
-                return BaseType::GetRequiredStorageSize(this->GetStorageType(),
-                    this->GetRows(), this->GetColumns(), 
-                    this->GetNumberOfSubDiagonals(), this->GetNumberOfSuperDiagonals());
-            }
-            
-            unsigned int CalculateIndex(unsigned int row, unsigned int col, const char transpose) const
-            {
-                unsigned int numRows = this->GetSize()[0];
-                unsigned int numColumns = this->GetSize()[1];
-                return BaseType::CalculateIndex(this->GetStorageType(),
-                    row, col, numRows, numColumns, transpose,
-                    m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
-            }
-            
-            /// \brief Returns the element value at the given row and column.
-            typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column) const
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                    
-                return GetValue(row, column, this->GetTransposeFlag());
-            }
-
-            /// \brief Returns the element value at the given row and column.  
-            /// \brief row The element's row.
-            /// \brief column The element's column.
-            /// \brief transpose If transpose = 'N', then the return value is element [row, column].
-            ///                  If transpose = 'T', then the return value is element [column, row].
-            ConstGetValueType GetValue(unsigned int row, unsigned int column, char transpose) const
-            {
-                static DataType defaultReturnValue;
-                unsigned int index = CalculateIndex(row, column, transpose);
-                if( index != std::numeric_limits<unsigned int>::max() )
-                {
-                    return m_data[index];
-                }
-                else
-                {
-                    return defaultReturnValue;
-                }
-            }
-            
-            const Array<OneD, const DataType>& GetPtr() const
-            {
-                return m_data;
-            }
-            
-            /// \brief Returns the scaling used by this matrix.
-            ///
-            /// Since this matrix is not a scaled matrix, this method always returns 1.
-            DataType Scale() const
-            {
-                return DataType(1);
-            }
-
-            const DataType* GetRawPtr() const
-            {
-                return m_data.data();
-            }
-            
-            typedef iterator_impl<const DataType, const ThisType> const_iterator;
-            
-            
-            const_iterator begin() const
-            {
-                return begin(this->GetTransposeFlag());
-            }
-
-            const_iterator begin(char transpose) const
-            { 
-                if( transpose == 'N' )
-                {
-                    return const_iterator(m_data.data(), m_data.data() + m_data.num_elements());
-                }
-                else
-                {
-                    return const_iterator(this, transpose);
-                }
-            }
-
-            const_iterator end() const
-            {
-                return end(this->GetTransposeFlag());
-            }
-
-            const_iterator end(char transpose) const
-            {
-                if( transpose == 'N' )
-                {
-                    return const_iterator(m_data.data(), m_data.data() + m_data.num_elements(), true);
-                }
-                else
-                {
-                    return const_iterator(this, transpose, true);
-                }
-            }
-            
-            
-            unsigned int GetStorageSize() const
-            {
-                return m_data.num_elements();
-            }
-            
-             // Banded matrices only.
-            // Get the specified number of sub diagonals, or calculate the 
-            // number if this object has not been initialized.
-            unsigned int GetNumberOfSubDiagonals() const
-            {
-                if( m_numberOfSubDiagonals != std::numeric_limits<unsigned int>::max() )
-                {
-                    return m_numberOfSubDiagonals;
-                }
-                else if( this->GetRows() > 0 )
-                {
-                    return this->GetRows()-1;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-
-            unsigned int GetNumberOfSuperDiagonals() const
-            {
-                if( m_numberOfSuperDiagonals != std::numeric_limits<unsigned int>::max() )
-                {
-                    return m_numberOfSuperDiagonals;
-                }
-                else if( this->GetRows() > 0 )
-                {
-                    return this->GetRows()-1;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-            
-            unsigned int CalculateNumberOfRows() const
-            {
-                return GetNumberOfSubDiagonals() + GetNumberOfSuperDiagonals() + 1;
-            }
-            /// \brief Returns true if the this matrix and rhs are equivalent.
-            ///
-            /// Two matrices are equivalent if they have the same size and each element
-            /// is the same.
-            bool operator==(const NekMatrix<DataType, StandardMatrixTag>& rhs) const
-            {                
-                if( this->GetRows() != rhs.GetRows() ||
-                    this->GetColumns() != rhs.GetColumns() )
-                {
-                    return false;
-                }
-
-                if( this->GetTransposeFlag() == rhs.GetTransposeFlag() )
-                {
-                    return std::equal(begin(), end(), rhs.begin());
-                }
-                else
-                {
-                    for(unsigned int i = 0; i < this->GetRows(); ++i)
-                    {
-                        for(unsigned int j = 0; j < this->GetColumns(); ++j)
-                        {
-                            if( (*this)(i,j) != rhs(i,j) )
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-
-                return true;
-            }
-                   
-            PointerWrapper GetWrapperType() const { return m_wrapperType; }
-
-            // The following methods purposefully hide the method with the same name in the base class.
-            // We don't need to call the virtual function if we have an actual pointer to the 
-            // derived class.
-//            unsigned int GetRows() const
-//            {
-//                return BaseType::GetRowsForTranspose(this->GetRawTransposeFlag());
-//            }
-//            
-//            unsigned int GetColumns() const
-//            {
-//                return BaseType::GetColumnsForTranspose(this->GetRawTransposeFlag());
-//            }
-            
-            char GetTransposeFlag() const 
-            {
-                return this->GetRawTransposeFlag();
-            }  
-            
-            
-            boost::tuples::tuple<unsigned int, unsigned int> 
-            Advance(unsigned int curRow, unsigned int curColumn) const
-            {
-                return Advance(curRow, curColumn, this->GetTransposeFlag());
-            }
-            
-            boost::tuples::tuple<unsigned int, unsigned int> 
-            Advance(unsigned int curRow, unsigned int curColumn, char transpose) const
-            {
-                unsigned int numRows = this->GetTransposedRows(transpose);
-                unsigned int numColumns = this->GetTransposedColumns(transpose);
-                
-                switch(m_storagePolicy)
-                {
-                    case eFULL:
-                        return FullMatrixFuncs::Advance(
-                            numRows, numColumns, curRow, curColumn);
-                        break;
-                    case eDIAGONAL:
-                        return DiagonalMatrixFuncs::Advance(
-                            numRows, numColumns, curRow, curColumn);
-                        break;
-                    case eUPPER_TRIANGULAR:
-                        return UpperTriangularMatrixFuncs::Advance(
-                            numRows, numColumns, curRow, curColumn);
-                        break;
-                        
-                    case eLOWER_TRIANGULAR:
-                        return LowerTriangularMatrixFuncs::Advance(
-                            numRows, numColumns, curRow, curColumn);
-                        break;
-                        
-                    case eSYMMETRIC:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC:
-                        return SymmetricMatrixFuncs::Advance(
-                            numRows, numColumns, curRow, curColumn);
-                        break;
-                    case eBANDED:
-                        return BandedMatrixFuncs::Advance(
-                            numRows, numColumns, curRow, curColumn);
-                        break;
-                    case eSYMMETRIC_BANDED:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eUPPER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eLOWER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                        
-                    default:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                }
-                return boost::tuples::tuple<unsigned int, unsigned int>(curRow, curColumn);
-            }
-         
-            static ThisType CreateWrapper(const ThisType& rhs)
-            {
-                return ThisType(rhs, eWrapper);
-            }
-            
-            static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs)
-            {
-                return boost::shared_ptr<ThisType>(new ThisType(*rhs, eWrapper));
-            }
-
-        protected:
-            NekMatrix(const ThisType& rhs, PointerWrapper wrapperType)  :
-                BaseType(rhs),
-                m_data(),
-                m_wrapperType(wrapperType),
-                m_storagePolicy(rhs.m_storagePolicy),
-                m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
-                m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals)
-            {
-                    PerformCopyConstruction(rhs);
-            }
-            
-            Array<OneD, DataType>& GetData() { return m_data; }
-            
-            void RemoveExcessCapacity()
-            {
-                if( m_wrapperType == eCopy )
-                {
-                    unsigned int requiredStorageSize = GetRequiredStorageSize();
-                    if( m_data.num_elements() > requiredStorageSize )
-                    {
-                        Array<OneD, DataType> newArray(requiredStorageSize);
-                        CopyArrayN(m_data, newArray, requiredStorageSize);
-                        m_data = newArray;
-                    }
-                }
-                else if( m_wrapperType == eWrapper )
-                {
-                    ASSERTL0(true, "Can't call RemoveExcessCapacity on a wrapped matrix.");
-                }
-            }
-            
-            void ResizeDataArrayIfNeeded(unsigned int requiredStorageSize)
-            {
-                if( m_wrapperType == eCopy  )
-                {
-                    if( m_data.num_elements() < requiredStorageSize )
-                    {
-                        Array<OneD, DataType> newData(requiredStorageSize);
-                        std::copy(m_data.data(), m_data.data() + m_data.num_elements(), newData.data());
-                        m_data = newData;
-                    }
-                }
-                else if( m_wrapperType == eWrapper )
-                {
-                    // If the current matrix is wrapped, then just copy over the top,
-                    // but the sizes of the two matrices must be the same.
-                    ASSERTL0(m_data.num_elements() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
-                }
-            }
-            
-            void ResizeDataArrayIfNeeded()
-            {
-                unsigned int requiredStorageSize = GetRequiredStorageSize();
-                ResizeDataArrayIfNeeded(requiredStorageSize);
-            }
-            
-            //void ResizeDataArrayIfNeeded(const NekMatrixMetadata& data)
-            //{
-            //    ResizeDataArrayIfNeeded(data.RequiredStorageSize);
-            //}
-
-            
-        private:
-            void PerformCopyConstruction(const ThisType& rhs)
-            {
-                if( m_wrapperType == eWrapper )
-                {
-                    m_data = rhs.m_data;
-                }
-                else
-                {
-                    m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-                    CopyArrayN(rhs.m_data, m_data, m_data.num_elements());
-                }
-            }
-            
-            virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
-            {
-                return ThisType::operator()(row, column);
-            }
-            
-            virtual unsigned int v_GetStorageSize() const 
-            {
-                return ThisType::GetStorageSize();
-            }
-            
-            virtual MatrixStorage v_GetStorageType() const
-            {
-                return ThisType::GetType();
-            }
-            
-            // We need to rethink class structure a little.  This shouldn't be necessary.
-            virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
-            {
-            }
-            
-            Array<OneD, DataType> m_data;
-            PointerWrapper m_wrapperType;
-            MatrixStorage m_storagePolicy;
-            
-            // Only used by banded matrices.
-            unsigned int m_numberOfSuperDiagonals;
-            unsigned int m_numberOfSubDiagonals;
-    };
-
-     
-    template<typename DataType>
-    class NekMatrix<DataType, StandardMatrixTag> : public NekMatrix<const DataType, StandardMatrixTag>
-    {
-        public:
-            typedef NekMatrix<const DataType, StandardMatrixTag> BaseType;
-            typedef NekMatrix<DataType, StandardMatrixTag> ThisType;
-            typedef DataType NumberType;
-            typedef DataType GetValueType;
-            typedef const DataType& ConstGetValueType;
-
-        public:
-            NekMatrix() :
-                BaseType(),
-                m_tempSpace()
-            {
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns,
-                      MatrixStorage policy = eFULL,
-                      unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, policy, subDiagonals, superDiagonals),
-                m_tempSpace()
-            {
-            }
-
-            NekMatrix(unsigned int rows, unsigned int columns, typename boost::call_traits<DataType>::const_reference initValue,
-                      MatrixStorage policy = eFULL,
-                      unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, initValue, policy, subDiagonals, superDiagonals),
-                m_tempSpace()
-            {
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns, const DataType* data,
-                      MatrixStorage policy = eFULL,
-                      unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, data, policy, subDiagonals, superDiagonals),
-                m_tempSpace()
-            {
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, const DataType>& d,
-                      MatrixStorage policy = eFULL,
-                      unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, d, policy, subDiagonals, superDiagonals),
-                m_tempSpace()
-            {
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns, const Array<OneD, DataType>& d, PointerWrapper wrapperType = eCopy,
-                      MatrixStorage policy = eFULL,
-                      unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
-                      unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, d, wrapperType, policy, subDiagonals, superDiagonals),
-                m_tempSpace()
-            {
-
-            }
-            
-            NekMatrix(unsigned int rows, unsigned int columns, 
-                      MatrixStorage policy,
-                      unsigned int subDiagonals,
-                      unsigned int superDiagonals,
-                      unsigned int capacity) :
-                BaseType(rows, columns, policy, subDiagonals, superDiagonals, capacity),
-                m_tempSpace()
-            {
-            }
-
-            NekMatrix(const ThisType& rhs) :
-                BaseType(rhs),
-                m_tempSpace()
-            {
-            }
-            
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                template<typename L, typename Op, typename R>
-                NekMatrix(const expt::Node<L, Op, R>& rhs) :
-                    BaseType(0, 0),
-                    m_tempSpace()
-                {
-                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
-                        MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
-                    unsigned int rows = sizes.get<0>();
-                    unsigned int columns = sizes.get<1>();
-                    unsigned int bufferSize = sizes.get<2>();
-
-                    this->ResizeDataArrayIfNeeded(bufferSize);
-
-                    this->Resize(rows, columns);
-                    //this->GetData() = Array<OneD, DataType>(this());
-                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
-                    
-                    this->RemoveExcessCapacity();
-                    
-                }
-            #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
-            
-            // TODO - Copy constructors from other types of matrices.
-            
-            ThisType& operator=(const ThisType& rhs)
-            {
-                if( this == &rhs )
-                {
-                    return *this;
-                }
-
-                BaseType::operator=(rhs);
-                return *this;
-            }
-            
-            template<typename InnerMatrixType>
-            ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
-            {
-                BaseType::operator=(rhs);
-                return *this;
-            }
-            
-            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
                 ThisType& operator=(const expt::Node<L, Op, R>& rhs)
                 {
@@ -1074,22 +449,11 @@ namespace Nektar
 
                     return *this;        
                 }
-                    
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
-            void SetSize(unsigned int rows, unsigned int cols)
-            {
-                this->Resize(rows, cols);
-                
-                // Some places in Nektar++ access the matrix data array and 
-                // use num_elements() to see how big it is.  When using 
-                // expression templates, the data array's capacity is often larger
-                // than the actual number of elements, so this statement is 
-                // required to report the correct number of elements.
-                this->GetData().ChangeSize(this->GetRequiredStorageSize());
-                ASSERTL0(this->GetRequiredStorageSize() <= this->GetData().num_elements(), "Can't resize matrices if there is not enough capacity.");
-            }
             
+            /// \brief Returns the element value at the given row and column.
+            LIB_UTILITIES_EXPORT ConstGetValueType operator()(unsigned int row, unsigned int column) const;
+
             class Proxy
             {
                 public:
@@ -1119,305 +483,196 @@ namespace Nektar
                     static DataType defaultReturnValue;
             };
 
+            /// \brief Returns the element value at the given row and column.  
+            /// \brief row The element's row.
+            /// \brief column The element's column.
+            /// \brief transpose If transpose = 'N', then the return value is element [row, column].
+            ///                  If transpose = 'T', then the return value is element [column, row].
+            LIB_UTILITIES_EXPORT ConstGetValueType operator()(unsigned int row, unsigned int column, char transpose) const;
             
-            using BaseType::operator();
-            Proxy operator()(unsigned int row, unsigned int column)
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                    
-                return (*this)(row, column, this->GetTransposeFlag());
-            }
+            LIB_UTILITIES_EXPORT unsigned int GetRequiredStorageSize() const;
+            
+            LIB_UTILITIES_EXPORT unsigned int CalculateIndex(unsigned int row, unsigned int col, const char transpose) const;
+            
+            /// \brief Returns the element value at the given row and column.
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column) const;
+
+            /// \brief Returns the element value at the given row and column.  
+            /// \brief row The element's row.
+            /// \brief column The element's column.
+            /// \brief transpose If transpose = 'N', then the return value is element [row, column].
+            ///                  If transpose = 'T', then the return value is element [column, row].
+            LIB_UTILITIES_EXPORT ConstGetValueType GetValue(unsigned int row, unsigned int column, char transpose) const;
+            
+            LIB_UTILITIES_EXPORT const Array<OneD, const DataType>& GetPtr() const;
+            
+            /// \brief Returns the scaling used by this matrix.
+            ///
+            /// Since this matrix is not a scaled matrix, this method always returns 1.
+            LIB_UTILITIES_EXPORT DataType Scale() const;
+
+            LIB_UTILITIES_EXPORT const DataType* GetRawPtr() const;
+            
+            typedef iterator_impl<const DataType, const ThisType> const_iterator;
+            typedef iterator_impl<DataType, ThisType> iterator;
+            
+            LIB_UTILITIES_EXPORT iterator begin();
+
+            LIB_UTILITIES_EXPORT iterator begin(char transpose);
+
+            LIB_UTILITIES_EXPORT iterator end();
+            LIB_UTILITIES_EXPORT iterator end(char transpose);
+
+            LIB_UTILITIES_EXPORT const_iterator begin() const;
+
+            LIB_UTILITIES_EXPORT const_iterator begin(char transpose) const;
+
+            LIB_UTILITIES_EXPORT const_iterator end() const;
+
+            LIB_UTILITIES_EXPORT const_iterator end(char transpose) const;
+            
+            
+            LIB_UTILITIES_EXPORT unsigned int GetStorageSize() const;
+            
+             // Banded matrices only.
+            // Get the specified number of sub diagonals, or calculate the 
+            // number if this object has not been initialized.
+            LIB_UTILITIES_EXPORT unsigned int GetNumberOfSubDiagonals() const;
+
+            LIB_UTILITIES_EXPORT unsigned int GetNumberOfSuperDiagonals() const;
+            
+            LIB_UTILITIES_EXPORT unsigned int CalculateNumberOfRows() const;
+
+            /// \brief Returns true if the this matrix and rhs are equivalent.
+            ///
+            /// Two matrices are equivalent if they have the same size and each element
+            /// is the same.
+            LIB_UTILITIES_EXPORT bool operator==(const NekMatrix<DataType, StandardMatrixTag>& rhs) const;
+
+            LIB_UTILITIES_EXPORT PointerWrapper GetWrapperType() const;
+
+
+            LIB_UTILITIES_EXPORT char GetTransposeFlag() const ;
+            
+            
+            LIB_UTILITIES_EXPORT boost::tuples::tuple<unsigned int, unsigned int> 
+            Advance(unsigned int curRow, unsigned int curColumn) const;
+            
+            LIB_UTILITIES_EXPORT boost::tuples::tuple<unsigned int, unsigned int> 
+            Advance(unsigned int curRow, unsigned int curColumn, char transpose) const;
+         
+            LIB_UTILITIES_EXPORT static ThisType CreateWrapper(const ThisType& rhs);
+            
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs);
+
+            LIB_UTILITIES_EXPORT void SetSize(unsigned int rows, unsigned int cols);
+
+            LIB_UTILITIES_EXPORT Proxy operator()(unsigned int row, unsigned int column);
             
                         
-            Proxy operator()(unsigned int row, unsigned int column, char transpose)
-            {   
-                unsigned int index = this->CalculateIndex(row, column, transpose);
-                if( index != std::numeric_limits<unsigned int>::max() )
-                {
-                    return Proxy(this->GetData()[index]);
-                }
-                else
-                {
-                    return Proxy();
-                }    
-//                static DataType defaultReturnValue;
-//                unsigned int index = CalculateIndex(row, column, transpose);
-//                if( index != std::numeric_limits<unsigned int>::max() )
-//                {
-//                    return GetData()[index];
-//                }
-//                else
-//                {
-//                    // Reset the default in case someone overwrites it.
-//                    defaultReturnValue = DataType();
-//                    return defaultReturnValue;
-//                }
-            }
+            LIB_UTILITIES_EXPORT Proxy operator()(unsigned int row, unsigned int column, char transpose);
             
-            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                SetValue(row, column, d, this->GetTransposeFlag());
-            }
+            LIB_UTILITIES_EXPORT void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d);
 
-            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d, char transpose)
-            {
-                unsigned int index = this->CalculateIndex(row, column, transpose);
-                if( index != std::numeric_limits<unsigned int>::max() )
-                {
-                    this->GetData()[index] = d;
-                }
-                else
-                {
-                    NEKERROR(ErrorUtil::efatal, "Can't assign values into zeroed elements of a special array.");
-                }
-            }
+            LIB_UTILITIES_EXPORT void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d, char transpose);
 
-            using BaseType::GetPtr;
-            Array<OneD, DataType>& GetPtr()
-            {
-                return this->GetData();
-            }
+            LIB_UTILITIES_EXPORT Array<OneD, DataType>& GetPtr();
 
-            using BaseType::GetRawPtr;
-            DataType* GetRawPtr()
-            {
-                return this->GetData().data();
-            }
+            LIB_UTILITIES_EXPORT DataType* GetRawPtr();
 
-            typedef typename BaseType::template iterator_impl<DataType, ThisType> iterator;
             
-            using BaseType::begin;
-            using BaseType::end;
-            iterator begin()
-            {
-                return begin(this->GetTransposeFlag());
-            }
 
-            iterator begin(char transpose) 
-            { 
-                if( transpose == 'N' )
-                {
-                    return iterator(this->GetData().data(), this->GetData().data() + this->GetData().num_elements());
-                }
-                else
-                {
-                    return iterator(this, transpose);
-                }
-            }
+            LIB_UTILITIES_EXPORT NekDouble AbsMaxtoMinEigenValueRatio(void);
 
-            iterator end()
-            {
-                return end(this->GetTransposeFlag());
-            }
+            LIB_UTILITIES_EXPORT void EigenSolve(Array<OneD, NekDouble> &EigValReal,
+                            Array<OneD, NekDouble> &EigValImag,
+                            Array<OneD, NekDouble> &EigVecs =NullNekDouble1DArray);
 
-            iterator end(char transpose)
-            {
-                if( transpose == 'N' )
-                {
-                    return iterator(this->GetData().data(), this->GetData().data() + this->GetData().num_elements(), true);
-                }
-                else
-                {
-                    return iterator(this, transpose, true);
-                }
-            }
-
-        NekDouble AbsMaxtoMinEigenValueRatio(void)
-        {
-            NekDouble returnval; 
-            int nvals = this->GetColumns();
-            Array<OneD, NekDouble> EigValReal(nvals);
-            Array<OneD, NekDouble> EigValImag(nvals);
-
-            EigenSolve(EigValReal,EigValImag);
-
-            Vmath::Vmul(nvals,EigValReal,1,EigValReal,1,EigValReal,1);
-            Vmath::Vmul(nvals,EigValImag,1,EigValImag,1,EigValImag,1);
-            Vmath::Vadd(nvals,EigValReal,1,EigValImag,1,EigValReal,1);
-            
-            returnval = sqrt(Vmath::Vmax(nvals,EigValReal,1)/Vmath::Vmin(nvals,EigValReal,1));
-            
-            return returnval; 
-        }
-
-        void EigenSolve(Array<OneD, NekDouble> &EigValReal, 
-                        Array<OneD, NekDouble> &EigValImag, 
-                        Array<OneD, NekDouble> &EigVecs =NullNekDouble1DArray)
-        {
-            ASSERTL0(this->GetRows()==this->GetColumns(), "Only square matrices can be called");
-            
-            switch(this->GetType())
-            {
-            case eFULL:
-                FullMatrixFuncs::EigenSolve(this->GetRows(),
-                                            this->GetData(), EigValReal,
-                                            EigValImag, EigVecs);
-                break;
-            case eDIAGONAL:
-                Vmath::Vcopy(this->GetRows(),&(this->GetData())[0],1, &EigValReal[0],1);
-                Vmath::Zero(this->GetRows(),&EigValImag[0],1);
-                break;
-            case eUPPER_TRIANGULAR:
-            case eLOWER_TRIANGULAR:
-            case eSYMMETRIC:
-                    case eBANDED:
-            case eSYMMETRIC_BANDED:
-            case eUPPER_TRIANGULAR_BANDED:
-            case eLOWER_TRIANGULAR_BANDED:
-                NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                break;
+            LIB_UTILITIES_EXPORT void Invert();
                 
-            default:
-                NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-            }
-        }
-
-            void Invert()
-            {
-                ASSERTL0(this->GetRows()==this->GetColumns(), "Only square matrices can be inverted.");
-                ASSERTL0(this->GetTransposeFlag()=='N', "Only untransposed matrices may be inverted.");
-
-                switch(this->GetType())
-                {
-                    case eFULL:
-                        FullMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
-                            this->GetData(), this->GetTransposeFlag());
-                        break;
-                    case eDIAGONAL:
-                        DiagonalMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
-                            this->GetData());
-                        break;
-                    case eUPPER_TRIANGULAR:
-                    case eLOWER_TRIANGULAR:
-                    case eSYMMETRIC:
-                    case eBANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eSYMMETRIC_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eUPPER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eLOWER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
+            LIB_UTILITIES_EXPORT Array<OneD, DataType>& GetTempSpace();
+            
+            LIB_UTILITIES_EXPORT void SwapTempAndDataBuffers();
                         
-                    default:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                } 
-            }
-                
-            Array<OneD, DataType>& GetTempSpace()
-            {
-                if( m_tempSpace.capacity() == 0 )
-                {
-                    m_tempSpace = Array<OneD, DataType>(this->GetData().capacity());
-                }
-                return m_tempSpace;
-            }
-            
-            void SwapTempAndDataBuffers()
-            {
-                std::swap(m_tempSpace, this->GetData());
-            }
-            
-            static ThisType CreateWrapper(const ThisType& rhs)
-            {
-                return ThisType(rhs, eWrapper);
-            }
-            
-            static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs)
-            {
-                return boost::shared_ptr<ThisType>(new ThisType(*rhs, eWrapper));
-            }
-            
-            ThisType& operator*=(const NumberType& s)
-            {
-                for(unsigned int i = 0; i < this->GetPtr().num_elements(); ++i)
-                {
-                    this->GetPtr()[i] *= s;
-                }
-                return *this;
-            }
-            
+            LIB_UTILITIES_EXPORT ThisType& operator*=(const NumberType& s);
+
         protected:
+            LIB_UTILITIES_EXPORT NekMatrix(const ThisType& rhs, PointerWrapper wrapperType);
             
+            LIB_UTILITIES_EXPORT Array<OneD, DataType>& GetData();
             
+            LIB_UTILITIES_EXPORT void RemoveExcessCapacity();
+            
+            LIB_UTILITIES_EXPORT void ResizeDataArrayIfNeeded(unsigned int requiredStorageSize);
+            
+            LIB_UTILITIES_EXPORT void ResizeDataArrayIfNeeded();
+            
+
         private:
-            NekMatrix(const ThisType& rhs, PointerWrapper wrapper) :
-                BaseType(rhs, wrapper),
-                m_tempSpace()
-            {
-            }
+            LIB_UTILITIES_EXPORT void PerformCopyConstruction(const ThisType& rhs);
             
-            virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
-            {
-                return ThisType::SetValue(row, column, d);
-            }
+            LIB_UTILITIES_EXPORT virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const;
             
+            LIB_UTILITIES_EXPORT virtual unsigned int v_GetStorageSize() const ;
+            
+            LIB_UTILITIES_EXPORT virtual MatrixStorage v_GetStorageType() const;
+            
+            // We need to rethink class structure a little.  This shouldn't be necessary.
+            LIB_UTILITIES_EXPORT virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d);
+
+            Array<OneD, DataType> m_data;
+            PointerWrapper m_wrapperType;
+            MatrixStorage m_storagePolicy;
+            
+            // Only used by banded matrices.
+            unsigned int m_numberOfSuperDiagonals;
+            unsigned int m_numberOfSubDiagonals;
+
+            // Used during chained matrix multiplication as workspace.
             Array<OneD, DataType> m_tempSpace;
     };
+   
     
-
     template<typename DataType>
     DataType NekMatrix<DataType, StandardMatrixTag>::Proxy::defaultReturnValue;
-            
+
     template<typename DataType>
-    NekMatrix<DataType, StandardMatrixTag>
-    Transpose(NekMatrix<DataType, StandardMatrixTag>& rhs)
-    {
-        NekMatrix<DataType, StandardMatrixTag> result(rhs.GetRows(), rhs.GetColumns(), 
-            rhs.GetPtr(), eWrapper, rhs.GetType(), rhs.GetNumberOfSubDiagonals(), 
-            rhs.GetNumberOfSuperDiagonals());
-        result.Transpose();
-        return result;
-    }
+    LIB_UTILITIES_EXPORT NekMatrix<DataType, StandardMatrixTag>
+    Transpose(NekMatrix<DataType, StandardMatrixTag>& rhs);
 }
     
-    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 namespace expt
 {
-        template<typename DataType>
+    template<typename DataType>
     struct IsAlias<Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>, Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag> >
-        {
+    {
         static bool Apply(const Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>& lhs, const Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>& rhs)
-            {
-                return lhs.GetPtr().Overlaps(rhs.GetPtr());
-            }
-        };
-
-        template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
-        struct CreateFromTree<NekMatrix<DataType, StandardMatrixTag>, NodeType, Indices, StartIndex>
         {
-            template<typename ArgVectorType>
+            return lhs.GetPtr().Overlaps(rhs.GetPtr());
+        }
+    };
+
+    template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
+    struct CreateFromTree<NekMatrix<DataType, StandardMatrixTag>, NodeType, Indices, StartIndex>
+    {
+        template<typename ArgVectorType>
         static Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag> Apply(const ArgVectorType& tree)
-            {
-                boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+        {
+            boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
                 Nektar::MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
 
-                unsigned int rows = sizes.get<0>();
-                unsigned int columns = sizes.get<1>();
-                unsigned int bufferSize = sizes.get<2>();
+            unsigned int rows = sizes.get<0>();
+            unsigned int columns = sizes.get<1>();
+            unsigned int bufferSize = sizes.get<2>();
 
             return Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>(rows, columns,
-                     eFULL, std::numeric_limits<unsigned int>::max(),
-                     std::numeric_limits<unsigned int>::max(), bufferSize);
-            }
-        };
+                eFULL, std::numeric_limits<unsigned int>::max(),
+                std::numeric_limits<unsigned int>::max(), bufferSize);
+        }
+    };
 }
-    #endif
+#endif
 
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP

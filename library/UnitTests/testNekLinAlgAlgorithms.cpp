@@ -77,7 +77,7 @@ namespace Nektar
 /**
     $Log: testNekLinAlgAlgorithms.cpp,v $
     Revision 1.6  2008/03/28 01:45:56  bnelson
-    Updated constant sized vectors so they inherit from NekVector<const DataType> like the variable sized vectors.
+    Updated constant sized vectors so they inherit from NekVector<DataType> like the variable sized vectors.
 
     Revision 1.5  2008/03/06 04:48:23  ehan
     Changed NekVector<NekDouble, 3> to NekVector<NekDouble, ThreeD> to match the changes of enum to struct typename dim.

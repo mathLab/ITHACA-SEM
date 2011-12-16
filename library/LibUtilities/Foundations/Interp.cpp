@@ -75,7 +75,7 @@ namespace Nektar
                 
                 I0 = PointsManager()[fpoints0]->GetI(tpoints0);
                 
-                NekVector<const NekDouble> in(fpoints0.GetNumPoints(),from,eWrapper);
+                NekVector<NekDouble> in(fpoints0.GetNumPoints(),from,eWrapper);
                 NekVector<NekDouble> out(tpoints0.GetNumPoints(),to,eWrapper);
                 
                 out  = (*I0)*in;

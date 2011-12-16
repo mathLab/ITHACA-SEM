@@ -30,6 +30,8 @@
 #ifndef EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
 #define EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #include <ExpressionTemplates/Operators.hpp>
 #include <boost/type_traits.hpp>
 
@@ -64,4 +66,5 @@ namespace expt
 //    };
 }
 
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP

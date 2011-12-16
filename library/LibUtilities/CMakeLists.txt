@@ -11,6 +11,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/CanGetRawPtr.hpp
+    ./LinearAlgebra/ExplicitInstantiation.h
     ./LinearAlgebra/IsDgemmTraits.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
@@ -97,7 +98,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Equation.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/ErrorUtil.cpp
-    ./BasicUtils/mojo.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
@@ -120,13 +120,13 @@ SET(BasicUtilsSources
     ./BasicUtils/Equation.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
+    ./BasicUtils/VMath.cpp
 )
 
 SET(Memory
 	./Memory/ThreadSpecificPool.cpp	
 	./Memory/ThreadSpecificPool.hpp
 	./Memory/NekMemoryManager.hpp	
-	./Memory/DeleteNothing.hpp
 )
 
 
@@ -170,7 +170,13 @@ ENDIF(NEKTAR_USE_MPI)
 
 SET(LinearAlgebraSources
 	./LinearAlgebra/blas.cpp
+        ./LinearAlgebra/BlockMatrix.cpp
+        ./LinearAlgebra/MatrixBase.cpp
 	./LinearAlgebra/MatrixFuncs.cpp
+        ./LinearAlgebra/MatrixVectorMultiplication.cpp
+        ./LinearAlgebra/NekVector.cpp
+        ./LinearAlgebra/ScaledMatrix.cpp
+        ./LinearAlgebra/StandardMatrix.cpp
 #	./LinearAlgebra/lapack.cpp
 )
 

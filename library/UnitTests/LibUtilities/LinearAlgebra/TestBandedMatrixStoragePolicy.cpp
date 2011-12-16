@@ -134,63 +134,6 @@ namespace Nektar
             BOOST_CHECK_EQUAL(14, Policy::CalculateIndex(4, 4, 3, 3, 1, 2));
         }
 
-
-        BOOST_AUTO_TEST_CASE(TestGetValue)
-        {
-            UnitTests::RedirectCerrIfNeeded();
-
-            // [ 1 2 3 0 ]
-            // [ 4 5 6 7 ]
-            // [ 0 8 9 10 ]
-            // [ 0 0 11 12 ]
-            CountedObject<NekDouble> buf[] = { CountedObject<NekDouble>(0), CountedObject<NekDouble>(0), CountedObject<NekDouble>(1), CountedObject<NekDouble>(4),
-                                               CountedObject<NekDouble>(0), CountedObject<NekDouble>(2), CountedObject<NekDouble>(5), CountedObject<NekDouble>(8),
-                                               CountedObject<NekDouble>(3), CountedObject<NekDouble>(6), CountedObject<NekDouble>(9), CountedObject<NekDouble>(11),
-                                               CountedObject<NekDouble>(7), CountedObject<NekDouble>(10), CountedObject<NekDouble>(12), CountedObject<NekDouble>(0) };
-            NekMatrix<CountedObject<NekDouble> > m(4, 4, buf, eBANDED, 1, 2);
-
-            CountedObject<NekDouble>::ClearCounters();
-
-            CountedObject<NekDouble>& c1 = m(0,0);
-            BOOST_CHECK_EQUAL(1, c1);
-            CountedObject<NekDouble>& c2 = m(0,1);
-            BOOST_CHECK_EQUAL(2, c2);
-            CountedObject<NekDouble>& c3 = m(0,2);
-            BOOST_CHECK_EQUAL(3, c3);
-            CountedObject<NekDouble>& c4 = m(0,3);
-            BOOST_CHECK_EQUAL(0, c4);
-
-            CountedObject<NekDouble>& c5 = m(1,0);
-            BOOST_CHECK_EQUAL(4, c5);
-            CountedObject<NekDouble>& c6 = m(1,1);
-            BOOST_CHECK_EQUAL(5, c6);
-            CountedObject<NekDouble>& c7 = m(1,2);
-            BOOST_CHECK_EQUAL(6, c7);
-            CountedObject<NekDouble>& c8 = m(1,3);
-            BOOST_CHECK_EQUAL(7, c8);
-
-            CountedObject<NekDouble>& c9 = m(2,0);
-            BOOST_CHECK_EQUAL(0, c9);
-            CountedObject<NekDouble>& c10 = m(2,1);
-            BOOST_CHECK_EQUAL(8, c10);
-            CountedObject<NekDouble>& c11 = m(2,2);
-            BOOST_CHECK_EQUAL(9, c11);
-            CountedObject<NekDouble>& c12 = m(2,3);
-            BOOST_CHECK_EQUAL(10, c12);
-
-            CountedObject<NekDouble>& c13 = m(3,0);
-            BOOST_CHECK_EQUAL(0, c13);
-            CountedObject<NekDouble>& c14 = m(3,1);
-            BOOST_CHECK_EQUAL(0, c14);
-            CountedObject<NekDouble>& c15 = m(3,2);
-            BOOST_CHECK_EQUAL(11, c15);
-            CountedObject<NekDouble>& c16 = m(3,3);
-            BOOST_CHECK_EQUAL(12, c16);
-
-            CountedObject<NekDouble>::Check(0, 0, 0, 0, 0, 0);
-
-        }
-
         BOOST_AUTO_TEST_CASE(TestSetValue)
         {
             UnitTests::RedirectCerrIfNeeded();

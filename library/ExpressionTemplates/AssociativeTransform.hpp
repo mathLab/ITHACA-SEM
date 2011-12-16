@@ -30,6 +30,8 @@
 #ifndef EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
 #define EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #include <ExpressionTemplates/CommutativeTransform.hpp>
 #include <ExpressionTemplates/Operators.hpp>
 #include <ExpressionTemplates/AssociativeTraits.hpp>
@@ -86,6 +88,8 @@ namespace expt
         typedef expt::Node<L1, LOp, expt::Node<L2, OpType, RhsNodeType> > TransformedNodeType;
     };
 }
+
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #endif //EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
 

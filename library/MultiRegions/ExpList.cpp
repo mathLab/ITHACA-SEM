@@ -388,7 +388,7 @@ namespace Nektar
             int ncols = blockmat->GetColumns();
 
             // Create NekVectors from the given data arrays
-            NekVector<const NekDouble> in (ncols,inarray, eWrapper);
+            NekVector<NekDouble> in (ncols,inarray, eWrapper);
             NekVector<      NekDouble> out(nrows,outarray,eWrapper);
 
             // Perform matrix-vector multiply.
@@ -602,12 +602,12 @@ namespace Nektar
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             if(inarray.get() == outarray.get())
             {
-                NekVector<const NekDouble> in(m_ncoeffs,inarray); // copy data
+                NekVector<NekDouble> in(m_ncoeffs,inarray); // copy data
                 out = (*InvMass)*in;
             }
             else
             {
-                NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
+                NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 out = (*InvMass)*in;
             }
         }

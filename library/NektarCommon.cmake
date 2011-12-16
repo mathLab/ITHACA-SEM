@@ -181,25 +181,27 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
     
-    # Prevent including these common flags multiple times.
-    IF (NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
-        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
-    
         IF( MSVC )
             # Disable the warnings about duplicate copy/assignment methods 
             #   (4521, 4522)
             # Disable the warning that arrays are default intialized (4351)	
             # Disable "forcing value to bool 'true' or 'false' (performance
             #   warning)" warning (4800)
+        # 4250 - Inheritance via dominance.  Nektar appears to be handling the 
+        # diamond correctly.
 
             # /Za is necessary to prevent temporaries being bound to reference
             #   parameters.
             SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS 
-                                    "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
+                                "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800 /wd4250")
 
     		# Enable source level parallel builds.
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
         ENDIF(  )	
+    
+    # Prevent including these common flags multiple times.
+    IF (NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
+        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
 
         IF ( NEKTAR_FULL_DEBUG )
             SET(CMAKE_CXX_FLAGS_DEBUG 

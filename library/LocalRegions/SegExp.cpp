@@ -705,7 +705,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
             DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
 
-            NekVector<const NekDouble> in(m_ncoeffs,inarray,eCopy);
+            NekVector<NekDouble> in(m_ncoeffs,inarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
 
             out = (*matsys)*in;
@@ -750,7 +750,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
-                NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
+                NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
 
                 out = (*matsys)*in;

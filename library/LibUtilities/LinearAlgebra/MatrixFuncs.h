@@ -38,7 +38,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_FUNCS_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_FUNCS_H
 
-#include <boost/call_traits.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <limits>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>

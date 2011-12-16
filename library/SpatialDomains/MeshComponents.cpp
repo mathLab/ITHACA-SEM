@@ -56,7 +56,7 @@ namespace Nektar
         }
 
         // copy constructor
-        VertexComponent::VertexComponent(const VertexComponent &T): NekPoint<double,ThreeD>(T)
+        VertexComponent::VertexComponent(const VertexComponent &T): NekPoint<NekDouble>(T)
         {
             m_vid = T.m_vid;
             m_coordim = T.m_coordim;

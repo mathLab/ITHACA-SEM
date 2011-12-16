@@ -41,7 +41,6 @@
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Memory/DeleteNothing.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 
@@ -100,7 +99,6 @@
 #include <LibUtilities/BasicUtils/Concepts.hpp>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/mojo.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>

@@ -64,7 +64,7 @@ namespace Nektar
 	    
 	    DNekMatSharedPtr ftB = BasisManager()[fbasis0]->GetI(tbasis0);
 	    
-	    NekVector<const NekDouble> in(fbasis0.GetNumModes(),from,eWrapper);
+	    NekVector<NekDouble> in(fbasis0.GetNumModes(),from,eWrapper);
 	    NekVector<NekDouble> out(tbasis0.GetNumModes(),to,eWrapper);
 	    
 	    out  = (*ftB)*in;

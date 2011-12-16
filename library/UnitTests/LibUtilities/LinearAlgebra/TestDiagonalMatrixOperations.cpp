@@ -65,23 +65,6 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
         }
         
-        BOOST_AUTO_TEST_CASE(TestIntDiagonalVectorMultiplication)
-        {
-            int m_buf[] = {1, 2, 3};
-            int v_buf[] = {4, 5, 6};
-            
-            NekMatrix<int> m(3, 3, m_buf, eDIAGONAL);
-            NekVector<int> v(3, v_buf);
-            
-            int expected_result_buf[] = {4, 10, 18};
-            NekVector<int> expected_result(3, expected_result_buf);
-            
-            NekVector<int> result = m*v;
-            
-            BOOST_CHECK_EQUAL(expected_result, result);
-        }
-
-        
         BOOST_AUTO_TEST_CASE(TestDoubleScaledDiagonalVectorMultiplication)
         {
             double m_buf[] = {1, 2, 3};
@@ -102,28 +85,7 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
 
         }
-        
-        BOOST_AUTO_TEST_CASE(TestIntScaledDiagonalVectorMultiplication)
-        {
-            int m_buf[] = {1, 2, 3};
-            int v_buf[] = {4, 5, 6};
-            
-            boost::shared_ptr<NekMatrix<int> > inner(
-                new NekMatrix<int>(3, 3, m_buf, eDIAGONAL));
-            NekMatrix<NekMatrix<int>, ScaledMatrixTag> 
-                m(5, inner);
-                
-            NekVector<int> v(3, v_buf);
-            
-            int expected_result_buf[] = {20, 50, 90};
-            NekVector<int> expected_result(3, expected_result_buf);
-            
-            NekVector<int> result = m*v;
-            
-            BOOST_CHECK_EQUAL(expected_result, result);
-
-        }
-
+       
     }
 }
 

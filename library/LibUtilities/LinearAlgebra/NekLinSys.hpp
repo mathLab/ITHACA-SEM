@@ -40,7 +40,6 @@
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/Memory/DeleteNothing.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
@@ -401,9 +400,9 @@ namespace Nektar
             // In the following calls to Solve, VectorType must be a NekVector.
             // Anything else won't compile.        
             template<typename VectorType>
-            typename RemoveVectorConst<typename RawType<VectorType>::type>::type Solve(const VectorType& b)
+            typename RawType<VectorType>::type Solve(const VectorType& b)
             {
-                typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                typename RawType<VectorType>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
                 LinearSystemSolver::Solve(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
@@ -419,9 +418,9 @@ namespace Nektar
 
             // Transpose variant of solve
             template<typename VectorType>
-            typename RemoveVectorConst<typename RawType<VectorType>::type>::type SolveTranspose(const VectorType& b)
+            typename RawType<VectorType>::type SolveTranspose(const VectorType& b)
             {
-                typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
+                typename RawType<VectorType>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
                 LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;

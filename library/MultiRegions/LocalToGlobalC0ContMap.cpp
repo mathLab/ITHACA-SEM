@@ -2310,7 +2310,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalC0ContMap::v_LocalToGlobal(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             LocalToGlobal(loc.GetPtr(),global.GetPtr());
@@ -2331,7 +2331,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalC0ContMap::v_GlobalToLocal(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const
         {
             GlobalToLocal(global.GetPtr(),loc.GetPtr());
@@ -2357,7 +2357,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalC0ContMap::v_Assemble(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             Assemble(loc.GetPtr(),global.GetPtr());

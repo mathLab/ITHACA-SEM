@@ -68,14 +68,15 @@ namespace Nektar
     template<typename DataType>
     class NekMatrix<DataType, StandardMatrixTag>;
     
-    typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
-    typedef NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> DNekScalMat;
+    typedef boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > SharedNekMatrixPtr;
+    typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
     typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
     // Type registration must occur for the expression template machinery to 
     // automatically detect the types of matrix operations.
     BOOST_TYPEOF_REGISTER_TEMPLATE(NekMatrix, 2);
     
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename T>
     struct IsMatrix : public boost::false_type {};
     
@@ -87,6 +88,7 @@ namespace Nektar
     
     template<typename DataType>
     struct IsMatrix<Matrix<DataType> > : public boost::true_type {};
+#endif
     
 };
     

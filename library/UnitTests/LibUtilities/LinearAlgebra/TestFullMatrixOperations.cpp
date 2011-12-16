@@ -174,23 +174,6 @@ namespace Nektar
         }
 
 
-        BOOST_AUTO_TEST_CASE(TestIntSquareFullVectorMultiplication)
-        {
-            int m_buf[] = {1, 2, 3,
-                              4, 5, 6,
-                              7, 8, 9};
-            int v_buf[] = {4, 5, 6};
-            
-            NekMatrix<int> m(3, 3, m_buf);
-            NekVector<int> v(3, v_buf);
-            
-            int expected_result_buf[] = {66, 81, 96};
-            NekVector<int> expected_result(3, expected_result_buf);
-            
-            NekVector<int> result = m*v;
-            
-            BOOST_CHECK_EQUAL(expected_result, result);
-        }
         
         BOOST_AUTO_TEST_CASE(TestScaledDoubleSquareFullVectorMultiplication)
         {
@@ -211,25 +194,6 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
-
-        BOOST_AUTO_TEST_CASE(TestScaledIntSquareFullVectorMultiplication)
-        {
-            int m_buf[] = {1, 2, 3,
-                              4, 5, 6,
-                              7, 8, 9};
-            int v_buf[] = {4, 5, 6};
-            
-            boost::shared_ptr<NekMatrix<int> > inner(new NekMatrix<int>(3, 3, m_buf));
-            NekMatrix<NekMatrix<int>, ScaledMatrixTag> m(7, inner);
-            NekVector<int> v(3, v_buf);
-            
-            int expected_result_buf[] = {462, 567, 672};
-            NekVector<int> expected_result(3, expected_result_buf);
-            
-            NekVector<int> result = m*v;
-            
-            BOOST_CHECK_EQUAL(expected_result, result);
-        }
 
         BOOST_AUTO_TEST_CASE(TestThreeMatrixMultiplication)
         {

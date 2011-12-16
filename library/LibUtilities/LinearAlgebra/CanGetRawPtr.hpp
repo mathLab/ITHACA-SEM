@@ -50,8 +50,8 @@ namespace Nektar
     template<typename T>
     struct CanGetRawPtr<NekMatrix<T, StandardMatrixTag> > : public boost::true_type {};
     
-    template<typename T>
-    struct CanGetRawPtr<NekMatrix<NekMatrix<T>, ScaledMatrixTag> > : public boost::true_type {};
+    template<typename T, typename R>
+    struct CanGetRawPtr<NekMatrix<NekMatrix<T, R>, ScaledMatrixTag> > : public boost::true_type {};
     
     template<typename T, typename M>
     struct CanGetRawPtr<NekMatrix<T, M> > :

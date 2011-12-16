@@ -187,13 +187,13 @@ namespace Nektar
 			Array<OneD, NekDouble> PadV2_slab_phys(2*nlines,0.0);
 			Array<OneD, NekDouble> PadRe_slab_phys(2*nlines,0.0);
 			
-			NekVector<const NekDouble> PadIN_V1(2*nlines,PadV1_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_V1(2*nlines,PadV1_slab_coeff,eWrapper);
 			NekVector<NekDouble> PadOUT_V1(2*nlines,PadV1_slab_phys,eWrapper);
 			
-			NekVector<const NekDouble> PadIN_V2(2*nlines,PadV2_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_V2(2*nlines,PadV2_slab_coeff,eWrapper);
 			NekVector<NekDouble> PadOUT_V2(2*nlines,PadV2_slab_phys,eWrapper);
 			
-			NekVector<const NekDouble> PadIN_Re(2*nlines,PadRe_slab_phys,eWrapper);
+			NekVector<NekDouble> PadIN_Re(2*nlines,PadRe_slab_phys,eWrapper);
 			NekVector<NekDouble> PadOUT_Re(2*nlines,PadRe_slab_coeff,eWrapper);
 			
 			//Looping on the slabs
@@ -395,7 +395,7 @@ namespace Nektar
                 ShuffleIntoHomogeneous2DClosePacked(inarray,sortedinarray,!IsForwards);
 				
                 // Create NekVectors from the given data arrays
-                NekVector<const NekDouble> in (ncols,sortedinarray,eWrapper);
+                NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
                 NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
 				
                 // Perform matrix-vector multiply.

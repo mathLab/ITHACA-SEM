@@ -433,57 +433,9 @@ namespace Nektar
                     }
                 }
             }
-        
-            {
-
-                NekMatrix<float> dynamic_matrix(7, 3, (float)7.8);
-
-                for(unsigned int i = 0; i < 7; ++i)
-                {
-                    for(unsigned int j = 0; j < 3; ++j)
-                    {
-                        BOOST_CHECK(dynamic_matrix(i,j) == 7.8f);
-                    }
-                }
-            }
-
         }
 
-        BOOST_AUTO_TEST_CASE(testNekMatrixAccess)
-        {
-            // We need to be able to access any element in the matrix, and
-            // assign into the matrix at any location.
-            NekMatrix<unsigned int> static_matrix(3,3);
 
-            for(unsigned int i = 0; i < 3; ++i)
-            {
-                for(unsigned int j = 0; j < 3; ++j)
-                {
-                    static_matrix(i,j) = 10*i + j;
-                }
-            }
-
-            for(unsigned int i = 0; i < 3; ++i)
-            {
-                for(unsigned int j = 0; j < 3; ++j)
-                {
-                    BOOST_CHECK(static_matrix(i,j) == 10*i + j);
-                    BOOST_CHECK(static_matrix(i,j) == 10*i + j);
-
-                    const NekMatrix<unsigned int>& ref = static_matrix;
-
-                    BOOST_CHECK(ref(i,j) == 10*i + j);
-                    BOOST_CHECK(ref(i,j) == 10*i + j);
-
-                }
-            }
-
-            // Invalid access is an unrecoverable error.
-            //BOOST_CHECK_THROW(static_matrix(3,2), OutOfBoundsError);
-            //BOOST_CHECK_THROW(static_matrix(2,3), OutOfBoundsError);
-            BOOST_CHECK_NO_THROW(static_matrix(2,2));
-
-        }
 
         BOOST_AUTO_TEST_CASE(testNekMatrixBasicMath)
         {
@@ -517,39 +469,7 @@ namespace Nektar
                  }
              }
              // Multiply
-             {
 
-                 unsigned int buf1[] = {1, 4, 7,
-                                        2, 5, 8,
-                                        3, 6, 9};
-                 unsigned int buf2[] = {10, 15, 19,
-                                        11, 16, 20,
-                                        12, 17, 21,
-                                        14, 18, 22};
-                                        
-                 NekMatrix<unsigned int> lhs(3, 3, buf1);
-                 NekMatrix<unsigned int> rhs(3, 4, buf2);
-                 NekMatrix<unsigned int> result = lhs*rhs;
- 
-                 BOOST_CHECK(result.GetRows() == 3);
-                 BOOST_CHECK(result.GetColumns() == 4);
- 
-                 BOOST_CHECK(result(0,0) == 97);
-                 BOOST_CHECK(result(0,1) == 103);
-                 BOOST_CHECK(result(0,2) == 109);
-                 BOOST_CHECK(result(0,3) == 116);
- 
-                 BOOST_CHECK(result(1,0) == 229);
-                 BOOST_CHECK(result(1,1) == 244);
-                 BOOST_CHECK(result(1,2) == 259);
-                 BOOST_CHECK(result(1,3) == 278);
- 
-                 BOOST_CHECK(result(2,0) == 361);
-                 BOOST_CHECK(result(2,1) == 385);
-                 BOOST_CHECK(result(2,2) == 409);
-                 BOOST_CHECK(result(2,3) == 440);
-             }
- 
              {
                  double buf1[] = {1, 4, 7,
                                   2, 5, 8,
@@ -611,50 +531,9 @@ namespace Nektar
                  BOOST_CHECK_CLOSE(*result(2,2), 409.0, epsilon);
                  BOOST_CHECK_CLOSE(*result(2,3), 440.0, epsilon);
              }
-             
-             {
-                 //unsigned int buf1[] = {1, 2, 3,
-                 //                       4, 5, 6,
-                 //                       7, 8, 9};
+            
  
-                 //                       
-                 //unsigned int buf2[] = { 1, 2, 3};
- 
-                 //NekMatrix<unsigned int> lhs(3, 3, buf1);
-                 //NekVector<unsigned int> rhs(3, buf2);
- 
-                 //NekVector<unsigned int> result = lhs*rhs;
- 
-                 //BOOST_CHECK(result[0] == 14);
-                 //BOOST_CHECK(result[1] == 32);
-                 //BOOST_CHECK(result[2] == 50);
-             }
- 
-//             // Negation
-//             {
-//                 int buf[] = {1, 2, 3,
-//                                        4, 5, 6,
-//                                        7, 8, 9};
-// 
-//                 int neg_buf[] = {-1, -2, -3,
-//                                        -4, -5, -6,
-//                                        -7, -8, -9};
-// 
-//                 NekMatrix<int> m1(3,3, buf);
-//                 NekMatrix<int> m2 = -m1;
-//                 NekMatrix<int> m3 = -m2;
-// 
-//                 BOOST_CHECK_EQUAL(m1, m3);
-// 
-//                 NekMatrix<int> negated(3,3,neg_buf);
-//                 BOOST_CHECK_EQUAL(m2, negated);
-// 
-//                 NekMatrix<int> m4 = -(-m1);
-//                 BOOST_CHECK_EQUAL(m4, m1);
-// 
-//                 NekMatrix<int> m5 = -(-(-(-(-(-(-(-(-m1))))))));
-//                 BOOST_CHECK_EQUAL(m5, negated);
-//             }
+
 // 
 //             // Transpose
 // 
@@ -672,84 +551,8 @@ namespace Nektar
         }
 
 
-        BOOST_AUTO_TEST_CASE(testNekMatrixFullDiagonalOperations)
-        {
-             unsigned int fullValues[] = {1, 4, 7,
-                                          2, 5, 8,
-                                          3, 6, 9};
-             
-             NekMatrix<unsigned int> full(3, 3, fullValues);
- 
-             unsigned int diagonalValues[] = {6, 12, 5};
-             NekMatrix<unsigned int> diag(3, 3, diagonalValues, eDIAGONAL);
- 
-             NekMatrix<unsigned int> result1 = full+diag;
-             NekMatrix<unsigned int> result2 = diag+full;
- 
-             BOOST_CHECK_EQUAL(result1, result2);
-             BOOST_CHECK_EQUAL(result1(0,0),7);
-             BOOST_CHECK_EQUAL(result1(0,1),2);
-             BOOST_CHECK_EQUAL(result1(0,2),3);
- 
-             BOOST_CHECK_EQUAL(result1(1,0),4);
-             BOOST_CHECK_EQUAL(result1(1,1),17);
-             BOOST_CHECK_EQUAL(result1(1,2),6);
- 
-             BOOST_CHECK_EQUAL(result1(2,0),7);
-             BOOST_CHECK_EQUAL(result1(2,1),8);
-             BOOST_CHECK_EQUAL(result1(2,2),14); 
-         }
- 
-         BOOST_AUTO_TEST_CASE(testUserManagedMatrixData)
-         {    
-             {
-                 unsigned int mv[] = {1, 4, 7,
-                                      2, 5, 8,
-                                      3, 6, 9};
-                 Array<OneD, unsigned int> matrixValues(9, mv);
-                 NekMatrix<unsigned int> m(3, 3, matrixValues, eWrapper);
- 
-                 BOOST_CHECK_EQUAL(m(0,0), 1);
-                 BOOST_CHECK_EQUAL(m(0,1), 2);
-                 BOOST_CHECK_EQUAL(m(0,2), 3);
- 
-                 BOOST_CHECK_EQUAL(m(1,0), 4);
-                 BOOST_CHECK_EQUAL(m(1,1), 5);
-                 BOOST_CHECK_EQUAL(m(1,2), 6);
- 
-                 BOOST_CHECK_EQUAL(m(2,0), 7);
-                 BOOST_CHECK_EQUAL(m(2,1), 8);
-                 BOOST_CHECK_EQUAL(m(2,2), 9);
- 
-                 m(0,0) = 18;
-                 BOOST_CHECK_EQUAL(m(0,0), 18);
-                 BOOST_CHECK_EQUAL(matrixValues[0], m(0,0));
- 
-                 NekMatrix<unsigned int> m1(m);
-                 m1(1,0) = 900;
-                 BOOST_CHECK_EQUAL(m1(1,0), 900);
-                 BOOST_CHECK_EQUAL(m(1,0), 900);
-                 BOOST_CHECK_EQUAL(matrixValues[1], 900);
- 
-                 NekMatrix<unsigned int> m2(3, 3);
-                 m2 = m1;
-                 m2(0,0) = 800;
-                 BOOST_CHECK_EQUAL(m1(0,0), 18);
-                 BOOST_CHECK_EQUAL(m2(0,0), 800);
-             }
- 
-             {
-                 unsigned int mv[] = {1, 4, 7,
-                                      2, 5, 8,
-                                      3, 6, 9};
-                 Array<OneD, unsigned int> matrixValues(9, mv);
-                 NekMatrix<unsigned int> m(3, 3, matrixValues, eCopy);
- 
-                 m(0,0) = 800;
-                 BOOST_CHECK_EQUAL(m(0,0), 800);
-                 BOOST_CHECK_EQUAL(matrixValues[0], 1);
-             }
-        }
+
+
     }
 }
 

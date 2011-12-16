@@ -403,7 +403,7 @@ namespace Nektar
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
             // copy inarray in case inarray == outarray
-            NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
+            NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             
             out = (*matsys)*in;
@@ -656,7 +656,7 @@ namespace Nektar
 
                 vdm.Invert();  
 
-                NekVector<const NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
+                NekVector<NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
                 NekVector<NekDouble> out(GetNcoeffs());
                 out = vdm*in;
 

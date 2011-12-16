@@ -92,7 +92,7 @@ namespace Nektar
                           Array<OneD,       NekDouble>& global) const;
 
             inline const void LocalToGlobal(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
             inline const void GlobalToLocal(
@@ -100,7 +100,7 @@ namespace Nektar
                           Array<OneD,       NekDouble>& loc) const;
 
             inline const void GlobalToLocal(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
             inline const void Assemble(
@@ -108,7 +108,7 @@ namespace Nektar
                           Array<OneD,       NekDouble> &global) const;
 
             inline const void Assemble(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
             inline const void UniversalAssemble(
@@ -167,12 +167,12 @@ namespace Nektar
 
             ///
             inline void GlobalToLocalBnd(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc,
                     int offset) const;
 
             inline void GlobalToLocalBnd(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc) const;
 
             inline void GlobalToLocalBnd(
@@ -184,10 +184,10 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const;
 
-            inline void AssembleBnd(const NekVector<const NekDouble>& loc,
+            inline void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const;
 
-            inline void AssembleBnd(const NekVector<const NekDouble>& loc,
+            inline void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global) const;
 
             inline void AssembleBnd(const Array<OneD,const NekDouble>& loc,
@@ -343,7 +343,7 @@ namespace Nektar
                           Array<OneD,       NekDouble>& global) const;
 
             virtual const void v_LocalToGlobal(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
             virtual const void v_GlobalToLocal(
@@ -351,7 +351,7 @@ namespace Nektar
                           Array<OneD,       NekDouble>& loc) const;
 
             virtual const void v_GlobalToLocal(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
             virtual const void v_Assemble(
@@ -359,7 +359,7 @@ namespace Nektar
                           Array<OneD,       NekDouble> &global) const;
 
             virtual const void v_Assemble(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
             virtual const void v_UniversalAssemble(
@@ -426,7 +426,7 @@ namespace Nektar
         }
 
         inline const void LocalToGlobalBaseMap::LocalToGlobal(
-                const NekVector<const NekDouble>& loc,
+                const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             v_LocalToGlobal(loc,global);
@@ -440,7 +440,7 @@ namespace Nektar
         }
 
         inline const void LocalToGlobalBaseMap::GlobalToLocal(
-                const NekVector<const NekDouble>& global,
+                const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
             v_GlobalToLocal(global,loc);
@@ -454,7 +454,7 @@ namespace Nektar
         }
 
         inline const void LocalToGlobalBaseMap::Assemble(
-                const NekVector<const NekDouble>& loc,
+                const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             v_Assemble(loc,global);
@@ -598,7 +598,7 @@ namespace Nektar
         }
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc,
                     int offset) const
         {
@@ -607,7 +607,7 @@ namespace Nektar
 
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc) const
         {
             GlobalToLocalBnd(global.GetPtr(), loc.GetPtr());
@@ -655,7 +655,7 @@ namespace Nektar
 
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const
         {
             AssembleBnd(loc.GetPtr(), global.GetPtr(), offset);
@@ -663,7 +663,7 @@ namespace Nektar
 
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global) const
         {
             AssembleBnd(loc.GetPtr(), global.GetPtr());

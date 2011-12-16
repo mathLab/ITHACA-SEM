@@ -905,7 +905,7 @@ namespace Nektar
             DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
 
             // copy inarray in case inarray == outarray
-            NekVector<const NekDouble> in (m_ncoeffs,outarray,eCopy);
+            NekVector<NekDouble> in (m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
 
             out = (*matsys)*in;
@@ -1248,7 +1248,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp2(EGmsh->GetNcoeffs());
                 EGmsh->ModalToNodal(m_coeffs,tmp2);
 
-                NekVector<const NekDouble> in(EGmsh->GetNcoeffs(),tmp2,eWrapper);
+                NekVector<NekDouble> in(EGmsh->GetNcoeffs(),tmp2,eWrapper);
                 NekVector<NekDouble> out(EGmsh->GetNcoeffs());
                 out = vdm*in;
 

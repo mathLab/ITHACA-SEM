@@ -35,6 +35,10 @@ TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
 
 SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)
 
-
+ADD_TEST(NAME LibUtilities WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${NEKTAR_BIN_DIR} COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 SUBDIRS(LinearAlgebra)
-SUBDIRS(ExpressionTemplates)
+
+IF( NEKTAR_USE_EXPRESSION_TEMPLATES )
+    SUBDIRS(ExpressionTemplates)
+ENDIF()
+

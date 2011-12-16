@@ -91,12 +91,12 @@ namespace Nektar
 
         if(inarray.data() == outarray.data()) // copy intput array
         {
-            NekVector<const NekDouble> in(nquad,inarray,eCopy);
+            NekVector<NekDouble> in(nquad,inarray,eCopy);
             out = (*D)*in;
         }
         else
         {
-            NekVector<const NekDouble> in (nquad,inarray,eWrapper);
+            NekVector<NekDouble> in (nquad,inarray,eWrapper);
             out = (*D)*in;
         }
 

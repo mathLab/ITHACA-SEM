@@ -146,7 +146,7 @@ namespace Nektar
                     LibUtilities::PointsKey fkey(npts,curve->m_ptype);
                     I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
 
-                    NekVector<const NekDouble> in(npts,tmp,eWrapper);
+                    NekVector<NekDouble> in(npts,tmp,eWrapper);
                     NekVector<NekDouble>       out(npts+1,m_xmap[i]->UpdatePhys(),eWrapper);
                     out  = (*I0)*in;
 

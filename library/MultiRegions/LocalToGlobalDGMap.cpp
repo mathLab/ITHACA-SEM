@@ -772,7 +772,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalDGMap::v_LocalToGlobal(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             AssembleBnd(loc,global);
@@ -786,7 +786,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalDGMap::v_GlobalToLocal(
-                    const NekVector<const NekDouble>& global,
+                    const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const
         {
             GlobalToLocalBnd(global,loc);
@@ -800,7 +800,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalDGMap::v_Assemble(
-                    const NekVector<const NekDouble>& loc,
+                    const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             AssembleBnd(loc,global);

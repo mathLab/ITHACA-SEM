@@ -465,7 +465,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalBaseMap::v_LocalToGlobal(
-                const NekVector<const NekDouble>& loc,
+                const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
@@ -479,7 +479,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalBaseMap::v_GlobalToLocal(
-                const NekVector<const NekDouble>& global,
+                const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
@@ -493,7 +493,7 @@ namespace Nektar
         }
 
         const void LocalToGlobalBaseMap::v_Assemble(
-                const NekVector<const NekDouble>& loc,
+                const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");

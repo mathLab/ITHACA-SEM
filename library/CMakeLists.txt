@@ -5,6 +5,7 @@ RelWithDebInfo MinSizeRel.")
 PROJECT(Nektar++)
 
 INCLUDE(CMakeExportBuildSettings)
+ENABLE_TESTING()
 
 # Use the CMake 2.4 policy for CMake 2.6
 if(COMMAND cmake_policy)
@@ -132,7 +133,7 @@ ELSE( NOT WIN32 )
 ENDIF( NOT WIN32 )
 
 SET(Boost_USE_MULTITHREAD ON)
-SET(Boost_ADDITIONAL_VERSIONS "1.46" "1.46.1" "1.40" "1.40.0" "1.35.0" "1.35")
+SET(Boost_ADDITIONAL_VERSIONS "1.48.0" "1.46" "1.46.1" "1.40" "1.40.0" "1.35.0" "1.35")
 
 IF( NOT BOOST_ROOT )
     #If the user has not set BOOST_ROOT, look in a couple common places first.
@@ -141,7 +142,7 @@ IF( NOT BOOST_ROOT )
     SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
     FIND_PACKAGE( Boost 1.40.0 COMPONENTS thread iostreams zlib date_time filesystem system)
 ELSE()
-    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system)
+    FIND_PACKAGE( Boost 1.48.0 COMPONENTS thread iostreams zlib date_time filesystem system)
 ENDIF()
 
 IF(NOT Boost_ZLIB_FOUND)

@@ -31,6 +31,8 @@
 #ifndef EXPRESSION_TEMPLATES_NODE_HPP
 #define EXPRESSION_TEMPLATES_NODE_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #define FUSION_MAX_VECTOR_SIZE 50
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/vector_c.hpp>
@@ -351,5 +353,7 @@ namespace expt
         return Node<Node<L>, Op, Node<R> >(lhs_node, rhs_node);
     }
 }
+
+#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #endif //EXPRESSION_TEMPLATES_NODE_HPP

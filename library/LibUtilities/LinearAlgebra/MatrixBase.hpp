@@ -36,6 +36,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_BASE_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_BASE_HPP
 
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
@@ -55,291 +57,86 @@ namespace Nektar
     class ConstMatrix
     {
         public:
-            typedef ConstMatrix<DataType> ThisType;
-            virtual ~ConstMatrix() {}
+            LIB_UTILITIES_EXPORT virtual ~ConstMatrix();
             
         public:
-            typename boost::call_traits<DataType>::value_type operator()(unsigned int row, unsigned int column) const
-            {
-                ASSERTL2(row < GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(GetColumns()) +
-                    std::string(" columns"));
-                return v_GetValue(row, column);
-            }
+            LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::value_type operator()(unsigned int row, unsigned int column) const;
             
-            unsigned int GetStorageSize() const
-            {
-                return v_GetStorageSize();
-            }
+            LIB_UTILITIES_EXPORT unsigned int GetStorageSize() const;
             
-            MatrixStorage GetStorageType() const 
-            {
-                return v_GetStorageType();
-            }
+            LIB_UTILITIES_EXPORT MatrixStorage GetStorageType() const ;
             
-            unsigned int GetRows() const
-            {
-                return GetTransposedRows(GetTransposeFlag());
-            }
+            LIB_UTILITIES_EXPORT unsigned int GetRows() const;
 
-            unsigned int GetTransposedRows(char transpose) const 
-            {
-                if( transpose == 'N' )
-                {
-                    return m_size[0]; 
-                }
-                else
-                {
-                    return m_size[1];
-                }
-            }
+            LIB_UTILITIES_EXPORT unsigned int GetTransposedRows(char transpose) const ;
             
-            unsigned int GetColumns() const
-            {
-                return GetTransposedColumns(GetTransposeFlag());
-            }
+            LIB_UTILITIES_EXPORT unsigned int GetColumns() const;
 
-            unsigned int GetTransposedColumns(char transpose) const 
-            { 
-                if( transpose == 'N' )
-                {
-                    return m_size[1]; 
-                }
-                else
-                {
-                    return m_size[0];
-                }
-            }
+            LIB_UTILITIES_EXPORT unsigned int GetTransposedColumns(char transpose) const ;
 
-            const unsigned int* GetSize() const { return m_size; }
+            LIB_UTILITIES_EXPORT const unsigned int* GetSize() const;
             
-            void Transpose() 
-            {
-                if( m_transpose == 'N' )
-                {
-                    m_transpose = 'T';
-                }
-                else
-                {
-                    m_transpose = 'N';
-                }
-                v_Transpose();
-            }
+            LIB_UTILITIES_EXPORT void Transpose() ;
 
-            char GetTransposeFlag() const 
-            {
-                return v_GetTransposeFlag();
-            }       
+            LIB_UTILITIES_EXPORT char GetTransposeFlag() const;
             
-            static unsigned int CalculateIndex(MatrixStorage type, 
+            LIB_UTILITIES_EXPORT static unsigned int CalculateIndex(MatrixStorage type, 
                 unsigned int row, unsigned int col, 
                 unsigned int numRows, unsigned int numColumns, const char transpose =  'N',
-                unsigned int numSubDiags = 0, unsigned int numSuperDiags = 0) 
-            {
-                if(transpose == 'T' )
-                {
-                    std::swap(row, col);
-                }
-                switch(type)
-                {
-                    case eFULL:
-                        return FullMatrixFuncs::CalculateIndex(numRows, numColumns, row, col);
-                        break;
-                    case eDIAGONAL:
-                        return DiagonalMatrixFuncs::CalculateIndex(row, col);
-                        break;
-                    case eUPPER_TRIANGULAR:
-                        return UpperTriangularMatrixFuncs::CalculateIndex(row, col);                        
-                        break;
-                    case eLOWER_TRIANGULAR:
-                        return LowerTriangularMatrixFuncs::CalculateIndex(numColumns, row, col);
-                        break;
-                    case eSYMMETRIC:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC:
-                        return SymmetricMatrixFuncs::CalculateIndex(row, col);
-                        break;
-                    case eBANDED:
-                        return BandedMatrixFuncs::CalculateIndex(numRows, numColumns,
-                            row, col, numSubDiags, numSuperDiags);
-                        break;
-                    case eSYMMETRIC_BANDED:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
-                        {
-                            ASSERTL1(numSubDiags==numSuperDiags,
-                                     std::string("Number of sub- and superdiagonals should ") + 
-                                     std::string("be equal for a symmetric banded matrix"));
-                            return SymmetricBandedMatrixFuncs::CalculateIndex(row, col, 
-                                numSuperDiags);
-                        }
-                        break;
-                    case eUPPER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
-                        break;
-                    case eLOWER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
-                        break;
-                        
-                    default:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                }
-                
-                return std::numeric_limits<unsigned int>::max();
-            }
+                unsigned int numSubDiags = 0, unsigned int numSuperDiags = 0) ;
             
-            static unsigned int GetRequiredStorageSize(MatrixStorage type, unsigned int rows, 
-                unsigned int columns, unsigned int subDiags = 0, unsigned int superDiags = 0)
-            {
-                switch(type)
-                {
-                    case eFULL:
-                        return FullMatrixFuncs::GetRequiredStorageSize(rows, columns);
-                        break;
-                    case eDIAGONAL:
-                        return DiagonalMatrixFuncs::GetRequiredStorageSize(rows, columns);
-                        break;
-                    case eUPPER_TRIANGULAR:
-                        return UpperTriangularMatrixFuncs::GetRequiredStorageSize(rows, columns);
-                        break;
-                    case eLOWER_TRIANGULAR:
-                        return LowerTriangularMatrixFuncs::GetRequiredStorageSize(rows, columns);
-                        break;
-                    case eSYMMETRIC:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC:
-                        return SymmetricMatrixFuncs::GetRequiredStorageSize(rows, columns);
-                        break;
-                    case eBANDED:
-                        return BandedMatrixFuncs::GetRequiredStorageSize(rows, columns,
-                            subDiags, superDiags);
-                        break;
-                    case eSYMMETRIC_BANDED:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
-                        {
-                            ASSERTL1(subDiags==superDiags,
-                                     std::string("Number of sub- and superdiagonals should ") + 
-                                     std::string("be equal for a symmetric banded matrix"));
-                            return SymmetricBandedMatrixFuncs::GetRequiredStorageSize(rows, columns,
-                                superDiags);
-                        }
-                        break;
-                    case eUPPER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eLOWER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                        
-                    default:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                }
-
-                return 0;
-            }
+            LIB_UTILITIES_EXPORT static unsigned int GetRequiredStorageSize(MatrixStorage type, unsigned int rows, 
+                unsigned int columns, unsigned int subDiags = 0, unsigned int superDiags = 0);
 
         protected:
             
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
-            ConstMatrix(unsigned int rows, unsigned int columns) :
-                m_size(),
-                m_transpose('N')
-            {
-                m_size[0] = rows;
-                m_size[1] = columns;
-            }
+            LIB_UTILITIES_EXPORT ConstMatrix(unsigned int rows, unsigned int columns);
             
-            ConstMatrix(const ThisType& rhs) :
-                m_size(),
-                m_transpose(rhs.m_transpose)
-            {
-                m_size[0] = rhs.m_size[0];
-                m_size[1] = rhs.m_size[1];
-            }
+            LIB_UTILITIES_EXPORT ConstMatrix(const ConstMatrix<DataType>& rhs);
 
-            ThisType& operator=(const ThisType& rhs)
-            {
-                m_size[0] = rhs.m_size[0];
-                m_size[1] = rhs.m_size[1];
-                m_transpose = rhs.m_transpose;
-                return *this;
-            }
+            LIB_UTILITIES_EXPORT ConstMatrix<DataType>& operator=(const ConstMatrix<DataType>& rhs);
             
             /// \brief Resets the rows and columns in the array.
             /// This method does not update the data storage to match the new row and column counts.
-            void Resize(unsigned int rows, unsigned int columns)
-            {
-                m_size[0] = rows;
-                m_size[1] = columns;
-            }
+            LIB_UTILITIES_EXPORT void Resize(unsigned int rows, unsigned int columns);
 
-            void SetTransposeFlag(char newValue)
-            {
-                m_transpose = newValue; 
-            }
-
-            char GetRawTransposeFlag() const { return m_transpose; }
+            LIB_UTILITIES_EXPORT void SetTransposeFlag(char newValue);
+            LIB_UTILITIES_EXPORT char GetRawTransposeFlag() const;
 
         private:
             
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            
             virtual unsigned int v_GetStorageSize() const = 0;            
             virtual MatrixStorage v_GetStorageType() const = 0;
-            virtual void v_Transpose() {};
-            virtual char v_GetTransposeFlag() const { return m_transpose; }
+            LIB_UTILITIES_EXPORT virtual void v_Transpose();
+            LIB_UTILITIES_EXPORT virtual char v_GetTransposeFlag() const;
             unsigned int m_size[2];
             char m_transpose;
     };
     
     template<typename DataType>
     class Matrix : public ConstMatrix<DataType>
-    {
+    {  
         public:
-            typedef Matrix<DataType> ThisType;
-            typedef ConstMatrix<DataType> BaseType;
+            LIB_UTILITIES_EXPORT virtual ~Matrix();
             
-        public:
-            virtual ~Matrix() {}
-            
-            void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
-            {
-                ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
-                    std::string(" rows"));
-                ASSERTL2(column < this->GetColumns(), std::string("Column ") + boost::lexical_cast<std::string>(column) + 
-                    std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetColumns()) +
-                    std::string(" columns"));
-                v_SetValue(row, column, d);
-            }
+            LIB_UTILITIES_EXPORT void SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d);
             
         protected:            
             // All constructors are private to enforce the abstract nature of ConstMatrix without
             // resorting to pure virtual functions.
-            Matrix(unsigned int rows, unsigned int columns) :
-                BaseType(rows, columns)
-            {
-            }
+            LIB_UTILITIES_EXPORT Matrix(unsigned int rows, unsigned int columns);
             
-            Matrix(const ThisType& rhs) :
-                BaseType(rhs)
-            {
-            }
+            LIB_UTILITIES_EXPORT Matrix(const Matrix<DataType>& rhs);
 
-            ThisType& operator=(const ThisType& rhs)
-            {
-                BaseType::operator=(rhs);
-                return *this;
-            }
+            LIB_UTILITIES_EXPORT Matrix<DataType>& operator=(const Matrix<DataType>& rhs);
             
-            ThisType& operator=(const ConstMatrix<DataType>& rhs)
-            {
-                BaseType::operator=(rhs);
-                return *this;
-            }
+            LIB_UTILITIES_EXPORT Matrix<DataType>& operator=(const ConstMatrix<DataType>& rhs);
             
         private:
-            virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d) = 0;
+            LIB_UTILITIES_EXPORT virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d) = 0;
     };
     
     

@@ -47,38 +47,46 @@ namespace Nektar
 {
     typedef NekVector<NekDouble>                DNekVec;
 
-    typedef NekMatrix<NekDouble>                DNekMat;
+    typedef NekMatrix<NekDouble, StandardMatrixTag>
+            DNekMat;
+    typedef NekMatrix<NekDouble, StandardMatrixTag> DenseMatrix;
+
+    typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>
+            DNekScalMat;
+    typedef NekMatrix<DenseMatrix, ScaledMatrixTag> ScaledMatrix;
+
+    typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, BlockMatrixTag>
+            DNekBlkMat;
+    typedef NekMatrix<DenseMatrix, BlockMatrixTag> BlockMatrix;
+
+    typedef NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, BlockMatrixTag>, BlockMatrixTag>
+            BlkMatDNekBlkMat;
+    typedef NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>
+            DNekScalBlkMat;
+    typedef NekMatrix<NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>, BlockMatrixTag>
+            BlkMatDNekScalBlkMat;
+    typedef NekSparseMatrix<NekDouble>
+            DNekSparseMat;
+
     typedef boost::shared_ptr<DNekMat>          DNekMatSharedPtr;
+    typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
+    typedef boost::shared_ptr<DNekBlkMat>    DNekBlkMatSharedPtr;
+    typedef boost::shared_ptr<BlkMatDNekBlkMat>  BlkMatDNekBlkMatSharedPtr;
+    typedef boost::shared_ptr<DNekScalBlkMat>      DNekScalBlkMatSharedPtr;
+    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
+    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
+    typedef boost::shared_ptr<DNekSparseMat>     DNekSparseMatSharedPtr;
+
+
+    static DNekScalMatSharedPtr NullDNekScalMatSharedPtr;
+    static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
 
     typedef LinearSystem                        DNekLinSys;
     typedef boost::shared_ptr<DNekLinSys>       DNekLinSysSharedPtr;
 
-    typedef NekMatrix<NekMatrix<NekDouble>,ScaledMatrixTag> DNekScalMat; 
-    typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
-    static DNekScalMatSharedPtr NullDNekScalMatSharedPtr;
-
     typedef LinearSystem                        DNekScalLinSys; 
     typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
 
-    typedef NekMatrix<DNekMat, BlockMatrixTag> DNekBlkMat;
-
-    typedef boost::shared_ptr<DNekBlkMat>    DNekBlkMatSharedPtr;
-
-    typedef NekMatrix<DNekBlkMat, BlockMatrixTag> BlkMatDNekBlkMat;
-    typedef boost::shared_ptr<BlkMatDNekBlkMat>  BlkMatDNekBlkMatSharedPtr;
-
-    typedef NekMatrix<DNekScalMat, BlockMatrixTag> DNekScalBlkMat;
-    typedef boost::shared_ptr<DNekScalBlkMat>      DNekScalBlkMatSharedPtr;
-    static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
-    
-    typedef NekMatrix<DNekScalBlkMat, BlockMatrixTag> BlkMatDNekScalBlkMat;
-    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
-
-    typedef NekMatrix<DNekScalBlkMat, BlockMatrixTag> BlkMatDNekScalBlkMat;
-    typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
-    
-    typedef NekSparseMatrix<NekDouble>           DNekSparseMat;
-    typedef boost::shared_ptr<DNekSparseMat>     DNekSparseMatSharedPtr;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP

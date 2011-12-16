@@ -232,9 +232,9 @@ namespace Nektar
 
 #else //NEKTAR_USING_DIRECT_BLAS_CALLS
 
-                NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
+                NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<const double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
@@ -276,7 +276,7 @@ namespace Nektar
                 StdMatrixKey      masskey(eInvMass,v_DetExpansionType(),*this);
                 DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
 
-                NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
+                NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
 
                 out = (*matsys)*in;

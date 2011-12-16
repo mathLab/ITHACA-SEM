@@ -49,11 +49,11 @@ namespace Nektar
     ///         match the size of the input then an error occurred.
     /// This algorithm is taken from "Parallel Scientific Computing in
     /// C++ and MPI", Karniadakis and Kirby, page 55.
-    template<typename DataType, typename VectorDimension, typename space>
-    std::vector<NekVector<DataType, VectorDimension, space> > 
-    GramSchmidtOrthogonalization(const std::vector<NekVector<DataType, VectorDimension, space> >& x)
+    template<typename DataType>
+    std::vector<NekVector<DataType> > 
+    GramSchmidtOrthogonalization(const std::vector<NekVector<DataType> >& x)
     {
-        typedef NekVector<DataType, VectorDimension, space> VectorType;
+        typedef NekVector<DataType> VectorType;
         typedef NekMatrix<DataType> MatrixType;
         
         //typename dim = x[0].GetDimension(); 
@@ -101,17 +101,3 @@ namespace Nektar
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LIN_ALG_ALGORITHMS_HPP
 
-/**
-    $Log: NekLinAlgAlgorithms.hpp,v $
-    Revision 1.3  2008/03/03 02:28:39  bnelson
-    Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
-
-    Added a new NekVector<const DataType> to allow wrapping of ConstArrays.
-
-    Revision 1.2  2007/02/15 06:56:55  bnelson
-    *** empty log message ***
-
-    Revision 1.1  2006/11/20 03:39:06  bnelson
-    Initial Revision
-
-**/

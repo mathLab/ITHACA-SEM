@@ -168,14 +168,14 @@ namespace Nektar
 			Array<OneD, NekDouble> PadV2_pencil_phys(2*nplanes,0.0);
 			Array<OneD, NekDouble> PadRe_pencil_phys(2*nplanes,0.0);
 									
-			NekVector<const NekDouble> PadIN_V1(2*nplanes,PadV1_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_V1(2*nplanes,PadV1_pencil_coeff,eWrapper);
 			NekVector<NekDouble> PadOUT_V1(2*nplanes,PadV1_pencil_phys,eWrapper);
 			
-			NekVector<const NekDouble> PadIN_V2(2*nplanes,PadV2_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_V2(2*nplanes,PadV2_pencil_coeff,eWrapper);
 			NekVector<NekDouble> PadOUT_V2(2*nplanes,PadV2_pencil_phys,eWrapper);
 			
-			NekVector<const NekDouble> PadIN_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
-			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
 			
 			//Looping on the pencils
 			for(int i = 0 ; i< npencils ; i++)
@@ -349,7 +349,7 @@ namespace Nektar
                 ShuffleIntoHomogeneous1DClosePacked(inarray,sortedinarray,!IsForwards);
                 
                 // Create NekVectors from the given data arrays
-                NekVector<const NekDouble> in (ncols,sortedinarray,eWrapper);
+                NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
                 NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
 		
                 // Perform matrix-vector multiply.

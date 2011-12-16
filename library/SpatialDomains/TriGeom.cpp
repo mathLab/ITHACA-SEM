@@ -228,7 +228,7 @@ namespace Nektar
                 if (pdim == 2)
                 {
                     int N = curve->m_points.size();
-                    int nEdgePts = (-1+(int)sqrt(8*N+1))/2;
+                    int nEdgePts = (-1+(int)sqrt(static_cast<double>(8*N+1)))/2;
                     
                     ASSERTL0(nEdgePts*(nEdgePts+1)/2 == N,
                              "NUMPOINTS must be a triangle number for 2D basis.");

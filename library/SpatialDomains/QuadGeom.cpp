@@ -167,7 +167,7 @@ namespace Nektar
             for(int i = 0; i < m_coordim; ++i)
             {
                 int npts = curve->m_points.size();
-                int nEdgePts = (int)sqrt(npts);
+                int nEdgePts = (int)sqrt(static_cast<double>(npts));
                 Array<OneD,NekDouble> tmp(npts);
                 LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
 

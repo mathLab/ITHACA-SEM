@@ -341,6 +341,10 @@ namespace Nektar
                 const PrismGeomMap& GetAllPrismGeoms() const { return m_prismGeoms; }
                 const HexGeomMap& GetAllHexGeoms() const { return m_hexGeoms; }
 
+                /// Convenience method for ElVis.
+                template<typename ElementType>
+                const std::map<int, boost::shared_ptr<ElementType> >& GetAllElementsOfType() const;
+
             protected:
                 LibUtilities::SessionReaderSharedPtr  m_session;
                 VertexMap               m_vertSet;
@@ -374,6 +378,30 @@ namespace Nektar
                 ExpansionMapShPtr    SetUpExpansionMap(void);
 
         };
+
+        template<>
+        inline const std::map<int, boost::shared_ptr<HexGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllHexGeoms();
+        }
+
+        template<>
+        inline const std::map<int, boost::shared_ptr<PrismGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllPrismGeoms();
+        }
+
+        template<>
+        inline const std::map<int, boost::shared_ptr<TetGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllTetGeoms();
+        }
+
+        template<>
+        inline const std::map<int, boost::shared_ptr<PyrGeom> >& MeshGraph::GetAllElementsOfType() const
+        {
+            return GetAllPyrGeoms();
+        }
 
         typedef boost::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 

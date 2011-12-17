@@ -518,18 +518,9 @@ namespace Nektar
 //    }
 
 
-    //template LIB_UTILITIES_EXPORT class NekMatrix< NekMatrix<const NekDouble, StandardMatrixTag>, BlockMatrixTag>;
     template LIB_UTILITIES_EXPORT class NekMatrix< NekMatrix<NekDouble, StandardMatrixTag>, BlockMatrixTag>;
-
-    //template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekMatrix<const NekDouble, StandardMatrixTag>, BlockMatrixTag>, BlockMatrixTag>;
     template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekMatrix<NekDouble, StandardMatrixTag>, BlockMatrixTag>, BlockMatrixTag>;
-
-    //template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekMatrix<const NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>;
     template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>;
-
-    //template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix<NekMatrix< NekMatrix<const NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>, BlockMatrixTag>;
     template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix<NekMatrix< NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>, BlockMatrixTag>;
-
-    //template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix<NekDouble, InnerMatrixType>, BlockMatrixTag>::iterator_base<MatrixType>::
 }
 

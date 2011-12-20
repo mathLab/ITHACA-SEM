@@ -27,6 +27,6 @@ INSTALL(FILES ${input_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/APESolver/InputFiles COMPONENT test)
 FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
-		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/APEAPEAPEAPEAPESolver/OkFiles COMPONENT test)
+		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/APESolver/OkFiles COMPONENT test)
 
-ADD_TEST(NAME APESolverTest WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/dist/bin COMMAND APESolverTest)
+ADD_TEST(NAME APESolverTest COMMAND APESolverTest)

@@ -765,7 +765,7 @@ void RegressBase::ClearBuffer(char* buf, int bSize)
 std::string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
-    #if BOOST_VERSION > 104000
+    #if BOOST_VERSION > 104200
     temp.make_preferred();
     return temp.string();
     #else

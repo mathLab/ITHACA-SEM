@@ -27,4 +27,4 @@ INSTALL(FILES ${input_files}
 FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Demos/LocalRegions/OkFiles COMPONENT test)
-ADD_TEST(NAME LocalRegionsDemoTest WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/builds/dist/bin COMMAND LocalRegionsDemoTest)
+ADD_TEST(NAME LocalRegionsDemoTest COMMAND LocalRegionsDemoTest)

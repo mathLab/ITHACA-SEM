@@ -50,7 +50,6 @@ namespace Nektar
     namespace MultiRegions
     {
 
-
         static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
@@ -142,6 +141,7 @@ namespace Nektar
             Array<OneD,int> m_globalToUniversalMapUnique;
 
         private:
+            int m_maxStaticCondLevel;
             /// Construct mappings for a one-dimensional scalar expansion.
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,

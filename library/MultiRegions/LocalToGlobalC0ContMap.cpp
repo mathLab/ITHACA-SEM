@@ -66,6 +66,7 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession):
             LocalToGlobalBaseMap(pSession)
         {
+            pSession->LoadParameter("MaxStaticCondLevel",m_maxStaticCondLevel,100);
         }
 
 
@@ -145,6 +146,7 @@ namespace Nektar
                 const bool checkIfSystemSingular) :
             LocalToGlobalBaseMap(pSession)
         {
+            pSession->LoadParameter("MaxStaticCondLevel",m_maxStaticCondLevel,100);
             SetUp2DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
                                       bndCondExp,
@@ -649,7 +651,8 @@ namespace Nektar
             if ((m_solnType == eDirectMultiLevelStaticCond
                     || m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
             {
-                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
+                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1)&&
+                   (m_staticCondLevel < m_maxStaticCondLevel))
                 {
                     Array<OneD, int> vwgts_perm(Dofs[0].size()+Dofs[1].size()+-firstNonDirGraphVertId);
                     for(i = 0; i < Dofs[0].size(); ++i)

@@ -269,9 +269,9 @@ namespace Nektar
                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr))
                 {
                     LibUtilities::BasisKey QuadBa
-                                        = expIt->second->m_basisKeyVector[0];
+                        = expIt->second->m_basisKeyVector[0];
                     LibUtilities::BasisKey QuadBb
-                                        = expIt->second->m_basisKeyVector[1];
+                        = expIt->second->m_basisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
                         ::AllocateSharedPtr(QuadBa,QuadBb,

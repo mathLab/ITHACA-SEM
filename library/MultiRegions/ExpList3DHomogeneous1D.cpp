@@ -65,7 +65,7 @@ namespace Nektar
         {
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var));
         }
-
+        
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
@@ -79,7 +79,7 @@ namespace Nektar
 
         void ExpList3DHomogeneous1D::GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions)
         {
-            int n,j,nel;
+            int  n,j,nel;
             bool False = false;
             ExpList2DSharedPtr plane_zero;
 
@@ -88,12 +88,12 @@ namespace Nektar
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
-
+            
             for(j = 0; j < nel; ++j)
             {
                 (*m_exp).push_back(m_planes[0]->GetExp(j));
             }
-
+            
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*plane_zero,False);
@@ -102,7 +102,7 @@ namespace Nektar
                     (*m_exp).push_back((*m_exp)[j]);
                 }
             }
-
+            
             // Setup Default optimisation information.
             nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>

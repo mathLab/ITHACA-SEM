@@ -52,7 +52,7 @@ namespace Nektar
                 &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT):
             ExpList(pSession),
             m_lhom(lhom),
-		    m_useFFT(useFFT),
+            m_useFFT(useFFT),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
         {
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
@@ -61,11 +61,11 @@ namespace Nektar
 			
             int nzplanes = m_homogeneousBasis->GetNumPoints();
 			
-			const LibUtilities::PointsKey Ppad(2*nzplanes,LibUtilities::eFourierEvenlySpaced);
-			const LibUtilities::BasisKey  Bpad(LibUtilities::eFourier,2*nzplanes,Ppad);
-			
-			m_paddingBasis = LibUtilities::BasisManager()[Bpad];
-
+            const LibUtilities::PointsKey Ppad(2*nzplanes,LibUtilities::eFourierEvenlySpaced);
+            const LibUtilities::BasisKey  Bpad(LibUtilities::eFourier,2*nzplanes,Ppad);
+            
+            m_paddingBasis = LibUtilities::BasisManager()[Bpad];
+            
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
             
             if(m_useFFT)
@@ -231,6 +231,24 @@ namespace Nektar
             HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
         }
 
+        void ExpListHomogeneous1D::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+            int nplanes = m_planes.num_elements();
+
+            for(int n = 0; n < nplanes; ++n)
+            {
+                m_planes[n]->FwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+
+                cnt   += m_planes[n]->GetTotPoints();
+                cnt1  += m_planes[n]->GetNcoeffs();
+            }
+            
+            HomogeneousFwdTrans(outarray,outarray);
+        }
+
+
         void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
             int cnt = 0, cnt1 = 0;
@@ -252,7 +270,7 @@ namespace Nektar
                 cnt1   += m_planes[n]->GetTotPoints();
             }
 			
-			HomogeneousBwdTrans(outarray,outarray);
+            HomogeneousBwdTrans(outarray,outarray);
         }
 
 

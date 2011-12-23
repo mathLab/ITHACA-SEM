@@ -65,44 +65,36 @@ namespace Nektar
         {
         public:
 
-        PatchMap(const int patchId,
-                 const int dofId,
-                 const bool bndPatch,
-                 const NekDouble sign):
-            m_patchId(patchId),
-                m_dofId(dofId),
-                m_bndPatch(bndPatch),
-                m_sign(sign)
-                {
-                }
-            
-            inline int GetPatchId() const 
+            PatchMap(const int vals);
+
+            void SetPatchMap(const int n, const int patchId, const int dofId,const bool bndPatch,const NekDouble sign);
+
+            inline Array<OneD, const int> GetPatchId() const 
             {
                 return m_patchId;
             }
 
-            inline int GetDofId() const
+            inline Array<OneD, const int>  GetDofId() const
             {
                 return m_dofId;
             }
 
-            inline bool IsBndDof() const
+            inline Array<OneD, const bool> IsBndDof() const
             {
                 return m_bndPatch;
             }
 
-            inline NekDouble GetSign() const
+            inline Array<OneD, const NekDouble> GetSign() const
             {
                 return m_sign;
             }
-
+            
         protected:
-            int       m_patchId;
-            int       m_dofId;
-            bool      m_bndPatch; 
-            NekDouble m_sign; 
+            Array<OneD, int > m_patchId;
+            Array<OneD, int > m_dofId;
+            Array<OneD, bool> m_bndPatch; 
+            Array<OneD, NekDouble> m_sign; 
         };
-
 
 
         class SubGraph

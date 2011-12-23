@@ -47,6 +47,22 @@ namespace Nektar
     namespace MultiRegions
     {
        
+        PatchMap::PatchMap(const int nvals)
+        {
+            m_patchId  = Array<OneD, int>(nvals);
+            m_dofId    = Array<OneD, int>(nvals);
+            m_bndPatch = Array<OneD, bool>(nvals);
+            m_sign     = Array<OneD, NekDouble>(nvals);
+        }
+            
+        void PatchMap::SetPatchMap(const int n, const int patchId, const int dofId,const bool bndPatch,const NekDouble sign)
+        {
+            m_patchId[n]  = patchId;
+            m_dofId[n]    = dofId;
+            m_bndPatch[n] = bndPatch;
+            m_sign[n]     = sign;
+        }
+        
         MultiLevelBisectedGraph::MultiLevelBisectedGraph(const Array<OneD, const int> sepTree):
             m_BndDofs(),
             m_leftDaughterGraph(),

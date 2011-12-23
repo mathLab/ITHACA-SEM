@@ -84,7 +84,7 @@ namespace Nektar
         MultiRegions::BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
         int staticCondLevel = 0;
 
-        if(CheckforSingularSys) //all singularity checking by setting flat to true
+        if(CheckforSingularSys) //all singularity checking by setting flag to true
         {
             m_systemSingular = true;
         }
@@ -163,12 +163,16 @@ namespace Nektar
                         locnorm = loc_exp->GetLeftAdjacentElementExp()->GetEdgeNormal(loc_exp->GetLeftAdjacentElementEdge());
                         //locnorm = bndCondExp[j]->GetExp(k)->Get GetMetricInfo()->GetNormal();
                         
-                        for(int l = 0; l < locnorm[0].num_elements(); ++l)
+                        int ndir = locnorm.num_elements();
+                        if(i < ndir) // account for Fourier version where n can be larger then ndir
                         {
-                            if(fabs(locnorm[i][l]) > NekConstants::kNekZeroTol)
+                            for(int l = 0; l < locnorm[0].num_elements(); ++l)
                             {
-                                m_systemSingular = false;
-                                break;
+                                if(fabs(locnorm[i][l]) > NekConstants::kNekZeroTol)
+                                {
+                                    m_systemSingular = false;
+                                    break;
+                                }
                             }
                         }
                         if(m_systemSingular == false)
@@ -237,11 +241,10 @@ namespace Nektar
                 {
                     Dofs[0][vertId] = nvel*nz_loc;
                     
-                    // Adjust for a mixed boundary condition
+                    // Adjust for a Dirichlet boundary condition to give number to be solved
                     if(IsDirVertDof.count(vertId) != 0)
                     {
-                        int diff = (nvel-IsDirVertDof[vertId])*nz_loc;
-                        Dofs[0][vertId] -= diff; 
+                        Dofs[0][vertId] -= IsDirVertDof[vertId]*nz_loc; 
                     }
                 }
 
@@ -251,11 +254,10 @@ namespace Nektar
                     Dofs[1][edgeId] = nvel*(locExpVector[eid]->GetEdgeNcoeffs(j)-2)*nz_loc;
                 }
                 
-                // count how many vertices 
+                // Adjust for Dirichlet boundary conditions to give number to be solved
                 if(IsDirEdgeDof.count(edgeId) != 0)
                 {
-                    int diff = (nvel-IsDirEdgeDof[edgeId])*nz_loc;
-                    Dofs[1][edgeId] -= diff*(locExpVector[eid]->GetEdgeNcoeffs(j)-2);
+                    Dofs[1][edgeId] -= IsDirEdgeDof[edgeId]*nz_loc*(locExpVector[eid]->GetEdgeNcoeffs(j)-2);
                 }
             }
         }
@@ -342,48 +344,6 @@ namespace Nektar
                 }
             }
 
-#if 0 
-            // reset singular edge to be defedge so that it is part of
-            // inner solve.
-            if(m_systemSingular)
-            {
-
-                for(i = 0; i < bndgraphs.size(); ++i)
-                {
-                    int GlobIdOffset = bndgraphs[i]->GetIdOffset();
-
-
-                    
-                for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
-                {
-                    // find edge in graph vert list
-                    if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
-                    {
-                        edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
-                        if(defedge == -1)
-                        {
-                            defedge = edgeId;
-                            break;
-                        }
-                    }
-                }
-                if(defedge != -1)
-                {
-                    break;
-                }
-            }
-
-                for(i = 0; i < AddMeanPressureToEdgeId.size(); ++i)
-                {
-                    if(AddMeanPressureToEdgeId[i] != -1)
-                    {
-                        AddMeanPressureToEdgeId[i] = defedge;
-                        break;
-                    }
-            }
-
-#endif
-
             for(int n = 1; n < nlevels; ++n)
             {
                 // produce a map with a key that is the element id
@@ -469,7 +429,7 @@ namespace Nektar
                     // default edget value
                     if(SetEdge == false)
                     {
-                        if(elmtid == -1) // find aN elmtid in patch 
+                        if(elmtid == -1) // find an elmtid in patch 
                         {
                             for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
                             {
@@ -522,7 +482,7 @@ namespace Nektar
                 }
             }
             ASSERTL0((AddMeanPressureToEdgeId[eid] != -1),"Did not determine "
-                     "a edge to attach mean pressure dof");
+                     "an edge to attach mean pressure dof");
             // Add the mean pressure degree of freedom to this edge
             Dofs[1][AddMeanPressureToEdgeId[eid]] += nz_loc;
         }
@@ -690,7 +650,7 @@ namespace Nektar
             }
         }
     
-        // Accumulate all interior degrees of freedom with positive
+        // Accumulate all interior degrees of freedom with positive values
         m_numGlobalDirBndCoeffs = cnt;
 
         // offset values
@@ -750,8 +710,8 @@ namespace Nektar
 
         for(i = 0; i < nel; ++i)
         {
-            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*nvel*(locExpVector[fields[0]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1);
-            m_numLocalIntCoeffsPerPatch[i] = (unsigned int) (pressure->GetExp(eid)->GetNcoeffs()-1)*nz_loc;
+            m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[fields[0]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1);
+            m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(eid)->GetNcoeffs()-1);
         }
         
         /**
@@ -911,7 +871,7 @@ namespace Nektar
             {
                 Array<OneD, int> vwgts_perm(Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
 
-                for(i = 0; i < ReorderedGraphVertId[0].size(); ++i)
+                for(i = 0; i < Dofs[0].size(); ++i)
                 {
                     if(ReorderedGraphVertId[0][i] >= firstNonDirGraphVertId)
                     {
@@ -919,7 +879,7 @@ namespace Nektar
                     }
                 }
 
-                for(i = 0; i < ReorderedGraphVertId[1].size(); ++i)
+                for(i = 0; i < Dofs[1].size(); ++i)
                 {
                     if(ReorderedGraphVertId[1][i] >= firstNonDirGraphVertId)
                     {
@@ -927,7 +887,12 @@ namespace Nektar
                     }
                 }
         
+                //bottomUpGraph->Dump();
                 bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
+                //bottomUpGraph->Dump();
+
+                m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
+                  AllocateSharedPtr(this,bottomUpGraph);
             }
         }
     }

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
 {
@@ -430,6 +431,8 @@ namespace Nektar
             ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
 
 
+        Timer timer;
+        timer.Start();
         for(n = 0; n < nel; ++n)
         {
             eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(n);
@@ -437,9 +440,14 @@ namespace Nektar
             nint   = nsize_int[n];
             k = nsize_bndry_p1[n];
             DNekMatSharedPtr Ah = MemoryManager<DNekMat>::AllocateSharedPtr(k,k,zero);
+            Array<OneD, NekDouble> Ah_data = Ah->GetPtr();
+            int AhRows = k;
             DNekMatSharedPtr B  = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,nint,zero);
+            Array<OneD, NekDouble> B_data = B->GetPtr();
             DNekMatSharedPtr C  = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,nint,zero);
+            Array<OneD, NekDouble> C_data = C->GetPtr();
             DNekMatSharedPtr D  = MemoryManager<DNekMat>::AllocateSharedPtr(nint, nint,zero);
+            Array<OneD, NekDouble> D_data = D->GetPtr();
             
             DNekMatSharedPtr Dbnd = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p[n],nsize_bndry[n],zero);
             DNekMatSharedPtr Dint = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p[n],nsize_int[n],zero);
@@ -615,26 +623,6 @@ namespace Nektar
                         }
                     }
                 }
-                
-#if 0
-            if(nz_loc  == 2)
-            {
-                cout << "Ah" << endl;
-                cout << *Ah << endl;
-                cout << "B" << endl;
-                cout << *B << endl;
-                cout << "C" << endl;
-                cout << *C << endl;
-                cout << "D" << endl;
-                cout << *D << endl;
-                cout << "Dbnd" << endl;
-                cout << *Dbnd << endl;
-                cout << "Dint" << endl;
-                cout << *Dint << endl;
-                exit(1);
-            }
-#endif                
-            
             }
             else
             {
@@ -645,6 +633,10 @@ namespace Nektar
                 DNekScalMat &HelmMat = *(boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
+                Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
+                NekDouble HelmMatScale = HelmMat.Scale();
+                int HelmMatRows = HelmMat.GetRows();
+
                 if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
                 {
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
@@ -702,12 +694,13 @@ namespace Nektar
                     {
                         for(j = 0; j < nbmap; ++j)
                         {
-                            (*Ah)(i+k*nbmap,j+k*nbmap) += m_kinvis*HelmMat(bmap[i],bmap[j]);
+                            //                            Ah_data[i+k*nbmap + (j+k*nbmap)*AhRows] += m_kinvis*HelmMat(bmap[i],bmap[j]);
+                            Ah_data[i+k*nbmap + (j+k*nbmap)*AhRows] += m_kinvis*HelmMatScale*HelmMat_data[bmap[i] + HelmMatRows*bmap[j]];
                         }
                         
                         for(j = 0; j < nimap; ++j)
                         {
-                            (*B)(i+k*nbmap,j+k*nimap) += m_kinvis*HelmMat(bmap[i],imap[j]);
+                            B_data[i+k*nbmap + (j+k*nimap)*nbndry] += m_kinvis*HelmMatScale*HelmMat_data[bmap[i]+HelmMatRows*imap[j]];
                         }
                     }
                     
@@ -717,22 +710,22 @@ namespace Nektar
                         {
                             for(j = 0; j < nbmap; ++j)
                             {
-                                (*Ah)(i+2*k*nbmap,j+(2*k+1)*nbmap) -= lambda_imag*(*MassMat)(bmap[i],bmap[j]);
+                                Ah_data[i+2*k*nbmap + (j+(2*k+1)*nbmap)*AhRows] -= lambda_imag*(*MassMat)(bmap[i],bmap[j]);
                             }
 
                             for(j = 0; j < nbmap; ++j)
                             {
-                                (*Ah)(i+(2*k+1)*nbmap,j+2*k*nbmap) += lambda_imag*(*MassMat)(bmap[i],bmap[j]);
+                                Ah_data[i+(2*k+1)*nbmap + (j+2*k*nbmap)*AhRows] += lambda_imag*(*MassMat)(bmap[i],bmap[j]);
                             }
 
                             for(j = 0; j < nimap; ++j)
                             {
-                                (*B)(i+2*k*nbmap,j+(2*k+1)*nimap) -= lambda_imag*(*MassMat)(bmap[i],imap[j]);
+                                B_data[i+2*k*nbmap + (j+(2*k+1)*nimap)*nbndry] -= lambda_imag*(*MassMat)(bmap[i],imap[j]);
                             }
 
                             for(j = 0; j < nimap; ++j)
                             {
-                                (*B)(i+(2*k+1)*nbmap,j+2*k*nimap) += lambda_imag*(*MassMat)(bmap[i],imap[j]);
+                                B_data[i+(2*k+1)*nbmap + (j+2*k*nimap)*nbndry] += lambda_imag*(*MassMat)(bmap[i],imap[j]);
                             }
 
                         }
@@ -773,13 +766,13 @@ namespace Nektar
                             {
                                 for(j = 0; j < nbmap; ++j)
                                 {
-                                    (*Ah)(j+2*nv*nbmap,i+(2*nv+1)*nbmap) +=
+                                    Ah_data[j+2*nv*nbmap + (i+(2*nv+1)*nbmap)*AhRows] +=
                                         coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
-                                    (*C)(i+(2*nv+1)*nbmap,j+2*nv*nimap) += 
+                                    C_data[i+(2*nv+1)*nbmap + (j+2*nv*nimap)*nbndry] += 
                                         coeffs[imap[j]];
                                 }
                             }
@@ -790,13 +783,13 @@ namespace Nektar
                             {
                                 for(j = 0; j < nbmap; ++j)
                                 {
-                                    (*Ah)(j+(2*nv+1)*nbmap,i+2*nv*nbmap) +=
+                                    Ah_data[j+(2*nv+1)*nbmap + (i+2*nv*nbmap)*AhRows] +=
                                         coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
-                                    (*C)(i+2*nv*nbmap,j+(2*nv+1)*nimap) += 
+                                    C_data[i+2*nv*nbmap + (j+(2*nv+1)*nimap)*nbndry] += 
                                         coeffs[imap[j]];
                                 }
                             }
@@ -816,13 +809,13 @@ namespace Nektar
                                 {
                                     for(j = 0; j < nbmap; ++j)
                                     {
-                                        (*Ah)(j+nv*nbmap,i+nv*nbmap) +=
+                                        Ah_data[j+nv*nbmap + (i+nv*nbmap)*AhRows] +=
                                             coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
-                                        (*C)(i+nv*nbmap,j+nv*nimap) += 
+                                        C_data[i+nv*nbmap + (j+nv*nimap)*nbndry] += 
                                             coeffs[imap[j]];
                                     }
                                 }
@@ -852,15 +845,15 @@ namespace Nektar
                                 {
                                     for(j = 0; j < nbmap; ++j)
                                     {
-                                        (*Ah)(j+(k*nz_loc+n1)*nbmap,
-                                              i+(nv*nz_loc+n1)*nbmap) +=
-                                            coeffs[bmap[j]];
+                                        Ah_data[j+(k*nz_loc+n1)*nbmap + 
+                                                 (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
+                                                coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
-                                        (*C)(i+(nv*nz_loc+n1)*nbmap,
-                                             j+(k*nz_loc+n1)*nimap) += 
+                                        C_data[i+(nv*nz_loc+n1)*nbmap + 
+                                               (j+(k*nz_loc+n1)*nimap)*nbndry] += 
                                             coeffs[imap[j]];
                                     }
                                 }
@@ -881,12 +874,12 @@ namespace Nektar
                     {
                         for(j = 0; j < nbmap; ++j) // C set up as transpose
                         {
-                            (*C)(j+k*nbmap,i+k*nimap) += m_kinvis*HelmMat(imap[i],bmap[j]);
+                            C_data[j+k*nbmap + (i+k*nimap)*nbndry] += m_kinvis*HelmMatScale*HelmMat_data[imap[i]+HelmMatRows*bmap[j]];
                         }
                         
                         for(j = 0; j < nimap; ++j)
                         {
-                            (*D)(i+k*nimap,j+k*nimap) += m_kinvis*HelmMat(imap[i],imap[j]);
+                            D_data[i+k*nimap + (j+k*nimap)*nint] += m_kinvis*HelmMatScale*HelmMat_data[imap[i]+HelmMatRows*imap[j]];
                         }
                     }
 
@@ -896,22 +889,22 @@ namespace Nektar
                         {
                             for(j = 0; j < nbmap; ++j) // C set up as transpose
                             {
-                                (*C)(j+2*k*nbmap,i+(2*k+1)*nimap) += lambda_imag*(*MassMat)(bmap[j],imap[i]);
+                                C_data[j+2*k*nbmap + (i+(2*k+1)*nimap)*nbndry] += lambda_imag*(*MassMat)(bmap[j],imap[i]);
                             }
 
                             for(j = 0; j < nbmap; ++j) // C set up as transpose
                             {
-                                (*C)(j+(2*k+1)*nbmap,i+2*k*nimap) -= lambda_imag*(*MassMat)(bmap[j],imap[i]);
+                                C_data[j+(2*k+1)*nbmap + (i+2*k*nimap)*nbndry] -= lambda_imag*(*MassMat)(bmap[j],imap[i]);
                             }
 
                             for(j = 0; j < nimap; ++j)
                             {
-                                (*D)(i+2*k*nimap,j+(2*k+1)*nimap) -= lambda_imag*(*MassMat)(imap[i],imap[j]);
+                                D_data[i+2*k*nimap + (j+(2*k+1)*nimap)*nint] -= lambda_imag*(*MassMat)(imap[i],imap[j]);
                             }
 
                             for(j = 0; j < nimap; ++j)
                             {
-                                (*D)(i+(2*k+1)*nimap,j+2*k*nimap) += lambda_imag*(*MassMat)(imap[i],imap[j]);
+                                D_data[i+(2*k+1)*nimap + (j+2*k*nimap)*nint] += lambda_imag*(*MassMat)(imap[i],imap[j]);
                             }
                         }
                     }
@@ -945,14 +938,14 @@ namespace Nektar
                             {
                                 for(j = 0; j < nbmap; ++j)
                                 {
-                                    (*B)(j+2*nv*nbmap,i+(2*nv+1)*nimap) += 
+                                    B_data[j+2*nv*nbmap + (i+(2*nv+1)*nimap)*nbndry] += 
                                         coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
-                                    (*D)(j+2*nv*nimap,i+(2*nv+1)*nimap) += 
-                                         coeffs[imap[j]];
+                                    D_data[j+2*nv*nimap + (i+(2*nv+1)*nimap)*nint] += 
+                                        coeffs[imap[j]];
                                 }
                             }
                             Vmath::Neg(ncoeffs,coeffs,1);
@@ -961,13 +954,13 @@ namespace Nektar
                             {
                                 for(j = 0; j < nbmap; ++j)
                                 {
-                                    (*B)(j+(2*nv+1)*nbmap,i+2*nv*nimap) += 
+                                    B_data[j+(2*nv+1)*nbmap + (i+2*nv*nimap)*nbndry] += 
                                         coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
-                                    (*D)(j+(2*nv+1)*nimap,i+2*nv*nimap) += 
+                                    D_data[j+(2*nv+1)*nimap + (i+2*nv*nimap)*nint] += 
                                         coeffs[imap[j]];
                                 }
                             }
@@ -990,13 +983,13 @@ namespace Nektar
                                 {
                                     for(j = 0; j < nbmap; ++j)
                                     {
-                                        (*B)(j+nv*nbmap,i+nv*nimap) +=
+                                        B_data[j+nv*nbmap + (i+nv*nimap)*nbndry] +=
                                             coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
-                                        (*D)(j+nv*nimap,i+nv*nimap) += 
+                                        D_data[j+nv*nimap + (i+nv*nimap)*nint] += 
                                             coeffs[imap[j]];
                                     }
                                 }
@@ -1026,15 +1019,15 @@ namespace Nektar
                                 {
                                     for(j = 0; j < nbmap; ++j)
                                     {
-                                        (*B)(j+(k*nz_loc+n1)*nbmap,
-                                             i+(nv*nz_loc+n1)*nimap) += 
+                                        B_data[j+(k*nz_loc+n1)*nbmap + 
+                                               (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
                                             coeffs[bmap[j]];
                                     }
 
                                     for(j = 0; j < nimap; ++j)
                                     {
-                                        (*D)(j+(k*nz_loc+n1)*nimap,
-                                             i+(nv*nz_loc+n1)*nimap) += 
+                                        D_data[j+(k*nz_loc+n1)*nimap +  
+                                               (i+(nv*nz_loc+n1)*nimap)*nint] += 
                                             coeffs[imap[j]];
                                     }
                                 }
@@ -1043,24 +1036,6 @@ namespace Nektar
                     }
                 }
 
-#if 0
-            if(nz_loc  == 2)
-            {
-                //cout << "Ah" << endl;
-                //                cout << *Ah << endl;
-                //                cout << "B" << endl;
-                //cout << *B << endl;
-                //cout << "C" << endl;
-                //  cout >> *C << endl;
-                cout << "D" << endl;
-                ///cout >> *D << endl;
-                cout << *D << endl;
-                //cout << "Dbnd" << endl;
-                //cout >> *Dbnd << endl;
-                cout << "Dint" << endl;
-                cout << *Dint << endl;
-            }
-#endif
 
                 D->Invert();
                 (*B) = (*B)*(*D);
@@ -1092,14 +1067,7 @@ namespace Nektar
             BCinv  = B;  
             Btilde = C; 
 
-#if 0 
             DintCinvDTint      = (*Dint)*(*Cinv)*Transpose(*Dint);
-#else
-            DNekMat CinvDTint = (*Cinv)*Transpose(*Dint);
-            
-            DintCinvDTint      = (*Dint)*(CinvDTint);
-#endif
-
             BCinvDTint_m_DTbnd = (*BCinv)*Transpose(*Dint) - Transpose(*Dbnd);
             
             // This could be transpose of BCinvDint in some cases
@@ -1109,7 +1077,8 @@ namespace Nektar
             DNekMatSharedPtr Bh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_bndry_p1[n],nsize_p_m1[n],zero);
             DNekMatSharedPtr Ch = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n],nsize_bndry_p1[n],zero);
             DNekMatSharedPtr Dh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n], nsize_p_m1[n],zero);
-            
+            Array<OneD, NekDouble> Dh_data = Dh->GetPtr();
+
             // Copy matrices into final structures. 
             int n1,n2;
             for(n1 = 0; n1 < nz_loc; ++n1)
@@ -1120,7 +1089,9 @@ namespace Nektar
                     {
                         for(j = 0; j < psize-1; ++j)
                         {
-                            (*Dh)(i+n1*(psize-1),j+n2*(psize-1)) = 
+                            //(*Dh)(i+n1*(psize-1),j+n2*(psize-1)) = 
+                            //-DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
+                            Dh_data[(i+n1*(psize-1)) + (j+n2*(psize-1))*Dh->GetRows()] = 
                                 -DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
                         }
                     }                    
@@ -1169,43 +1140,13 @@ namespace Nektar
                 }
             }
 
-
-#if 0
-            if(nz_loc  == 2)
-            {
-                cout << "Bh" << endl;
-                cout << *Bh << endl;
-                cout << "DintCinvDTint" << endl;
-                cout << DintCinvDTint << endl;
-            }
-#endif
-
             // Do static condensation
             Dh->Invert();
             (*Bh) = (*Bh)*(*Dh);
-            (*Ah) = (*Ah) - (*Bh)*(*Ch);
-
-#if 0
-            if(nz_loc  == 2)
-            {
-                //cout << "Cinv" << endl;
-                //cout << *Cinv << endl;
-                //cout << "Dbnd" << endl;
-                //cout << *Dbnd << endl;
-                //cout << "Dint" << endl;
-                //cout << *Dint << endl;
-                //cout << "Ah" << endl;
-                // cout << *Ah << endl;
-                cout << "Bh" << endl;
-                cout << *Bh << endl;
-                cout << "Dh" << endl;
-                cout << *Dh << endl;
-                exit(1);
-                cout << "Ch" << endl;
-                cout << *Ch << endl;
-                exit(1);
-            }
-#endif
+            //(*Ah) = (*Ah) - (*Bh)*(*Ch);
+            Blas::Dgemm('N','N', Bh->GetRows(), Ch->GetColumns(), Bh->GetColumns(), -1.0,
+                        Bh->GetRawPtr(), Bh->GetRows(), Ch->GetRawPtr(), Ch->GetRows(), 
+                        1.0, Ah->GetRawPtr(), Ah->GetRows());
 
             // Set matrices for later inversion. Probably do not need to be 
             // attached to class
@@ -1214,13 +1155,19 @@ namespace Nektar
             pCh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ch));
             pDh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Dh));    
         }
+        timer.Stop();
+        cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
 
+
+        timer.Start();
         // Set up global coupled boundary solver. 
         // This is a key to define the solution matrix type
         // currently we are giving it a argument of eLInearAdvectionReaction 
         // since this then makes the matrix storage of type eFull
         MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,locToGloMap);
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
+        timer.Stop();
+        cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
     void CoupledLinearNS::v_PrintSummary(std::ostream &out)

@@ -190,8 +190,8 @@ namespace Nektar
         std::string   hisname = m_session->GetSessionName() + ".his";
         std::ofstream hisFile;
         
-		std::string   mdlname = m_session->GetSessionName() + ".mdl";
-		std::ofstream mdlFile;
+        std::string   mdlname = m_session->GetSessionName() + ".mdl";
+        std::ofstream mdlFile;
 
         if (m_historysteps)
         {
@@ -227,44 +227,44 @@ namespace Nektar
             if(m_energysteps && !((n+1)%m_energysteps))
             {
                 if(m_HomogeneousType != eNotHomogeneous)
-				{
-					if(m_HomogeneousType == eHomogeneous1D)
-					{
-						Array<OneD, NekDouble> Energy(m_npointsZ,0.0);
-						Array<OneD, NekDouble> Energy_tmp(m_npointsZ,0.0);
-						
-						for(i = 0; i < m_nConvectiveFields; ++i)
-						{
-							Energy_tmp = m_fields[i]->HomogeneousEnergy();
-							Vmath::Vadd(m_npointsZ,Energy_tmp,1,Energy,1,Energy,1);
-						}
-						mdlFile << m_time << "\t";
-						for(i = 0; i < m_npointsZ; i++)
-						{
-							mdlFile << Energy[i] << "\t";
-						}
-						mdlFile << endl;
-					}
-					else
-					{
-						ASSERTL0(false,"3D Homogeneous 2D energy dumping not implemented yet")
-					}
-				}
-				else
-				{
-					NekDouble energy = 0.0;
-					for(i = 0; i < m_nConvectiveFields; ++i)
-					{
-						m_fields[i]->SetPhys(fields[i]);
-						m_fields[i]->SetPhysState(true);
-						NekDouble norm = L2Error(i, true);
-						energy += norm*norm;
-					}
-					mdlFile << m_time << "   " << 0.5*energy << endl;
-				}
-				
+                {
+                    if(m_HomogeneousType == eHomogeneous1D)
+                    {
+                        Array<OneD, NekDouble> Energy(m_npointsZ,0.0);
+                        Array<OneD, NekDouble> Energy_tmp(m_npointsZ,0.0);
+			
+                        for(i = 0; i < m_nConvectiveFields; ++i)
+                        {
+                            Energy_tmp = m_fields[i]->HomogeneousEnergy();
+                            Vmath::Vadd(m_npointsZ,Energy_tmp,1,Energy,1,Energy,1);
+                        }
+                        mdlFile << m_time << "\t";
+                        for(i = 0; i < m_npointsZ; i++)
+                        {
+                            mdlFile << Energy[i] << "\t";
+                        }
+                        mdlFile << endl;
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"3D Homogeneous 2D energy dumping not implemented yet");
+                    }
+                }
+                else
+                {
+                    NekDouble energy = 0.0;
+                    for(i = 0; i < m_nConvectiveFields; ++i)
+                    {
+                        m_fields[i]->SetPhys(fields[i]);
+                        m_fields[i]->SetPhysState(true);
+                        NekDouble norm = L2Error(i, true);
+                        energy += norm*norm;
+                    }
+                    mdlFile << m_time << "   " << 0.5*energy << endl;
+                }
+                
             }
-
+            
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
             {

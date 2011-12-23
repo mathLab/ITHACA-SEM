@@ -505,7 +505,7 @@ namespace Nektar
 
                 // Now create the DNekMatrices and link them to the memory
                 // allocated above
-                Array<OneD, DNekMatSharedPtr> substructeredMat[4]
+                Array<OneD, DNekMatSharedPtr> substructuredMat[4]
                     = {Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix A
                        Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix B
                        Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix C
@@ -530,25 +530,25 @@ namespace Nektar
                 {
                     // Matrix A
                     tmparray = storageA+cntA;
-                    substructeredMat[0][i] = MemoryManager<DNekMat>
+                    substructuredMat[0][i] = MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nBndDofsPerPatch[i],
                                                         nBndDofsPerPatch[i],
                                                         tmparray, wType);
                     // Matrix B
                     tmparray = storageB+cntB;
-                    substructeredMat[1][i] = MemoryManager<DNekMat>
+                    substructuredMat[1][i] = MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nBndDofsPerPatch[i],
                                                         nIntDofsPerPatch[i],
                                                         tmparray, wType);
                     // Matrix C
                     tmparray = storageC+cntC;
-                    substructeredMat[2][i] = MemoryManager<DNekMat>
+                    substructuredMat[2][i] = MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nIntDofsPerPatch[i],
                                                         nBndDofsPerPatch[i],
                                                         tmparray, wType);
                     // Matrix D
                     tmparray = storageD+cntD;
-                    substructeredMat[3][i] = MemoryManager<DNekMat>
+                    substructuredMat[3][i] = MemoryManager<DNekMat>
                                     ::AllocateSharedPtr(nIntDofsPerPatch[i],
                                                         nIntDofsPerPatch[i],
                                                         tmparray, wType);
@@ -564,39 +564,71 @@ namespace Nektar
                 DNekScalBlkMatSharedPtr SchurCompl  = m_schurCompl;
                 DNekScalMatSharedPtr schurComplSubMat;
                 int       schurComplSubMatnRows;
-                int       patchId_i ,patchId_j;
-                int       dofId_i   ,dofId_j;
-                bool      isBndDof_i,isBndDof_j;
-                NekDouble sign_i    ,sign_j;
-                NekDouble value;
-                int       ABCorD;
+                Array<OneD, const int>       patchId, dofId;
+                Array<OneD, const bool>      isBndDof;
+                Array<OneD, const NekDouble> sign;
+                NekDouble scale;
+
                 for(n = cnt = 0; n < SchurCompl->GetNumberOfBlockRows(); ++n)
                 {
                     schurComplSubMat      = SchurCompl->GetBlock(n,n);
                     schurComplSubMatnRows = schurComplSubMat->GetRows();
+                    
+                    scale = SchurCompl->GetBlock(n,n)->Scale();
+                    Array<OneD, NekDouble> schurSubMat = SchurCompl->GetBlock(n,n)->GetOwnedMatrix()->GetPtr();
+                    
+                    patchId  = pLocToGloMap->GetPatchMapFromPrevLevel()->GetPatchId()+ cnt;
+                    dofId    = pLocToGloMap->GetPatchMapFromPrevLevel()->GetDofId()+ cnt;
+                    isBndDof = pLocToGloMap->GetPatchMapFromPrevLevel()->IsBndDof() + cnt;
+                    sign     = pLocToGloMap->GetPatchMapFromPrevLevel()->GetSign() + cnt;
 
                     // Set up  Matrix;
                     for(i = 0; i < schurComplSubMatnRows; ++i)
                     {
-                        patchId_i  = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetPatchId();
-                        dofId_i    = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetDofId();
-                        isBndDof_i = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+i)->IsBndDof();
-                        sign_i     = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetSign();
-
-                        for(j = 0; j < schurComplSubMatnRows; ++j)
+                        Array<OneD, NekDouble> subMat0 = substructuredMat[0][patchId[i]]->GetPtr();
+                        int subMat0rows = substructuredMat[0][patchId[i]]->GetRows();
+                        Array<OneD, NekDouble> subMat1 = substructuredMat[1][patchId[i]]->GetPtr();
+                        int subMat1rows = substructuredMat[1][patchId[i]]->GetRows();
+                        Array<OneD, NekDouble> subMat2 = substructuredMat[2][patchId[i]]->GetPtr();
+                        int subMat2rows = substructuredMat[2][patchId[i]]->GetRows();
+                        Array<OneD, NekDouble> subMat3 = substructuredMat[3][patchId[i]]->GetPtr();
+                        int subMat3rows = substructuredMat[3][patchId[i]]->GetRows();
+                        
+                        if(isBndDof[i])
                         {
-                            patchId_j  = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetPatchId();
-                            dofId_j    = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetDofId();
-                            isBndDof_j = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+j)->IsBndDof();
-                            sign_j     = pLocToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetSign();
-
-                            ASSERTL0(patchId_i==patchId_j,"These values should be equal");
-
-                            ABCorD = 2*(isBndDof_i?0:1)+(isBndDof_j?0:1);
-                            value = substructeredMat[ABCorD][patchId_i]->GetValue(dofId_i,dofId_j) +
-                                sign_i*sign_j*(*schurComplSubMat)(i,j);
-
-                            substructeredMat[ABCorD][patchId_i]->SetValue(dofId_i,dofId_j,value);
+                            for(j = 0; j < schurComplSubMatnRows; ++j)
+                            {
+                                ASSERTL0(patchId[i]==patchId[j],"These values should be equal");
+                                
+                                if(isBndDof[j])
+                                {
+                                    subMat0[dofId[i]+dofId[j]*subMat0rows] += 
+                                        sign[i]*sign[j]*(scale*schurSubMat[i+j*schurComplSubMatnRows]);
+                                }
+                                else
+                                {
+                                    subMat1[dofId[i]+dofId[j]*subMat1rows] += 
+                                        sign[i]*sign[j]*(scale*schurSubMat[i+j*schurComplSubMatnRows]);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for(j = 0; j < schurComplSubMatnRows; ++j)
+                            {
+                                ASSERTL0(patchId[i]==patchId[j],"These values should be equal");
+                                
+                                if(isBndDof[j])
+                                {
+                                    subMat2[dofId[i]+dofId[j]*subMat2rows] += 
+                                        sign[i]*sign[j]*(scale*schurSubMat[i+j*schurComplSubMatnRows]);
+                                }
+                                else
+                                {
+                                    subMat3[dofId[i]+dofId[j]*subMat3rows] += 
+                                        sign[i]*sign[j]*(scale*schurSubMat[i+j*schurComplSubMatnRows]);
+                                }
+                            }
                         }
                     }
                     cnt += schurComplSubMatnRows;
@@ -608,13 +640,25 @@ namespace Nektar
                 {
                     if(nIntDofsPerPatch[i])
                     {
+                        Array<OneD, NekDouble> subMat0 = substructuredMat[0][i]->GetPtr();
+                        int subMat0rows = substructuredMat[0][i]->GetRows();
+                        Array<OneD, NekDouble> subMat1 = substructuredMat[1][i]->GetPtr();
+                        int subMat1rows = substructuredMat[1][i]->GetRows();
+                        Array<OneD, NekDouble> subMat2 = substructuredMat[2][i]->GetPtr();
+                        int subMat2rows = substructuredMat[2][i]->GetRows();
+                        int subMat2cols = substructuredMat[2][i]->GetColumns();
+
                         // 1. D -> InvD
-                        substructeredMat[3][i]->Invert();
+                        substructuredMat[3][i]->Invert();
                         // 2. B -> BInvD
-                        (*substructeredMat[1][i]) = (*substructeredMat[1][i])*(*substructeredMat[3][i]);
+                        (*substructuredMat[1][i]) = (*substructuredMat[1][i])*(*substructuredMat[3][i]);
                         // 3. A -> A - BInvD*C (= schurcomplement)
-                        (*substructeredMat[0][i]) = (*substructeredMat[0][i]) -
-                            (*substructeredMat[1][i])*(*substructeredMat[2][i]);
+                        // (*substructuredMat[0][i]) = (*substructuredMat[0][i]) -
+                        // (*substructuredMat[1][i])*(*substructuredMat[2][i]);
+                        // Note: faster to use blas directly
+                        Blas::Dgemm('N','N', subMat1rows, subMat2cols, subMat2rows, -1.0,
+                                    &subMat1[0], subMat1rows, &subMat2[0], subMat2rows, 
+                                    1.0, &subMat0[0], subMat0rows);
                     }
                 }
 
@@ -637,7 +681,7 @@ namespace Nektar
                 {
                     for(j = 0; j < 4; j++)
                     {
-                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructeredMat[j][i]);
+                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructuredMat[j][i]);
                         blkMatrices[j]->SetBlock(i,i,tmpscalmat);
                     }
                 }

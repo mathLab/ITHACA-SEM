@@ -928,85 +928,79 @@ namespace Nektar
         {
             cout << "Initial Conditions:" << endl;
         }
-       if (m_session->DefinesFunction("InitialConditions"))
-       {
-           // Check for restart file.
-           if (m_session->GetFunctionType("InitialConditions")
-                   == LibUtilities::eFunctionTypeFile)
-           {
-               std::string restartfile
-                           = m_session->GetFunctionFilename("InitialConditions");
-               cout << "\tRestart file: "<< restartfile << endl;
-               ImportFld(restartfile, m_fields);
-           }
-           else
-           {
-               int nq = m_fields[0]->GetNpoints();
-
-               Array<OneD,NekDouble> x0(nq);
-               Array<OneD,NekDouble> x1(nq);
-               Array<OneD,NekDouble> x2(nq);
-
-               // get the coordinates (assuming all fields have the same
-               // discretisation)
-               m_fields[0]->GetCoords(x0,x1,x2);
-			   
-               for(unsigned int i = 0 ; i < m_fields.num_elements(); i++)
-               {
-                   LibUtilities::EquationSharedPtr ifunc
-                           = m_session->GetFunction("InitialConditions", i);
-                   for(int j = 0; j < nq; j++)
-                   {
-                       (m_fields[i]->UpdatePhys())[j]
-					   = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
-                   }
-                   m_fields[i]->SetPhysState(true);
+        
+        if (m_session->DefinesFunction("InitialConditions"))
+        {
+            // Check for restart file.
+            if (m_session->GetFunctionType("InitialConditions")
+                == LibUtilities::eFunctionTypeFile)
+            {
+                std::string restartfile
+                    = m_session->GetFunctionFilename("InitialConditions");
+                cout << "\tRestart file: "<< restartfile << endl;
+                ImportFld(restartfile, m_fields);
+            }
+            else
+            {
+                int nq = m_fields[0]->GetNpoints();
+                
+                Array<OneD,NekDouble> x0(nq);
+                Array<OneD,NekDouble> x1(nq);
+                Array<OneD,NekDouble> x2(nq);
+                
+                // get the coordinates (assuming all fields have the same
+                // discretisation)
+                m_fields[0]->GetCoords(x0,x1,x2);
 		
-				   if(m_HomogeneousType != eNotHomogeneous)
-				   {
-					   m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
-                                                    m_fields[i]->UpdateCoeffs());
-				   }
-				   else 
-				   {
-					   m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-														m_fields[i]->UpdateCoeffs());
-				   }
-
-                   if (m_session->GetComm()->GetRank() == 0)
-                   {
-                       cout << "\tField "<< m_session->GetVariable(i)
-                         <<": " << ifunc->GetEquation() << endl;
-                   }
-               }
-           }
-       }
-       else
-       {
-           int nq = m_fields[0]->GetNpoints();
-           for(int i = 0 ; i < m_fields.num_elements(); i++)
-           {
-               Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
-               m_fields[i]->SetPhysState(true);
-               m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                m_fields[i]->UpdateCoeffs());
-               if (m_session->GetComm()->GetRank() == 0)
-               {
+                for(unsigned int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    LibUtilities::EquationSharedPtr ifunc
+                        = m_session->GetFunction("InitialConditions", i);
+                    for(int j = 0; j < nq; j++)
+                    {
+                        (m_fields[i]->UpdatePhys())[j]
+                            = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
+                    }
+                    m_fields[i]->SetPhysState(true);
+                    
+                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+                                                     m_fields[i]->UpdateCoeffs());
+                    
+                    if (m_session->GetComm()->GetRank() == 0)
+                    {
+                        cout << "\tField "<< m_session->GetVariable(i)
+                             <<": " << ifunc->GetEquation() << endl;
+                    }
+                }
+            }
+        }
+        else
+        {
+            int nq = m_fields[0]->GetNpoints();
+            for(int i = 0 ; i < m_fields.num_elements(); i++)
+            {
+                Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
+                m_fields[i]->SetPhysState(true);
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+                                                 m_fields[i]->UpdateCoeffs());
+                if (m_session->GetComm()->GetRank() == 0)
+                {
                     cout << "\tField "<< m_session->GetVariable(i)
-                        <<": 0 (default)" << endl;
-               }
-           }
-       }
-       if(dumpInitialConditions)
-       {
-           std::string outname = m_sessionName +"_0.chk";
+                         <<": 0 (default)" << endl;
+                }
+            }
+        }
 
-           // dump initial conditions to file
-           WriteFld(outname);
-       }
-   }
-
-
+        if(dumpInitialConditions)
+        {
+            std::string outname = m_sessionName +"_0.chk";
+            
+            // dump initial conditions to file
+            WriteFld(outname);
+        }
+    }
+    
+    
     void EquationSystem::v_EvaluateExactSolution(unsigned int field,
                     Array<OneD, NekDouble> &outfield,
                     const NekDouble time)

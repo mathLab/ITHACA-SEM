@@ -219,7 +219,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-
+                
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -263,7 +263,8 @@ namespace Nektar
             {
                 m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
             }
-            m_patchMapFromPrevLevel = Array<OneD, PatchMapSharedPtr>(numLocalBndCoeffsOld);
+
+            m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
 
             // Set up an offset array that denotes the offset of the local
             // boundary degrees of freedom of the next level
@@ -330,8 +331,8 @@ namespace Nektar
                     }
 
                     sign = isBndDof?1.0:sign;
-                    m_patchMapFromPrevLevel[cnt] =  MemoryManager<PatchMap>::
-                        AllocateSharedPtr(curPatch,blockid,isBndDof,sign);
+
+                    m_patchMapFromPrevLevel->SetPatchMap(cnt,curPatch,blockid,isBndDof,sign);
 
                     cnt++;
                 }

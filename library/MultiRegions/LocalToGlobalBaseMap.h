@@ -226,7 +226,8 @@ namespace Nektar
             /// Returns the patch map from the previous level 
             /// of the multi-level static condensation.
             inline const PatchMapSharedPtr&
-                    GetPatchMapFromPrevLevel(const int i) const;
+                GetPatchMapFromPrevLevel(void) const;
+
             /// Returns true if this is the last level in the multi-level
             /// static condensation.
             inline bool AtLastLevel() const;
@@ -310,7 +311,9 @@ namespace Nektar
             Array<OneD, unsigned int> m_numLocalIntCoeffsPerPatch;
             /// Map from the patches of the previous level to the patches of
             /// the current level
-            Array<OneD, PatchMapSharedPtr> m_patchMapFromPrevLevel;
+
+            PatchMapSharedPtr m_patchMapFromPrevLevel;
+
             /// The local to global mapping of the next level of recursion
             LocalToGlobalBaseMapSharedPtr m_nextLevelLocalToGlobalMap;
 
@@ -761,12 +764,11 @@ namespace Nektar
         }
 
         inline const PatchMapSharedPtr&
-                    LocalToGlobalBaseMap::GetPatchMapFromPrevLevel(const int i)
+                    LocalToGlobalBaseMap::GetPatchMapFromPrevLevel(void)
                                                                         const
         {
-            return m_patchMapFromPrevLevel[i];
+            return m_patchMapFromPrevLevel;
         }
-
 
         inline bool LocalToGlobalBaseMap::AtLastLevel() const
         {

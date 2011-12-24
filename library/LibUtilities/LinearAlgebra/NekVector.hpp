@@ -231,11 +231,11 @@ namespace Nektar
 
         protected:
 
-            LIB_UTILITIES_EXPORT inline Array<OneD, DataType>& GetData();
-            LIB_UTILITIES_EXPORT inline void SetSize(unsigned int s);
-            LIB_UTILITIES_EXPORT inline void SetWrapperType(PointerWrapper p);
-            LIB_UTILITIES_EXPORT inline void SetData(const Array<OneD, DataType>& newData);
-            LIB_UTILITIES_EXPORT inline void Resize(unsigned int newSize);
+            LIB_UTILITIES_EXPORT Array<OneD, DataType>& GetData();
+            LIB_UTILITIES_EXPORT void SetSize(unsigned int s);
+            LIB_UTILITIES_EXPORT void SetWrapperType(PointerWrapper p);
+            LIB_UTILITIES_EXPORT void SetData(const Array<OneD, DataType>& newData);
+            LIB_UTILITIES_EXPORT void Resize(unsigned int newSize);
 
         private:
             // Prevents accidental use of wrapped mode around ConstArrays.

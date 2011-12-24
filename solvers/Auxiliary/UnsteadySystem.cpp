@@ -283,179 +283,186 @@ namespace Nektar
 		/// It has to be generalised
 		if(m_cfl>0.0)
 		{
-                    NekDouble L2ErrorHalf, L2ErrorQuarter, L2ErrorFull, LInfErrorHalf, LInfErrorQuarter, LInfErrorFull;
-                    bool QuarterNotpassed = true;
-                    NekDouble QuartTime = m_fintime/4.0;
-                    NekDouble HalfTime  = m_fintime/2.0;
-                    
-                    // This function is implemented for teh CFLTester only (for efficiency profiling)
-                    m_timestep = GetTimeStep(ExpOrder[0],m_cfl,TimeStability);
-                    
-                    Timer timer;
-                    
-                    int step = 0;
-                    
-                    while(m_time < m_fintime)
-                    {
-                        timer.Start();
+			NekDouble L2ErrorHalf, L2ErrorQuarter, L2ErrorFull, LInfErrorHalf, LInfErrorQuarter, LInfErrorFull;
+			bool QuarterNotpassed = true;
+			NekDouble QuartTime = m_fintime/4.0;
+			NekDouble HalfTime  = m_fintime/2.0;
 			
-                        // Increment time.
-                        if(m_time + m_timestep > m_fintime && m_fintime > 0.0)
-                        {
-                            m_timestep = m_fintime - m_time;
-                        }
-                        
-                        // Integrate over timestep.
-                        if( step < numMultiSteps-1)
-                        {
-                            // Use initialisation schemes if time step is less than the
-                            // number of steps in the scheme.
-                            fields = IntScheme[step]->TimeIntegrate(m_timestep,u,m_ode);
-                        }
-                        else
-                        {
-                            fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
-                        }
+			// This function is implemented for teh CFLTester only (for efficiency profiling)
+			m_timestep = GetTimeStep(ExpOrder[0],m_cfl,TimeStability);
 			
+			Timer timer;
 			
-                        m_time += m_timestep;
+			int step = 0;
 			
-                        timer.Stop();
-                        
-                        IntegrationTime += timer.TimePerTest(1);
+			while(m_time < m_fintime)
+			{
+				timer.Start();
+				
+                // Increment time.
+				if(m_time + m_timestep > m_fintime && m_fintime > 0.0)
+				{
+					m_timestep = m_fintime - m_time;
+				}
+
+				// Integrate over timestep.
+				if( step < numMultiSteps-1)
+				{
+					// Use initialisation schemes if time step is less than the
+					// number of steps in the scheme.
+					fields = IntScheme[step]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				else
+				{
+					fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				
+				
+				m_time += m_timestep;
+				
+                timer.Stop();
+				
+				IntegrationTime += timer.TimePerTest(1);
+				
+				if(QuarterNotpassed) // Error after quarter integration
+				{
+					if(m_time <= QuartTime && (m_time + m_timestep) > QuartTime)
+					{
+						m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
+						L2ErrorQuarter   = L2Error(0);
+						LInfErrorQuarter = LinfError(0);
+						QuarterNotpassed = false;
+					}
+				}
+				else // Error after half integration 
+				{
+					if(m_time <= HalfTime && (m_time+m_timestep) > HalfTime)
+					{
+						m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
+						L2ErrorHalf   = L2Error(0);
+						LInfErrorHalf = LinfError(0); 
+					}
+				}
+
+				// Write out status information.
+				if(m_session->GetComm()->GetRank() == 0
+                        && !((step)%m_infosteps) || m_time==m_fintime)
+				{
+					cout << "Step: " << step
+					     << "\t Time: " << m_time
+					     << "\t Time-step: " << m_timestep << "\t" << endl;
+				}
 			
-                        if(QuarterNotpassed) // Error after quarter integration
-                        {
-                            if(m_time <= QuartTime && (m_time + m_timestep) > QuartTime)
-                            {
-                                m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
-                                L2ErrorQuarter   = L2Error(0);
-                                LInfErrorQuarter = LinfError(0);
-                                QuarterNotpassed = false;
-                            }
-                        }
-                        else // Error after half integration 
-                        {
-                            if(m_time <= HalfTime && (m_time+m_timestep) > HalfTime)
-                            {
-                                m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
-                                L2ErrorHalf   = L2Error(0);
-                                LInfErrorHalf = LinfError(0); 
-                            }
-                        }
-                        
-                        // Write out status information.
-                        if(m_session->GetComm()->GetRank() == 0
-                           && !((step)%m_infosteps) || m_time==m_fintime)
-                        {
-                            cout << "Step: " << step << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
-                        }
+				// Write out checkpoint files.
+				if(m_time >= m_fintime && m_fintime>0.0)
+				{
+					for(i = 0; i < nvariables; ++i)
+					{
+						m_fields[i]->FwdTrans(fields[i],
+						                      m_fields[i]->UpdateCoeffs());
+						m_fields[i]->SetPhysState(false);
+					}
+					Checkpoint_Output(nchk++);
+					WriteHistoryData(hisFile);
+				}
+				
+				
+				// step advance
+				step++;
+			}
 			
-                        // Write out checkpoint files.
-                        if(m_time >= m_fintime && m_fintime>0.0)
-                        {
-                            for(i = 0; i < nvariables; ++i)
-                            {
-                                m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
-                                m_fields[i]->SetPhysState(false);
-                            }
-                            Checkpoint_Output(nchk++);
-                            WriteHistoryData(hisFile);
-                        }
+			// At the end of the time integration, store final solution.
+			for(i = 0; i < nvariables; ++i)
+			{
+				m_fields[i]->UpdatePhys() = fields[i];
+			}
 			
-			
-                        // step advance
-                        step++;
-                    }
-                    
-                    // At the end of the time integration, store final solution.
-                    for(i = 0; i < nvariables; ++i)
-                    {
-                        m_fields[i]->UpdatePhys() = fields[i];
-                    }
-                    
-                    L2ErrorFull   = L2Error(0);
-                    LInfErrorFull =  LinfError(0);
-                    
-                    cout <<"\nCFL number                      : " << m_cfl << endl << endl;
-                    cout <<"Time-integration timing (quarter): " << IntegrationTime/4.0 << " s" << endl << endl;
-                    cout <<"Time-integration timing (half)   : " << IntegrationTime/2.0 << " s" << endl << endl;
-                    cout <<"Time-integration timing (full)   : " << IntegrationTime << " s" << endl << endl;
-                    cout <<"L2 error (quarter): " << L2ErrorQuarter  << endl << endl;
-                    cout <<"LI error (quarter): " << LInfErrorQuarter << endl << endl;
-                    cout <<"L2 error (half)   : " << L2ErrorHalf  << endl << endl;
-                    cout <<"LI error (half)   : " << LInfErrorHalf  << endl << endl;
-                    cout <<"L2 error (full)   : " << L2ErrorFull  << endl << endl;
-                    cout <<"LI error (full)   : " << LInfErrorFull  << endl << endl;
+			L2ErrorFull   = L2Error(0);
+			LInfErrorFull =  LinfError(0);
+				
+			cout <<"\nCFL number                      : " << m_cfl << endl << endl;
+			cout <<"Time-integration timing (quarter): " << IntegrationTime/4.0 << " s" << endl << endl;
+			cout <<"Time-integration timing (half)   : " << IntegrationTime/2.0 << " s" << endl << endl;
+			cout <<"Time-integration timing (full)   : " << IntegrationTime << " s" << endl << endl;
+			cout <<"L2 error (quarter): " << L2ErrorQuarter  << endl << endl;
+			cout <<"LI error (quarter): " << LInfErrorQuarter << endl << endl;
+			cout <<"L2 error (half)   : " << L2ErrorHalf  << endl << endl;
+			cout <<"LI error (half)   : " << LInfErrorHalf  << endl << endl;
+			cout <<"L2 error (full)   : " << L2ErrorFull  << endl << endl;
+			cout <<"LI error (full)   : " << LInfErrorFull  << endl << endl;
 		}
 		
 		else
 		{
-                    for(n = 0; n < m_steps; ++n)
+			for(n = 0; n < m_steps; ++n)
+			{
+                Timer timer;
+                timer.Start();
+				// Integrate over timestep.
+				if( n < numMultiSteps-1)
+				{
+					// Use initialisation schemes if time step is less than the
+					// number of steps in the scheme.
+					fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				else
+				{
+					fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				
+				m_time += m_timestep;
+				
+                timer.Stop();
+                IntegrationTime += timer.TimePerTest(1);
+				
+				// Write out status information.
+				if(m_session->GetComm()->GetRank() == 0
+                        && !((n+1)%m_infosteps))
+				{
+					cout << "Steps: " << n+1
+					     << "\t Time: " << m_time
+					     << "\t Time-step: " << m_timestep << "\t" << endl;
+				}
+
+				// Transform data if needed
+				if((m_historysteps && !((n+1)%m_historysteps))
+				        || (n&&(!((n+1)%m_checksteps))))
+                {
+                    for (i = 0; i < nvariables; ++i)
                     {
-                        Timer timer;
-                        timer.Start();
-                        // Integrate over timestep.
-                        if( n < numMultiSteps-1)
-                        {
-                            // Use initialisation schemes if time step is less than the
-                            // number of steps in the scheme.
-                            fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
-                        }
-                        else
-                        {
-                            fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
-                        }
-			
-                        m_time += m_timestep;
-			
-                        timer.Stop();
-                        IntegrationTime += timer.TimePerTest(1);
-                        
-                        // Write out status information.
-                        if(m_session->GetComm()->GetRank() == 0
-                           && !((n+1)%m_infosteps))
-                        {
-                            cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
-                            //                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
-                            //                     << setw(7) << "Steps: " << setw(6) << n+1
-                            //                     << setw(7) << "Time: "
-                            //                     << setw(8) << fixed << setprecision(2) << m_time
-                            //                     << "\t " << flush;
-                        }
-                        
-                        // Write out history data to file
-                        if(m_historysteps && !((n+1)%m_historysteps))
-                        {
-                            WriteHistoryData(hisFile);
-                        }
-                        
-                        // Write out checkpoint files.
-                        if(n&&(!((n+1)%m_checksteps)))
-                        {
-                            for(i = 0; i < nvariables; ++i)
-                            {
-                                m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
-                                m_fields[i]->SetPhysState(false);
-                            }
-                            Checkpoint_Output(nchk++);
-                        }
-                        // step advance
-                    }
-                    
-                    cout <<"\nCFL number              : " << m_cfl << endl;
-                    cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
-                    
-                    // At the end of the time integration, store final solution.
-                    for(i = 0; i < nvariables; ++i)
-                    {
-                        if(m_fields[i]->GetPhysState() == false)
-                        {
-                            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-                        }
-                        m_fields[i]->UpdatePhys() = fields[i];
+                        m_fields[i]->FwdTrans(fields[i],
+                                              m_fields[i]->UpdateCoeffs());
+                        m_fields[i]->SetPhysState(false);
                     }
                 }
+
+	            // Write out history data to file
+	            if(m_historysteps && !((n+1)%m_historysteps))
+	            {
+	                WriteHistoryData(hisFile);
+	            }
+
+				// Write out checkpoint files.
+				if(n&&(!((n+1)%m_checksteps)))
+				{
+					Checkpoint_Output(nchk++);
+				}
+				// step advance
+			}
+			
+			cout <<"\nCFL number              : " << m_cfl << endl;
+			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
+
+			// At the end of the time integration, store final solution.
+			for(i = 0; i < nvariables; ++i)
+			{
+	            if(m_fields[i]->GetPhysState() == false)
+	            {
+	                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+	            }
+				m_fields[i]->UpdatePhys() = fields[i];
+			}
+	    }
     }
 
 

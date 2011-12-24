@@ -151,7 +151,7 @@ namespace Nektar
             "IMEXdirk_2_2_2",
             "IMEXdirk_2_3_2",                                
             "IMEXdirk_2_3_3",
-            "IMEXdirk_3_4_3"                
+            "IMEXdirk_3_4_3",
             "IMEXdirk_4_4_3",
         };
 

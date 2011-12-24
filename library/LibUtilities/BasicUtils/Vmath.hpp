@@ -93,6 +93,41 @@ namespace Vmath
     template<class T>  LIB_UTILITIES_EXPORT void Neg( int n, T *x, const int incx);
     
     
+    template<class T> void Vlog(int n, const T *x, const int incx,
+                 T *y, const int incy)
+    {
+        while (n--)
+        {
+            *y = log( *x );
+            x += incx;
+            y += incy;
+        }
+    }
+
+
+    template<class T> void Vexp(int n, const T *x, const int incx,
+                 T *y, const int incy)
+    {
+        while (n--)
+        {
+            *y = exp( *x );
+            x += incx;
+            y += incy;
+        }
+    }
+
+    template<class T> void Vpow(int n, const T *x, const int incx,
+                const T f, T *y, const int incy)
+    {
+        while (n--)
+        {
+            *y = pow( *x, f );
+            x += incx;
+            y += incy;
+        }
+    }
+
+
     /// \brief sqrt y = sqrt(x)
     template<class T> LIB_UTILITIES_EXPORT void Vsqrt(int n, const T *x, const int incx,
                  T *y, const int incy);

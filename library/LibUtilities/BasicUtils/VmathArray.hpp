@@ -159,7 +159,31 @@ using namespace Nektar;
             
         }
     
-    
+        template<class T> void Vlog(int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+
+            Vlog(n, &x[0], incx, &y[0], incy);
+        }
+
+
+        template<class T> void Vexp(int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+
+            Vexp(n, &x[0], incx, &y[0], incy);
+        }
+
+        template<class T> void Vpow(int n, const Array<OneD,const T> &x, const int incx, const T f, Array<OneD,T> &y, const int incy)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+
+            Vpow(n, &x[0], incx, f, &y[0], incy);
+        }
+
         /// \brief sqrt y = sqrt(x)
         template<class T> void Vsqrt(int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy)
         {
@@ -211,7 +235,18 @@ using namespace Nektar;
             Svtvp(n,alpha,&x[0],incx,&y[0],incy,&z[0],incz);
             
         }
-    
+
+        /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
+        template<class T> void Svtvm(int n, const T alpha, const Array<OneD,const T> &x,  const int incx, const Array<OneD, const T> &y, const int incy, Array<OneD,T> &z, const int incz)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
+
+            Svtvm(n,alpha,&x[0],incx,&y[0],incy,&z[0],incz);
+
+        }
+
         /// \brief vvtvm (vector times vector plus vector): z = w*x - y
         template<class T> void Vvtvm(int n, const Array<OneD,const T> &w, const int incw, const Array<OneD,const T> &x, const int incx, const Array<OneD,const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
@@ -224,7 +259,16 @@ using namespace Nektar;
             
         }
     
-    
+        template<class T> void Svtsvtp(int n, const T alpha, const Array<OneD,const T> &x, const int incx, const T beta, const Array<OneD,const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
+        {
+            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
+
+            Svtsvtp(n,alpha,&x[0],incx,beta,&y[0],incy,&z[0],incz);
+        }
+
+
         /************ Misc routine from Veclib (and extras)  ************/
         
         /// \brief Gather vector z[i] = x[y[i]]

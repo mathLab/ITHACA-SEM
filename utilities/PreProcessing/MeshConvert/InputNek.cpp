@@ -204,9 +204,13 @@ namespace Nektar
                 }
                 
                 // Read in number of vertices for element type.
-                int nNodes = GetNnodes(elType);
-                double vertex[3][nNodes];
-                
+                const int nNodes = GetNnodes(elType);
+                double* vertex[3];
+				for (j = 0; j < 3; ++j)
+				{
+					vertex[j] = new double[nNodes];
+				}
+
                 for (j = 0; j < m->expDim; ++j)
                 {
                     getline(mshFile,line);
@@ -244,6 +248,11 @@ namespace Nektar
                     nodeList.push_back(n);
                 }
                 
+				for (j = 0; j < 3; ++j)
+				{
+					delete[] vertex[j];
+				}
+
                 vector<int> tags;
                 tags.push_back(elType);
                 
@@ -430,7 +439,7 @@ namespace Nektar
                     FaceSharedPtr f    = e->GetFace(faceId);
                     EdgeSharedPtr edge;
                     int           Ntot = (*hoIt)->surfVerts.size();
-                    int           N    = ((int)sqrt(8*Ntot+1)-1)/2;
+					int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
                     
                     // Apply high-order map to convert face data to Nektar++
                     // ordering (vertices->edges->internal).
@@ -685,8 +694,9 @@ namespace Nektar
         void HOSurf::Rotate(int nrot)
         {
             int n, i, j, cnt;
-            int np = ((int)sqrt(8*surfVerts.size()+1)-1)/2;
-            NodeSharedPtr tmp[np][np];
+            int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
+			NodeSharedPtr* tmp = new NodeSharedPtr[np*np];
+            //NodeSharedPtr tmp[np][np];
             
             for (n = 0; n < nrot; ++n) 
             {
@@ -694,30 +704,31 @@ namespace Nektar
                 {
                     for (j = 0; j < np-i; ++j, cnt++)
                     {
-                        tmp[i][j] = surfVerts[cnt];
+                        tmp[i*np+j] = surfVerts[cnt];
                     }
                 }
                 for (cnt = i = 0; i < np; ++i)
                 {
                     for (j = 0; j < np-i; ++j,cnt++)
                     {
-                        surfVerts[cnt] = tmp[np-1-i-j][i];
+                        surfVerts[cnt] = tmp[(np-1-i-j)*np+i];
                     }
                 }
             }
+			delete[] tmp;
         }
         
         void HOSurf::Reflect()
         {
             int n, i, j, cnt;
-            int np = ((int)sqrt(8*surfVerts.size()+1)-1)/2;
-            NodeSharedPtr tmp[np][np];
+            int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
+            NodeSharedPtr* tmp = new NodeSharedPtr[np*np];
             
             for (cnt = i = 0; i < np; ++i)
             {
                 for (j = 0; j < np-i; ++j,cnt++)
                 {
-                    tmp[i][np-i-1-j] = surfVerts[cnt];
+                    tmp[i*np+np-i-1-j] = surfVerts[cnt];
                 }
             }
             
@@ -725,9 +736,11 @@ namespace Nektar
             {
                 for(j = 0; j < np-i; ++j,cnt++)
                 {
-                    surfVerts[cnt] = tmp[i][j];
+                    surfVerts[cnt] = tmp[i*np+j];
                 }
             }
+
+			delete[] tmp;
         }
     }
 }

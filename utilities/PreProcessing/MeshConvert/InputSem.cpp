@@ -95,33 +95,33 @@ namespace Nektar
             mshFile.seekg(0);
 
             // Check that required sections exist in the file.
-            if (sectionMap["NODES"] == -1)
+			if (sectionMap["NODES"] == std::streampos(-1))
             {
                 cerr << "Unable to locate NODES section in session file." << endl;
                 abort();
             }
             
-            if (sectionMap["ELEMENTS"] == -1)
+            if (sectionMap["ELEMENTS"] == std::streampos(-1))
             {
                 cerr << "Unable to locate ELEMENTS section in session file." << endl;
                 abort();
             }
 
-            if (sectionMap["SURFACES"] != -1)
+            if (sectionMap["SURFACES"] != std::streampos(-1))
             {
-                if (sectionMap["BCS"] == -1)
+                if (sectionMap["BCS"] == std::streampos(-1))
                 {
                     cerr << "SURFACES section defined but BCS section not found." << endl;
                     abort();
                 }
                 
-                if (sectionMap["GROUPS"] == -1)
+                if (sectionMap["GROUPS"] == std::streampos(-1))
                 {
                     cerr << "SURFACES section defined but GROUPS section not found." << endl;
                     abort();
                 }
 
-                if (sectionMap["FIELDS"] == -1)
+                if (sectionMap["FIELDS"] == std::streampos(-1))
                 {
                     cerr << "SURFACES section defined but FIELDS section not found." << endl;
                     abort();
@@ -245,7 +245,7 @@ namespace Nektar
             }
         
             // Finally, process curves.
-            if (sectionMap["CURVES"] != -1)
+			if (sectionMap["CURVES"] != std::streampos(-1))
             {
                 int np, nel, nodeId = m->node.size();
                 
@@ -389,7 +389,7 @@ namespace Nektar
             }
 
             // Process field names
-            if (sectionMap["FIELDS"] != -1)
+			if (sectionMap["FIELDS"] != std::streampos(-1))
             {
                 mshFile.seekg(sectionMap["FIELDS"]);
                 getline(mshFile, line);
@@ -404,7 +404,7 @@ namespace Nektar
             
             // Process surfaces if they exist. This is deliberately done after
             // curves to ensure high-order points are preserved.
-            if (sectionMap["SURFACES"] != -1)
+			if (sectionMap["SURFACES"] != std::streampos(-1))
             {
                 map<string,int> conditionMap;
                 int             maxTag = -1;

@@ -97,6 +97,8 @@ namespace Nektar
             {
                 nEnt += element[d].size();
             }
+
+			return nEnt;
         }
 
         /**

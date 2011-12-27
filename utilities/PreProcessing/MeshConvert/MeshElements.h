@@ -179,6 +179,7 @@ namespace Nektar
         typedef boost::shared_ptr<Edge> EdgeSharedPtr;
         
         bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
+        bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
         
         struct EdgeHash : std::unary_function<EdgeSharedPtr, std::size_t>
         {
@@ -289,6 +290,7 @@ namespace Nektar
         typedef boost::shared_ptr<Face> FaceSharedPtr;
         
         bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2);
+        bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2);
         
         struct FaceHash : std::unary_function<FaceSharedPtr, std::size_t>
         {

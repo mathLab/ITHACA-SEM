@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <set>
 #include <string>
 using namespace std;
 
@@ -90,9 +91,13 @@ namespace Nektar
         void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
         {
             TiXmlElement* verTag = new TiXmlElement( "VERTEX" );
-            NodeSet::iterator it;
+            std::set<NodeSharedPtr>::iterator it;
 
-            for (it = m->vertexSet.begin(); it != m->vertexSet.end(); ++it)
+            std::set<NodeSharedPtr> tmp(
+                    m->vertexSet.begin(),
+                    m->vertexSet.end());
+
+            for (it = tmp.begin(); it != tmp.end(); ++it)
             {
                 NodeSharedPtr n = *it;
                 stringstream s;
@@ -112,9 +117,12 @@ namespace Nektar
             {
                 int edgecnt = 0;
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
-                EdgeSet::iterator it;
+                std::set<EdgeSharedPtr>::iterator it;
+                std::set<EdgeSharedPtr> tmp(
+                        m->edgeSet.begin(),
+                        m->edgeSet.end());
                 
-                for (it = m->edgeSet.begin(); it != m->edgeSet.end(); ++it)
+                for (it = tmp.begin(); it != tmp.end(); ++it)
                 {
                     EdgeSharedPtr ed = *it;
                     stringstream s;
@@ -134,9 +142,12 @@ namespace Nektar
             if (m->expDim == 3)
             {
                 TiXmlElement* verTag = new TiXmlElement( "FACE" );
-                FaceSet::iterator it;
+                std::set<FaceSharedPtr>::iterator it;
+                std::set<FaceSharedPtr> tmp(
+                        m->faceSet.begin(),
+                        m->faceSet.end());
 
-                for (it = m->faceSet.begin(); it != m->faceSet.end(); ++it)
+                for (it = tmp.begin(); it != tmp.end(); ++it)
                 {
                     stringstream s;
                     FaceSharedPtr fa = *it;

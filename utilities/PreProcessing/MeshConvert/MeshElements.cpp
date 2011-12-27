@@ -137,6 +137,11 @@ namespace Nektar
                   || ((*(p1->n2) == *(p2->n1)) && (*(p1->n1) == *(p2->n2))));
         }
 
+        bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
+        {
+            return p1->id < p2->id;
+        }
+
         bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
         {
             bool e = true;
@@ -152,7 +157,11 @@ namespace Nektar
             return true;
         }
         
-        
+        bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2)
+        {
+            return p1->id < p2->id;
+        }
+
         /**
          * When a face is replaced, no other consistency checks are required.
          */

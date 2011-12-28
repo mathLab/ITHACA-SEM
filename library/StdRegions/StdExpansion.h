@@ -587,41 +587,12 @@ namespace Nektar
                 v_BwdTrans (inarray, outarray);
             }
 
-            /** \brief This function performs the Forward transformation from
-             *  physical space to coefficient space
-             *
-             *  This function is a wrapper around the virtual function
-             *  \a v_FwdTrans()
-             *
-             *  Given a function evaluated at the quadrature points, this
-             *  function calculates the expansion coefficients such that the
-             *  resulting expansion approximates the original function.
-             *
-             *  The calculation of the expansion coefficients is done using a
-             *  Galerkin projection. This is equivalent to the operation:
-             *  \f[ \mathbf{\hat{u}} = \mathbf{M}^{-1} \mathbf{I}\f]
-             *  where
-             *  - \f$\mathbf{M}[p][q]= \int\phi_p(\mathbf{\xi})\phi_q(
-             *  \mathbf{\xi}) d\mathbf{\xi}\f$ is the Mass matrix
-             *  - \f$\mathbf{I}[p] = \int\phi_p(\mathbf{\xi}) u(\mathbf{\xi})
-             *  d\mathbf{\xi}\f$
-             *
-             *  This function takes the array \a inarray as the values of the
-             *  function evaluated at the quadrature points
-             *  (i.e. \f$\mathbf{u}\f$),
-             *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$
-             *  in the \a outarray
-             *
-             *  \param inarray array of the function discretely evaluated at the
-             *  quadrature points
-             *
-             *  \param outarray array of the function coefficieints
+            /**
+             * @brief This function performs the Forward transformation from
+             * physical space to coefficient space.
              */
-            void  FwdTrans (const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
-            {
-                v_FwdTrans(inarray,outarray);
-            }
+            inline void FwdTrans (const Array<OneD, const NekDouble>& inarray,
+                            Array<OneD, NekDouble> &outarray);
 
             void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray)
@@ -645,6 +616,19 @@ namespace Nektar
              *  at the quadrature points (i.e.
              *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
              *  \return returns the value of the calculated integral
+             *
+             *              Inputs:\n
+
+            - \a inarray: definition of function to be returned at quadrature point
+            of expansion.
+
+            Outputs:\n
+
+            - returns \f$\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2) J[i,j] d
+            \xi_1 d \xi_2 \f$ where \f$inarray[i,j] =
+            u(\xi_{1i},\xi_{2j}) \f$ and \f$ J[i,j] \f$ is the
+            Jacobian evaluated at the quadrature point.
+             *
              */
             NekDouble Integral(const Array<OneD, const NekDouble>& inarray )
             {
@@ -677,6 +661,23 @@ namespace Nektar
              *
              *  This is equivalent to the numerical evaluation of
              *  \f[ I[p] = \int \phi_p(\mathbf{x}) f(\mathbf{x}) d\mathbf{x}\f]
+             *            \f$ \begin{array}{rcl} I_{pq} = (\phi_q \phi_q, u) & = &
+            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \phi_p(\xi_{0,i})
+            \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
+            J_{i,j}\\ & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
+            \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
+            J_{i,j} \end{array} \f$
+
+            where
+
+            \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
+
+            which can be implemented as
+
+            \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} =
+            {\bf B_1 U}  \f$
+            \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} =
+            {\bf B_0 F}  \f$
              *
              *  \param inarray contains the values of the function \a f
              *  evaluated at the quadrature points
@@ -869,7 +870,6 @@ namespace Nektar
                                      const std::vector<unsigned int > &nummodes, 
                                      const int nmodes_offset,
                                      Array<OneD, NekDouble> &coeffs)
-
             {
                 v_ExtractDataToCoeffs(data,offset,nummodes,nmodes_offset,coeffs);
             }
@@ -948,10 +948,12 @@ namespace Nektar
                                       nummodesA,nummodesB);
             }
 
-            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-            {
-                v_GetEdgePhysVals(edge,inarray,outarray);
-            }
+            /**
+             * @brief Extract the physical values along edge \a edge from \a
+             * inarray into \a outarray following the local edge orientation
+             * and point distribution defined by defined in \a EdgeExp.
+             */
+            inline void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion1D>   &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
@@ -1030,6 +1032,12 @@ namespace Nektar
                 v_LinearAdvectionDiffusionReactionMatrixOp(inarray,outarray,mkey,addDiffusionTerm);
             }
 
+            /**
+             * @param   inarray     Input array @f$ \mathbf{u} @f$.
+             * @param   outarray    Output array @f$ \boldsymbol{\nabla^2u}
+             *                          + \lambda \boldsymbol{u} @f$.
+             * @param   mkey
+             */
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
@@ -1057,16 +1065,18 @@ namespace Nektar
                 v_PhysDeriv (dir, inarray, outarray);
             }
 
-	    void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
-	    	    	     Array<OneD, NekDouble> &out_ds)
-	    {
-	    	v_PhysDeriv_s(inarray,out_ds);
-	    }
+            void PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+                             Array<OneD, NekDouble> &out_ds)
+            {
+                v_PhysDeriv_s(inarray,out_ds);
+            }
+
             void PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
             	             Array<OneD, NekDouble>& out_dn)
             {
             	 v_PhysDeriv_n(inarray,out_dn);
             }
+
             void PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
                                       const Array<OneD, const NekDouble>& direction,
                                       Array<OneD, NekDouble> &outarray)
@@ -1190,20 +1200,6 @@ namespace Nektar
                 return v_GetGeom3D();
             }
 
-//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
-
-//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau);
-//
-//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-//                                                         const Array<OneD, NekDouble> &dir1Forcing,
-//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-//                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
-//
-//            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-//                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-//                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
-//                                                         NekDouble tau = NekConstants::kNekUnsetDouble);
-
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
@@ -1214,6 +1210,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             
+            /**
+             * @brief Unpack data from input file assuming it comes from the
+             * same expansion type.
+             * @see StdExpansion::ExtractDataToCoeffs
+             */
             STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
                                                 const int offset, 
                                                 const std::vector<unsigned int > &nummodes, 
@@ -1533,16 +1534,29 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray) = 0;
-            STD_REGIONS_EXPORT virtual void   v_FwdTrans   (const Array<OneD, const NekDouble>& inarray,
-                                         Array<OneD, NekDouble> &outarray) = 0;
-            STD_REGIONS_EXPORT virtual void  v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                                           Array<OneD, NekDouble> &outarray) = 0;
+
+            /**
+             * @brief Transform a given function from physical quadrature space
+             * to coefficient space.
+             * @see StdExpansion::FwdTrans
+             */
+            STD_REGIONS_EXPORT virtual void   v_FwdTrans   (
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD,       NekDouble> &outarray) = 0;
+
+            /**
+             * @brief Calculates the inner product of a given function \a f
+             * with the different modes of the expansion
+             */
+            STD_REGIONS_EXPORT virtual void  v_IProductWRTBase(
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD,       NekDouble> &outarray) = 0;
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& base,
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray,
-                    int coll_check)
+                            const Array<OneD, const NekDouble>& base,
+                            const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD,       NekDouble>& outarray,
+                                  int coll_check)
             {
                 ASSERTL0(false, "StdExpansion::v_IProductWRTBase has no (and should have no) implementation");
             }
@@ -1634,6 +1648,11 @@ namespace Nektar
                                                Array<OneD, int> &signarray,
                                                int nummodesA = -1, int nummodesB = -1);
 
+            /**
+             * @brief Extract the physical values along edge \a edge from \a
+             * inarray into \a outarray following the local edge orientation
+             * and point distribution defined by defined in \a EdgeExp.
+             */
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
@@ -1728,439 +1747,60 @@ namespace Nektar
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
         typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
 
+        /**
+         *  This function is a wrapper around the virtual function
+         *  \a v_FwdTrans()
+         *
+         *  Given a function evaluated at the quadrature points, this
+         *  function calculates the expansion coefficients such that the
+         *  resulting expansion approximates the original function.
+         *
+         *  The calculation of the expansion coefficients is done using a
+         *  Galerkin projection. This is equivalent to the operation:
+         *  \f[ \mathbf{\hat{u}} = \mathbf{M}^{-1} \mathbf{I}\f]
+         *  where
+         *  - \f$\mathbf{M}[p][q]= \int\phi_p(\mathbf{\xi})\phi_q(
+         *  \mathbf{\xi}) d\mathbf{\xi}\f$ is the Mass matrix
+         *  - \f$\mathbf{I}[p] = \int\phi_p(\mathbf{\xi}) u(\mathbf{\xi})
+         *  d\mathbf{\xi}\f$
+         *
+         *  This function takes the array \a inarray as the values of the
+         *  function evaluated at the quadrature points
+         *  (i.e. \f$\mathbf{u}\f$),
+         *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$
+         *  in the \a outarray
+         *
+         *  @param inarray array of the function discretely evaluated at the
+         *  quadrature points
+         *
+         *  @param outarray array of the function coefficieints
+         */
+        inline void StdExpansion::FwdTrans (const Array<OneD, const NekDouble>& inarray,
+                        Array<OneD, NekDouble> &outarray)
+        {
+            v_FwdTrans(inarray,outarray);
+        }
+
+
+        /**
+         * @note: this function will check to see if points distribution along
+         * the Tri expansion \a edge is the same as the local edge definition
+         * and if not interpolate. If they are the same no interpolation will
+         * be performed as can be seen in the function LibUtilities::Interp1D.
+         * @param   edge    The edge id which is to be extracted
+         * @param   EdgeExp The Edge Expansion defining the orientation and
+         *                  point distrubution points are to be interpolated.
+         * @param   inarray The 2D physical point set from which data is to be
+         *                  extracted.
+         * @param   outarray The output data
+         *
+         */
+        inline void StdExpansion::GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+        {
+            v_GetEdgePhysVals(edge,inarray,outarray);
+        }
+
     } //end of namespace
 } //end of namespace
 
 #endif //STANDARDDEXPANSION_H
-/**
- * $Log: StdExpansion.h,v $
- * Revision 1.127  2010/01/03 19:39:09  cantwell
- * Added FldToVtk converter.
- * Added XmlToVtk converter.
- *
- * Revision 1.126  2009/12/14 18:02:55  cbiotto
- * Adding functions for tecplot file
- *
- * Revision 1.125  2009/11/10 19:01:37  sehunchun
- * Update related to Variable coefficients of HDG2D Solver
- *
- * Revision 1.124  2009/11/06 21:42:17  sherwin
- * Added call to DGDeriv function
- *
- * Revision 1.123  2009/11/02 19:15:43  cantwell
- * Moved ContField1D to inherit from DisContField1D.
- * Moved ContField3D to inherit from DisContField3D.
- * Incorporated GenExpList1D functionality into ExpList1D.
- * Tidied up and added documentation to various classes.
- * Moved Namespace documentation and introductions to separate files along with
- * doxygen configuration.
- * Added option to use system ZLIB library instead of libboost_zlib on UNIX.
- * Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
- * Updated Linux compiling instructions.
- * Updated regDemo to use Helmholtz2D-g when built as debug.
- *
- * Revision 1.122  2009/10/25 18:53:39  sherwin
- * Added H1 norm definition
- *
- * Revision 1.121  2009/09/22 21:23:48  bnelson
- * Fixed windows compile error.
- * Committed on the Free edition of March Hare Software CVSNT Server.
- * Upgrade to CVS Suite for more features and support:
- * http://march-hare.com/cvsnt/
- *
- * Revision 1.120  2009/09/06 21:55:26  sherwin
- * Updates related to Navier Stokes Solver
- *
- * Revision 1.119  2009/08/14 09:24:08  cbiotto
- * Fixed bug in GetEdgeExp
- *
- * Revision 1.118  2009/07/20 14:15:44  cbiotto
- * Adding GetEdgeExp function
- *
- * Revision 1.117  2009/07/08 17:21:12  sehunchun
- * Deleting GetTanBasis
- *
- * Revision 1.116  2009/07/08 11:12:48  sehunchun
- * Adding GetSurfaceNormal function
- *
- * Revision 1.115  2009/07/07 16:33:14  sehunchun
- * Adding AddEdgeNormBoundaryBiInt
- *
- * Revision 1.114  2009/07/03 15:37:12  sehunchun
- * Adding GetTanBasis function
- *
- * Revision 1.113  2009/04/27 21:32:45  sherwin
- * Updated WriteToField method
- *
- * Revision 1.112  2009/04/22 22:30:48  sherwin
- * Added ReadFromFile method to read back in .dat file
- *
- * Revision 1.111  2009/04/20 16:11:47  sherwin
- * Mods to handle output and optimise DG work
- *
- * Revision 1.110  2009/04/03 14:57:34  sherwin
- * Linear Advection matrices added, corrected unsigned int intialisation
- *
- * Revision 1.109  2009/03/04 14:17:38  pvos
- * Removed all methods that take and Expansion as argument
- *
- * Revision 1.108  2008/12/18 14:11:35  pvos
- * NekConstants Update
- *
- * Revision 1.107  2008/11/24 10:31:14  pvos
- * Changed name from _PartitionedOp to _MatFree
- *
- * Revision 1.106  2008/11/19 16:02:47  pvos
- * Added functionality for variable Laplacian coeffcients
- *
- * Revision 1.105  2008/11/05 16:08:15  pvos
- * Added elemental optimisation functionality
- *
- * Revision 1.104  2008/11/01 22:36:06  bnelson
- * Removed uneeded files.
- *
- * Revision 1.103  2008/10/19 15:55:46  sherwin
- * Added methods EvalBasisNumModesMax
- *
- * Revision 1.102  2008/10/04 19:27:41  sherwin
- * Added AddEdgeNormBoundaryInt
- *
- * Revision 1.101  2008/09/23 18:19:26  pvos
- * Updates for working ProjectContField3D demo
- *
- * Revision 1.100  2008/09/17 13:46:02  pvos
- * Added LocalToGlobalC0ContMap for 3D expansions
- *
- * Revision 1.99  2008/09/16 13:37:03  pvos
- * Restructured the LocalToGlobalMap classes
- *
- * Revision 1.98  2008/09/15 13:18:08  pvos
- * Added more hexahedron mapping routines
- *
- * Revision 1.97  2008/09/09 14:14:27  sherwin
- * Remove Interp1D/2D/3D and added DetCartesianDirOfEdge
- *
- * Revision 1.96  2008/08/27 16:34:53  pvos
- * Small efficiency update
- *
- * Revision 1.95  2008/08/14 22:09:50  sherwin
- * Modifications to remove HDG routines from StdRegions and removed StdExpMap
- *
- * Revision 1.94  2008/08/03 20:13:03  sherwin
- * Put return values in virtual functions
- *
- * Revision 1.93  2008/07/31 11:10:15  sherwin
- * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
- *
- * Revision 1.92  2008/07/29 22:21:15  sherwin
- * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
- *
- * Revision 1.91  2008/07/19 21:12:54  sherwin
- * Removed MapTo function and made orientation convention anticlockwise in UDG routines
- *
- * Revision 1.90  2008/07/16 22:20:27  sherwin
- * Added AddEdgeNormBoundaryInt
- *
- * Revision 1.89  2008/07/12 19:08:29  sherwin
- * Modifications for DG advection routines
- *
- * Revision 1.88  2008/07/12 16:30:07  sherwin
- * Added an new member m_elmt_id so that there is an element number for use later in lists
- *
- * Revision 1.87  2008/07/04 10:18:40  pvos
- * Some updates
- *
- * Revision 1.86  2008/07/02 14:08:56  pvos
- * Implementation of HelmholtzMatOp and LapMatOp on shape level
- *
- * Revision 1.85  2008/06/16 22:45:15  ehan
- * Populated the function GetFaceToElementMap(..)
- *
- * Revision 1.84  2008/06/13 00:27:20  ehan
- * Added GetFaceNCoeffs() function.
- *
- * Revision 1.83  2008/05/30 00:33:49  delisi
- * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- * Revision 1.82  2008/05/29 21:36:25  pvos
- * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- * Revision 1.81  2008/05/10 18:27:33  sherwin
- * Modifications necessary for QuadExp Unified DG Solver
- *
- * Revision 1.80  2008/05/07 16:04:57  pvos
- * Mapping + Manager updates
- *
- * Revision 1.79  2008/04/06 06:04:14  bnelson
- * Changed ConstArray to Array<const>
- *
- * Revision 1.78  2008/04/02 22:18:10  pvos
- * Update for 2D local to global mapping
- *
- * Revision 1.77  2008/03/18 14:15:45  pvos
- * Update for nodal triangular helmholtz solver
- *
- * Revision 1.76  2008/03/12 15:25:09  pvos
- * Clean up of the code
- *
- * Revision 1.75  2008/02/29 19:15:19  sherwin
- * Update for UDG stuff
- *
- * Revision 1.74  2008/02/16 06:00:37  ehan
- * Added interpolation 3D.
- *
- * Revision 1.73  2008/01/23 09:09:46  sherwin
- * Updates for Hybrized DG
- *
- * Revision 1.72  2008/01/03 04:15:17  bnelson
- * Added a return value to some functions that abort to prevent visual studio compile errors.
- *
- * Revision 1.71  2007/12/17 13:03:50  sherwin
- * Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
- *
- * Revision 1.70  2007/12/06 22:44:47  pvos
- * 2D Helmholtz solver updates
- *
- * Revision 1.69  2007/11/29 21:40:22  sherwin
- * updates for MultiRegions and DG solver
- *
- * Revision 1.68  2007/11/08 16:55:13  pvos
- * Updates towards 2D helmholtz solver
- *
- * Revision 1.67  2007/10/03 11:37:51  sherwin
- * Updates relating to static condensation implementation
- *
- * Revision 1.66  2007/08/29 23:26:49  jfrazier
- * Created non-static manager that shares data across instances.
- *
- * Revision 1.65  2007/08/11 23:42:25  sherwin
- * A few changes
- *
- * Revision 1.64  2007/07/27 16:56:55  jfrazier
- * Changed manager to static.
- *
- * Revision 1.63  2007/07/22 23:04:25  bnelson
- * Backed out Nektar::ptr.
- *
- * Revision 1.62  2007/07/20 02:16:52  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.61  2007/07/16 18:28:43  sherwin
- * Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
- *
- * Revision 1.60  2007/07/13 09:02:25  sherwin
- * Mods for Helmholtz solver
- *
- * Revision 1.59  2007/07/12 12:55:15  sherwin
- * Simplified Matrix Generation
- *
- * Revision 1.57  2007/07/11 19:29:52  sherwin
- * Update for ScalMat
- *
- * Revision 1.56  2007/07/11 13:44:08  kirby
- * *** empty log message ***
- *
- * Revision 1.55  2007/07/11 13:40:26  kirby
- * *** empty log message ***
- *
- * Revision 1.51  2007/07/10 20:41:46  kirby
- * more fixes
- *
- * Revision 1.50  2007/07/10 19:27:57  kirby
- * Update for new matrix structures
- *
- * Revision 1.49  2007/05/30 20:49:13  sherwin
- * Updates to do with LocalRegions and SpatialDomains
- *
- * Revision 1.48  2007/05/28 16:15:01  sherwin
- * Updated files in MultiRegions to make 1D demos work
- *
- * Revision 1.47  2007/05/17 17:59:27  sherwin
- * Modification to make Demos work after introducion of Array<>
- *
- * Revision 1.46  2007/05/15 05:18:23  bnelson
- * Updated to use the new Array object.
- *
- * Revision 1.45  2007/04/26 15:00:17  sherwin
- * SJS compiling working version using SHaredArrays
- *
- * Revision 1.44  2007/04/18 16:09:13  pvos
- * Added some new Tensor Operations routines
- *
- * Revision 1.43  2007/04/10 14:00:45  sherwin
- * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
- *
- * Revision 1.42  2007/04/08 03:36:58  jfrazier
- * Updated to use SharedArray consistently and minor reformatting.
- *
- * Revision 1.41  2007/04/06 08:44:43  sherwin
- * Update to make 2D regions work at StdRegions level
- *
- * Revision 1.40  2007/04/04 21:49:25  sherwin
- * Update for SharedArray
- *
- * Revision 1.39  2007/04/04 20:48:16  sherwin
- * Update to handle SharedArrays
- *
- * Revision 1.38  2007/03/31 00:04:03  bnelson
- * *** empty log message ***
- *
- * Revision 1.37  2007/03/29 19:35:09  bnelson
- * Replaced boost::shared_array with SharedArray
- *
- * Revision 1.36  2007/03/25 15:48:22  sherwin
- * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
- *
- * Revision 1.35  2007/03/21 20:56:43  sherwin
- * Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
- *
- * Revision 1.34  2007/03/20 16:58:42  sherwin
- * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
- *
- * Revision 1.33  2007/03/20 09:12:46  kirby
- * update of geofac and metric info; fix style issues
- *
- * Revision 1.32  2007/03/14 21:24:09  sherwin
- * Update for working version of MultiRegions up to ExpList1D
- *
- * Revision 1.31  2007/03/08 09:34:18  pvos
- * added documentation
- *
- * Revision 1.30  2007/03/05 08:07:12  sherwin
- * Modified so that StdMatrixKey has const calling arguments in its constructor.
- *
- * Revision 1.29  2007/03/02 16:43:44  pvos
- * Added some documentation
- *
- * Revision 1.28  2007/03/02 12:01:52  sherwin
- * Update for working version of LocalRegions/Project1D
- *
- * Revision 1.27  2007/03/01 17:04:07  jfrazier
- * Removed extraneous basis.
- *
- * Revision 1.26  2007/03/01 03:52:10  jfrazier
- * Added GetBasis function.
- *
- * Revision 1.25  2007/02/28 19:05:11  sherwin
- * Moved key definitions to their own files to make things more transparent
- *
- * Revision 1.24  2007/02/28 09:53:17  sherwin
- * Update including adding GetBasis call to StdExpansion
- *
- * Revision 1.23  2007/02/24 09:07:25  sherwin
- * Working version of stdMatrixManager and stdLinSysMatrix
- *
- * Revision 1.22  2007/02/23 19:26:08  jfrazier
- * General bug fix and formatting.
- *
- * Revision 1.21  2007/02/22 22:02:28  sherwin
- * Update with executing StdMatManager
- *
- * Revision 1.20  2007/02/22 18:11:31  sherwin
- * Version with some create functions introduced for StdMatManagers
- *
- * Revision 1.19  2007/02/21 22:55:16  sherwin
- * First integration of StdMatrixManagers
- *
- * Revision 1.18  2007/02/17 04:03:23  jfrazier
- * Added NekManager for holding matrices.  Need to finish the create function.
- *
- * Revision 1.17  2007/02/16 17:14:39  pvos
- * Added documentation
- *
- * Revision 1.16  2007/02/07 12:51:53  sherwin
- * Compiling version of Project1D
- *
- * Revision 1.15  2007/02/06 02:23:31  jfrazier
- * Minor cleanup.
- *
- * Revision 1.14  2007/01/28 18:34:21  sherwin
- * More modifications to make Demo Project1D compile
- *
- * Revision 1.13  2007/01/23 23:20:21  sherwin
- * New version after Jan 07 update
- *
- * Revision 1.12  2007/01/20 22:35:21  sherwin
- * Version with StdExpansion compiling
- *
- * Revision 1.11  2007/01/18 23:03:56  sherwin
- * Removed for repository update in utah 07
- *
- * Revision 1.10  2007/01/15 11:08:40  pvos
- * Updating doxygen documentation
- *
- * Revision 1.9  2006/12/10 19:00:54  sherwin
- * Modifications to handle nodal expansions
- *
- * Revision 1.8  2006/08/05 19:03:48  sherwin
- * Update to make the multiregions 2D expansion in connected regions work
- *
- * Revision 1.7  2006/07/02 17:16:18  sherwin
- *
- * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
- *
- * Revision 1.6  2006/06/13 18:05:02  sherwin
- * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
- *
- * Revision 1.5  2006/06/06 15:25:21  jfrazier
- * Removed unreferenced variables and replaced ASSERTL0(false, ....) with
- * NEKERROR.
- *
- * Revision 1.4  2006/06/01 13:43:19  kirby
- * *** empty log message ***
- *
- * Revision 1.3  2006/05/30 14:00:04  sherwin
- * Updates to make MultiRegions and its Demos work
- *
- * Revision 1.2  2006/05/29 19:03:08  sherwin
- * Modifications to wrap geometric information in shared_ptr
- *
- * Revision 1.1  2006/05/04 18:58:31  kirby
- * *** empty log message ***
- *
- * Revision 1.75  2006/04/25 20:23:33  jfrazier
- * Various fixes to correct bugs, calls to ASSERT, etc.
- *
- * Revision 1.74  2006/04/01 21:59:27  sherwin
- * Sorted new definition of ASSERT
- *
- * Revision 1.73  2006/03/12 14:20:44  sherwin
- *
- * First compiling version of SpatialDomains and associated modifications
- *
- * Revision 1.72  2006/03/05 23:17:53  sherwin
- *
- * Corrected to allow MMatrix1D and MMatrix2D to execute properly
- *
- * Revision 1.71  2006/03/05 22:11:02  sherwin
- *
- * Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
- *
- * Revision 1.70  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.69  2006/03/03 23:04:54  sherwin
- *
- * Corrected Mistake in StdBasis.cpp to do with eModified_B
- *
- * Revision 1.66  2006/03/01 22:59:12  sherwin
- *
- * First working version of Project1D
- *
- * Revision 1.65  2006/03/01 08:25:03  sherwin
- *
- * First compiling version of StdRegions
- *
- * Revision 1.64  2006/02/26 23:37:29  sherwin
- *
- * Updates and compiling checks upto StdExpansions1D
- *
- * Revision 1.63  2006/02/26 21:23:20  bnelson
- * Fixed a variety of compiler errors caused by updates to the coding standard.
- *
- * Revision 1.62  2006/02/19 13:26:13  sherwin
- *
- * Coding standard revisions so that libraries compile
- *
- **/
-

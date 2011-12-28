@@ -41,8 +41,6 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        /** \brief Constructor using BasisKey class for quadrature
-            points and order definition */
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
                        const SpatialDomains::TriGeomSharedPtr &geom):
@@ -62,7 +60,7 @@ namespace Nektar
         {
         }
 
-        /// Copy Constructor
+
         TriExp::TriExp(const TriExp &T):
             StdExpansion(T),
             Expansion(T),
@@ -76,31 +74,12 @@ namespace Nektar
         {
         }
 
-        /// Destructor
+
         TriExp::~TriExp()
         {
         }
 
 
-        //----------------------------
-        // Integration Methods
-        //----------------------------
-
-        /** \brief Integrate the physical point list \a inarray over region
-            and return the value
-
-            Inputs:\n
-
-            - \a inarray: definition of function to be returned at quadrature point
-            of expansion.
-
-            Outputs:\n
-
-            - returns \f$\int^1_{-1}\int^1_{-1} u(\eta_1, \eta_2) J[i,j] d
-            \eta_1 d \eta_2 \f$ where \f$inarray[i,j] = u(\eta_{1i},\eta_{2j})
-            \f$ and \f$ J[i,j] \f$ is the Jacobian evaluated at the
-            quadrature point.
-        */
         NekDouble TriExp::v_Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -125,11 +104,6 @@ namespace Nektar
         }
 
 
-        /**
-           \brief Calculate the derivative of the physical points
-           If the tangent system is defined, this routine will return
-           derivatives in the direction of tangent vectors.
-        **/
         void TriExp::v_PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &out_d0,
                                Array<OneD,NekDouble> &out_d1,
@@ -198,6 +172,7 @@ namespace Nektar
             }
         }
 
+
         void TriExp::v_PhysDeriv(const int dir,
                                const Array<OneD, const NekDouble>& inarray,
                                Array<OneD, NekDouble> &outarray)
@@ -227,7 +202,7 @@ namespace Nektar
             }
         }
 
-        // Physical Derivation along direction vector
+
         void TriExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
                                           const Array<OneD, const Array<OneD, NekDouble> >& direction,
                                           Array<OneD,NekDouble> &out)
@@ -275,19 +250,7 @@ namespace Nektar
             }
         }
 
-        /** \brief Forward transform from physical quadrature space
-            stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->m_coeffs
 
-            Inputs:\n
-
-            - \a inarray: array of physical quadrature points to be transformed
-
-            Outputs:\n
-
-            - \a (this)->m_coeffs: updated array of expansion coefficients.
-
-        */
         void TriExp::v_FwdTrans(const Array<OneD, const NekDouble> & inarray,
                               Array<OneD,NekDouble> &outarray)
         {
@@ -304,6 +267,7 @@ namespace Nektar
 
             out = (*matsys)*in;
         }
+
 
         void TriExp::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                              Array<OneD, NekDouble> &outarray)
@@ -407,36 +371,12 @@ namespace Nektar
         }
 
 
-        /**
-            \brief Calculate the inner product of inarray with respect to
-            the basis B=base0*base1 and put into outarray:
-
-            \f$
-            \begin{array}{rcl}
-            I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1}
-            \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
-            J_{i,j}\\
-            & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-            \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}  J_{i,j}
-            \end{array}
-            \f$
-
-            where
-
-            \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-
-            which can be implemented as
-
-            \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} =
-            {\bf B_1 U}  \f$
-            \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} =
-            {\bf B_0 F}  \f$
-        **/
         void TriExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                              Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase_SumFac(inarray,outarray);
         }
+
 
         void TriExp::v_IProductWRTDerivBase(const int dir,
                                   const Array<OneD, const NekDouble>& inarray,
@@ -444,6 +384,7 @@ namespace Nektar
         {
             IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
+
 
         void TriExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                             Array<OneD, NekDouble> &outarray)
@@ -459,6 +400,7 @@ namespace Nektar
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
         }
 
+
         void TriExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
         {
@@ -470,6 +412,7 @@ namespace Nektar
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
+
 
         void TriExp::v_IProductWRTDerivBase_SumFac(const int dir,
                                                  const Array<OneD, const NekDouble>& inarray,
@@ -538,6 +481,7 @@ namespace Nektar
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,m_base[1]->GetDbdata(),tmp2,outarray,tmp0);
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
+
 
         void TriExp::v_IProductWRTDerivBase_MatOp(const int dir,
                                                 const Array<OneD, const NekDouble>& inarray,
@@ -658,7 +602,6 @@ namespace Nektar
         }
 
 
-        // get the coordinates "coords" at the local coordinates "Lcoords"
         void TriExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,NekDouble> &coords)
         {
@@ -676,10 +619,12 @@ namespace Nektar
             }
         }
 
+
         NekDouble TriExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             return PhysEvaluate(coord,m_phys);
         }
+
 
         NekDouble TriExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)
         {
@@ -691,29 +636,7 @@ namespace Nektar
             return StdTriExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
-        /** \brief Extract the physical values along edge \a edge
-            from \a inarray into \a outarray following the local
-            edge orientation and point distribution defined by
-            defined in \a EdgeExp.
 
-            Note: this function will check to see if points
-            distribution along the Tri expansion \a edge is the
-            same as the local edge definition and if not
-            interpolate. If they are the same no interpolation
-            will be performed as can be seen in the functino
-            LibUtilities::Interp1D
-
-            \param edge the edge id which is to be extracted
-
-            \param EdgeExp The Edge Expansion defining the
-            orientation and point distrubution points are to be
-            interpolated.
-
-            \param inarray is the 2D physical point set from which
-            data is to be extracted.
-
-            \param outarray is the output data
-        */
         void TriExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray)
@@ -753,6 +676,7 @@ namespace Nektar
             }
 
         }
+
 
         void TriExp::v_ComputeEdgeNormal(const int edge)
         {
@@ -918,6 +842,7 @@ namespace Nektar
                 }
             }
         }
+
 
         void TriExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
@@ -1141,26 +1066,31 @@ namespace Nektar
             }
         }
 
+
         const SpatialDomains::GeomFactorsSharedPtr& TriExp::v_GetMetricInfo() const
         {
             return m_metricinfo;
         }
+
+
         const SpatialDomains::GeometrySharedPtr TriExp::v_GetGeom() const
         {
             return m_geom;
         }
+
 
         const SpatialDomains::Geometry2DSharedPtr& TriExp::v_GetGeom2D() const
         {
             return m_geom;
         }
 
+
         int TriExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
         }
 
-        // Unpack data from input file assuming it comes from the same expansion type
+
         void TriExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data,
                                             const int offset,
                                             const std::vector<unsigned int > &nummodes,
@@ -1199,25 +1129,31 @@ namespace Nektar
             }
         }
 
+
         StdRegions::EdgeOrientation TriExp::v_GetEorient(int edge)
         {
             return m_geom->GetEorient(edge);
         }
 
+
         StdRegions::EdgeOrientation TriExp::v_GetCartesianEorient(int edge)
         {
             return m_geom->GetCartesianEorient(edge);
         }
+
+
         const LibUtilities::BasisSharedPtr& TriExp::v_GetBasis(int dir) const
             {
           ASSERTL1(dir >= 0 &&dir <= 1,"input dir is out of range");
           return m_base[dir];
         }
 
+
         int TriExp::v_GetNumPoints(const int dir) const
         {
             return GetNumPoints(dir);
         }
+
 
         DNekMatSharedPtr TriExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
@@ -1239,6 +1175,7 @@ namespace Nektar
             }
             return returnval;
         }
+
 
         DNekMatSharedPtr TriExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
@@ -1523,6 +1460,7 @@ namespace Nektar
             return returnval;
         }
 
+
         DNekScalBlkMatSharedPtr TriExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
@@ -1636,15 +1574,18 @@ namespace Nektar
             return returnval;
         }
 
+
         DNekScalMatSharedPtr& TriExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
+
         DNekScalBlkMatSharedPtr& TriExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
+
 
         void TriExp::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray,
@@ -1653,12 +1594,14 @@ namespace Nektar
             StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
+
         void TriExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,NekDouble> &outarray,
                                const StdRegions::StdMatrixKey &mkey)
         {
                 TriExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
+
 
         void TriExp::v_LaplacianMatrixOp(const int k1, const int k2,
                                const Array<OneD, const NekDouble> &inarray,
@@ -1668,6 +1611,7 @@ namespace Nektar
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
         }
 
+
         void TriExp::v_WeakDerivMatrixOp(const int i,
                                const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,NekDouble> &outarray,
@@ -1676,6 +1620,7 @@ namespace Nektar
             StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
 
+
         void TriExp::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray,
                                           const StdRegions::StdMatrixKey &mkey)
@@ -1683,12 +1628,14 @@ namespace Nektar
             StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
+
         void TriExp::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray,
                                           const StdRegions::StdMatrixKey &mkey)
         {
             StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
         }
+
 
         void TriExp::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,NekDouble> &outarray,
@@ -1909,6 +1856,7 @@ namespace Nektar
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
         }
+
 
         void TriExp::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD,NekDouble> &outarray,

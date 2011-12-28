@@ -1206,6 +1206,9 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This method has not been defined");
             }
 
+            /**
+             *
+             */
             void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray)
             {
@@ -1213,6 +1216,10 @@ namespace Nektar
             }
 
 
+            /**
+             * @brief Integrates the specified function over the domain.
+             * @see StdRegions#StdExpansion#Integral.
+             */
             NekDouble StdExpansion::v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -1242,6 +1249,10 @@ namespace Nektar
                          "specific element types");
             }
 
+            /**
+             * @brief Calculate the derivative of the physical points
+             * @see StdRegions#StdExpansion#PhysDeriv
+             */
             void StdExpansion::v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &out_d1,
                                         Array<OneD, NekDouble> &out_d2,
@@ -1251,19 +1262,24 @@ namespace Nektar
                          "local expansions");
             }
 
-	    void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
-	    	    		Array<OneD, NekDouble> &out_ds)
-	    {
-	    	    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-	    	    	    "local expansions");
-	    }
-	    void StdExpansion::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
-	    	    		Array<OneD, NekDouble>& out_dn)
-	    {
-	    	    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-	    	    	    "local expansions");
-	    }
+            void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+                            Array<OneD, NekDouble> &out_ds)
+            {
+                    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                            "local expansions");
+            }
+            void StdExpansion::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+                            Array<OneD, NekDouble>& out_dn)
+            {
+                    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                            "local expansions");
+            }
 	
+            /**
+             * @brief Calculate the derivative of the physical points in a
+             * given direction
+             * @see StdRegions#StdExpansion#PhysDeriv
+             */
             void StdExpansion::v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0)
@@ -1273,6 +1289,10 @@ namespace Nektar
                          "specific element types");
             }
 
+            /**
+             * @brief Physical derivative along a direction vector.
+             * @see StdRegions#StdExpansion#PhysDirectionalDeriv
+             */
             void StdExpansion::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
                                                 const Array<OneD, const NekDouble>& direction,
                                                 Array<OneD, NekDouble> &outarray)

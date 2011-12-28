@@ -58,6 +58,10 @@ namespace Nektar
                         virtual public Expansion2D
         {
         public:
+            /**
+             * @brief Constructor using BasisKey class for quadrature
+             *        points and order definition
+             */
             LOCAL_REGIONS_EXPORT QuadExp(
                             const LibUtilities::BasisKey &Ba,
                             const LibUtilities::BasisKey &Bb,
@@ -65,7 +69,7 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT QuadExp(const QuadExp &T);
 
-            LOCAL_REGIONS_EXPORT ~QuadExp();
+            LOCAL_REGIONS_EXPORT virtual ~QuadExp();
 
         protected:
             //-------------------------------

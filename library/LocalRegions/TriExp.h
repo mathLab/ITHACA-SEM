@@ -59,7 +59,10 @@ namespace Nektar
         {
 
         public:
-
+            /**
+             * @brief Constructor using BasisKey class for quadrature
+             * points and order definition
+             */
             LOCAL_REGIONS_EXPORT TriExp(
                             const LibUtilities::BasisKey &Ba,
                             const LibUtilities::BasisKey &Bb,

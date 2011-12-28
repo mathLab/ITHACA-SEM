@@ -45,9 +45,6 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-
-        /** \brief Constructor using BasisKey class for quadrature
-            points and order definition */
         QuadExp::QuadExp(const LibUtilities::BasisKey &Ba,
                          const LibUtilities::BasisKey &Bb,
                          const SpatialDomains::QuadGeomSharedPtr &geom):
@@ -66,6 +63,7 @@ namespace Nektar
         {
         }
 
+
         QuadExp::QuadExp(const QuadExp &T):
             StdExpansion(T),
             Expansion   (),
@@ -78,30 +76,12 @@ namespace Nektar
         {
         }
 
-        // by default the StdQuadExp destructor will be called
+
         QuadExp::~QuadExp()
         {
         }
 
-        //----------------------------
-        // Integration Methods
-        //----------------------------
 
-        /** \brief Integrate the physical point list \a inarray over region
-            and return the value
-
-            Inputs:\n
-
-            - \a inarray: definition of function to be returned at quadrature point
-            of expansion.
-
-            Outputs:\n
-
-            - returns \f$\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2) J[i,j] d
-            \xi_1 d \xi_2 \f$ where \f$inarray[i,j] =
-            u(\xi_{1i},\xi_{2j}) \f$ and \f$ J[i,j] \f$ is the
-            Jacobian evaluated at the quadrature point.
-        */
         NekDouble QuadExp::v_Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -127,18 +107,6 @@ namespace Nektar
         }
 
 
-
-        ///////////////////////////////
-        /// Differentiation Methods
-        ///////////////////////////////
-
-        /**
-            \brief Calculate the derivative of the physical points
-
-            For quadrilateral region can use the Tensor_Deriv function
-            defined under StdExpansion.
-
-        **/
         void QuadExp::v_PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                 Array<OneD,NekDouble> &out_d0,
                                 Array<OneD,NekDouble> &out_d1,
@@ -198,6 +166,7 @@ namespace Nektar
             }
         }
 
+
         void QuadExp::v_PhysDeriv(const int dir,
                                 const Array<OneD, const NekDouble>& inarray,
                                 Array<OneD, NekDouble> &outarray)
@@ -227,7 +196,7 @@ namespace Nektar
             }
         }
 
-        // Physical Derivation along direction vector
+
         void QuadExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
                                            const Array<OneD, const NekDouble>& direction,
                                            Array<OneD,NekDouble> &out)
@@ -272,19 +241,6 @@ namespace Nektar
         }
 
 
-        /** \brief Forward transform from physical quadrature space
-            stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->m_coeffs
-
-            Inputs:\n
-
-            - \a inarray: array of physical quadrature points to be transformed
-
-            Outputs:\n
-
-            - (this)->_coeffs: updated array of expansion coefficients.
-
-        */
         void QuadExp::v_FwdTrans(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &outarray)
         {
@@ -308,6 +264,7 @@ namespace Nektar
                 out = (*matsys)*in;
             }
         }
+
 
         void QuadExp::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                               Array<OneD, NekDouble> &outarray)
@@ -419,28 +376,7 @@ namespace Nektar
 
         }
 
-        /**
-            \brief Calculate the inner product of inarray with respect to
-            the basis B=base0*base1 and put into outarray:
 
-            \f$ \begin{array}{rcl} I_{pq} = (\phi_q \phi_q, u) & = &
-            \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \phi_p(\xi_{0,i})
-            \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
-            J_{i,j}\\ & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-            \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
-            J_{i,j} \end{array} \f$
-
-            where
-
-            \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-
-            which can be implemented as
-
-            \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} =
-            {\bf B_1 U}  \f$
-            \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} =
-            {\bf B_0 F}  \f$
-        **/
         void QuadExp::v_IProductWRTBase(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray)
@@ -455,12 +391,14 @@ namespace Nektar
             }
         }
 
+
         void QuadExp::v_IProductWRTDerivBase(const int dir,
                                   const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray)
         {
             IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
+
 
         void QuadExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                              Array<OneD, NekDouble> &outarray)
@@ -478,6 +416,7 @@ namespace Nektar
                                                      tmp,outarray,wsp,true,true);
         }
 
+
         void QuadExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray,
                                             Array<OneD, NekDouble> &outarray)
         {
@@ -489,6 +428,7 @@ namespace Nektar
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
+
 
         void QuadExp::v_IProductWRTDerivBase_SumFac(const int dir,
                                                   const Array<OneD, const NekDouble>& inarray,
@@ -528,6 +468,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
 
+
         void QuadExp::v_IProductWRTDerivBase_MatOp(const int dir,
                                                  const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
@@ -565,6 +506,7 @@ namespace Nektar
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
+
 
         void QuadExp::v_NormVectorIProductWRTBase(
                 const Array<OneD, const NekDouble> &Fx,
@@ -672,7 +614,6 @@ namespace Nektar
             }
         }
 
-        // get the coordinates "coords" at the local coordinates "Lcoords"
 
         void QuadExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                                Array<OneD,NekDouble> &coords)
@@ -690,10 +631,12 @@ namespace Nektar
             }
         }
 
+
         NekDouble QuadExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             return PhysEvaluate(coord,m_phys);
         }
+
 
         NekDouble QuadExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)
         {
@@ -774,30 +717,6 @@ namespace Nektar
         }
 
 
-        /** \brief Extract the physical values along edge \a edge
-                        from \a inarray into \a outarray following the local
-                        edge orientation and point distribution defined by
-                        defined in \a EdgeExp.
-
-                        Note: this function will check to see if points
-                        distribution along the Tri expansion \a edge is the
-                        same as the local edge definition and if not
-                        interpolate. If they are the same no interpolation
-                        will be performed as can be seen in the functino
-                        LibUtilities::Interp1D
-
-                        \param edge the edge id which is to be extracted
-
-                        \param EdgeExp The Edge Expansion defining the
-                        orientation and point distrubution points are to be
-                        interpolated.
-
-                        \param inarray is the 2D physical point set from which
-                        data is to be extracted.
-
-                        \param outarray is the output data
-        */
-
         void QuadExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                       const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
         {
@@ -841,6 +760,7 @@ namespace Nektar
             }
 
         }
+
 
         void QuadExp::v_ComputeEdgeNormal(const int edge)
         {
@@ -1022,6 +942,7 @@ namespace Nektar
                 }
             }
         }
+
 
         void QuadExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
@@ -1235,24 +1156,31 @@ namespace Nektar
             }
         }
 
+
         const SpatialDomains::GeomFactorsSharedPtr& QuadExp::v_GetMetricInfo() const
         {
             return m_metricinfo;
         }
+
+
         const SpatialDomains::GeometrySharedPtr QuadExp::v_GetGeom() const
         {
             return m_geom;
         }
+
+
         const SpatialDomains::Geometry2DSharedPtr& QuadExp::v_GetGeom2D() const
         {
             return m_geom;
         }
+
+
         int QuadExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
         }
 
-        // Unpack data from input file assuming it comes from the same expansion type
+
         void QuadExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data,
                                             const int offset,
                                             const std::vector<unsigned int > &nummodes,
@@ -1291,14 +1219,18 @@ namespace Nektar
             }
         }
 
+
         StdRegions::EdgeOrientation QuadExp::v_GetEorient(int edge)
         {
             return m_geom->GetEorient(edge);
         }
+
+
         StdRegions::EdgeOrientation QuadExp::v_GetCartesianEorient(int edge)
         {
             return m_geom->GetCartesianEorient(edge);
         }
+
 
         const LibUtilities::BasisSharedPtr& QuadExp::v_GetBasis(int dir) const
         {
@@ -1306,10 +1238,12 @@ namespace Nektar
             return m_base[dir];
         }
 
+
         int QuadExp::v_GetNumPoints(const int dir) const
         {
             return GetNumPoints(dir);
         }
+
 
         DNekMatSharedPtr QuadExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
@@ -1332,6 +1266,7 @@ namespace Nektar
             return returnval;
         }
 
+
         DNekMatSharedPtr QuadExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
@@ -1339,6 +1274,7 @@ namespace Nektar
             StdRegions::StdQuadExpSharedPtr tmp = MemoryManager<StdQuadExp>::AllocateSharedPtr(bkey0,bkey1);
             return tmp->GetStdMatrix(mkey);
         }
+
 
         DNekScalMatSharedPtr QuadExp::CreateMatrix(const MatrixKey &mkey)
         {
@@ -1432,106 +1368,6 @@ namespace Nektar
                         (*WeakDeriv) = gmat[2*dir][0]*deriv0 + gmat[2*dir+1][0]*deriv1;
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDeriv);
                     }
-                }
-                break;
-          case StdRegions::eWeakDirectionalDeriv:
-                {
-                    ASSERTL0(false, "Called QuadExp::eWeakDirectionalDeriv");
-/*                    int dim = m_geom->GetCoordim();
-                    int nqtot   = (m_base[0]->GetNumPoints())*(m_base[1]->GetNumPoints());
-                    int nvarcoeffs = mkey.GetNVarCoeff();
-
-                    NekDouble jac = (m_metricinfo->GetJac())[0];
-                    Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
-
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        NekDouble one = 1.0;
-                        DNekMatSharedPtr WeakDirectionalDeriv = GenMatrix(mkey);
-                        Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
-                        Array<OneD, NekDouble> tmp;
-
-                        // Store tangential basis in Weighted[0-dim]
-                        Weight[0] = mkey.GetVariableCoefficient(0);
-
-                        // Store gmat info in Weight[dim+1]
-                        for (int k=0; k < 2*dim; ++k)
-                        {
-                            tmp = Array<OneD, NekDouble>(nqtot);
-                            Vmath::Vcopy(nqtot, &gmat[k][0], 1, &tmp[0], 1);
-                            Weight[k+1] = tmp;
-                        }
-
-                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight);
-                        DNekMatSharedPtr MassLevelCurvaturemat = GenMatrix(stdmasskey);
-
-                        (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
-
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,WeakDirectionalDeriv);
-                    }
-                    else
-                    {
-                        Array<OneD, Array<OneD, const NekDouble> > Cxi(1);
-                        Array<OneD, Array<OneD, const NekDouble> > Ceta(1);
-
-                        // Directional Forcing is applied
-                        Array<OneD, NekDouble> Cxi_wk  = Array<OneD, NekDouble> (nqtot,0.0);
-                        Array<OneD, NekDouble> Ceta_wk = Array<OneD, NekDouble> (nqtot,0.0);
-
-                        // Cxi = tan_{xi_x} * d \xi/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
-                        // Ceta = tan_{eta_x} * d \eta/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
-                        for (int k=0; k<dim; ++k)
-                        {
-                            Vmath::Svtvp(nqtot,gmat[2*k][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &Cxi[0][0],1,&Cxi_wk[0],1);
-                            Vmath::Svtvp(nqtot,gmat[2*k+1][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &Ceta[0][0],1,&Ceta_wk[0],1);
-                        }
-
-                        // Assign value to const NekDouble array for input to key
-                        Cxi[0]  = Cxi_wk;
-                        Ceta[0] = Ceta_wk;
-
-                        // derivxi = Cxi * ( B * D_{\xi} *B^T )
-                        // deriveta = Ceta * ( B * D_{\eta} * B^T )
-                        MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetExpansionType(), *this, Cxi);
-                        MatrixKey derivetakey(StdRegions::eWeakDeriv1, mkey.GetExpansionType(), *this, Ceta);
-
-                        DNekMat &derivxi = *GetStdMatrix(derivxikey);
-                        DNekMat &deriveta = *GetStdMatrix(derivetakey);
-
-                        int rows = derivxi.GetRows();
-                        int cols = deriveta.GetColumns();
-
-                        DNekMatSharedPtr WeakDirectionalDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-
-                        // D_t = D_xi
-                        (*WeakDirectionalDeriv) = derivxi + deriveta;
-
-                        // Add Weighted Mass with (\grad \cdot u )
-                        Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
-                        Array<OneD, NekDouble> Weight_wk;
-
-                        // Store tangential basis in Weighted[0-dim]
-                        Weight[0] = mkey.GetVariableCoefficient(0);
-
-                        // Store gmat info in Weight[dim+1]
-                        for (int k=0; k < 2*dim; ++k)
-                        {
-                            Weight_wk = Array<OneD, NekDouble>(gmat[k].num_elements());
-                            // assign constant value to Weight_wk
-                            Weight_wk[0] = gmat[k][0];
-                            // Case array into const NekDouble Array.
-                            Weight[k+1] = Weight_wk;
-                        }
-
-                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight);
-                        DNekMatSharedPtr MassLevelCurvaturemat = GetStdMatrix(stdmasskey);
-
-                        (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
-
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDirectionalDeriv);
-                    }*/
                 }
                 break;
             case StdRegions::eLaplacian:
@@ -1690,23 +1526,6 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-//                    int nvarcoeffs = mkey.GetNVarCoeff();
-//                    Array<OneD, Array<OneD, const NekDouble> > varcoeffs(nvarcoeffs);
-//
-//                    if(nvarcoeffs>0)
-//                    {
-//                        for(int j=0; j<nvarcoeffs; j++)
-//                        {
-//                            varcoeffs[j] = mkey.GetVariableCoefficient(j);
-//                        }
-//                    }
-//
-//                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-//                                                  DetExpansionType(),*this,
-//                                                  mkey.GetConstant(0),
-//                                                  mkey.GetConstant(1),
-//                                                  varcoeffs);
-
                     MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
@@ -1726,7 +1545,6 @@ namespace Nektar
 
             return returnval;
         }
-
 
 
         DNekScalBlkMatSharedPtr QuadExp::CreateStaticCondMatrix(const MatrixKey &mkey)
@@ -1840,15 +1658,18 @@ namespace Nektar
             return returnval;
         }
 
+
         DNekScalMatSharedPtr& QuadExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
+
         DNekScalBlkMatSharedPtr& QuadExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
+
 
         void QuadExp::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray,
@@ -1857,12 +1678,14 @@ namespace Nektar
             StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
+
         void QuadExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,NekDouble> &outarray,
                                const StdRegions::StdMatrixKey &mkey)
         {
             QuadExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
+
 
         void QuadExp::v_LaplacianMatrixOp(const int k1, const int k2,
                                const Array<OneD, const NekDouble> &inarray,
@@ -1872,6 +1695,7 @@ namespace Nektar
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
         }
 
+
         void QuadExp::v_WeakDerivMatrixOp(const int i,
                                const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,NekDouble> &outarray,
@@ -1880,6 +1704,7 @@ namespace Nektar
             StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
 
+
         void QuadExp::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray,
                                           const StdRegions::StdMatrixKey &mkey)
@@ -1887,12 +1712,14 @@ namespace Nektar
             StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
+
         void QuadExp::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray,
                                           const StdRegions::StdMatrixKey &mkey)
         {
             StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
         }
+
 
         void QuadExp::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,NekDouble> &outarray,
@@ -1924,11 +1751,7 @@ namespace Nektar
             }
         }
 
-        /**
-         * @param   inarray     Input coefficients.
-         * @param   output      Output coefficients.
-         * @param   mkey        Matrix key
-         */
+
         void QuadExp::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD,NekDouble> &outarray,
                                                 const StdRegions::StdMatrixKey &mkey)
@@ -2107,12 +1930,7 @@ namespace Nektar
             }
         }
 
-        /**
-         * @param   inarray     Input array @f$ \mathbf{u} @f$.
-         * @param   outarray    Output array @f$ \boldsymbol{\nabla^2u}
-         *                          + \lambda \boldsymbol{u} @f$.
-         * @param   mkey
-         */
+
         void QuadExp::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
@@ -2299,6 +2117,7 @@ namespace Nektar
             }
         }
 
+
         void QuadExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {
@@ -2343,20 +2162,6 @@ namespace Nektar
                 }
             }
         }
-
-
-
-//        void QuadExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
-//                                       const int k)
-//	    {
-//            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-//
-//            Vmath::Vcopy(m_num, GetSurfaceNormal()[k], 1,
-//                                SurfaceNormal, 1);
-//      	}
-
-
-
 
     }//end of namespace
 }//end of namespace

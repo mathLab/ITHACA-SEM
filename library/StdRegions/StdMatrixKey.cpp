@@ -58,6 +58,11 @@ namespace Nektar
             m_varcoeffs(varCoeffMap),
             m_matrixid(0)
         {
+            if(m_varcoeffs != NullVarCoeffMap) // force new matrix construction
+            {
+                m_matrixid = s_matrixcnt++;
+            }
+            
         }
 
 

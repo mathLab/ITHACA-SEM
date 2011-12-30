@@ -97,9 +97,9 @@ namespace Nektar
                 return m_base;
             }
 
-            int GetMatrixID() const
+            std::vector<std::size_t> GetVarCoeffHashes() const
             {
-                return m_matrixid;
+                return m_varcoeff_hashes;
             }
 
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
@@ -168,8 +168,7 @@ namespace Nektar
             ConstFactorMap m_factors;
             VarCoeffMap m_varcoeffs;
 
-            int                   m_matrixid;
-
+            std::vector<std::size_t>     m_varcoeff_hashes;
         private:
             StdMatrixKey();
         };

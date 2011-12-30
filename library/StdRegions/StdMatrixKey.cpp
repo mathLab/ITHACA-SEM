@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/functional/hash.hpp>
 #include "StdRegions/StdExpansion.h"
 #include "StdRegions/StdMatrixKey.h"
 
@@ -56,13 +57,15 @@ namespace Nektar
             m_nodalPointsType(nodalType),
             m_factors(factorMap),
             m_varcoeffs(varCoeffMap),
-            m_matrixid(0)
+            m_varcoeff_hashes(varCoeffMap.size())
         {
-            if(m_varcoeffs != NullVarCoeffMap) // force new matrix construction
+            // Create hash
+            int i = 0;
+            for (VarCoeffMap::const_iterator x = varCoeffMap.begin(); x != varCoeffMap.end(); ++x)
             {
-                m_matrixid = s_matrixcnt++;
+                m_varcoeff_hashes[i++] = boost::hash_range(x->second.begin(), x->second.end());
+                boost::hash_combine(m_varcoeff_hashes[i], x->first);
             }
-            
         }
 
 
@@ -74,7 +77,7 @@ namespace Nektar
             m_nodalPointsType(rhs.m_nodalPointsType),
             m_factors(rhs.m_factors),
             m_varcoeffs(rhs.m_varcoeffs),
-            m_matrixid(rhs.m_matrixid)
+            m_varcoeff_hashes(rhs.m_varcoeff_hashes)
         {
         }
         
@@ -154,31 +157,16 @@ namespace Nektar
                 return false;
             }
 
-            /*
-            else 
+            for (unsigned int i = 0; i < lhs.m_varcoeff_hashes.size(); ++i)
             {
-                for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
+                if(lhs.m_varcoeff_hashes[i] < rhs.m_varcoeff_hashes[i])
                 {
-                    if((lhs.m_variablecoefficient[i]).get() < (rhs.m_variablecoefficient[i]).get())
-                    {
-                        return true;
-                    }
-                    
-                    if((lhs.m_variablecoefficient[i]).get() > (rhs.m_variablecoefficient[i]).get())
-                    {
-                        return false;
-                    }
+                    return true;
                 }
-            }
-            */
-
-            if(lhs.m_matrixid < rhs.m_matrixid)
-            {
-                return true;
-            }
-            if(lhs.m_matrixid > rhs.m_matrixid)
-            {
-                return false;
+                if(lhs.m_varcoeff_hashes[i] > rhs.m_varcoeff_hashes[i])
+                {
+                    return false;
+                }
             }
             
             if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
@@ -213,9 +201,11 @@ namespace Nektar
             {
                 os << "Variable coefficients: " << endl;
                 VarCoeffMap::const_iterator x;
+                unsigned int i = 0;
                 for (x = rhs.GetVarCoeffs().begin(); x != rhs.GetVarCoeffs().end(); ++x)
                 {
                     os << "\t Coeff defined: " << VarCoeffTypeMap[x->first] << endl;
+                    os << "\t Hash:          " << rhs.GetVarCoeffHashes()[i++] << endl;
                 }
             }
             

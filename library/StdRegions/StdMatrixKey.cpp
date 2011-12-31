@@ -63,8 +63,9 @@ namespace Nektar
             int i = 0;
             for (VarCoeffMap::const_iterator x = varCoeffMap.begin(); x != varCoeffMap.end(); ++x)
             {
-                m_varcoeff_hashes[i++] = boost::hash_range(x->second.begin(), x->second.end());
+                m_varcoeff_hashes[i] = boost::hash_range(x->second.begin(), x->second.end());
                 boost::hash_combine(m_varcoeff_hashes[i], x->first);
+				i++;
             }
         }
 

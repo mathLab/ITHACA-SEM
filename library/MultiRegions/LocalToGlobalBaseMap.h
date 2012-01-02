@@ -312,8 +312,6 @@ namespace Nektar
             /// Map from the patches of the previous level to the patches of
             /// the current level
 
-            PatchMapSharedPtr m_patchMapFromPrevLevel;
-
             /// The local to global mapping of the next level of recursion
             LocalToGlobalBaseMapSharedPtr m_nextLevelLocalToGlobalMap;
 
@@ -325,6 +323,9 @@ namespace Nektar
                     Array<OneD,NekDouble>& loc);
 
         private:
+            /// Mapping information for previous level in MultiLevel Solver
+            PatchMapSharedPtr m_patchMapFromPrevLevel;
+
             virtual int v_GetLocalToGlobalMap(const int i) const;
 
             virtual int v_GetGlobalToUniversalMap(const int i) const;

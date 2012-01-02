@@ -65,10 +65,17 @@ namespace Nektar
         {
         public:
 
-            PatchMap(const int vals);
+            MULTI_REGIONS_EXPORT  PatchMap(void);
 
-            void SetPatchMap(const int n, const int patchId, const int dofId,const bool bndPatch,const NekDouble sign);
+            MULTI_REGIONS_EXPORT  PatchMap(const int vals);
 
+            MULTI_REGIONS_EXPORT  ~PatchMap(void);
+
+#if 0 
+            MULTI_REGIONS_EXPORT void SetPatchMap(const int n, const int patchId, const int dofId,const bool bndPatch,const NekDouble sign);
+#else
+            MULTI_REGIONS_EXPORT void SetPatchMap(const int n, const int patchId, const int dofId,const unsigned int bndPatch,const NekDouble sign);
+#endif
             inline Array<OneD, const int> GetPatchId() const 
             {
                 return m_patchId;
@@ -78,12 +85,17 @@ namespace Nektar
             {
                 return m_dofId;
             }
-
+#if 0 
             inline Array<OneD, const bool> IsBndDof() const
             {
                 return m_bndPatch;
             }
-
+#else
+            inline Array<OneD, const unsigned int> IsBndDof() const
+            {
+                return m_bndPatch;
+            }
+#endif
             inline Array<OneD, const NekDouble> GetSign() const
             {
                 return m_sign;
@@ -92,7 +104,8 @@ namespace Nektar
         protected:
             Array<OneD, int > m_patchId;
             Array<OneD, int > m_dofId;
-            Array<OneD, bool> m_bndPatch; 
+            //            Array<OneD, bool> m_bndPatch; 
+            Array<OneD, unsigned int> m_bndPatch; 
             Array<OneD, NekDouble> m_sign; 
         };
 
@@ -100,13 +113,17 @@ namespace Nektar
         class SubGraph
         {
         public:
-
-            SubGraph(const int nVerts, const int idOffset = 0):
-                m_nVerts(nVerts),
+            
+            MULTI_REGIONS_EXPORT SubGraph(const int nVerts, const int idOffset = 0):
+            m_nVerts(nVerts),
                 m_idOffset(idOffset)
+                {
+                }
+            
+            MULTI_REGIONS_EXPORT ~SubGraph(void)
             {
             }
-
+            
             inline int GetNverts(void) const
             {
                 return m_nVerts;
@@ -140,6 +157,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(const Array<OneD, const int> sepTree);
             MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(const int nBndDofs);
 
+            MULTI_REGIONS_EXPORT ~MultiLevelBisectedGraph(void);
+
             MULTI_REGIONS_EXPORT int  GetTotDofs() const;
 
             MULTI_REGIONS_EXPORT void SetGlobalNumberingOffset();
@@ -172,6 +191,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(const Array<OneD, const int> septree);
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(const MultiLevelBisectedGraphSharedPtr& graph);
             MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(const int nVerts);
+
+            MULTI_REGIONS_EXPORT ~BottomUpSubStructuredGraph(void);
 
             MULTI_REGIONS_EXPORT int GetTotDofs() const;
 

@@ -47,15 +47,32 @@ namespace Nektar
     namespace MultiRegions
     {
        
+        PatchMap::PatchMap(void)
+        {
+        };
+
         PatchMap::PatchMap(const int nvals)
         {
-            m_patchId  = Array<OneD, int>(nvals);
-            m_dofId    = Array<OneD, int>(nvals);
+            m_patchId  = Array<OneD, int> (nvals);
+            m_dofId    = Array<OneD, int> (nvals);
+#if 0 
             m_bndPatch = Array<OneD, bool>(nvals);
+#else
+            m_bndPatch = Array<OneD, unsigned int>(nvals);
+#endif
             m_sign     = Array<OneD, NekDouble>(nvals);
         }
             
+        PatchMap::~PatchMap(void)
+        {
+        }
+        
+
+#if 0
         void PatchMap::SetPatchMap(const int n, const int patchId, const int dofId,const bool bndPatch,const NekDouble sign)
+#else
+        void PatchMap::SetPatchMap(const int n, const int patchId, const int dofId,const unsigned int bndPatch,const NekDouble sign)
+#endif
         {
             m_patchId[n]  = patchId;
             m_dofId[n]    = dofId;
@@ -131,6 +148,10 @@ namespace Nektar
             m_BndDofs(MemoryManager<SubGraph>::AllocateSharedPtr(nBndDofs)),
             m_leftDaughterGraph(),
             m_rightDaughterGraph()
+        {
+        }
+        
+        MultiLevelBisectedGraph::~MultiLevelBisectedGraph(void)
         {
         }
 
@@ -402,7 +423,11 @@ namespace Nektar
                 m_daughterGraph = MemoryManager<BottomUpSubStructuredGraph>::AllocateSharedPtr(graph);
             }
         }
-
+        
+        BottomUpSubStructuredGraph::~BottomUpSubStructuredGraph(void)
+        {
+        }
+            
         int BottomUpSubStructuredGraph::GetTotDofs() const
         {
             static int nIntDofs = 0;

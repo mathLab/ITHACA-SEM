@@ -107,7 +107,7 @@ namespace Nektar
                       const bool DeclareCoeffPhysArrays = true);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpList1D();
+            MULTI_REGIONS_EXPORT virtual ~ExpList1D();
 
             /// Performs the post-processing on a specified element.
             MULTI_REGIONS_EXPORT void PostProcess(   LibUtilities::KernelSharedPtr kernel,

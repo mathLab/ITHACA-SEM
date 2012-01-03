@@ -84,7 +84,7 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
                      const GlobalLinSysKey &pKey,
-                     const boost::shared_ptr<ExpList> &pExpList,
+                     const boost::weak_ptr<ExpList> &pExpList,
                      const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
                 : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap),
@@ -112,7 +112,7 @@ namespace Nektar
          */
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
                      const GlobalLinSysKey &pKey,
-                     const boost::shared_ptr<ExpList> &pExpList,
+                     const boost::weak_ptr<ExpList> &pExpList,
                      const DNekScalBlkMatSharedPtr pSchurCompl,
                      const DNekScalBlkMatSharedPtr pBinvD,
                      const DNekScalBlkMatSharedPtr pC,
@@ -291,7 +291,7 @@ namespace Nektar
                 const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap)
         {
             int n;
-            int n_exp = m_expList->GetNumElmts();
+            int n_exp = m_expList.lock()->GetNumElmts();
 
             const Array<OneD,const unsigned int>& nbdry_size
                     = pLocToGloMap->GetNumLocalBndCoeffsPerPatch();

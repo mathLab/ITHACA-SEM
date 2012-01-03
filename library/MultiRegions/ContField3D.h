@@ -72,7 +72,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In);
 
-            MULTI_REGIONS_EXPORT ~ContField3D();
+            MULTI_REGIONS_EXPORT virtual ~ContField3D();
 
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>& GetBndCondExpansions()
             {

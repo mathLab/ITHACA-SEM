@@ -54,7 +54,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT StdExpansion0D();
             STD_REGIONS_EXPORT StdExpansion0D(const StdExpansion0D &T);
-            STD_REGIONS_EXPORT ~StdExpansion0D();
+            STD_REGIONS_EXPORT virtual ~StdExpansion0D();
 
             
         protected:

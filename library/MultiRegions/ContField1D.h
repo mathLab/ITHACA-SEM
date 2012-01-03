@@ -76,7 +76,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField1D( const LibUtilities::SessionReaderSharedPtr &pSession,
                                               const ExpList1D & In);
             /// Destructor
-            MULTI_REGIONS_EXPORT ~ContField1D();
+            MULTI_REGIONS_EXPORT virtual ~ContField1D();
 
             /// Perform global forward transformation of a function \f$f(x)\f$,
             //  subject to the boundary conditions specified.

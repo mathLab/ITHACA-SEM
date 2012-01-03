@@ -80,7 +80,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField3D(const DisContField3D &In);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~DisContField3D();
+            MULTI_REGIONS_EXPORT virtual ~DisContField3D();
 
         protected:
 

@@ -73,7 +73,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
                            const bool DeclareCoeffPhysArrays = true);
 
-            MULTI_REGIONS_EXPORT ~DisContField2D();
+            MULTI_REGIONS_EXPORT virtual ~DisContField2D();
 
             inline ExpList1DSharedPtr &GetTrace(void)
             {

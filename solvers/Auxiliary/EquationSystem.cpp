@@ -266,7 +266,6 @@ namespace Nektar
                         MultiRegions::ContField2DSharedPtr firstfield;
                         firstfield = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i),DeclareCoeffPhysArrays,m_checkIfSystemSingular[0]);
-
                         m_fields[0] = firstfield;
                         for(i = 1 ; i < m_fields.num_elements(); i++)
                         {
@@ -517,7 +516,7 @@ namespace Nektar
      */
     EquationSystem::~EquationSystem()
     {
-        
+
     }
 
 
@@ -1102,7 +1101,7 @@ namespace Nektar
         int i;
         //NUM VARIABLES CAN BE DIFFERENT FROM THE DIMENSION OF THE BASE FLOW
         m_base =Array<OneD, MultiRegions::ExpListSharedPtr> (m_spacedim);
-        if (m_projectionType = MultiRegions::eGalerkin)
+        if (m_projectionType == MultiRegions::eGalerkin)
         {
             switch (m_expdim)
             {
@@ -1111,7 +1110,7 @@ namespace Nektar
                 for(i = 0 ; i < m_base.num_elements(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                    ::AllocateSharedPtr(m_session,mesh,m_session->GetVariable(i));
+                    ::AllocateSharedPtr(m_session,mesh,m_session->GetVariable(0));
                 }
             }
             break;
@@ -1121,13 +1120,13 @@ namespace Nektar
                 MultiRegions::ContField2DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField2D>
                 ::AllocateSharedPtr(m_session,m_graph,
-                        m_session->GetVariable(i));
+                        m_session->GetVariable(0));
                 m_base[0]=firstbase;
                 for(i = 1 ; i < m_base.num_elements(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::ContField2D>
                     ::AllocateSharedPtr(*firstbase,m_graph,
-                            m_session->GetVariable(i));
+                            m_session->GetVariable(0));
                 }
             }
             break;
@@ -1136,13 +1135,13 @@ namespace Nektar
                 MultiRegions::ContField3DSharedPtr firstbase =
                         MemoryManager<MultiRegions::ContField3D>
                 ::AllocateSharedPtr(m_session,m_graph,
-                        m_session->GetVariable(i));
+                        m_session->GetVariable(0));
                 m_base[0] = firstbase;
                 for(i = 1 ; i < m_base.num_elements(); i++)
                 {
                     m_base[i] = MemoryManager<MultiRegions::ContField3D>
                     ::AllocateSharedPtr(*firstbase,
-                            m_graph,m_session->GetVariable(i));
+                            m_graph,m_session->GetVariable(0));
                 }
             }
             break;

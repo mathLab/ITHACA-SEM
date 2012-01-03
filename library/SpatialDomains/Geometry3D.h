@@ -58,7 +58,7 @@ namespace Nektar
         public:
             SPATIAL_DOMAINS_EXPORT Geometry3D();
             SPATIAL_DOMAINS_EXPORT Geometry3D(const int coordim);
-            SPATIAL_DOMAINS_EXPORT ~Geometry3D();
+            SPATIAL_DOMAINS_EXPORT virtual ~Geometry3D();
 
             StdRegions::StdExpansion3DSharedPtr GetXmap(const int i)
             {

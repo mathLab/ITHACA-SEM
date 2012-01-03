@@ -110,7 +110,7 @@ namespace Nektar
         IncNSFilenames.push_back(IncCondFile);
 
         // Create Incompressible NavierStokesSolver session reader.
-        m_sessionRoll = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames);
+        m_sessionRoll = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames, m_sessionVWI->GetComm());
         std::string vEquation = m_sessionRoll->GetSolverInfo("SolverType");
         m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll);
 
@@ -136,7 +136,7 @@ namespace Nektar
         AdvDiffFilenames.push_back(AdvDiffCondFile);
 
         // Create AdvDiffusion session reader.
-        m_sessionStreak = LibUtilities::SessionReader::CreateInstance(argc, argv, AdvDiffFilenames);
+        m_sessionStreak = LibUtilities::SessionReader::CreateInstance(argc, argv, AdvDiffFilenames, m_sessionVWI->GetComm());
 
         // Initialise LinNS solver 
         std::string LinNSCondFile(argv[argc-1]); 
@@ -146,7 +146,7 @@ namespace Nektar
         LinNSFilenames.push_back(LinNSCondFile);
         
         // Create Linearised NS stability session reader.
-        m_sessionWave = LibUtilities::SessionReader::CreateInstance(argc, argv, LinNSFilenames);
+        m_sessionWave = LibUtilities::SessionReader::CreateInstance(argc, argv, LinNSFilenames, m_sessionVWI->GetComm());
 
         // Set the initial beta value in stability to be equal to VWI file
         std::string LZstr("LZ");
@@ -236,9 +236,7 @@ namespace Nektar
 
     VortexWaveInteraction::~VortexWaveInteraction()
     {
-        m_solverRoll->GetSession()->Finalise();
-        m_sessionStreak->Finalise();
-        m_sessionWave->Finalise();
+        m_sessionVWI->Finalise();
     }
     
     void VortexWaveInteraction::ExecuteRoll(void)

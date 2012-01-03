@@ -54,7 +54,7 @@ namespace Nektar
             STD_REGIONS_EXPORT StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
                            const LibUtilities::BasisKey &Bb);
             STD_REGIONS_EXPORT StdExpansion2D(const StdExpansion2D &T);
-            STD_REGIONS_EXPORT ~StdExpansion2D();
+            STD_REGIONS_EXPORT virtual ~StdExpansion2D();
 
             // Generic operations in different element
 

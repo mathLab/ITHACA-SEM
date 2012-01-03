@@ -50,6 +50,7 @@ namespace Nektar
         class Expansion0D: virtual public Expansion, virtual public StdRegions::StdExpansion0D
         {
             public:
+                LOCAL_REGIONS_EXPORT virtual ~Expansion0D() {}
             
                 inline Expansion1DSharedPtr GetLeftAdjacentElementExp() const;
 

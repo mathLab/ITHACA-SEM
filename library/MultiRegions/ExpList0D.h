@@ -95,7 +95,7 @@ namespace Nektar
 										   const bool DeclareCoeffPhysArrays = true);
 			
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpList0D();
+            MULTI_REGIONS_EXPORT virtual ~ExpList0D();
 			
 			LocalRegions::PointExpSharedPtr m_point;
 			

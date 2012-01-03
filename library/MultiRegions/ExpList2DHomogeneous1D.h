@@ -86,7 +86,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(const ExpList2DHomogeneous1D &In);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpList2DHomogeneous1D();
+            MULTI_REGIONS_EXPORT virtual ~ExpList2DHomogeneous1D();
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.

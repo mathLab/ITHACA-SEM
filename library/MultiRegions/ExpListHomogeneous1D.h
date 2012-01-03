@@ -85,7 +85,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpListHomogeneous1D();
+            MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous1D();
 
             MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
 

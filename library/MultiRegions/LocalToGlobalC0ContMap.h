@@ -106,7 +106,7 @@ namespace Nektar
                                    const map<int,int>& periodicFacesId);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~LocalToGlobalC0ContMap();
+            MULTI_REGIONS_EXPORT virtual ~LocalToGlobalC0ContMap();
 
 
             /** Construct optimal ordering a two-dimensional expansion

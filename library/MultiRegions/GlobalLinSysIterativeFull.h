@@ -53,7 +53,7 @@ namespace Nektar
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::shared_ptr<ExpList> &pExpList,
+                    const boost::weak_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap)
             {
@@ -67,7 +67,7 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::shared_ptr<ExpList> &pExpList,
+                    const boost::weak_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap);
 

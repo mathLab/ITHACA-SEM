@@ -151,7 +151,7 @@ namespace Nektar
         }
 
 
-        SessionReader::SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames)
+        SessionReader::SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames, const CommSharedPtr &pComm)
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
@@ -160,7 +160,14 @@ namespace Nektar
             m_xmlDoc = MergeDoc(pFilenames);
 
             // Create communicator
-            CreateComm(argc, argv, m_filename);
+            if (!pComm.get())
+            {
+                CreateComm(argc, argv, m_filename);
+            }
+            else
+            {
+                m_comm = pComm;
+            }
         }
 
 

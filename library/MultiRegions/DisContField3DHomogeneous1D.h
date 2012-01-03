@@ -71,7 +71,7 @@ namespace Nektar
                                         const bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor. 
-            MULTI_REGIONS_EXPORT ~DisContField3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT virtual ~DisContField3DHomogeneous1D();
             
             MULTI_REGIONS_EXPORT void SetupBoundaryConditions(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, SpatialDomains::BoundaryConditions &bcs, const std::string variable);
             /**

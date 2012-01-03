@@ -51,6 +51,7 @@ namespace Nektar
         {
         public:
             LOCAL_REGIONS_EXPORT Expansion2D();
+            LOCAL_REGIONS_EXPORT virtual ~Expansion2D() {}
             
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            Array<OneD, NekDouble> &inout);

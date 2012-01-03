@@ -95,7 +95,7 @@ namespace Nektar
                                          const bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpList3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT virtual ~ExpList3DHomogeneous1D();
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.

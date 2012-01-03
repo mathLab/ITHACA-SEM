@@ -71,7 +71,7 @@ namespace Nektar
          */
         GlobalLinSysIterativeFull::GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pKey,
-                    const boost::shared_ptr<ExpList> &pExp,
+                    const boost::weak_ptr<ExpList> &pExp,
                     const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
                 : GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
         {
@@ -114,6 +114,7 @@ namespace Nektar
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
             if (m_locToGloMap
                 = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
@@ -133,7 +134,7 @@ namespace Nektar
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
 
             int nDirTotal = nDirDofs;
-            m_expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
+            expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
 
             if(nDirTotal)
             {
@@ -151,7 +152,7 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
-                    m_expList->GeneralMatrixOp(
+                    expList->GeneralMatrixOp(
                                     m_linSysKey,
                                     pOutput, global_tmp, true);
 
@@ -205,6 +206,7 @@ namespace Nektar
         void GlobalLinSysIterativeFull::ComputeDiagonalPreconditioner(
                 const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocal  = pLocToGloMap->GetNumLocalCoeffs();
             int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -220,7 +222,7 @@ namespace Nektar
                 Array<OneD, NekDouble> test(nGlobal, 0.0);
                 Array<OneD, NekDouble> test_local(nLocal, 0.0);
                 test[i+nDir] = 1.0;
-                m_expList->GeneralMatrixOp(m_linSysKey, test, test, true);
+                expList->GeneralMatrixOp(m_linSysKey, test, test, true);
 
                 M.SetValue(i,i,1.0/test[i+nDir]);
             }
@@ -235,6 +237,7 @@ namespace Nektar
         void GlobalLinSysIterativeFull::ComputeDiagonalPreconditionerSum(
                 const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int i,j,n,cnt,gid1,gid2;
             NekDouble sign1,sign2,value;
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
@@ -251,7 +254,7 @@ namespace Nektar
             DNekMat &M = (*m_preconditioner);
 
             int loc_lda;
-            for(n = cnt = 0; n < m_expList->GetNumElmts(); ++n)
+            for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
             {
                 //loc_mat = vBlkMat->GetBlock(n,n);
                 loc_mat = GetBlock(n);
@@ -302,14 +305,15 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             // Perform matrix-vector operation A*d_i
-            m_expList->GeneralMatrixOp(m_linSysKey,
+            expList->GeneralMatrixOp(m_linSysKey,
                                         pInput, pOutput, true);
 
             // retrieve robin boundary condition information and apply robin
             // boundary conditions to the solution.
             const std::map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                                                = m_expList->GetRobinBCInfo();
+                                                = expList->GetRobinBCInfo();
             if(vRobinBCInfo.size() > 0)
             {
                 ASSERTL0(false,
@@ -328,17 +332,17 @@ namespace Nektar
 
                 // Iterate over all the elements computing Robin BCs where
                 // necessary
-                for (int n = 0; n < m_expList->GetNumElmts(); ++n)
+                for (int n = 0; n < expList->GetNumElmts(); ++n)
                 {
-                    int nel = m_expList->GetOffset_Elmt_Id(n);
-                    int offset = m_expList->GetCoeff_Offset(n);
-                    int ncoeffs = m_expList->GetExp(nel)->GetNcoeffs();
+                    int nel = expList->GetOffset_Elmt_Id(n);
+                    int offset = expList->GetCoeff_Offset(n);
+                    int ncoeffs = expList->GetExp(nel)->GetNcoeffs();
 
                     if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
                     {
                         RobinBCInfoSharedPtr rBC;
                         Array<OneD, NekDouble> tmp;
-                        StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
+                        StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(nel);
 
                         // add local matrix contribution
                         for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)

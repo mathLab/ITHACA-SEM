@@ -75,7 +75,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField1D(const ExpList1D &In);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~DisContField1D();
+            MULTI_REGIONS_EXPORT virtual ~DisContField1D();
 			
 			////2D
 			inline ExpList0DSharedPtr &GetTrace1D(void)

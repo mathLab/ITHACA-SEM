@@ -105,7 +105,7 @@ namespace Nektar
                         const SpatialDomains::MeshGraphSharedPtr &graph3D);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpList2D();
+            MULTI_REGIONS_EXPORT virtual ~ExpList2D();
 
         protected:
 

@@ -58,7 +58,7 @@ namespace Nektar
         public:
             SPATIAL_DOMAINS_EXPORT Geometry2D();
             SPATIAL_DOMAINS_EXPORT Geometry2D(const int coordim);
-            SPATIAL_DOMAINS_EXPORT ~Geometry2D();
+            SPATIAL_DOMAINS_EXPORT virtual ~Geometry2D();
 
 
             StdRegions::StdExpansion2DSharedPtr GetXmap(const int i)

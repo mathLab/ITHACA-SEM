@@ -155,7 +155,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
-                const boost::shared_ptr<ExpList> &pExpList,
+                const boost::weak_ptr<ExpList> &pExpList,
                 const boost::shared_ptr<LocalToGlobalBaseMap>
                                    &pLocToGloMap):
             m_linSysKey(pKey),
@@ -185,11 +185,12 @@ namespace Nektar
          */
         DNekScalMatSharedPtr GlobalLinSys::GetBlock(unsigned int n)
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
-            int nel = m_expList->GetOffset_Elmt_Id(n);
+            int nel = expList->GetOffset_Elmt_Id(n);
             DNekScalMatSharedPtr loc_mat;
 
-            LocalRegions::ExpansionSharedPtr vExp = boost::dynamic_pointer_cast<LocalRegions::Expansion>(m_expList->GetExp(nel));
+            LocalRegions::ExpansionSharedPtr vExp = boost::dynamic_pointer_cast<LocalRegions::Expansion>(expList->GetExp(nel));
 
             // need to be initialised with zero size for non variable
             // coefficient case
@@ -199,7 +200,7 @@ namespace Nektar
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
                 StdRegions::VarCoeffMap::const_iterator x;
-                cnt = m_expList->GetPhys_Offset(n);
+                cnt = expList->GetPhys_Offset(n);
                 for (x = m_linSysKey.GetVarCoeffs().begin(); x != m_linSysKey.GetVarCoeffs().end(); ++x)
                 {
                     vVarCoeffMap[x->first] = x->second + cnt;
@@ -242,7 +243,7 @@ namespace Nektar
             // retrieve robin boundary condition information and apply robin
             // boundary conditions to the matrix.
             const map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                                                = m_expList->GetRobinBCInfo();
+                                                = expList->GetRobinBCInfo();
             if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
             {
                 RobinBCInfoSharedPtr rBC;
@@ -279,12 +280,13 @@ namespace Nektar
          */
         DNekScalBlkMatSharedPtr GlobalLinSys::GetStaticCondBlock(unsigned int n)
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
-            int nel = m_expList->GetOffset_Elmt_Id(n);
+            int nel = expList->GetOffset_Elmt_Id(n);
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    tmp_mat;
 
-            StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
+            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(nel);
 
             // need to be initialised with zero size for non variable
             // coefficient case
@@ -294,7 +296,7 @@ namespace Nektar
             if(m_linSysKey.GetNVarCoeffs() > 0)
             {
                 StdRegions::VarCoeffMap::const_iterator x;
-                cnt = m_expList->GetPhys_Offset(n);
+                cnt = expList->GetPhys_Offset(n);
                 for (x = m_linSysKey.GetVarCoeffs().begin(); x != m_linSysKey.GetVarCoeffs().end(); ++x)
                 {
                     vVarCoeffMap[x->first] = x->second + cnt;
@@ -310,7 +312,7 @@ namespace Nektar
             loc_mat = vExp->GetLocStaticCondMatrix(matkey);
 
             const map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                    = m_expList->GetRobinBCInfo();
+                    = expList->GetRobinBCInfo();
             if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
             {
                 RobinBCInfoSharedPtr rBC;

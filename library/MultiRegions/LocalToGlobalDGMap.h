@@ -75,7 +75,7 @@ namespace Nektar
                 const map<int,int> &periodicEdges);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~LocalToGlobalDGMap();
+            MULTI_REGIONS_EXPORT virtual ~LocalToGlobalDGMap();
 
             /// Return the number of boundary segments on which Dirichlet
             /// boundary conditions are imposed.

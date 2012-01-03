@@ -123,9 +123,9 @@ namespace Nektar
              * parallel communication, it also calls the main initialisation
              * of the object.
              */
-            LIB_UTILITIES_EXPORT static SessionReaderSharedPtr CreateInstance(int argc, char *argv[], std::vector<std::string> &pFilenames)
+            LIB_UTILITIES_EXPORT static SessionReaderSharedPtr CreateInstance(int argc, char *argv[], std::vector<std::string> &pFilenames, const CommSharedPtr& pComm = CommSharedPtr())
             {
-                SessionReaderSharedPtr p = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(argc, argv, pFilenames);
+                SessionReaderSharedPtr p = MemoryManager<LibUtilities::SessionReader>::AllocateSharedPtr(argc, argv, pFilenames, pComm);
                 p->InitSession();
                 return p;
             }
@@ -265,7 +265,7 @@ namespace Nektar
 
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[]);
-            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames);
+            LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames, const CommSharedPtr &pComm);
             LIB_UTILITIES_EXPORT void InitSession();
 
             /// Returns a shared pointer to the current object.

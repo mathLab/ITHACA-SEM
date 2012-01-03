@@ -49,7 +49,7 @@ namespace Nektar
         public:
             SPATIAL_DOMAINS_EXPORT Geometry1D();
             SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
-            SPATIAL_DOMAINS_EXPORT ~Geometry1D();
+            SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
 
             // Wrappers around virtual Functions (for the EdgeComponent class)
             void AddElmtConnected(int gvo_id, int locid)

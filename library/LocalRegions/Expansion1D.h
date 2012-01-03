@@ -50,6 +50,8 @@ namespace Nektar
         class Expansion1D: virtual public Expansion, virtual public StdRegions::StdExpansion1D
         {
             public:
+                LOCAL_REGIONS_EXPORT virtual ~Expansion1D() {}
+
                 LOCAL_REGIONS_EXPORT void AddNormTraceInt(
                         const int dir,
                         Array<OneD, const NekDouble> &inarray,

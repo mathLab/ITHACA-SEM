@@ -45,79 +45,16 @@ namespace Nektar
     namespace MultiRegions
     {
 
-//        typedef std::map<StdRegions::VarCoeffType, Array<OneD, const NekDouble> > VarCoeffTypeMap;
-//        typedef std::map<StdRegions::ConstFactorType, NekDouble> ConstFactorTypeMap;
-
         /// Describes a matrix with ordering defined by a local to global map.
         class GlobalMatrixKey
         {
         public:
-            /// Matrix without any parameters.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const StdRegions::ExpansionType expType,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-
-            /// Matrix without any parameters.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-
             MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                     = NullLocalToGlobalBaseMapSharedPtr,
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
                             const StdRegions::VarCoeffMap &varCoeffs = StdRegions::NullVarCoeffMap);
 
-            /// Matrix with a single real parameter.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const NekDouble factor,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-//
-//            /// Matrix with two real parameters.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const NekDouble factor1,
-//                            const NekDouble factor2,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-//
-//            /// Matrix with a single variable coefficient parameter.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const Array<OneD,NekDouble>& varcoeffs,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-//
-//            /// Matrix with multiple variable coefficient parameters.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const StdRegions::VarCoeffMap& varcoeffs,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-//
-//            /// Matrix with a single real parameter and multiple variable
-//            /// coefficient parameters.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const NekDouble factor,
-//                            const StdRegions::VarCoeffMap& varcoeffs,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-//
-//            /// Matrix with two real parameters and multiple variable
-//            /// coefficient parameters.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const NekDouble factor1,
-//                            const NekDouble factor2,
-//                            const StdRegions::VarCoeffMap& varcoeffs,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
-//
-//            // Matrix with one vector parameters and one real parameter and multiple variable coeffs.
-//            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-//                            const Array<OneD,NekDouble>& factor1,
-//                            const NekDouble factor2,
-//                            const StdRegions::VarCoeffMap& varcoeffs,
-//                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-//                                        = NullLocalToGlobalBaseMapSharedPtr);
             /// Copy constructor with change in expansion type
             GlobalMatrixKey(const GlobalMatrixKey &key,
                             const StdRegions::ExpansionType expType);
@@ -125,7 +62,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalMatrixKey(const GlobalMatrixKey &key);
 
             /// Destructor
-            MULTI_REGIONS_EXPORT ~GlobalMatrixKey();
+            MULTI_REGIONS_EXPORT virtual ~GlobalMatrixKey();
 
             /// Provides ordering of GlobalMatrixKey objects.
             MULTI_REGIONS_EXPORT friend bool operator<(const GlobalMatrixKey &lhs,
@@ -146,7 +83,6 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetNVarCoeffs() const;
 
-//            MULTI_REGIONS_EXPORT void SetVarCoeff(const StdRegions::VarCoeffType& coeff, const Array<OneD, const NekDouble> & varcoeff);
             MULTI_REGIONS_EXPORT const Array<OneD, const NekDouble> & GetVarCoeff(const StdRegions::VarCoeffType& coeff) const;
             MULTI_REGIONS_EXPORT const StdRegions::VarCoeffMap & GetVarCoeffs() const;
 
@@ -163,13 +99,6 @@ namespace Nektar
 
             StdRegions::ConstFactorMap  m_constFactors;
             StdRegions::VarCoeffMap     m_varCoeffs;
-            /// The number of real parameters for the matrix.
-//            int                   m_nconstants;
-//            /// The real parameters for the matrix.
-//            Array<OneD,NekDouble> m_constant;
-//
-//            /// Number of variable coefficients
-//            StdRegions::VarCoeffMap m_varcoeff;
 
             /// Pointer to the local to global mapping.
             LocalToGlobalBaseMapSharedPtr m_locToGloMap;
@@ -224,11 +153,6 @@ namespace Nektar
             return m_constFactors;
         }
 
-//        inline void GlobalMatrixKey::SetVarCoeff(const StdRegions::VarCoeffType &coeff, const Array<OneD, const NekDouble> &varcoeff)
-//        {
-//            m_varcoeff[coeff] = varcoeff;
-//        }
-
         inline int GlobalMatrixKey::GetNVarCoeffs() const
         {
             return m_varCoeffs.size();
@@ -244,24 +168,7 @@ namespace Nektar
         {
             return m_varCoeffs;
         }
-    } // end of namespace
-} // end of namespace
+    }
+}
 
-#endif //NEKTAR_LIBS_MULTIREGIONS_GLOBALMATRIXKEY_H
-
-/**
-* $Log: GlobalMatrixKey.h,v $
-* Revision 1.4  2009/11/20 18:02:23  cantwell
-* Docs.
-*
-* Revision 1.3  2009/11/19 23:30:36  cantwell
-* Documentation for ExpList2D and GlobalMatrixKey
-* Updated doxygen pages.
-*
-* Revision 1.2  2009/11/07 21:11:30  sehunchun
-* Variable coefficients parameters are added
-*
-* Revision 1.1  2009/03/23 10:46:41  pvos
-* Added GlobalMatrixKey
-*
-**/
+#endif

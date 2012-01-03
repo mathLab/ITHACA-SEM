@@ -83,7 +83,7 @@ namespace Nektar
             ExpList3D(const SpatialDomains::ExpansionMap &expansions);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ExpList3D();
+            MULTI_REGIONS_EXPORT virtual ~ExpList3D();
 
         protected:
 

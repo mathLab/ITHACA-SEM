@@ -50,7 +50,7 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysIterative::GlobalLinSysIterative(
                 const GlobalLinSysKey &pKey,
-                const boost::shared_ptr<ExpList> &pExpList,
+                const boost::weak_ptr<ExpList> &pExpList,
                 const boost::shared_ptr<LocalToGlobalBaseMap>
                                                        &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap)
@@ -82,7 +82,7 @@ namespace Nektar
             }
 
             // Get the communicator for performing data exchanges
-            LibUtilities::CommSharedPtr vComm = m_expList->GetComm();
+            LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm();
 
             // Get vector sizes
             int nNonDir = nGlobal - nDir;

@@ -57,7 +57,7 @@ namespace Nektar
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory< std::string, GlobalLinSys, 
             const GlobalLinSysKey&,
-            const boost::shared_ptr<ExpList>&,
+            const boost::weak_ptr<ExpList>&,
             const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
         GlobalLinSysFactory& GetGlobalLinSysFactory();
 
@@ -73,9 +73,12 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT
             GlobalLinSys(const GlobalLinSysKey &pKey,
-                    const boost::shared_ptr<ExpList> &pExpList,
+                    const boost::weak_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap);
+
+            MULTI_REGIONS_EXPORT
+            virtual ~GlobalLinSys() {}
 
             /// Returns the key associated with the system.
             const inline GlobalLinSysKey &GetKey(void) const;
@@ -94,7 +97,7 @@ namespace Nektar
             /// Key associated with this linear system.
             GlobalLinSysKey                         m_linSysKey;
             /// Local Matrix System
-            boost::shared_ptr<ExpList>              m_expList;
+            boost::weak_ptr<ExpList>                m_expList;
 
             /// Solve the linear system for given input and output vectors.
             inline void SolveLinearSystem(

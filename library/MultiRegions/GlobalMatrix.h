@@ -53,6 +53,8 @@ namespace Nektar
                          unsigned int columns,
                          const COOMatType &cooMat);
 
+            MULTI_REGIONS_EXPORT ~GlobalMatrix() {}
+
             /// Returns a pointer to the DNekSparseMat matrix.
             const DNekSparseMatSharedPtr GetMatrix(void) const
             {

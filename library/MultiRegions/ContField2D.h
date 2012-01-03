@@ -85,7 +85,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
-            MULTI_REGIONS_EXPORT ~ContField2D();
+            MULTI_REGIONS_EXPORT virtual ~ContField2D();
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion

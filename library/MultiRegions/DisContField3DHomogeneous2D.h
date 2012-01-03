@@ -72,7 +72,7 @@ namespace Nektar
 															 const bool DeclareLinesSetCoeffPhys = true);
 
             /// Destructor. 
-            MULTI_REGIONS_EXPORT ~DisContField3DHomogeneous2D();
+            MULTI_REGIONS_EXPORT virtual ~DisContField3DHomogeneous2D();
             
 			
             MULTI_REGIONS_EXPORT void SetupBoundaryConditions(const LibUtilities::BasisKey &HomoBasis_y,

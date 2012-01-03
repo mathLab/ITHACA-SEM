@@ -79,7 +79,7 @@ namespace Nektar
         /// Constructor for full direct matrix solve.
         GlobalLinSysDirectFull::GlobalLinSysDirectFull(
                     const GlobalLinSysKey &pLinSysKey,
-                    const boost::shared_ptr<ExpList> &pExp,
+                    const boost::weak_ptr<ExpList> &pExp,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
                 : GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
@@ -88,7 +88,7 @@ namespace Nektar
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eDirectFullMatrix,
                      "This routine should only be used when using a Full Direct"
                      " matrix solve");
-            ASSERTL1(pExp->GetComm()->GetSize() == 1,
+            ASSERTL1(pExp.lock()->GetComm()->GetSize() == 1,
                      "Direct full matrix solve can only be used in serial.");
 
             AssembleFullMatrix(pLocToGloMap);
@@ -130,7 +130,7 @@ namespace Nektar
                     // from the rhs
                     int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
 
-                    m_expList->GeneralMatrixOp(
+                    m_expList.lock()->GeneralMatrixOp(
                             m_linSysKey,
                             pOutput, tmp, true);
 
@@ -216,7 +216,7 @@ namespace Nektar
             DNekScalMatSharedPtr loc_mat;
 
             int loc_lda;
-            for(n = cnt = 0; n < m_expList->GetNumElmts(); ++n)
+            for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
                 loc_mat = GetBlock(n);
                 loc_lda = loc_mat->GetRows();

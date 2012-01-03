@@ -62,7 +62,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3DHomogeneous2D(const ContField3DHomogeneous2D &In);
 
             /// Destructor.
-            MULTI_REGIONS_EXPORT ~ContField3DHomogeneous2D();
+            MULTI_REGIONS_EXPORT virtual ~ContField3DHomogeneous2D();
             
         protected:
 

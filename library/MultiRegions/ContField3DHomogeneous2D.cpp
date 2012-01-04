@@ -75,7 +75,7 @@ namespace Nektar
 														   const std::string &variable):
             DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
         {
-            int i,j,n,nel;
+            int i,n,nel;
             bool False = false;
             ContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
@@ -85,9 +85,9 @@ namespace Nektar
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
 
-            for(j = 0; j < nel; ++j)
+            for(i = 0; i < nel; ++i)
             {
-                (*m_exp).push_back(m_lines[0]->GetExp(j));
+                (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
 
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
@@ -97,9 +97,9 @@ namespace Nektar
             {
                 m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
                 
-                for(j = 0; j < nel; ++j)
+                for(i = 0; i < nel; ++i)
                 {
-                    (*m_exp).push_back((*m_exp)[j]);
+                    (*m_exp).push_back((*m_exp)[i]);
                 }
             }            
 
@@ -117,7 +117,7 @@ namespace Nektar
 
         void ContField3DHomogeneous2D::SetCoeffPhys(void)
         {
-            int i,n,cnt;
+            int n,cnt;
             int contncoeffs_per_line = m_lines[0]->GetContNcoeffs();
             int nyzlines = m_lines.num_elements();
 

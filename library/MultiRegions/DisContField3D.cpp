@@ -355,7 +355,7 @@ namespace Nektar
                     map<int,int>& periodicEdges,
                     map<int,int>& periodicFaces)
         {
-            int i,j,k;
+            int i,k;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                         = bcs.GetBoundaryRegions();

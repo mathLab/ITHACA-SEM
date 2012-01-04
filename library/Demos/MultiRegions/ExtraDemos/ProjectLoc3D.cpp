@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce, tmp, tmp2;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    NekDouble  lambda;
 
     if(argc != 2)
     {

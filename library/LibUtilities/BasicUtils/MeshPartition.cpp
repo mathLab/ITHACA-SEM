@@ -114,7 +114,7 @@ namespace Nektar
         void MeshPartition::ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             TiXmlElement* x;
-            TiXmlElement *vGeometry, *vSubElement, *vElements;
+            TiXmlElement *vGeometry, *vSubElement;
             int i;
 
             vGeometry = pSession->GetElement("Nektar/Geometry");

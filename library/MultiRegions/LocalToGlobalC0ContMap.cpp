@@ -381,8 +381,8 @@ namespace Nektar
         {
             int i,j,k;
             int cnt = 0,offset=0;
-            int meshVertId, meshVertId2;
-            int meshEdgeId, meshEdgeId2;
+            int meshVertId;
+            int meshEdgeId;
             int bndEdgeCnt;
             int globalId, nGraphVerts;
             int nEdgeCoeffs;
@@ -1006,7 +1006,8 @@ namespace Nektar
             {
                 if(m_session->DefinesParameter("SingularElement"))
                 {
-                    int s_eid = m_session->GetParameter("SingularElement");
+                    int s_eid;
+                    m_session->LoadParameter("SingularElement", s_eid);
 
                     ASSERTL1(s_eid < locExpVector.size(),"SingularElement Parameter is too large");
                     

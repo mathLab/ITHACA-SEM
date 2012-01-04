@@ -75,7 +75,7 @@ namespace Nektar
 									   const bool CheckIfSingularSystem):
             DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
         {
-            int i,j,n,nel;
+            int i,n,nel;
             bool False = false;
             ContField2DSharedPtr plane_zero;
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
@@ -86,18 +86,18 @@ namespace Nektar
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
 
-            for(j = 0; j < nel; ++j)
+            for(i = 0; i < nel; ++i)
             {
-                (*m_exp).push_back(m_planes[0]->GetExp(j));
+                (*m_exp).push_back(m_planes[0]->GetExp(i));
             }
 
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
                 m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,False,CheckIfSingularSystem);
                 
-                for(j = 0; j < nel; ++j)
+                for(i = 0; i < nel; ++i)
                 {
-                    (*m_exp).push_back((*m_exp)[j]);
+                    (*m_exp).push_back((*m_exp)[i]);
                 }
             }            
 
@@ -115,7 +115,7 @@ namespace Nektar
 
         void ContField3DHomogeneous1D::SetCoeffPhys(void)
         {
-            int i,n,cnt;
+            int n,cnt;
             int contncoeffs_per_plane = m_planes[0]->GetContNcoeffs();
             int nzplanes = m_planes.num_elements();
 

@@ -677,7 +677,7 @@ namespace Nektar
         const DNekScalBlkMatSharedPtr ExpList::GenBlockMatrix(
                                                               const GlobalMatrixKey &gkey)
         {
-            int i,j,cnt1;
+            int i,cnt1;
             int n_exp = 0;
             DNekScalMatSharedPtr    loc_mat;
             DNekScalBlkMatSharedPtr BlkMatrix;
@@ -778,7 +778,7 @@ namespace Nektar
             BlkMatrix = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
-            int totnq, nvarcoeffs = gkey.GetNVarCoeffs();
+            int nvarcoeffs = gkey.GetNVarCoeffs();
             int eid;
             Array<OneD, NekDouble> varcoeffs_wk;
 
@@ -855,7 +855,7 @@ namespace Nektar
                 }
                 else
                 {
-                    int  i,j;
+                    int i;
                     int nvarcoeffs = gkey.GetNVarCoeffs();
 
                     for(i= 0; i < num_elmts[n]; ++i)
@@ -1280,6 +1280,7 @@ namespace Nektar
                 }
             }
             ASSERTL0(false, "Cannot find element for this point.");
+            return (*m_exp)[0]; // avoid warnings
         }
 
         /** @todo need a smarter search here that first just looks at bounding 
@@ -1310,6 +1311,7 @@ namespace Nektar
                 }
             }
             ASSERTL0(false, "Cannot find element for this point.");
+            return -1;
         }
 
 

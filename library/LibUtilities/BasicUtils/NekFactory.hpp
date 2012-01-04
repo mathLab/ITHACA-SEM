@@ -186,6 +186,7 @@ namespace Nektar
                     errstr << "No such module: " << idKey << std::endl;
                     PrintAvailableClasses(errstr);
                     ASSERTL0(false, errstr.str());
+                    return tBaseSharedPtr();
                 }
 
 

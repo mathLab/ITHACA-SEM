@@ -102,7 +102,7 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpList(pSession,graph1D)
         {
-            int i, id=0;
+            int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
@@ -169,7 +169,7 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays):
             ExpList(pSession,graph1D)
         {
-            int i,id=0;
+            int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
@@ -240,7 +240,7 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
             ExpList()
         {
-            int i,j,cnt,id=0;
+            int j,cnt,id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;

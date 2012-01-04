@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    int i,j,e;
+    int j,e;
 	if (argc != 2)
 	{
 		fprintf(stderr,"Usage: Post-processor meshfile \n"); 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
 	// Step3: Call the appropriate post-processing function
 	Array<OneD,NekDouble> ustar_elm(eval_npoints);
-	u->PostProcess(post_kernel,eval_points,ustar_elm,e,h);
+	u->PostProcess(post_kernel,eval_points,ustar_elm,h,e);
 	
 	// The Post-Processing for the entire domain
 	// Step1: Calculate the points used for evaluating the post-processed solution

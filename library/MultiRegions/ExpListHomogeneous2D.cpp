@@ -621,7 +621,7 @@ namespace Nektar
 
         void ExpListHomogeneous2D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
-            int i,n,k;
+            int i,k;
 			
 			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
 			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
@@ -656,7 +656,7 @@ namespace Nektar
         //Extract the data in fielddata into the m_coeff list
         void ExpListHomogeneous2D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
         {
-            int i,n,k;
+            int i,k;
             int offset = 0;
             int datalen = fielddata.size()/fielddef->m_fields.size();
             int ncoeffs_per_line = m_lines[0]->GetNcoeffs();

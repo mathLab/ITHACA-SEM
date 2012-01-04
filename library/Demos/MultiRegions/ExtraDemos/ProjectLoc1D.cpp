@@ -21,11 +21,9 @@ int main(int argc, char *argv[])
     string meshfile(vSession->GetFilename());
 
     MultiRegions::ExpList1DSharedPtr Exp,Sol;
-    int i,j,k;
-    int     order, nq;
-    int     coordim;
-    LibUtilities::PointsType Qtype;
-    LibUtilities::BasisType  btype;  
+    int i,j;
+    int nq;
+    int coordim;
     Array<OneD, NekDouble> sol; 
     Array<OneD, NekDouble> xc0,xc1,xc2; 
 
@@ -70,7 +68,7 @@ int main(int argc, char *argv[])
     for(i = 0; i < nq; ++i)
     {
         sol[i] = 0.0;
-        for(j = 0; j < order; ++j)
+        for(j = 0; j < nmodes; ++j)
         {
             sol[i] += pow(xc0[i],j);
             sol[i] += pow(xc1[i],j);

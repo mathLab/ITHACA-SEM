@@ -242,7 +242,7 @@ namespace Nektar
                                       map<int,int>& periodicVertices)
         {
 
-            int i,j,k;
+            int i,k;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                     = bcs.GetBoundaryRegions();
@@ -347,7 +347,7 @@ namespace Nektar
                                 Array<OneD, SpatialDomains
                                     ::BoundaryConditionShPtr> &bndConditions)
         {
-            int i,j,k;
+            int i,k;
             int cnt  = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -592,7 +592,7 @@ namespace Nektar
 		 {
 			 // Loop over elemente and collect forward expansion
 			 int nexp = GetExpSize();
-			 int n_quad,n,p,offset,phys_offset;
+			 int n,p,offset,phys_offset;
 			 
 			 ASSERTL1(outarray.num_elements() >= m_trace->GetExpSize(),
 					  "input array is of insufficient length");

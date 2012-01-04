@@ -92,7 +92,7 @@ namespace Nektar
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            int i,j,n,nel;
+            int i,n,nel;
             bool True  = true; 
             bool False = false; 
             DisContField1DSharedPtr line_zero;
@@ -104,9 +104,9 @@ namespace Nektar
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
 
-            for(j = 0; j < nel; ++j)
+            for(i = 0; i < nel; ++i)
             {
-                (*m_exp).push_back(m_lines[0]->GetExp(j));
+                (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
 			
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
@@ -115,9 +115,9 @@ namespace Nektar
             for(n = 1; n < nylines*nzlines; ++n)
             {
                 m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable);
-                for(j = 0; j < nel; ++j)
+                for(i = 0; i < nel; ++i)
                 {
-                    (*m_exp).push_back((*m_exp)[j]);
+                    (*m_exp).push_back((*m_exp)[i]);
                 }
             }            
 
@@ -143,7 +143,7 @@ namespace Nektar
 																  const NekDouble lhom_z,
 																  SpatialDomains::BoundaryConditions &bcs)
         {
-            int i,j,n;
+            int i,n;
             
 			// Setup an ExpList1DHomogeneous2D expansion for boundary
             // conditions and link to class declared in m_lines.
@@ -213,7 +213,6 @@ namespace Nektar
 			int nhom_modes_z = m_homogeneousBasis_z->GetNumModes();
             NekDouble beta_y;
 			NekDouble beta_z;
-			NekDouble beta;
 			StdRegions::ConstFactorMap new_factors;
 			
             Array<OneD, NekDouble> e_out;

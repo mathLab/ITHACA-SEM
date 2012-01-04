@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
         }
         //----------------------------------------------
     }
-    catch (const std::runtime_error& e)
+    catch (const std::runtime_error&)
     {
         cout << "Caught an error" << endl;
         return 1;

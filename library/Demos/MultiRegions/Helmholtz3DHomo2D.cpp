@@ -39,13 +39,17 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
-    int nypoints = vSession->GetParameter("HomModesY");
-	int nzpoints = vSession->GetParameter("HomModesZ");
-	
-	NekDouble ly     = vSession->GetParameter("LY");
-    NekDouble lz     = vSession->GetParameter("LZ");
-	
-	int FFT      = vSession->GetParameter("USEFFT");
+    int nypoints;
+    int nzpoints;
+    NekDouble ly;
+    NekDouble lz;
+    int FFT;
+
+    vSession->LoadParameter("HomModesY", nypoints);
+    vSession->LoadParameter("HomModesZ", nzpoints);
+	vSession->LoadParameter("LY",        ly);
+	vSession->LoadParameter("LZ",        lz);
+	vSession->LoadParameter("USEFFT",    FFT);
 	
 	bool useFFT = false;
 	if(FFT==1){useFFT = true;}

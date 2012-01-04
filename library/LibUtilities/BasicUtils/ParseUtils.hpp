@@ -268,7 +268,7 @@ namespace Nektar
             {
                 if (!m_vector->empty())
                 {
-                    unsigned int prevElem = m_vector->back();
+                    NekDouble prevElem = m_vector->back();
 
                     if (n > prevElem)
                     {

@@ -45,13 +45,7 @@ namespace Nektar
         {
 
             DNekMatSharedPtr returnval;
-            
-            switch(mkey.GetMatrixType())
-            {
-                default:
-                    ASSERTL0(false,"This matrix type cannot is not set up");
-                    break;
-            }
+            ASSERTL0(false,"This matrix type cannot is not set up");
             
             return returnval;
         }

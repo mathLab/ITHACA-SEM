@@ -1177,10 +1177,9 @@ namespace Nektar
 //                break;
             default:
                 ASSERTL0(false,"expansion type unknown");
-                return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
                 break;
             }
-//#endif
+            return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
         }
 
 

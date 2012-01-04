@@ -160,7 +160,6 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const GlobalMatrixKey& rhs)
         {
-            int i;
             os << "MatrixType: " << rhs.GetMatrixType() << endl;
             os << "Number of constants: " << rhs.GetNConstFactors() << endl;
             StdRegions::ConstFactorMap::const_iterator x;
@@ -176,21 +175,3 @@ namespace Nektar
         }
     }
 }
-
-/**
-* $Log: GlobalMatrixKey.cpp,v $
-* Revision 1.4  2009/11/20 18:02:23  cantwell
-* Docs.
-*
-* Revision 1.3  2009/11/19 23:30:36  cantwell
-* Documentation for ExpList2D and GlobalMatrixKey
-* Updated doxygen pages.
-*
-* Revision 1.2  2009/11/07 21:11:30  sehunchun
-* Variable coefficients parameters are added
-*
-* Revision 1.1  2009/03/23 10:46:54  pvos
-* Added GlobalMatrixKey
-*
-**/
-

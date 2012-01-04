@@ -21,10 +21,9 @@ int main(int argc, char *argv[])
 
     MultiRegions::ContField1DSharedPtr Exp,Sol;
 
-    int     i,j,k;
+    int     i,j;
     int     order, nq;
     int     coordim;
-    char    *infile;
     Array<OneD,NekDouble> sol;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     std::string meshfile(vSession->GetFilename());

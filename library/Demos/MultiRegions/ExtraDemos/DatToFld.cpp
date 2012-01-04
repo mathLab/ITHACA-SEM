@@ -8,7 +8,7 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     MultiRegions::ExpList2DSharedPtr Exp;
-    int     i, nq,  coordim;
+    int i;
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 

@@ -68,7 +68,6 @@ namespace Nektar
                          "than order in 'c' direction");
             }
             
-            int p, q, r;
             int P = m_base[0]->GetNumModes()-1;
             int Q = m_base[1]->GetNumModes()-1;
             int R = m_base[2]->GetNumModes()-1;

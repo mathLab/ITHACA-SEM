@@ -437,7 +437,7 @@ namespace Nektar
         {
             ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D),
                      "Expected a MeshGraph2D.");
-            int i,j,k;
+            int i,k;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                 = bcs.GetBoundaryRegions();

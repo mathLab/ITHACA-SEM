@@ -181,7 +181,6 @@ namespace Nektar
         {
             int n;
             Array<OneD, NekDouble> tmp_xc;
-            NekDouble val,dz;
             int nzplanes = m_planes.num_elements();
             int npoints  = GetTotPoints(eid);
 
@@ -227,7 +226,6 @@ namespace Nektar
         {
             int n;
             Array<OneD, NekDouble> tmp_xc;
-            NekDouble val,dz;
             int nzplanes = m_planes.num_elements();
             int npoints = m_planes[0]->GetTotPoints();
 

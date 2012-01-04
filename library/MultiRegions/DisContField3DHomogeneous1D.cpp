@@ -89,7 +89,7 @@ namespace Nektar
             m_bndCondExpansions(),
             m_bndConditions()
         {
-            int i,j,n,nel;
+            int i,n,nel;
             bool True  = true; 
             bool False = false; 
             DisContField2DSharedPtr plane_zero;
@@ -101,17 +101,17 @@ namespace Nektar
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
 
-            for(j = 0; j < nel; ++j)
+            for(i = 0; i < nel; ++i)
             {
-                (*m_exp).push_back(m_planes[0]->GetExp(j));
+                (*m_exp).push_back(m_planes[0]->GetExp(i));
             }
 
             for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
             {
                 m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,True,False);
-                for(j = 0; j < nel; ++j)
+                for(i = 0; i < nel; ++i)
                 {
-                    (*m_exp).push_back((*m_exp)[j]);
+                    (*m_exp).push_back((*m_exp)[i]);
                 }
             }            
 

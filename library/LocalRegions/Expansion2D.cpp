@@ -1145,7 +1145,7 @@ namespace Nektar
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
-            int i,j;
+            int i;
             Expansion1DSharedPtr edgeExp = m_edgeExp[edgeid].lock();
             int order_e = edgeExp->GetNcoeffs();
 

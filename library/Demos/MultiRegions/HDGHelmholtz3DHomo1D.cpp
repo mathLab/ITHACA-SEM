@@ -30,12 +30,12 @@ int main(int argc, char *argv[])
 
     MultiRegions::DisContField3DHomogeneous1DSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2,DerExp3;
-    int     i, nq,  coordim;
+    int i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
-    NekDouble  lz;
-    NekDouble   st, cps = (double)CLOCKS_PER_SEC;
+    NekDouble lz;
+    NekDouble cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
     {

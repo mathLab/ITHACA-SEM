@@ -433,14 +433,13 @@ namespace Nektar
         void QuadGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                     Array<OneD,NekDouble> &Lcoords)
         {
-            int i;
-
             FillGeom();                       
             // calculate local coordinate for coord
 /*
 	//this method works only for strictly regular elements and sometimes fails
             if(GetGtype() == eRegular)
-            { // can assume it is right angled rectangle        	    
+            { // can assume it is right angled rectangle
+                int i;
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
                 NekDouble xi0 = 0.0;

@@ -346,7 +346,7 @@ namespace Nektar
                      "Assuming that input matrix was square");
 
             // Get local Element mapping for vertex point
-             NekDouble  map = GetVertexMap(vert);
+            int map = GetVertexMap(vert);
 
             // Now need to identify a map which takes the local edge
             // mass matrix to the matrix stored in inoutmat;
@@ -397,7 +397,7 @@ namespace Nektar
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
 
-            NekDouble  map = GetVertexMap(vert);
+            int map = GetVertexMap(vert);
             Vmath::Zero(GetNcoeffs(), coeffs, 1);
             coeffs[map] = primCoeffs[0];
         }

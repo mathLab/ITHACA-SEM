@@ -348,7 +348,7 @@ namespace Nektar
             ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
             ASSERTL0(paramMapIter != m_parameters.end(),
                     "Required parameter '" + pName + "' not specified in session.");
-            pVar = paramMapIter->second;
+            pVar = floor(paramMapIter->second);
         }
 
 
@@ -361,7 +361,7 @@ namespace Nektar
             ParameterMap::const_iterator paramMapIter = m_parameters.find(vName);
             if(paramMapIter != m_parameters.end())
             {
-                pVar = paramMapIter->second;
+                pVar = floor(paramMapIter->second);
             }
             else
             {
@@ -982,7 +982,7 @@ namespace Nektar
                                 expEvaluator.DefineFunction("", rhs);
                                 value =  expEvaluator.Evaluate();
                             }
-                            catch (const std::runtime_error &e)
+                            catch (const std::runtime_error &)
                             {
                                 ASSERTL0(false, "Error evaluating parameter expression '" + rhs + "'." );
                             }
@@ -1001,7 +1001,7 @@ namespace Nektar
                     // Set ourselves up for evaluation later.
                     Equation::SetConstParameters(caseSensitiveParameters);
                 }
-                catch (const std::runtime_error& e)
+                catch (const std::runtime_error&)
                 {
                     // Attempted to set parameters more than once, but we let
                     // this go.

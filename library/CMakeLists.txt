@@ -133,16 +133,16 @@ ELSE( NOT WIN32 )
 ENDIF( NOT WIN32 )
 
 SET(Boost_USE_MULTITHREAD ON)
-SET(Boost_ADDITIONAL_VERSIONS "1.48.0" "1.47.0" "1.47" "1.46" "1.46.1" "1.40" "1.40.0" "1.35.0" "1.35")
+SET(Boost_ADDITIONAL_VERSIONS "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46.1" "1.40" "1.40.0" "1.35.0" "1.35")
 
 IF( NOT BOOST_ROOT )
     #If the user has not set BOOST_ROOT, look in a couple common places first.
     SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost) 
-    FIND_PACKAGE( Boost 1.40.0 COMPONENTS thread iostreams zlib date_time filesystem system)
+    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system)
     SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
-    FIND_PACKAGE( Boost 1.40.0 COMPONENTS thread iostreams zlib date_time filesystem system)
+    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system)
 ELSE()
-    FIND_PACKAGE( Boost 1.48.0 COMPONENTS thread iostreams zlib date_time filesystem system)
+    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system)
 ENDIF()
 
 IF(NOT Boost_ZLIB_FOUND)

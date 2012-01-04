@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 //#include <LocalRegions/Expansion2D.h>
+#include <boost/weak_ptr.hpp>
 
 namespace Nektar
 {
@@ -46,6 +47,7 @@ namespace Nektar
     {
         class Expansion2D;
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
         
         class Expansion1D: virtual public Expansion, virtual public StdRegions::StdExpansion1D
         {
@@ -88,8 +90,8 @@ namespace Nektar
                               Array<OneD, NekDouble> &coeffs);
 
             private:
-                Expansion2DSharedPtr m_elementLeft;
-                Expansion2DSharedPtr m_elementRight;
+                Expansion2DWeakPtr m_elementLeft;
+                Expansion2DWeakPtr m_elementRight;
                 int m_elementEdgeLeft;
                 int m_elementEdgeRight;
 
@@ -97,19 +99,20 @@ namespace Nektar
         
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion1D> Expansion1DSharedPtr;
+        typedef boost::weak_ptr<Expansion1D> Expansion1DWeakPtr;
         typedef std::vector< Expansion1DSharedPtr > Expansion1DVector;
         typedef std::vector< Expansion1DSharedPtr >::iterator Expansion1DVectorIter;
         
         inline Expansion2DSharedPtr Expansion1D::GetLeftAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.get(), "Left adjacent element not set.");
-            return m_elementLeft;
+            ASSERTL1(m_elementLeft.lock().get(), "Left adjacent element not set.");
+            return m_elementLeft.lock();
         }
 
         inline Expansion2DSharedPtr Expansion1D::GetRightAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.get(), "Right adjacent element not set.");
-            return m_elementRight;
+            ASSERTL1(m_elementLeft.lock().get(), "Right adjacent element not set.");
+            return m_elementRight.lock();
         }
 
         inline int Expansion1D::GetLeftAdjacentElementEdge() const
@@ -124,9 +127,9 @@ namespace Nektar
 
         inline void Expansion1D::SetAdjacentElementExp(int edge, Expansion2DSharedPtr &e)
         {
-            if (m_elementLeft.get())
+            if (m_elementLeft.lock().get())
             {
-                ASSERTL1(!m_elementRight.get(),
+                ASSERTL1(!m_elementRight.lock().get(),
                          "Both adjacent elements already set.");
                 m_elementRight = e;
                 m_elementEdgeRight = edge;

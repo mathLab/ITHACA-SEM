@@ -69,20 +69,20 @@ namespace Nektar
 
         m_epsilon = Array<OneD, NekDouble>(2,0.0);
 
-        LoadParameter("epsilon0",       m_epsilon[0], 0.0);
-        LoadParameter("epsilon1",       m_epsilon[1], 0.0);
-        LoadParameter("Beta",           m_beta, 0.0);
-        LoadParameter("UseDirDeriv",    m_UseDirDeriv, 0);
+        m_session->LoadParameter("epsilon0",       m_epsilon[0], 0.0);
+        m_session->LoadParameter("epsilon1",       m_epsilon[1], 0.0);
+        m_session->LoadParameter("Beta",           m_beta, 0.0);
+        m_session->LoadParameter("UseDirDeriv",    m_UseDirDeriv, 0);
 
-        LoadParameter("k",              mK,   0.0);
-        LoadParameter("a",              mA,   0.0);
-        LoadParameter("b",              mB,   0.0);
-        LoadParameter("c",              mC,   0.0);
-        LoadParameter("eps",            mEps, 0.0);
-        LoadParameter("mu1",            mMu1, 0.0);
-        LoadParameter("mu2",            mMu2, 0.0);
+        m_session->LoadParameter("k",              mK,   0.0);
+        m_session->LoadParameter("a",              mA,   0.0);
+        m_session->LoadParameter("b",              mB,   0.0);
+        m_session->LoadParameter("c",              mC,   0.0);
+        m_session->LoadParameter("eps",            mEps, 0.0);
+        m_session->LoadParameter("mu1",            mMu1, 0.0);
+        m_session->LoadParameter("mu2",            mMu2, 0.0);
 
-        LoadParameter("diam",           mDiam,1.0);
+        m_session->LoadParameter("diam",           mDiam,1.0);
         
         // -2: Advection problem on sphere
         // -1: Linear Morphogenesis problem for diffusion-reaction test
@@ -90,15 +90,15 @@ namespace Nektar
         // 1: Planar propagation from -y direction
         // 2: For Planar propagation from -x direction in xy plane
         // 10: For Planar propagation from +z direction
-        LoadParameter("initialwavetype",m_initialwavetype, 0);
-        LoadParameter("duration",       m_duration, 3.5);
-        LoadParameter("x0c",            m_x0c, 0.0);
-        LoadParameter("x1c",            m_x1c, 0.0);
-        LoadParameter("x2c",            m_x2c, 0.0);
-        LoadParameter("Anisotropy",     m_Anisotropy, 0.0);
-        LoadParameter("Angularfreq",    m_Angularfreq,
+        m_session->LoadParameter("initialwavetype",m_initialwavetype, 0);
+        m_session->LoadParameter("duration",       m_duration, 3.5);
+        m_session->LoadParameter("x0c",            m_x0c, 0.0);
+        m_session->LoadParameter("x1c",            m_x1c, 0.0);
+        m_session->LoadParameter("x2c",            m_x2c, 0.0);
+        m_session->LoadParameter("Anisotropy",     m_Anisotropy, 0);
+        m_session->LoadParameter("Angularfreq",    m_Angularfreq,
                                             3.14159265358979323846/6.0);
-        LoadParameter("Angleofaxis",    m_Angleofaxis, 0.0);
+        m_session->LoadParameter("Angleofaxis",    m_Angleofaxis, 0.0);
 
         // Set up equation type enum using kEquationTypeStr
         std::string typeStr = m_session->GetSolverInfo("EQTYPE");

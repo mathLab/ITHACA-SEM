@@ -111,7 +111,7 @@ namespace Nektar
         int m_nConvectiveFields;     /// Number of fields to be convected;
 		
 		//number of slices
-		NekDouble                                       m_slices;
+		int                                             m_slices;
 		//period length
 		NekDouble										m_period;
 		//interpolation vector

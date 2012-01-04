@@ -57,12 +57,13 @@ namespace Nektar
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
 
-            std::vector<Expansion2DSharedPtr> m_faceExp;
+            std::vector<Expansion2DWeakPtr> m_faceExp;
 
         };
         
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+        typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
         typedef std::vector< Expansion3DSharedPtr > Expansion3DVector;
         typedef std::vector< Expansion3DSharedPtr >::iterator Expansion3DVectorIter;
         

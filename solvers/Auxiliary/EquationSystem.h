@@ -106,12 +106,6 @@ namespace Nektar
         /// Print a summary of parameters and solver characteristics.
         inline void PrintSummary(std::ostream &out);
 
-        /// Check for and load an integer parameter
-        void LoadParameter(std::string name, int &var, int def = 0);
-
-        /// Check for and load a double precision parameter
-        void LoadParameter(std::string name, NekDouble &var, NekDouble def= 0.0);
-
         /// Set parameter m_lambda
         inline void SetLambda(NekDouble lambda);
 
@@ -669,6 +663,7 @@ namespace Nektar
                 break;
             default:
                 ASSERTL0(false,"illegal expansion dimension");
+                return 0;
         }
     }
 

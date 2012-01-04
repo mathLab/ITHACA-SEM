@@ -88,6 +88,8 @@ namespace Nektar
      */
     void DriverModifiedArnoldi::v_Execute(ostream &out)
     {
+        int i                   = 0;
+        int j                   = 0;
         int nq                  = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
         int ntot                = m_nfields*nq;
         int converged           = 0;
@@ -105,7 +107,7 @@ namespace Nektar
             = Array<OneD, Array<OneD, NekDouble> > (m_kdim + 1);
         Array<OneD, Array<OneD, NekDouble> > Tseq
             = Array<OneD, Array<OneD, NekDouble> > (m_kdim + 1);
-        for (int i = 0; i < m_kdim + 1; ++i)
+        for (i = 0; i < m_kdim + 1; ++i)
         {
             Kseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
             Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
@@ -142,7 +144,6 @@ namespace Nektar
 
          // Fill initial krylov sequence
          NekDouble resid0;
-         int i;
          for (i = 1; !converged && i <= m_kdim; ++i)
          {
              // Compute next vector
@@ -212,7 +213,7 @@ namespace Nektar
          // The specific format of the error output is essential for the
          // regression tests to work.
          // Evaluate L2 Error
-         for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
+         for(j = 0; j < m_equ[0]->GetNvariables(); ++j)
          {
              NekDouble vL2Error = m_equ[0]->L2Error(j,false);
              NekDouble vLinfError = m_equ[0]->LinfError(j);
@@ -225,9 +226,11 @@ namespace Nektar
          
          // Process eigenvectors and write out.
          EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi, converged);
-         
-         m_real_evl = wr + m_realShift;
-         m_imag_evl = wi + m_imagShift;
+
+         m_real_evl = Array<OneD, NekDouble>(m_kdim);
+         m_imag_evl = Array<OneD, NekDouble>(m_kdim);
+         Vmath::Sadd(m_kdim, m_realShift, wr, 1, m_real_evl, 1);
+         Vmath::Sadd(m_kdim, m_imagShift, wi, 1, m_imag_evl, 1);
          
          // Close the runtime info file.
          evlout.close();

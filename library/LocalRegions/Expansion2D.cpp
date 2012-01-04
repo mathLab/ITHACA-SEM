@@ -1027,7 +1027,8 @@ namespace Nektar
                      "Assuming that input matrix was square");
             int i,j;
             int id1,id2;
-            int order_e = m_edgeExp[edge]->GetNcoeffs();                    
+            Expansion1DSharedPtr edgeExp = m_edgeExp[edge].lock();
+            int order_e = edgeExp->GetNcoeffs();
          
             Array<OneD,unsigned int> map;
             Array<OneD,int> sign;
@@ -1035,8 +1036,8 @@ namespace Nektar
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
 
-            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *m_edgeExp[edge], StdRegions::NullConstFactorMap, varcoeffs);
-            DNekScalMat &edgemat = *m_edgeExp[edge]->GetLocMatrix(mkey);
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *edgeExp, StdRegions::NullConstFactorMap, varcoeffs);
+            DNekScalMat &edgemat = *edgeExp->GetLocMatrix(mkey);
 
             // Now need to identify a map which takes the local edge
             // mass matrix to the matrix stored in inoutmat;
@@ -1097,7 +1098,7 @@ namespace Nektar
                 // check for mapping reversal 
                 if(GetEorient(edge) == StdRegions::eBackwards)
                 {
-                    switch(m_edgeExp[edge]->GetBasis(0)->GetBasisType())
+                    switch(edgeExp->GetBasis(0)->GetBasisType())
                     {
                     case LibUtilities::eGLL_Lagrange:
                         reverse( map.get() , map.get()+order_e);
@@ -1145,7 +1146,8 @@ namespace Nektar
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
             int i,j;
-            int order_e = m_edgeExp[edgeid]->GetNcoeffs();
+            Expansion1DSharedPtr edgeExp = m_edgeExp[edgeid].lock();
+            int order_e = edgeExp->GetNcoeffs();
 
             Array<OneD,unsigned int> map;
             Array<OneD,int> sign;
@@ -1153,8 +1155,8 @@ namespace Nektar
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
 
-            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *m_edgeExp[edgeid], StdRegions::NullConstFactorMap, varcoeffs);
-            DNekScalMat &edgemat = *m_edgeExp[edgeid]->GetLocMatrix(mkey);
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *edgeExp, StdRegions::NullConstFactorMap, varcoeffs);
+            DNekScalMat &edgemat = *edgeExp->GetLocMatrix(mkey);
 
             NekVector<NekDouble> vEdgeCoeffs (order_e);
 

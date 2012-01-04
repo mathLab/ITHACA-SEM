@@ -73,6 +73,7 @@ namespace Nektar
                 catch (const std::runtime_error& e)
                 {
                     ASSERTL0(false, std::string("ERROR: ") + e.what());
+                    return 0;
                 }
                 catch (const std::string& e)
                 {

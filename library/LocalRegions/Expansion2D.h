@@ -46,6 +46,7 @@ namespace Nektar
     {
       class Expansion3D;
       typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+      typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
 
         class Expansion2D: virtual public Expansion, virtual public StdRegions::StdExpansion2D
         {
@@ -125,7 +126,7 @@ namespace Nektar
                                     Array <OneD,NekDouble > &outarray,
                                     const StdRegions::VarCoeffMap &varcoeffs);
 
-            virtual void v_DGDeriv(int dir,
+            virtual void v_DGDeriv(const int dir,
                          const Array<OneD, const NekDouble>&incoeffs,
                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                          Array<OneD, NekDouble> &out_d);
@@ -165,10 +166,10 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray);
 
         private:
-            std::vector<Expansion1DSharedPtr> m_edgeExp;
+            std::vector<Expansion1DWeakPtr> m_edgeExp;
 
-            Expansion3DSharedPtr m_elementLeft;
-            Expansion3DSharedPtr m_elementRight;
+            Expansion3DWeakPtr m_elementLeft;
+            Expansion3DWeakPtr m_elementRight;
             int m_elementFaceLeft;
             int m_elementFaceRight;
 
@@ -176,13 +177,14 @@ namespace Nektar
 
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
         typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
         typedef std::vector< Expansion2DSharedPtr >::iterator Expansion2DVectorIter;
 
         inline Expansion1DSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)
         {
             ASSERTL1(edge < GetNedges(), "Edge out of range.");
-            return m_edgeExp[edge];
+            return m_edgeExp[edge].lock();
         }
 
         inline void Expansion2D::SetEdgeExp(const int edge, Expansion1DSharedPtr &e)
@@ -240,14 +242,14 @@ namespace Nektar
 
         inline Expansion3DSharedPtr Expansion2D::GetLeftAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.get(), "Left adjacent element not set.");
-            return m_elementLeft;
+            ASSERTL1(m_elementLeft.lock().get(), "Left adjacent element not set.");
+            return m_elementLeft.lock();
         }
         
         inline Expansion3DSharedPtr Expansion2D::GetRightAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.get(), "Right adjacent element not set.");
-            return m_elementRight;
+            ASSERTL1(m_elementLeft.lock().get(), "Right adjacent element not set.");
+            return m_elementRight.lock();
         }
 
         inline int Expansion2D::GetLeftAdjacentElementFace() const
@@ -262,9 +264,9 @@ namespace Nektar
         
         inline void Expansion2D::SetAdjacentElementExp(int face, Expansion3DSharedPtr &f)
         {
-            if (m_elementLeft.get())
+            if (m_elementLeft.lock().get())
             {
-                ASSERTL1(!m_elementRight.get(),
+                ASSERTL1(!m_elementRight.lock().get(),
                          "Both adjacent elements already set.");
                 m_elementRight = f;
                 m_elementFaceRight = face;

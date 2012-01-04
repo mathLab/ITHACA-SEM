@@ -112,7 +112,7 @@ namespace Nektar
             return m_initialwavetype;
         }
 
-	inline int diffrate(void)
+	inline NekDouble diffrate(void)
         {
             return m_diffrate;
         }

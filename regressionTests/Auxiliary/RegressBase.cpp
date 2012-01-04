@@ -652,7 +652,7 @@ int RegressBase::IsDoubleChar(std::string c)
 
 int RegressBase::GetVal(std::string l, std::string code, std::string &val)
 {
-    int pos=0; //initial position
+    unsigned int pos=0; //initial position
     std::string line="";
     bool stop=false, got1=false;
     val="";
@@ -719,8 +719,8 @@ int RegressBase::ReadOutput(std::string &errStr, std::string &err)
 {
     FILE *OkFile;
     char buffer[50];
-    bool gotErr=false,
-        stop=false;	
+    int gotErr=0;
+    bool stop=false;
     //// OUTPUT.ERR IS LOCATED IN WORKING DIR
     std::string fname=m_output;
     std::string line="";

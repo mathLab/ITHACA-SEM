@@ -504,7 +504,7 @@ namespace Nektar
             Array<OneD, NekDouble> &wr,
             Array<OneD, NekDouble> &wi)
     {
-        NekDouble wgt, norm, dot;
+        NekDouble wgt, norm;
 
         // Generate big eigenvectors
         for (int j = 0; j < nvec; ++j)

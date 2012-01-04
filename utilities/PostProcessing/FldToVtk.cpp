@@ -23,7 +23,7 @@ int fexist( const char *filename ) {
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    unsigned int i,j;
 
     if(argc < 3)
     {

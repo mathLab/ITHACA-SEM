@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
     // Copy data from field file
     for(j = 0; j < nfields; ++j)
     {
-        for(int i = 0; i < fielddata.size(); ++i)
+        for(unsigned int i = 0; i < fielddata.size(); ++i)
         {
             Exp[j]->ExtractDataToCoeffs(fielddef [i],
                                         fielddata[i],

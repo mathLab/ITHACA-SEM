@@ -56,8 +56,8 @@ namespace Nektar
 
         int i,j,k,n;
         int cnt = 0,offset=0;
-        int meshVertId, meshVertId2;
-        int meshEdgeId, meshEdgeId2;
+        int meshVertId;
+        int meshEdgeId;
         int bndEdgeCnt;
         int globalId;
         int nEdgeCoeffs;

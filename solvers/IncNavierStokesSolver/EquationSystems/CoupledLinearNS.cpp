@@ -60,7 +60,7 @@ namespace Nektar
     {
         IncNavierStokes::v_InitObject();
 
-        int  n,i,j,k,eid;
+        int  i;
         int  expdim = m_graph->GetMeshDimension();
         int  n_exp  = m_fields[m_velocity[0]]->GetNumElmts();
         int  nvel   = m_velocity.num_elements();
@@ -1309,7 +1309,7 @@ namespace Nektar
                                                     const NekDouble time, 
                                                     const NekDouble aii_Dt)
     {
-        int i,n;
+        int i;
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         NekDouble  lambda = 1.0/aii_Dt; 
         static NekDouble lambda_store; 
@@ -1327,7 +1327,7 @@ namespace Nektar
         SetBoundaryConditions(time);		
 
         // Forcing for advection solve 
-        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        for(i = 0; i < m_velocity.num_elements(); ++i)
         {
             m_fields[m_velocity[i]]->IProductWRTBase(inarray[i],m_fields[m_velocity[i]]->UpdateCoeffs());
             Vmath::Smul(m_fields[m_velocity[i]]->GetNcoeffs(),lambda,m_fields[m_velocity[i]]->GetCoeffs(), 1,m_fields[m_velocity[i]]->UpdateCoeffs(),1);
@@ -1336,7 +1336,7 @@ namespace Nektar
 
         SolveLinearNS(forcing);
         
-        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        for(i = 0; i < m_velocity.num_elements(); ++i)
         {
             m_fields[m_velocity[i]]->BwdTrans(m_fields[m_velocity[i]]->GetCoeffs(),outarray[i]);
         }

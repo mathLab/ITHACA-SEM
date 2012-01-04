@@ -64,25 +64,10 @@ namespace Nektar
         m_sessionVWI->LoadParameter("NeutralPointTolerance",m_neutralPointTol,1e-4);
         m_sessionVWI->LoadParameter("MaxOuterIterations",m_maxOuterIterations,100);
         
-        if(m_sessionVWI->DefinesParameter("StartIteration"))
-        {
-            m_iterStart = m_sessionVWI->GetParameter("StartIteration");
-        }
-        else
-        {
-            m_iterStart = 0; 
-        }
+        m_sessionVWI->LoadParameter("StartIteration", m_iterStart, 0);
+        m_sessionVWI->LoadParameter("EndIteration", m_iterEnd, 0);
 
-        if(m_sessionVWI->DefinesParameter("EndIteration"))
-        {
-            m_iterEnd = m_sessionVWI->GetParameter("EndIteration");
-        }
-        else
-        {
-            m_iterEnd = 1; 
-        }
-
-        m_waveForceMag     = m_sessionVWI->GetParameter("WaveForceMag");
+        m_sessionVWI->LoadParameter("WaveForceMag", m_waveForceMag);
 
         m_sessionVWI->LoadParameter("WaveForceMagStep",m_waveForceMagStep,0.01);
         m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
@@ -227,7 +212,7 @@ namespace Nektar
                     }
                 }
                 break;
-            Default:
+            default:
                 ASSERTL0(false,"Unknown VWIITerationType in restart");
             }
         }
@@ -633,6 +618,7 @@ namespace Nektar
             previous_imag_evl = m_leading_imag_evl[0];
             return false;
         }
+        return false;
     }
 
     // Check to see if leading eigenvalue is within tolerance defined
@@ -675,7 +661,7 @@ namespace Nektar
         }
         else
         {
-            int i,j;
+            int i;
             int nstore = (m_alpha.num_elements() < outeriter)? m_alpha.num_elements(): outeriter;
             Array<OneD, NekDouble> Alpha(nstore);
             Array<OneD, NekDouble> Growth(nstore);

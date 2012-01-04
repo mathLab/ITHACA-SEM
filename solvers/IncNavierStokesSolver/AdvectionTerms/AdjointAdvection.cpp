@@ -70,7 +70,8 @@ namespace Nektar
 		//Periodic base flows
 		if(m_session->DefinesParameter("N_slices"))
 		{
-			m_slices=m_session->GetParameter("N_slices");			
+		    m_session->LoadParameter("N_slices", m_slices);
+
 			if(m_slices>1)
 			{
 				

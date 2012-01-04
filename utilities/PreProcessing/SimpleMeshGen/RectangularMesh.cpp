@@ -30,7 +30,6 @@ void  PrintConditions(void);
 int main(int argc, char *argv[])
 {
     vector<double> xc,yc; 
-    double         x,y;
     int            nx = 0, ny = 0;
     int            i,j,k;
     

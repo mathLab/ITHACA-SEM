@@ -105,7 +105,7 @@ namespace Nektar
         {
             ASSERTL0(m_session->DefinesFunction("Stimulus", "u"),
                     "Stimulus function not defined.");
-            m_stimDuration = m_session->GetParameter("StimulusDuration");
+            m_session->LoadParameter("StimulusDuration", m_stimDuration);
         }
         else
         {

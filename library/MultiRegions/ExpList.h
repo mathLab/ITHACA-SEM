@@ -1163,7 +1163,7 @@ namespace Nektar
          */
         inline int ExpList::EvalBasisNumModesMax() const
         {
-            int i;
+            unsigned int i;
             int returnval = 0;
 
             for(i= 0; i < (*m_exp).size(); ++i)
@@ -1181,7 +1181,7 @@ namespace Nektar
         inline const Array<OneD,int> ExpList::EvalBasisNumModesMaxPerExp(void)
             const
         {
-            int i;
+            unsigned int i;
             Array<OneD,int> returnval((*m_exp).size(),0);
 
             for(i= 0; i < (*m_exp).size(); ++i)

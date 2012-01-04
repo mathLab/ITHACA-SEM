@@ -601,7 +601,7 @@ namespace Nektar
     NekDouble g = m_g;
     NekDouble d = m_depth[0]; // only valid for constant depth!
 
-    NekDouble hC,huC,hvC,SL,SR,hstar,Sstar;
+    NekDouble SL,SR;
     NekDouble cL = sqrt(g * d);
     NekDouble cR = sqrt(g * d);
     

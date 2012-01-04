@@ -88,7 +88,7 @@ namespace Nektar
         //Storage of the base flow
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
 		//number of slices
-		NekDouble                                       m_slices;
+		int                                             m_slices;
 		//period length
 		NekDouble										m_period;
 		//interpolation vector

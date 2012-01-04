@@ -155,24 +155,29 @@ namespace Nektar
 
     inline NekDouble GetStabilityLimit(int n)
     {
-      NekDouble CFLDG[21] = {2,6,11.8424,19.1569,27.8419,37.8247,49.0518,61.4815,75.0797,89.8181,105.67,122.62,140.64,159.73,179.85,201.01,223.18,246.36,270.53,295.69,321.83}; //CFLDG 1D [0-20]
-      
-      if(n<=20)
-	return CFLDG[n];
-      else
-	ASSERTL0(false,"illegal modes dimension (CFL DG)");
+        NekDouble CFLDG[21] = {2,6,11.8424,19.1569,27.8419,37.8247,49.0518,61.4815,75.0797,89.8181,105.67,122.62,140.64,159.73,179.85,201.01,223.18,246.36,270.53,295.69,321.83}; //CFLDG 1D [0-20]
+
+        if(n<=20)
+        {
+            return CFLDG[n];
+        }
+        else
+        {
+            ASSERTL0(false,"illegal modes dimension (CFL DG)");
+            return 0;
+        }
     }
-    
+
     inline Array<OneD,NekDouble> GetStabilityLimitVector(const Array<OneD,int> &ExpOrder)
-      {
-	int i;
-	Array<OneD,NekDouble> returnval(m_fields[0]->GetExpSize(),0.0);
-	for(i =0; i<m_fields[0]->GetExpSize(); i++)
-	  {
-	    returnval[i] = GetStabilityLimit(ExpOrder[i]);
-	  }
-	return returnval;
-      }
+    {
+        int i;
+        Array<OneD,NekDouble> returnval(m_fields[0]->GetExpSize(),0.0);
+        for(i =0; i<m_fields[0]->GetExpSize(); i++)
+        {
+            returnval[i] = GetStabilityLimit(ExpOrder[i]);
+        }
+        return returnval;
+    }
 
   };
 

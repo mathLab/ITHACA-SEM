@@ -1154,32 +1154,33 @@ namespace Nektar
             {
                 switch(m_base[1]->GetBasisType())
                 {
-                    case LibUtilities::eModified_B:
+                case LibUtilities::eModified_B:
+                {
+                    switch(m_base[1]->GetPointsType())
                     {
-                        switch(m_base[1]->GetPointsType())
-                        {
-                            case LibUtilities::eGaussRadauMAlpha1Beta0:
-                            {                            
-                                LibUtilities::PointsKey pkey(
-                                    m_base[1]->GetBasisKey().GetPointsKey().
-                                    GetNumPoints()+1,
-                                    LibUtilities::eGaussLobattoLegendre);
-                                return LibUtilities::BasisKey(
-                                    LibUtilities::eModified_A,
-                                    m_base[1]->GetNumModes(),pkey);
-                                break;
-                            }
-
-			default:
-                            ASSERTL0(false,"unexpected points distribution");
-                            break;
-                        }
+                    case LibUtilities::eGaussRadauMAlpha1Beta0:
+                    {
+                        LibUtilities::PointsKey pkey(
+                                m_base[1]->GetBasisKey().GetPointsKey().
+                                GetNumPoints()+1,
+                                LibUtilities::eGaussLobattoLegendre);
+                        return LibUtilities::BasisKey(
+                                LibUtilities::eModified_A,
+                                m_base[1]->GetNumModes(),pkey);
+                        break;
                     }
+
+                    default:
+                        ASSERTL0(false,"unexpected points distribution");
+                        break;
+                    }
+                }
                 default:
                     ASSERTL0(false,"Information not available to set edge key");
                     break;
                 }
             }
+            return LibUtilities::NullBasisKey;
         }
 
 

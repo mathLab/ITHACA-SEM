@@ -201,7 +201,6 @@ void WriteToXMLFile(const char* outfile, const vector<Vertex> & nodes, const vec
     //---------------------------------------------
     // Write EDGE
     int edgecnt = 0;
-    int small, large;
     verTag = new TiXmlElement( "EDGE" );
 
     for( int i = 0; i < edges.size(); ++i ) {

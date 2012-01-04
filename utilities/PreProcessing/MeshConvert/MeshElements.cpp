@@ -81,7 +81,7 @@ namespace Nektar
 
         unsigned int Mesh::GetNumBndryElements()
         {
-            int i, nElmt = 0;
+            unsigned int i, nElmt = 0;
             
             for (i = 0; i < expDim; ++i)
                 nElmt += element[i].size();
@@ -91,9 +91,9 @@ namespace Nektar
         
         unsigned int Mesh::GetNumEntities()
         {
-            int nEnt = 0;
+            unsigned int nEnt = 0;
             
-            for (int d = 0; d < expDim; ++d)
+            for (unsigned int d = 0; d < expDim; ++d)
             {
                 nEnt += element[d].size();
             }
@@ -109,9 +109,9 @@ namespace Nektar
         {
             EdgeSharedPtr vOld = edge[p];
             edge[p] = pNew;
-            for (int i = 0; i < face.size(); ++i)
+            for (unsigned int i = 0; i < face.size(); ++i)
             {
-                for (int j = 0; j < face[i]->edgeList.size(); ++j)
+                for (unsigned int j = 0; j < face[i]->edgeList.size(); ++j)
                 {
                     if (face[i]->edgeList[j] == vOld)
                     {
@@ -459,7 +459,7 @@ namespace Nektar
                 if (m_conf.faceNodes)
                 {
                     int N = 4 + 6*n + j*n*(n-1)/2;
-                    for (unsigned int i = 0; i < n*(n-1)/2; ++i)
+                    for (int i = 0; i < n*(n-1)/2; ++i)
                     {
                         faceNodes.push_back(pNodeList[N+i]);
                     }
@@ -597,7 +597,7 @@ namespace Nektar
                     int facenodes = j%2==0 ? n*n : n*(n-1)/2;
                     faceoffset   += facenodes;
                     int N = 6 + 9*n + faceoffset;
-                    for (unsigned int i = 0; i < facenodes; ++i)
+                    for (int i = 0; i < facenodes; ++i)
                     {
                         faceNodes.push_back(pNodeList[N+i]);
                     }
@@ -755,7 +755,7 @@ namespace Nektar
                 if (m_conf.faceNodes)
                 {
                     int N = 8 + 12*n + j*n*n;
-                    for (unsigned int i = 0; i < n*n; ++i)
+                    for (int i = 0; i < n*n; ++i)
                     {
                         faceNodes.push_back(pNodeList[N+i]);
                     }

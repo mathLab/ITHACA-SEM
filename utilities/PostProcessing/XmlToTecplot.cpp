@@ -9,7 +9,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
 

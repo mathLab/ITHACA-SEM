@@ -97,14 +97,7 @@ namespace Nektar
 
     void NavierStokesCFE::v_SetInitialConditions(NekDouble initialtime, bool dumpInitialConditions)
     {
-        switch(m_problemType)
-        {
-        default:
-        {
-            EquationSystem::v_SetInitialConditions(initialtime,false);
-        }
-        break;
-        }
+        EquationSystem::v_SetInitialConditions(initialtime,false);
 
         if(dumpInitialConditions)
         {

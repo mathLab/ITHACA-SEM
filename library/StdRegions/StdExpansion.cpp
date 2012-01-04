@@ -700,7 +700,7 @@ namespace Nektar
             v_PhysDeriv(k1,tmp,tmp);
 
             VarCoeffType keys[] = {eVarCoeffD00, eVarCoeffD11, eVarCoeffD22};
-            if(mkey.HasVarCoeff(keys[k1]) > 0)
+            if(mkey.HasVarCoeff(keys[k1]))
             {
                 Vmath::Vmul(nq, &(mkey.GetVarCoeff(keys[k1]))[0], 1, &tmp[0], 1, &tmp[0], 1);
             }

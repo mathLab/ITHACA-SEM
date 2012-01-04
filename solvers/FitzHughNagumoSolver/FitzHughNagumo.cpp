@@ -95,7 +95,7 @@ namespace Nektar
         ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
  
 	std::string Implicit = "Implicit"; 
-	m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0.0);
+	m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
 	
 	// check that any user defined boundary condition is indeed implemented
 	for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -196,7 +196,7 @@ namespace Nektar
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
       
-        NekDouble unew=100.0, uinit=0.0, vinit=0.0, f, fd, fval, gval,Tol=0.00000001;
+        NekDouble unew=100.0, uinit=0.0, vinit=0.0, f, fd, Tol=0.00000001;
 
         m_fields[0]->GetCoords(x0,x1,x2);
 
@@ -360,8 +360,6 @@ namespace Nektar
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
       
-        NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
-
         // get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
 
@@ -746,7 +744,7 @@ namespace Nektar
     // where \hat = modal coeffs
 
     int i, nc_e, offset;
-    for(int i=0; i<Nelem; ++i)
+    for(i=0; i<Nelem; ++i)
     {
         nc_e = GetNcoeffs(i);
         offset = GetCoeff_Offset(i);
@@ -915,7 +913,7 @@ namespace Nektar
             Minloc[i] = Array<OneD, NekDouble>(chksteps,0.0);
         }
 
-        NekDouble maxindex, minindex;
+        int maxindex, minindex;
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);

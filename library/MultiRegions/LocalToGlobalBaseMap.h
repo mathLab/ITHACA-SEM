@@ -773,7 +773,7 @@ namespace Nektar
 
         inline bool LocalToGlobalBaseMap::AtLastLevel() const
         {
-            return !( (bool) m_nextLevelLocalToGlobalMap.get() );
+            return !( m_nextLevelLocalToGlobalMap.get() );
         }
 
 

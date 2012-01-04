@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         // Finalise communications
         session->Finalise();
     }
-    catch (const std::runtime_error& e)
+    catch (const std::runtime_error&)
     {
         return 1;
     }

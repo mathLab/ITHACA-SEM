@@ -189,7 +189,7 @@ namespace Nektar
 
         inline void Expansion2D::SetEdgeExp(const int edge, Expansion1DSharedPtr &e)
         {
-            int nEdges = GetNedges();
+            unsigned int nEdges = GetNedges();
             ASSERTL1(edge < nEdges, "Edge out of range.");
             if (m_edgeExp.size() < nEdges)
             {

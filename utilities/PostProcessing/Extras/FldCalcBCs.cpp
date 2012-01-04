@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     void WriteFld(string outfile, SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD,
     	                       MultiRegions::ExpListSharedPtr> &fields );
     
-    int i,j;
+    int j;
     if(argc != 4)
     {
         fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  streakfile\n");
@@ -110,7 +110,7 @@ cout<<nfields<<endl;
     // Copy data from file:fill fields with the fielddata
     for(j = 0; j < nfields; ++j)
     {  	       	    
-        for(int i = 0; i < fielddata.size(); ++i)
+        for(unsigned int i = 0; i < fielddata.size(); ++i)
         {
             fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
         }             
@@ -167,7 +167,7 @@ cout<<"streak"<<endl;
 
     // Copy data from file:fill streak with the streakdata
     	       	    
-    for(int i = 0; i < streakdata.size(); ++i)
+    for(unsigned int i = 0; i < streakdata.size(); ++i)
     {        	
             streak->ExtractDataToCoeffs(streakdef[i],streakdata[i],streakdef[i]->m_fields[0]);
     }             
@@ -317,7 +317,6 @@ cout<<"OOOK"<<endl;
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
 	{		
 		// Setting parameteres for homogenous problems
-        	MultiRegions::GlobalSysSolnType solnType;
 		NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
 		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
 		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
@@ -348,8 +347,8 @@ cout<<"OOOK"<<endl;
 			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
 				HomogeneousType = eHomogeneous1D;
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+				session->LoadParameter("HomModesZ", npointsZ);
+				session->LoadParameter("LZ", LhomZ);
 				HomoDirec       = 1;				
 			}
 			
@@ -357,10 +356,10 @@ cout<<"OOOK"<<endl;
 			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
 			{
 				HomogeneousType = eHomogeneous2D;
-				npointsY        = session->GetParameter("HomModesY");
-				LhomY           = session->GetParameter("LY");
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+                session->LoadParameter("HomModesY", npointsY);
+                session->LoadParameter("LY", LhomY);
+                session->LoadParameter("HomModesZ", npointsZ);
+                session->LoadParameter("LZ", LhomZ);
 				HomoDirec       = 2;
 			}
 			
@@ -368,12 +367,12 @@ cout<<"OOOK"<<endl;
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
 				HomogeneousType = eHomogeneous3D;
-				npointsX        = session->GetParameter("HomModesX");
-				LhomX           = session->GetParameter("LX");
-				npointsY        = session->GetParameter("HomModesY");
-				LhomY           = session->GetParameter("LY");
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+                session->LoadParameter("HomModesX", npointsX);
+                session->LoadParameter("LX",LhomX);
+                session->LoadParameter("HomModesY", npointsY);
+                session->LoadParameter("LY", LhomY);
+                session->LoadParameter("HomModesZ", npointsZ);
+                session->LoadParameter("LZ", LhomZ);
 				HomoDirec       = 3;
 			}
 			
@@ -631,7 +630,7 @@ cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
                      tangents[f] = Array<OneD, NekDouble>(nqedge);
                 }                
         	
-                for(int k=0; k< Icompreg->size(); k++)//loop over segments of each layer
+                for(unsigned int k=0; k< Icompreg->size(); k++)//loop over segments of each layer
                 {
                     
                      if(
@@ -722,7 +721,7 @@ cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
 
 
 
-		     for(int d=0; d<bmapedgereg.num_elements(); d++)
+		     for(unsigned int d=0; d<bmapedgereg.num_elements(); d++)
 		     {	 
 		     	   Recoeffsedgereg[d]=Recoeffs[Reoffsetreg+bmapedgereg[d]];		
                            Imcoeffsedgereg[d]=Imcoeffs[Imoffsetreg+bmapedgereg[d]];
@@ -1036,7 +1035,7 @@ cout<<"fielddata"<<FieldDef.size()<<endl;
          
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
             //this cycle is needed in order to use the the appendfielddata with coeffs function!!!
-            for(int i = 0; i < fields.num_elements(); ++i)
+            for(unsigned int i = 0; i < fields.num_elements(); ++i)
             {
             	if (fields[i]->GetPhysState()==true)
             	{	
@@ -1048,10 +1047,10 @@ cout<<"fielddata"<<FieldDef.size()<<endl;
             }
             
             // copy Data into FieldData and set variable
-            for(int j = 0; j < fieldcoeffs.num_elements(); ++j)
+            for(unsigned int j = 0; j < fieldcoeffs.num_elements(); ++j)
             {
             	//fieldcoeffs[j] = fields[j]->UpdateCoeffs();             	    
-            	for(int i = 0; i < FieldDef.size(); ++i)
+            	for(unsigned int i = 0; i < FieldDef.size(); ++i)
           	{
           	     // Could do a search here to find correct variable
           	     FieldDef[i]->m_fields.push_back(variables[j]);

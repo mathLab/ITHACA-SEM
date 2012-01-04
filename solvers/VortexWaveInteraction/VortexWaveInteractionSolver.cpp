@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
         }
     }
-    catch (const std::runtime_error& e)
+    catch (const std::runtime_error&)
     {
         return 1;
     }

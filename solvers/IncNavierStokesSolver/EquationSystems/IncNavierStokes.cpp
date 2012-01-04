@@ -59,7 +59,7 @@ namespace Nektar
     {
         EquationSystem::v_InitObject();
         
-        int i,j,expdim;
+        int i,j;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
         
@@ -311,7 +311,7 @@ namespace Nektar
                                                  Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                  Array<OneD, NekDouble> &wk)
     {
-        int i,j;
+        int i;
         int nvariables = inarray.num_elements();
         int nqtot      = m_fields[0]->GetTotPoints();
         int VelDim     = m_velocity.num_elements();

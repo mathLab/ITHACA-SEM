@@ -193,6 +193,25 @@ namespace Nektar
                     }
                 }
                 
+                static void ClearManager(std::string whichPool = "")
+                {
+                    typename ValueContainerPool::iterator x;
+                    if (!whichPool.empty())
+                    {
+                        x = m_ValueContainerPool.find(whichPool);
+                        ASSERTL1(x != m_ValueContainerPool.end(),
+                                "Could not find pool " + whichPool);
+                        x->second->clear();
+                    }
+                    else
+                    {
+                        for (x = m_ValueContainerPool.begin(); x != m_ValueContainerPool.end(); ++x)
+                        {
+                            x->second->clear();
+                        }
+                    }
+                }
+
             private:
                 NekManager(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
                 NekManager<KeyType, ValueType, opLessCreator>& operator=(const NekManager<KeyType, ValueType, opLessCreator>& rhs);

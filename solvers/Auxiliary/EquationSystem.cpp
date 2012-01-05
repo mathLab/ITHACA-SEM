@@ -516,7 +516,8 @@ namespace Nektar
      */
     EquationSystem::~EquationSystem()
     {
-
+        LibUtilities::NekManager<LocalRegions::MatrixKey, DNekScalMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+        LibUtilities::NekManager<LocalRegions::MatrixKey, DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
     }
 
 

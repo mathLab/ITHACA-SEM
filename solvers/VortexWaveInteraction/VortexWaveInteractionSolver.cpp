@@ -74,27 +74,12 @@ int main(int argc, char *argv[])
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
             {
                 Mvdir("Save",WaveForce);
-                #ifdef _MSC_VER
-                Sleep(10000);
-                #else
-                sleep(10);
-                #endif
             }
             else
             {
                 Mvdir("Save_Outer",WaveForce);
-                #ifdef _MSC_VER
-                Sleep(10000);
-                #else
-                sleep(10);
-                #endif
                 // Execute Another loop so that not same initial conditions as last iteration
                 vwi.ExecuteLoop();
-                #ifdef _MSC_VER
-                Sleep(10000);
-                #else
-                sleep(10);
-                #endif
             }
 
         }
@@ -114,13 +99,19 @@ void Mvdir(string dir, NekDouble dir_ending)
 {
     // save OuterIter.his if exists
     string saveOuterIter = "mv -f OuterIter.his "+ dir;
-    system(saveOuterIter.c_str());
+    if(system(saveOuterIter.c_str()))
+    {
+        ASSERTL0(false,saveOuterIter.c_str());
+    }
 
     // Mv directory
     string newdir  = dir + boost::lexical_cast<std::string>(dir_ending);
     string syscall = "mv -f " + dir + " " + newdir;
 
-    system(syscall.c_str());
+    if(system(syscall.c_str()))
+    {
+        ASSERTL0(false,syscall.c_str());
+    }
 
     // make new directory
     syscall = "mkdir " + dir;

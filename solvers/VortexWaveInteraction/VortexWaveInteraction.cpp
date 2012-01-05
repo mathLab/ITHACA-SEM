@@ -60,7 +60,7 @@ namespace Nektar
 
         m_sessionVWI->LoadParameter("AlphaStep",m_alphaStep,0.05);
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
-        m_sessionVWI->LoadParameter("EigenvalueRelativeTol",m_eigRelTol,1e-3);
+        m_sessionVWI->LoadParameter("EivalueRelativeTol",m_eigRelTol,1e-3);
         m_sessionVWI->LoadParameter("NeutralPointTolerance",m_neutralPointTol,1e-4);
         m_sessionVWI->LoadParameter("MaxOuterIterations",m_maxOuterIterations,100);
         
@@ -170,10 +170,16 @@ namespace Nektar
                     cout << "Restarting from iteration " << m_iterStart << endl;
                     std::string rstfile = "cp -f Save/" + m_sessionName + ".rst." + nstr + " " + m_sessionName + ".rst"; 
                     cout << "      " << rstfile << endl;
-                    system(rstfile.c_str());
+                    if(system(rstfile.c_str()))
+                    {
+                        ASSERTL0(false,rstfile.c_str());
+                    }
                     std::string vwifile = "cp -f Save/" + m_sessionName + ".vwi." + nstr + " " + m_sessionName + ".vwi"; 
                     cout << "      " << vwifile << endl;
-                    system(vwifile.c_str());
+                    if(system(vwifile.c_str()))
+                    {
+                        ASSERTL0(false,vwifile.c_str());
+                    }
                 }
                 break;
             case  eFixedWaveForcing:
@@ -262,6 +268,16 @@ namespace Nektar
 
     void VortexWaveInteraction::ExecuteStreak(void)
     {
+
+
+        // Create driver
+#if 1 
+        std::string vDriverModule;
+        m_sessionStreak->LoadSolverInfo("Driver", vDriverModule, "Standard");
+        
+        DriverSharedPtr solverStreak = GetDriverFactory().CreateInstance(vDriverModule, m_sessionStreak); 
+        solverStreak->Execute();
+#else        
         // Setup and execute Advection Diffusion solver 
         string vEquation = m_sessionStreak->GetSolverInfo("EqType");
         EquationSystemSharedPtr solverStreak = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionStreak);
@@ -270,6 +286,7 @@ namespace Nektar
         solverStreak->DoInitialise();
         solverStreak->DoSolve();
         solverStreak->Output();
+#endif
         
         cout << "Executing cp -f session.fld session_streak.fld" << endl;
         CopyFile(".fld","_streak.fld");
@@ -502,13 +519,18 @@ namespace Nektar
             // make directory and presume will fail if it already exists
             string mkdir = "mkdir " + dir;
             system(mkdir.c_str());
+
             opendir[dir] = 1;
         }
         
         string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
         string syscall  = "cp -f "  + file + " " + savefile; 
 
-         system(syscall.c_str());
+        if(system(syscall.c_str()))
+        {
+            ASSERTL0(false,syscall.c_str());
+        }
+
      }
 
 
@@ -527,7 +549,10 @@ namespace Nektar
         string savefile = dir + "/" + file + "." + boost::lexical_cast<std::string>(n);
         string syscall  = "mv -f "  + file + " " + savefile; 
 
-         system(syscall.c_str());
+        if(system(syscall.c_str()))
+        {
+            ASSERTL0(false,syscall.c_str());
+        }
      }
 
      void VortexWaveInteraction::CopyFile(string file1end, string file2end)
@@ -536,7 +561,10 @@ namespace Nektar
          string cpfile2   = m_sessionName + file2end;
          string syscall  = "cp -f "  + cpfile1 + " " + cpfile2; 
 
-         system(syscall.c_str());
+         if(system(syscall.c_str()))
+         {
+             ASSERTL0(false,syscall.c_str());
+         }
      }
 
      void VortexWaveInteraction::AppendEvlToFile(string file, int n)

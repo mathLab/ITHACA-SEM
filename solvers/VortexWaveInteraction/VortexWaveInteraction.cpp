@@ -60,7 +60,7 @@ namespace Nektar
 
         m_sessionVWI->LoadParameter("AlphaStep",m_alphaStep,0.05);
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
-        m_sessionVWI->LoadParameter("EivalueRelativeTol",m_eigRelTol,1e-3);
+        m_sessionVWI->LoadParameter("EigenvalueRelativeTol",m_eigRelTol,1e-3);
         m_sessionVWI->LoadParameter("NeutralPointTolerance",m_neutralPointTol,1e-4);
         m_sessionVWI->LoadParameter("MaxOuterIterations",m_maxOuterIterations,100);
         

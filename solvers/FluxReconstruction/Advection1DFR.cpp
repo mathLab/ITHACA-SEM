@@ -149,8 +149,8 @@ namespace Nektar
 		Array<OneD,double> fd(nq,0.0);
 		Array<OneD,double> gradfd(nq,0.0);
 		
-		Array<OneD,double> udi(2*ni-2,0.0);
-		Array<OneD,double> fdi(2*ni-2,0.0);
+		Array<OneD,double> udi(2*ne,0.0);
+		Array<OneD,double> fdi(2*ne,0.0);
 		Array<OneD,double> fi(ni,0.0);
 		
 		Array<OneD,double> tmp1,tmp2;
@@ -164,8 +164,15 @@ namespace Nektar
 		//calculating the discontinous flux fd = Adv*Ud
 		Vmath::Vmul(nq,Adv[0],1,inarray[0],1,fd,1);
 		
-		// Taking the gradient of gradfd = dfd/dx
-		Domain->PhysDeriv(fd,gradfd);
+		// Taking the gradient of gradfd = dfd/dx on the reference element
+		LibUtilities::BasisSharedPtr Basis;
+		Basis = Domain->GetExp(0)->GetBasis(0);
+		
+		StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+		for(int i=0; i < ne; i++)
+		{
+			StdSeg.PhysDeriv(tmp1 = fd + i*nq/ne, tmp2 = gradfd + i*nq/ne);
+		}
 		
 		//calculate the value of the fd at the interface points ==> fdi
 		InterpToInterface(fd,fdi);
@@ -196,10 +203,10 @@ namespace Nektar
 		sumInt = Array<OneD,double>(ni);
 		difInt = Array<OneD,double>(ni);
 		
-		sumInt[0] = inarray[0]+inarray[2*ni-3];
-		sumInt[ni-1] = inarray[0]+inarray[2*ni-3];
-		difInt[0] = inarray[0]-inarray[2*ni-3];
-		difInt[ni-1] = inarray[0]-inarray[2*ni-3];
+		sumInt[0] = inarray[0]+inarray[2*ne-1];
+		sumInt[ni-1] = sumInt[0];
+		difInt[0] = inarray[0]-inarray[2*ne-1];
+		difInt[ni-1] = difInt[0];
 		
 		for(int i = 1; i < ni-1; i++)
 		{
@@ -234,7 +241,7 @@ namespace Nektar
 		Array<OneD,double> tmp,tmparray;
 		
 		// calculating the jumps on the left and right side
-		for(int i = 0; i< ni-1; i++)
+		for(int i = 0; i< ne; i++)
 		{
 			jL[i] = fi[i] - fdi[2*i];
 			jR[i] = fi[i+1] - fdi[2*i+1];
@@ -302,15 +309,22 @@ namespace Nektar
 	void Advection1DFR::InterpToInterface(const Array<OneD, double> & total,
 										  Array<OneD, double> & interfaceValue)
 	{
-		LibUtilities::PointsKey InteriorPoints(nq/ne,LibUtilities::eGaussGaussLegendre);
-		LibUtilities::BasisKey  ProblemBase(LibUtilities::eGLL_Lagrange,nq/ne-1,InteriorPoints);
+		LibUtilities::BasisSharedPtr Basis;
+		Basis = Domain->GetExp(0)->GetBasis(0);
 		
-		LibUtilities::PointsKey InterfacePoints(2,LibUtilities::eGaussLobattoLegendre);
-		LibUtilities::BasisKey  LocalBase(LibUtilities::eModified_A,2,InterfacePoints);
+		StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
 		
+		Array<OneD,double> coordL(3,0.0);
+		Array<OneD,double> coordR(3,0.0);
+		Array<OneD,double> tmp(nq/ne,0.0);
+		coordL[0] = -1.0;
+		coordR[0] = 1.0;
+		int cnt = 0;
 		for(int i=0; i < ne; i++)
 		{
-			LibUtilities::Interp1D(ProblemBase,&(total[i*nq/ne]),LocalBase,&(interfaceValue[2*i]));
+			tmp = total + i*nq/ne;
+			interface[cnt] = StdSeg.PhysEvaluate(coordL,tmp);cnt++;
+			interface[cnt] = StdSeg.PhysEvaluate(coordR,tmp);cnt++;
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////

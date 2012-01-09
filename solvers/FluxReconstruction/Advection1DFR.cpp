@@ -323,8 +323,8 @@ namespace Nektar
 		for(int i=0; i < ne; i++)
 		{
 			tmp = total + i*nq/ne;
-			interface[cnt] = StdSeg.PhysEvaluate(coordL,tmp);cnt++;
-			interface[cnt] = StdSeg.PhysEvaluate(coordR,tmp);cnt++;
+			interfaceValue[cnt] = StdSeg.PhysEvaluate(coordL,tmp);cnt++;
+			interfaceValue[cnt] = StdSeg.PhysEvaluate(coordR,tmp);cnt++;
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////

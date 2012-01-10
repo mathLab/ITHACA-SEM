@@ -79,6 +79,10 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
         IF (NEKTAR_USE_MPI)
             TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
         ENDIF (NEKTAR_USE_MPI)
+        
+        IF (NEKTAR_USE_VTK)
+            TARGET_LINK_LIBRARIES(${name} vtkHybrid)
+        ENDIF (NEKTAR_USE_VTK)
     ENDIF( NEKTAR++_FOUND )
     
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")

@@ -19,5 +19,10 @@ SET(MeshConvertSources
     MeshConvert.cpp
     MeshElements.cpp)
 
+IF (NEKTAR_USE_VTK)
+    SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h)
+    SET(MeshConvertSources ${MeshConvertSources} InputVtk.cpp)
+ENDIF (NEKTAR_USE_VTK)
+
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 

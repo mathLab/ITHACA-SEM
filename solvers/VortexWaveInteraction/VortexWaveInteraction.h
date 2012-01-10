@@ -144,6 +144,9 @@ namespace Nektar
 
         int m_maxWaveForceMagIter; 
 
+        bool m_deltaFcnApprox;  // Activate delta function approximation around wave 
+        NekDouble m_deltaFcnDecay;   // Delta function decay level 
+
         NekDouble m_waveForceMag;
         NekDouble m_waveForceMagStep;
 
@@ -166,6 +169,8 @@ namespace Nektar
         
         Array<OneD, Array<OneD, NekDouble > >  m_vwiForcing; 
 
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_streakField; 
+        
         string m_sessionName;
         LibUtilities::SessionReaderSharedPtr m_sessionVWI; 
 

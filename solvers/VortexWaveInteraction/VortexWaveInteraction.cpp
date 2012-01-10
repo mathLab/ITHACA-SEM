@@ -73,6 +73,17 @@ namespace Nektar
         m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
         m_sessionVWI->LoadParameter("RollForceScale",m_rollForceScale,1.0);
         
+        if(m_sessionVWI->DefinesSolverInfo("DeltaFcnApprox"))
+        {
+            m_deltaFcnApprox = true;
+            m_sessionVWI->LoadParameter("DeltaFcnDecay",m_deltaFcnDecay,1.0/500);
+        }
+        else
+        {
+            m_deltaFcnApprox = false;
+            m_deltaFcnDecay = 0.0;
+        }
+
         m_alpha = Array<OneD, NekDouble> (storesize);
         m_leading_real_evl = Array<OneD, NekDouble> (storesize);
         m_leading_imag_evl = Array<OneD, NekDouble> (storesize);
@@ -271,7 +282,7 @@ namespace Nektar
 
 
         // Create driver
-#if 1 
+#if 0
         std::string vDriverModule;
         m_sessionStreak->LoadSolverInfo("Driver", vDriverModule, "Standard");
         
@@ -287,7 +298,8 @@ namespace Nektar
         solverStreak->DoSolve();
         solverStreak->Output();
 #endif
-        
+
+        m_streakField = solverStreak->UpdateFields();
         cout << "Executing cp -f session.fld session_streak.fld" << endl;
         CopyFile(".fld","_streak.fld");
 
@@ -334,11 +346,48 @@ namespace Nektar
 
     void VortexWaveInteraction::CalcNonLinearWaveForce(void)
     {
-        
         int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
         int ncoeffs = m_waveVelocities[0]->GetPlane(0)->GetNcoeffs();
         Array<OneD, NekDouble> val(npts), der1(2*npts);
         Array<OneD, NekDouble> der2 = der1 + npts; 
+        Array<OneD, NekDouble> streak;
+        static int projectfield = -1;
+
+        if(m_deltaFcnApprox)
+        {
+            streak = Array<OneD, NekDouble> (npts);
+            m_streakField[0]->BwdTrans(m_streakField[0]->GetCoeffs(), streak);
+
+            // Set project field to be first field that has a Neumann
+            // boundary since this not impose any condition on the vertical boundaries
+            // Othersise set to zero. 
+            if(projectfield == -1)
+            {
+                Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+                
+                for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
+                {
+                    BndConds = m_waveVelocities[i]->GetBndConditions();
+                    for(int j = 0; j < BndConds.num_elements(); ++j)
+                    {
+                        if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                        {
+                            projectfield = i;
+                            break;
+                        }
+                    }
+                    if(projectfield != -1)
+                    {
+                        break;
+                    }
+                }
+                if(projectfield == -1)
+                {
+                    cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
+                    projectfield = 0;
+                }
+            }
+        }
 
         // Shift m_vwiForcing in case of relaxation 
         Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
@@ -349,6 +398,7 @@ namespace Nektar
                                               m_wavePressure->GetPlane(0)->UpdatePhys());
         m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
                                               m_wavePressure->GetPlane(1)->UpdatePhys());
+
         // Determine normalisation of pressure so that |P|/A = 1
         NekDouble norm = 0, l2;
         l2    = m_wavePressure->GetPlane(0)->L2();
@@ -380,6 +430,7 @@ namespace Nektar
         Vmath::Smul (npts,2.0,val,1,val,1);
         m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
         
+        
         // d/dy(v u* + v* u)
         Vmath::Vmul (npts,u_real,1,v_real,1,val,1);
         Vmath::Vvtvp(npts,u_imag,1,v_imag,1,val,1,val,1);
@@ -388,9 +439,21 @@ namespace Nektar
         
         Vmath::Vadd(npts,der1,1,der2,1,der1,1);
         
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[0]);
-        Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[0],1,m_vwiForcing[0],1);
+        if(m_deltaFcnApprox)
+        {
+            for(int i = 0; i < npts; ++i)
+            {
+                der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
+            }
+        }
         
+#if 1
+        m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[0]);
+#else
+        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[0]);
+#endif
+        Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[0],1,m_vwiForcing[0],1);
+
         // d/dx(u v* + u* v)
         m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
         
@@ -402,7 +465,20 @@ namespace Nektar
         
         Vmath::Vadd(npts,der1,1,der2,1,der1,1);
 
+        if(m_deltaFcnApprox)
+        {
+            for(int i = 0; i < npts; ++i)
+            {
+                der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
+            }
+        }
+
+#if 1
+        m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[1]);
+#else
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
+#endif
+
         Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[1],1,m_vwiForcing[1],1);
         
 #if 0 
@@ -455,8 +531,7 @@ namespace Nektar
             physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
             coord[0] = coord_x[i];
             coord[1] = coord_y[i];
-            der2[i]  = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
-                                                                           der1 + physoffset);
+            der2[i]  = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,                                                                         der1 + physoffset);
         }
         
         //-> Average field 1
@@ -472,6 +547,7 @@ namespace Nektar
         {
             val[i] = 0.5*(der1[i] - der1[index[i]]);
         }
+
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
 
 
@@ -479,23 +555,23 @@ namespace Nektar
         for(i = 0; i < npts; ++i)
         {
             val[i] = 0.5*(der1[i] - der1[index[i]]);
-        }
+        }        
+            
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
 #endif
 
 
-        // Apply relaxation 
-        if(m_vwiRelaxation)
+        if(!(m_deltaFcnApprox)&&(m_vwiRelaxation))
         {
             Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
                         m_vwiForcing[0],1,m_vwiForcing[0],1);
             Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[2],1,
-                          m_vwiForcing[0],1,m_vwiForcing[0],1);
-
+                         m_vwiForcing[0],1,m_vwiForcing[0],1);
+            
             Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
                         m_vwiForcing[1],1,m_vwiForcing[1],1);
             Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[3],1,
-                          m_vwiForcing[1],1,m_vwiForcing[1],1);
+                         m_vwiForcing[1],1,m_vwiForcing[1],1);
         }
         
         // dump output

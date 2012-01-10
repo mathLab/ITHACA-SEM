@@ -1534,43 +1534,32 @@ namespace Nektar
 			return returnval;
 		}
 
+
+		/**
+		 * Generate a single vector of Expansion structs mapping global element
+		 * ID to a corresponding Geometry shared pointer and basis key.
+		 *
+		 * Expansion map ensures elements which appear in multiple composites
+		 * within the domain are only listed once.
+		 */
         ExpansionMapShPtr MeshGraph::SetUpExpansionMap(void)
         {
             ExpansionMapShPtr returnval; 
             returnval = MemoryManager<ExpansionMap>::AllocateSharedPtr();
             
-            // Need a vector of all elements and their associated
-            // expansion information.
             const CompositeMap &domain = this->GetDomain();
             CompositeMap::const_iterator compIter;
             
             for (compIter = domain.begin(); compIter != domain.end(); ++compIter)
             {
-                boost::shared_ptr<GeometryVector> geomVectorShPtr = compIter->second;
-                GeometryVectorIter geomIter;
-                for (geomIter = geomVectorShPtr->begin(); geomIter != geomVectorShPtr->end(); ++geomIter)
+                GeometryVector::const_iterator x;
+                for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
                 {
-                    // Make sure we only have one instance of the
-                    // GeometrySharedPtr stored in the list.
-                    ExpansionMap::iterator elemIter;
-
-                    for (elemIter = returnval->begin(); elemIter != returnval->end(); ++elemIter)
-                    {
-                        if (elemIter->second->m_geomShPtr == *geomIter)
-                        {
-                            break;
-                        }
-                    }
-                    
-                    // Not found in list.
-                    if (elemIter == returnval->end())
-                    {
-                        LibUtilities::BasisKeyVector def;
-                        ExpansionShPtr expansionElementShPtr =
-                            MemoryManager<Expansion>::AllocateSharedPtr(*geomIter, def);
-                        int id = (*geomIter)->GetGlobalID();
-                        (*returnval)[id] = expansionElementShPtr;
-                    }
+                    LibUtilities::BasisKeyVector def;
+                    ExpansionShPtr expansionElementShPtr =
+                        MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
+                    int id = (*x)->GetGlobalID();
+                    (*returnval)[id] = expansionElementShPtr;
                 }
             }
             
@@ -1793,23 +1782,35 @@ namespace Nektar
                             GeometryVectorIter geomVecIter;
                             for (geomVecIter = (compVecIter->second)->begin(); geomVecIter != (compVecIter->second)->end(); ++geomVecIter)
                             {
-                                ExpansionMapIter expVecIter;
-                                for (expVecIter = expansionMap->begin(); expVecIter != expansionMap->end(); ++expVecIter)
+                                ExpansionMapIter x = expansionMap->find((*geomVecIter)->GetGlobalID());
+                                ASSERTL0(x != expansionMap->end(), "Expansion not found!!");
+                                if(useExpansionType)
                                 {
-                                    if (*geomVecIter == (expVecIter->second)->m_geomShPtr)
-                                    {
-                                        if(useExpansionType)
-                                        {
-                                            (expVecIter->second)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
-                                        }
-                                        else
-                                        {
-                                            ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
-                                            (expVecIter->second)->m_basisKeyVector = basiskeyvec;
-                                        }
-                                        break;
-                                    }
+                                    (x->second)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
                                 }
+                                else
+                                {
+                                    ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
+                                    (x->second)->m_basisKeyVector = basiskeyvec;
+                                }
+
+//                                ExpansionMapIter expVecIter;
+//                                for (expVecIter = expansionMap->begin(); expVecIter != expansionMap->end(); ++expVecIter)
+//                                {
+//                                    if (*geomVecIter == (expVecIter->second)->m_geomShPtr)
+//                                    {
+//                                        if(useExpansionType)
+//                                        {
+//                                            (expVecIter->second)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
+//                                        }
+//                                        else
+//                                        {
+//                                            ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
+//                                            (expVecIter->second)->m_basisKeyVector = basiskeyvec;
+//                                        }
+//                                        break;
+//                                    }
+//                                }
                             }
                         }
 

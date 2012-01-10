@@ -39,6 +39,8 @@
 #include <cstdlib>
 #include <fstream>
 
+#include <boost/unordered_map.hpp>
+
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/InterfaceComponent.h>
@@ -96,8 +98,6 @@ namespace Nektar
         typedef std::list< SharedInterfaceCompPtr >     InterfaceCompList;
 
         typedef boost::shared_ptr< GeometryVector >     Composite;
-        //typedef std::vector< Composite >                CompositeVector;
-        //typedef std::vector< Composite >::iterator      CompositeVectorIter;
         typedef std::map<int, Composite>                CompositeMap;
         typedef std::map<int, Composite>::iterator      CompositeMapIter;
 

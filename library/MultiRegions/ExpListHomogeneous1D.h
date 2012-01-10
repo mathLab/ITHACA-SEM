@@ -168,6 +168,10 @@ namespace Nektar
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
+			
+			virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
+											  Array<OneD,      NekDouble> &outarray,
+											  bool  UseContCoeffs);
 
             virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs);
 

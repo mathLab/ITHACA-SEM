@@ -240,14 +240,12 @@ namespace Nektar
             /// This function elementally evaluates the forward transformation
             /// of a function \f$u(\boldsymbol{x})\f$ onto the global
             /// spectral/hp expansion.
-            MULTI_REGIONS_EXPORT void   FwdTrans_IterPerExp (
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray);
+            inline void  FwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray,
+											 Array<OneD,NekDouble> &outarray);
 
             ///
-            inline void FwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
+            inline void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+								Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             /// This function elementally mulplies the coefficient space of
@@ -300,9 +298,8 @@ namespace Nektar
 
             /// This function elementally evaluates the backward transformation
             /// of the global spectral/hp element expansion.
-            MULTI_REGIONS_EXPORT void BwdTrans_IterPerExp (
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray);
+            inline void BwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray,
+											 Array<OneD,NekDouble> &outarray);
 
             ///
             inline void BwdTrans (const Array<OneD, const NekDouble> &inarray,
@@ -976,24 +973,26 @@ namespace Nektar
 
             virtual void v_GlobalToLocal();
 
-            virtual void v_BwdTrans(
-                                    const Array<OneD,const NekDouble> &inarray,
+            virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
-
-            virtual void v_SetUpPhysTangents(
-		                	    const StdRegions::StdExpansionVector &locexp);
+			
+			virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
+											   Array<OneD,NekDouble> &outarray);
 	    
-            virtual void v_FwdTrans(
-                                    const Array<OneD,const NekDouble> &inarray,
+            virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
+			
+			virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
+                                    Array<OneD,      NekDouble> &outarray);
 
 
-            virtual void v_IProductWRTBase(
-                                           const Array<OneD,const NekDouble> &inarray,
+            virtual void v_IProductWRTBase(const Array<OneD,const NekDouble> &inarray,
                                            Array<OneD,      NekDouble> &outarray,
                                            bool  UseContCoeffs);
+			
+			virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
 
             virtual void v_GeneralMatrixOp(
                                            const GlobalMatrixKey             &gkey,
@@ -1304,12 +1303,39 @@ namespace Nektar
         /**
          *
          */
-        inline void ExpList::FwdTrans(
-                                      const Array<OneD, const NekDouble> &inarray,
+        inline void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                       bool  UseContCoeffs)
         {
             v_FwdTrans(inarray,outarray,UseContCoeffs);
+        }
+		
+		/**
+         *
+         */
+        inline void ExpList::FwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray,
+												  Array<OneD,NekDouble> &outarray)
+        {
+            v_FwdTrans_IterPerExp(inarray,outarray);
+        }
+		
+		/**
+         *
+         */
+        inline void ExpList::BwdTrans (const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,       NekDouble> &outarray,
+                                       bool  UseContCoeffs)
+        {
+            v_BwdTrans(inarray,outarray,UseContCoeffs);
+        }
+		
+		/**
+         *
+         */
+        inline void ExpList::BwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,       NekDouble> &outarray)
+        {
+            v_BwdTrans_IterPerExp(inarray,outarray);
         }
 
 
@@ -1363,18 +1389,6 @@ namespace Nektar
         {
             v_LinearAdvectionReactionSolve(velocity,inarray, outarray, lambda, UseContCoeffs,dirForcing);
         }
-
-        /**
-         *
-         */
-        inline void ExpList::BwdTrans (
-                                       const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       bool  UseContCoeffs)
-        {
-            v_BwdTrans(inarray,outarray,UseContCoeffs);
-        }
-
 
         /**
          *

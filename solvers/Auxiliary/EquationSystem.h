@@ -47,6 +47,10 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ExpListHomogeneous1D.h>
+#include <MultiRegions/ExpListHomogeneous2D.h>
 
 namespace Nektar
 {

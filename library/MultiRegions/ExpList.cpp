@@ -630,9 +630,8 @@ namespace Nektar
          *                          \f$\hat{u}_n^e\f$ will be stored in this
          *                          array of size \f$N_{\mathrm{eof}}\f$.
          */
-        void ExpList::FwdTrans_IterPerExp(
-                                          const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD, NekDouble> &outarray)
+        void ExpList::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
+											Array<OneD, NekDouble> &outarray)
         {
             Array<OneD,NekDouble> f(m_ncoeffs);
 
@@ -1227,9 +1226,8 @@ namespace Nektar
          *                          will be stored in this array of size
          *                          \f$Q_{\mathrm{tot}}\f$.
          */
-        void ExpList::BwdTrans_IterPerExp(
-                                          const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD, NekDouble> &outarray)
+        void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
+											Array<OneD, NekDouble> &outarray)
         {
             // get optimisation information about performing block
             // matrix multiplies
@@ -2268,20 +2266,18 @@ namespace Nektar
         }
 
 
-        void ExpList::v_BwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+        void ExpList::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
+								 Array<OneD,       NekDouble> &outarray,
+								 bool  UseContCoeffs)
         {
-            BwdTrans_IterPerExp(inarray,outarray);
+            v_BwdTrans_IterPerExp(inarray,outarray);
         }
 
-        void ExpList::v_FwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+        void ExpList::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+								 Array<OneD,       NekDouble> &outarray,
+								 bool  UseContCoeffs)
         {
-            FwdTrans_IterPerExp(inarray,outarray);
+            v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
         void ExpList::v_IProductWRTBase(

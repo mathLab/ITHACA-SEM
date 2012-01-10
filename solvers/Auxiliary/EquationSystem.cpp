@@ -931,9 +931,9 @@ namespace Nektar
                     }
                     m_fields[i]->SetPhysState(true);
                     
-                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+					m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                                                      m_fields[i]->UpdateCoeffs());
-                    
+
                     if (m_session->GetComm()->GetRank() == 0)
                     {
                         cout << "\tField "<< m_session->GetVariable(i)
@@ -961,7 +961,7 @@ namespace Nektar
 
         if(dumpInitialConditions)
         {
-            std::string outname = m_sessionName +"_0.chk";
+            std::string outname = m_sessionName +"_ini.chk";
             
             // dump initial conditions to file
             WriteFld(outname);

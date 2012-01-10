@@ -272,6 +272,23 @@ namespace Nektar
 			
             HomogeneousBwdTrans(outarray,outarray);
         }
+		
+		void ExpListHomogeneous1D::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+            int nplanes = m_planes.num_elements();
+			
+            for(int n = 0; n < nplanes; ++n)
+            {
+                m_planes[n]->BwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+
+				cnt    += m_planes[n]->GetNcoeffs();
+                cnt1   += m_planes[n]->GetTotPoints();
+            }
+			
+            HomogeneousBwdTrans(outarray,outarray);
+        }
 
 
         void ExpListHomogeneous1D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)

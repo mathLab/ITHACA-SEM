@@ -357,35 +357,35 @@ namespace Nektar
         {
             streak = Array<OneD, NekDouble> (npts);
             m_streakField[0]->BwdTrans(m_streakField[0]->GetCoeffs(), streak);
+        }
 
-            // Set project field to be first field that has a Neumann
-            // boundary since this not impose any condition on the vertical boundaries
-            // Othersise set to zero. 
-            if(projectfield == -1)
-            {
-                Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+        // Set project field to be first field that has a Neumann
+        // boundary since this not impose any condition on the vertical boundaries
+        // Othersise set to zero. 
+        if(projectfield == -1)
+        {
+            Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
                 
-                for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
+            for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
+            {
+                BndConds = m_waveVelocities[i]->GetBndConditions();
+                for(int j = 0; j < BndConds.num_elements(); ++j)
                 {
-                    BndConds = m_waveVelocities[i]->GetBndConditions();
-                    for(int j = 0; j < BndConds.num_elements(); ++j)
+                    if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                     {
-                        if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                        {
-                            projectfield = i;
-                            break;
-                        }
-                    }
-                    if(projectfield != -1)
-                    {
+                        projectfield = i;
                         break;
                     }
                 }
-                if(projectfield == -1)
+                if(projectfield != -1)
                 {
-                    cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
-                    projectfield = 0;
+                    break;
                 }
+            }
+            if(projectfield == -1)
+            {
+                cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
+                projectfield = 0;
             }
         }
 

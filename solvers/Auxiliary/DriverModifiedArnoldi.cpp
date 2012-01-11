@@ -227,10 +227,9 @@ namespace Nektar
          // Process eigenvectors and write out.
          EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi, converged);
 
-         m_real_evl = Array<OneD, NekDouble>(m_kdim);
-         m_imag_evl = Array<OneD, NekDouble>(m_kdim);
-         Vmath::Sadd(m_kdim, m_realShift, wr, 1, m_real_evl, 1);
-         Vmath::Sadd(m_kdim, m_imagShift, wi, 1, m_imag_evl, 1);
+         // store eigenvalues so they can be access from driver class
+         m_real_evl = wr;
+         m_imag_evl = wi;
          
          // Close the runtime info file.
          evlout.close();

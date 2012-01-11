@@ -332,10 +332,22 @@ namespace Nektar
         m_leading_real_evl[0] = solverWave->GetRealEvl()[0];
         m_leading_imag_evl[0] = solverWave->GetImagEvl()[0];
 
+        // note this will only be true for modified Arnoldi
+        NekDouble realShift;
+        if(m_sessionVWI->DefinesParameter("RealShift"))
+        {
+            realShift = m_sessionVWI->GetParameter("RealShift");
+        }
+        else
+        {
+            realShift = 0.0;
+        }
+
         // Set up leading eigenvalue from inverse 
         NekDouble invmag = 1.0/(m_leading_real_evl[0]*m_leading_real_evl[0] + 
                                 m_leading_imag_evl[0]*m_leading_imag_evl[0]);
         m_leading_real_evl[0] *= -invmag;
+        m_leading_real_evl[0] += realShift;
         m_leading_imag_evl[0] *= invmag;
 
 

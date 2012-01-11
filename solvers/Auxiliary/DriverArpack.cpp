@@ -253,27 +253,25 @@ namespace Nektar
         sigmai     = m_imagShift;
 	
         //Setting 'A', Ritz vectors are computed. 'S' for Shur vectors
-        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, 
-                       problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
+        Arpack::Dneupd(1, "A", ritzSelect.get(), dr.get(), di.get(), z.get(), n, sigmar, sigmai, workev.get(), "I", n, problem, m_nvec, m_evtol, resid.get(), m_kdim, v.get(), n, iparam, ipntr, workd.get(), workl.get(),lworkl,info);
 		
         ASSERTL0(info == 0, " Error with Dneupd");
-        int nconv=iparam[4];	
+        int nconv=iparam[4];
         Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
         out << "Converged Eigenvalues: " << nconv << endl;
         fprintf(pFile,"Converged Eigenvalues: %d\n:",nconv);
 		
-		
         for(int i= 0; i< nconv; ++i)
         {
             WriteEvs(stdout,i,dr[i],di[i]);
-            WriteEvs(pFile,i,dr[i],di[i]);
+            WriteEvs(pFile ,i,dr[i],di[i]);
 			
             std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
             
             WriteFld(file,z + i*nq);
         }
-
+        
         m_real_evl = dr;
         m_imag_evl = di;
         fclose (pFile);
@@ -283,14 +281,6 @@ namespace Nektar
               cout<<"Dump leading eigenvector"<<endl;
               CopyArnoldiArrayToField(z);               
               m_equ[0]->DoSolve(); 
-              //copy leading eigenvector (conv=0) to field before writing the output file
-              for (int k = 0; k < m_nfields; ++k)
-              {
-                  Vmath::Vcopy(nq, &z[k*nq], 1, &fields[k]->UpdateCoeffs()[0] , 1);   
-                  fields[k]->SetPhysState(false);     
-                  //Vmath::Vcopy(nq, &z[k*nq+(nconv-1)*n], 1, &fields[k]->UpdateCoeffs()[0] , 1);			
-                  //fields[k]->SetPhysState(true);
-              }    	
               m_equ[0]->Output();
         }
         
@@ -302,7 +292,7 @@ namespace Nektar
             {
                 out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
                 out << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
-            }			
+            }	
         }
     }
 

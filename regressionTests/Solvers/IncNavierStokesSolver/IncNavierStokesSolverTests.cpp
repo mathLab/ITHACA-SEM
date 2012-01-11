@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
 	//Test 3D homogeneous 1D approach, velocity correction scheme, Laminar Channel Flow
 	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_MVM.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (MVM)");
 	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_MVM.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (MVM)");
+	Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes (MVM)");
 #ifdef NEKTAR_USING_FFTW
 	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_FFT.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (FFT)");
 	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_FFT.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (FFT)");

@@ -103,6 +103,17 @@ namespace Nektar
         
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs; //< Storage for current and previous levels of high order pressure boundary conditions. 
         
+		Array<OneD, Array<OneD, int> > m_HBC;  //data structure to old all the information regarding High order pressure BCs
+		
+		int m_HBCnumber;                       // number of elemental expansion where a boundary is of High order type
+		
+		StdRegions::StdExpansionSharedPtr m_elmt; // general standard element used to deaal with HOPBC calculations
+		
+		Array<OneD, NekDouble> m_wavenumber;
+		
+		Array<OneD, NekDouble> m_beta;
+		
+		Array<OneD, bool> m_negateNormals;
 
         /**  \brief This function evaluates the normal Neumann pressure
          *  boundary condition for the velocity correction scheme at the

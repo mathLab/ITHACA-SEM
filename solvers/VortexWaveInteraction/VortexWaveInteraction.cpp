@@ -334,9 +334,9 @@ namespace Nektar
 
         // note this will only be true for modified Arnoldi
         NekDouble realShift;
-        if(m_sessionVWI->DefinesParameter("RealShift"))
+        if(m_sessionWave->DefinesParameter("RealShift"))
         {
-            realShift = m_sessionVWI->GetParameter("RealShift");
+            realShift = m_sessionWave->GetParameter("RealShift");
         }
         else
         {

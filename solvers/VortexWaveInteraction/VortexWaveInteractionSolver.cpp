@@ -128,11 +128,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
         for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
         {
             vwi.ExecuteLoop();
-            #ifdef _MSC_VER
-            Sleep(10000);
-            #else
-            sleep(10);
-            #endif
             vwi.SaveLoopDetails("Save",i);
             vwi.AppendEvlToFile("conv.his",i);            
         }
@@ -148,11 +143,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
                 {
                     vwi.ExecuteLoop();
-                    #ifdef _MSC_VER
-                    Sleep(10000);
-                    #else
-                    sleep(10);
-                    #endif
                     vwi.SaveLoopDetails("Save", i);
                     vwi.AppendEvlToFile("conv.his",i);            
                         
@@ -198,11 +188,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 bool exit_alphaIter = false;
                 
                 vwi.ExecuteLoop(false);
-                #ifdef _MSC_VER
-                Sleep(10000);
-                #else
-                sleep(10);
-                #endif
 
                 // Sub iterate Alpha
                 for(i = 0; i < vwi.GetIterEnd(); ++i)
@@ -220,11 +205,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     else
                     {
                         vwi.CalcNonLinearWaveForce();
-                        #ifdef _MSC_VER
-                        Sleep(10000);
-                        #else
-                        sleep(10);
-                        #endif
                         break;
                     }
                 }

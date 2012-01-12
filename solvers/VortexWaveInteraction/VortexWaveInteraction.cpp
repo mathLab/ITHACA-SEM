@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 //
 // File VortexWaveInteraction.cpp
 //
@@ -681,6 +681,8 @@ namespace Nektar
         // Save Wave solution output
         SaveFile(m_sessionName + ".evl",SaveDir,i);
         SaveFile(m_sessionName + "_eig_0",SaveDir,i);
+        // Save new field file of eigenvalue
+        SaveFile(m_sessionName + ".fld",SaveDir,i);
         // Save new forcing file
         SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
     }
@@ -689,8 +691,11 @@ namespace Nektar
     {
         ExecuteRoll();
 
+	sleep(3);
+
         ExecuteStreak();
  
+	sleep(3);
         ExecuteWave();
 
         if(CalcWaveForce)

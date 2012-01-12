@@ -219,11 +219,7 @@ namespace Nektar
 
             m_equ[0]->DoSolve();
 
-            if(!(cycle%m_infosteps))
-            {
-                cout << endl;
-                m_equ[0]->Output();
-            }
+            m_equ[0]->Output();
 
             if(m_EvolutionOperator == eTransientGrowth)
             {
@@ -276,13 +272,6 @@ namespace Nektar
         m_imag_evl = di;
         fclose (pFile);
         
-        if(m_EvolutionOperator != eTransientGrowth)
-        {
-              cout<<"Dump leading eigenvector"<<endl;
-              CopyArnoldiArrayToField(z);               
-              m_equ[0]->DoSolve(); 
-              m_equ[0]->Output();
-        }
         
 	for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
         {

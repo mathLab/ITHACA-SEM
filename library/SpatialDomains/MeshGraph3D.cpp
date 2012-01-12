@@ -454,6 +454,7 @@ namespace Nektar
                         tetgeom->SetGlobalID(indx);
 
                         m_tetGeoms[indx] = tetgeom;
+                        PopulateFaceToElMap(tetgeom, kNfaces);
                     }
                     catch(...)
                     {
@@ -519,6 +520,7 @@ namespace Nektar
                         pyrgeom->SetGlobalID(indx);
 
                         m_pyrGeoms[indx] = pyrgeom;
+                        PopulateFaceToElMap(pyrgeom, kNfaces);
                     }
                     catch(...)
                     {
@@ -589,6 +591,7 @@ namespace Nektar
                         prismgeom->SetGlobalID(indx);
 
                         m_prismGeoms[indx] = prismgeom;
+                        PopulateFaceToElMap(prismgeom, kNfaces);
                     }
                     catch(...)
                     {
@@ -655,6 +658,7 @@ namespace Nektar
                         hexgeom->SetGlobalID(indx);
 
                         m_hexGeoms[indx] = hexgeom;
+                        PopulateFaceToElMap(hexgeom, kNfaces);
                     }
                     catch(...)
                     {
@@ -998,80 +1002,12 @@ namespace Nektar
 
         ElementFaceVectorSharedPtr MeshGraph3D::GetElementsFromFace(Geometry2DSharedPtr face)
         {
-            // Search tets, prisms, pyramids, and hexahedrons
-            // Need to iterate through vectors because there may be multiple
-            // occurrences.
-            ElementFaceSharedPtr elementFace;
+            boost::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
+                m_faceToElMap.find(face->GetGlobalID());
 
-            ElementFaceVectorSharedPtr returnval = MemoryManager<ElementFaceVector>::AllocateSharedPtr();
-
-            CompositeMapIter compIter;
-
-            TetGeomSharedPtr tetGeomShPtr;
-            HexGeomSharedPtr hexGeomShPtr;
-            PrismGeomSharedPtr prismGeomShPtr;
-            PyrGeomSharedPtr pyrGeomShPtr;
-
-            GeometryVectorIter geomIter;
-
-            for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
-            {
-                for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
-                {
-                    tetGeomShPtr = boost::dynamic_pointer_cast<TetGeom>(*geomIter);
-                    hexGeomShPtr = boost::dynamic_pointer_cast<HexGeom>(*geomIter);
-                    prismGeomShPtr = boost::dynamic_pointer_cast<PrismGeom>(*geomIter);
-                    pyrGeomShPtr = boost::dynamic_pointer_cast<PyrGeom>(*geomIter);
-
-                    if (tetGeomShPtr || hexGeomShPtr || prismGeomShPtr || pyrGeomShPtr)
-                    {
-                        int faceNum;
-                        if (tetGeomShPtr)
-                        {
-                            if ((faceNum = tetGeomShPtr->WhichFace(face)) > -1)
-                            {
-                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Element = tetGeomShPtr;
-                                elementFace->m_FaceIndx = faceNum;
-                                returnval->push_back(elementFace);
-                            }
-                        }
-                        else if (hexGeomShPtr)
-                        {
-                            if ((faceNum = hexGeomShPtr->WhichFace(face)) > -1)
-                            {
-                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Element = hexGeomShPtr;
-                                elementFace->m_FaceIndx = faceNum;
-                                returnval->push_back(elementFace);
-                            }
-                        }
-                        else if (prismGeomShPtr)
-                        {
-                            if ((faceNum = prismGeomShPtr->WhichFace(face)) > -1)
-                            {
-                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Element = prismGeomShPtr;
-                                elementFace->m_FaceIndx = faceNum;
-                                returnval->push_back(elementFace);
-                            }
-                        }
-                        else if (pyrGeomShPtr)
-                        {
-                            if ((faceNum = pyrGeomShPtr->WhichFace(face)) > -1)
-                            {
-                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Element = pyrGeomShPtr;
-                                elementFace->m_FaceIndx = faceNum;
-                                returnval->push_back(elementFace);
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            return returnval;
+            ASSERTL0(it != m_faceToElMap.end(), "Unable to find corresponding face!");
+            
+            return it->second;
         }
 
         LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag)
@@ -1183,7 +1119,45 @@ namespace Nektar
         }
 
 
-
+        /**
+         * @brief Given a 3D geometry object #element, populate the face to
+         * element map #m_faceToElMap which maps faces to their corresponding
+         * element(s).
+         * 
+         * @param element  Element to process.
+         * @param kNfaces  Number of faces of #element. Should be removed and
+         * put into Geometry3D as a virtual member function.
+         */
+        void MeshGraph3D::PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces)
+        {
+            // Set up face -> element map
+            for (int i = 0; i < kNfaces; ++i)
+            {
+                int                  faceId = element->GetFace(i)->GetGlobalID();
+                ElementFaceSharedPtr elementFace = 
+                    MemoryManager<ElementFace>::AllocateSharedPtr();
+                
+                elementFace->m_Element  = element;
+                elementFace->m_FaceIndx = i;
+                
+                // Search map to see if face already exists.
+                boost::unordered_map<int, ElementFaceVectorSharedPtr>::iterator it = 
+                    m_faceToElMap.find(faceId);
+                
+                if (it == m_faceToElMap.end())
+                {
+                    ElementFaceVectorSharedPtr tmp = 
+                        MemoryManager<ElementFaceVector>::AllocateSharedPtr();
+                    tmp->push_back(elementFace);
+                    m_faceToElMap[faceId] = tmp;
+                }
+                else
+                {
+                    ElementFaceVectorSharedPtr tmp = it->second;
+                    tmp->push_back(elementFace);
+                }
+            }
+        }
     }; //end of namespace
 }; //end of namespace
 

@@ -39,6 +39,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <list>
+#include <boost/unordered_map.hpp>
 
 namespace Nektar
 {
@@ -216,6 +217,8 @@ namespace Nektar
                     Composite& composite);
 
         private:
+            void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
+            boost::unordered_map<int, ElementFaceVectorSharedPtr> m_faceToElMap;
 
         };
 

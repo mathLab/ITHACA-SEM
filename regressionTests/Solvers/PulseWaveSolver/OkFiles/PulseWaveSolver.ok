@@ -1,0 +1,20 @@
+PulseWaveSolver
+==========================================
+TestPaper1_DG.xml
+L 2 error (variable A) : 5.47723
+L inf error (variable A) : 1
+L 2 error (variable u) : 5.47723
+L inf error (variable u) : 1.00002
+----------------------------------------
+TestPaper2_DG.xml
+L 2 error (variable A) : 14.1394
+L inf error (variable A) : 1.00063
+L 2 error (variable u) : 14.1161
+L inf error (variable u) : 1.00633
+----------------------------------------
+TestPaper3_DG.xml
+L 2 error (variable A) : 10.7976
+L inf error (variable A) : 0.988339
+L 2 error (variable u) : 19.9527
+L inf error (variable u) : 1.99782
+----------------------------------------

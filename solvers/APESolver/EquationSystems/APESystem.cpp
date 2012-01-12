@@ -127,7 +127,7 @@ namespace Nektar
 	m_session->LoadParameter("Gravity", m_g, 9.81);
 		
 	// Load constant incompressible density (APE)
-	m_session->LoadParameter("Rho0", m_Rho0, 1.0);
+	m_session->LoadParameter("Rho0", m_Rho0, 1.204);
 		
 	// Load isentropic coefficient, Ratio of specific heats (APE)
 	m_session->LoadParameter("Gamma", m_gamma, 1.4);

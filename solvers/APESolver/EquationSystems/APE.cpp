@@ -485,6 +485,7 @@ namespace Nektar
 	
         for (i = 0; i < nTraceNumPoints; ++i)
 	  {
+		  //cout << "Tracepoint: "<<i<<" of "<<nTraceNumPoints<<endl;
 
 	    switch(m_upwindType)
 	      {
@@ -536,6 +537,12 @@ namespace Nektar
 	  characteristic[2] = pR/2 + uR*sqrt(P0*m_gamma*m_Rho0)/2;
 	  characteristic[3] = pR/2 - uR*sqrt(P0*m_gamma*m_Rho0)/2;
 
+	  //cout << endl;
+	  for (int i=0; i<4; i++)
+	  {
+		  //cout << "characteristic["<<i<<"] = "<<characteristic[i]<<endl;
+	  }
+	  
 	  
 	  //take left or right value of characteristic variable
 	  for (int j=0; j<nvariables; j++)
@@ -550,6 +557,14 @@ namespace Nektar
 		  }
 	  }
 	  
+	  //cout << "lambda[0] = "<<lambda[0]<<"\tlambda[1] = "<<lambda[1]<<endl;
+
+	  for (int i=0; i<2; i++)
+	  {
+		 // cout << "upwinded W["<<i<<"] = "<<W[i]<<endl;
+	  }
+	  
+	  
 	  //calculate conservative variables from characteristics
 	  upphysfield[0]= W[0]+W[1];
 	  upphysfield[1]= (W[0]-W[1])/sqrt(P0*m_gamma*m_Rho0);
@@ -559,6 +574,8 @@ namespace Nektar
 	  pflux = U0*upphysfield[0] + m_gamma*P0*upphysfield[1];   	  
 	  uflux = U0*upphysfield[1]+V0*upphysfield[2] + upphysfield[0]/m_Rho0;
 	  vflux = 0.0;
+	  
+	  //cout << "pflux = "<<pflux<< "\tuflux = "<<uflux<< "\tvflux = "<<vflux<<endl;
 	  
   }
   

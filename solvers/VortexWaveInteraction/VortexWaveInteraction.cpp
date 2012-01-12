@@ -333,14 +333,18 @@ namespace Nektar
         m_leading_imag_evl[0] = solverWave->GetImagEvl()[0];
 
         // note this will only be true for modified Arnoldi
-        NekDouble realShift;
+        NekDouble realShift = 0.0;
         if(m_sessionWave->DefinesParameter("RealShift"))
         {
-            realShift = m_sessionWave->GetParameter("RealShift");
-        }
-        else
-        {
-            realShift = 0.0;
+            bool defineshift;
+            // only use shift in modifiedArnoldi solver since
+            // implicitly handled in Arpack.
+            m_sessionWave->MatchSolverInfo("Driver","ModifiedArnoldi",defineshift,true);
+            if(defineshift)
+            {
+                realShift = m_sessionWave->GetParameter("RealShift");
+            }
+
         }
 
         // Set up leading eigenvalue from inverse 
@@ -685,6 +689,7 @@ namespace Nektar
         SaveFile(m_sessionName + ".fld",SaveDir,i);
         // Save new forcing file
         SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
+
     }
 
     void VortexWaveInteraction::ExecuteLoop(bool CalcWaveForce)

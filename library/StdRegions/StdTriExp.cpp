@@ -238,7 +238,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& out_d1,
                   Array<OneD,       NekDouble>& out_d2)
         {
-            v_PhysDeriv(inarray, out_d0, out_d1);
+            StdTriExp::v_PhysDeriv(inarray, out_d0, out_d1);
         }
 
         void StdTriExp::v_StdPhysDeriv(
@@ -246,7 +246,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            v_PhysDeriv(dir,inarray,outarray);
+            StdTriExp::v_PhysDeriv(dir,inarray,outarray);
         }
         
 

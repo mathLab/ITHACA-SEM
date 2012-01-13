@@ -508,20 +508,16 @@ namespace Nektar
                                Array<OneD,NekDouble> &out_ds)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
             int     coordim  = m_geom->GetCoordim();
-            Array<OneD, NekDouble> out_ds_tmp(nquad0,0.0);
+            Array<OneD, NekDouble> diff (nquad0);
+            //this operation is needed if you put out_ds==inarray
+            Vmath::Zero(nquad0,out_ds,1);              
             switch(coordim)
             {
             case 2:
-
-                    Array<OneD, NekDouble> inarray_d0(nquad0);
-                    Array<OneD, NekDouble> inarray_d1(nquad0);
-
-                    v_PhysDeriv(inarray,inarray_d0,inarray_d1);
+                  
                     Array<OneD, Array<OneD, NekDouble> > tangents;
                     tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
-
                     for(int k=0; k<coordim; ++k)
                     {
                         tangents[k]= Array<OneD, NekDouble>(nquad0); 
@@ -529,12 +525,23 @@ namespace Nektar
                     tangents = GetMetricInfo()->GetEdgeTangent();
                     ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
                             "tangent vectors do not exist: check if a boundary region is defined as I ");
-                    // \nabla u \cdot tangent
-                    Vmath::Vmul(nquad0,tangents[0],1,inarray_d0,1,out_ds_tmp,1);
-                    Vmath::Vadd(nquad0,out_ds_tmp,1,out_ds,1,out_ds,1);
-                    Vmath::Zero(nquad0,out_ds_tmp,1);
-                    Vmath::Vmul(nquad0,tangents[1],1,inarray_d1,1,out_ds_tmp,1);
-                    Vmath::Vadd(nquad0,out_ds_tmp,1,out_ds,1,out_ds,1);
+		    //diff= dU/de
+            	    Array<OneD,NekDouble> diff(nquad0);
+
+            	    PhysTensorDeriv(inarray,diff);
+
+                    //get dS/de= (Jac)^-1
+                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac();                    
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {                                           	   
+                         //calculate the derivative as (dU/de)*(Jac)^-1
+                         Vmath::Vdiv(nquad0,diff,1,Jac ,1,out_ds,1);			 
+                    }
+                    else
+                    {
+                          NekDouble invJac = 1/Jac[0];
+                          Vmath::Smul(nquad0, invJac,diff,1,out_ds,1);                         
+                    }
 
             }
         }

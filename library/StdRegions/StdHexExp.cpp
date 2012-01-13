@@ -383,7 +383,7 @@ namespace Nektar
                                       Array<OneD, NekDouble> &out_d1,
                                       Array<OneD, NekDouble> &out_d2)
         {
-            v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
+            StdHexExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
 

@@ -126,14 +126,14 @@ namespace Nektar
                             Array<OneD, NekDouble> &out_d1,
                             Array<OneD, NekDouble> &out_d2)
         {
-            PhysDeriv(inarray, out_d0, out_d1);
+            StdQuadExp::v_PhysDeriv(inarray, out_d0, out_d1);            
         }
 
         void StdQuadExp::v_StdPhysDeriv(const int dir, 
                             const Array<OneD, const NekDouble>& inarray, 
                             Array<OneD, NekDouble> &outarray)
         {
-            PhysDeriv(dir,inarray,outarray);
+            StdQuadExp::v_PhysDeriv(dir,inarray,outarray);
         }
 
 

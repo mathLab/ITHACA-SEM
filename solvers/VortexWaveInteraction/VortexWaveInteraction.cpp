@@ -455,14 +455,6 @@ namespace Nektar
         
         Vmath::Vadd(npts,der1,1,der2,1,der1,1);
         
-        if(m_deltaFcnApprox)
-        {
-            for(int i = 0; i < npts; ++i)
-            {
-                der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
-            }
-        }
-        
 #if 1
         m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[0]);
 #else
@@ -480,14 +472,6 @@ namespace Nektar
         m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
         
         Vmath::Vadd(npts,der1,1,der2,1,der1,1);
-
-        if(m_deltaFcnApprox)
-        {
-            for(int i = 0; i < npts; ++i)
-            {
-                der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
-            }
-        }
 
 #if 1
         m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[1]);
@@ -577,7 +561,7 @@ namespace Nektar
 #endif
 
 
-        if(!(m_deltaFcnApprox)&&(m_vwiRelaxation))
+        if(m_vwiRelaxation)
         {
             Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
                         m_vwiForcing[0],1,m_vwiForcing[0],1);
@@ -589,7 +573,23 @@ namespace Nektar
             Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[3],1,
                          m_vwiForcing[1],1,m_vwiForcing[1],1);
         }
-        
+
+        if(m_deltaFcnApprox)
+        {
+            for(int j = 0; j < 2; ++j)
+            {
+                
+                m_waveVelocities[projectfield]->GetPlane(0)->BwdTrans(m_vwiForcing[j],der1);
+                for(int i = 0; i < npts; ++i)
+                {
+                    der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
+                }
+                m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[j]);
+            }
+        }
+
+
+      
         // dump output
         Array<OneD, std::string> variables(2);
         Array<OneD, Array<OneD, NekDouble> > outfield(2);

@@ -961,7 +961,7 @@ namespace Nektar
 
         if(dumpInitialConditions)
         {
-            std::string outname = m_sessionName +"_ini.chk";
+            std::string outname = m_sessionName +"_0.chk";
             
             // dump initial conditions to file
             WriteFld(outname);

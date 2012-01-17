@@ -1232,7 +1232,7 @@ namespace Nektar
             // get optimisation information about performing block
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
-                = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
+                = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
             const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 

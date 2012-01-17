@@ -88,5 +88,29 @@
     </FUNCTION>
     
   </CONDITIONS>
+  
+  <GLOBALOPTIMIZATIONPARAMETERS>
+
+        <BwdTrans>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </BwdTrans>
+
+        <IProductWRTBase>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </IProductWRTBase>
+
+        <MassMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </MassMatrixOp>
+
+        <HelmholtzMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </HelmholtzMatrixOp>
+
+  </GLOBALOPTIMIZATIONPARAMETERS>
     
 </NEKTAR>

@@ -91,10 +91,7 @@
         </ELEMENT>
         <COMPOSITE>
             <C ID="0"> Q[0-15] </C>
-            <C ID="1"> E[11,21,30,39] </C>
-            <C ID="2"> E[3,6,9,12] </C>
-            <C ID="3"> E[0,13,22,31] </C>
-            <C ID="4"> E[32,34,36,38] </C>
+            <C ID="1"> E[11,21,30,39,3,6,9,12,0,13,22,31,32,34,36,38] </C>
         </COMPOSITE>
         
         <DOMAIN> C[0] </DOMAIN>
@@ -102,7 +99,7 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="2" FIELDS="u" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="#NUMMODES#" FIELDS="u" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
@@ -112,8 +109,8 @@
       <P> TimeStep           = 0.1              </P>
       <P> IO_CheckSteps      = 100              </P>
       <P> IO_InfoSteps       = 100              </P>
-      <P> CFL                = 1            </P>
-      <P> NumQuadPointsError = 1            </P>
+      <P> CFL                = #CFL#            </P>
+      <P> NumQuadPointsError = #NQP#            </P>
     </PARAMETERS>
 
     <SOLVERINFO>
@@ -128,23 +125,11 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
     </BOUNDARYCONDITIONS>
 

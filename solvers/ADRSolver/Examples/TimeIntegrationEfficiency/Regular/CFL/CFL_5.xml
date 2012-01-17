@@ -130,15 +130,12 @@
         </ELEMENT>
         <COMPOSITE>
             <C ID="0"> Q[0-24] </C>
-            <C ID="1"> E[14,26,37,48,59] </C>
-            <C ID="2"> E[3,6,9,12,15] </C>
-            <C ID="3"> E[0,16,27,38,49] </C>
-            <C ID="4"> E[50,52,54,56,58] </C>
+            <C ID="1"> E[14,26,37,48,59,3,6,9,12,15,0,16,27,38,49,50,52,54,56,58] </C>
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="#NUMMODES#" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
     
     <CONDITIONS>
@@ -148,14 +145,14 @@
       <P> TimeStep           = 0.1              </P>
       <P> IO_CheckSteps      = 100              </P>
       <P> IO_InfoSteps       = 100              </P>
-      <P> CFL                = 1.0            </P>
-      <P> NumQuadPointsError = 60            </P>
+      <P> CFL                = #CFL#            </P>
+      <P> NumQuadPointsError = #NQP#            </P>
     </PARAMETERS>
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="CFLtester"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>    
-      <I PROPERTY="TimeIntegrationMethod"  VALUE="RungeKutta2_ImprovedEuler"/>
+      <I PROPERTY="TimeIntegrationMethod"  VALUE="#TimeScheme#"/>
     </SOLVERINFO> 
 
     <VARIABLES>
@@ -164,23 +161,11 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
     </BOUNDARYCONDITIONS>
 

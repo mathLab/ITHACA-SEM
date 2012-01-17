@@ -268,11 +268,14 @@ namespace Nektar
 		
 		m_session->LoadParameter("Noise", Noise,0.0);
 		
-		for(int i = 0; i < m_nConvectiveFields; i++)
+		if(Noise > 0.0)
 		{
-			Vmath::FillWhiteNoise(phystot,Noise,noise,1);
-			Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
-			m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+			for(int i = 0; i < m_nConvectiveFields; i++)
+			{
+				Vmath::FillWhiteNoise(phystot,Noise,noise,1);
+				Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
+				m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+			}
 		}
     }
 

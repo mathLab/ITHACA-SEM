@@ -370,10 +370,7 @@
         </ELEMENT>
         <COMPOSITE>
             <C ID="0"> Q[0-80] </C>
-            <C ID="1"> E[26,46,65,84,103,122,141,160,179] </C>
-            <C ID="2"> E[3,6,9,12,15,18,21,24,27] </C>
-            <C ID="3"> E[0,28,47,66,85,104,123,142,161] </C>
-            <C ID="4"> E[162,164,166,168,170,172,174,176,178] </C>
+            <C ID="1"> E[26,46,65,84,103,122,141,160,179,3,6,9,12,15,18,21,24,27,0,28,47,66,85,104,123,142,161,162,164,166,168,170,172,174,176,178] </C>
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
@@ -404,23 +401,11 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
     </BOUNDARYCONDITIONS>
 

@@ -34,10 +34,7 @@
         </ELEMENT>
         <COMPOSITE>
             <C ID="0"> Q[0-3] </C>
-            <C ID="1"> E[5,11] </C>
-            <C ID="2"> E[3,6] </C>
-            <C ID="3"> E[0,7] </C>
-            <C ID="4"> E[8,10] </C>
+            <C ID="1"> E[5,11,3,6,0,7,8,10] </C>
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
@@ -68,24 +65,13 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
-      <REGION REF="1">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
+     
     </BOUNDARYCONDITIONS>
 
      <FUNCTION NAME="AdvectionVelocity">

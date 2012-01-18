@@ -8,8 +8,45 @@
 #include <vtk-5.4/vtkPoints.h>
 #include <vtk-5.4/vtkCellArray.h>
 #include <vtk-5.4/vtkCellDataToPointData.h>
-
+#include <vtk-5.4/vtkContourFilter.h>
 // Usage: VtkToFld session.xml input.vtk output.fld
+
+#include <boost/unordered_set.hpp>
+
+struct Vertex
+{
+    Vertex(double pX, double pY, double pZ, double pScalar, double factor)
+        : x((int)floor(pX*factor)), y((int)floor(pY*factor)), z((int)floor(pZ*factor)), scalar(pScalar) {}
+    int x;
+    int y;
+    int z;
+    double scalar;
+
+    bool operator=(const Vertex& v)
+    {
+        return (x == v.x && y == v.y && z == v.z);
+    }
+};
+typedef boost::shared_ptr<Vertex> VertexSharedPtr;
+
+struct VertexHash : std::unary_function<VertexSharedPtr, std::size_t>
+{
+    std::size_t operator()(VertexSharedPtr const& p) const
+    {
+        std::size_t seed = 0;
+        boost::hash_combine(seed, p -> x);
+        boost::hash_combine(seed, p -> y);
+        boost::hash_combine(seed, p -> z);
+        return seed;
+    }
+};
+typedef boost::unordered_set<VertexSharedPtr, VertexHash> VertexSet;
+
+bool operator==(const VertexSharedPtr& v1, const VertexSharedPtr& v2)
+{
+    return v1->operator=(*v2);
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -20,24 +57,26 @@ int main(int argc, char* argv[])
 
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv, vFilenames);
-cout << "Loaded session" << endl;
+
     try
     {
+        const double factor = atof(argv[4]);
+
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
         //----------------------------------------------
-cout << "Created graph" << endl;
+
         //----------------------------------------------
         // Define Expansion
         Exp = MemoryManager<MultiRegions::ExpList2D>::
             AllocateSharedPtr(vSession,graph2D);
         //----------------------------------------------
-cout << "Created ExpList" << endl;
+
         //----------------------------------------------
-        // Set up coordinates of mesh for Forcing function evaluation
+        // Set up coordinates of mesh
         int coordim = Exp->GetCoordim(0);
-        int nq      = Exp->GetTotPoints();
+        int nq      = Exp->GetNpoints();
 
         Array<OneD, NekDouble> xc0(nq,0.0);
         Array<OneD, NekDouble> xc1(nq,0.0);
@@ -61,28 +100,70 @@ cout << "Created ExpList" << endl;
         vtkMeshReader->SetFileName(argv[2]);
         vtkMeshReader->Update();
         vtkPolyData *vtkMesh = vtkMeshReader->GetOutput();
+        vtkCellDataToPointData* c2p = vtkCellDataToPointData::New();
+        c2p->SetInput(vtkMesh);
+        c2p->PassCellDataOn();
+        c2p->Update();
+        vtkPolyData *vtkDataAtPoints = c2p->GetPolyDataOutput();
 
         vtkPoints *vtkPoints = vtkMesh->GetPoints();
         vtkCellArray *vtkPolys = vtkMesh->GetPolys();
-        vtkCellDataToPointData* c2p = vtkCellDataToPointData::New();
-        c2p->SetInput(vtkMesh);
-        vtkPolyData *vtkDataAtPoints = c2p->GetPolyDataOutput();
-        vtkPointData *vtkPointData = vtkDataAtPoints->GetPointData();
 
-        for(int i = 0; i < nq; ++i)
+        ASSERTL0(vtkPoints, "ERROR: cannot get points from mesh.");
+        ASSERTL0(vtkPolys,  "ERROR: cannot get polygons from mesh.");
+
+        VertexSet points;
+        VertexSet::iterator vIter;
+        double p[3];
+        double val;
+        double x, y, z;
+        int coeff_idx;
+        int i,j;
+
+        // Build up an unordered set of vertices from the VTK file. For each
+        // vertex a hashed value of the coordinates is generated to within a
+        // given tolerance.
+        for (i = 0; i < vtkPoints->GetNumberOfPoints(); ++i)
         {
-            cout << "Point: " << i << endl;
-            for (int j = 0; j < vtkDataAtPoints->GetNumberOfPoints(); ++i)
+            vtkPoints->GetPoint(i,p);
+            val = vtkDataAtPoints->GetPointData()->GetScalars("Image_Intensity")->GetTuple1(i);
+            boost::shared_ptr<Vertex> v(new Vertex(p[0],p[1],p[2],val,factor));
+            points.insert(v);
+        }
+
+        // Now process each vertex of each element in the mesh
+        for (i = 0; i < Exp->GetNumElmts(); ++i)
+        {
+            StdRegions::StdExpansionSharedPtr e = Exp->GetExp(i);
+            for (j = 0; j < e->GetNverts(); ++j)
             {
-                double p[3];
-                vtkDataAtPoints->GetPoint(j, p);
-                if (fabs(p[0]-xc0[i]) + fabs(p[1]-xc1[i]) + fabs(p[2]-xc2[i]) < 1e-06)
+                // Get the index of the coefficient corresponding to this vertex
+                coeff_idx = Exp->GetCoeff_Offset(i) + e->GetVertexMap(j);
+
+                // Get the coordinates of the vertex
+                SpatialDomains::VertexComponentSharedPtr vert = e->GetGeom2D()->GetVertex(j);
+                vert->GetCoords(x,y,z);
+
+                // Look up the vertex in the VertexSet
+                boost::shared_ptr<Vertex> v(new Vertex(x,y,z,0.0,factor));
+                vIter = points.find(v);
+
+                // If not found, maybe the tolerance should be reduced?
+                // If found, record the scalar value from the VTK file in the
+                // corresponding coefficient.
+                if (vIter == points.end())
                 {
-                    cout << "Found value" << endl;
-                    Exp->UpdatePhys()[i] = vtkPointData->GetScalars("Image_Intensity")->GetTuple1(j);
+                    cerr << "Vertex " << i << " not found."
+                            << x << ", " << y << ", " << z << endl;
+                    cerr << v->x << ", " << v->y << ", " << v->z << endl;
+                }
+                else
+                {
+                    Exp->UpdateCoeffs()[coeff_idx] = (*vIter)->scalar;
                 }
             }
         }
+        Exp->SetPhysState(false);
 
         //-----------------------------------------------
         // Write solution to file
@@ -95,15 +176,15 @@ cout << "Created ExpList" << endl;
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        for(int i = 0; i < FieldDef.size(); ++i)
+        for(i = 0; i < FieldDef.size(); ++i)
         {
-            FieldDef[i]->m_fields.push_back("u");
+            FieldDef[i]->m_fields.push_back("intensity");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
         graph2D->Write(out, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {
-        cout << "ERROR" << endl;
+        cout << "An error occurred." << endl;
     }
 }

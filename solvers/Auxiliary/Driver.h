@@ -62,7 +62,8 @@ namespace Nektar
         eNonlinear,
         eDirect,
         eAdjoint,
-        eTransientGrowth
+        eTransientGrowth,
+		eSkewSymmetric
     };
 
     /// Base class for the development of solvers.

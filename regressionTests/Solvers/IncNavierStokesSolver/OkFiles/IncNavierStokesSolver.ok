@@ -196,3 +196,21 @@ L inf error (variable w) : 5.62603e-05
 L 2 error (variable p) : 0.000133879
 L inf error (variable p) : 0.000823509
 ----------------------------------------
+Test_ChanFlow_m3_SKS.xml
+L 2 error (variable u) : 5.1101e-16
+L inf error (variable u) : 4.71845e-15
+L 2 error (variable v) : 0
+L inf error (variable v) : 3.23096e-16
+L 2 error (variable p) : 9.24888e-15
+L inf error (variable p) : 6.63913e-14
+----------------------------------------
+Test_KovaFlow_3DH1D_P5_20modes_SKS_MVM.xml
+L 2 error (variable u) : 6.86346e-05
+L inf error (variable u) : 0.000156063
+L 2 error (variable v) : 2.68934e-05
+L inf error (variable v) : 0.000102184
+L 2 error (variable w) : 2.48503e-05
+L inf error (variable w) : 5.67364e-05
+L 2 error (variable p) : 0.000140221
+L inf error (variable p) : 0.0009048
+----------------------------------------

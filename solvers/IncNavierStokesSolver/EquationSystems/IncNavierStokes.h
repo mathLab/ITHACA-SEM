@@ -80,6 +80,7 @@ namespace Nektar
         eNonConservative,
         eLinearised,
         eAdjoint,
+		eSkewSymmetric,
         eAdvectionFormSize
     };
     
@@ -90,7 +91,8 @@ namespace Nektar
         "Convective",
         "NonConservative",
         "Linearised",
-        "Adjoint"
+        "Adjoint",
+		"SkewSymmetric"
     };
 	
     /**

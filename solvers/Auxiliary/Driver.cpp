@@ -37,11 +37,12 @@
 
 namespace Nektar
 {
-    std::string Driver::evolutionOperatorLookupIds[4] = {
+    std::string Driver::evolutionOperatorLookupIds[5] = {
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Nonlinear"      ,eNonlinear),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Direct"         ,eDirect),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Adjoint"        ,eAdjoint),
-            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth)
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth),
+		    LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","SkewSymmetric",eSkewSymmetric)
     };
     std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
     std::string Driver::driverDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Driver","Standard");
@@ -122,6 +123,10 @@ namespace Nektar
                 m_session->SetTag("AdvectiveType","Adjoint");
                 m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                 break;
+			case eSkewSymmetric:
+				m_session->SetTag("AdvectiveType","SkewSymmetric");
+				m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
+				break;
             default:
                 ASSERTL0(false, "Unrecognised evolution operator.");
             }

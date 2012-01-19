@@ -143,6 +143,30 @@ namespace Nektar
                          int pVelocityComponent,
 						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk);
+		
+		///Parameter for homogeneous expansions
+        enum HomogeneousType
+        {
+            eHomogeneous1D,
+            eHomogeneous2D,
+            eHomogeneous3D,
+            eNotHomogeneous
+        };
+		
+        bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
+		
+        enum HomogeneousType m_HomogeneousType;
+		
+        NekDouble m_LhomX; ///< physical length in X direction (if homogeneous)
+        NekDouble m_LhomY; ///< physical length in Y direction (if homogeneous)
+        NekDouble m_LhomZ; ///< physical length in Z direction (if homogeneous)
+		
+        int m_npointsX;    ///< number of points in X direction (if homogeneous)
+        int m_npointsY;    ///< number of points in Y direction (if homogeneous)
+        int m_npointsZ;    ///< number of points in Z direction (if homogeneous)
+		
+        int m_HomoDirec;   ///< number of homogenous directions
+		
 
 		SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
 

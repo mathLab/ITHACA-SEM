@@ -698,7 +698,7 @@ namespace Nektar
 				// x-component (stored in Qx)
 				Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qx,1,Nu,1,Qx,1);
 				// y-component (stored in Qy)
-				Vmath::Svtvp(m_HBC[1][j],m_kinvis,Qy,1,Nv,1,Qy,1);
+				Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qy,1,Nv,1,Qy,1);
 				// z-component (stored in Qz) not required for this approach
 				// the third component of the normal vector is always zero
 				

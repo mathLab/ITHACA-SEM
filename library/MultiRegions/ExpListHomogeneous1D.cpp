@@ -175,7 +175,7 @@ namespace Nektar
 			NekVector<NekDouble> PadOUT_V2(2*nplanes,PadV2_pencil_phys,eWrapper);
 			
 			NekVector<NekDouble> PadIN_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
-			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(2*nplanes,PadRe_pencil_coeff,eWrapper);
 			
 			//Looping on the pencils
 			for(int i = 0 ; i< npencils ; i++)

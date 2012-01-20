@@ -696,11 +696,13 @@ namespace Nektar
     {
         ExecuteRoll();
 
+#ifndef _WIN32
 	sleep(3);
-
+#endif
         ExecuteStreak();
- 
+#ifndef _WIN32
 	sleep(3);
+#endif
         ExecuteWave();
 
         if(CalcWaveForce)

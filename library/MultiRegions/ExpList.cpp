@@ -2507,7 +2507,7 @@ namespace Nektar
             ASSERTL1(collectionIter != collection.end(), "Unable to locate collection.");
             const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
             SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
-            ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unalbe to locate condition map.");
+            ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unable to locate condition map.");
             const SpatialDomains::BoundaryConditionShPtr boundaryCondition = (*conditionMapIter).second;
             return boundaryCondition;
         }

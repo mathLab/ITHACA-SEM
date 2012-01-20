@@ -43,11 +43,10 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2)
+    std::vector<std::string> vFilenames;
+    for (unsigned int i = 1; i < argc; ++i)
     {
-        cout << "\nUsage: CardiacEPSolver  sessionfile" << endl;
-        GetEquationSystemFactory().PrintAvailableClasses();
-        exit(1);
+        vFilenames.push_back(argv[i]);
     }
 
     LibUtilities::SessionReaderSharedPtr session;
@@ -57,7 +56,7 @@ int main(int argc, char *argv[])
 //    try
 //    {
         // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv, vFilenames);
 
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");

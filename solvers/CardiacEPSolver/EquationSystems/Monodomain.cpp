@@ -85,20 +85,40 @@ namespace Nektar
 
         m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]->GetNpoints());
 
-        if (m_session->DefinesParameter("d00"))
+        // Load variable coefficients
+        /// @todo: move to an EvaluateFunction routine.
+        std::string varCoeffs[3] = {"d00", "d11", "d22"};
+        StdRegions::VarCoeffType varCoeffEnum[3] = {
+                StdRegions::eVarCoeffD00,
+                StdRegions::eVarCoeffD11,
+                StdRegions::eVarCoeffD22
+        };
+        std::string varName = "intensity";
+        for (int i = 0; i < 3; ++i)
         {
-            m_vardiff[StdRegions::eVarCoeffD00]
-                = Array<OneD, NekDouble>(GetNpoints(), m_session->GetParameter("d00"));
-        }
-        if (m_session->DefinesParameter("d11"))
-        {
-            m_vardiff[StdRegions::eVarCoeffD11]
-                = Array<OneD, NekDouble>(GetNpoints(), m_session->GetParameter("d11"));
-        }
-        if (m_session->DefinesParameter("d22"))
-        {
-            m_vardiff[StdRegions::eVarCoeffD22]
-                = Array<OneD, NekDouble>(GetNpoints(), m_session->GetParameter("d22"));
+            if (m_session->DefinesFunction(varCoeffs[i]))
+            {
+                if (m_session->GetFunctionType(varCoeffs[i]) == LibUtilities::eFunctionTypeFile)
+                {
+                    std::string fileName = m_session->GetFunctionFilename(varCoeffs[i]);
+                    ImportFld(fileName, m_fields[0], varName);
+
+                    m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+
+                    int nq = m_fields[0]->GetNpoints();
+                    NekDouble max = Vmath::Vmax(nq, m_fields[0]->GetPhys(), 1);
+                    Vmath::Smul(nq, 1.0/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Neg(nq, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Sadd(nq, 1.0, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+
+                    m_vardiff[varCoeffEnum[i]] = m_fields[0]->GetPhys();
+                }
+            }
+            else
+            {
+            	ASSERTL0(false, "Need to implement analytic function import for VarCoeffs");
+                // Implement for an analytic function
+            }
         }
 
         if (m_session->DefinesParameter("StimulusDuration"))

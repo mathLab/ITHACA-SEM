@@ -1795,6 +1795,36 @@ namespace Nektar
         }
     }
 
+    /**
+     * Import field from infile and load into \a pField. This routine will
+     * also perform a \a BwdTrans to ensure data is in both the physical and
+     * coefficient storage.
+     */
+    void EquationSystem::ImportFld(std::string &infile, MultiRegions::ExpListSharedPtr &pField, std::string &pFieldName)
+    {
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+        std::vector<std::vector<NekDouble> > FieldData;
+
+        m_graph->Import(infile,FieldDef,FieldData);
+        int idx = -1;
+
+        for(int i = 0; i < FieldDef.size(); ++i)
+        {
+            // find the index of the required field in the file.
+            for(int j = 0; j < FieldData.size(); ++j)
+            {
+                if (FieldDef[i]->m_fields[j] == pFieldName)
+                {
+                    idx = j;
+                }
+            }
+            ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
+
+            pField->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                             FieldDef[i]->m_fields[idx]);
+        }
+        pField->BwdTrans(pField->GetCoeffs(), pField->UpdatePhys());
+    }
 
     /**
      * Import field from infile and load into the array \a

@@ -66,10 +66,6 @@ namespace Nektar
         class GlobalLinSys
         {
         public:
-            /// Default constructor
-//            MULTI_REGIONS_EXPORT
-//            GlobalLinSys();
-
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT
             GlobalLinSys(const GlobalLinSysKey &pKey,
@@ -95,9 +91,11 @@ namespace Nektar
 
         protected:
             /// Key associated with this linear system.
-            GlobalLinSysKey                         m_linSysKey;
+            const GlobalLinSysKey                   m_linSysKey;
             /// Local Matrix System
-            boost::weak_ptr<ExpList>                m_expList;
+            const boost::weak_ptr<ExpList>          m_expList;
+            /// Robin boundary info
+            const map<int, RobinBCInfoSharedPtr>    m_robinBCInfo;
 
             /// Solve the linear system for given input and output vectors.
             inline void SolveLinearSystem(

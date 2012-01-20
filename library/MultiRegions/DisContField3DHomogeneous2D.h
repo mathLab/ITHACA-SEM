@@ -114,6 +114,12 @@ namespace Nektar
                 GetBoundaryToElmtMap(ElmtID,EdgeID);
             }
 
+           /// @todo Fix Robin BCs for homogeneous case
+           virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+           {
+               return map<int, RobinBCInfoSharedPtr>();
+           }
+
         private:
             // virtual functions
             virtual void v_HelmSolve(

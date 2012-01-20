@@ -678,7 +678,7 @@ namespace Nektar
             {
                 for(j = 0; j < dim; j++)
                 {
-                    mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],DetExpansionType(),*this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mkey,mtype[i][j]);
 
                     LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
                     Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);

@@ -51,6 +51,13 @@ namespace Nektar
         {
         }
 
+        MatrixKey::MatrixKey(const MatrixKey& mkey,
+                      const StdRegions::MatrixType matrixType) :
+            StdRegions::StdMatrixKey(mkey, matrixType),
+            m_metricinfo(mkey.m_metricinfo)
+        {
+        }
+
         MatrixKey::MatrixKey(const StdRegions::StdMatrixKey &mkey) :
             StdRegions::StdMatrixKey(mkey)
         {

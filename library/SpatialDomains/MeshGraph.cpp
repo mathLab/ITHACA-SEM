@@ -1793,24 +1793,6 @@ namespace Nektar
                                     ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
                                     (x->second)->m_basisKeyVector = basiskeyvec;
                                 }
-
-//                                ExpansionMapIter expVecIter;
-//                                for (expVecIter = expansionMap->begin(); expVecIter != expansionMap->end(); ++expVecIter)
-//                                {
-//                                    if (*geomVecIter == (expVecIter->second)->m_geomShPtr)
-//                                    {
-//                                        if(useExpansionType)
-//                                        {
-//                                            (expVecIter->second)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
-//                                        }
-//                                        else
-//                                        {
-//                                            ASSERTL0((*geomVecIter)->GetShapeDim() == basiskeyvec.size()," There is an incompatible expansion dimension with geometry dimension");
-//                                            (expVecIter->second)->m_basisKeyVector = basiskeyvec;
-//                                        }
-//                                        break;
-//                                    }
-//                                }
                             }
                         }
 

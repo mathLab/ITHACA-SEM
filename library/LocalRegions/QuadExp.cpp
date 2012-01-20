@@ -1441,11 +1441,11 @@ namespace Nektar
             case StdRegions::eHelmholtz:
                 {
                     NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetExpansionType(), *this);
+
+                    MatrixKey masskey(mkey, StdRegions::eMass);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+
+                    MatrixKey lapkey(mkey, StdRegions::eLaplacian);
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();

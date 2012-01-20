@@ -140,12 +140,6 @@ namespace Nektar
          */
 
 
-//        GlobalLinSys::GlobalLinSys()
-//        {
-//
-//        }
-
-
         /**
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by
@@ -159,9 +153,9 @@ namespace Nektar
                 const boost::shared_ptr<LocalToGlobalBaseMap>
                                    &pLocToGloMap):
             m_linSysKey(pKey),
-            m_expList(pExpList)
+            m_expList(pExpList),
+            m_robinBCInfo(m_expList.lock()->GetRobinBCInfo())
         {
-
         }
 
 
@@ -207,44 +201,14 @@ namespace Nektar
                 }
             }
 
-            // if requesting the HybridDGHelmBndLam matrix, retrieve the two
-            // scalar constants
-            if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
-            {
-//                NekDouble vFactor1, vFactor2;
-//                int Nconstants = vMatrixKey->GetNconstants();
-//
-//                if(Nconstants>2)
-//                {
-//                    vFactor1 = m_linSysKey.GetConstant(nel);
-//                    vFactor2 = m_linSysKey.GetConstant(Nconstants-1);
-//                }
-//
-//                else
-//                {
-//                    vFactor1 = m_linSysKey.GetConstant(0);
-//                    vFactor2 = m_linSysKey.GetConstant(1);
-//                }
-                LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                               vExp->DetExpansionType(),
-                                               *vExp, m_linSysKey.GetConstFactors(),
-                                               vVarCoeffMap);
-                loc_mat = vExp->GetLocMatrix(matkey);
-            }
-            else
-            {
-                LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetExpansionType(),
-                                           *vExp, m_linSysKey.GetConstFactors(),
-                                           vVarCoeffMap);
-                loc_mat = vExp->GetLocMatrix(matkey);
-            }
+            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
+                                       vExp->DetExpansionType(),
+                                       *vExp, m_linSysKey.GetConstFactors(),
+                                       vVarCoeffMap);
+            loc_mat = vExp->GetLocMatrix(matkey);
 
-            // retrieve robin boundary condition information and apply robin
-            // boundary conditions to the matrix.
-            const map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                                                = expList->GetRobinBCInfo();
-            if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
+            // apply robin boundary conditions to the matrix.
+            if(m_robinBCInfo.count(nel) != 0) // add robin mass matrix
             {
                 RobinBCInfoSharedPtr rBC;
 
@@ -256,7 +220,7 @@ namespace Nektar
                 Blas::Dscal(rows*cols,loc_mat->Scale(),new_mat->GetRawPtr(),1);
 
                 // add local matrix contribution
-                for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
                 {
                     vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                 }
@@ -311,9 +275,7 @@ namespace Nektar
 
             loc_mat = vExp->GetLocStaticCondMatrix(matkey);
 
-            const map<int, RobinBCInfoSharedPtr> vRobinBCInfo
-                    = expList->GetRobinBCInfo();
-            if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
+            if(m_robinBCInfo.count(nel) != 0) // add robin mass matrix
             {
                 RobinBCInfoSharedPtr rBC;
 
@@ -327,7 +289,7 @@ namespace Nektar
                 Blas::Dscal(rows*cols,tmp_mat->Scale(),new_mat->GetRawPtr(),1);
 
                 // add local matrix contribution
-                for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
                 {
                     vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                 }

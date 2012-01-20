@@ -777,7 +777,7 @@ namespace Nektar
             bool loadOkay = vMainDoc->LoadFile();
             ASSERTL0(loadOkay, std::string("Unable to load file: ") +
                     pFilenames[0] + ". Check XML standards compliance. Error on line: "
-                    + boost::lexical_cast<std::string>(vMainDoc->Row()));
+                    + boost::lexical_cast<std::string>(vMainDoc->Row()) + ": " + std::string(vMainDoc->ErrorDesc()));
             TiXmlHandle vMainHandle(vMainDoc);
             TiXmlElement* vMainNektar = vMainHandle.FirstChildElement("NEKTAR").Element();
 

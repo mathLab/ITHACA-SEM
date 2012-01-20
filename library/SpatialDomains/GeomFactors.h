@@ -36,6 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
+#include <boost/unordered_set.hpp>
+
 #include <LibUtilities/Foundations/Points.h>
 
 #include <SpatialDomains/SpatialDomains.hpp>
@@ -60,7 +62,11 @@ namespace Nektar
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
         /// Iterator for the GeomFactorsVector.
         typedef GeomFactorsVector::iterator GeomFactorsVectorIter;
-
+        /// An unordered set of GeomFactor pointers.
+        typedef boost::unordered_set< GeomFactorsSharedPtr > GeomFactorsSet;
+        /// Iterator for the GeomFactorsSet
+        typedef boost::unordered_set< GeomFactorsSharedPtr >::iterator GeomFactorsSetIter;
+        
         /// Describes the principle direction for tangents on the domain.
         enum GeomTangents
         {
@@ -145,21 +151,11 @@ namespace Nektar
             /// Indicates if the Laplacian metric with index \a indx is zero.
             inline bool LaplacianMetricIsZero(const int indx) const;
 
-            /// Computes the edge normals from a 2D element
-//            inline void ComputeNormals(
-//                            const GeometrySharedPtr &geom2D,
-//                            const int edge,
-//                            const LibUtilities::PointsKey &to_key);
             /// Computes the edge tangents from 1D element
             inline void ComputeEdgeTangents(
             	    	    const GeometrySharedPtr &geom2D,
             	    	    const int edge,
             	    	    const LibUtilities::PointsKey &to_key);
-            /// Computes the edge normals for 1D geometries only.
-//            inline void ComputeEdgeNormals(
-//                            const int edge,
-//                            const LibUtilities::PointsKey &to_key,
-//                            Array<OneD, Array<OneD, NekDouble> > &output) const;
 
             /// Set tangent orientation
             inline void SetTangentOrientation(std::string conn);
@@ -168,14 +164,11 @@ namespace Nektar
             inline void SetTangentCircularCentre(
                             Array<OneD,NekDouble> &centre);
 
-            /// Returns the normal vectors evaluated at each quadrature point.
-//            inline const Array<OneD, const Array<OneD, NekDouble> >
-//                                                            &GetNormal() const;
+	    	/// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
+	    	/// The tangent vectors are set using the function ComputeEdgeTangents.
+	    	inline const Array<OneD, const Array<OneD, NekDouble> >
+	    						    &GetEdgeTangent() const;
 
-	    /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
-	    /// The tangent vectors are set using the function ComputeEdgeTangents.
-	    inline const Array<OneD, const Array<OneD, NekDouble> >
-	    						    &GetEdgeTangent() const;                                                            
             /// Returns a single tangent vector.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetTangent(int i);
@@ -203,6 +196,22 @@ namespace Nektar
             {
                 ASSERTL1(i < m_pointsKey.num_elements(), "PointsKey out of range.");
                 return m_pointsKey[i];
+            }
+
+            const size_t GetHash() const
+            {
+                size_t hash = 0;
+                boost::hash_combine(hash, m_type);
+                boost::hash_combine(hash, m_expDim);
+                boost::hash_combine(hash, m_coordDim);
+                boost::hash_combine(hash, m_isUsingQuadMetrics);
+                boost::hash_combine(hash, m_isUsingLaplMetrics);
+                boost::hash_range(hash, m_jac.begin(), m_jac.end());
+                for (int i = 0; i < m_gmat.GetRows(); ++i)
+                {
+                    boost::hash_range(hash, m_gmat[i].begin(), m_gmat[i].end());
+                }
+                return hash;
             }
 
         protected:
@@ -281,18 +290,6 @@ namespace Nektar
             GeomFactors(const GeomFactors &S);
 
         private:
-            /// (1D only) Compute normals based on a 2D element.
-//            virtual void v_ComputeNormals(
-//                        const GeometrySharedPtr &geom2D,
-//                        const int edge,
-//                        const LibUtilities::PointsKey &to_key);
-
-            /// (2D only) Compute the outward normals for a given edge.
-//            virtual void v_ComputeEdgeNormals(
-//                        const int edge,
-//                        const LibUtilities::PointsKey &to_key,
-//                        Array<OneD, Array<OneD, NekDouble> > &output) const;
-
             /// (2D only) Compute tangents based on a 1D element.
             virtual void v_ComputeEdgeTangents(
             	    	const GeometrySharedPtr &geom2D,
@@ -316,6 +313,14 @@ namespace Nektar
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
                                                                        &tbasis);
 
+        };
+
+        struct GeomFactorsHash : std::unary_function<GeomFactorsSharedPtr, std::size_t>
+        {
+            std::size_t operator()(GeomFactorsSharedPtr const& p) const
+            {
+                return p->GetHash();
+            }
         };
 
         /// Return the type of geometry.
@@ -420,31 +425,15 @@ namespace Nektar
             return m_laplacianMetricIsZero[indx];
         }
 
-        /// Computes the edge normals from a 2D element
-//        inline void GeomFactors::ComputeNormals(
-//                        const GeometrySharedPtr &geom2D,
-//                        const int edge,
-//                        const LibUtilities::PointsKey &to_key)
-//        {
-//            v_ComputeNormals(geom2D, edge, to_key);
-//        }
 
-	/// Computes the edge tangents from a 1D element
-	inline void GeomFactors::ComputeEdgeTangents(
+		/// Computes the edge tangents from a 1D element
+		inline void GeomFactors::ComputeEdgeTangents(
 			const GeometrySharedPtr &geom2D,
 			const int edge,
 			const LibUtilities::PointsKey &to_key)
-	{
-	   v_ComputeEdgeTangents(geom2D, edge, to_key);
-	}
-        /// Computes the edge normals for 1D geometries only.
-//        inline void GeomFactors::ComputeEdgeNormals(
-//                        const int edge,
-//                        const LibUtilities::PointsKey &to_key,
-//                        Array<OneD, Array<OneD, NekDouble> > &output) const
-//        {
-//            v_ComputeEdgeNormals(edge, to_key, output);
-//        }
+		{
+	   		v_ComputeEdgeTangents(geom2D, edge, to_key);
+		}
 
         /// Set tangent orientation
         inline void GeomFactors::SetTangentOrientation(std::string conn)
@@ -466,21 +455,15 @@ namespace Nektar
             m_tangentDirCentre = centre;
         }
 
-        /// Returns the normal vectors evaluated at each quadrature point.
-//        inline const Array<OneD, const Array<OneD, NekDouble> >
-//                                                &GeomFactors::GetNormal() const
-//        {
-//            return m_normal;
-//        }
-
         /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
-	/// The tangent vectors are set using the function ComputeEdgeTangents.
-	inline const Array<OneD, const Array<OneD, NekDouble> >
+		/// The tangent vectors are set using the function ComputeEdgeTangents.
+		inline const Array<OneD, const Array<OneD, NekDouble> >
 						&GeomFactors::GetEdgeTangent() const
-	{
-	     ASSERTL0(m_tangent.num_elements()>0," tangent vectors are not computed for this line");	
-	     return m_tangent;
-	}
+		{
+			ASSERTL0(m_tangent.num_elements()>0," tangent vectors are not computed for this line");	
+	     	return m_tangent;
+		}
+		
         /// Returns a single tangent vector.
         inline const Array<OneD, const Array<OneD, NekDouble> >
                                                 &GeomFactors::GetTangent(int i)
@@ -512,160 +495,4 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-#endif //NEKTAR_SPATIALDOMAINS_GeomFactors_H
-
-//
-// $Log: GeomFactors.h,v $
-// Revision 1.32  2010/01/07 16:00:18  sehunchun
-// Generalizing TangentCircular ...
-//
-// Revision 1.31  2010/01/06 14:53:03  cantwell
-// Added geominfo parameters TangentCentre{X,Y} for circular tangent vectors.
-//
-// Revision 1.30  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.29  2009/07/08 17:24:52  sehunchun
-// Delete SetUpTanBasis and SetUp SurfaceNormal only when coordim == 3
-//
-// Revision 1.28  2009/07/08 11:15:51  sehunchun
-// Adding Setup function fo Surface Normal and GetSurfaceNormal to obtain Surface Normal vector for a given 2D manifold
-//
-// Revision 1.27  2009/07/03 15:33:09  sehunchun
-// Introducing m_tanbasis for tangential basis of 2D manfiold
-//
-// Revision 1.26  2009/07/02 13:32:24  sehunchun
-// *** empty log message ***
-//
-// Revision 1.25  2009/05/15 14:38:41  pvos
-// Changed check for regular quads so that it also includes parallellograms
-//
-// Revision 1.24  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.23  2008/12/17 16:57:20  pvos
-// Performance updates
-//
-// Revision 1.22  2008/12/16 14:09:07  pvos
-// Performance updates
-//
-// Revision 1.21  2008/11/24 18:33:10  ehan
-// Added 3D routines for GeomFactors()
-//
-// Revision 1.20  2008/09/09 22:46:51  ehan
-// Fixed error; extra qualification ‘Nektar::SpatialDomains::GeomFactors::’ on member ‘GenNormals2D’
-//
-// Revision 1.19  2008/09/09 14:18:02  sherwin
-// Removed m_normals from GeomFactor. Added GenNormals2D and additional copy type constructor
-//
-// Revision 1.18  2008/07/17 19:27:22  ehan
-// Added 3D GeomFactors(..).
-//
-// Revision 1.17  2008/06/09 21:34:28  jfrazier
-// Added some code for 3d.
-//
-// Revision 1.16  2008/04/06 06:00:37  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.15  2007/12/17 20:27:23  sherwin
-// Added normals to GeomFactors
-//
-// Revision 1.14  2007/12/03 21:30:43  sherwin
-// Added normal details
-//
-// Revision 1.13  2007/07/22 23:04:23  bnelson
-// Backed out Nektar::ptr.
-//
-// Revision 1.12  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.11  2007/07/10 22:20:59  jfrazier
-// Revision of geo fac manager to test for equality.
-//
-// Revision 1.10  2007/07/10 17:06:31  jfrazier
-// Added method and underlying structure to manage geomfactors.
-//
-// Revision 1.9  2007/05/28 21:48:42  sherwin
-// Update for 2D functionality
-//
-// Revision 1.8  2007/05/28 08:35:26  sherwin
-// Updated for localregions up to Project1D
-//
-// Revision 1.7  2007/05/25 17:52:02  jfrazier
-// Updated to use new Array classes.
-//
-// Revision 1.6  2007/05/17 18:45:25  jfrazier
-// Minor changes to accommodate Array class.
-//
-// Revision 1.5  2007/04/08 03:34:48  jfrazier
-// Updated to compile with SharedArray.  This has not been converted to SharedArray, just made to work with others that have been converted.
-//
-// Revision 1.4  2007/04/04 21:49:24  sherwin
-// Update for SharedArray
-//
-// Revision 1.3  2007/03/29 19:24:00  bnelson
-// Replaced boost::shared_array with SharedArray
-//
-// Revision 1.2  2007/03/25 15:48:22  sherwin
-// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
-//
-// Revision 1.1  2007/03/20 09:17:39  kirby
-//
-// GeomFactors now added; metricinfo used instead of minfo; styles updated
-//
-// Revision 1.7  2007/03/14 21:24:08  sherwin
-// Update for working version of MultiRegions up to ExpList1D
-//
-// Revision 1.6  2007/03/02 12:01:59  sherwin
-// Update for working version of LocalRegions/Project1D
-//
-// Revision 1.5  2007/02/19 08:06:25  sherwin
-// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
-//
-// Revision 1.4  2006/06/02 18:48:40  sherwin
-// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
-//
-// Revision 1.3  2006/06/01 14:15:30  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.2  2006/05/29 17:05:17  sherwin
-// Updated to use shared_ptr around Geom types - added typedef
-//
-// Revision 1.1  2006/05/04 18:58:59  kirby
-// *** empty log message ***
-//
-// Revision 1.16  2006/03/25 00:58:28  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.15  2006/03/13 19:47:54  sherwin
-//
-// Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts
-//
-// Revision 1.14  2006/03/13 18:20:03  sherwin
-//
-// Fixed error in ResetGmat:
-//
-// Revision 1.13  2006/03/12 14:20:42  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.12  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.11  2006/03/04 20:26:04  bnelson
-// Added comments after #endif.
-//
-// Revision 1.10  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//
-
+#endif

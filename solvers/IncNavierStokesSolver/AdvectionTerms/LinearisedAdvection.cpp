@@ -146,9 +146,6 @@ namespace Nektar
             SetUpBaseFields(m_graph);
             ASSERTL0(m_session->DefinesFunction("BaseFlow"),
                     "Base flow must be defined for linearised forms.");
-            ASSERTL0(m_session->GetFunctionType("BaseFlow")
-                                    == LibUtilities::eFunctionTypeFile,
-                    "Base flow must be provided in a file.");
             string file = m_session->GetFunctionFilename("BaseFlow");
 		
 		
@@ -247,8 +244,41 @@ namespace Nektar
 			//Steady base-flow
 			else
 			{
-				m_slices=1;
-				ImportFldBase(file,m_graph,1);
+				//BaseFlow from file
+				if (m_session->GetFunctionType("BaseFlow")
+					== LibUtilities::eFunctionTypeFile)
+			    {
+					m_slices=1;
+					ImportFldBase(file,m_graph,1);
+				}
+				//analytic base flow
+				else
+				{
+					int nq = m_base[0]->GetNpoints();
+					Array<OneD,NekDouble> x0(nq);
+					Array<OneD,NekDouble> x1(nq);
+					Array<OneD,NekDouble> x2(nq);
+					
+					// get the coordinates (assuming all fields have the same
+					// discretisation)
+					m_base[0]->GetCoords(x0,x1,x2);
+					for(unsigned int i = 0 ; i < m_base.num_elements(); i++)
+					{
+						LibUtilities::EquationSharedPtr ifunc
+                        = m_session->GetFunction("BaseFlow", i);
+						for(int j = 0; j < nq; j++)
+						{
+							(m_base[i]->UpdatePhys())[j]
+                            = ifunc->Evaluate(x0[j],x1[j],x2[j],0);
+						}
+						
+						m_base[i]->SetPhysState(true);						
+						m_base[i]->FwdTrans_IterPerExp(m_base[i]->GetPhys(),
+														 m_base[i]->UpdateCoeffs());
+					}
+					
+				}
+					
 			}
 				
 	}
@@ -451,7 +481,7 @@ namespace Nektar
                     == m_session->GetVariable(j);
                 ASSERTL1(flag, (std::string("Order of ") + pInfile
                                 + std::string(" data and that defined in "
-                                              "m_boundaryconditions differs")).c_str());
+                                             "m_boundaryconditions differs")).c_str());
                 
                 m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                FieldDef[i]->m_fields[j]);

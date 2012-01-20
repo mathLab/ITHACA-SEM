@@ -542,7 +542,11 @@ namespace Nektar
             int i,n,id;
             int bid,cnt,Fid;
             int nbcs = 0;
+            
+            SpatialDomains::MeshGraph3DSharedPtr graph3D = 
+                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(m_graph);
 
+            // Determine number of boundary condition expansions.
             for(i = 0; i < m_bndConditions.num_elements(); ++i)
             {
                 nbcs += m_bndCondExpansions[i]->GetExpSize();
@@ -551,48 +555,27 @@ namespace Nektar
             // make sure arrays are of sufficient length
             if(ElmtID.num_elements() != nbcs)
             {
-                ElmtID = Array<OneD, int>(nbcs,-1);
-            }
-            else
-            {
-                fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
+                ElmtID = Array<OneD, int>(nbcs);
             }
 
             if(FaceID.num_elements() != nbcs)
             {
                 FaceID = Array<OneD, int>(nbcs);
             }
-
-            // setup map of all global ids along boundary
+            
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i)
+                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                 {
-                    Fid =  m_bndCondExpansions[n]->GetExp(i)->GetGeom2D()->GetFid();
-                    FaceGID[Fid] = cnt++;
+                    // Use face to element map from MeshGraph3D.
+                    SpatialDomains::ElementFaceVectorSharedPtr tmp = 
+                        graph3D->GetElementsFromFace(
+                            m_bndCondExpansions[n]->GetExp(i)->GetGeom2D());
+                    
+                    ElmtID[cnt] = (*tmp)[0]->m_Element->GetGlobalID();
+                    FaceID[cnt] = (*tmp)[0]->m_FaceIndx;
                 }
             }
-
-
-            // Loop over elements and find edges that match;
-            for(cnt = n = 0; n < GetExpSize(); ++n)
-            {
-                for(i = 0; i < (*m_exp)[n]->GetNfaces(); ++i)
-                {
-                    id = (*m_exp)[n]->GetGeom3D()->GetFid(i);
-
-                    if(FaceGID.count(id) > 0)
-                    {
-                        bid = FaceGID.find(id)->second;
-                        ASSERTL1(ElmtID[bid] == -1,"Face already set");
-                        ElmtID[bid] = n;
-                        FaceID[bid] = i;
-                        cnt ++;
-                    }
-                }
-            }
-
-            ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
         }
 
 

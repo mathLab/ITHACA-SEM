@@ -66,6 +66,7 @@ namespace Nektar
         GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor)
         {
             GeomFactorsSharedPtr returnval = geomFactor;
+#if 0
             bool found = false;
             if (geomFactor->GetGtype() == eRegular)
             {
@@ -87,7 +88,7 @@ namespace Nektar
                     returnval = geomFactor;
                 }
             }
-
+#endif
             return returnval;
         }
 

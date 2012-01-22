@@ -622,7 +622,7 @@ namespace Nektar
                     schurComplSubMatnRows = schurComplSubMat->GetRows();
                     
                     scale = SchurCompl->GetBlock(n,n)->Scale();
-                    Array<OneD, NekDouble> schurSubMat = SchurCompl->GetBlock(n,n)->GetOwnedMatrix()->GetPtr();
+                    const Array<OneD, const NekDouble> schurSubMat = SchurCompl->GetBlock(n,n)->GetOwnedMatrix()->GetPtr();
                     
 
                     patchId  = pLocToGloMap->GetPatchMapFromPrevLevel()->GetPatchId()+ cnt;

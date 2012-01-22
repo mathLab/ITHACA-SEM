@@ -167,12 +167,25 @@ namespace Vmath
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T*z, const int incz)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1 && incz == 1)
         {
-            *z = (*x) * (*y);
-            x += incx;
-            y += incy;
-            z += incz;
+            while( --n )
+            {
+                *z = (*x) * (*y);
+                ++x;
+                ++y;
+                ++z;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *z = (*x) * (*y);
+                x += incx;
+                y += incy;
+                z += incz;
+            }
         }
     }
     template  LIB_UTILITIES_EXPORT void Vmul( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
@@ -183,11 +196,23 @@ namespace Vmath
     template<class T>  void Smul( int n, const T alpha, const T *x, const int incx,
                                   T *y, const int incy)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1)
         {
-            *y = alpha * (*x);
-            x += incx;
-            y += incy;
+            while( --n )
+            {
+                *y = alpha * (*x);
+                ++x;
+                ++y;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *y = alpha * (*x);
+                x += incx;
+                y += incy;
+            }
         }
     }
 
@@ -198,12 +223,25 @@ namespace Vmath
     template<class T>  void Vdiv( int n, const T *x, const int incx, const T *y,
                   const int incy,  T*z, const int incz)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1)
         {
-            *z = (*x) / (*y);
-            x += incx;
-            y += incy;
-            z += incz;
+            while( --n )
+            {
+                *z = (*x) / (*y);
+                ++x;
+                ++y;
+                ++z;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *z = (*x) / (*y);
+                x += incx;
+                y += incy;
+                z += incz;
+            }
         }
     }
 
@@ -214,11 +252,23 @@ namespace Vmath
     template<class T>  void Sdiv( int n, const T alpha, const T *x,
                                   const int incx, T *y, const int incy)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1)
         {
-            *y = alpha / (*x);
-            x += incx;
-            y += incy;
+            while( --n )
+            {
+                *y = alpha / (*x);
+                ++x;
+                ++y;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *y = alpha / (*x);
+                x += incx;
+                y += incy;
+            }
         }
     }
 
@@ -245,11 +295,23 @@ namespace Vmath
     template<class T>  void Sadd( int n, const T alpha, const T *x,
                   const int incx, T *y, const int incy)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1)
         {
-            *y = alpha + (*x);
-            x += incx;
-            y += incy;
+            while( --n )
+            {
+                *y = alpha + (*x);
+                ++x;
+                ++y;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *y = alpha + (*x);
+                x += incx;
+                y += incy;
+            }
         }
     }
 
@@ -260,12 +322,25 @@ namespace Vmath
     template<class T>  void Vsub( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1 && incz == 1)
         {
-            *z = (*x) - (*y);
-            x += incx;
-            y += incy;
-            z += incz;
+            while( --n )
+            {
+                *z = (*x) - (*y);
+                ++x;
+                ++y;
+                ++z;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *z = (*x) - (*y);
+                x += incx;
+                y += incy;
+                z += incz;
+            }
         }
     }
 
@@ -385,12 +460,25 @@ namespace Vmath
                  const int incx, const T *y, const int incy,
                  T *z, const int incz)
     {
-        while( n-- )
+        if (incx == 1 && incy == 1 && incz == 1)
         {
-            *z = alpha * (*x) + (*y);
-            x += incx;
-            y += incy;
-            z += incz;
+            while( --n )
+            {
+                *z = alpha * (*x) + (*y);
+                ++x;
+                ++y;
+                ++z;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *z = alpha * (*x) + (*y);
+                x += incx;
+                y += incy;
+                z += incz;
+            }
         }
     }
 

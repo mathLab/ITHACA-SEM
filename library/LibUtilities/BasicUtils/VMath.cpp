@@ -167,6 +167,7 @@ namespace Vmath
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T*z, const int incz)
     {
+        ++n;
         if (incx == 1 && incy == 1 && incz == 1)
         {
             while( --n )
@@ -196,6 +197,7 @@ namespace Vmath
     template<class T>  void Smul( int n, const T alpha, const T *x, const int incx,
                                   T *y, const int incy)
     {
+        ++n;
         if (incx == 1 && incy == 1)
         {
             while( --n )
@@ -223,6 +225,7 @@ namespace Vmath
     template<class T>  void Vdiv( int n, const T *x, const int incx, const T *y,
                   const int incy,  T*z, const int incz)
     {
+        ++n;
         if (incx == 1 && incy == 1)
         {
             while( --n )
@@ -252,6 +255,7 @@ namespace Vmath
     template<class T>  void Sdiv( int n, const T alpha, const T *x,
                                   const int incx, T *y, const int incy)
     {
+        ++n;
         if (incx == 1 && incy == 1)
         {
             while( --n )
@@ -295,6 +299,7 @@ namespace Vmath
     template<class T>  void Sadd( int n, const T alpha, const T *x,
                   const int incx, T *y, const int incy)
     {
+        ++n;
         if (incx == 1 && incy == 1)
         {
             while( --n )
@@ -322,6 +327,7 @@ namespace Vmath
     template<class T>  void Vsub( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz)
     {
+        ++n;
         if (incx == 1 && incy == 1 && incz == 1)
         {
             while( --n )
@@ -357,7 +363,8 @@ namespace Vmath
         else
         {
             T zero = 0;
-            while(n--)
+            ++n;
+            while(--n)
             {
             *x = zero;
             x+=incx;
@@ -460,6 +467,7 @@ namespace Vmath
                  const int incx, const T *y, const int incy,
                  T *z, const int incz)
     {
+        ++n;
         if (incx == 1 && incy == 1 && incz == 1)
         {
             while( --n )

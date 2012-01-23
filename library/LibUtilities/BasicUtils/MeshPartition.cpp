@@ -653,7 +653,7 @@ namespace Nektar
                 TiXmlElement* vNewBndRegions = new TiXmlElement("BOUNDARYREGIONS");
                 TiXmlElement* vItem = vBndRegions->FirstChildElement();
                 int p = 0;
-                do
+                while (vItem)
                 {
                     std::string vSeqStr = vItem->FirstChild()->ToText()->Value();
                     std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
@@ -686,12 +686,13 @@ namespace Nektar
                         vNewBndRegions->LinkEndChild(vNewElement);
                         vBndRegionIdList[atoi(vItem->Attribute("ID"))] = p++;
                     }
-                } while (vItem = vItem->NextSiblingElement());
+                    vItem = vItem->NextSiblingElement();
+                }
                 vConditions->ReplaceChild(vBndRegions, *vNewBndRegions);
 
                 TiXmlElement* vBndConditions = vConditions->FirstChildElement("BOUNDARYCONDITIONS");
                 vItem = vBndConditions->FirstChildElement();
-                do
+                while (vItem)
                 {
                     std::map<int, int>::iterator x;
                     if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
@@ -702,7 +703,8 @@ namespace Nektar
                     {
                         vBndConditions->RemoveChild(vItem);
                     }
-                } while (vItem = vItem->NextSiblingElement());
+                    vItem = vItem->NextSiblingElement();
+                }
 
                 pNektar->LinkEndChild(vConditions);
             }

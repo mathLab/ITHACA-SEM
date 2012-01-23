@@ -94,6 +94,7 @@ namespace Nektar
                 StdRegions::eVarCoeffD22
         };
         std::string varName = "intensity";
+
         for (int i = 0; i < 3; ++i)
         {
             if (m_session->DefinesFunction(varCoeffs[i]))
@@ -113,11 +114,11 @@ namespace Nektar
 
                     m_vardiff[varCoeffEnum[i]] = m_fields[0]->GetPhys();
                 }
-            }
-            else
-            {
-            	ASSERTL0(false, "Need to implement analytic function import for VarCoeffs");
-                // Implement for an analytic function
+                else
+                {
+                    ASSERTL0(false, "Need to implement analytic function import for VarCoeffs");
+                    // Implement for an analytic function
+                }
             }
         }
 

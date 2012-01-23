@@ -244,11 +244,12 @@ namespace Nektar
 			//Steady base-flow
 			else
 			{
+				m_slices=1;
+
 				//BaseFlow from file
 				if (m_session->GetFunctionType("BaseFlow")
 					== LibUtilities::eFunctionTypeFile)
 			    {
-					m_slices=1;
 					ImportFldBase(file,m_graph,1);
 				}
 				//analytic base flow
@@ -533,14 +534,25 @@ namespace Nektar
         grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);		
 		
 		//Evaluation of the base flow for periodic cases
-		if(m_slices>1)
-		{
+		//(it requires fld files)
 			
-			for(int i=0; i<m_nConvectiveFields;++i)
-			{
-				UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),m_time,m_period);
+			if(m_slices>1)
+			{				
+				if (m_session->GetFunctionType("BaseFlow")
+					== LibUtilities::eFunctionTypeFile)
+				{
+					for(int i=0; i<m_nConvectiveFields;++i)
+					{
+						UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),m_time,m_period);
+					}
+				}
+				else 
+				{
+					ASSERTL0(false, "Periodic Base flow requires .fld files");	
+				}
 			}
-		}
+		
+
 		
 				
 		//Evaluate the linearised advection term

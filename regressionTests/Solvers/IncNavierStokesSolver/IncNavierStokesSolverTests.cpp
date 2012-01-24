@@ -100,6 +100,8 @@ int main(int argc, char* argv[])
     Execute("IncNavierStokesSolver","Test_ChanFlow_LinNS_m8.xml","Unsteady channel flow with coupled solver , P=8");
 
     Execute("IncNavierStokesSolver","Test_SinCos_LinNS_3DHom1D.xml","Steady Linearised NavierStokes, 3D Soln with coupled solver , P=6");
+
+    Execute("IncNavierStokesSolver","Test_2DFlow_lineforcing_bcfromfile.xml", "Flow forced by a derivative discontinuity along a line with coupled solver, P=5");
     
     //Test Modified Arnoldi direct stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability.xml","Linear stability (Mod. Arnoldi): Channel");

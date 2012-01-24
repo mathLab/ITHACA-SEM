@@ -49,12 +49,13 @@ int main(int argc, char *argv[])
     	         Array<OneD, NekDouble> &curve, MultiRegions::ExpListSharedPtr & bndfield, 
     	         Array<OneD, NekDouble>& outx, Array<OneD, NekDouble>& outy,
     	         Array<OneD, int>&Eids);
-    NekDouble yMove(NekDouble y, NekDouble yold_up, NekDouble Deltaold);
+    NekDouble yMove(NekDouble y, NekDouble yold_up, NekDouble Deltaold);   
     void Replacevertices(string filename, Array<OneD, NekDouble> newx, 
     	               Array<OneD,  NekDouble> newy,
     	               Array<OneD, NekDouble> x_lay, Array<OneD, NekDouble> y_lay,
-    	               Array<OneD, NekDouble>& Pcurvx, Array<OneD, NekDouble>& Pcurvy,
-    	               Array<OneD, int>&Eids);
+    	               Array<OneD, NekDouble> & Pcurvx, 
+    	               Array<OneD, NekDouble> & Pcurvy,
+    	               Array<OneD, int>&Eids, int Npoints);
     
     
     
@@ -189,11 +190,12 @@ cout<<"nIregions="<<nIregions<<endl;
       
     i=2;
     while(i<nvertl)
-    { 
+    {     	    
          v1=i;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-1], 
         	Vids_low, v1, v2 , x_connect, lastedge, xold_low, yold_low );          
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_low[v1]);     
+cout<<"Vids low="<<Vids_low[v1]<<endl;         
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
@@ -213,7 +215,7 @@ cout<<"nIregions="<<nIregions<<endl;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2 ], 
         	Vids_up, v1, v2 , 0 ,lastedge, xold_up, yold_up);    
     SpatialDomains::VertexComponentSharedPtr vertexU = graphShPt->GetVertex(Vids_up[v2]);    
-
+cout<<"VIdup="<<Vids_up[v2]<<endl;
     //update x_connect    
     vertexU->GetCoords(x_connect,yt,zt);
       
@@ -224,7 +226,7 @@ cout<<"nIregions="<<nIregions<<endl;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2], 
          	Vids_up, v1, v2 , x_connect, lastedge, xold_up, yold_up );          
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_up[v1]);  
-   
+cout<<"VIdup="<<Vids_up[v1]<<endl;   
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
@@ -256,7 +258,7 @@ cout<<"nIregions="<<nIregions<<endl;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion], 
          	Vids_c, v1, v2 , x_connect, lastedge, xold_c, yold_c );          
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_c[v1]);  
-   
+   cout<<"Vids cl="<<Vids_low[v1]<<endl;  
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
@@ -310,12 +312,6 @@ cout<<"nIregions="<<nIregions<<endl;
     //------------------------------------------------------------------
     
 
-    //calculate the approximated curve coeffs
-    //since the number of degree of freedom is too large 
-    // we split the layer in as many curves as many changing of the rate 
-    // \Delta( (\Delta y /\Delta x) ) (second derivative)
-    //for each change of rate, calculate one curve and the additional point for
-    // the curved tag of the session file
     
     int ncurves=1;
     //array storing ALL the curvecoeffs 
@@ -327,7 +323,14 @@ cout<<"nIregions="<<nIregions<<endl;
     Array<OneD, NekDouble> Cpointsx (nedges);
     Array<OneD, NekDouble> Cpointsy (nedges, 0.0);
     Array<OneD, int> Eids (nedges);    
-    
+
+/*
+    //calculate the approximated curve coeffs
+    //since the number of degree of freedom is too large 
+    // we split the layer in as many curves as many changing of the rate 
+    // \Delta( (\Delta y /\Delta x) ) (second derivative)
+    //for each change of rate, calculate one curve and the additional point for
+    // the curved tag of the session file    
     
     //change of curve second derivative sign quantities
     NekDouble der,tmp;
@@ -341,7 +344,7 @@ cout<<"nIregions="<<nIregions<<endl;
     {
       sign2der =-1;
     }
-cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;    
+//cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;    
     for(int r=2; r< nedges; r++)
     {
         tmp = (y_c[r+1]-y_c[r])/(x_c[r+1]-x_c[r]);
@@ -352,13 +355,13 @@ cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;
            {
               cnt++;
               //Array<OneD, NekDouble> curvecoeffs (nvertl);               
-cout<<"change 1"<<endl;   
+//cout<<"change 1"<<endl;   
               Npoints = r-(ncurves-1)-Npoints;
 	      ncurvepoints[ncurves-1] = Npoints;              
               ncurves++;
               sign2der = -1*sign2der;
 
-cout<<"Npoints="<<Npoints<<"  r="<<r<<endl;   
+//cout<<"Npoints="<<Npoints<<"  r="<<r<<endl;   
               if(Npused==0)
               {
                  ntotcurvecoeffs += Npoints;              	      
@@ -382,12 +385,12 @@ cout<<"Npoints="<<Npoints<<"  r="<<r<<endl;
            if(tmp > der)
            {
               cnt++;
-cout<<"change -1"<<endl;           	   
+//cout<<"change -1"<<endl;           	   
               Npoints = r-(ncurves-1)-Npoints;
 	      ncurvepoints[ncurves-1] = Npoints;              
               ncurves++;
               sign2der = -1*sign2der;
-cout<<"npoints="<<Npoints<<"  r="<<r<<endl;              
+//cout<<"npoints="<<Npoints<<"  r="<<r<<endl;              
               if(Npused==0)
               {
                  ntotcurvecoeffs += Npoints;              	      
@@ -405,7 +408,7 @@ cout<<"npoints="<<Npoints<<"  r="<<r<<endl;
               Npused +=Npoints;       
            }
         }
-cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;    
+//cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;    
         
         der =tmp;        
     }
@@ -424,26 +427,47 @@ cout<<"sign="<<sign2der<<"  tmp="<<tmp<<"   der="<<der<<endl;
     else
     {
          ntotcurvecoeffs +=  Nplast+1;    
-cout<<"last curve   npoints="<<Nplast<<"   Npused="<<Npused<<endl; 
-cout<<"ntotcurvecoeffs="<<ntotcurvecoeffs<<endl;
+//cout<<"last curve   npoints="<<Nplast<<"   Npused="<<Npused<<endl; 
+//cout<<"ntotcurvecoeffs="<<ntotcurvecoeffs<<endl;
       	 GenerateCurve(Nplast+1, Npused-1, x_c, y_c, totcurvecoeffs); 
          GenerateAddPoints(lastIregion, graphShPt, Nplast+1, Npused-1, totcurvecoeffs,  
                   bndfieldx[lastIregion],    Cpointsx, Cpointsy, Eids);       	 
     }  
-cout<<" final curves coeffs values"<<endl;
-cout<<"ntotcurvecoeffs="<<ntotcurvecoeffs<<endl;
+//cout<<" final curves coeffs values"<<endl;
+//cout<<"ntotcurvecoeffs="<<ntotcurvecoeffs<<endl;
     ASSERTL0( ntotcurvecoeffs <= 2*nvertl, "numer of curves coeffs exceeds 2*nvertices");
     for(int u=0; u <2*nvertl; u++)
     {
-cout<<"coeffs = "<<totcurvecoeffs[u]<<endl;
+//cout<<"coeffs = "<<totcurvecoeffs[u]<<endl;
     }
 
-    
+*/    
     
     //generate additional points using the Newton iteration
     //determine the xposition for every edge (in the middle even if it 
     // is not necessary
+    //PARAMETER which determines the number of points @todo put as an input
+    int npedge=5;
+    //additional points arrays
+/*
+    //NB Double array LEAK!!!!
+    Array<OneD, Array<OneD, NekDouble> >Addpointsx;
+    Array<OneD, Array<OneD, NekDouble> >Addpointsy;
+    Addpointsx = Array<OneD, Array<OneD, NekDouble> > (nedges);
+    Addpointsy = Array<OneD, Array<OneD, NekDouble> > (nedges);
+    for(int q=0; q< npedge-2; q++)
+    {
+        // npedge-2 num points per edge
+        Addpointsx[q] = Array<OneD, NekDouble> (npedge-2, 0.0);
+        Addpointsy[q] = Array<OneD, NekDouble> (npedge-2, 0.0);       
+    }
     
+*/    
+    Array<OneD, NekDouble> Addpointsx (nedges*(npedge-2), 0.0);
+    Array<OneD, NekDouble> Addpointsy (nedges*(npedge-2), 0.0);    
+    //Array<OneD, NekDouble> Ycoords (nedges*npedge-2, 0.0);
+
+
     Array<OneD, NekDouble> derstreak (streak->GetTotPoints());
     streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), derstreak);
     
@@ -465,22 +489,47 @@ cout<<"coeffs = "<<totcurvecoeffs[u]<<endl;
 	 vertex2 = graphShPt->GetVertex(id2);     
 	 vertex1->GetCoords(x1,y1,z1);
 	 vertex2->GetCoords(x2,y2,z2);	
-cout<<"x1="<<x1<<"  x2="<<x2<<endl;		 
+cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<endl;
+cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	 if(x2>x1)
 	 {
-	     Cpointsx[r] = x1 +(x2-x1)/2;
+	     Cpointsx[r] = x1 +(x2-x1)/2;             
 	     if( Cpointsx[r]>x2 || Cpointsx[r]< x1)
 	     {
-	     	  Cpointsx[r] = -Cpointsx[r];
-	     }
+	     	  Cpointsx[r] = -Cpointsx[r];		  
+	     }	     
+             for(int w=0; w< npedge-2; w++)
+             {    
+                 Addpointsx[r*(npedge-2) +w] = x1 +((x2-x1)/(npedge - 1))*(w+1);   
+                 if( Addpointsx[r*(npedge-2) +w] > x2 || Addpointsx[r*(npedge-2) +w] < x1)
+	         {
+	              Addpointsx[r*(npedge-2) +w] = -Addpointsx[r*(npedge-2) +w];
+	         }        
+             	 
+	         Addpointsy[r*(npedge-2) +w] = y1 + ((y2-y1)/(x2-x1))*(Addpointsx[r*(npedge-2) +w]-x1);	         
+	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w],
+	              	      Addpointsx[r*(npedge-2) +w],  Addpointsy[r*(npedge-2) +w], streak, derstreak); 
+             }
+
 	 }
 	 else if(x1>x2)
 	 {	         	 
-	      Cpointsx[r] = x2+ (x1-x2)/2;
-	      if( Cpointsx[r] > x1 || Cpointsx[r] <x2)
-	      {
-	      	  Cpointsx[r] = -Cpointsx[r];
-	      }
+	     Cpointsx[r] = x2+ (x1-x2)/2;
+	     if( Cpointsx[r] > x1 || Cpointsx[r] < x2)
+	     {
+	          Cpointsx[r] = -Cpointsx[r];
+	     }
+             for(int w=0; w< npedge-2; w++)
+             { 
+                 Addpointsx[r*(npedge-2) +w] = x2 +((x1-x2)/(npedge - 1))*(w+1);
+                 if( Addpointsx[r*(npedge-2) +w] > x1 || Addpointsx[r*(npedge-2) +w] < x2)
+	         {
+	              Addpointsx[r*(npedge-2) +w] = -Addpointsx[r*(npedge-2) +w];	              
+	         }
+	         Addpointsy[r*(npedge-2) +w] = y2 + ((y1-y2)/(x1-x2))*(Addpointsx[r*(npedge-2) +w]-x2);	         	         
+	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], 
+	               Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], streak, derstreak); 
+             }	      
 	 }
 	 else
 	 {
@@ -489,12 +538,92 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
 	 
 	 
          GenerateAddPointsNewtonIt( Cpointsx[r], Cpointsy[r],Cpointsx[r], Cpointsy[r],
-    	       streak, derstreak);    
+    	       streak, derstreak); 
+         NekDouble diff = Cpointsy[r]-Addpointsy[r*(npedge-2)];
+cout<<"diff="<<diff<<endl;         
 	 Eids[r] = Eid;
-	         
-cout<<"Newton eid="<<Eids[r]<<"  xadd="<<Cpointsx[r]<<"   yadd="<<Cpointsy[r]<<endl;      	 
-        
+
+    }   
+    //TETST!!!!
+cout<<"test!!!"<<endl;    
+
+    
+    //generate the closest curve to the critical layer positions taking 
+    // npedge-2 points per edge
+    Array<OneD, NekDouble> Crlay_pointsx(nedges*(npedge-2)+nedges+1);
+    Array<OneD, NekDouble> Crlay_pointsy(nedges*(npedge-2)+nedges+1);
+    int cnt=0;
+    int cnt1=0;
+    int cnt2=0;
+    //HYPOTHESIS: Cpoints ALREADY generated
+cout<<"Cr x--y"<<endl;    
+    for(int u=0; u<Crlay_pointsx.num_elements(); u++)
+    {
+    	  if( u== cnt)// u pari  
+          {
+               Crlay_pointsx[u] = x_c[cnt1];
+               Crlay_pointsy[u] = y_c[cnt1];
+               cnt =cnt +npedge-1;
+               cnt1++;
+          }
+          else//u dispari
+          {
+    	       //Crlay_pointsx[u] = Cpointsx[cnt1];
+    	       //Crlay_pointsy[u] = Cpointsy[cnt1];
+    	       Crlay_pointsx[u] = Addpointsx[cnt2];
+    	       Crlay_pointsy[u] = Addpointsy[cnt2];    	       
+    	       cnt2++;
+          }
+cout<<u<<"      "<<Crlay_pointsx[u]<<"       "<<Crlay_pointsy[u]<<endl;          
     }
+    
+    for(int r=0; r< Crlay_pointsx.num_elements(); r++)
+    {
+cout<<r<<"     "<<Crlay_pointsx[r]<<"                "<<Crlay_pointsy[r]
+<<"       "<<sqrt((Crlay_pointsx[r+1]- Crlay_pointsx[r])
+*(Crlay_pointsx[r+1]- Crlay_pointsx[r]) +
+(Crlay_pointsy[r+1]- Crlay_pointsy[r])
+*(Crlay_pointsy[r+1]- Crlay_pointsy[r])) <<endl;
+    }
+    
+   
+    
+    
+    Array<OneD, NekDouble> curve_coeffs (nedges*(npedge-2)+nedges+1);
+    //generate the curve
+    //NB:: for a high number of points (>20)  it does not work for all 
+    // points
+cout<<"CALL generate curve"<<nedges*(npedge-2)+nedges+1<<endl;    
+    //GenerateCurve(nedges*(npedge-2)+nedges+1, 0, Crlay_pointsx, Crlay_pointsy, curve_coeffs);    
+    //calculate the coords of the additional points as y=poly(x)
+    //HYPOTHESES: 
+    //x coords ALREADY CALCULATED
+    //npedge is the number of points per edge
+    //Eid[s] ALREADY GENERATED
+/*    
+    int polorder; 
+    double xl; 
+    //put zero Addpointsy!!!!!
+    Vmath::Zero(nedges*(npedge-2), Addpointsy,1);    
+    for(int e=0; e< nedges*(npedge-2); e++)              
+    {
+    	  	 xl = Addpointsx[e];
+    	  	 polorder = curve_coeffs.num_elements()-1; 	  
+
+                 for(int g= 0; g< curve_coeffs.num_elements(); g++)
+	         {	         	 
+	             Addpointsy[e] += curve_coeffs[g]*(std::pow( xl , polorder));
+//cout<<g<<"  coeff="<<curve_coeffs[g]<<"   x^exp="<<(std::pow( xl , polorder))<<"  exp="<<polorder<<endl;
+                     ASSERTL0(polorder >=0, " polynomial with one negative exponent");
+                     polorder--;
+	         }
+cout<<xl<<"     "<<Addpointsy[e]<<"      "<<Crlay_pointsx[e]<<"       "
+<<Crlay_pointsy[e]<<"     "
+<<curve_coeffs[e]<<endl;	         
+
+    }
+cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
+*/
     //------------------------------------------------------------    
   
     //------------------------------------------------------------
@@ -555,7 +684,7 @@ cout<<"Newton eid="<<Eids[r]<<"  xadd="<<Cpointsx[r]<<"   yadd="<<Cpointsy[r]<<e
                 //ynew[i] = y + Sign[qp_closer]*Deltaup[qp_closer];
                  ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
                  ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
-cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;                    
+//cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;                    
                  //ynew[i] = y_c[qp_closer] +(y-yold_c[qp_closer])*ratio;                 
              }
              else if(y<yold_low[qp_closer])
@@ -596,7 +725,8 @@ cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;
     //------------------------------------------------------------------
     
     //replace the vertices with the new ones
-    Replacevertices(changefile, xnew , ynew, x_c, y_c, Cpointsx, Cpointsy, Eids);
+    //Replacevertices(changefile, xnew , ynew, x_c, y_c, Cpointsx, Cpointsy, Eids, npedge);
+    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge);
           	       
 }
 				
@@ -784,7 +914,7 @@ cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;
    	        LocalRegions::SegExpSharedPtr  bndSegExplow = 
    	             boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(j)) ;   	
    	        edge = (bndSegExplow->GetGeom1D())->GetEid();
-   	   
+cout<<" edge="<<edge<<endl;   	   
    	        for(int k=0; k<2; k++)
    	        {
    	            Vids_temp[j+k]=(bndSegExplow->GetGeom1D())->GetVid(k);   
@@ -912,8 +1042,7 @@ cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;
            ASSERTL0( y_c[q]> y[ineg] && y_c[q]<y[ipos], " wrong position");
 cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" y_pos="<<y[ipos]<<"   y_neg="<<y[ineg]<<endl;           
 */         
-         
-         
+                 
                     //algorithm to determine the closest points to the streak positions
                     //using the weighted mean         
                     for(int j=0; j<nq; j++)
@@ -938,7 +1067,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" y_pos="<<y[ipos]<<"   y_neg="<<y[
 	          //determine the streak y position as the result of the weighted mean
 	            xc[q]= x[ipos];
 	            weightpos = 1/(streaktmppos*streaktmppos);
-	            weightneg = 1/(streaktmpneg*streaktmpneg);
+	            weightneg = 1/(streaktmpneg*streaktmpneg);	            
 	            yc[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
 cout<<" streak x="<<xc[q]<<"   y="<<yc[q]<<endl;
      
@@ -1017,7 +1146,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 	           }
                    yc[e] = coord[1];
 	           //Utilities::Zerofunction(coord[0], coord[1], xtest, ytest, streak, derstreak);
-cout<<"result y="<<yc[e]<<"   streak="<<U<<endl;	           
+cout<<"result x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
               }
            
 		
@@ -1027,10 +1156,12 @@ cout<<"result y="<<yc[e]<<"   streak="<<U<<endl;
 	{
 		int elmtid,offset;
 		NekDouble F,U,dU;
-		Array<OneD, NekDouble> coords(2);
+		Array<OneD, NekDouble> coords(2);	
 		coords[0] = xi;
-		coords[1] = yi;
+		coords[1] = yi;	
+cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
 		elmtid = function->GetExpIndex(coords, 0.00001);
+cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
 		offset = function->GetPhys_Offset(elmtid);
 		F =1000;
 		while( abs(F)> 0.00000001)
@@ -1043,7 +1174,7 @@ cout<<"result y="<<yc[e]<<"   streak="<<U<<endl;
 	        }
 	        x0 = xi;
 	        y0 = coords[1];
-cout<<"NewtonIt result  y="<<coords[1]<<"   U="<<U<<endl;	        
+cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;	        
 	}
 
         void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
@@ -1069,7 +1200,7 @@ cout<<"totppoints="<<totpoints<<endl;
             for(int r= npused; r< totpoints; r++)
             {
     	        b[row] =   y_c[r];
-cout<<"b="<<b[row]<<"  y_c="<<y_c[r]<<endl;     	        
+//cout<<"b="<<b[row]<<"  y_c="<<y_c[r]<<endl;     	        
     	        row++;       
 	    }
 	    
@@ -1111,7 +1242,8 @@ cout<<"coeffs a,b,c,d..."<<endl;
 	    //fill the coeffs array
 	    if(npused==0)
 	    {
-	        Vmath::Vcopy(totpoints, &(b[0]), 1, &(curve[npused]), 1);	    	    
+	        Vmath::Vcopy(totpoints, &(b[0]), 1, &(curve[npused]), 1);	
+cout<<b[1]<<"   ipiv="<<ipivot[1]<<endl;    	        
 	    }
 	    else
 	    {
@@ -1232,23 +1364,23 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
 	         for(int g= firstcoeff; g< lastcoeff; g++)
 	         {	         	 
 	             outy[s] += curve[g]*(std::pow(outx[s], polorder));
-cout<<"coeff*x^i="<<outy[s]<<"  coeff="<<curve[g]<<"  exp="<<polorder<<endl;
+//cout<<"coeff*x^i="<<outy[s]<<"  coeff="<<curve[g]<<"  exp="<<polorder<<endl;
                      ASSERTL0(polorder >=0, " polynomial with one negative exponent");
                      polorder--;
 	         }
 	         Eids[s] = Eid;
 	         
-cout<<"eid="<<Eids[s]<<"  xadd="<<outx[s]<<"   yadd="<<outy[s]<<endl;            	 
+//cout<<"eid="<<Eids[s]<<"  xadd="<<outx[s]<<"   yadd="<<outy[s]<<endl;            	 
             }
             
         }
         
-        
         void Replacevertices(string filename, Array<OneD, NekDouble> newx, 
     	               Array<OneD,  NekDouble> newy,
     	               Array<OneD, NekDouble> x_lay, Array<OneD, NekDouble> y_lay,
-    	               Array<OneD, NekDouble>& Pcurvx, Array<OneD, NekDouble>& Pcurvy,
-    	               Array<OneD, int>&Eids)
+    	               Array<OneD, NekDouble> & Pcurvx, 
+    	               Array<OneD, NekDouble> & Pcurvy,
+    	               Array<OneD, int>&Eids, int Npoints)	
 	{     
 	    //load existing file
             string newfile;
@@ -1289,7 +1421,7 @@ cout<<"eid="<<Eids[s]<<"  xadd="<<outx[s]<<"   yadd="<<outy[s]<<endl;
  
       	    
 	    int indx;
-	    int err;
+	    int err, numPts;
 	    int nextVertexNumber = -1;	
 	    
 	    while (vertexnew)
@@ -1317,11 +1449,11 @@ cout<<"eid="<<Eids[s]<<"  xadd="<<outx[s]<<"   yadd="<<outy[s]<<endl;
        	           //remove the old coordinates
        	           vertexnew->RemoveChild(vertexBody);
                    //write the new one   
-cout<<"writing.. v:"<<nextVertexNumber<<endl;	    	    	
+//cout<<"writing.. v:"<<nextVertexNumber<<endl;	    	    	
 	    	   stringstream s;
 		   //we need at least 5 digits (setprecision 5) to get the streak position with
 		   // precision 10^-10
-	    	   s << std::scientific << std::setprecision(5) <<  newx[nextVertexNumber] << "   "
+	    	   s << std::scientific << std::setprecision(8) <<  newx[nextVertexNumber] << "   "
 	    	   << newy[nextVertexNumber] << "   " << 0.0;
 	    	   vertexnew->LinkEndChild(new TiXmlText(s.str()));      
 	    	   //TiXmlNode *newvertexBody = vertexnew->FirstChild();
@@ -1385,7 +1517,7 @@ cout<<"Eids="<<Eids[u]<<endl;
    	    	      //y1 = y_lay[cnt];
    	    	      //y2 = y_lay[cnt+1];
    	    	      v1 = cnt;
-   	    	      v2 = cnt=1;
+   	    	      v2 = cnt+1;
    	    	   }
    	    	   else
    	    	   {
@@ -1395,20 +1527,45 @@ cout<<"Eids="<<Eids[u]<<endl;
    	    	      //y2 = y_lay[cnt];
    	    	      v1 = cnt+1;
    	    	      v2 = cnt;
+                      cout<<"Warning: the edges can have the vertices in the reverse order";   	    	      
    	    	   }
 		   //we need at least 5 digits (setprecision 5) to get the streak position with
 		   // precision 10^-10
+		   
+                   //Determine the number of points
+                   err = edgenew->QueryIntAttribute("NUMPOINTS", &numPts);
+                   ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
+                   edgenew->SetAttribute("NUMPOINTS", Npoints);
+		   stringstream st;
+		   st << std::scientific << std::setprecision(8) << x_lay[v1] << "   "
+	    	   << y_lay[v1] << "   " << 0.000<<"   ";
+
+		   for(int a=0; a< Npoints-2; a++)
+		   {		       	   
+		      st << std::scientific << std::setprecision(8) <<
+		      "    "<<Pcurvx[indexeid*(Npoints-2) +a]<<"    "<<Pcurvy[indexeid*(Npoints-2) +a]
+		      <<"    "<<0.000<<"   "; 
+	      
+		   }
+		   st << std::scientific << std::setprecision(8) <<
+		   "    "<<x_lay[v2]<<"   "<< y_lay[v2] <<"   "<< 0.000;
+	    	   edgenew->LinkEndChild(new TiXmlText(st.str()));    		   
+
+//cout<<st.str()<<endl;		
+/*
 	    	   stringstream s;
 	    	   s << std::scientific << std::setprecision(5) <<  x_lay[v1] << "   "
 	    	   << y_lay[v1] << "   " << 0.000<<"        "<< Pcurvx[indexeid]<< "   "<<
 	    	   Pcurvy[indexeid]<<"   "<<0.000 <<"       "<<x_lay[v2]<<"   "<< y_lay[v2] 
 	    	   <<"   "<< 0.000;
-	    	   edgenew->LinkEndChild(new TiXmlText(s.str()));      
-	    	   
+	    	   edgenew->LinkEndChild(new TiXmlText(s.str()));    
+*/  
+/*	    	   
                    if(x_lay[cnt] < x_lay[cnt+1])
                    {
                       cout<<"Warning: the edges can have the vertices in the reverse order";
                    }
+*/                   
    	    	   edgenew = edgenew->NextSiblingElement("E");
    	    	    
    	    }
@@ -1421,4 +1578,5 @@ cout<<"Eids="<<Eids[u]<<endl;
        	    
        	    cout<<"new file:  "<<newfile<<endl;
 	   
-	}
+	}    	
+	

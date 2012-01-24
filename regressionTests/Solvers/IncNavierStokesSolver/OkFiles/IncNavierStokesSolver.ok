@@ -146,6 +146,12 @@ L inf error (variable v) : 3.55271e-15
 L 2 error (variable w) : 1.15463e-05
 L inf error (variable w) : 1.11177e-05
 ----------------------------------------
+Test_2DFlow_lineforcing_bcfromfile.xml
+L 2 error (variable u) : 0.612372
+L inf error (variable u) : 1.5
+L 2 error (variable v) : 2.34962e-14
+L inf error (variable v) : 1.46978e-13
+----------------------------------------
 Test_ChanFlow_3DH1D_MVM.xml
 L 2 error (variable u) : 5.27625e-16
 L inf error (variable u) : 4.57967e-15

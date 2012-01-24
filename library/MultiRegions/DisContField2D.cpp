@@ -1291,7 +1291,10 @@ namespace Nektar
                              m_graph->Import(filebcs,FieldDef, FieldData);
                              // copy FieldData into locExpList                                            
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
-                                                 FieldDef[0]->m_fields[0]);                                       
+                                                 FieldDef[0]->m_fields[0]);   
+                             locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
+                             locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
+                                        locExpList->UpdateCoeffs());                                     
                         }
                         else
                         {
@@ -1331,6 +1334,9 @@ namespace Nektar
                              // copy FieldData into locExpList                                           
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
                                              FieldDef[0]->m_fields[0]);
+                             locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
+                             locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
                         }
                         else
                         {	
@@ -1371,9 +1377,9 @@ namespace Nektar
                              // copy FieldData into locExpList                                       
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
                                                  FieldDef[0]->m_fields[0]);                                                
-                             //locExpList->IProductWRTBase(locExpList->GetPhys(),
-                             //                       locExpList->UpdateCoeffs());
-
+                             locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
+                             locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
                              // put primitive coefficient into the physical space storage
                              for(j = 0; j < npoints; j++)
                              {

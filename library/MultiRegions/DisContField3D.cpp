@@ -538,13 +538,20 @@ namespace Nektar
         void DisContField3D::v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                     Array<OneD,int> &FaceID)
         {
-            map<int, int> FaceGID;
+            map<int,int> globalIdMap;
             int i,n,id;
             int bid,cnt,Fid;
             int nbcs = 0;
             
             SpatialDomains::MeshGraph3DSharedPtr graph3D = 
                 boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(m_graph);
+            
+            // Populate global ID map (takes global geometry ID to local
+            // expansion list ID).
+            for (i = 0; i < GetExpSize(); ++i)
+            {
+                globalIdMap[(*m_exp)[i]->GetGeom3D()->GetGlobalID()] = i;
+            }
 
             // Determine number of boundary condition expansions.
             for(i = 0; i < m_bndConditions.num_elements(); ++i)
@@ -572,7 +579,7 @@ namespace Nektar
                         graph3D->GetElementsFromFace(
                             m_bndCondExpansions[n]->GetExp(i)->GetGeom2D());
                     
-                    ElmtID[cnt] = (*tmp)[0]->m_Element->GetGlobalID();
+                    ElmtID[cnt] = globalIdMap[(*tmp)[0]->m_Element->GetGlobalID()];
                     FaceID[cnt] = (*tmp)[0]->m_FaceIndx;
                 }
             }

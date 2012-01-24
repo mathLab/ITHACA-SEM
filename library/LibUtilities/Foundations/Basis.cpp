@@ -530,6 +530,27 @@ namespace Nektar
 
                 }//end scope
                 break;
+			case eLagrange:
+                {
+                    mode = m_bdata.data();
+                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes,eGaussGaussLegendre)];
+                    const Array<OneD, const NekDouble>& zp(m_points->GetZ());
+					
+                    for (p=0; p<numModes; ++p,mode += numPoints)
+                    {
+                        for(q = 0; q < numPoints; ++q)
+                        {
+                            mode[q] = Polylib::hglj(p,z[q],zp.data(),numModes,0.0,0.0);
+                        }
+                    }
+					
+                    // define derivative basis
+                    Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
+								numPoints, m_bdata.data(),numPoints,0.0,
+								m_dbdata.data(),numPoints);
+					
+                }//end scope
+				break;
             case eFourier:
 
                 ASSERTL0(numModes%2==0, "Fourier modes should be a factor of 2");
@@ -636,7 +657,7 @@ namespace Nektar
         {
             return ( m_basistype == eGLL_Lagrange &&
                 GetPointsType() == eGaussLobattoLegendre &&
-                GetNumModes() == GetNumPoints());
+                GetNumModes() == GetNumPoints() || m_basistype == eLagrange);
         }
 
 

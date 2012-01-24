@@ -49,32 +49,35 @@ namespace Nektar
 		// to encaplusate the mesh
 		graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
 		
+		/*const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions(); 
+		LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
+		int Npoints = bkey0.GetNumModes();
+		
+		const LibUtilities::PointsKey FRpoints(Npoints,LibUtilities::eGaussGaussLegendre);
+		const LibUtilities::BasisKey  FRBase(LibUtilities::eLagrange,Npoints,FRpoints);*/
+		
 		// Feed our spatial discretisation object with the information coming from the session file
 		// i.e. initialise all the memory
 		Domain = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(vSession,graph1D,vSession->GetVariable(0));
 		
-		// Get the total number of physical points (quadrature points)
-		// For nodal expansion the number of physical points is equal to the number of coefficients 
+		//number of total Gauss point
 		nq = Domain->GetTotPoints();
 		
-		// Create an array "x" to hold the coordinates value (x_i) and fill it up
-		// with the the function GetCoords (y and z are required by default but they are zero if your mesh is
-		// a line in a 1D space, if it is a line in a 3D space you may need y and z too)
-		x = Array<OneD,double>(nq);
-		y = Array<OneD,double>(nq);
-		z = Array<OneD,double>(nq);
-		
+		x = Array<OneD,NekDouble>(nq);
+		y = Array<OneD,NekDouble>(nq);
+		z = Array<OneD,NekDouble>(nq);
+
 		Domain->GetCoords(x,y,z);
 		
 		// interface points
 		ni = graph1D->GetNvertices();
 		ne = Domain->GetExpSize();
 		
-		K = Array<OneD,double>(ni);
+		K = Array<OneD,NekDouble>(ni);
 		
-		xi = Array<OneD,double>(ni);
-		yi = Array<OneD,double>(ni);
-		zi = Array<OneD,double>(ni);
+		xi = Array<OneD,NekDouble>(ni);
+		yi = Array<OneD,NekDouble>(ni);
+		zi = Array<OneD,NekDouble>(ni);
 		
 		for (int i = 0; i < ni; i++)
 		{
@@ -83,8 +86,8 @@ namespace Nektar
 		
 		//filling the correction function array
 		GFtype = vSession->GetSolverInfo("Gfunctions");
-		dgL = Array<OneD,double>(nq/ne);
-		dgR = Array<OneD,double>(nq/ne);
+		dgL = Array<OneD,NekDouble>(nq/ne);
+		dgR = Array<OneD,NekDouble>(nq/ne);
 		GFunctionsGrad(dgL,dgR);
 		
 		// Loading from the session file the functions describing the advection term,
@@ -101,13 +104,13 @@ namespace Nektar
 		RiemSol = vSession->GetSolverInfo("ReimannSolver");
 		
 		// Filling two vectors with the value of the prescibed functions at the quadrature points
-		Adv  = Array<OneD, Array<OneD, double> >(1);
-		Ini  = Array<OneD, Array<OneD, double> >(1);
-		Exac = Array<OneD, Array<OneD, double> >(1);
+		Adv  = Array<OneD, Array<OneD, NekDouble> >(1);
+		Ini  = Array<OneD, Array<OneD, NekDouble> >(1);
+		Exac = Array<OneD, Array<OneD, NekDouble> >(1);
 		
-		Adv[0]  = Array<OneD,double>(nq);
-		Ini[0]  = Array<OneD,double>(nq);
-		Exac[0] = Array<OneD,double>(nq);
+		Adv[0]  = Array<OneD,NekDouble>(nq);
+		Ini[0]  = Array<OneD,NekDouble>(nq);
+		Exac[0] = Array<OneD,NekDouble>(nq);
 		
 		for(int i = 0; i < nq; ++i)
 		{
@@ -118,7 +121,7 @@ namespace Nektar
 		// Setting the physical value of the initial condition inside the physical space
 		Domain->UpdatePhys() = Ini[0];
 		// Setting also the coefficients consequently
-		Domain->FwdTrans(Ini[0],Domain->UpdateCoeffs());
+		//Domain->FwdTrans(Ini[0],Domain->UpdateCoeffs());
 	}
 	
 	//disctructor
@@ -130,9 +133,9 @@ namespace Nektar
 	// FUNCTIONs IMPLEMENTATION
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	void Advection1DFR::EvaluateAdvectionTerm(const Array<OneD, Array<OneD, double> > & inarray,
-											  Array<OneD, Array<OneD, double> > & outarray,
-											  const double time)
+	void Advection1DFR::EvaluateAdvectionTerm(const Array<OneD, Array<OneD, NekDouble> > & inarray,
+											  Array<OneD, Array<OneD, NekDouble> > & outarray,
+											  const NekDouble time)
 	{
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// inarray is intended to be the solution U at time n, so this RHS calculation we will be used to work out U at time n+1
@@ -146,32 +149,27 @@ namespace Nektar
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// switching to Peter nomenclature where inarray = Ud
 		
-		Array<OneD,double> fd(nq,0.0);
-		Array<OneD,double> gradfd(nq,0.0);
+		Array<OneD,NekDouble> fd(nq,0.0);
+		Array<OneD,NekDouble> gradfd(nq,0.0);
 		
-		Array<OneD,double> udi(2*ne,0.0);
-		Array<OneD,double> fdi(2*ne,0.0);
-		Array<OneD,double> fi(ni,0.0);
+		Array<OneD,NekDouble> udi(2*ne,0.0);
+		Array<OneD,NekDouble> fdi(2*ne,0.0);
+		Array<OneD,NekDouble> fi(ni,0.0);
 		
-		Array<OneD,double> tmp1,tmp2;
-		
-		// recalculating the advection coefficient a in case is time-dependent
-		for(int i = 0; i < nq; ++i)
-		{
-			Adv[0][i] = AdveFunc->Evaluate(x[i],y[i],z[i],time);
-		}
+		Array<OneD,NekDouble> tmp1,tmp2;
 		
 		//calculating the discontinous flux fd = Adv*Ud
 		Vmath::Vmul(nq,Adv[0],1,inarray[0],1,fd,1);
 		
-		// Taking the gradient of gradfd = dfd/dx on the reference element
 		LibUtilities::BasisSharedPtr Basis;
+		
 		Basis = Domain->GetExp(0)->GetBasis(0);
 		
 		StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
-		for(int i=0; i < ne; i++)
+		
+		for(int i = 0; i < ne ; i++)
 		{
-			StdSeg.PhysDeriv(tmp1 = fd + i*nq/ne, tmp2 = gradfd + i*nq/ne);
+			StdSeg.PhysDeriv(tmp1 = fd + i*nq/ne,tmp2 = gradfd + i*nq/ne);
 		}
 		
 		//calculate the value of the fd at the interface points ==> fdi
@@ -185,23 +183,26 @@ namespace Nektar
 		
 		//calculate correction final flux gradient df/dx and putting it into the output vector ==> outarray
 		FluxesReconstruction(gradfd,fdi,fi,outarray[0]);
+		
+		// negate advection term
+		Vmath::Neg(nq,outarray[0],1);
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void Advection1DFR::Projection(const Array<OneD, Array<OneD, double> > & inarray,
-								   Array<OneD, Array<OneD, double> > & outarray,
-								   const double time) const
+	void Advection1DFR::Projection(const Array<OneD, Array<OneD, NekDouble> > & inarray,
+								   Array<OneD, Array<OneD, NekDouble> > & outarray,
+								   const NekDouble time) const
 	{
 		// For DG it is just a copy
 		Vmath::Vcopy(nq,inarray[0],1,outarray[0],1);
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void Advection1DFR::ReimannSolver(const Array<OneD, double> & inarray, 
-									  Array<OneD, double> & F)
+	void Advection1DFR::ReimannSolver(const Array<OneD, NekDouble> & inarray, 
+									  Array<OneD, NekDouble> & F)
 	{
-		Array<OneD,double> a,sumInt,difInt;
-		a = Array<OneD,double>(ni);
-		sumInt = Array<OneD,double>(ni);
-		difInt = Array<OneD,double>(ni);
+		Array<OneD,NekDouble> a,sumInt,difInt;
+		a = Array<OneD,NekDouble>(ni);
+		sumInt = Array<OneD,NekDouble>(ni);
+		difInt = Array<OneD,NekDouble>(ni);
 		
 		sumInt[0] = inarray[0]+inarray[2*ne-1];
 		sumInt[ni-1] = sumInt[0];
@@ -224,21 +225,21 @@ namespace Nektar
 			else if(RiemSol == "Lax-Wendroff"){K[i] = 1.0 - (TimeStep*abs(a[i]));}
 			else{ASSERTL0(false,"Reimann solver not implemented");}
 			
-			F[i] = 0.5*a[i]*(sumInt[i]) - 0.5*abs(a[i])*(1-K[i])*(difInt[i]);
+			F[i] = 0.5*a[i]*(sumInt[i]) - 0.5*abs(a[i])*(1.0-K[i])*(difInt[i]);
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void Advection1DFR::FluxesReconstruction(const Array<OneD, double> & fd,
-											 const Array<OneD, double> & fdi,
-											 const Array<OneD, double> & fi,
-											 Array<OneD, double> & outarray)
+	void Advection1DFR::FluxesReconstruction(const Array<OneD, NekDouble> & fd,
+											 const Array<OneD, NekDouble> & fdi,
+											 const Array<OneD, NekDouble> & fi,
+											 Array<OneD, NekDouble> & outarray)
 	{
-		Array<OneD,double> jL(ni-1,0.0);  // jumps on the left interfaces
-		Array<OneD,double> jR(ni-1,0.0);  // jumps on the righ interfaces
+		Array<OneD,NekDouble> jL(ni-1,0.0);  // jumps on the left interfaces
+		Array<OneD,NekDouble> jR(ni-1,0.0);  // jumps on the righ interfaces
 		
-		Array<OneD,double> tmpDGL(nq/ne,0.0); // temp arrays containing j*dg/dx
-		Array<OneD,double> tmpDGR(nq/ne,0.0);
-		Array<OneD,double> tmp,tmparray;
+		Array<OneD,NekDouble> tmpDGL(nq/ne,0.0); // temp arrays containing j*dg/dx
+		Array<OneD,NekDouble> tmpDGR(nq/ne,0.0);
+		Array<OneD,NekDouble> tmp,tmparray;
 		
 		// calculating the jumps on the left and right side
 		for(int i = 0; i< ne; i++)
@@ -256,67 +257,121 @@ namespace Nektar
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void Advection1DFR::GFunctionsGrad(Array<OneD, double> & dGL,
-									   Array<OneD, double> & dGR)
+	void Advection1DFR::GFunctionsGrad(Array<OneD, NekDouble> & dGL,
+									   Array<OneD, NekDouble> & dGR)
 	{	
 		LibUtilities::BasisSharedPtr Basis;
 		
 		Basis = Domain->GetExp(0)->GetBasis(0);
 		
+		StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+		
 		int k  = Basis->GetNumModes();
 		int np = Basis->GetNumPoints();
 		
-		Array<OneD,double> zeros(np,0.0);
+		Array<OneD,NekDouble> zeros(np,0.0);
 		
 		zeros = Basis->GetZ();
 		
-		double sign = pow(-1.0,double(k));
-		double etak;
+		NekDouble sign = pow(-1.0,double(k));
+		NekDouble etak;
 		
 		if(GFtype == "DG"){ etak = 0.0; }
 		else if(GFtype == "SD"){ etak = k/(1.0+k); }
 		else if(GFtype == "HU"){ etak = (1.0+k)/k; }
 		else {ASSERTL0(false,"options for the g functions are DG, SD and HU");}
 		
-		double overeta = 1.0/(1.0+etak);
+		NekDouble overeta = 1.0/(1.0+etak);
 						
-		Array<OneD,double> Lk(np,0.0);
-		Array<OneD,double> dLk(np,0.0);
-		Array<OneD,double> Lkp1(np,0.0);
-		Array<OneD,double> dLkp1(np,0.0);
-		Array<OneD,double> Lkm1(np,0.0);
-		Array<OneD,double> dLkm1(np,0.0);
+		Array<OneD,NekDouble> Lk(np,0.0);
+		Array<OneD,NekDouble> dLk(np,0.0);
+		Array<OneD,NekDouble> Lkp1(np,0.0);
+		Array<OneD,NekDouble> dLkp1(np,0.0);
+		Array<OneD,NekDouble> Lkm1(np,0.0);
+		Array<OneD,NekDouble> dLkm1(np,0.0);
+		Array<OneD,NekDouble> GL(np,0.0);
+		Array<OneD,NekDouble> GR(np,0.0);
 		
 		Polylib::jacobfd(np,&(zeros[0]),&(Lk[0]),&(dLk[0]),k,0.0,0.0);
 		Polylib::jacobfd(np,&(zeros[0]),&(Lkm1[0]),&(dLkm1[0]),k-1,0.0,0.0);
 		Polylib::jacobfd(np,&(zeros[0]),&(Lkp1[0]),&(dLkp1[0]),k+1,0.0,0.0);
 	
 		//dgL
-		Vmath::Smul(np,etak,dLkm1,1,dGL,1);
-		Vmath::Vadd(np,dGL,1,dLkp1,1,dGL,1);
-		Vmath::Smul(np,overeta,dGL,1,dGL,1);
-		Vmath::Vsub(np,dLk,1,dGL,1,dGL,1);
-		Vmath::Smul(np,0.5*sign,dGL,1,dGL,1);
+		Vmath::Smul(np,etak,Lkm1,1,GL,1);
+		Vmath::Vadd(np,GL,1,Lkp1,1,GL,1);
+		Vmath::Smul(np,overeta,GL,1,GL,1);
+		Vmath::Vsub(np,Lk,1,GL,1,GL,1);
+		Vmath::Smul(np,0.5*sign,GL,1,GL,1);
 		//dgR
-		Vmath::Smul(np,etak,dLkm1,1,dGR,1);
-		Vmath::Vadd(np,dGR,1,dLkp1,1,dGR,1);
-		Vmath::Smul(np,overeta,dGR,1,dGR,1);
-		Vmath::Vadd(np,dLk,1,dGR,1,dGR,1);
-		Vmath::Smul(np,0.5,dGR,1,dGR,1);
+		Vmath::Smul(np,etak,Lkm1,1,GR,1);
+		Vmath::Vadd(np,GR,1,Lkp1,1,GR,1);
+		Vmath::Smul(np,overeta,GR,1,GR,1);
+		Vmath::Vadd(np,Lk,1,GR,1,GR,1);
+		Vmath::Smul(np,0.5,GR,1,GR,1);
+		
+		StdSeg.PhysDeriv(GL,dGL);
+		StdSeg.PhysDeriv(GR,dGR);
+		
+
+		np = 1000;
+		NekDouble dx = 2.0/(np-1);
+		Array<OneD,NekDouble> points(np);
+		points[0] = -1.0;
+		for (int i=1; i < np ; i++)
+		{
+			points[i] = points[i-1] + dx;
+		}
+			
+		Array<OneD,NekDouble> plot_Lk(np,0.0);
+		Array<OneD,NekDouble> plot_dLk(np,0.0);
+		Array<OneD,NekDouble> plot_Lkp1(np,0.0);
+		Array<OneD,NekDouble> plot_dLkp1(np,0.0);
+		Array<OneD,NekDouble> plot_Lkm1(np,0.0);
+		Array<OneD,NekDouble> plot_dLkm1(np,0.0);
+		Array<OneD,NekDouble> plot_GL(np,0.0);
+		Array<OneD,NekDouble> plot_GR(np,0.0);
+			
+		Polylib::jacobfd(np,&(points[0]),&(plot_Lk[0]),&(plot_dLk[0]),k,0.0,0.0);
+		Polylib::jacobfd(np,&(points[0]),&(plot_Lkm1[0]),&(plot_dLkm1[0]),k-1,0.0,0.0);
+		Polylib::jacobfd(np,&(points[0]),&(plot_Lkp1[0]),&(plot_dLkp1[0]),k+1,0.0,0.0);
+			
+			//dgL
+		Vmath::Smul(np,etak,plot_Lkm1,1,plot_GL,1);
+		Vmath::Vadd(np,plot_GL,1,plot_Lkp1,1,plot_GL,1);
+		Vmath::Smul(np,overeta,plot_GL,1,plot_GL,1);
+		Vmath::Vsub(np,plot_Lk,1,plot_GL,1,plot_GL,1);
+		Vmath::Smul(np,0.5*sign,plot_GL,1,plot_GL,1);
+		
+		ofstream outfile;
+		
+		outfile.open("GL.dat");
+		for(int i = 0; i < np; i++)
+		{
+			outfile << scientific 
+			<< setw (17) 
+			<< setprecision(10) 
+			<< points[i]
+			<< "  " 
+			<< plot_GL[i]  
+			<< endl;
+		}
+		outfile << endl << endl;
+		outfile.close();
+		
 	}
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void Advection1DFR::InterpToInterface(const Array<OneD, double> & total,
-										  Array<OneD, double> & interfaceValue)
+	void Advection1DFR::InterpToInterface(const Array<OneD, NekDouble> & total,
+										  Array<OneD, NekDouble> & interfaceValue)
 	{
 		LibUtilities::BasisSharedPtr Basis;
 		Basis = Domain->GetExp(0)->GetBasis(0);
 		
 		StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
 		
-		Array<OneD,double> coordL(3,0.0);
-		Array<OneD,double> coordR(3,0.0);
-		Array<OneD,double> tmp(nq/ne,0.0);
+		Array<OneD,NekDouble> coordL(3,0.0);
+		Array<OneD,NekDouble> coordR(3,0.0);
+		Array<OneD,NekDouble> tmp(nq/ne,0.0);
 		coordL[0] = -1.0;
 		coordR[0] = 1.0;
 		int cnt = 0;
@@ -328,8 +383,8 @@ namespace Nektar
 		}
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	void Advection1DFR::AppendOutput(const Array<OneD, double> & approx,
-									 const Array<OneD, double> & exact) const
+	void Advection1DFR::AppendOutput(const Array<OneD, NekDouble> & approx,
+									 const Array<OneD, NekDouble> & exact) const
 	{
 		ofstream outfile;
 		outfile.open("Solution.dat");
@@ -377,7 +432,7 @@ namespace Nektar
 	{
 		/////////////////////////////////////////////////////////////
 		// Evaluating the error
-		double L2, Linf;
+		NekDouble L2, Linf;
 		for(int i = 0; i < nq; ++i)
 		{
 			Exac[0][i] = ExSol->Evaluate(x[i],y[i],z[i],Time);
@@ -420,7 +475,7 @@ namespace Nektar
 		return Domain;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	double Advection1DFR::GetTime() const
+	NekDouble Advection1DFR::GetTime() const
 	{
 		return Time;
 	}
@@ -428,9 +483,11 @@ namespace Nektar
 	void Advection1DFR::UpdateTime()
 	{
 		Time = Time + TimeStep;
+		
+		return;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	double Advection1DFR::GetTimeStep() const
+	NekDouble Advection1DFR::GetTimeStep() const
 	{
 		return TimeStep;
 	}

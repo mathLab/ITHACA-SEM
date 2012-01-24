@@ -82,8 +82,8 @@ int main(int argc, char *argv[])
 	// We create a vector in which we strore our solution step by step.
 	// At the really begenning we put in equal to the physical value of the object Domain
 	// inside Advection1DFR, where we have stored the initial solution
-	Array<OneD, Array<OneD, double> > U(1);
-	U[0] = Array<OneD, double>(solver.GetNumPoints());
+	Array<OneD, Array<OneD, NekDouble> > U(1);
+	U[0] = Array<OneD, NekDouble>(solver.GetNumPoints());
 	
 	U[0] = solver.GetDomain()->GetPhys();
 	
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 		// Coping the solution in the member variable m_phys of the object Domain
 	    solver.GetDomain()->UpdatePhys() = U[0];
 		// Updating the variable m_coeffs of the object Domain (the coefficinet space)
-		solver.GetDomain()->FwdTrans(U[0],solver.GetDomain()->UpdateCoeffs());
+		//solver.GetDomain()->FwdTrans(U[0],solver.GetDomain()->UpdateCoeffs());
 	}
 
 	solver.SolutionPrint();

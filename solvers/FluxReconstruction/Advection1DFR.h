@@ -61,77 +61,77 @@ namespace Nektar
 		~Advection1DFR(void);
 	
 		//Function which evaluate the advection term
-		void EvaluateAdvectionTerm(const Array<OneD, Array<OneD, double> > & inarray,
-								   Array<OneD, Array<OneD, double> > & outarray,
-								   const double time);
+		void EvaluateAdvectionTerm(const Array<OneD, Array<OneD, NekDouble> > & inarray,
+								   Array<OneD, Array<OneD, NekDouble> > & outarray,
+								   const NekDouble time);
 	
 		//Projection
-		void Projection(const Array<OneD, Array<OneD, double> > & inarray,
-						Array<OneD, Array<OneD, double> > & outarray,
-						const double time) const;
+		void Projection(const Array<OneD, Array<OneD, NekDouble> > & inarray,
+						Array<OneD, Array<OneD, NekDouble> > & outarray,
+						const NekDouble time) const;
 		
 		//Reimann solver to work out the interface fluxes (so far just a trivial upwinf scheme)
-		void ReimannSolver(const Array<OneD, double> & inarray, 
-						   Array<OneD, double> & F);
+		void ReimannSolver(const Array<OneD, NekDouble> & inarray, 
+						   Array<OneD, NekDouble> & F);
 		
 		// Flux reconstruction, this function calculate the jumps and return the final flux = df/dx
 		// corrected with gL and gR functions
-		void FluxesReconstruction(const Array<OneD, double> & fd,
-								  const Array<OneD, double> & fdi,
-								  const Array<OneD, double> & fi,
-								  Array<OneD, double> & outarray);
+		void FluxesReconstruction(const Array<OneD, NekDouble> & fd,
+								  const Array<OneD, NekDouble> & fdi,
+								  const Array<OneD, NekDouble> & fi,
+								  Array<OneD, NekDouble> & outarray);
 		
 		//calculate the correction function derivatives at the beginning and store the value
-		void GFunctionsGrad(Array<OneD, double> & dGL,
-				            Array<OneD, double> & dGR);
+		void GFunctionsGrad(Array<OneD, NekDouble> & dGL,
+				            Array<OneD, NekDouble> & dGR);
 		
 		// function which interpolate the total value (total) to the interface value (interface)
-		void InterpToInterface(const Array<OneD, double> & total,
-							   Array<OneD, double> & interfaceValue);
+		void InterpToInterface(const Array<OneD, NekDouble> & total,
+							   Array<OneD, NekDouble> & interfaceValue);
 		
 		//Print out a summary and the results (the solution to file and the error to screen)
 		void SolutionPrint();
 		
-		void AppendOutput(const Array<OneD, double> & approx,
-						  const Array<OneD, double> & exact) const;
+		void AppendOutput(const Array<OneD, NekDouble> & approx,
+						  const Array<OneD, NekDouble> & exact) const;
 		
 		void GenerateGnuplotScript() const;
 		
 		//functions to access some variable inside the problem
 		
 		MultiRegions::DisContField1DSharedPtr GetDomain() const;
-		double GetTime() const;
+		NekDouble GetTime() const;
 		void UpdateTime();
-		double GetTimeStep() const;
+		NekDouble GetTimeStep() const;
 		int GetNumSteps() const;
 		int GetNumPoints() const;
 		
 		// Variables
-		MultiRegions::DisContField1DSharedPtr        Domain; // object in which the mesh, the projection type and the expansion are joined
+		MultiRegions::DisContField1DSharedPtr             Domain; // object in which the mesh, the projection type and the expansion are joined
 		SpatialDomains::MeshGraphSharedPtr          graph1D; // object containg the mesh
-		Array<OneD,double>								  x;  // coordinates of the quadrature points
-		Array<OneD,double>								  y;  // if the line describing the domain in in 1D y and z are zeros
-		Array<OneD,double>								  z;  //
-		Array<OneD,double>								 xi; // coordinates of the quadrature points
-		Array<OneD,double>								 yi; // if the line describing the domain in in 1D y and z are zeros
-		Array<OneD,double>								 zi; //
+		Array<OneD,NekDouble>								  x;  // coordinates of the quadrature points
+		Array<OneD,NekDouble>								  y;  // if the line describing the domain in in 1D y and z are zeros
+		Array<OneD,NekDouble>								  z;  //
+		Array<OneD,NekDouble>								 xi; // coordinates of the quadrature points
+		Array<OneD,NekDouble>								 yi; // if the line describing the domain in in 1D y and z are zeros
+		Array<OneD,NekDouble>								 zi; //
 		int												 nq; // number of quadrature points
 		int												 ni; // number of interface points
 		int												 ne; // number of elements
-		double										   Time; // time-level
-		double									   TimeStep; // time-step
+		NekDouble										   Time; // time-level
+		NekDouble									   TimeStep; // time-step
 		int                                        NumSteps; // number of tie-step to be performed
 		LibUtilities::EquationSharedPtr            AdveFunc; // equation holding the advection definition
 		LibUtilities::EquationSharedPtr            InitCond; // equation holding the initial condition definition
 		LibUtilities::EquationSharedPtr               ExSol; // equation holding the exact solution definition
-		Array<OneD, Array<OneD, double> >                Adv; // vector containg the values of the advection coefficient at the quadrature
-		Array<OneD, Array<OneD, double> >                Ini; // vector containg the values of the initial condition at the quadrature
-		Array<OneD, Array<OneD, double> >               Exac; // vector containg the values of the exact solution at the quadrature
+		Array<OneD, Array<OneD, NekDouble> >                Adv; // vector containg the values of the advection coefficient at the quadrature
+		Array<OneD, Array<OneD, NekDouble> >                Ini; // vector containg the values of the initial condition at the quadrature
+		Array<OneD, Array<OneD, NekDouble> >               Exac; // vector containg the values of the exact solution at the quadrature
 		std::string                                 RiemSol; // string which defines the Riemann solver 
 		std::string                                  GFtype; // g functions type
-		Array<OneD, double>                                K; // Array of K which defines which type of Reiman solver we are using
-		Array<OneD, double>                              dgL; // left correction function derived by x
-		Array<OneD, double>                              dgR; // right correction function derived by x
+		Array<OneD, NekDouble>                                K; // Array of K which defines which type of Reiman solver we are using
+		Array<OneD, NekDouble>                              dgL; // left correction function derived by x
+		Array<OneD, NekDouble>                              dgR; // right correction function derived by x
 		
 	private:
 		

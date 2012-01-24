@@ -56,6 +56,7 @@ namespace Nektar
             eLegendre,     //!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
             eChebyshev,    //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
             eMonomial,     //!< Monomial polynomials 
+			eLagrange,
             SIZE_BasisType //!< Length of enum list
         };
 
@@ -72,7 +73,8 @@ namespace Nektar
             "GLL_Lagrange",
             "Legendre",
             "Chebyshev",
-            "Monomial"
+            "Monomial",
+			"Lagrange"
         };
 
         enum PointsType

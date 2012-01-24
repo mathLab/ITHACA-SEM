@@ -199,6 +199,7 @@ namespace Nektar
                     if( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
+					    (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
                         (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) )
                     {
                         check++;

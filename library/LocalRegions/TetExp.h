@@ -160,6 +160,13 @@ namespace Nektar
                             Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
 
+            //Extract physical values on a face
+            virtual void v_GetFacePhysVals(
+                            const int face,
+                            const StdRegions::StdExpansion2DSharedPtr &FaceExp,                            
+                            const Array<OneD,const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray);
+
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -186,6 +193,8 @@ namespace Nektar
 
             virtual int v_GetCoordim();
 
+            virtual StdRegions::FaceOrientation v_GetFaceorient(int face);
+
             virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol);
 
             virtual NekDouble v_Linf();
@@ -202,6 +211,8 @@ namespace Nektar
 
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(
                             const MatrixKey &mkey);
+
+            void v_ComputeFaceNormal(const int face);      
         };
 
         // type defines for use of TetExp in a boost vector

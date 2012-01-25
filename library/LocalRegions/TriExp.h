@@ -135,6 +135,13 @@ namespace Nektar
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> & outarray);
 
+            LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const NekDouble> &Fx,
+                    const Array<OneD, const NekDouble> &Fy, 
+                    const Array<OneD, const NekDouble> &Fz, 
+                    Array< OneD, NekDouble> &outarray, 
+                    bool NegateNorm = false);
+
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------

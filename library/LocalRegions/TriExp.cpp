@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <LocalRegions/TriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
+#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {
@@ -522,6 +523,35 @@ namespace Nektar
 
         }
 
+        void TriExp::v_NormVectorIProductWRTBase(
+                const Array<OneD, const NekDouble> &Fx,
+                const Array<OneD, const NekDouble> &Fy,
+                const Array<OneD, const NekDouble> &Fz,
+                Array< OneD, NekDouble> &outarray,
+                bool NegateNormal)
+        {
+ 
+            int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetFaceNormal(GetLeftAdjacentElementFace());
+
+            //Vmath::Vmul (nq,&Fx[0],1,normals[0][0], 1,&Fn[0],1);
+            //Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
+            //Vmath::Vvtvp(nq,&Fz[0],1,&normals[2][0],1,&Fn[0],1,&Fn[0],1);
+
+            for (int i=0; i<nq; ++i)
+            {
+                Fn[i]=Fx[i]*normals[0][0]+Fy[i]*normals[1][0]+Fz[i]*normals[2][0];
+            }
+
+            if(NegateNormal == true)
+            {
+                Vmath::Neg(nq,Fn,1);
+            }
+
+            IProductWRTBase(Fn,outarray);
+        }
 
         void TriExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,

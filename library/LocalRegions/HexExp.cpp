@@ -1891,7 +1891,7 @@ namespace Nektar
                 }
                 break;
             case 2:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     Vmath::Vcopy(nquad0*nquad1,e_tmp=inarray+(nquad0-1),nquad0,outarray,1);
@@ -1911,6 +1911,7 @@ namespace Nektar
                     {
                         Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(nquad0*nquad1*(nquad2-1-k)),nquad0,o_tmp=outarray+(k*nquad0),1);
                     }
+                    Vmath::Vcopy(nquad0*nquad1,e_tmp=inarray+(nquad0-1),nquad0,outarray,1);
                 }
                 else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
@@ -1922,7 +1923,7 @@ namespace Nektar
                 }
                 break;
             case 3:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     for (int k=0; k<nquad2; k++)
@@ -2100,7 +2101,7 @@ namespace Nektar
 		
 	    }
             else   // Set up deformed normals
-            {
+                {
 	        int j, k;
 
                 int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
@@ -2121,7 +2122,7 @@ namespace Nektar
                 switch(face)
 	        {
                 case 0:
-                    for(j = 0; j < nquad0*nquad1; ++j)
+		    for(j = 0; j < nquad0*nquad1; ++j)
                     {
                         normals[j] = -gmat[2][j]*jac[j];
                         normals[nqtot+j] = -gmat[5][j]*jac[j];
@@ -2168,7 +2169,7 @@ namespace Nektar
                     }
                     break;
                 case 2:
-                    for (j=0; j< nquad1; ++j)
+		    for (j=0; j< nquad1; ++j)
                     {
                         for(k=0; k<nquad2; ++k)
                         {
@@ -2191,9 +2192,9 @@ namespace Nektar
 		        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
                         Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
                     }
-                    break;                
+                    break;               
                 case 3:
-                    for (j=0; j< nquad0; ++j)
+		    for (j=0; j< nquad0; ++j)
                     {
                         for(k=0; k<nquad2; ++k)
                         {
@@ -2219,7 +2220,7 @@ namespace Nektar
                     }
                     break;
                 case 4:
-                    for (j=0; j< nquad0; ++j)
+		    for (j=0; j< nquad0; ++j)
                     {
                         for(k=0; k<nquad2; ++k)
                         {
@@ -2284,16 +2285,16 @@ namespace Nektar
                     Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
 		}
             }
- 
+
             switch(face)
             {
             case 0:
                 if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2))
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2BwdDir2)) 
                 {
                     for (i = 0; i < vCoordDim; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+		        Vmath::Neg(nqe,normal[i],1);                 
                     }
                 }
                 break;
@@ -2303,7 +2304,7 @@ namespace Nektar
                 {
                     for (i = 0; i < vCoordDim; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+		        Vmath::Neg(nqe,normal[i],1);                 
                     }
                 }
                 break;
@@ -2313,7 +2314,7 @@ namespace Nektar
                 {
                     for (i = 0; i < vCoordDim; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+		        Vmath::Neg(nqe,normal[i],1);                 
                     }
                 }
                 break;
@@ -2323,7 +2324,7 @@ namespace Nektar
                 {
                     for (i = 0; i < vCoordDim; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+		        Vmath::Neg(nqe,normal[i],1);                 
                     }
                 }
                 break;
@@ -2333,17 +2334,17 @@ namespace Nektar
                 {
                     for (i = 0; i < vCoordDim; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+		        Vmath::Neg(nqe,normal[i],1);                 
                     }
                 }
                 break;
             case 5:
                 if ((GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2)) 
+                || (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2))
                 {
                     for (i = 0; i < vCoordDim; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+		      Vmath::Neg(nqe,normal[i],1);                 
                     }
                 }
                 break;
@@ -2351,7 +2352,8 @@ namespace Nektar
                 ASSERTL0(false,"face value (> 5) is out of range");
                 break;               
             }
-        
+
+            StdRegions::FaceOrientation orient=GetFaceorient(face);
         }
 
 

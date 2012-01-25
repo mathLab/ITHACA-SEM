@@ -407,7 +407,7 @@ namespace Nektar
          * @param   outarray        An array of size \f$N_{\mathrm{eof}}\f$
          *                          used to store the result.
          */
-        void ExpList::IProductWRTBase_IterPerExp(
+        void ExpList::v_IProductWRTBase_IterPerExp(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray)
         {
@@ -2285,7 +2285,7 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs)
         {
-            IProductWRTBase_IterPerExp(inarray,outarray);
+            v_IProductWRTBase_IterPerExp(inarray,outarray);
         }
 
         void ExpList::v_GeneralMatrixOp(

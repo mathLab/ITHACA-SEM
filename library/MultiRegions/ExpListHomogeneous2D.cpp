@@ -256,6 +256,23 @@ namespace Nektar
 			
 			HomogeneousFwdTrans(outarray,outarray,UseContCoeffs);
         }
+		
+		void ExpListHomogeneous2D::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+            int nlines = m_lines.num_elements();
+			
+            for(int n = 0; n < nlines; ++n)
+            {
+                m_lines[n]->FwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+                
+				cnt   += m_lines[n]->GetTotPoints();
+				cnt1  += m_lines[n]->GetNcoeffs();
+            }
+			
+			HomogeneousFwdTrans(outarray,outarray);
+        }
 
         void ExpListHomogeneous2D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
@@ -280,6 +297,23 @@ namespace Nektar
 
 			HomogeneousBwdTrans(outarray,outarray);
         }
+		
+		void ExpListHomogeneous2D::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+            int nlines = m_lines.num_elements();
+			
+            for(int n = 0; n < nlines; ++n)
+            {
+                m_lines[n]->BwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+
+				cnt    += m_lines[n]->GetNcoeffs();
+                cnt1   += m_lines[n]->GetTotPoints();
+            }
+			
+			HomogeneousBwdTrans(outarray,outarray);
+        }
 
 
         void ExpListHomogeneous2D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -300,6 +334,21 @@ namespace Nektar
                 {
                     cnt    += m_lines[n]->GetNcoeffs();
                 }
+                cnt1   += m_lines[n]->GetTotPoints();
+            }
+        }
+		
+		void ExpListHomogeneous2D::v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+            int nlines = m_lines.num_elements();
+			
+            for(int n = 0; n < nlines; ++n)
+            {
+                m_lines[n]->IProductWRTBase_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
+				
+				cnt    += m_lines[n]->GetNcoeffs();
                 cnt1   += m_lines[n]->GetTotPoints();
             }
         }
@@ -784,6 +833,8 @@ namespace Nektar
 			
 			UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d1,false);
 			UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d2,false);
+			Vmath::Smul(npoints,1.0/m_lhom_y,out_d1,1,out_d1,1);
+			Vmath::Smul(npoints,1.0/m_lhom_z,out_d2,1,out_d2,1);
 
 		}
 		
@@ -826,10 +877,12 @@ namespace Nektar
 				if (dir == 1)
 				{
 					UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d,false);
+					Vmath::Smul(npoints,1.0/m_lhom_y,out_d,1,out_d,1);
 				}
 				else 
 				{
 					UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d,false);
+					Vmath::Smul(npoints,1.0/m_lhom_z,out_d,1,out_d,1);
 				}
 			}
 		}

@@ -170,11 +170,16 @@ namespace Nektar
                                     bool  UseContCoeffs);
 			
 			virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
-											  Array<OneD,      NekDouble> &outarray,
-											  bool  UseContCoeffs);
+											  Array<OneD,      NekDouble> &outarray);
 
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs);
-
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+										   Array<OneD, NekDouble> &outarray, 
+										   bool UseContCoeffs);
+			
+			virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
+													  Array<OneD, NekDouble> &outarray);
+			
+			
             virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
 
             virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);

@@ -711,6 +711,12 @@ namespace Nektar
                 return shared_from_this();
             }
 
+            /// Returns the session object
+            boost::shared_ptr<LibUtilities::SessionReader> GetSession()
+            {
+                return m_session;
+            }
+
             /// Returns the comm object
             boost::shared_ptr<LibUtilities::Comm> GetComm()
             {

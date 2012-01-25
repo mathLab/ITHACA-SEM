@@ -55,6 +55,12 @@ namespace Nektar
                                                        &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap)
         {
+            LibUtilities::SessionReaderSharedPtr vSession
+                                            = pExpList.lock()->GetSession();
+            vSession->LoadParameter("IterativeSolverTolerance",
+                                    m_tolerance,
+                                    NekConstants::kNekIterativeTol);
+
         }
 
         GlobalLinSysIterative::~GlobalLinSysIterative()
@@ -106,8 +112,8 @@ namespace Nektar
             NekVector<NekDouble> p(nNonDir,p_A + nDir,eWrapper);
 
             int k;
-            NekDouble alpha, beta, normsq;
-            Array<OneD, NekDouble> vExchange(3);
+            NekDouble alpha, beta, normsq, r_dot_z_old;
+            Array<OneD, NekDouble> vExchange(2);
 
             // INVERSE of preconditioner matrix.
             const DNekMat &M = (*m_preconditioner);
@@ -118,13 +124,17 @@ namespace Nektar
             d = z;
             k = 0;
 
+            vExchange[0] = Vmath::Dot2(nNonDir, r_A, r_A, m_map + nDir);
+            vExchange[1] = Vmath::Dot2(nNonDir, r_A, z_A, m_map + nDir);
+            vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
+
             // If input vector is zero, set zero output and skip solve.
-            vExchange[0] = VDmath::Ddot2(vComm, nNonDir, r_A, r_A, m_map + nDir);
             if (vExchange[0] < NekConstants::kNekZeroTol)
             {
                 Vmath::Zero(nGlobal, pOutput, 1);
                 return;
             }
+            r_dot_z_old = vExchange[1];
 
             // Continue until convergence
             while (true)
@@ -138,21 +148,11 @@ namespace Nektar
                                         d_A + nDir,
                                         p_A + nDir,
                                         m_map + nDir);
-                // alpha numerator
-                vExchange[1] = Vmath::Dot2(nNonDir,
-                                        z_A,
-                                        r_A,
-                                        m_map + nDir);
-                // beta denominator
-                vExchange[2] = Vmath::Dot2(nNonDir,
-                                        r_A,
-                                        z_A,
-                                        m_map + nDir);
                 // perform exchange
                 vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
 
                 // compute alpha
-                alpha = vExchange[1]/vExchange[0];
+                alpha = r_dot_z_old/vExchange[0];
 
                 // approximate solution
                 out   = out + alpha*d;
@@ -167,7 +167,7 @@ namespace Nektar
                 vExchange[0] = Vmath::Dot2(nNonDir,
                                         r_new_A,
                                         z_new_A,
-                                        m_map + nDir) / vExchange[2];
+                                        m_map + nDir);
 
                 // residual
                 vExchange[1] = Vmath::Dot2(nNonDir,
@@ -179,11 +179,12 @@ namespace Nektar
                 vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
 
                 // extract values for beta and norm
-                beta = vExchange[0];
-                normsq = vExchange[1];
+                beta        = vExchange[0]/r_dot_z_old;
+                r_dot_z_old = vExchange[0];
+                normsq      = vExchange[1];
 
                 // test if norm is within tolerance
-                if (sqrt(normsq) < NekConstants::kNekIterativeTol)
+                if (normsq < m_tolerance * m_tolerance)
                 {
                     break;
                 }

@@ -66,6 +66,9 @@ namespace Nektar
             /// Operator preconditioner matrix.
             DNekMatSharedPtr                            m_preconditioner;
 
+            /// Tolerance of iterative solver.
+            NekDouble                                   m_tolerance;
+
         private:
             /// Solve the matrix system
             virtual void v_SolveLinearSystem(

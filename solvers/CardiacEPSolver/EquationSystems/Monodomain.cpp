@@ -99,13 +99,17 @@ namespace Nektar
         {
             if (m_session->DefinesFunction(varCoeffs[i]))
             {
+                // Load from FLD file.
                 if (m_session->GetFunctionType(varCoeffs[i]) == LibUtilities::eFunctionTypeFile)
                 {
-                    std::string fileName = m_session->GetFunctionFilename(varCoeffs[i]);
-                    ImportFld(fileName, m_fields[0], varName);
+                    ImportFld(m_session->GetFunctionFilename(varCoeffs[i]),
+                              m_fields[0],
+                              varName);
 
-                    m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+                    m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(),
+                                          m_fields[0]->UpdatePhys());
 
+                    // Normalise and invert (assuming image intensity data)
                     int nq = m_fields[0]->GetNpoints();
                     NekDouble max = Vmath::Vmax(nq, m_fields[0]->GetPhys(), 1);
                     Vmath::Smul(nq, 1.0/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
@@ -114,11 +118,32 @@ namespace Nektar
 
                     m_vardiff[varCoeffEnum[i]] = m_fields[0]->GetPhys();
                 }
+                // Evaluate expression
                 else
                 {
-                    ASSERTL0(false, "Need to implement analytic function import for VarCoeffs");
-                    // Implement for an analytic function
+                    int nq = m_fields[0]->GetNpoints();
+                    Array<OneD,NekDouble> x0(nq);
+                    Array<OneD,NekDouble> x1(nq);
+                    Array<OneD,NekDouble> x2(nq);
+
+                    // get the coordinates
+                    m_fields[0]->GetCoords(x0,x1,x2);
+
+                    Array<OneD, NekDouble> tmp(nq);
+
+                    LibUtilities::EquationSharedPtr ifunc
+                            = m_session->GetFunction(varCoeffs[i], varName);
+                    for(int j = 0; j < nq; j++)
+                    {
+                        tmp[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],0.0);
+                    }
+                    m_vardiff[varCoeffEnum[i]] = tmp;
                 }
+
+                // Dump actual variable coefficients for verification.
+                m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(),
+                                                 m_fields[0]->UpdateCoeffs());
+                WriteFld(varCoeffs[i] + ".fld");
             }
         }
 

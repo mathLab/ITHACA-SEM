@@ -215,28 +215,28 @@ namespace Nektar
                 Array<OneD, std::string> &variables);
 
         /// Write field data to the given filename.
-        void WriteFld(std::string &outname);
+        void WriteFld(const std::string &outname);
 
         /// Write input fields to the given filename.
         void WriteFld(
-                std::string &outname,
+                const std::string &outname,
                 MultiRegions::ExpListSharedPtr &field,
                 Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs,
                 Array<OneD, std::string> &variables);
 
         /// Input field data from the given file.
         void ImportFld(
-                std::string &infile,
+                const std::string &infile,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
 
          /// Output a field.
          /// Input field data into array from the given file.
-         void ImportFld(std::string &infile, std::vector<std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs);
+         void ImportFld(const std::string &infile, std::vector<std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs);
 
          /// Output a field.
          /// Input field data into ExpList from the given file.
-         void ImportFld(std::string &infile, MultiRegions::ExpListSharedPtr &pField, std::string &pFieldName);
+         void ImportFld(const std::string &infile, MultiRegions::ExpListSharedPtr &pField, std::string &pFieldName);
          
         /// Output a field.
 //        void Array_Output(
@@ -245,7 +245,7 @@ namespace Nektar
 //                const Array<OneD, const NekDouble>&inarray,
 //                bool IsInPhysicalSpace);
 
-        void WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace);
+        void WriteTecplotFile(const int n, const std::string &name, bool IsInPhysicalSpace);
 
         /// Builds map of which element holds each history point.
         void ScanForHistoryPoints();

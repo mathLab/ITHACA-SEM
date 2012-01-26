@@ -1719,7 +1719,7 @@ namespace Nektar
      * Writes the field data to a file with the given filename.
      * @param   outname     Filename to write to.
      */
-    void EquationSystem::WriteFld(std::string &outname)
+    void EquationSystem::WriteFld(const std::string &outname)
     {
         Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements());
         Array<OneD, std::string>  variables(m_fields.num_elements());
@@ -1742,7 +1742,7 @@ namespace Nektar
      * @param fieldcoeffs   An array of array of expansion coefficients
      * @param  variables    An array of variable names
      */
-    void EquationSystem::WriteFld(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
+    void EquationSystem::WriteFld(const std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
     {
 
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
@@ -1770,7 +1770,7 @@ namespace Nektar
      * coefficient storage.
      * @param   infile          Filename to read.
      */
-    void EquationSystem::ImportFld(std::string &infile, Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+    void EquationSystem::ImportFld(const std::string &infile, Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
@@ -1800,7 +1800,7 @@ namespace Nektar
      * also perform a \a BwdTrans to ensure data is in both the physical and
      * coefficient storage.
      */
-    void EquationSystem::ImportFld(std::string &infile, MultiRegions::ExpListSharedPtr &pField, std::string &pFieldName)
+    void EquationSystem::ImportFld(const std::string &infile, MultiRegions::ExpListSharedPtr &pField, std::string &pFieldName)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
@@ -1834,7 +1834,7 @@ namespace Nektar
      * @param fieldStr an array of string identifying fields to be imported
      * @param coeffs and array of array of coefficients to store imported data
      */
-    void EquationSystem::ImportFld(std::string &infile, std::vector< std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs)
+    void EquationSystem::ImportFld(const std::string &infile, std::vector< std::string> &fieldStr, Array<OneD, Array<OneD, NekDouble> > &coeffs)
     {
 
         ASSERTL0(fieldStr.size() <= coeffs.num_elements(),"length of fieldstr should be the same as pFields");
@@ -1901,7 +1901,7 @@ namespace Nektar
      * @param   name                Additional name (appended to session name).
      * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
      */
-    void EquationSystem::WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace)
+    void EquationSystem::WriteTecplotFile(const int n, const std::string &name, bool IsInPhysicalSpace)
     {
         int nq = m_fields[0]->GetTotPoints();
 

@@ -56,6 +56,16 @@ ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3DHomo1D demos HDGHelmholtz3DHomo1DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz3DHomo1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz3DHomo1D)
 
+SET(Deriv3DHomo1DSource  Deriv3DHomo1D.cpp)
+ADD_NEKTAR_EXECUTABLE(Deriv3DHomo1D demos Deriv3DHomo1DSource)
+TARGET_LINK_LIBRARIES(Deriv3DHomo1D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Deriv3DHomo1D)
+
+SET(Deriv3DHomo2DSource  Deriv3DHomo2D.cpp)
+ADD_NEKTAR_EXECUTABLE(Deriv3DHomo2D demos Deriv3DHomo2DSource)
+TARGET_LINK_LIBRARIES(Deriv3DHomo2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Deriv3DHomo2D)
+
 SET(SteadyAdvectionDiffusionReactionCont2DSource  SteadyAdvectionDiffusionReaction2D.cpp)
 ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D demos SteadyAdvectionDiffusionReactionCont2DSource)
 TARGET_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D ${LinkLibraries})

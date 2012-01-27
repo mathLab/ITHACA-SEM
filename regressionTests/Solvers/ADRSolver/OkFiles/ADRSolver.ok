@@ -1,45 +1,5 @@
 ADRSolver
 ==========================================
-Test_Helmholtz2D_modal.xml
-L 2 error (variable u) : 0.00888037
-L inf error (variable u) : 0.0101781
-----------------------------------------
-Test_SteadyAdvDiffReact2D_modal.xml
-L 2 error (variable u) : 0.000367073
-L inf error (variable u) : 0.000514567
-----------------------------------------
-Test_Helmholtz2D_nodal.xml
-L 2 error (variable u) : 0.00194795
-L inf error (variable u) : 0.00302271
-----------------------------------------
-Test_Advection_m12_Order1.xml
-L 2 error (variable u) : 0.0118581
-L inf error (variable u) : 0.011437
-----------------------------------------
-Test_Advection_m12_Order2.xml
-L 2 error (variable u) : 9.55749e-05
-L inf error (variable u) : 9.27095e-05
-----------------------------------------
-Test_Advection_m14_Order4.xml
-L 2 error (variable u) : 8.38722e-09
-L inf error (variable u) : 5.32501e-08
-----------------------------------------
-Test_Helmholtz2D_modal_DG.xml
-L 2 error (variable u) : 0.011251
-L inf error (variable u) : 0.0355625
-----------------------------------------
-Test_Advection_m12_DG_Order1.xml
-L 2 error (variable u) : 0.0118577
-L inf error (variable u) : 0.0113757
-----------------------------------------
-Test_Advection_m12_DG_Order2.xml
-L 2 error (variable u) : 9.18608e-05
-L inf error (variable u) : 9.63598e-05
-----------------------------------------
-Test_Advection_m14_DG_Order4.xml
-L 2 error (variable u) : 3.88022e-09
-L inf error (variable u) : 6.24598e-08
-----------------------------------------
 Test_Helmholtz1D_8modes.xml
 L 2 error (variable u) : 1.11262e-05
 L inf error (variable u) : 1.28659e-05
@@ -51,6 +11,46 @@ L inf error (variable u) : 0.000213838
 Test_Helmholtz1D_8nodes.xml
 L 2 error (variable u) : 1.11262e-05
 L inf error (variable u) : 1.28659e-05
+----------------------------------------
+Test_Helmholtz2D_modal.xml
+L 2 error (variable u) : 0.00888037
+L inf error (variable u) : 0.0101781
+----------------------------------------
+Test_Helmholtz2D_modal_DG.xml
+L 2 error (variable u) : 0.011251
+L inf error (variable u) : 0.0355625
+----------------------------------------
+Test_Helmholtz2D_nodal.xml
+L 2 error (variable u) : 0.00194795
+L inf error (variable u) : 0.00302271
+----------------------------------------
+Test_Helmholtz3D_modal.xml
+L 2 error (variable u) : 3.94573e-07
+L inf error (variable u) : 1.17288e-06
+----------------------------------------
+Test_Helmholtz3D_nodal.xml
+L 2 error (variable u) : 1.62207e-08
+L inf error (variable u) : 5.66566e-08
+----------------------------------------
+Test_Helmholtz_3DHomo1D_MVM.xml
+L 2 error (variable u) : 3.19231e-05
+L inf error (variable u) : 2.50889e-05
+----------------------------------------
+Test_Helmholtz_3DHomo2D_MVM.xml
+L 2 error (variable u) : 2.00743e-06
+L inf error (variable u) : 6.32758e-06
+----------------------------------------
+Test_Helmholtz_3DHomo1D_FFT.xml
+L 2 error (variable u) : 3.19231e-05
+L inf error (variable u) : 2.50889e-05
+----------------------------------------
+Test_Helmholtz_3DHomo2D_FFT.xml
+L 2 error (variable u) : 2.00743e-06
+L inf error (variable u) : 6.32758e-06
+----------------------------------------
+Test_SteadyAdvDiffReact2D_modal.xml
+L 2 error (variable u) : 0.000367073
+L inf error (variable u) : 0.000514567
 ----------------------------------------
 Test_Advection1D_m7_DG.xml
 L 2 error (variable u) : 0.000354307
@@ -65,8 +65,32 @@ L 2 error (variable u) : 3.62709e-05
 L inf error (variable u) : 2.4442e-05
 ----------------------------------------
 Test_Advection1D_m14_Order4.xml
-L 2 error (variable u) : 8.1655e-11
-L inf error (variable u) : 3.02724e-10
+L 2 error (variable u) : 8.17241e-11
+L inf error (variable u) : 3.02666e-10
+----------------------------------------
+Test_Advection_m12_Order1.xml
+L 2 error (variable u) : 0.0118581
+L inf error (variable u) : 0.011437
+----------------------------------------
+Test_Advection_m12_Order2.xml
+L 2 error (variable u) : 9.55749e-05
+L inf error (variable u) : 9.27095e-05
+----------------------------------------
+Test_Advection_m14_Order4.xml
+L 2 error (variable u) : 8.3871e-09
+L inf error (variable u) : 5.3248e-08
+----------------------------------------
+Test_Advection_m12_DG_Order1.xml
+L 2 error (variable u) : 0.0118577
+L inf error (variable u) : 0.0113757
+----------------------------------------
+Test_Advection_m12_DG_Order2.xml
+L 2 error (variable u) : 9.18608e-05
+L inf error (variable u) : 9.63598e-05
+----------------------------------------
+Test_Advection_m14_DG_Order4.xml
+L 2 error (variable u) : 3.88032e-09
+L inf error (variable u) : 6.24598e-08
 ----------------------------------------
 Test_ImDiffusion_m6.xml
 L 2 error (variable u) : 0.00424554
@@ -75,6 +99,10 @@ L inf error (variable u) : 0.032055
 Test_ImDiffusion_m12.xml
 L 2 error (variable u) : 0.00153495
 L inf error (variable u) : 0.00153495
+----------------------------------------
+Test_ImDiffusion_VarCoeff.xml
+L 2 error (variable u) : 0.00173845
+L inf error (variable u) : 0.00173845
 ----------------------------------------
 Test_ExDiffusion_m3.xml
 L 2 error (variable u) : 0.00712372
@@ -100,47 +128,19 @@ Test_UnsteadyAdvectionDiffusion_Order2_0001.xml
 L 2 error (variable u) : 1.5458e-08
 L inf error (variable u) : 3.64252e-08
 ----------------------------------------
-Test_Helmholtz3D_modal.xml
-L 2 error (variable u) : 3.94573e-07
-L inf error (variable u) : 1.17288e-06
-----------------------------------------
-Test_Helmholtz3D_nodal.xml
-L 2 error (variable u) : 1.62207e-08
-L inf error (variable u) : 5.66566e-08
-----------------------------------------
-Test_Helmholtz_3DHomo1D_MVM.xml
-L 2 error (variable u) : 3.19231e-05
-L inf error (variable u) : 2.50889e-05
-----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo1D_MVM.xml
-L 2 error (variable u) : 3.27974e-06
-L inf error (variable u) : 5.64315e-06
-----------------------------------------
-Test_Helmholtz_3DHomo1D_FFT.xml
-L 2 error (variable u) : 3.19231e-05
-L inf error (variable u) : 2.50889e-05
-----------------------------------------
-Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml
-L 2 error (variable u) : 3.12969e-06
-L inf error (variable u) : 5.68224e-06
-----------------------------------------
-Test_Helmholtz_3DHomo2D_MVM.xml
-L 2 error (variable u) : 2.00743e-06
-L inf error (variable u) : 6.32758e-06
-----------------------------------------
-Test_Helmholtz_3DHomo2D_FFT.xml
-L 2 error (variable u) : 2.00743e-06
-L inf error (variable u) : 6.32758e-06
+L 2 error (variable u) : 1.16095e-06
+L inf error (variable u) : 1.53887e-07
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml
-L 2 error (variable u) : 5.79861e-09
-L inf error (variable u) : 1.14218e-08
+L 2 error (variable u) : 5.48207e-09
+L inf error (variable u) : 1.39886e-08
+----------------------------------------
+Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml
+L 2 error (variable u) : 6.16212e-07
+L inf error (variable u) : 1.02378e-07
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_FFT.xml
-L 2 error (variable u) : 5.79861e-09
-L inf error (variable u) : 1.14218e-08
-----------------------------------------
-Test_ImDiffusion_VarCoeff.xml
-L 2 error (variable u) : 0.00173845
-L inf error (variable u) : 0.00173845
+L 2 error (variable u) : 5.48207e-09
+L inf error (variable u) : 1.39886e-08
 ----------------------------------------

@@ -822,20 +822,54 @@ namespace Nektar
 				m_lines[i]->PhysDeriv( tmp1 = inarray + i*n_points_line ,tmp2 = out_d0 + i*n_points_line);
 			}
 			
-			StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
-			
-			ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
-			
-			for(int i = 0; i < n_points_line; i++)
+			if(m_homogeneousBasis_y->GetBasisType() == LibUtilities::eFourier && m_homogeneousBasis_z->GetBasisType() == LibUtilities::eFourier)
 			{
-				StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
+				HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+				NekDouble sign = -1.0;
+				NekDouble beta;
+				
+				//along y
+				for(int i = 0; i < m_ny; i++)
+				{
+					beta = sign*2*M_PI*(i/2)/m_lhom_y;
+					
+					for(int j = 0; j < m_nz; j++)
+					{
+						Vmath::Smul(n_points_line,beta,tmp1 = temparray + n_points_line*(i+j*m_ny),1, tmp2 = temparray1 + n_points_line*((i-int(sign))+j*m_ny),1);
+					}
+					
+					sign = -1.0*sign;
+				}
+				
+				//along z
+				sign = -1.0;
+				for(int i = 0; i < m_nz; i++)
+				{
+					beta = sign*2*M_PI*(i/2)/m_lhom_z;
+					Vmath::Smul(m_ny*n_points_line,beta,tmp1 = temparray + i*m_ny*n_points_line,1,tmp2 = temparray2 + (i-int(sign))*m_ny*n_points_line,1);
+					sign = -1.0*sign;
+				}
+				
+				HomogeneousBwdTrans(temparray1,out_d1,UseContCoeffs);
+				HomogeneousBwdTrans(temparray2,out_d2,UseContCoeffs);
+				
 			}
-			
-			UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d1,false);
-			UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d2,false);
-			Vmath::Smul(npoints,1.0/m_lhom_y,out_d1,1,out_d1,1);
-			Vmath::Smul(npoints,1.0/m_lhom_z,out_d2,1,out_d2,1);
-
+			else 
+			{
+				StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
+				
+				ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
+				
+				for(int i = 0; i < n_points_line; i++)
+				{
+					StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
+				}
+				
+				UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d1,false);
+				UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d2,false);
+				Vmath::Smul(npoints,2.0/m_lhom_y,out_d1,1,out_d1,1);
+				Vmath::Smul(npoints,2.0/m_lhom_z,out_d2,1,out_d2,1);
+			}
 		}
 		
 		void ExpListHomogeneous2D::v_PhysDeriv(Direction edir,
@@ -865,24 +899,60 @@ namespace Nektar
 			}
 			else
 			{
-				StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
-				
-				ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
-				
-				for(int i = 0; i < n_points_line; i++)
+				if(m_homogeneousBasis_y->GetBasisType() == LibUtilities::eFourier && m_homogeneousBasis_z->GetBasisType() == LibUtilities::eFourier)
 				{
-					StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
-				}
-				
-				if (dir == 1)
-				{
-					UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d,false);
-					Vmath::Smul(npoints,1.0/m_lhom_y,out_d,1,out_d,1);
+					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+					NekDouble sign = -1.0;
+					NekDouble beta;
+					
+					if (dir == 1)
+					{
+						//along y
+						for(int i = 0; i < m_ny; i++)
+						{
+							beta = sign*2*M_PI*(i/2)/m_lhom_y;
+						
+							for(int j = 0; j < m_nz; j++)
+							{
+								Vmath::Smul(n_points_line,beta,tmp1 = temparray + n_points_line*(i+j*m_ny),1, tmp2 = temparray1 + n_points_line*((i-int(sign))+j*m_ny),1);
+							}
+							sign = -1.0*sign;
+						}
+						HomogeneousBwdTrans(temparray1,out_d,UseContCoeffs);
+					}
+					else 
+					{
+						//along z
+						for(int i = 0; i < m_nz; i++)
+						{
+							beta = sign*2*M_PI*(i/2)/m_lhom_z;
+							Vmath::Smul(m_ny*n_points_line,beta,tmp1 = temparray + i*m_ny*n_points_line,1,tmp2 = temparray2 + (i-int(sign))*m_ny*n_points_line,1);
+							sign = -1.0*sign;
+						}
+						HomogeneousBwdTrans(temparray2,out_d,UseContCoeffs);
+					}
 				}
 				else 
 				{
-					UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d,false);
-					Vmath::Smul(npoints,1.0/m_lhom_z,out_d,1,out_d,1);
+					StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
+					
+					ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
+					
+					for(int i = 0; i < n_points_line; i++)
+					{
+						StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
+					}
+					
+					if (dir == 1)
+					{
+						UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d,false);
+						Vmath::Smul(npoints,2.0/m_lhom_y,out_d,1,out_d,1);
+					}
+					else 
+					{
+						UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d,false);
+						Vmath::Smul(npoints,2.0/m_lhom_z,out_d,1,out_d,1);
+					}
 				}
 			}
 		}

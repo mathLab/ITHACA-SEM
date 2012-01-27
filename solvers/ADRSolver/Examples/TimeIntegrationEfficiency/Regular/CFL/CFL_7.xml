@@ -269,7 +269,7 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
+        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*( (x+(0.3*cos(2*PI*t)))^2 + (y-(0.3*sin(2*PI*t)))^2 ))" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
@@ -279,11 +279,11 @@
     </FUNCTION>   
     
     <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
+      <E VAR="u" VALUE="exp(-41*( (x+(0.3*cos(2*PI*t)))^2 + (y-(0.3*sin(2*PI*t)))^2 ))" />
     </FUNCTION>
     
     <FUNCTION NAME="InitialConditions">
-      <E VAR="u" VALUE="exp(-41*(((x+0.3)*(x+0.3))+((y)*(y))))" />
+      <E VAR="u" VALUE="exp(-41*( (x+(0.3*cos(2*PI*t)))^2 + (y-(0.3*sin(2*PI*t)))^2 ))" />
     </FUNCTION>
     
   </CONDITIONS>

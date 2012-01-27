@@ -43,19 +43,19 @@
             <REGION REF="0">
                 <D VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*z))" />
                 <D VAR="v" VALUE="0"  />
-                <D VAR="w" VALUE="(-0.963740544195769*LZ/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
+                <D VAR="w" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="1">
                 <D VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*z))" />
                 <D VAR="v" VALUE="0"  />
-                <D VAR="w" VALUE="(-0.963740544195769*LZ/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
+                <D VAR="w" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
                 <D VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
             </REGION>
             <REGION REF="2">
                 <D VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*z))" />
                 <D VAR="v" VALUE="0"  />
-                <D VAR="w" VALUE="(-0.963740544195769*LZ/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
+                <D VAR="w" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
                 <D VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
             </REGION>
         </BOUNDARYCONDITIONS>
@@ -63,14 +63,14 @@
         <FUNCTION NAME="InitialConditions">
            <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*z))" />
             <E VAR="v" VALUE="0"  />
-            <E VAR="w" VALUE="(-0.963740544195769*LZ/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
+            <E VAR="w" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
             <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
             <E VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*z))" />
             <E VAR="v" VALUE="0"  />
-            <E VAR="w" VALUE="(-0.963740544195769*LZ/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
+            <E VAR="w" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*z)" />
             <E VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
         </FUNCTION>
 

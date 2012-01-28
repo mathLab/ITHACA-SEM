@@ -1325,9 +1325,7 @@ namespace Nektar
 
                         // Add variable
                         functionDef.m_expressions[variableStr]
-                            = MemoryManager<Equation>::AllocateSharedPtr("0.0");
-                        functionDef.m_expressions[variableStr]
-                                                  ->SetEquation(fcnStr);
+                            = MemoryManager<Equation>::AllocateSharedPtr(fcnStr);
                     }
 
                     // Files are denoted by F

@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  Template class for holding and evaluating classes.
+//  Description:  Wrapper to ExpressionEvaluator class.
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,27 +48,66 @@ namespace Nektar
         class Equation
         {
         public: 
-
-            Equation()
+            Equation(const Equation &src):
+              m_expr   (src.m_expr),
+              m_expr_id(src.m_expr_id)
             {
             }
 
-            Equation(const Equation &eqn):
-              m_eqn(eqn.m_eqn)
+            Equation(const std::string& expr = ""):
+              m_expr(expr),
+              m_expr_id(-1)
             {
+                try
+                {
+                    if (!expr.empty())
+                    {
+                        m_expr_id = m_evaluator.DefineFunction("x y z t", m_expr);
+                    }
+                }
+                catch (const std::runtime_error& e)
+                {
+                    m_expr_id = -1;
+
+                    // this instanse is wrongly used by DisContField2D as a wrapper to
+                    // a string container
+                    // holding the link to the file with boundary conditions.
+                    // ExpressionEvaluator cannot parse the expression of the form
+                    // "FILE:whatever.bc" and throws an instance of std::runtime_error.
+                    // In order not to destroy the currently existing code we catch
+                    // this exception in order to ignore it.
+                    // Provided the frequency of file links is relatively low, it is
+                    // cheaper to catch an exception than performing each time a string
+                    // search with expr.find() as below.
+                    if (!expr.empty() && (expr.find("FILE:") != std::string::npos))
+                    {
+                        return;
+                    }
+                    ASSERTL0(false, std::string("ERROR: ") + e.what());
+                    return;
+                }
+                catch (const std::string& e)
+                {
+                    m_expr_id = -1;
+
+                    std::cout << "ERROR: " << e << std::endl;
+                    return;
+                }
             }
 
-            Equation(const std::string &eqn):
-              m_eqn(eqn)
+            Equation& operator=(const Equation &src)
             {
+                return *this;
             }
 
             NekDouble Evaluate(NekDouble x=0, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
             {
                 try
                 {
-                    m_evaluator.DefineFunction("x y z t", m_eqn.c_str());
-                    return m_evaluator.Evaluate(x, y, z, t);
+                    if (m_expr_id != -1)
+                    {
+                        return m_evaluator.Evaluate(m_expr_id, x, y, z, t);
+                    }
                 }
                 catch (const std::runtime_error& e)
                 {
@@ -89,16 +128,12 @@ namespace Nektar
 
             std::string GetEquation(void) const
             {
-              return m_eqn;
-            }
-
-            void SetEquation(std::string eqn)
-            {
-              m_eqn = eqn;
+              return m_expr;
             }
 
         private:
-            std::string m_eqn;
+            std::string  m_expr;
+            int          m_expr_id;
             LIB_UTILITIES_EXPORT static LibUtilities::ExpressionEvaluator m_evaluator;
         };
 

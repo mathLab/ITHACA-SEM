@@ -244,7 +244,7 @@ namespace Nektar
         // \brief Initializes the evaluator. Call DefineFunction(...) next.
         ExpressionEvaluator::ExpressionEvaluator(void)
         {
-            ParsedMap = new map<string, ParsedAST*>;
+            //ParsedMap = new <ParsedAST*>;
             ParsedData = NULL;
             ParametersMap = new map<string, double>;
 
@@ -275,87 +275,86 @@ namespace Nektar
         /** \brief Destroys the evaluator object and deletes all of the saves ASTs. **/
         ExpressionEvaluator::~ExpressionEvaluator(void)
         {
-            if (ParsedMap != NULL)
+            if (!ParsedASTs.empty())
             {
-                for (map<string, ParsedAST*>::iterator it = ParsedMap->begin(); it != ParsedMap->end(); it++)
-                    if (it->second != NULL)
-                        delete it->second;
-                delete ParsedMap;
+                for (vector<ParsedAST*>::iterator it = ParsedASTs.begin(); it != ParsedASTs.end(); it++)
+                        delete *it;
             }
             if (ParametersMap != NULL) delete ParametersMap;
             if (constants_p != NULL) delete constants_p;
         }
 
 
-		/** \brief Initializes evaluator with list of non-constant/parameter variables and the
-			function to evaluate. **/
-		void ExpressionEvaluator::DefineFunction(std::string const& vlist, std::string const& function)
-		{
-			// The function is already set, so don't do anything.
-			if (ParsedData != NULL
-					&& function == ParsedData->FunctionString
-					&& vlist == ParsedData->VariableListString)
-				return;
+        /** \brief Initializes evaluator with list of non-constant/parameter variables and the
+            function to evaluate. **/
+        int ExpressionEvaluator::DefineFunction(const std::string& vlist, const std::string& function)
+        {
 
-			// Find the previous parsing.
-			map<string, ParsedAST*>::iterator it = ParsedMap->find(function);
-			if (it != ParsedMap->end())
-			{
-				ParsedData = it->second;
-				ParsedData->ASTMode = Node::SAVE_PARAMETERS;
-				return;
-			}
+            // Find the previous parsing.
+            map<string, int>::const_iterator it = ParsedMapExprToId.find(function);
+            if (it != ParsedMapExprToId.end())
+            {
+                // if this function is already defined, don't do anything but
+                // return its ID.
+                ParsedData = ParsedASTs[it->second];
+                ParsedData->ASTMode = Node::SAVE_PARAMETERS;
+                return it->second;
+            }
 
-			// Create a new parsing if a previous one doesn't exist.
-			string functionStr(function.c_str());
-			string vlistStr(vlist.c_str());
-			ParsedData = new ParsedAST(functionStr, vlistStr);
+            // Create a new parsing if a previous one doesn't exist.
+            string functionStr(function.c_str());
+            string vlistStr(vlist.c_str());
+            ParsedData = new ParsedAST(functionStr, vlistStr);
 
-			// Parse the vlist input and separate the variables into ordered entries
-			// in a vector<string> object. These need to be ordered because this is
-			// the order the variables will get assigned to in the Map when Evaluate(...)
-			// is called.
-			vector<string> VariableVector;
-			parse((char*) vlistStr.c_str(), ( *space_p >>
-						   *(
-								+(+graph_p)[push_back_a(VariableVector)]
-									>> +space_p
-							 )
-						 )
-				 );
-			ParsedData->NumberVariables = VariableVector.size();
-			vector<double*> mapAddresses;
-			for (vector<string>::iterator it = VariableVector.begin(); it != VariableVector.end(); it++)
-			{
-				(*ParsedData->VariableMap)[*it] = 0;
-				mapAddresses.push_back(&(*ParsedData->VariableMap)[*it]);
-			}
-			ParsedData->NextMapVar = new NextMapVariable(mapAddresses);
+            // Parse the vlist input and separate the variables into ordered entries
+            // in a vector<string> object. These need to be ordered because this is
+            // the order the variables will get assigned to in the Map when Evaluate(...)
+            // is called.
+            vector<string> VariableVector;
+            parse((char*) vlistStr.c_str(), ( *space_p >>
+                       *(
+                                +(+graph_p)[push_back_a(VariableVector)]
+                                    >> +space_p
+                             )
+                        )
+             );
+            ParsedData->NumberVariables = VariableVector.size();
+            vector<double*> mapAddresses;
+            for (vector<string>::iterator it = VariableVector.begin(); it != VariableVector.end(); it++)
+            {
+                (*ParsedData->VariableMap)[*it] = 0;
+                mapAddresses.push_back(&(*ParsedData->VariableMap)[*it]);
+            }
+            ParsedData->NextMapVar = new NextMapVariable(mapAddresses);
 
-			// Do the actual parsing with spirit and alert the user if there was an error with an exception.
-			MathExpression myGrammar(constants_p, VariableVector);
-			//const char* last = functionStr.c_str(); while (*last != '\0') last++;
-			//tree_parse_info<const char*, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double> >((const char*) functionStr.c_str(), (const char*) last, myGrammar, space_p);
-			tree_parse_info<string::const_iterator, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double>, string::const_iterator, MathExpression, space_parser>(functionStr.begin(), functionStr.end(), myGrammar, space_p);
-			if (parseInfo.full == false)
-			{
-				delete ParsedData;
-				throw std::runtime_error("Unable to fully parse function. Stopped just before: " + string(parseInfo.stop, parseInfo.stop + 15));
-				return;
-			}
+            // Do the actual parsing with spirit and alert the user if there was an error with an exception.
+            MathExpression myGrammar(constants_p, VariableVector);
+            //const char* last = functionStr.c_str(); while (*last != '\0') last++;
+            //tree_parse_info<const char*, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double> >((const char*) functionStr.c_str(), (const char*) last, myGrammar, space_p);
+            tree_parse_info<string::const_iterator, node_val_data_factory<double> > parseInfo = ast_parse<node_val_data_factory<double>, string::const_iterator, MathExpression, space_parser>(functionStr.begin(), functionStr.end(), myGrammar, space_p);
+            if (parseInfo.full == false)
+            {
+                delete ParsedData;
+                throw std::runtime_error("Unable to fully parse function. Stopped just before: " + string(parseInfo.stop, parseInfo.stop + 15));
+                return -1;
+            }
 
-			// This creates a simplified AST that only holds the information required to
-			// parse the expression. It also performs any simplifications possible without
-			// having the final variable and parameter values.
-			ParsedData->AST = CreateAST(parseInfo.trees.begin());
+            // This creates a simplified AST that only holds the information required to
+            // parse the expression. It also performs any simplifications possible without
+            // having the final variable and parameter values.
+            ParsedData->AST = CreateAST(parseInfo.trees.begin());
 
-			// Store the AST so this function can be Evaluated again very quickly.
-			(*ParsedMap)[functionStr] = ParsedData;
-		}
+            // Store the AST so this function can be Evaluated again very quickly.
+            //(*ParsedMap)[functionStr] = ParsedData;
+            ParsedASTs.push_back(ParsedData);
+            ParsedMapExprToId[functionStr] = ( ParsedASTs.size() - 1 );
+
+            return ParsedASTs.size() - 1;
+        }
 
 
-		/** \brief Adds constants that can be used in all functions defined in the future. **/
-		void ExpressionEvaluator::AddConstants(std::map<std::string, double> const& constants)
+        /** \brief Adds constants that can be used in all functions defined in the future. **/
+        void ExpressionEvaluator::AddConstants(std::map<std::string, double> const& constants)
         {
             vector<string> AlreadyAdded;
             for (map<string, double>::const_iterator it = constants.begin(); it != constants.end(); it++)
@@ -483,7 +482,96 @@ namespace Nektar
         }
 
 
-		/** \brief Evaluates a function with different values, and returns the result in a vector. **/
+        /** \brief Evaluates a function and returns the result. **/
+        double ExpressionEvaluator::Evaluate(std::string const& function, double start, ...)
+        {
+            va_list ap;
+
+            va_start(ap, start);
+
+            // Find the previous parsing.
+            if (ParsedData == NULL)
+            {
+                va_end(ap);
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return -1;
+            }
+            else
+            {
+                map<string, int>::const_iterator it = ParsedMapExprToId.find(function);
+                if (it == ParsedMapExprToId.end())
+                {
+                    va_end(ap);
+                    throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                    return -1;
+                }
+
+                ParsedData = ParsedASTs[it->second];
+                ParsedData->ASTMode = Node::SAVE_PARAMETERS;
+            }
+
+            if (ParsedData->NumberVariables > 0)
+            {
+                ParsedData->NextMapVar->ResetIndex();
+                *(ParsedData->NextMapVar->GetNext()) = start;
+                for (string::size_type i = 1 ; i < ParsedData->NumberVariables; i++)
+                    *(ParsedData->NextMapVar->GetNext()) = va_arg(ap, double);
+            }
+
+            va_end(ap);
+
+            if (ParsedData->ASTMode == Node::SAVE_PARAMETERS)
+            {
+                ParsedData->ASTMode = Node::USE_SAVED_PARAMETERS;
+                return EvaluateExpression(ParsedData->AST, Node::SAVE_PARAMETERS);
+            }
+            else
+            {
+                return EvaluateExpression(ParsedData->AST, ParsedData->ASTMode);
+            }
+        }
+
+        /** \brief Evaluates a function and returns the result. **/
+        double ExpressionEvaluator::Evaluate(const int expression_id, double start, ...)
+        {
+            va_list ap;
+
+            va_start(ap, start);
+
+            if (expression_id >= ParsedASTs.size())
+            {
+                va_end(ap);
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return -1;
+            }
+
+            ParsedData = ParsedASTs[expression_id];
+            ParsedData->ASTMode = Node::SAVE_PARAMETERS;
+
+
+            if (ParsedData->NumberVariables > 0)
+            {
+                ParsedData->NextMapVar->ResetIndex();
+                *(ParsedData->NextMapVar->GetNext()) = start;
+                for (string::size_type i = 1 ; i < ParsedData->NumberVariables; i++)
+                    *(ParsedData->NextMapVar->GetNext()) = va_arg(ap, double);
+            }
+
+            va_end(ap);
+
+            if (ParsedData->ASTMode == Node::SAVE_PARAMETERS)
+            {
+                ParsedData->ASTMode = Node::USE_SAVED_PARAMETERS;
+                return EvaluateExpression(ParsedData->AST, Node::SAVE_PARAMETERS);
+            }
+            else
+            {
+                return EvaluateExpression(ParsedData->AST, ParsedData->ASTMode);
+            }
+        }
+
+
+        /** \brief Evaluates a function with different values, and returns the result in a vector. **/
         vector<double> ExpressionEvaluator::Evaluate(vector<double> const* start, ...)
         {
             va_list ap;

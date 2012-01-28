@@ -73,7 +73,7 @@ namespace Nektar
 	            note that if you have previously set a function to use a certain "vlist", and then
 	            you call DefineFunction again with the same function string but a different vlist string,
 	            it will use the old vlist string from the first declaration. **/
-	        LIB_UTILITIES_EXPORT void DefineFunction(std::string const& vlist, std::string const& function);
+	        LIB_UTILITIES_EXPORT int DefineFunction(const std::string& vlist, const std::string& function);
 
 	        /** Constants are evaluated and inserted into the function at the time it is parsed
 			    when calling the #DefineFunction function. After parsing, if a constant is
@@ -114,24 +114,39 @@ namespace Nektar
 				parameter stores. If the parameter doesn't exist, it throws an exception. **/
 	        LIB_UTILITIES_EXPORT double GetParameter(std::string const& name);
 
-			/** This function evaluates the function defined from #DefineFunction.
-				The arguments to the function are the values that were defined in the
-				first argument of #DefineFunction in the same order as they were
-				listed. It results the result of the evaluation as a double. If a function
-				is not currently defined, behavior may be unpredictable since I do not
-				know how many arguments were passed in, so it will probably not be cleaned
-				up correctly. **/
-	        LIB_UTILITIES_EXPORT double Evaluate(double start = 0, ...);
+            /** This function evaluates at one point the expression defined via
+                #DefineFunction. If #DefineFunction was called multiple times for
+                different expressions, this function evaluates the latest expression
+                defined via #DefineFunction.
+                The arguments to the function are the values that were defined in the
+                first argument of #DefineFunction in the same order as they were
+                listed. It results the result of the evaluation as a double. If a function
+                is not currently defined, behavior may be unpredictable since I do not
+                know how many arguments were passed in, so it will probably not be cleaned
+                up correctly. **/
+            LIB_UTILITIES_EXPORT double Evaluate(double start = 0, ...);
 
-			/** This function evaluates the function defined from #DefineFunction. It accepts
-				a "vector<double> const*" argument for each of the variables given in the first
-				argument (vlist) of the #DefineFunction function. The vectors for each variable
-				must be in the same order as they appear in the vlist argument. This function will
-				calculate the function from #DefineFunction with values from each of the vectors
-				and then store the result in another vector. If the vectors aren't the same length,
-				an exception will be thrown.
-				For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12} **/
-	        LIB_UTILITIES_EXPORT std::vector<double> Evaluate(std::vector<double> const* start, ...);
+            /** This function works the same as above but takes additional argument ---
+                the string form of evaluated expression --- in order to choose which
+                expression (among others defined via #DefineFunction) to evaluate.
+                \attention This version is slower than the version below due to a
+                logarithmic time hash map lookups with std::string keys.  **/
+            LIB_UTILITIES_EXPORT double Evaluate(std::string const& function, double start = 0, ...);
+
+            /** This function takes an unique ID of previously defined expression. It performs
+                exactly the same operation as the other two functions above.  **/
+            LIB_UTILITIES_EXPORT double Evaluate(const int expression_id, double start = 0, ...);
+
+
+            /** This function evaluates the function defined from #DefineFunction. It accepts
+                a "vector<double> const*" argument for each of the variables given in the first
+                argument (vlist) of the #DefineFunction function. The vectors for each variable
+                must be in the same order as they appear in the vlist argument. This function will
+                calculate the function from #DefineFunction with values from each of the vectors
+                and then store the result in another vector. If the vectors aren't the same length,
+                an exception will be thrown.
+                For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12} **/
+            LIB_UTILITIES_EXPORT std::vector<double> Evaluate(std::vector<double> const* start, ...);
 
         private:
 
@@ -242,97 +257,101 @@ namespace Nektar
 		        }
 	        };
 
-	        /** This class stores pointers to the value for each map variable for the
-				variables defined in #DefineFunction. Therefore, instead of having
-				to always search the map for the variable name, you just call GetNext()
-				since it is always in the same order (the order in which you specified
-				the variables in #DefineFunction. This makes evaluating the
-				function MUCH faster. **/
-	        class NextMapVariable
-	        {
-	        private:
-		        std::vector<double*> addresses;
-		        std::vector<double*>::size_type index;
+            /** This class stores pointers to the value for each map variable for the
+                variables defined in #DefineFunction. Therefore, instead of having
+                to always search the map for the variable name, you just call GetNext()
+                since it is always in the same order (the order in which you specified
+                the variables in #DefineFunction. This makes evaluating the
+                function MUCH faster. **/
+            class NextMapVariable
+            {
+            private:
+                std::vector<double*> addresses;
+                std::vector<double*>::size_type index;
 
-	        public:
-		        NextMapVariable(std::vector<double*> const& addr) : addresses(addr), index(0) { }
-		        ~NextMapVariable() { }
-		        double* GetNext() { return addresses[index++ % addresses.size()]; }
-		        void ResetIndex() { index = 0; }
-	        };
-        	
-	        /** This structure holds all of the data needed to evaluate an expression.
-				Therefore, if another function is defined, this structure can be saved
-				and reverted to later to parse data from a previous function definition. **/
-	        struct ParsedAST
-	        {
-		        /** This is a map that looks like <var_name, var_value>. It is set when
-					#Evaluate is called and used when evaluating the expression in
-					eval_expression. **/
-		        std::map<std::string, double>* VariableMap;
+            public:
+                NextMapVariable(std::vector<double*> const& addr) : addresses(addr), index(0) { }
+                ~NextMapVariable() { }
+                double* GetNext() { return addresses[index++ % addresses.size()]; }
+                void ResetIndex() { index = 0; }
+            };
 
-		        /** This is a vector that holds the names of the variables specified in
-					the first parameter of #DefineFunction (vlist) in the order in
-					which they appear. It is used to fill in the VariableMap appropriately
-					so the variables are in the correct order. **/
-		        std::vector<std::string>* VariableVector;
+            /** This structure holds all of the data needed to evaluate an expression.
+                Therefore, if another function is defined, this structure can be saved
+                and reverted to later to parse data from a previous function definition. **/
+            struct ParsedAST
+            {
+                /** This is a map that looks like <var_name, var_value>. It is set when
+                    #Evaluate is called and used when evaluating the expression in
+                    eval_expression. **/
+                std::map<std::string, double>* VariableMap;
 
-		        /** This is an object that stores the pointer to the VariableMap value.
-					Therefore, instead of having to always search the map for the variable
-					name, you just call NextMapVar->GetNext() since it is always in the
-					same order (the order in which you specified the variables in
-					#DefineFunction. This makes evaluating the function MUCH faster. **/
-		        NextMapVariable* NextMapVar;
+                /** This is a vector that holds the names of the variables specified in
+                    the first parameter of #DefineFunction (vlist) in the order in
+                    which they appear. It is used to fill in the VariableMap appropriately
+                    so the variables are in the correct order. **/
+                std::vector<std::string>* VariableVector;
 
-		        /** This is the number of variables that were specified in the vlist parameter
-					of #DefineFunction. This is the same number as VariableVector->size(). **/
-		        std::string::size_type NumberVariables;
+                /** This is an object that stores the pointer to the VariableMap value.
+                    Therefore, instead of having to always search the map for the variable
+                    name, you just call NextMapVar->GetNext() since it is always in the
+                    same order (the order in which you specified the variables in
+                    #DefineFunction. This makes evaluating the function MUCH faster. **/
+                NextMapVariable* NextMapVar;
 
-				/** This stores the simplified AST that is created with #CreateAST in the
-					#DefineFunction function. **/
-		        Node* AST;
+                /** This is the number of variables that were specified in the vlist parameter
+                    of #DefineFunction. This is the same number as VariableVector->size(). **/
+                std::string::size_type NumberVariables;
 
-		        /** This is the mode that will be used when evaluating the AST as it pertains to
-					the lookup of defined parameters. There are three options: DEFAULT,
-					SAVE_PARAMETERS, and USE_SAVED_PARAMETERS. These determine if the parameter
-					lookups should be cached in the node, so if the parameters don't change they
-					don't need to be looked up in the map each time. **/
-		        Node::AST_Mode ASTMode;
+                /** This stores the simplified AST that is created with #CreateAST in the
+                    #DefineFunction function. **/
+                Node* AST;
 
-				/** This holds the string that was used for the function definition and variables
-					list. They are used to compare against the current state in #DefineFunction
-					to determine if a change is needed. **/
-				std::string FunctionString;
-				std::string VariableListString;
+                /** This is the mode that will be used when evaluating the AST as it pertains to
+                    the lookup of defined parameters. There are three options: DEFAULT,
+                    SAVE_PARAMETERS, and USE_SAVED_PARAMETERS. These determine if the parameter
+                    lookups should be cached in the node, so if the parameters don't change they
+                    don't need to be looked up in the map each time. **/
+                Node::AST_Mode ASTMode;
 
-				ParsedAST(std::string functionStr, std::string varListStr)
-					: FunctionString(functionStr), VariableListString(varListStr)
-		        {
-			        VariableMap = new std::map<std::string, double>;
-			        VariableVector = new std::vector<std::string>;
-			        NextMapVar = NULL;
-			        NumberVariables = 0;
-			        AST = NULL;
-			        ASTMode = Node::SAVE_PARAMETERS;
-		        }
+                /** This holds the string that was used for the function definition and variables
+                    list. They are used to compare against the current state in #DefineFunction
+                    to determine if a change is needed. **/
+                std::string FunctionString;
+                std::string VariableListString;
 
-		        ~ParsedAST()
-		        {
-			        if (VariableMap != NULL) delete VariableMap;
-			        if (VariableVector != NULL) delete VariableVector;
-			        if (NextMapVar != NULL) delete NextMapVar;
-			        if (AST != NULL) delete AST;
-		        }
-	        };
+                ParsedAST(std::string functionStr, std::string varListStr)
+                    : FunctionString(functionStr), VariableListString(varListStr)
+                {
+                    VariableMap = new std::map<std::string, double>;
+                    VariableVector = new std::vector<std::string>;
+                    NextMapVar = NULL;
+                    NumberVariables = 0;
+                    AST = NULL;
+                    ASTMode = Node::SAVE_PARAMETERS;
+                }
 
-	        /** This is the currently active ParsedAST that is being used. It can be
-				changed with defining a new function in #DefineFunction. **/
-	        ParsedAST* ParsedData;
+                ~ParsedAST()
+                {
+                    if (VariableMap != NULL) delete VariableMap;
+                    if (VariableVector != NULL) delete VariableVector;
+                    if (NextMapVar != NULL) delete NextMapVar;
+                    if (AST != NULL) delete AST;
+                }
+            };
 
-	        /** This is a map of <string, ParsedAST*>. The string key is the second argument
-				of #DefineFunction that is used to find the ParsedAST* again. The found
-				AST is set to be default be storing it in ParsedData. **/
-	        std::map<std::string, ParsedAST*>* ParsedMap;
+            /** This is the currently active ParsedAST that is being used. It can be
+                changed with defining a new function in #DefineFunction. **/
+            ParsedAST* ParsedData;
+
+            /** These two containers hold processed string expressions defined
+                via the second argument of #DefineFunction. Each processed expression
+                gets its unique ID (to be stored in ParsedMapExprToId
+                and unique AST (to be stored in ParsedASTs). ParsedMapExprToId is here for
+                quick lookups of string expressions while ParsedASTs is split from the map
+                in order to get constant time access to the AST via its ID. **/
+            std::map<std::string, int> ParsedMapExprToId;
+            std::vector<ParsedAST*> ParsedASTs;
 
 	        /** This is a map that looks like <parameter_name, parameter_value>. It is set in
 				the #SetParameters function and used for parameter lookup during function

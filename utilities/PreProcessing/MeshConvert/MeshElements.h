@@ -327,11 +327,11 @@ namespace Nektar
         struct ElmtConfig
         {
             ElmtConfig(ElementType pE, unsigned int pOrder, 
-                       bool pFn, bool pVn, 
+                       bool pFn, bool pVn, bool pReorient = true,
                        LibUtilities::PointsType pECt=LibUtilities::ePolyEvenlySpaced,
                        LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced): 
-            e(pE), faceNodes(pFn), volumeNodes(pVn), order(pOrder),
-                edgeCurveType(pECt), faceCurveType(pFCt) {}
+                e(pE), faceNodes(pFn), volumeNodes(pVn), order(pOrder),
+                reorient(pReorient), edgeCurveType(pECt), faceCurveType(pFCt) {}
             ElmtConfig() {}
 
             /// Element type (e.g. triangle, quad, etc).
@@ -346,6 +346,9 @@ namespace Nektar
             bool                     volumeNodes;
             /// Order of the element.
             unsigned int             order;
+            /// Denotes whether the element needs to be re-orientated for a
+            /// spectral element framework.
+            bool                     reorient;
             /// Distribution of points in edges.
             LibUtilities::PointsType edgeCurveType;
             /// Distribution of points in faces.
@@ -443,6 +446,10 @@ namespace Nektar
             /// (3D boundary element).
             void SetFaceLink(FaceSharedPtr pLink) {
                 m_faceLink = pLink;
+            }
+            /// Set the list of tags associated with this element.
+            void SetTagList(const std::vector<int> &tags) {
+                m_taglist = tags;
             }
             /// Generate a list of vertices (1D), edges (2D), or faces (3D).
             virtual std::string GetXmlString() const {
@@ -571,6 +578,8 @@ namespace Nektar
         typedef boost::shared_ptr<Condition> ConditionSharedPtr;
         typedef std::map<int,ConditionSharedPtr> ConditionMap;
 
+        bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2);
+        
         class Mesh
         {
         public:
@@ -578,37 +587,37 @@ namespace Nektar
                  const std::string outFilename);
 
             /// Dimension of the expansion.
-            unsigned int                        expDim;
+            unsigned int               expDim;
             /// Dimension of the space in which the mesh is defined.
-            unsigned int                        spaceDim;
+            unsigned int               spaceDim;
             /// List of mesh nodes.
-            std::vector<NodeSharedPtr>          node;
+            std::vector<NodeSharedPtr> node;
             /// Set of element vertices.
-            NodeSet                             vertexSet;
+            NodeSet                    vertexSet;
             /// Set of element edges.
-            EdgeSet                             edgeSet;
+            EdgeSet                    edgeSet;
             /// Set of element faces.
-            FaceSet                             faceSet;
+            FaceSet                    faceSet;
             /// Map for elements.
-            ElementMap                          element;
+            ElementMap                 element;
             /// Map for composites.
-            CompositeMap                        composite;
+            CompositeMap               composite;
             /// Boundary conditions maps tag to condition.
-            ConditionMap                        condition;
+            ConditionMap               condition;
             /// List of fields names.
-            std::vector<std::string>            fields;
+            std::vector<std::string>   fields;
             /// Original filename.
-            std::string                         inFilename;
+            std::string                inFilename;
             /// Intended target.
-            std::string                         outFilename;
+            std::string                outFilename;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
-            unsigned int                        GetNumElements();
+            unsigned int               GetNumElements();
             /// Returns the total number of elements in the mesh with
             /// dimension < expDim.
-            unsigned int                        GetNumBndryElements();
+            unsigned int               GetNumBndryElements();
             /// Returns the total number of entities in the mesh.
-            unsigned int                        GetNumEntities();
+            unsigned int               GetNumEntities();
         };
         /// Shared pointer to a mesh.
         typedef boost::shared_ptr<Mesh> MeshSharedPtr;
@@ -746,6 +755,11 @@ namespace Nektar
             virtual ~Tetrahedron() {}
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
+
+            /**
+             * Orientation of tet; unchanged = 0; base vertex swapped = 1.
+             */
+            unsigned int orientation;
 
         protected:
             void OrientTet();

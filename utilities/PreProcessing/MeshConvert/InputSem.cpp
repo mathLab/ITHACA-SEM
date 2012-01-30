@@ -245,7 +245,7 @@ namespace Nektar
             }
         
             // Finally, process curves.
-			if (sectionMap["CURVES"] != std::streampos(-1))
+            if (sectionMap["CURVES"] != std::streampos(-1))
             {
                 int np, nel, nodeId = m->node.size();
                 
@@ -269,8 +269,10 @@ namespace Nektar
                     homeshFile.open(meshfile.c_str());
                     if (!homeshFile.is_open())
                     {
-                        cerr << "Cannot open or find mesh file: " << meshfile << endl;
-                        cerr << "Make sure to run meshpr on your session file first." << endl;
+                        cerr << "Cannot open or find mesh file: " 
+                             << meshfile << endl
+                             << "Make sure to run meshpr on your session "
+                             << "file first." << endl;
                         abort();
                     }
 
@@ -379,7 +381,7 @@ namespace Nektar
                     
                     // Create new element and replace with an incomplete
                     // quadrilateral of the correct order.
-                    ElmtConfig conf(elType,np-1,false,false,
+                    ElmtConfig conf(elType,np-1,false,false,true,
                                     LibUtilities::eGaussLobattoLegendre);
                     m->element[2][elmt] = GetElementFactory().
                         CreateInstance(elType,conf,edgeNodes,tags);
@@ -389,7 +391,7 @@ namespace Nektar
             }
 
             // Process field names
-			if (sectionMap["FIELDS"] != std::streampos(-1))
+            if (sectionMap["FIELDS"] != std::streampos(-1))
             {
                 mshFile.seekg(sectionMap["FIELDS"]);
                 getline(mshFile, line);
@@ -404,7 +406,7 @@ namespace Nektar
             
             // Process surfaces if they exist. This is deliberately done after
             // curves to ensure high-order points are preserved.
-			if (sectionMap["SURFACES"] != std::streampos(-1))
+            if (sectionMap["SURFACES"] != std::streampos(-1))
             {
                 map<string,int> conditionMap;
                 int             maxTag = -1;
@@ -611,7 +613,7 @@ namespace Nektar
             tags.push_back(eLine);
             
             ElementType seg = eLine;
-            ElmtConfig conf(eLine,order,true,false,
+            ElmtConfig conf(eLine,order,true,false,true,
                             LibUtilities::eGaussLobattoLegendre);
             ElementSharedPtr E = GetElementFactory().
                 CreateInstance(eLine,conf,edgeNodes,tags);

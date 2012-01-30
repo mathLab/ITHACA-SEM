@@ -97,8 +97,37 @@ namespace Nektar
             {
                 nEnt += element[d].size();
             }
-
-			return nEnt;
+            
+            return nEnt;
+        }
+        
+        /**
+         * @brief Test equality of two conditions - i.e. compare types, fields
+         * and values but _not_ composite ids.
+         */
+        bool operator==(ConditionSharedPtr const &c1, ConditionSharedPtr const &c2)
+        {
+            int i, n = c1->type.size();
+            
+            if (n != c2->type.size())
+            {
+                return false;
+            }
+            
+            for (i = 0; i < n; ++i)
+            {
+                if (c1->type[i] != c2->type[i])
+                {
+                    return false;
+                }
+                
+                if (c1->field[i] != c2->field[i] || c1->value[i] != c2->value[i])
+                {
+                    return false;
+                }
+            }
+            
+            return true;
         }
 
         /**
@@ -429,11 +458,14 @@ namespace Nektar
 
             // Reorient the tet to ensure collapsed coordinates align between adjacent
             // elements.
-            OrientTet();
+            if (m_conf.reorient)
+            {
+                OrientTet();
+            }
             
             // Create faces
             int face_ids[4][3] = {
-                {0,1,2},{0,1,3},{1,2,3},{2,0,3}};
+                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
             for (int j = 0; j < 4; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
@@ -453,7 +485,6 @@ namespace Nektar
                             break;
                         }
                     }
-
                 }
 
                 if (m_conf.faceNodes)
@@ -509,6 +540,11 @@ namespace Nektar
             if (vol < 0)
             {
                 swap(vertex[0], vertex[1]);
+                orientation = 1;
+            }
+            else
+            {
+                orientation = 0;
             }
         }
 
@@ -563,7 +599,10 @@ namespace Nektar
                                                       m_conf.edgeCurveType)));
             }
             
-            OrientPrism();
+            if (m_conf.reorient)
+            {
+                OrientPrism();
+            }
             
             // Create faces
             int face_ids[5][4] = {

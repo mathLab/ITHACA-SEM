@@ -226,6 +226,7 @@ namespace Nektar
                 }
             }
 
+            /*
             FaceSet::iterator it2;
             for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
             {
@@ -242,6 +243,7 @@ namespace Nektar
                     curved->LinkEndChild(f);
                 }
             }
+            */
             pRoot->LinkEndChild( curved );
         }
 

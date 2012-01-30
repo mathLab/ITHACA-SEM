@@ -5,6 +5,7 @@ SET(MeshConvertHeaders
     InputNek.h
     InputPly.h
     InputSem.h
+    InputSwan.h
     OutputNekpp.h
     MeshElements.h
 )
@@ -15,6 +16,7 @@ SET(MeshConvertSources
     InputNek.cpp
     InputPly.cpp
     InputSem.cpp
+    InputSwan.cpp
     OutputNekpp.cpp
     MeshConvert.cpp
     MeshElements.cpp)

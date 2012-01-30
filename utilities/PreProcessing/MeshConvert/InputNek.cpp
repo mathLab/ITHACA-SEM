@@ -40,6 +40,7 @@ using namespace std;
 #include "InputNek.h"
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <boost/algorithm/string.hpp>
 
 namespace Nektar
 {
@@ -74,8 +75,10 @@ namespace Nektar
             string      line, word;
             int         nParam, nModes, nElements, nCurves;
             int         i, j, k, nodeCounter = 0;
+            int         nComposite = 0;
             ElementType elType;
-
+            map<ElementType,int> domainComposite;
+            
             m->expDim   = 0;
             m->spaceDim = 0;
             
@@ -150,6 +153,15 @@ namespace Nektar
             s >> nElements >> m->expDim;
             m->spaceDim = m->expDim;
             
+            // Set up field names.
+            m->fields.push_back("u");
+            m->fields.push_back("v");
+            if (m->spaceDim > 2)
+            {
+                m->fields.push_back("w");
+            }
+            m->fields.push_back("p");
+            
             // Loop over and create elements.
             for (i = 0; i < nElements; ++i)
             {
@@ -206,10 +218,10 @@ namespace Nektar
                 // Read in number of vertices for element type.
                 const int nNodes = GetNnodes(elType);
                 double* vertex[3];
-				for (j = 0; j < 3; ++j)
-				{
-					vertex[j] = new double[nNodes];
-				}
+                for (j = 0; j < 3; ++j)
+                {
+                    vertex[j] = new double[nNodes];
+                }
 
                 for (j = 0; j < m->expDim; ++j)
                 {
@@ -248,27 +260,31 @@ namespace Nektar
                     nodeList.push_back(n);
                 }
                 
-				for (j = 0; j < 3; ++j)
-				{
-					delete[] vertex[j];
-				}
-
+                for (j = 0; j < 3; ++j)
+                {
+                    delete[] vertex[j];
+                }
+                
                 vector<int> tags;
+                map<ElementType,int>::iterator compIt = domainComposite.find(elType);
+                if (compIt == domainComposite.end())
+                {
+                    tags.push_back(nComposite);
+                    domainComposite[elType] = nComposite;
+                    nComposite++;
+                }
+                else
+                {
+                    tags.push_back(compIt->second);
+                }
                 tags.push_back(elType);
                 
                 // Create linear element
-                ElmtConfig conf(elType,1,false,false);
+                ElmtConfig conf(elType,1,false,false,false);
                 ElementSharedPtr E = GetElementFactory().
                     CreateInstance(elType,conf,nodeList,tags);
                 m->element[E->GetDim()].push_back(E);
             }
-
-            // -- Process rest of mesh. This is done now to avoid overwriting
-            // -- edges which have high-order information later.
-            ProcessEdges     ();
-            ProcessFaces     ();
-            ProcessElements  ();
-            ProcessComposites();
 
             // -- Read in curved data.
             getline(mshFile, line);
@@ -328,7 +344,8 @@ namespace Nektar
 
                 s.clear(); s.str(line);
                 s >> nCurvedSides;
-
+                int skip = 0;
+                
                 // Iterate over curved sides, and look up high-order surface
                 // information in the HOSurfSet, then map this onto faces.
                 for (i = 0; i < nCurvedSides; ++i)
@@ -342,7 +359,8 @@ namespace Nektar
                     it = curveTags.find(word);
                     if (it == curveTags.end())
                     {
-                        cerr << "Unrecognised curve tag " << word << " in curved lines" << endl;
+                        cerr << "Unrecognised curve tag " << word 
+                             << " in curved lines" << endl;
                         abort();
                     }
                     
@@ -382,9 +400,13 @@ namespace Nektar
                             vertId[1] == surf->vertId[2]) 
                         {
                             if (vertId[1] == surf->vertId[0])
+                            {
                                 surf->Reflect();
+                            }
                             else
+                            {
                                 surf->Rotate(2);
+                            }
                         }
                     }
                     else if (vertId[0] == surf->vertId[2])
@@ -437,9 +459,9 @@ namespace Nektar
                     // this is a bit of a hack since the elements are
                     // technically linear, but should work just fine.
                     FaceSharedPtr f    = e->GetFace(faceId);
-                    EdgeSharedPtr edge;
                     int           Ntot = (*hoIt)->surfVerts.size();
-					int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
+                    int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
+                    EdgeSharedPtr edge;
                     
                     // Apply high-order map to convert face data to Nektar++
                     // ordering (vertices->edges->internal).
@@ -456,7 +478,9 @@ namespace Nektar
                         // Skip over edges which have already been populated,
                         // apart from those which need to be reoriented.
                         if (edge->edgeNodes.size() > 0 && reverseSide == 2)
+                        {
                             continue;
+                        }
                         
                         edge->edgeNodes.clear();
                         edge->curveType = LibUtilities::eGaussLobattoLegendre;
@@ -479,8 +503,249 @@ namespace Nektar
                     }
                 }
             }
+            
+            // -- Process fluid boundary conditions.
+
+            // Define a fairly horrendous map: key is the condition ID, the
+            // value is a vector of pairs of composites and element
+            // types. Essentially this map takes conditions -> composites for
+            // each element type.
+            map<int,vector<pair<int,ElementType> > > surfaceCompMap;
+            
+            // Skip boundary conditions line.
+            getline(mshFile, line);
+            getline(mshFile, line);
+            
+            int nSurfaces = 0;
+
+            while (true)
+            {
+                getline(mshFile, line);
+                
+                // Break out of loop at end of boundary conditions section.
+                if (line.find("*") != string::npos || mshFile.eof() ||
+                    line.length() == 0)
+                {
+                    break;
+                }
+
+                // Read boundary type, element ID and face ID.
+                char bcType;
+                int elId, faceId;
+                s.clear(); s.str(line);
+                s >> bcType >> elId >> faceId;
+                elId--;
+                faceId--;
+                
+                ConditionSharedPtr    c = MemoryManager<Condition>::AllocateSharedPtr();
+                vector<string>        vals;
+                vector<ConditionType> type;
+                
+                // First character on each line describes type of
+                // BC. Currently only support V, W, and O. In this switch
+                // statement we construct the quantities needed to search for
+                // the condition.
+                switch(bcType)
+                {
+                    // Wall boundary.
+                    case 'W':
+                    {
+                        for (i = 0; i < m->fields.size()-1; ++i)
+                        {
+                            vals.push_back("0");
+                            type.push_back(eDirichlet);
+                        }
+                        // Set high-order boundary condition for wall.
+                        vals.push_back("0");
+                        type.push_back(eHOPCondition);
+                        break;
+                    }
+
+                    // Velocity boundary condition (either constant or
+                    // dependent upon x,y,z).
+                    case 'V':
+                    case 'v':
+                    {
+                        for (i = 0; i < m->fields.size()-1; ++i)
+                        {
+                            getline(mshFile, line);
+                            size_t p = line.find_first_of('=');
+                            vals.push_back(boost::algorithm::trim_copy(line.substr(p+1)));
+                            type.push_back(eDirichlet);
+                        }
+                        // Set high-order boundary condition for Dirichlet
+                        // condition.
+                        vals.push_back("0");
+                        type.push_back(eHOPCondition);
+                        break;
+                    }
+
+                    // Natural outflow condition (default value = 0.0?)
+                    case 'O':
+                    {
+                        for (i = 0; i < m->fields.size(); ++i)
+                        {
+                            vals.push_back("0");
+                            type.push_back(eNeumann);
+                        }
+                        // Set zero Dirichlet condition for outflow.
+                        type[m->fields.size()-1] = eDirichlet;
+                        break;
+                    }
+                    
+                    // Ignore unsupported BCs
+                    case 'P':
+                    case 'E':
+                    case 'F':
+                    case 'f':
+                    case 'N':
+                        continue;
+                        break;
+                        
+                    default:
+                        cerr << "Unknown boundary condition type " << line[0] << endl;
+                        abort();
+                }
+                
+                // Populate condition information.
+                c->field = m->fields;
+                c->type  = type;
+                c->value = vals;
+                
+                // Now attempt to find this boundary condition inside
+                // m->condition. This is currently a linear search and should
+                // probably be made faster!
+                ConditionMap::iterator it;
+                bool found = false;
+                for (it = m->condition.begin(); it != m->condition.end(); ++it)
+                {
+                    if (c == it->second)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                int compTag, conditionId;
+                ElementSharedPtr elm = m->element[m->spaceDim][elId];
+                ElementSharedPtr surfEl;
+
+                // Create element for face (3D) or segment (2D). At the moment
+                // this is a bit of a hack since high-order nodes are not
+                // copied, so some output modules (e.g. Gmsh) will not output
+                // correctly.
+                if (elm->GetDim() == 3)
+                {
+                    FaceSharedPtr f = elm->GetFace(faceId);
+                    bool tri = f->vertexList.size() == 3;
+                    
+                    vector<NodeSharedPtr> nodeList;
+                    nodeList.insert(nodeList.begin(), 
+                                    f->vertexList.begin(), 
+                                    f->vertexList.end());
+                    
+                    vector<int> tags;
+                    
+                    ElementType seg = tri ? eTriangle : eQuadrilateral;
+                    tags.push_back(seg);
+                    ElmtConfig conf(seg,1,true,false,false,
+                                    LibUtilities::eGaussLobattoLegendre);
+                    surfEl = GetElementFactory().
+                        CreateInstance(seg,conf,nodeList,tags);
+                }
+                else
+                {
+                    EdgeSharedPtr f = elm->GetEdge(faceId);
+                    
+                    vector<NodeSharedPtr> nodeList;
+                    nodeList.push_back(f->n1);
+                    nodeList.push_back(f->n2);
+                    
+                    vector<int> tags;
+                    tags.push_back(eLine);
+                    
+                    ElmtConfig conf(eLine,1,true,false,false,
+                                    LibUtilities::eGaussLobattoLegendre);
+                    surfEl = GetElementFactory().
+                        CreateInstance(eLine,conf,nodeList,tags);
+                }
+                
+                if (!found)
+                {
+                    // If condition does not already exist, add to condition
+                    // list, create new composite tag and put inside
+                    // surfaceCompMap.
+                    conditionId = m->condition.size();
+                    compTag     = nComposite;
+                    c->composite.push_back(compTag);
+                    m->condition[conditionId] = c;
+                    
+                    surfaceCompMap[conditionId].push_back(
+                        pair<int,ElementType>(nComposite,surfEl->GetConf().e));
+                    
+                    nComposite++;
+                }
+                else
+                {
+                    // Otherwise find existing composite inside
+                    // surfaceCompMap.
+                    map<int,vector<pair<int,ElementType> > >::iterator it2;
+                    it2 = surfaceCompMap.find(it->first);
+                    
+                    found = false;
+                    if (it2 == surfaceCompMap.end())
+                    {
+                        // This should never happen!
+                        cerr << "Unable to find condition!" << endl;
+                        abort();
+                    }
+                    
+                    for (j = 0; j < it2->second.size(); ++j)
+                    {
+                        pair<int,ElementType> tmp = it2->second[j];
+                        if (tmp.second == surfEl->GetConf().e)
+                        {
+                            found   = true;
+                            compTag = tmp.first;
+                            break;
+                        }
+                    }
+                    
+                    // If no pairs were found, then this condition contains
+                    // multiple element types (i.e. both triangles and
+                    // quads). Create another composite for the new shape type
+                    // and insert into the map.
+                    if (!found)
+                    {
+                        it2->second.push_back(pair<int,ElementType>(
+                                                  nComposite,surfEl->GetConf().e));
+                        compTag = nComposite;
+                        m->condition[it->first]->composite.push_back(compTag);
+                        nComposite++;
+                    }
+                    
+                    conditionId = it->first;
+                }
+                
+                // Insert composite tag into element and insert element into
+                // mesh.
+                vector<int> existingTags = surfEl->GetTagList();
+                
+                existingTags.insert(existingTags.begin(), compTag);
+                surfEl->SetTagList (existingTags);
+                surfEl->SetId      (nSurfaces);
+                
+                m->element[surfEl->GetDim()].push_back(surfEl);
+                nSurfaces++;
+            }
 
             mshFile.close();
+            
+            // -- Process rest of mesh.
+            ProcessEdges     ();
+            ProcessFaces     ();
+            ProcessElements  ();
+            ProcessComposites();
         }
 
         /**
@@ -715,7 +980,8 @@ namespace Nektar
                     }
                 }
             }
-			delete[] tmp;
+            
+            delete[] tmp;
         }
         
         void HOSurf::Reflect()
@@ -740,7 +1006,7 @@ namespace Nektar
                 }
             }
 
-			delete[] tmp;
+            delete[] tmp;
         }
     }
 }

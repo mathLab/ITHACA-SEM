@@ -98,8 +98,11 @@ namespace Nektar
         /// Variable diffusivity
         StdRegions::VarCoeffMap m_vardiff;
 
+        NekDouble m_chi;
+        NekDouble m_capMembrane;
+
         /// Stimulus current
-        int m_stimDuration;
+        NekDouble m_stimDuration;
     };
 
 }

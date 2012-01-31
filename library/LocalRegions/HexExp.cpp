@@ -1460,7 +1460,8 @@ namespace Nektar
             {
             case StdRegions::eMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                            mkey.GetNVarCoeff())
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1504,7 +1505,8 @@ namespace Nektar
             case StdRegions::eWeakDeriv1:
             case StdRegions::eWeakDeriv2:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                            mkey.GetNVarCoeff())
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1555,7 +1557,8 @@ namespace Nektar
                 break;
             case StdRegions::eLaplacian:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                            mkey.GetNVarCoeff())
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1718,7 +1721,8 @@ namespace Nektar
                 goto UseLocRegionsMatrix;
                 break;
             default:
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                        mkey.GetNVarCoeff())
                 {
                     factor = 1.0;
                     goto UseLocRegionsMatrix;

@@ -475,7 +475,7 @@ namespace Nektar
             }
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors);
+            GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff);
 
             if(flags.isSet(eUseContCoeff))
             {

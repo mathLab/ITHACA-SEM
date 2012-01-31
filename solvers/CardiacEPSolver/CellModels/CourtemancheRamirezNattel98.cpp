@@ -62,7 +62,7 @@ namespace Nektar
 
         m_nq = nq;
 
-        C_m = 100.0;    // picoF
+        pSession->LoadParameter("Cm_ion", C_m);
         g_Na = 7.8;     // nanoS_per_picoF
         g_K1 = 0.09;    // nanoS_per_picoF
         g_to = 0.1652;  // nanoS_per_picoF

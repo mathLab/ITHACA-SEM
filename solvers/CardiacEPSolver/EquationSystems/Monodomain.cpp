@@ -76,7 +76,8 @@ namespace Nektar
     {
         UnsteadySystem::v_InitObject();
 
-        m_session->LoadParameter("epsilon",    m_epsilon,   1.0);
+        m_session->LoadParameter("Chi",        m_chi);
+        m_session->LoadParameter("Cm",         m_capMembrane);
 
         std::string vCellModel;
         m_session->LoadSolverInfo("CELLMODEL", vCellModel, "");
@@ -191,7 +192,7 @@ namespace Nektar
         int ncoeffs     = inarray[0].num_elements();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
+        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_chi/m_capMembrane;
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
@@ -206,7 +207,7 @@ namespace Nektar
             }
 
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -1.0/lambda/m_epsilon, inarray[i], 1,
+            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1,
                                             m_fields[i]->UpdatePhys(), 1);
 
             // Solve a system of equations with Helmholtz solver and transform
@@ -230,9 +231,9 @@ namespace Nektar
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
     {
+        int nq = m_fields[0]->GetNpoints();
         if (m_stimDuration > 0 && time < m_stimDuration)
         {
-            int nq = m_fields[0]->GetNpoints();
             Array<OneD,NekDouble> x0(nq);
             Array<OneD,NekDouble> x1(nq);
             Array<OneD,NekDouble> x2(nq);

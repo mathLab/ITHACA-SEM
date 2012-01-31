@@ -499,12 +499,6 @@ cout<<"layer region="<<Ireg<<endl;
             
 cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
 
-            //initialise the curvature array:
-            Array<OneD, NekDouble> curv(nq1D,0.0);
-            
-
- 
-
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                 = bcs.GetBoundaryRegions();
@@ -855,11 +849,20 @@ cout<<"Dim Rephysreg="<<Rephysreg.num_elements()<<"  nq1D="<<nq1D<<endl;
 	     outfieldx->FwdTrans(dtx, tcoeffs);
 	     outfieldx->FwdTrans(dty, tcoeffs);
 	     outfieldx->BwdTrans(tcoeffs, dtx);              
-	     outfieldx->BwdTrans(tcoeffs, dty);
+             Array<OneD, NekDouble> f_z(nq1D);
+             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, x1d, f_z);
+             Array<OneD, NekDouble> f_zz(nq1D);
+             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, f_z, f_zz);
+             Array<OneD, NekDouble> delta(nq1D);
+             Array<OneD, NekDouble> curv_unsigned(nq1D,0.0);
+             Array<OneD, NekDouble> curv(nq1D,0.0);
 cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;             
              for(int t=0; t<nq1D; t++)
 	     {
-	            curv[t]=sqrt(dtx[t]*dtx[t] +dty[t]*dty[t]);     
+	            curv_unsigned[t]=sqrt(dtx[t]*dtx[t] +dty[t]*dty[t]);     
+                    delta[t] = 1+f_z[t]*f_z[t];
+                    //Hall's definition...
+                    curv[t] = f_zz[t]/sqrt(delta[t]*delta[t]*delta[t]);
 cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<setw(13)<<"     "<<ty[t]<<"     "
 <<nx[t]<<"    "<<ny[t]<<"      "<<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
              }		     
@@ -958,7 +961,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 	    Array<OneD, NekDouble> mu53  (nq1D);
 	    Array<OneD, NekDouble> d2v  (nq1D,0.0);
 	    Array<OneD, NekDouble> prod  (nq1D);	    
-	    Array<OneD, NekDouble> prod2D  (nq1D);	    
+	    //Array<OneD, NekDouble> prod2D  (nq1D);	    
 		    
 	    double pow = 1.0/3.0;
 	    double base;
@@ -986,7 +989,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 	    Array<OneD, NekDouble> pjump(nq1D);
 	    Array<OneD, NekDouble> vjump(nq1D);
 
-
+/*
             //test a sin curve....
             Array<OneD, NekDouble> fun1D(nq1D);
             Array<OneD, NekDouble> derfun1D(nq1D);
@@ -1026,20 +1029,11 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
                  Vmath::Zero(nqedge, phys_edge,1);
                  Vmath::Zero(nqedge, der_edge,1);
             }
-            Array<OneD, NekDouble> dprod2Dreg (nq1D);
+*/
 
 
 
-
-//derivative of the product== product of the derivatives...
-/*
-           Array<OneD, NekDouble > mu53_dP2 (nq1D);
-           Array<OneD, NekDouble > dP_dmu53 (nq1D);
-           Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, mu53, dP_dmu53);
-           Vmath::Vmul(nq1D, mu53,1,mu53_dP2,1, mu53_dP2,1);
-    //       Array<OneD, NekDouble> dersprod (nq1D);
-//           Vmath::Vadd(nq1D, mu53_dP2,1,dP_dmu53,1,dersprod,1);
-*/           
+          
 
        
 	   //final jump conditions
@@ -1047,11 +1041,18 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
            NekDouble gamma13 = 2.6789385347077476336556929409746776441286893779573011009;
            NekDouble n0 = 12.845424015;
            NekDouble rho =1;
+           NekDouble alpha;
+	   alpha = 1;
+           NekDouble alpha53=1;
+           alpha53 = std::pow ((alpha*alpha),pow);
+           alpha53 = 1/(alpha*alpha53);
+           alpha53=1;
 	   for(int c=0; c<nq1D; c++)
 	   {
-	       pjump[c] = n0*curv[c]*prod[c] ;  	   
+	       pjump[c] = -n0*alpha53*curv[c]*prod[c] ;  	   
 	   }
 	   Vmath::Smul(nq1D, n0,d2v,1, vjump,1);      
+	   Vmath::Smul(nq1D, alpha53,vjump,1, vjump,1);  
 	   
 
 	   
@@ -1070,9 +1071,9 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             {
 //start            	              	    
             	(outfieldx->UpdatePhys())[j] = 
-            	  (vjump[j]-pjump[j])*tx[j];
+            	  (vjump[j]*tx[j]-pjump[j]);
             	(outfieldy->UpdatePhys())[j] =
-            	   (vjump[j]-pjump[j])*ty[j];		   
+            	   (vjump[j]*ty[j]-pjump[j]);		   
 //end
 //decomment
 /*
@@ -1090,16 +1091,85 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             Vmath::Zero(Nregcoeffs,finalcoeffs,1);            
             outfieldy->FwdTrans(outfieldy->GetPhys(), finalcoeffs);
             outfieldy->BwdTrans(finalcoeffs, outfieldy->UpdatePhys());  
+
+
+
+
+
+	    //calculate J,K
+            Array<OneD, NekDouble> lambda(nq1D);            
+            Array<OneD, NekDouble> a(nq1D);
+            Array<OneD, NekDouble> dPre_dz(nq1D);
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, Rephysreg, dPre_dz);
+            Array<OneD, NekDouble> dPim_dz(nq1D);
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, Imphysreg, dPim_dz);
+            Array<OneD, NekDouble> dPre_dz2(nq1D);
+            Vmath::Vmul(nq1D, dPre_dz,1, dPre_dz,1, dPre_dz2,1);
+            Array<OneD, NekDouble> dPim_dz2(nq1D);
+            Vmath::Vmul(nq1D, dPim_dz,1, dPim_dz,1, dPim_dz2,1);
+            Array<OneD, NekDouble> dP_dz2(nq1D);
+            Vmath::Vadd(nq1D, dPre_dz2,1,dPim_dz2,1,dP_dz2,1);
+            Array<OneD, NekDouble> ddP_dz2z(nq1D);
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, dP_dz2, ddP_dz2z);
+
+
+            Array<OneD, NekDouble> delta5(nq1D);
+            Array<OneD, NekDouble> a53(nq1D);
+            pow = 1./3.;
+            for(int e=0; e<nq1D; e++) 
+            {
+                //delta[e] = 1+ f_z[e]*f_z[e];
+                delta5[e] = delta[e]*delta[e]*delta[e]*delta[e]*delta[e];
+                lambda[e] = dUreg[e]/sqrt(delta[e]);
+                a[e] = lambda[e]*alpha/delta[e];
+                a53[e] = std::pow( (a[e]*a[e]), pow);
+//cout<<"a^2/3="<<a53[e]<<endl;
+                a53[e] = a[e]*a53[e];
+            }
+
+            Array<OneD, NekDouble> delta_z(nq1D);
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, delta, delta_z);
+            Array<OneD, NekDouble> a_z(nq1D);
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, a, a_z);
+
+            Array<OneD, NekDouble> J(nq1D);
+            Array<OneD, NekDouble> K(nq1D);
+            Array<OneD, NekDouble> f1(nq1D);
+            Array<OneD, NekDouble> f2(nq1D);
+            //NekDouble a53,delta5;
+            for(int f=0; f<nq1D; f++)
+            {
+                 //a53 = std::pow(a[f],5./3.);
+                 //delta5 = std::pow( delta[f], 5);
+                 J[f] =( (n0*rho*rho)/(a53[f]*delta5[f])   )*
+                        (  
+                          ( (-7*delta_z[f])/(2*delta[f]) - (5*a_z[f] )/(3*a[f])  )*dP_dz2[f] +
+                          ddP_dz2z[f]
+                        );
+                 K[f] = -(n0*rho*rho)/(a53[f]*delta5[f])*f_zz[f]*dP_dz2[f];
+                 f1[f] = lambda[f]*(K[f]-delta[f]*f_z[f]*J[f]);
+                 f2[f] = -lambda[f]*(f_z[f]*K[f] +delta[f]*J[f]);
+            }
+
+
             
             
             //test dermu
             Array<OneD, NekDouble> dermu53(nq1D);
             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, mu53, dermu53);
 
+            //test d(dP_square)ds
+            Array<OneD, NekDouble> ddP_square_ds(nq1D);
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, dP_square, ddP_square_ds);
+
+
+
 
 
             NekDouble jactest;
 
+
+            NekDouble tmpcalc;
 	    for(int g=0; g<nq1D; g++)
 	    {
                 //pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;       
@@ -1108,20 +1178,45 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
   
 //NBBB dPre is the stdDERIV!!! 
                 jactest = (gmat0[g]*tx[g] +gmat2[g]*ty[g])-(1/Jac[g]);
+                tmpcalc = (dPim_dz[g]*dPim_dz[g] +dPre_dz[g]*dPre_dz[g])/delta[g];
 
+cout<<x0d[g]<<"       "<<
+//stphysreg[g]<<"      "<<lambda[g]<<"      "<<
+//delta[g]<<"      "<<
+//f_z[g]<<"     "<<a53[g]<<"    "<<
+//delta5[g]<<"     "<<delta_z[g]<<"     "<<a_z[g]<<"     "<<
+//"      "<<ddP_dz2z[g]<<"        "<<dP_dz2[g]<<"        "<<
+//dP_square[g]<<"        "<<dP_dz2[g]/delta[g]<<"       "<<
+//ddP_square_ds[g]<<"         "<<ddP_dz2z[g]/(delta[g]*sqrt(delta[g]))<<"         "<<
+//ddP_dz2z[g]/delta[g]<<"       "<<
+//a[g]<<"        "<<a53[g]<<"       "<<
+vjump[g]*tx[g]*sqrt(delta[g])<<"         "<<
+J[g]<<"      "<<K[g]<<"       "<<pjump[g]<<"      "<<
+f1[g]<<"      "<<f2[g]<<"      "<<
+f_zz[g]/(sqrt(delta5[g]))<<"       "<<
+//f_zz[g]/sqrt(delta[g]*delta[g]*delta[g])<<"      "
+curv[g]<<"        "<<
+outfieldx->GetPhys()[g]<<"      "
+<<outfieldy->GetPhys()[g]
+<<endl;
+
+
+/*
 cout<<setw(14)<<x0d[g]<<"      "<<setw(13)<<x1d[g]<<
 "      "<<Rephysreg[g]<<"   "<<dP_re[g]<<"     "
 <<stphysreg[g]<<"      "<<mu53[g]<<"       "<<curv[g]
 <<setw(13)<<"      "<<setw(13)<<prod[g]
 <<"       "<<
-(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<"      "<<1/Jac[g]
+//(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<"      "<<1/Jac[g]
 //<<"       "<<dermu53[g]
+//tx[g]<<"     "<<ty[g]
+f1[g]<<"        "<<f2[g]
 <<"     "<<pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
 <<outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]<<endl;
 //cout<<"jactest="<<jactest<<endl;
                 ASSERTL0(abs(jactest)<0.5, "jac 1D problem..");
-
+*/
 	    }
          
 // gamma(1/3)= 2.6789385347077476337            

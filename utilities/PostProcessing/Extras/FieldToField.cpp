@@ -212,8 +212,7 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
 			eNotHomogeneous
 		};
 	
-		enum HomogeneousType HomogeneousType = eNotHomogeneous;
-cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;		
+		enum HomogeneousType HomogeneousType = eNotHomogeneous;		
                 if(cnt==0)
                 { 	
 		if(session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -335,8 +334,7 @@ cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;
                      }
                      break;
              	     case 2:
-             	     {
-cout<<"setfields"<<endl;             	     	     
+             	     {           	     	     
                           ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
                           if(fielddef[0]->m_numHomogeneousDir == 1)
@@ -358,8 +356,7 @@ cout<<"setfields"<<endl;
                           	for(i = 1; i < nvariables; ++i)
                           	{                         		
                           		Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
-                          		    AllocateSharedPtr(*Exp3DH1);
-cout<<"set field="<<i<<endl;                           		    
+                          		    AllocateSharedPtr(*Exp3DH1);                        		    
                           	}
                           }
                           else
@@ -410,7 +407,6 @@ cout<<"set field="<<i<<endl;
              {
                    coords[0] = x1[r];
                    coords[1] = y1[r];
-//cout<<"x="<<x1[r]<<"   y="<<y1[r]<<endl;                   
                    elmtid = field0->GetExpIndex(coords, 0.00001);
                    offset = field0->GetPhys_Offset(elmtid);
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->

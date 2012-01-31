@@ -762,7 +762,7 @@ namespace Nektar
         {
             return m_bndConditions;
         }
-		
+
         /**
          * Based on the expression \f$g(x,t)\f$ for the boundary conditions,
          * this function evaluates the boundary conditions for all boundaries
@@ -772,25 +772,25 @@ namespace Nektar
          * @param   bndCondExpansions   List of boundary expansions.
          * @param   bndConditions   Information about the boundary conditions.
          */
-        void DisContField1D::v_EvaluateBoundaryConditions(const NekDouble time, 
-														  const NekDouble x2_in,
-														  const NekDouble x3_in)
+        void DisContField1D::v_EvaluateBoundaryConditions(const NekDouble time,
+                                                          const NekDouble x2_in,
+                                                          const NekDouble x3_in)
         {
             int i;
 
             NekDouble x0;
             NekDouble x1;
             NekDouble x2;
-			
+
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
-				
-				if(x2_in != NekConstants::kNekUnsetDouble && x3_in != NekConstants::kNekUnsetDouble)
-				{
-					x1 = x2_in;
-					x2 = x3_in;
-				}
+
+                if(x2_in != NekConstants::kNekUnsetDouble && x3_in != NekConstants::kNekUnsetDouble)
+                {
+                    x1 = x2_in;
+                    x2 = x3_in;
+                }
 
                 if(m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)

@@ -1239,15 +1239,15 @@ namespace Nektar
          * @param   bndConditions   Information about the boundary conditions.
          */
         void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
-														  const NekDouble x2_in,
-														  const NekDouble x3_in)
-        {       	
+                                                          const NekDouble x2_in,
+                                                          const NekDouble x3_in)
+        {
             int i,j;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
 
             MultiRegions::ExpListSharedPtr locExpList;
-   
+
             for(i = 0; i < nbnd; ++i)
             {
                 if(time == 0.0 || m_bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
@@ -1256,7 +1256,7 @@ namespace Nektar
                     npoints = locExpList->GetNpoints();
                     Array<OneD,NekDouble> x0(npoints,0.0);
                     Array<OneD,NekDouble> x1(npoints,0.0);
-                    Array<OneD,NekDouble> x2(npoints,0.0);                                                         
+                    Array<OneD,NekDouble> x2(npoints,0.0);
 
                     if(x2_in == NekConstants::kNekUnsetDouble) //homogeneous input case for x2
                     {

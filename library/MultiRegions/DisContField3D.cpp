@@ -191,7 +191,6 @@ namespace Nektar
                     const std::string &variable)
         {
             int cnt1  = 0;
-            int cnt2  = 0;
             const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
 
@@ -204,10 +203,6 @@ namespace Nektar
                 if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     cnt1++;
-                    if( boundaryCondition->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
-                    {
-                        cnt2++;
-                    }
                 }
             }
 
@@ -619,8 +614,8 @@ namespace Nektar
          * @param   bndConditions   Information about the boundary conditions.
          */
         void DisContField3D::v_EvaluateBoundaryConditions(const NekDouble time,
-														  const NekDouble x2_in,
-														  const NekDouble x3_in)
+                                                          const NekDouble x2_in,
+                                                          const NekDouble x3_in)
         {
             int i,j;
             int npoints;

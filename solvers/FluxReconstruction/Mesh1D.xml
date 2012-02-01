@@ -38,14 +38,14 @@
     </GEOMETRY>
     
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" FIELDS="u" BASISTYPE="Legendre" NUMMODES="4" POINTSTYPE="GaussGaussLegendre" NUMPOINTS="4"/>
+        <E COMPOSITE="C[0]" FIELDS="u" BASISTYPE="GLL_Lagrange" NUMMODES="4" POINTSTYPE="GaussGaussLegendre" NUMPOINTS="4"/>
     </EXPANSIONS>
     
     <CONDITIONS>
     
     <SOLVERINFO>
         <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-        <I PROPERTY="ReimannSolver" VALUE="Up-Wind" />
+        <I PROPERTY="RiemannSolver" VALUE="Up-Wind" />
         <I PROPERTY="Gfunctions" VALUE="DG" />
     </SOLVERINFO>
 
@@ -81,7 +81,7 @@
     </FUNCTION>
 
     <FUNCTION NAME="ExactSolution">
-        <E VAR="u" VALUE="exp(-20.0*(x-t)*(x-t))" />
+        <E VAR="u" VALUE="exp(-20.0*x*x)" />
     </FUNCTION>
 
     </CONDITIONS>

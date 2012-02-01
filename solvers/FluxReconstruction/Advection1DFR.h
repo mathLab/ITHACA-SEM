@@ -70,8 +70,8 @@ namespace Nektar
 						Array<OneD, Array<OneD, NekDouble> > & outarray,
 						const NekDouble time) const;
 		
-		//Reimann solver to work out the interface fluxes (so far just a trivial upwinf scheme)
-		void ReimannSolver(const Array<OneD, NekDouble> & inarray, 
+		//Riemann solver to work out the interface fluxes (so far just a trivial upwinf scheme)
+		void RiemannSolver(const Array<OneD, NekDouble> & inarray, 
 						   Array<OneD, NekDouble> & F);
 		
 		// Flux reconstruction, this function calculate the jumps and return the final flux = df/dx
@@ -97,6 +97,9 @@ namespace Nektar
 		
 		void GenerateGnuplotScript() const;
 		
+        void GenerateMatlabScript() const;
+        
+        
 		//functions to access some variable inside the problem
 		
 		MultiRegions::DisContField1DSharedPtr GetDomain() const;

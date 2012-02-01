@@ -254,8 +254,8 @@ namespace Nektar
 			
 			if      (RiemSol == "Up-Wind")       {K[i] = 0.0;}
 			else if (RiemSol == "Euler-Centered"){K[i] = 1.0;}
-			else if (RiemSol == "Lax-Friedrichs"){K[i] = 1.0 - 1.0/(TimeStep*abs(a[i]));}
-			else if (RiemSol == "Lax-Wendroff")  {K[i] = 1.0 - (TimeStep*abs(a[i]));}
+			else if (RiemSol == "Lax-Friedrichs"){K[i] = 1.0 - 0.07/(TimeStep*abs(a[i]));}
+			else if (RiemSol == "Lax-Wendroff")  {K[i] = 1.0 - (TimeStep*abs(a[i]))/(0.07);}
 			else                                 {ASSERTL0(false,"Riemann solver not implemented");}
 			
 			F[i] = 0.5*a[i]*(sumInt[i]) - 0.5*abs(a[i])*(1.0-K[i])*(difInt[i]);
@@ -595,9 +595,9 @@ namespace Nektar
 		outfile << "approx      = solution(1:end,2);"         << endl;                        
 		outfile << "exact       = solution(1:end,3);"         << endl;
 		outfile << "figure()"                                 << endl;
-		outfile << "plot(x,approx,'-o')"                      << endl;
+		outfile << "plot(x,approx,'--or')"                      << endl;
 		outfile << "hold on"                                  << endl;
-		outfile << "plot(x,exact,'--o')"                      << endl;
+		outfile << "plot(x,exact,'-o')"                      << endl;
 		outfile << "legend('Approximated','Exact')"           << endl;
 		outfile << "hold off"                                 << endl;
 

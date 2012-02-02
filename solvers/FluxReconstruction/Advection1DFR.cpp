@@ -197,20 +197,21 @@ namespace Nektar
         
         
 		//! 1.6) Calculate the value of ud at the interface points ==> udi 
-		InterpToInterface(inarray[0],udi);
+		InterpToInterface(inarray[0], udi);
         
         
 		//! 1.7) Calculate the interface fluxes fi
-		RiemannSolver(udi,fi);
-        		
-        
+		RiemannSolver(udi, fi);
+        		        
 		//! 1.8) Calculate the final correction flux gradient ==> (df/dx) and putting 
         //! it into the output vector ==> outarray
-		FluxesReconstruction(gradfd,fdi,fi,outarray[0]);
+		FluxesReconstruction(gradfd, fdi, fi, outarray[0]);
+
+        //! Temporary scale factor for the solution (multiplication for the Jacobian)
+        Vmath::Smul(nq, 10.0, outarray[0], 1.0, outarray[0], 1.0);
 		
-        
-		// 1.9) Negate advection term ?
-		Vmath::Neg(nq,outarray[0],1);
+        // 1.9) Negate advection term ?
+		Vmath::Neg(nq, outarray[0], 1);
 	}
 
 

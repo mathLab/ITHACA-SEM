@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
+    StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
 
@@ -93,6 +94,30 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
+        // Set up variable coefficients if defined
+        if (vSession->DefinesFunction("d00"))
+        {
+            Array<OneD, NekDouble> d00(nq,0.0);
+            LibUtilities::EquationSharedPtr d00func = vSession->GetFunction("d00",0);
+            for (i = 0; i < nq; ++i)
+            {
+                d00[i] = d00func->Evaluate(xc0[i], xc1[i], xc2[i]);
+            }
+            varcoeffs[StdRegions::eVarCoeffD00] = d00;
+        }
+        if (vSession->DefinesFunction("d11"))
+        {
+            Array<OneD, NekDouble> d11(nq,0.0);
+            LibUtilities::EquationSharedPtr d11func = vSession->GetFunction("d11",0);
+            for (i = 0; i < nq; ++i)
+            {
+                d11[i] = d11func->Evaluate(xc0[i], xc1[i], xc2[i]);
+            }
+            varcoeffs[StdRegions::eVarCoeffD11] = d11;
+        }
+        //----------------------------------------------
+
+        //----------------------------------------------
         // Define forcing function for first variable defined in file
         fce = Array<OneD,NekDouble>(nq);
         LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
@@ -111,14 +136,14 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors, varcoeffs);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
 
 #ifdef TIMING
         for(i = 0; i < 1000; ++i)
         {
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors, varcoeffs);
         }
 
         Timing("1000 Helmholtz Solves:... ");

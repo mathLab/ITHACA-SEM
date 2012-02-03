@@ -18,10 +18,7 @@
         </ELEMENT>
         <COMPOSITE>
             <C ID="0"> Q[0] </C>
-            <C ID="1"> E[2] </C>
-            <C ID="2"> E[3] </C>
-            <C ID="3"> E[0] </C>
-            <C ID="4"> E[1] </C>
+            <C ID="1"> E[0,1,2,3] </C>
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
@@ -32,10 +29,10 @@
     <CONDITIONS>
 
     <PARAMETERS>
-      <P> FinTime            = 1.0              </P>
-      <P> TimeStep           = 0.1              </P>
-      <P> IO_CheckSteps      = 100              </P>
-      <P> IO_InfoSteps       = 100              </P>
+      <P> FinTime            = #FinTime#        </P>
+      <P> TimeStep           = #DT#             </P>
+      <P> IO_CheckSteps      = 10000000         </P>
+      <P> IO_InfoSteps       = 10000000         </P>
       <P> CFL                = #CFL#            </P>
       <P> NumQuadPointsError = #NQP#            </P>
     </PARAMETERS>
@@ -52,23 +49,11 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[1] </B>
-      <B ID="1"> C[2] </B>
-      <B ID="2"> C[3] </B>
-      <B ID="3"> C[4] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="1">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="2">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
+        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*( (x+(0.3*cos(2*PI*t)))^2 + (y-(0.3*sin(2*PI*t)))^2 ))" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
@@ -78,13 +63,37 @@
     </FUNCTION>   
     
     <FUNCTION NAME="ExactSolution">
-      <E VAR="u" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
+      <E VAR="u" VALUE="exp(-41*( (x+(0.3*cos(2*PI*t)))^2 + (y-(0.3*sin(2*PI*t)))^2 ))" />
     </FUNCTION>
     
     <FUNCTION NAME="InitialConditions">
-      <E VAR="u" VALUE="exp(-41*(((x+0.3)*(x+0.3))+((y)*(y))))" />
+      <E VAR="u" VALUE="exp(-41*( (x+(0.3*cos(2*PI*t)))^2 + (y-(0.3*sin(2*PI*t)))^2 ))" />
     </FUNCTION>
     
   </CONDITIONS>
+  
+  <GLOBALOPTIMIZATIONPARAMETERS>
+
+        <BwdTrans>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </BwdTrans>
+
+        <IProductWRTBase>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </IProductWRTBase>
+
+        <MassMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </MassMatrixOp>
+
+        <HelmholtzMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="#OPT1#" />
+            <DO_BLOCK_MAT_OP TRI="#OPT2#" QUAD="#OPT3#" />
+        </HelmholtzMatrixOp>
+
+  </GLOBALOPTIMIZATIONPARAMETERS>
   
 </NEKTAR>

@@ -5,6 +5,8 @@ test ! -x $SOLVER && echo "Solver $SOLVER not found." && exit
 CFL=1.0
 TimeScheme=RungeKutta2_ImprovedEuler
 NQP=60
+FinTime=0.1
+DT=0.1 
 
 OPT1=0
 OPT2=0

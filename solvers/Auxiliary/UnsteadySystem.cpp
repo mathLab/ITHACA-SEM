@@ -261,7 +261,7 @@ namespace Nektar
 			case LibUtilities::eRungeKutta2_ModifiedEuler:
 			case LibUtilities::eRungeKutta2_ImprovedEuler:
 			{
-				TimeStability = 2;
+				TimeStability = 2.0;
 				break;
 			}
 				  

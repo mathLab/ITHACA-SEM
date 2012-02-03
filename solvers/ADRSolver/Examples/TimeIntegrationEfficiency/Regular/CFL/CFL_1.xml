@@ -29,10 +29,10 @@
     <CONDITIONS>
 
     <PARAMETERS>
-      <P> FinTime            = 1.0              </P>
-      <P> TimeStep           = 0.1              </P>
-      <P> IO_CheckSteps      = 100              </P>
-      <P> IO_InfoSteps       = 100              </P>
+      <P> FinTime            = #FinTime#        </P>
+      <P> TimeStep           = #DT#             </P>
+      <P> IO_CheckSteps      = 10000000         </P>
+      <P> IO_InfoSteps       = 10000000         </P>
       <P> CFL                = #CFL#            </P>
       <P> NumQuadPointsError = #NQP#            </P>
     </PARAMETERS>

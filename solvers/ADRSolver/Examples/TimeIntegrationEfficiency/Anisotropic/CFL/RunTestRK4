@@ -6,15 +6,27 @@ CFL=1.0
 TimeScheme=ClassicalRungeKutta4
 NQP=60
 
-for h in  2 4 6 8; do
+FinTime=1.0
+DT=0.1 
+
+OPT1=0
+OPT2=0
+OPT3=0
+
+for h in 1 2 4 6 8 10; do
 
         sed  "s/#CFL#/$CFL/" < CFL_Anaiso_$h.xml > tmp1.xml
         sed  "s/#TimeScheme#/$TimeScheme/" < tmp1.xml > tmp2.xml
         sed  "s/#NQP#/$NQP/" < tmp2.xml > tmp3.xml
+		sed  "s/#OPT1#/$OPT1/" < tmp3.xml > tmp4.xml
+	    sed  "s/#OPT2#/$OPT2/" < tmp4.xml > tmp5.xml
+	    sed  "s/#OPT3#/$OPT3/" < tmp5.xml > tmp6.xml
+	    sed  "s/#FinTime#/$FinTime/" < tmp6.xml > tmp7.xml
+	    sed  "s/#DT#/$DT/" < tmp7.xml > tmp8.xml
         
-		for P in 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+		for P in 2 4 6 8 10 12 14 15; do
 
-            sed "s/#NUMMODES#/$P/" < tmp3.xml > tmp.xml
+            sed "s/#NUMMODES#/$P/" < tmp8.xml > tmp.xml
 
             $SOLVER tmp.xml > output.txt
 			

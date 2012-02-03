@@ -265,6 +265,7 @@ namespace Nektar
 		// For real CFL calculations refer to the general implementation above. (A.Bolis)
 		
 		NekDouble TimeStep;
+		NekDouble SpatialStability;
 		int n_elements = m_fields[0]->GetExpSize();
 		//solve ambiguity in windows
 		NekDouble n_elem = n_elements;
@@ -272,8 +273,24 @@ namespace Nektar
 		int H = (int)DH;
 		int P = ExpOrder-1;
 		
-		//Regular meshes
-		TimeStep = (TimeStability/EigenvaluesRegMeshes[H-1][P-1])*CFL;
+		if (TimeStability == 1.0) 
+		{
+			SpatialStability = EigenvaluesAnaMeshesAB2[H/2][P-1];
+		}
+		else if (TimeStability == 2.0) 
+		{
+			SpatialStability = EigenvaluesAnaMeshesRK2[H/2][P-1];
+		}
+		else if (TimeStability == 2.784) 
+		{
+			SpatialStability = EigenvaluesAnaMeshesRK4[H/2][P-1];
+		}
+		else 
+		{
+			ASSERTL0(false,"error in time-scheme")
+		}
+
+		TimeStep = (TimeStability/SpatialStability)*CFL;
 		
 		return TimeStep;
 	}

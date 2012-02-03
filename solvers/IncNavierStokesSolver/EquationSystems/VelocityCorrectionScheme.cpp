@@ -579,32 +579,29 @@ namespace Nektar
 			
 			for(int j = 0 ; j < m_HBCnumber ; j++)
 			{
-				cout << "\nj = " << j << endl;
 				m_elmt = m_fields[0]->GetExp(m_HBC[0][j]);
-				cout << "step 0"<< endl;
 				U = velocity[m_velocity[0]] + m_HBC[2][j];
 				V = velocity[m_velocity[1]] + m_HBC[2][j];
 				W = velocity[m_velocity[2]] + m_HBC[7][j];
-				cout << "step 1"<< endl;
 				
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
 				Vmath::Smul(m_HBC[1][j],m_wavenumber[j],W,1,Wz,1);
-				cout << "step 2"<< endl;
+				
 				// x-components of vorticity curl
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vx,Vxy);
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Uyy);
 				Vmath::Smul(m_HBC[1][j],m_beta[j],U,1,Uzz,1);
 				//x-component coming from the other plane
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Wxz);
-				cout << "step 3"<< endl;
+	
 				// y-components of vorticity curl
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Vxx);
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Uxy);
 				Vmath::Smul(m_HBC[1][j],m_beta[j],V,1,Vzz,1);
 				//y-component coming from the other plane
 				m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Wz,Wyz);
-				cout << "step 4"<< endl;				
+								
 				// buinding up the curl of V adding the components
 				Vmath::Vsub(m_HBC[1][j],Vxy,1,Uyy,1,Qx,1);
 				Vmath::Vsub(m_HBC[1][j],Qx,1,Uzz,1,Qx,1);
@@ -613,7 +610,7 @@ namespace Nektar
 				Vmath::Vsub(m_HBC[1][j],Wyz,1,Vzz,1,Qy,1);
 				Vmath::Vsub(m_HBC[1][j],Qy,1,Vxx,1,Qy,1);
 				Vmath::Vadd(m_HBC[1][j],Qy,1,Uxy,1,Qy,1);
-				cout << "step 5"<< endl;
+				
 				// getting the advective term
 				Nu = advection[0] + m_HBC[2][j];
 				Nv = advection[1] + m_HBC[2][j];
@@ -625,7 +622,7 @@ namespace Nektar
 				Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qy,1,Nv,1,Qy,1);
 				// z-component (stored in Qz) not required for this approach
 				// the third component of the normal vector is always zero
-				cout << "step 6"<< endl;
+				
 				Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
 				
 				// Get edge values and put into Uy, Vx
@@ -636,7 +633,6 @@ namespace Nektar
 				Pvals = PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]);
 				
 				Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals,m_negateNormals[j]);
-				cout << "step 7"<< endl;
 			}
 		}
 		else if(m_HomogeneousType == eHomogeneous2D)

@@ -32,18 +32,18 @@
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
-#include <ExpressionTemplates/CommutativeTransform.hpp>
 #include <ExpressionTemplates/Operators.hpp>
 #include <ExpressionTemplates/AssociativeTraits.hpp>
+#include <ExpressionTemplates/Node.hpp>
 
 #include <boost/utility/enable_if.hpp>
-#include <boost/typeof/typeof.hpp>
-#include <boost/mpl/and.hpp>
 
 namespace expt
 {
-    // Performs an associative transform on a node.  Note that, unlike the commutative
-    // transform, this transform does not need to adjust the indices.
+    /// \brief Transforms the given tree using an associative transform if appropriate.
+    ///
+    /// Given a tree of the form A Op (B Op C), if Op is associative, this metafunction
+    /// transforms it to (A Op B) Op C.
     template<typename NodeType, typename enabled = void>
     struct AssociativeTransform
     {
@@ -51,10 +51,10 @@ namespace expt
     };
 
     template<typename LhsNodeType, typename OpType, typename R1, typename ROp, typename R2>
-    struct AssociativeTransform< expt::Node<LhsNodeType, OpType, expt::Node<R1, ROp, R2> >,
+    struct AssociativeTransform<Node<LhsNodeType, OpType, Node<R1, ROp, R2> >,
         typename boost::enable_if
         <
-            expt::AssociativeTraits
+            AssociativeTraits
             <
                 typename LhsNodeType::ResultType,
                 OpType,
@@ -63,9 +63,13 @@ namespace expt
             >
         >::type>
     {
-        typedef expt::Node<expt::Node<LhsNodeType, OpType, R1>, ROp, R2> TransformedNodeType;
+        typedef Node<Node<LhsNodeType, OpType, R1>, ROp, R2> TransformedNodeType;
     };
 
+    /// \brief Transforms the given tree using an associative transform if appropriate.
+    ///
+    /// Given a tree of the form (A Op B) Op C, if Op is associative, this metafunction
+    /// transforms it to A Op (B Op C).
     template<typename NodeType, typename enabled = void>
     struct InverseAssociativeTransform
     {
@@ -73,10 +77,10 @@ namespace expt
     };
 
     template<typename L1, typename LOp, typename L2, typename OpType, typename RhsNodeType>
-    struct InverseAssociativeTransform< expt::Node<expt::Node<L1, LOp, L2>, OpType, RhsNodeType >,
+    struct InverseAssociativeTransform<Node<Node<L1, LOp, L2>, OpType, RhsNodeType >,
         typename boost::enable_if
         <
-            expt::AssociativeTraits
+            AssociativeTraits
             <
                 typename L1::ResultType,
                 LOp,
@@ -85,11 +89,10 @@ namespace expt
             >
         >::type>
     {
-        typedef expt::Node<L1, LOp, expt::Node<L2, OpType, RhsNodeType> > TransformedNodeType;
+        typedef Node<L1, LOp, Node<L2, OpType, RhsNodeType> > TransformedNodeType;
     };
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-
 #endif //EXPRESSION_TEMPLATES_ASSOCIATIVE_TRANSFORM_HPP
 

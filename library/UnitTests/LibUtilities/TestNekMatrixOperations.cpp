@@ -35,7 +35,6 @@
 
 #include "LibUtilitiesUnitTestsPrecompiledHeader.h"
 
-#include <UnitTests/testNekMatrixOperations.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicUtils/BoostUtil.hpp>
 #include <boost/test/auto_unit_test.hpp>

@@ -95,6 +95,12 @@ namespace Nektar
     }
 
     template<typename DataType, typename InnerMatrixType>
+    void NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::SetScale(const NumberType& value)
+    {
+        m_scale = value;
+    }
+    
+    template<typename DataType, typename InnerMatrixType>
     const typename NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::NumberType*
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::GetRawPtr() const { return m_matrix->GetRawPtr(); }
 
@@ -237,5 +243,12 @@ namespace Nektar
     LIB_UTILITIES_EXPORT NekMatrix< NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>
     Transpose(NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>& rhs);
 
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<DataType, ScaledMatrixTag>& v)
+    {
+        v.SetScale(-1.0*v.Scale());
+    }
+
+    template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>& v);
 }
 

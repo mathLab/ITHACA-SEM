@@ -802,6 +802,15 @@ namespace Nektar
         std::swap(m_tempSpace, this->GetData());
     }
 
+    #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
+    template<typename DataType>
+    NekMatrix<DataType, StandardMatrixTag> NekMatrix<DataType, StandardMatrixTag>::operator-() const 
+    { 
+        NekMatrix<DataType, StandardMatrixTag> result(*this);
+        NegateInPlace(result);
+        return result;
+    }
+    #endif
 
     template<typename DataType>
     NekMatrix<DataType, StandardMatrixTag>& NekMatrix<DataType, StandardMatrixTag>::operator*=(const DataType& s)
@@ -828,6 +837,20 @@ namespace Nektar
     template LIB_UTILITIES_EXPORT NekMatrix<NekDouble, StandardMatrixTag> Transpose(NekMatrix<NekDouble, StandardMatrixTag>& rhs);
 
     template LIB_UTILITIES_EXPORT class NekMatrix<NekDouble, StandardMatrixTag>;
+
+    template<typename DataType>
+    void NegateInPlace(NekMatrix<DataType, StandardMatrixTag>& m)
+    {
+        for(unsigned int i = 0; i < m.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < m.GetColumns(); ++j)
+            {
+                m(i,j) *= -1.0;
+            }
+        }
+    }
+
+    template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<double, StandardMatrixTag>& v);
 
 //    template<typename DataType>
 //    template<typename T, typename MatrixType>

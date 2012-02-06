@@ -41,6 +41,11 @@
 #include <ExpressionTemplates/Node.hpp>
 #include <ExpressionTemplates/Operators.hpp>
 #include <ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp>
+#include <ExpressionTemplates/InvertNode.hpp>
+#include <ExpressionTemplates/ForwardInverseTransform.hpp>
+#include <ExpressionTemplates/BackwardInverseTransform.hpp>
+#include <ExpressionTemplates/PushDownUnaryNodes.hpp>
+#include <ExpressionTemplates/CreateFromTree.hpp>
 
 #endif
 

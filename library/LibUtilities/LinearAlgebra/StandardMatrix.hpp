@@ -364,46 +364,6 @@ namespace Nektar
             
 
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                //template<typename ExpressionPolicyType>
-                //ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
-                //{
-                //    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> > ));
-                //    
-                //    if( rhs.ContainsReference(*this) )
-                //    {
-                //        ThisType temp = rhs;
-                //        *this = temp;
-                //    }
-                //    else
-                //    {
-                //        m_storagePolicy = eFULL;
-                //        m_numberOfSubDiagonals = std::numeric_limits<unsigned int>::max();
-                //        m_numberOfSuperDiagonals = std::numeric_limits<unsigned int>::max();
-                //        
-                //        if( this->GetRows() != rhs.GetMetadata().Rows ||
-                //            this->GetColumns() != rhs.GetMetadata().Columns )
-                //        {
-                //            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                //            ResizeDataArrayIfNeeded(rhs.GetMetadata());
-                //        }
-
-                //        this->SetTransposeFlag('N');
-                //        Array<OneD, DataType> original = GetData();
-                //        
-                //        rhs.Evaluate(*this);
-                //        
-                //        if( m_wrapperType == eWrapper )
-                //        {
-                //            if( GetData().data() != original.data() )
-                //            {
-                //                this->SwapTempAndDataBuffers();
-                //                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
-                //                    this->GetData().data());
-                //            }
-                //        }
-                //    }
-                //    return *this;
-                //}
                 template<typename L, typename Op, typename R>
                 ThisType& operator=(const expt::Node<L, Op, R>& rhs)
                 {
@@ -596,6 +556,16 @@ namespace Nektar
                         
             LIB_UTILITIES_EXPORT ThisType& operator*=(const NumberType& s);
 
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+            expt::Node<expt::Node<NekMatrix<DataType, StandardMatrixTag> >, expt::NegateOp, void > operator-() const
+            {
+                expt::Node<NekMatrix<DataType, StandardMatrixTag> > leafNode(*this);
+                return expt::Node<expt::Node<NekMatrix<DataType, StandardMatrixTag> >, expt::NegateOp, void >(leafNode);
+            }
+            #else
+            LIB_UTILITIES_EXPORT NekMatrix<DataType, StandardMatrixTag> operator-() const;
+            #endif
+
         protected:
             LIB_UTILITIES_EXPORT NekMatrix(const ThisType& rhs, PointerWrapper wrapperType);
             
@@ -639,6 +609,9 @@ namespace Nektar
     template<typename DataType>
     LIB_UTILITIES_EXPORT NekMatrix<DataType, StandardMatrixTag>
     Transpose(NekMatrix<DataType, StandardMatrixTag>& rhs);
+
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<DataType, StandardMatrixTag>& v);
 }
     
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES

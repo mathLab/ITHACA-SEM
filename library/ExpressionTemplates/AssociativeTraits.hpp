@@ -32,7 +32,6 @@
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
-#include <ExpressionTemplates/Node.hpp>
 #include <ExpressionTemplates/Operators.hpp>
 #include <boost/type_traits.hpp>
 
@@ -48,26 +47,19 @@ namespace expt
     /// it can, then the expression T1 Op1 (T2 Op2 X) can be rewritten as
     /// (T1 Op1 T2) Op2 X.
     ///
-    /// This traits defaults to false.  The class should be specialized for
+    /// This trait defaults to false.  The class should be specialized for
     /// all combinations of operators and data types that are associative.
     template<typename T1, typename Op1, typename T2, typename Op2>
-    struct AssociativeTraits : public boost::false_type
-    {
-    };
+    struct AssociativeTraits : public boost::false_type {};
 
     /// \brief Specialization indicating multiplication is usually associative.
-    template<typename T1, typename T2>
-    struct AssociativeTraits<T1, expt::MultiplyOp, T2, expt::MultiplyOp> : public boost::true_type
-    {
-    };
+    template<typename T>
+    struct AssociativeTraits<T, MultiplyOp, T, MultiplyOp> : public boost::true_type {};
 
     /// \brief Specialization indicating addition is usually associative.
-    template<typename T1, typename T2>
-    struct AssociativeTraits<T1, expt::AddOp, T2, expt::AddOp> : public boost::true_type
-    {
-    };
+    template<typename T>
+    struct AssociativeTraits<T, AddOp, T, AddOp> : public boost::true_type {};
 }
 
 #endif // NEKTAR_USE_EXPRESSION_TEMPLATES
-
 #endif //EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP

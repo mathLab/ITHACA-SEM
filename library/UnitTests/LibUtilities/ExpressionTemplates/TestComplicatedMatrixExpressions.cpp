@@ -110,10 +110,10 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestComplicated2)
         {
             typedef NekMatrix<double> Matrix;
-            Matrix gmat[8][8];
-            for(unsigned int i = 0; i < 8; ++i)
+            Matrix gmat[9][9];
+            for(unsigned int i = 0; i < 9; ++i)
             {
-                for(unsigned int j = 0; j < 8; ++j)
+                for(unsigned int j = 0; j < 9; ++j)
                 {
                     gmat[i][j] = Matrix(2,2);
                 }
@@ -126,21 +126,21 @@ namespace Nektar
             Matrix lap12(2,2);
             Matrix lap22(2,2);
             
-            //Matrix lap = (gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0]
-            //                            + gmat[6][0]*gmat[6][0])*lap00
-            //                   + (gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0]
-            //                            + gmat[7][0]*gmat[7][0])*lap11
-            //                   + (gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0]
-            //                            + gmat[8][0]*gmat[8][0])*lap22
-            //                   + (gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0]
-            //                            + gmat[6][0]*gmat[7][0])
-            //                     *(lap01 + Transpose(lap01))
-            //                   + (gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0]
-            //                            + gmat[6][0]*gmat[8][0])
-            //                     *(lap02 + Transpose(lap02))
-            //                   + (gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0]
-            //                            + gmat[7][0]*gmat[8][0])
-            //                     *(lap12 + Transpose(lap12));
+            Matrix lap = (gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0]
+                                        + gmat[6][0]*gmat[6][0])*lap00
+                               + (gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0]
+                                        + gmat[7][0]*gmat[7][0])*lap11
+                               + (gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0]
+                                        + gmat[8][0]*gmat[8][0])*lap22
+                               + (gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0]
+                                        + gmat[6][0]*gmat[7][0])
+                                 *(lap01 + Transpose(lap01))
+                               + (gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0]
+                                        + gmat[6][0]*gmat[8][0])
+                                 *(lap02 + Transpose(lap02))
+                               + (gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0]
+                                        + gmat[7][0]*gmat[8][0])
+                                 *(lap12 + Transpose(lap12));
             
         }
 

@@ -56,16 +56,23 @@ namespace expt
         }
 
         template<typename L, typename R>
-        static typename ResultType<L, R>::type Op(const L& lhs, const R& rhs)
-        {
-            return Add(lhs, rhs);
-        }
-
-        template<typename L, typename R>
         static void Op(typename ResultType<L, R>::type& accumulator, const L& lhs, const R& rhs)
         {
             return Add(accumulator, lhs, rhs);
         }
+
+        template<typename L, typename R>
+        static void OpLeftInverse(typename ResultType<L, R>::type& accumulator, const L& lhs, const R& rhs)
+        {
+            return AddNegatedLhs(accumulator, lhs, rhs);
+        }
+
+        template<typename L, typename R>
+        static void OpLeftInverseEqual(L& accum, const R& rhs)
+        {
+            AddEqualNegatedLhs(accum, rhs);
+        }
+
     };
 
     struct MultiplyOp 
@@ -90,18 +97,19 @@ namespace expt
         }
 
         template<typename L, typename R>
-        static typename ResultType<L, R>::type Op(const L& lhs, const R& rhs)
-        {
-            return Multiply(lhs, rhs);
-        }
-
-        template<typename L, typename R>
         static void Op(typename ResultType<L, R>::type& accumulator, const L& lhs, const R& rhs)
         {
             return Multiply(accumulator, lhs, rhs);
         }
-    };
 
+        template<typename L, typename R>
+        static void OpLeftInverse(typename ResultType<L, R>::type& accumulator, const L& lhs, const R& rhs)
+        {
+            return MultiplyInvertedLhs(accumulator, lhs, rhs);
+        }
+
+    };
+       
     struct DivideOp 
     {
         template<typename L, typename R>
@@ -120,12 +128,6 @@ namespace expt
         static void OpEqual(double& accum, const double& rhs)
         {
             accum /= rhs;
-        }
-
-        template<typename L, typename R>
-        static typename ResultType<L, R>::type Op(const L& lhs, const R& rhs)
-        {
-            return Divide(lhs, rhs);
         }
 
         template<typename L, typename R>
@@ -156,15 +158,21 @@ namespace expt
         }
 
         template<typename L, typename R>
-        static typename ResultType<L, R>::type Op(const L& lhs, const R& rhs)
-        {
-            return Subtract(lhs, rhs);
-        }
-
-        template<typename L, typename R>
         static void Op(typename ResultType<L, R>::type& accumulator, const L& lhs, const R& rhs)
         {
             return Subtract(accumulator, lhs, rhs);
+        }
+
+        template<typename L, typename R>
+        static void OpLeftInverse(typename ResultType<L, R>::type& accumulator, const L& lhs, const R& rhs)
+        {
+            return SubtractNegatedLhs(accumulator, lhs, rhs);
+        }
+
+        template<typename L, typename R>
+        static void OpLeftInverseEqual(L& accum, const R& rhs)
+        {
+            SubtractEqualNegatedLhs(accum, rhs);
         }
 
     };
@@ -183,6 +191,31 @@ namespace expt
             NegateInPlace(accumulator);
         }
     };
+
+    struct InvertOp
+    {
+        template<typename T>
+        struct ResultType
+        {
+            typedef T type;
+        };
+
+        template<typename T>
+        static void Op(T& accumulator)
+        {
+            InvertInPlace(accumulator);
+        }
+    };
+
+
+    template<typename OpType>
+    struct IsAdditiveOperator : public boost::false_type {};
+
+    template<>
+    struct IsAdditiveOperator<AddOp> : public boost::true_type {};
+
+    template<>
+    struct IsAdditiveOperator<SubtractOp> : public boost::true_type {};
 }
 
 #endif //NEKTAR_EXPRESSION_TEMPLATES_OPERATORS_HPP

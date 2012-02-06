@@ -7,15 +7,18 @@ SET(BasicConstHeaders
 SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
     ./LinearAlgebra/Blas.hpp
+    ./LinearAlgebra/BlasOverrideUtil.hpp
     ./LinearAlgebra/SparseBlas.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/CanGetRawPtr.hpp
+    ./LinearAlgebra/DgemmOverride.hpp
+    ./LinearAlgebra/DgemvOverride.hpp
     ./LinearAlgebra/ExplicitInstantiation.h
-    ./LinearAlgebra/IsDgemmTraits.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
+    ./LinearAlgebra/MatrixOperationsDeclarations.hpp
     ./LinearAlgebra/MatrixOperations.cpp
     ./LinearAlgebra/MatrixOperations.hpp
     ./LinearAlgebra/MatrixSize.hpp
@@ -80,13 +83,21 @@ SET(CommunicationHeaders
 SET(ExpressionTemplates
     ../ExpressionTemplates/AssociativeTraits.hpp
     ../ExpressionTemplates/AssociativeTransform.hpp
+    ../ExpressionTemplates/BackwardInverseTransform.hpp
     ../ExpressionTemplates/CommutativeTraits.hpp
     ../ExpressionTemplates/CommutativeTransform.hpp
+    ../ExpressionTemplates/CreateFromTree.hpp
     ../ExpressionTemplates/ExpressionEvaluator.hpp
     ../ExpressionTemplates/ExpressionTemplates.hpp
+    ../ExpressionTemplates/ForwardInverseTransform.hpp
+    ../ExpressionTemplates/InverseOperatorTypeTraits.hpp
+    ../ExpressionTemplates/InvertNode.hpp
     ../ExpressionTemplates/Node.hpp
     ../ExpressionTemplates/Operators.hpp
+    ../ExpressionTemplates/PerformCommutativeTransformIfNeeded.hpp
+    ../ExpressionTemplates/PushDownUnaryNodes.hpp
     ../ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp
+    ../ExpressionTemplates/SortAssociativeCommutativeClusters.hpp
 )
 
 SET(BasicUtilsHeaders

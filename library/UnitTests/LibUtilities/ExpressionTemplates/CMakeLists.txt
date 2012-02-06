@@ -2,23 +2,27 @@
 SET(TARGET_NAME ExpressionTemplateUnitTests)
 
 SET(Sources 
+    ExpressionTemplateObjects.cpp
     main.cpp 
     TestAliasing.cpp
     TestAssociativeTransform.cpp
-    TestAssociativeTreeTransform.cpp
+    TestBackwardsAssociativeTransform.cpp
+    TestCommutativeTransform.cpp
     TestComplicatedMatrixExpressions.cpp
     TestCoupledLinearNSError.cpp
-    TestDotProduct.cpp
+    TestFindACNodesToSwap.cpp
+    TestForwardTransform.cpp
+    TestInverseAssociative.cpp
+    TestInvertNode.cpp
     TestTemporaryCount.cpp
-    TestTwoParameters.cpp 
-    TestThreeParameters.cpp
-    TestFourParameters.cpp 
     TestConstantConstantTree.cpp
     TestMatrixBlasOptimizations.cpp
     TestMatrixBufferSize.cpp 
-    TestNode.cpp
+    TestMatrixVectorOperations.cpp
+    TestPushDownUnaryNodes.cpp
     TestRemoveUnecessaryTemporaries.cpp
-    TestTraits.cpp
+    TestSortACClusters.cpp
+    TestUnaryOperations.cpp
     TestUnrolledVectors.cpp
     ../../util.cpp
 )

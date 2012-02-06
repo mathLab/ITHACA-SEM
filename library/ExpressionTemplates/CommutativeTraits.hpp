@@ -37,33 +37,25 @@
 
 namespace expt
 {
-    template<typename L, typename Op, typename R>
-    struct CommutativeTraitsSpecialization : public boost::true_type
-    {
-    };
-
+    /// \brief Traits class indicating whether an operator is commutative.
+    ///
+    /// Given an expression T1 Op T2, where T1 and T2 are data types
+    /// in an expression, and Op is the operator, CommutativeTraits initicates whether
+    /// the expression can be rewritten using the commutative property.  If
+    /// it can, then the expression T1 Op T2 and be rewritten as T2 Op T1.
+    ///
+    /// This trait defaults to false.  The class should be specialized for
+    /// all combinations of operators and data types that are commutative.
     template<typename L, typename Op, typename R, typename enabled = void>
-    struct CommutativeTraits : public boost::false_type
-    {
-    };
-
+    struct CommutativeTraits : public boost::false_type {};
+    
+    /// \brief Specialization indicating that addition is usually commutative.
     template<typename R, typename T>
-    struct CommutativeTraits<R, expt::AddOp, T> : public boost::true_type
-    {};
+    struct CommutativeTraits<R, AddOp, T> : public boost::true_type {};
 
+    /// \brief Specialization indicating that multiplication is usually commutative.
     template<typename R, typename T>
-    struct CommutativeTraits<R, expt::MultiplyOp, T> : public boost::true_type
-    {};
-
-//    template<typename R, typename T>
-//    struct CommutativeTraits<R, expt::MultiplyOp, T> :
-//        public boost::mpl::and_
-//        <
-//            boost::true_type,
-//            CommutativeTraitsSpecialization<R, expt::MultiplyOp, T>
-//        >::type
-//    {
-//    };
+    struct CommutativeTraits<R, MultiplyOp, T> : public boost::true_type {};
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

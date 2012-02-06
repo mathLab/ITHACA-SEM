@@ -205,14 +205,15 @@ namespace Nektar
 
             LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference z() const;
 
-            //#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            //expt::Node<NekVector<DataType>, expt::NegateOp, void > operator-() const
-            //{
-            //    return expt::Node<NekVector<DataType> >(*this);
-            //}
-            //#else
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+            expt::Node<expt::Node<NekVector<DataType> >, expt::NegateOp, void > operator-() const
+            {
+                expt::Node<NekVector<DataType> > leafNode(*this);
+                return expt::Node<expt::Node<NekVector<DataType> >, expt::NegateOp, void >(leafNode);
+            }
+            #else
             LIB_UTILITIES_EXPORT NekVector<DataType> operator-() const;
-            //#endif
+            #endif
 
             LIB_UTILITIES_EXPORT DataType Magnitude() const;
             LIB_UTILITIES_EXPORT DataType Dot(const NekVector<DataType>& rhs) const;
@@ -254,7 +255,16 @@ namespace Nektar
            const NekVector<DataType>& rhs);
     
     template<typename DataType>
+    LIB_UTILITIES_EXPORT void AddNegatedLhs(NekVector<DataType>& result,
+           const NekVector<DataType>& lhs,
+           const NekVector<DataType>& rhs);
+    
+    template<typename DataType>
     LIB_UTILITIES_EXPORT void AddEqual(NekVector<DataType>& result,
+           const NekVector<DataType>& rhs);
+    
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void AddEqualNegatedLhs(NekVector<DataType>& result,
            const NekVector<DataType>& rhs);
     
     template<typename LhsDataType,
@@ -270,7 +280,16 @@ namespace Nektar
            const NekVector<InputDataType>& rhs);
     
     template<typename ResultDataType, typename InputDataType>
+    LIB_UTILITIES_EXPORT void SubtractNegatedLhs(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
+           const NekVector<InputDataType>& rhs);
+    
+    template<typename ResultDataType, typename InputDataType>
     LIB_UTILITIES_EXPORT void SubtractEqual(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& rhs);
+    
+    template<typename ResultDataType, typename InputDataType>
+    LIB_UTILITIES_EXPORT void SubtractEqualNegatedLhs(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& rhs);
     
     template<typename DataType>
@@ -300,6 +319,20 @@ namespace Nektar
     template<typename ResultDataType, typename InputDataType>
     void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
            const NekVector<InputDataType>& lhs,
+           const NekVector<InputDataType>& rhs);
+    
+    template<typename ResultDataType, typename InputDataType>
+    void LIB_UTILITIES_EXPORT MultiplyEqual(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& rhs);
+    
+    template<typename DataType, typename InputDataType>
+    NekVector<DataType>
+    LIB_UTILITIES_EXPORT Multiply(const NekVector<DataType>& lhs,
+                const NekVector<InputDataType>& rhs);
+
+    template<typename ResultDataType, typename InputDataType>
+    void LIB_UTILITIES_EXPORT Multiply(NekVector<ResultDataType>& result,
+           const NekVector<InputDataType>& lhs,
            const NekDouble& rhs);
     
     template<typename ResultDataType>
@@ -316,6 +349,11 @@ namespace Nektar
                   const NekDouble& lhs,
                   const NekVector<InputDataType>& rhs);
         
+    template<typename ResultDataType, typename InputDataType>
+    void LIB_UTILITIES_EXPORT MultiplyInvertedLhs(NekVector<ResultDataType>& result,
+                  const NekDouble& lhs,
+                  const NekVector<InputDataType>& rhs);
+        
     template<typename DataType>
     NekVector<DataType>
     LIB_UTILITIES_EXPORT Multiply(const DataType& lhs,
@@ -323,6 +361,7 @@ namespace Nektar
 
     GENERATE_MULTIPLICATION_OPERATOR(NekVector, 1, NekDouble, 0);
     GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekVector, 1);
+    GENERATE_MULTIPLICATION_OPERATOR(NekVector, 1, NekVector, 1);
     
     GENERATE_DIVISION_OPERATOR(NekVector, 1, NekDouble, 0);
     GENERATE_ADDITION_OPERATOR(NekVector, 1, NekVector, 1);
@@ -369,6 +408,9 @@ namespace Nektar
 
     template<typename DataType>
     LIB_UTILITIES_EXPORT void NegateInPlace(NekVector<DataType>& v);
+
+    LIB_UTILITIES_EXPORT void NegateInPlace(NekDouble& v);
+    LIB_UTILITIES_EXPORT void InvertInPlace(NekDouble& v);
 
     template<typename DataType>
     LIB_UTILITIES_EXPORT void Normalize(NekVector<DataType>& v);
@@ -421,9 +463,7 @@ namespace expt
     // Optimal execution is obtained by loop unrolling.
 
     template<typename NodeType, typename enabled = void>
-    struct NodeCanUnroll : public boost::false_type
-    {
-    };
+    struct NodeCanUnroll : public boost::false_type {};
 
     template<typename Type>
     struct NodeCanUnroll<expt::Node<Type, void, void>,
@@ -444,11 +484,11 @@ namespace expt
                 Nektar::IsVector<typename RhsType::ResultType>,
                 NodeCanUnroll<LhsType>,
                 NodeCanUnroll<RhsType>,
-                boost::mpl::or_
-            <
-                boost::is_same<OpType, expt::AddOp>,
-                boost::is_same<OpType, expt::SubtractOp>
-            >
+                //boost::mpl::or_
+                //<
+                    boost::is_same<OpType, expt::AddOp>
+                //    boost::is_same<OpType, expt::SubtractOp>
+                //>
         > >::type >: public boost::true_type
     {
     };

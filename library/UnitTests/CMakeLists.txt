@@ -1,6 +1,5 @@
 
 SET(UnitTestSources
-    CountedObject.cpp
     main.cpp
     ScaledMatrixUnitTests.cpp
     BlockMatrixUnitTests.cpp
@@ -10,9 +9,7 @@ SET(UnitTestSources
     testNekLinAlgAlgorithms.cpp
     testNekManager.cpp
     testNekMatrix.cpp
-    testNekMatrixOperations.cpp
     testNekPoint.cpp
-    TestNekPtr.cpp
     testNekVector.cpp
     testNekSharedArray.cpp
     Memory/TestNekMemoryManager.cpp
@@ -25,16 +22,10 @@ SET(UnitTestSources
 
 SET(UnitTestHeaders
     CountedObject.h
-    testBoostUtil.h
-    testExpressionTemplates.h
     testLinearSystem.h
     testNekLinAlgAlgorithms.h
     testNekManager.h
-    testNekMatrix.h
-    testNekMatrixOperations.h
     testNekPoint.h
-    TestNekPtr.h
-    testNekVector.h
     testNekSharedArray.h
     Memory/TestNekMemoryManager.h
     StdRegions/testStdSegExp.h

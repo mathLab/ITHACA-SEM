@@ -109,10 +109,10 @@ namespace Nektar
             typedef expt::Node<LhsNode, expt::AddOp, RhsNode> Expression;
             typedef Expression::Indices Indices;
 
-            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType TransformedNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<Expression>::TransformedNodeType TransformedNodeType;
             BOOST_MPL_ASSERT(( boost::is_same<Expression, TransformedNodeType> ));
             
-            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
             BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 2 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 1>::type::value == 1 ));
@@ -151,10 +151,10 @@ namespace Nektar
             typedef expt::Node<LhsNode, expt::MultiplyOp, RhsNode> Expression;
             typedef Expression::Indices Indices;
 
-            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType TransformedNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<Expression>::TransformedNodeType TransformedNodeType;
             BOOST_MPL_ASSERT(( boost::is_same<Expression, TransformedNodeType> ));
             
-            typedef expt::RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
             BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 2 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 1>::type::value == 1 ));
@@ -207,6 +207,6 @@ namespace Nektar
         typedef ExpressionType::Indices Indices;
 
         //typedef expt::RemoveUnecessaryTemporaries<ExpressionType, Indices>::TransformedNodeType TransformedNodeType;
-        typedef expt::RemoveUnecessaryTemporaries<ExpressionType, Indices>::TransformedIndicesType TransformedIndicesType;
+        typedef expt::RemoveUnecessaryTemporaries<ExpressionType>::TransformedIndicesType TransformedIndicesType;
     }
 }

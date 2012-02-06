@@ -205,6 +205,15 @@ MACRO(SET_COMMON_PROPERTIES name)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
         ENDIF(  )	
     
+        IF( ${CMAKE_COMPILER_IS_GNUCXX} )
+	    IF(NEKTAR_ENABLE_PROFILE)
+	        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+	        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pg")
+	        SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pg")
+                SET(LINK_FLAGS "${LINK_FLAGS} -pg")
+            ENDIF()
+	ENDIF()
+
     # Prevent including these common flags multiple times.
     IF (NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
         SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
@@ -287,12 +296,6 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
         SET_PROPERTY(TARGET ${name}
                      APPEND PROPERTY LINK_FLAGS ${MPI_LINK_FLAGS})
     ENDIF( NEKTAR_USE_MPI )
-
-    IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        IF(NEKTAR_ENABLE_PROFILE)
-            #TARGET_LINK_LIBRARIES(${name} Saturn)
-        ENDIF(NEKTAR_ENABLE_PROFILE)
-    ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
 
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
 		TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)

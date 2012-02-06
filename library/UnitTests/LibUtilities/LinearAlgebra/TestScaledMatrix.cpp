@@ -434,7 +434,7 @@ namespace Nektar
             typedef expt::Node<MatMultNode, expt::MultiplyOp, MatrixNode> RhsNode;
             typedef expt::Node<MatrixNode, expt::AddOp, RhsNode> Expression;
 
-            BOOST_MPL_ASSERT(( boost::mpl::not_<IsDgemmLeftSide<MatrixNode> > ));
+            //BOOST_MPL_ASSERT(( boost::mpl::not_<IsDgemmLeftSide<MatrixNode> > ));
             #endif
 
             Mat = Mat + DMat*InvMass*Transpose(DMat);

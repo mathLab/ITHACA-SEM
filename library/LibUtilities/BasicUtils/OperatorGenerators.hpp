@@ -77,6 +77,30 @@ namespace Nektar
     #define GET_TYPE(TypeName, TemplateTypeName, Number) \
         BOOST_PP_IF(BOOST_PP_GREATER(Number, 0), GET_TEMPLATED_TYPE, TypeName BOOST_PP_TUPLE_EAT(3))(TypeName, TemplateTypeName, Number)
     
+    #define DECLARE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::MultiplyOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
+         operator*(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs);
+         
+     #define DECLARE_DIVISION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::DivideOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
+         operator/(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs);
+         
+     #define DECLARE_ADDITION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::AddOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > > \
+         operator+(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs);
+     
+     #define DECLARE_SUBTRACTION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
+         PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \
+         expt::Node<expt::Node<GET_TYPE(LeftType, LhsType, NumLeftParams) >, expt::SubtractOp, expt::Node<GET_TYPE(RightType, RhsType, NumRightParams) > >  \
+         operator-(const GET_TYPE(LeftType, LhsType, NumLeftParams)& lhs, \
+               const GET_TYPE(RightType, RhsType, NumRightParams)& rhs);
+
  #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
      #define GENERATE_MULTIPLICATION_OPERATOR(LeftType, NumLeftParams, RightType, NumRightParams) \
          PP_ENUM_TWO_SETS_OF_TYPES(LhsType, NumLeftParams, RhsType, NumRightParams) \

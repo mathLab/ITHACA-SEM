@@ -39,6 +39,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <UnitTests/LibUtilities/ExpressionTemplates/CountedObjectExpression.h>
+#include <UnitTests/LibUtilities/ExpressionTemplates/ExpressionTemplateObjects.h>
+
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <ExpressionTemplates/Node.hpp>
@@ -47,123 +49,75 @@
 #include <boost/type_traits.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
 
+using namespace expt;
+
 namespace Nektar
 {
     namespace UnitTests
     {
+        typedef NekMatrix<double> Matrix;
+        BOOST_AUTO_TEST_CASE(TestConstantAndUnaryNodes)
+        {
+            typedef Node<TestObjectA> ConstantNode;
+            typedef Node<ConstantNode, NegateOp> UnaryNode;
 
-        //BOOST_AUTO_TEST_CASE(TestAssociativeTransform)
-        //{
-        //    typedef NekMatrix<double> Matrix;
+            typedef AssociativeTransform<ConstantNode>::TransformedNodeType ConstantResultNode;
+            typedef AssociativeTransform<UnaryNode>::TransformedNodeType UnaryResultNode;
 
-        //    {
-        //        // Base case tests.
-        //        typedef Node<Matrix> T;
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::TransformedNodeType, T >));
+            BOOST_MPL_ASSERT(( boost::is_same<ConstantResultNode, ConstantNode> ));
+            BOOST_MPL_ASSERT(( boost::is_same<UnaryResultNode, UnaryNode> ));
+        }
 
-        //        typedef Node<Matrix, expt::NegateOp> U;
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<U>::TransformedNodeType, U >));
-        //    }
-        //    {
-        //        // A+B -> A+B
-        //        typedef Node<Node<Matrix>, expt::AddOp, Node<Matrix> > T;
+        // A+B -> A+B
+        BOOST_AUTO_TEST_CASE(TestAssociativeTransformAPlusB)
+        {
+            typedef Node<TestObjectA> LeafNode;
 
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::LeftChildType, Node<Matrix> >));
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::RightChildType, Node<Matrix> >));
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::TransformedRightChildType, Node<Matrix> >));
+            typedef Node<LeafNode, AddOp, LeafNode > NodeType;
 
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::UpdatedLeftChildType, Node<Matrix> >));
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::FinalRightChildType, Node<Matrix> >));
+            typedef AssociativeTransform<NodeType>::TransformedNodeType ResultType;
+            typedef InverseAssociativeTransform<NodeType>::TransformedNodeType InverseResultType;
 
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<T>::TransformedNodeType, T> ));
-        //    }
+            BOOST_MPL_ASSERT(( boost::is_same<NodeType, ResultType>));
+            BOOST_MPL_ASSERT(( boost::is_same<NodeType, InverseResultType>));
+        }
 
-        //    {
-        //        // A + (B+C) -> (A+B) + C
-        //        typedef Node<Node<Matrix>, expt::AddOp, Node<Matrix> > R;
-        //        typedef Node<Matrix> L;
-        //        typedef Node<L, expt::AddOp, R> Expression;
+        // (A+B)+C -> (A+B)+C
+        // A+(B+C) -> (A+B)+C
+        BOOST_AUTO_TEST_CASE(TestAssociativeTransformThreeNodes)
+        {
+            typedef Node<TestObjectA> LeafNode;
+            typedef Node<LeafNode, AddOp, LeafNode> AddNode;
+            typedef Node<AddNode, AddOp, LeafNode> Test1Node;
+            typedef Node<LeafNode, AddOp, AddNode> Test2Node;
 
-        //        typedef Node<R, expt::AddOp, L> ExpectedType;
+            typedef AssociativeTransform<Test1Node>::TransformedNodeType Test1ResultNode;
+            typedef AssociativeTransform<Test2Node>::TransformedNodeType Test2ResultNode;
 
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<Expression>::TransformedNodeType, ExpectedType> ));
-        //    }
+            typedef InverseAssociativeTransform<Test1Node>::TransformedNodeType Test1InverseResultNode;
+            typedef InverseAssociativeTransform<Test2Node>::TransformedNodeType Test2InverseResultNode;
 
-        //    {
-        //        // (A+B) + (C+D) -> ((A+B)+C)+D
-        //        typedef Node<Node<Matrix>, expt::AddOp, Node<Matrix> > Binary;
-        //        typedef Node<Binary, expt::AddOp, Binary> Expression;
+            typedef Test1Node ExpectedResult1Node;
+            typedef Test1Node ExpectedResult2Node;
 
-        //        typedef Node<Binary, expt::AddOp, Node<Matrix> > FirstTerm;
-        //        typedef Node<FirstTerm, expt::AddOp, Node<Matrix> > ExpectedType;
+            typedef Test2Node ExpectedInverseResult1Node;
+            typedef Test2Node ExpectedInverseResult2Node;
 
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<Expression>::TransformedNodeType, ExpectedType> ));
-        //    }
-
-        //    {
-        //        // (A*B) + (C+D) -> ((A*B)+C)+D
-        //        typedef Node<Node<Matrix>, expt::MultiplyOp, Node<Matrix> > MultiplicationBinary;
-        //        typedef Node<Node<Matrix>, expt::AddOp, Node<Matrix> > AddBinary;
-        //        typedef Node<MultiplicationBinary, expt::AddOp, AddBinary> Expression;
-
-        //        typedef Node<MultiplicationBinary, expt::AddOp, Node<Matrix> > FirstTerm;
-        //        typedef Node<FirstTerm, expt::AddOp, Node<Matrix> > ExpectedType;
-
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<Expression>::TransformedNodeType, ExpectedType> ));
-        //    }
-
-        //    {
-        //        // (A+B) + (C*D) -> (A+B) + (C*D)
-        //        typedef Node<Node<Matrix>, expt::MultiplyOp, Node<Matrix> > MultiplicationBinary;
-        //        typedef Node<Node<Matrix>, expt::AddOp, Node<Matrix> > AddBinary;
-        //        typedef Node<AddBinary, expt::AddOp, MultiplicationBinary> Expression;
-
-        //        typedef Expression ExpectedType;
-
-        //        BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<Expression>::TransformedNodeType, ExpectedType> ));
-        //    }
-        //}
+            BOOST_MPL_ASSERT(( boost::is_same<Test1ResultNode, ExpectedResult1Node> ));
+            BOOST_MPL_ASSERT(( boost::is_same<Test2ResultNode, ExpectedResult2Node> ));
+            BOOST_MPL_ASSERT(( boost::is_same<Test1InverseResultNode, ExpectedInverseResult1Node> ));
+            BOOST_MPL_ASSERT(( boost::is_same<Test2InverseResultNode, ExpectedInverseResult2Node> ));
+        }
 
         BOOST_AUTO_TEST_CASE(TestAssociativeTransformConstantAndUnaryNodes)
         {
-            typedef NekMatrix<double> Matrix;
+            typedef Node<TestObjectA> T;
+            BOOST_MPL_ASSERT(( boost::is_same<AssociativeTransform<T>::TransformedNodeType, T >));
+            BOOST_MPL_ASSERT(( boost::is_same<InverseAssociativeTransform<T>::TransformedNodeType, T >));
 
-            typedef expt::Node<Matrix> T;
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<T>::TransformedNodeType, T >));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T>::TransformedNodeType, T >));
-
-            typedef expt::Node<Matrix, expt::NegateOp> U;
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<U>::TransformedNodeType, U >));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T>::TransformedNodeType, T >));
-        }
-
-
-        BOOST_AUTO_TEST_CASE(TestAssociativeTransformAPlusB)
-        {
-            typedef NekMatrix<double> Matrix;
-
-            // A+B -> A+B
-            typedef expt::Node<expt::Node<Matrix>, expt::AddOp, expt::Node<Matrix> > T;
-
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<T>::TransformedNodeType, T >));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T>::TransformedNodeType, T >));
-        }
-
-        BOOST_AUTO_TEST_CASE(TestAssociativeTransformAPlusBPlusC)
-        {
-            typedef NekMatrix<double> Matrix;
-
-            // A + (B+C) -> (A+B) + C
-            typedef expt::Node<Matrix> ConstantNode;
-            typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> BinaryNode;
-            typedef expt::Node<ConstantNode, expt::AddOp, BinaryNode> T0;
-            typedef expt::Node<BinaryNode, expt::AddOp, ConstantNode> T1;
-
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<T0>::TransformedNodeType, T1 >));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<T1>::TransformedNodeType, T1 >));
-
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T1>::TransformedNodeType, T0 >));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T0>::TransformedNodeType, T0 >));
+            typedef Node<T, NegateOp> U;
+            BOOST_MPL_ASSERT(( boost::is_same<AssociativeTransform<U>::TransformedNodeType, U >));
+            BOOST_MPL_ASSERT(( boost::is_same<InverseAssociativeTransform<T>::TransformedNodeType, T >));
         }
 
         BOOST_AUTO_TEST_CASE(TestAssociativeTransformAPlusBPlusCPlusD)
@@ -171,162 +125,51 @@ namespace Nektar
             typedef NekMatrix<double> Matrix;
 
             // (A+B) + (C+D) -> ((A+B)+C)+D
-            typedef expt::Node<Matrix> ConstantNode;
-            typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> BinaryNode;
-            typedef expt::Node<BinaryNode, expt::AddOp, BinaryNode> T0;
+            typedef Node<Matrix> ConstantNode;
+            typedef Node<ConstantNode, AddOp, ConstantNode> BinaryNode;
+            typedef Node<BinaryNode, AddOp, BinaryNode> T0;
             
-            typedef expt::Node<BinaryNode, expt::AddOp, ConstantNode> ExpectedLhs;
-            typedef expt::Node<ExpectedLhs, expt::AddOp, ConstantNode> T1;
+            typedef Node<BinaryNode, AddOp, ConstantNode> ExpectedLhs;
+            typedef Node<ExpectedLhs, AddOp, ConstantNode> T1;
 
             
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<T0>::TransformedNodeType, T1 >));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::AssociativeTransform<T1>::TransformedNodeType, T1 >));
+            BOOST_MPL_ASSERT(( boost::is_same<AssociativeTransform<T0>::TransformedNodeType, T1 >));
+            BOOST_MPL_ASSERT(( boost::is_same<AssociativeTransform<T1>::TransformedNodeType, T1 >));
 
             // ((A+B)+C)+D -> (A+B) + (C+D)
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T1>::TransformedNodeType, T0 >));
+            BOOST_MPL_ASSERT(( boost::is_same<InverseAssociativeTransform<T1>::TransformedNodeType, T0 >));
             
             // (A+B) + (C+D) -> (A + (B + (C+D))
-            typedef expt::Node<ConstantNode, expt::AddOp, BinaryNode> ExpectedRhs;
-            typedef expt::Node<ConstantNode, expt::AddOp, ExpectedRhs> T2;
-            BOOST_MPL_ASSERT(( boost::is_same<expt::InverseAssociativeTransform<T0>::TransformedNodeType, T2 >));
+            typedef Node<ConstantNode, AddOp, BinaryNode> ExpectedRhs;
+            typedef Node<ConstantNode, AddOp, ExpectedRhs> T2;
+            BOOST_MPL_ASSERT(( boost::is_same<InverseAssociativeTransform<T0>::TransformedNodeType, T2 >));
         }
 
-
-            //{
-            //    // (A*B) + (C+D) -> ((A*B)+C)+D
-            //    typedef expt::Node<expt::Node<Matrix>, expt::MultiplyOp, expt::Node<Matrix> > MultiplicationBinary;
-            //    typedef expt::Node<expt::Node<Matrix>, expt::AddOp, expt::Node<Matrix> > AddBinary;
-            //    typedef expt::Node<MultiplicationBinary, expt::AddOp, AddBinary> Expression;
-
-            //    typedef expt::Node<MultiplicationBinary, expt::AddOp, expt::Node<Matrix> > FirstTerm;
-            //    typedef expt::Node<FirstTerm, expt::AddOp, expt::Node<Matrix> > ExpectedType;
-
-            //    BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<Expression>::TransformedNodeType, ExpectedType> ));
-            //}
-
-            //{
-            //    // (A+B) + (C*D) -> (A+B) + (C*D)
-            //    typedef expt::Node<expt::Node<Matrix>, expt::MultiplyOp, expt::Node<Matrix> > MultiplicationBinary;
-            //    typedef expt::Node<expt::Node<Matrix>, expt::AddOp, expt::Node<Matrix> > AddBinary;
-            //    typedef expt::Node<AddBinary, expt::AddOp, MultiplicationBinary> Expression;
-
-            //    typedef Expression ExpectedType;
-
-            //    BOOST_MPL_ASSERT(( boost::is_same<typename AssociativeTreeTransform<Expression>::TransformedNodeType, ExpectedType> ));
-            //}
-        //}
-
-        BOOST_AUTO_TEST_CASE(TestSortAssociativeCommutativeClusterAPlusB)
+        // (A+B)+C -> (A+B)+C
+        // A+(B+C) -> A+(B+C)
+        BOOST_AUTO_TEST_CASE(TestNonAssociativeOperator)
         {
-        //    // A+B -> A+B
-        //    typedef NekMatrix<double> Matrix;
-        //    typedef expt::Node<Matrix> ConstantNode;
-        //    typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> T0;
-        //    typedef T0::Indices IndicesType;
+            typedef Node<TestObject> LeafNode;
+            typedef Node<LeafNode, AddOp, LeafNode> AddNode;
+            typedef Node<AddNode, AddOp, LeafNode> Test1Node;
+            typedef Node<LeafNode, AddOp, AddNode> Test2Node;
 
-        //    typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::TransformedNodeType ResultNodeType;
-        //    typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::TransformedIndicesType IndicesType;
+            typedef AssociativeTransform<Test1Node>::TransformedNodeType Test1ResultNode;
+            typedef AssociativeTransform<Test2Node>::TransformedNodeType Test2ResultNode;
 
-        //    BOOST_MPL_ASSERT(( boost::is_same<ResultNodeType, T0> ));
+            typedef InverseAssociativeTransform<Test1Node>::TransformedNodeType Test1InverseResultNode;
+            typedef InverseAssociativeTransform<Test2Node>::TransformedNodeType Test2InverseResultNode;
 
-        //    BOOST_STATIC_ASSERT(( boost::mpl::size<IndicesType>::type::value == 2 ));
-        //    BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 0>::type::value == 0 ));
-        //    BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 1>::type::value == 1 ));
-        }
+            typedef Test1Node ExpectedResult1Node;
+            typedef Test2Node ExpectedResult2Node;
 
-        BOOST_AUTO_TEST_CASE(TestSortAssociativeCommutativeClusterAPlusBPlusC)
-        {
-            // A+B+C -> A+B+C
-//            typedef NekMatrix<double> Matrix;
-//            typedef expt::Node<Matrix> ConstantNode;
-//            typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> BinaryNode;
-//            typedef expt::Node<BinaryNode, expt::AddOp, ConstantNode> T0;
-//            typedef T0::Indices IndicesType;
-//
-//            typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::TransformedNodeType ResultNodeType;
-//            typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::TransformedIndicesType IndicesType;
-//
-//            BOOST_MPL_ASSERT(( boost::is_same<ResultNodeType, T0> ));
-//
-//            BOOST_STATIC_ASSERT(( boost::mpl::size<IndicesType>::type::value == 3 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 0>::type::value == 0 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 1>::type::value == 1 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 2>::type::value == 2 ));
-        }
+            typedef Test1Node ExpectedInverseResult1Node;
+            typedef Test2Node ExpectedInverseResult2Node;
 
-        BOOST_AUTO_TEST_CASE(TestSortAssociativeCommutativeClusterAPlusBTimesC)
-        {
-            // A+BC -> BC+A
-//            typedef NekMatrix<double> Matrix;
-//            typedef expt::Node<Matrix> ConstantNode;
-//            typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> BinaryNode;
-//            typedef expt::Node<ConstantNode, expt::AddOp, BinaryNode> T0;
-//            typedef expt::Node<BinaryNode, expt::AddOp, ConstantNode> T1;
-//            typedef T0::Indices IndicesType;
-//
-//            BOOST_STATIC_ASSERT(( SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::Id == 1 )); 
-//            typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::TransformedNodeType ResultNodeType;
-//            typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::TransformedIndicesType ResultIndicesType;
-//
-//            BOOST_MPL_ASSERT(( boost::is_same<ResultNodeType, T1> ));
-//
-//            BOOST_STATIC_ASSERT(( boost::mpl::size<ResultIndicesType>::type::value == 3 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<ResultIndicesType, 0>::type::value == 1 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<ResultIndicesType, 1>::type::value == 2 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<ResultIndicesType, 2>::type::value == 0 ));
-        }
-
-        BOOST_AUTO_TEST_CASE(TestSortAssociativeCommutativeClusterAPlusBPlusCTimesD)
-        {
-            // A+B+CD -> CD+A+B
-//            typedef NekMatrix<double> Matrix;
-//            typedef expt::Node<Matrix> ConstantNode;
-//            typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> AddNode;
-//            typedef expt::Node<ConstantNode, expt::MultiplyOp, ConstantNode> MultiplyNode;
-//            typedef expt::Node<AddNode, expt::AddOp, MultiplyNode> T0;
-//            typedef T0::Indices T0Indices;
-//
-//            typedef expt::Node<MultiplyNode, expt::AddOp, ConstantNode> Temp1;
-//            typedef expt::Node<Temp1, expt::AddOp, ConstantNode> T1;
-//
-//            typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, T0Indices, 0>::TransformedNodeType ResultNodeType;
-//            typedef SortAssociativeCommutativeCluster<T0, expt::AddOp, T0Indices, 0>::TransformedIndicesType IndicesType;
-//
-//            BOOST_MPL_ASSERT(( boost::is_same<SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::Tree0, T0> ));
-//
-//            // Check first inverse associative transform.
-//            // A+B+CD -> A+(B+CD)
-//            typedef expt::Node<ConstantNode, expt::AddOp, MultiplyNode> B0;
-//            typedef expt::Node<ConstantNode, expt::AddOp, B0> B1;
-//            BOOST_MPL_ASSERT(( boost::is_same<SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::Tree1, B1> ));
-//
-//            // Check the commutative transform.
-//            // A+(B+CD) -> A + (CD+B)
-//            typedef expt::Node<MultiplyNode, expt::AddOp, ConstantNode> C0;
-//            typedef expt::Node<ConstantNode, expt::AddOp, C0> C1;
-//            
-//            BOOST_MPL_ASSERT(( boost::is_same<SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::Tree2, C1> ));
-//
-//            // Second associative to complete the transfomration.
-//            // A + (CB+B) -> (A + CB) + B
-//            typedef expt::Node<ConstantNode, expt::AddOp, MultiplyNode> D0;
-//            typedef expt::Node<D0, expt::AddOp, ConstantNode> D1;
-//            BOOST_MPL_ASSERT(( boost::is_same<SortAssociativeCommutativeCluster<T0, expt::AddOp, IndicesType, 0>::Tree3, D1> ));
-//
-//            BOOST_MPL_ASSERT(( boost::is_same<ResultNodeType, T1> ));
-//
-//            BOOST_STATIC_ASSERT(( boost::mpl::size<IndicesType>::type::value == 4 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 0>::type::value == 2 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 1>::type::value == 3 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 2>::type::value == 0 ));
-//            BOOST_STATIC_ASSERT(( boost::mpl::at_c<IndicesType, 3>::type::value == 1 ));
-        }
-
-        BOOST_AUTO_TEST_CASE(TestNegateOp)
-        {
-            NekVector<double> v(3);
-            
-            //NekVector<double> result = -v;
+            BOOST_MPL_ASSERT(( boost::is_same<Test1ResultNode, ExpectedResult1Node> ));
+            BOOST_MPL_ASSERT(( boost::is_same<Test2ResultNode, ExpectedResult2Node> ));
+            BOOST_MPL_ASSERT(( boost::is_same<Test1InverseResultNode, ExpectedInverseResult1Node> ));
+            BOOST_MPL_ASSERT(( boost::is_same<Test2InverseResultNode, ExpectedInverseResult2Node> ));
         }
     }
 }

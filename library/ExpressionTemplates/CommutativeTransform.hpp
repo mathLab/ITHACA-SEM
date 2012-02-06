@@ -33,9 +33,19 @@
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
 #include <ExpressionTemplates/Node.hpp>
+#include <ExpressionTemplates/CommutativeTraits.hpp>
+
+#include <boost/utility/enable_if.hpp>
 
 namespace expt
 {
+    /// \brief Utility metafunction to swap indices.
+    ///
+    /// For a given sequence, this metafunction swaps the segment [start, partition) with 
+    /// [partition, end).  
+    ///
+    /// For example, with the sequence 0, 1, 2, 3, 4, 5, start = 2, partition =4, end = 6, the 
+    /// result of this metafunction is the sequence 0, 1, 4, 5, 2, 3.
     template<typename InputSequence, unsigned int start, unsigned int partition, unsigned int end>
     struct Swap
     {
@@ -63,11 +73,17 @@ namespace expt
         
     };
 
-    template<typename NodeType, typename IndicesType, unsigned int IndexStart>
-    struct CommutativeTransform;
+    /// \brief Performs a commutative transform on a node if the operator is commutative.
+    template<typename NodeType, typename IndicesType, unsigned int IndexStart, typename enabled=void>
+    struct CommutativeTransform
+    {
+        typedef NodeType TransformedNodeType;
+        typedef IndicesType TransformedIndicesType;
+    };
 
     template<typename Left, typename Op, typename Right, typename IndicesType, unsigned int IndexStart>
-    struct CommutativeTransform<Node<Left, Op, Right>, IndicesType, IndexStart >
+    struct CommutativeTransform<Node<Left, Op, Right>, IndicesType, IndexStart,
+        typename boost::enable_if<CommutativeTraits<typename Left::ResultType, Op, typename Right::ResultType> >::type>
     {
         typedef Node<Left, Op, Right> BaseNode;
         typedef Node<Right, Op, Left> TransformedNodeType;
@@ -76,6 +92,7 @@ namespace expt
         static const unsigned int end = IndexStart + Left::TotalCount + Right::TotalCount;
         typedef typename Swap<IndicesType, IndexStart, partition, end>::type TransformedIndicesType;    
     };
+
 }
 
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

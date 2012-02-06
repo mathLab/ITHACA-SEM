@@ -125,6 +125,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT MatrixStorage GetType() const;
                                     
             LIB_UTILITIES_EXPORT NumberType Scale() const;
+            LIB_UTILITIES_EXPORT void SetScale(const NumberType&);
             
             LIB_UTILITIES_EXPORT const NumberType* GetRawPtr() const;
             
@@ -156,6 +157,8 @@ namespace Nektar
             NumberType m_scale;
     };
 
+    template<typename DataType>
+    LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<DataType, ScaledMatrixTag>& v);
     
     template<typename DataType>
     LIB_UTILITIES_EXPORT NekMatrix<DataType, ScaledMatrixTag>

@@ -36,246 +36,197 @@
 #include <ExpressionTemplates/Operators.hpp>
 #include <ExpressionTemplates/AssociativeTraits.hpp>
 #include <ExpressionTemplates/CommutativeTraits.hpp>
+#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
 #include <boost/typeof/typeof.hpp>
 #include  BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
-namespace Nektar
+namespace expt
 {
-     //The operators associated with this object are arbitrarily assigned to associative and/or
-     //commutative categories for testing purposes.
+    //The operators associated with this object are arbitrarily assigned to associative and/or
+    //commutative categories for testing purposes.
+    //
+    // The suffix encodes the properties the object posseses
+    // C - Commutative
+    // A - Associative
 
-    class ExpressionTemplateTestObject00
+    class TestObject
     {
         public:
-            ExpressionTemplateTestObject00() : value(0.0) {}
-            ExpressionTemplateTestObject00(double v) : value(v) {}
+            TestObject() : value(0.0) {}
+            TestObject(double v) : value(v) {}
+
+            template<typename T1, typename Op, typename T2>
+            TestObject(const Node<T1, Op, T2>& node)
+            {
+                ExpressionEvaluator::Evaluate(node, *this);
+            }
+
             double value;
     };
 
-    ExpressionTemplateTestObject00 Add(const ExpressionTemplateTestObject00& lhs, const ExpressionTemplateTestObject00& rhs)
-    {
-        return ExpressionTemplateTestObject00(lhs.value + rhs.value);
-    }
+    TestObject Add(const TestObject& lhs, const TestObject& rhs);
 
-    void AddEqual(ExpressionTemplateTestObject00& accumulator, const ExpressionTemplateTestObject00& rhs)
-    {
-        accumulator.value += rhs.value;
-    }
+    void AddEqual(TestObject& accumulator, const TestObject& rhs);
 
-    void Add(ExpressionTemplateTestObject00& accumulator, const ExpressionTemplateTestObject00& lhs, const ExpressionTemplateTestObject00& rhs)
-    {
-        accumulator.value = lhs.value + rhs.value;
-    }
+    void Add(TestObject& accumulator, const TestObject& lhs, const TestObject& rhs);
     
-    ExpressionTemplateTestObject00 Multiply(const ExpressionTemplateTestObject00& lhs, const ExpressionTemplateTestObject00& rhs)
-    {
-        return ExpressionTemplateTestObject00(lhs.value * rhs.value);
-    }
+    TestObject Multiply(const TestObject& lhs, const TestObject& rhs);
 
-    void MultiplyEqual(ExpressionTemplateTestObject00& accumulator, const ExpressionTemplateTestObject00& rhs)
-    {
-        accumulator.value *= rhs.value;
-    }
+    void MultiplyEqual(TestObject& accumulator, const TestObject& rhs);
 
-    void Multiply(ExpressionTemplateTestObject00& accumulator, const ExpressionTemplateTestObject00& lhs, const ExpressionTemplateTestObject00& rhs)
-    {
-        accumulator.value = lhs.value * rhs.value;
-    }
-}
-
-namespace expt
-{
-    template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject00, expt::AddOp, Nektar::ExpressionTemplateTestObject00, expt::AddOp> : public boost::false_type {};
-    template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject00, expt::AddOp, Nektar::ExpressionTemplateTestObject00> : public boost::false_type {};
+    void Multiply(TestObject& accumulator, const TestObject& lhs, const TestObject& rhs);
 
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject00, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject00, expt::MultiplyOp> : public boost::false_type {};
+    struct AssociativeTraits<TestObject, expt::AddOp, TestObject, expt::AddOp> : public boost::false_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject00, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject00> : public boost::false_type {};
-}
+    struct CommutativeTraits<TestObject, expt::AddOp, TestObject> : public boost::false_type {};
 
-namespace Nektar
-{
-    BOOST_TYPEOF_REGISTER_TYPE(ExpressionTemplateTestObject00);
-    GENERATE_ADDITION_OPERATOR(ExpressionTemplateTestObject00, 0, ExpressionTemplateTestObject00, 0);
-    GENERATE_MULTIPLICATION_OPERATOR(ExpressionTemplateTestObject00, 0, ExpressionTemplateTestObject00, 0);
+    template<>
+    struct AssociativeTraits<TestObject, expt::MultiplyOp, TestObject, expt::MultiplyOp> : public boost::false_type {};
+    template<>
+    struct CommutativeTraits<TestObject, expt::MultiplyOp, TestObject> : public boost::false_type {};
 
-    class ExpressionTemplateTestObject01
+    BOOST_TYPEOF_REGISTER_TYPE(TestObject);
+    DECLARE_ADDITION_OPERATOR(TestObject, 0, TestObject, 0);
+    DECLARE_MULTIPLICATION_OPERATOR(TestObject, 0, TestObject, 0);
+
+    std::ostream& operator<<(std::ostream& os, const TestObject& obj);
+
+    bool operator==(const TestObject& lhs, const TestObject& rhs);
+
+    class TestObjectC
     {
         public:
-            ExpressionTemplateTestObject01() : value(0.0) {}
-            ExpressionTemplateTestObject01(double v) : value(v) {}
+            TestObjectC() : value(0.0) {}
+            TestObjectC(double v) : value(v) {}
+
+            template<typename T1, typename Op, typename T2>
+            TestObjectC(const Node<T1, Op, T2>& node)
+            {
+                ExpressionEvaluator::Evaluate(node, *this);
+            }
+
             double value;
     };
 
-    ExpressionTemplateTestObject01 Add(const ExpressionTemplateTestObject01& lhs, const ExpressionTemplateTestObject01& rhs)
-    {
-        return ExpressionTemplateTestObject01(lhs.value + rhs.value);
-    }
+    TestObjectC Add(const TestObjectC& lhs, const TestObjectC& rhs);
 
-    void AddEqual(ExpressionTemplateTestObject01& accumulator, const ExpressionTemplateTestObject01& rhs)
-    {
-        accumulator.value += rhs.value;
-    }
+    void AddEqual(TestObjectC& accumulator, const TestObjectC& rhs);
 
-    void Add(ExpressionTemplateTestObject01& accumulator, const ExpressionTemplateTestObject01& lhs, const ExpressionTemplateTestObject01& rhs)
-    {
-        accumulator.value = lhs.value + rhs.value;
-    }
+    void Add(TestObjectC& accumulator, const TestObjectC& lhs, const TestObjectC& rhs);
 
-    ExpressionTemplateTestObject01 Multiply(const ExpressionTemplateTestObject01& lhs, const ExpressionTemplateTestObject01& rhs)
-    {
-        return ExpressionTemplateTestObject01(lhs.value * rhs.value);
-    }
+    TestObjectC Multiply(const TestObjectC& lhs, const TestObjectC& rhs);
 
-    void MultiplyEqual(ExpressionTemplateTestObject01& accumulator, const ExpressionTemplateTestObject01& rhs)
-    {
-        accumulator.value *= rhs.value;
-    }
+    void MultiplyEqual(TestObjectC& accumulator, const TestObjectC& rhs);
 
-    void Multiply(ExpressionTemplateTestObject01& accumulator, const ExpressionTemplateTestObject01& lhs, const ExpressionTemplateTestObject01& rhs)
-    {
-        accumulator.value = lhs.value * rhs.value;
-    }
-}
+    void Multiply(TestObjectC& accumulator, const TestObjectC& lhs, const TestObjectC& rhs);
 
-namespace expt
-{
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject01, expt::AddOp, Nektar::ExpressionTemplateTestObject01, expt::AddOp> : public boost::false_type {};
+    struct AssociativeTraits<TestObjectC, expt::AddOp, TestObjectC, expt::AddOp> : public boost::false_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject01, expt::AddOp, Nektar::ExpressionTemplateTestObject01> : public boost::true_type {};
+    struct CommutativeTraits<TestObjectC, expt::AddOp, TestObjectC> : public boost::true_type {};
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject01, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject01, expt::MultiplyOp> : public boost::false_type {};
+    struct AssociativeTraits<TestObjectC, expt::MultiplyOp, TestObjectC, expt::MultiplyOp> : public boost::false_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject01, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject01> : public boost::false_type {};
-}
+    struct CommutativeTraits<TestObjectC, expt::MultiplyOp, TestObjectC> : public boost::false_type {};
 
-namespace Nektar
-{
-    BOOST_TYPEOF_REGISTER_TYPE(ExpressionTemplateTestObject01);
-    GENERATE_ADDITION_OPERATOR(ExpressionTemplateTestObject01, 0, ExpressionTemplateTestObject01, 0);    
-    GENERATE_MULTIPLICATION_OPERATOR(ExpressionTemplateTestObject01, 0, ExpressionTemplateTestObject01, 0);    
+    BOOST_TYPEOF_REGISTER_TYPE(TestObjectC);
+    DECLARE_ADDITION_OPERATOR(TestObjectC, 0, TestObjectC, 0);    
+    DECLARE_MULTIPLICATION_OPERATOR(TestObjectC, 0, TestObjectC, 0);    
 
-    class ExpressionTemplateTestObject10
+    std::ostream& operator<<(std::ostream& os, const TestObjectC& obj);
+
+    bool operator==(const TestObjectC& lhs, const TestObjectC& rhs);
+
+    class TestObjectA
     {
         public:
-            ExpressionTemplateTestObject10() : value(0.0) {}
-            ExpressionTemplateTestObject10(double v) : value(v) {}
+            TestObjectA() : value(0.0) {}
+            TestObjectA(double v) : value(v) {}
+
+            template<typename T1, typename Op, typename T2>
+            TestObjectA(const Node<T1, Op, T2>& node)
+            {
+                ExpressionEvaluator::Evaluate(node, *this);
+            }
+
             double value;
     };
 
-    ExpressionTemplateTestObject10 Add(const ExpressionTemplateTestObject10& lhs, const ExpressionTemplateTestObject10& rhs)
-    {
-        return ExpressionTemplateTestObject10(lhs.value + rhs.value);
-    }
+    TestObjectA Add(const TestObjectA& lhs, const TestObjectA& rhs);
 
-    void AddEqual(ExpressionTemplateTestObject10& accumulator, const ExpressionTemplateTestObject10& rhs)
-    {
-        accumulator.value += rhs.value;
-    }
+    void AddEqual(TestObjectA& accumulator, const TestObjectA& rhs);
 
-    void Add(ExpressionTemplateTestObject10& accumulator, const ExpressionTemplateTestObject10& lhs, const ExpressionTemplateTestObject10& rhs)
-    {
-        accumulator.value = lhs.value + rhs.value;
-    }
+    void Add(TestObjectA& accumulator, const TestObjectA& lhs, const TestObjectA& rhs);
 
-    ExpressionTemplateTestObject10 Multiply(const ExpressionTemplateTestObject10& lhs, const ExpressionTemplateTestObject10& rhs)
-    {
-        return ExpressionTemplateTestObject10(lhs.value * rhs.value);
-    }
+    TestObjectA Multiply(const TestObjectA& lhs, const TestObjectA& rhs);
 
-    void MultiplyEqual(ExpressionTemplateTestObject10& accumulator, const ExpressionTemplateTestObject10& rhs)
-    {
-        accumulator.value *= rhs.value;
-    }
+    void MultiplyEqual(TestObjectA& accumulator, const TestObjectA& rhs);
 
-    void Multiply(ExpressionTemplateTestObject10& accumulator, const ExpressionTemplateTestObject10& lhs, const ExpressionTemplateTestObject10& rhs)
-    {
-        accumulator.value = lhs.value * rhs.value;
-    }
-}
+    void Multiply(TestObjectA& accumulator, const TestObjectA& lhs, const TestObjectA& rhs);
 
-namespace expt
-{
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject10, expt::AddOp, Nektar::ExpressionTemplateTestObject10, expt::AddOp> : public boost::true_type {};
+    struct AssociativeTraits<TestObjectA, expt::AddOp, TestObjectA, expt::AddOp> : public boost::true_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject10, expt::AddOp, Nektar::ExpressionTemplateTestObject10> : public boost::false_type {};
+    struct CommutativeTraits<TestObjectA, expt::AddOp, TestObjectA> : public boost::false_type {};
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject10, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject10, expt::MultiplyOp> : public boost::false_type {};
+    struct AssociativeTraits<TestObjectA, expt::MultiplyOp, TestObjectA, expt::MultiplyOp> : public boost::false_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject10, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject10> : public boost::false_type {};
-}
+    struct CommutativeTraits<TestObjectA, expt::MultiplyOp, TestObjectA> : public boost::false_type {};
 
-namespace Nektar
-{
-    BOOST_TYPEOF_REGISTER_TYPE(ExpressionTemplateTestObject10);
-    GENERATE_ADDITION_OPERATOR(ExpressionTemplateTestObject10, 0, ExpressionTemplateTestObject10, 0);
-    GENERATE_MULTIPLICATION_OPERATOR(ExpressionTemplateTestObject10, 0, ExpressionTemplateTestObject10, 0);
+    BOOST_TYPEOF_REGISTER_TYPE(TestObjectA);
+    DECLARE_ADDITION_OPERATOR(TestObjectA, 0, TestObjectA, 0);
+    DECLARE_MULTIPLICATION_OPERATOR(TestObjectA, 0, TestObjectA, 0);
 
-    class ExpressionTemplateTestObject11
+    std::ostream& operator<<(std::ostream& os, const TestObjectA& obj);
+
+    bool operator==(const TestObjectA& lhs, const TestObjectA& rhs);
+
+    class TestObjectAC
     {
         public:
-            ExpressionTemplateTestObject11() : value(0.0) {}
-            ExpressionTemplateTestObject11(double v) : value(v) {}
+            TestObjectAC() : value(0.0) {}
+            TestObjectAC(double v) : value(v) {}
+            
+            template<typename T1, typename Op, typename T2>
+            TestObjectAC(const Node<T1, Op, T2>& node)
+            {
+                ExpressionEvaluator::Evaluate(node, *this);
+            }
+
             double value;
     };
 
-    ExpressionTemplateTestObject11 Add(const ExpressionTemplateTestObject11& lhs, const ExpressionTemplateTestObject11& rhs)
-    {
-        return ExpressionTemplateTestObject11(lhs.value + rhs.value);
-    }
+    TestObjectAC Add(const TestObjectAC& lhs, const TestObjectAC& rhs);
 
-    void AddEqual(ExpressionTemplateTestObject11& accumulator, const ExpressionTemplateTestObject11& rhs)
-    {
-        accumulator.value += rhs.value;
-    }
+    void AddEqual(TestObjectAC& accumulator, const TestObjectAC& rhs);
 
-    void Add(ExpressionTemplateTestObject11& accumulator, const ExpressionTemplateTestObject11& lhs, const ExpressionTemplateTestObject11& rhs)
-    {
-        accumulator.value = lhs.value + rhs.value;
-    }
+    void Add(TestObjectAC& accumulator, const TestObjectAC& lhs, const TestObjectAC& rhs);
 
-    ExpressionTemplateTestObject11 Multiply(const ExpressionTemplateTestObject11& lhs, const ExpressionTemplateTestObject11& rhs)
-    {
-        return ExpressionTemplateTestObject11(lhs.value * rhs.value);
-    }
+    TestObjectAC Multiply(const TestObjectAC& lhs, const TestObjectAC& rhs);
 
-    void MultiplyEqual(ExpressionTemplateTestObject11& accumulator, const ExpressionTemplateTestObject11& rhs)
-    {
-        accumulator.value *= rhs.value;
-    }
+    void MultiplyEqual(TestObjectAC& accumulator, const TestObjectAC& rhs);
 
-    void Multiply(ExpressionTemplateTestObject11& accumulator, const ExpressionTemplateTestObject11& lhs, const ExpressionTemplateTestObject11& rhs)
-    {
-        accumulator.value = lhs.value * rhs.value;
-    }
-}
+    void Multiply(TestObjectAC& accumulator, const TestObjectAC& lhs, const TestObjectAC& rhs);
 
-namespace expt
-{
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject11, expt::AddOp, Nektar::ExpressionTemplateTestObject11, expt::AddOp> : public boost::true_type {};
+    struct AssociativeTraits<TestObjectAC, expt::AddOp, TestObjectAC, expt::AddOp> : public boost::true_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject11, expt::AddOp, Nektar::ExpressionTemplateTestObject11> : public boost::true_type {};
+    struct CommutativeTraits<TestObjectAC, expt::AddOp, TestObjectAC> : public boost::true_type {};
     template<>
-    struct AssociativeTraits<Nektar::ExpressionTemplateTestObject11, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject11, expt::MultiplyOp> : public boost::false_type {};
+    struct AssociativeTraits<TestObjectAC, expt::MultiplyOp, TestObjectAC, expt::MultiplyOp> : public boost::false_type {};
     template<>
-    struct CommutativeTraits<Nektar::ExpressionTemplateTestObject11, expt::MultiplyOp, Nektar::ExpressionTemplateTestObject11> : public boost::false_type {};
+    struct CommutativeTraits<TestObjectAC, expt::MultiplyOp, TestObjectAC> : public boost::false_type {};
 
-}
+    BOOST_TYPEOF_REGISTER_TYPE(TestObjectAC);
+    DECLARE_ADDITION_OPERATOR(TestObjectAC, 0, TestObjectAC, 0);
+    DECLARE_MULTIPLICATION_OPERATOR(TestObjectAC, 0, TestObjectAC, 0);
 
-namespace Nektar
-{
-    BOOST_TYPEOF_REGISTER_TYPE(ExpressionTemplateTestObject11);
-    GENERATE_ADDITION_OPERATOR(ExpressionTemplateTestObject11, 0, ExpressionTemplateTestObject11, 0);
-    GENERATE_MULTIPLICATION_OPERATOR(ExpressionTemplateTestObject11, 0, ExpressionTemplateTestObject11, 0);
+    std::ostream& operator<<(std::ostream& os, const TestObjectAC& obj);
 
+    bool operator==(const TestObjectAC& lhs, const TestObjectAC& rhs);
 }
     
 

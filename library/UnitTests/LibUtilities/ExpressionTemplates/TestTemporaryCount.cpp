@@ -93,8 +93,8 @@ namespace Nektar
             typedef expt::Node<Matrix> ConstantNode;
             typedef ConstantNode::Indices Indices;
 
-            typedef expt::RemoveUnecessaryTemporaries<ConstantNode, Indices, 0>::TransformedNodeType ResultNodeType;
-            typedef expt::RemoveUnecessaryTemporaries<ConstantNode, Indices, 0>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<ConstantNode>::TransformedNodeType ResultNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<ConstantNode>::TransformedIndicesType TransformedIndicesType;
 
             BOOST_STATIC_ASSERT(( boost::mpl::size<Indices>::type::value == 2 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
@@ -121,8 +121,8 @@ namespace Nektar
 
             typedef BinaryNode::Indices Indices;
 
-            typedef expt::RemoveUnecessaryTemporaries<BinaryNode, Indices, 0>::TransformedNodeType ResultNodeType;
-            typedef expt::RemoveUnecessaryTemporaries<BinaryNode, Indices, 0>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<BinaryNode>::TransformedNodeType ResultNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<BinaryNode>::TransformedIndicesType TransformedIndicesType;
 
             BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 2 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
@@ -143,8 +143,8 @@ namespace Nektar
 
             typedef expt::Node<BinaryNode, expt::AddOp, ConstantNode> ExpectedNodeType;
 
-            typedef expt::RemoveUnecessaryTemporaries<NodeType, Indices, 0>::TransformedNodeType ResultNodeType;
-            typedef expt::RemoveUnecessaryTemporaries<NodeType, Indices, 0>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<NodeType>::TransformedNodeType ResultNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<NodeType>::TransformedIndicesType TransformedIndicesType;
 
             BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 3 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
@@ -166,12 +166,12 @@ namespace Nektar
 
             typedef expt::Node<BinaryNode, expt::AddOp, ConstantNode> ExpectedNodeType;
 
-            typedef expt::RemoveUnecessaryTemporaries<NodeType, Indices, 0>::TransformedNodeType ResultNodeType;
-            typedef expt::RemoveUnecessaryTemporaries<NodeType, Indices, 0>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<NodeType>::TransformedNodeType ResultNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<NodeType>::TransformedIndicesType TransformedIndicesType;
 
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree0Type Tree0Type;
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree1Type Tree1Type;
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree2Type Tree2Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree0Type Tree0Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree1Type Tree1Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree2Type Tree2Type;
 
             BOOST_MPL_ASSERT(( boost::is_same<Tree0Type, NodeType> ));
             BOOST_MPL_ASSERT(( boost::is_same<Tree1Type, NodeType> ));
@@ -232,20 +232,22 @@ namespace Nektar
             typedef expt::Node<ABNode, expt::AddOp, CDENode> NodeType;
             typedef NodeType::Indices Indices;
 
-            typedef expt::Node<ABNode, expt::AddOp, DENode> B0;
-            typedef expt::Node<B0, expt::AddOp, ConstantNode> ExpectedNodeType;
+            typedef expt::Node<DENode, expt::AddOp, ConstantNode> B0;
+            typedef expt::Node<B0, expt::AddOp, ConstantNode> B1;
+            typedef expt::Node<B1, expt::AddOp, ConstantNode> ExpectedNodeType;
+            
 
             // Right node goes from (C+DE) -> (DE+C) after optimizing rhs.
             typedef expt::Node<DENode, expt::AddOp, ConstantNode> ExpectedRightNode0Type;
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::RightNode0Type RightNode0Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::RightNode0Type RightNode0Type;
             BOOST_MPL_ASSERT(( boost::is_same<ExpectedRightNode0Type, RightNode0Type> ));
             
             typedef expt::Node<ABNode, expt::AddOp, ExpectedRightNode0Type> ExpectedTree0Type;
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree0Type Tree0Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree0Type Tree0Type;
             BOOST_MPL_ASSERT(( boost::is_same<ExpectedTree0Type, Tree0Type> ));
 
             // Tree goes from (A+B) + (DE+C) -> ((A+B)+DE) + C after the associative transform.
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree1Type Tree1Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::Tree1Type Tree1Type;
             typedef Tree1Type::Right Tree1TypeRight;
             BOOST_MPL_ASSERT(( boost::is_same<ConstantNode, Tree1TypeRight> ));
 
@@ -254,19 +256,19 @@ namespace Nektar
             BOOST_MPL_ASSERT(( boost::is_same<ExpectedTree1TypeLeft, Tree1TypeLeft> ));
 
             // Optimzing the lhs causes no change
-            typedef expt::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::LeftNode2Type LeftNode2Type;
+            typedef expt::impl::RemoveUnecessaryTemporariesInternal<NodeType, Indices, 0>::LeftNode2Type LeftNode2Type;
             typedef expt::Node<ABNode, expt::AddOp, DENode> ExpectedTree2TypeLeft;
             BOOST_MPL_ASSERT(( boost::is_same<ExpectedTree2TypeLeft, LeftNode2Type> ));
 
 
-            typedef expt::RemoveUnecessaryTemporaries<NodeType, Indices, 0>::TransformedNodeType ResultNodeType;
-            typedef expt::RemoveUnecessaryTemporaries<NodeType, Indices, 0>::TransformedIndicesType TransformedIndicesType;
+            typedef expt::RemoveUnecessaryTemporaries<NodeType>::TransformedNodeType ResultNodeType;
+            typedef expt::RemoveUnecessaryTemporaries<NodeType>::TransformedIndicesType TransformedIndicesType;
 
             BOOST_STATIC_ASSERT(( boost::mpl::size<TransformedIndicesType>::type::value == 5 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 0 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 1>::type::value == 1 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 2>::type::value == 3 ));
-            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 3>::type::value == 4 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 0>::type::value == 3 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 1>::type::value == 4 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 2>::type::value == 1 ));
+            BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 3>::type::value == 0 ));
             BOOST_STATIC_ASSERT(( boost::mpl::at_c<TransformedIndicesType, 4>::type::value == 2 ));
             
             BOOST_MPL_ASSERT(( boost::is_same<ExpectedNodeType, ResultNodeType> ));

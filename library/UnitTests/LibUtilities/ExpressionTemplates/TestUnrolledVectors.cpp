@@ -133,5 +133,26 @@ namespace Nektar
         //    
         //    BOOST_CHECK_EQUAL(result, expectedResult);
         //}
+
+        BOOST_AUTO_TEST_CASE(TestVectorUnrolling)
+        {
+            //typedef expt::Node< NekVector<double> > ConstantNode;
+            //BOOST_MPL_ASSERT(( expt::NodeCanUnroll<ConstantNode> ));
+
+            //typedef expt::Node< double > ConstantDoubleNode;
+            //BOOST_MPL_ASSERT(( boost::mpl::not_<expt::NodeCanUnroll<ConstantDoubleNode> > ));
+
+            //typedef expt::Node<ConstantNode, expt::AddOp, ConstantNode> AddNode;
+            //BOOST_MPL_ASSERT(( expt::NodeCanUnroll<AddNode> ));
+
+            //typedef expt::Node<ConstantNode, expt::SubtractOp, ConstantNode> SubtractNode;
+            //BOOST_MPL_ASSERT(( expt::NodeCanUnroll<SubtractNode> ));
+
+            //typedef expt::Node<AddNode, expt::SubtractOp, AddNode> TwoLevelNode;
+            //BOOST_MPL_ASSERT(( expt::NodeCanUnroll<TwoLevelNode> ));
+
+            //typedef expt::Node<ConstantNode, expt::MultiplyOp, ConstantNode> MultiplyNode;
+            //BOOST_MPL_ASSERT(( boost::mpl::not_<expt::NodeCanUnroll<MultiplyNode> > ));
+        }
     }
 }

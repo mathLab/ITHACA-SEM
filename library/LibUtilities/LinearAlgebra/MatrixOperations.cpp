@@ -185,7 +185,29 @@ namespace Nektar
         }
     }
 
+    
+    template<typename DataType, typename RhsDataType, typename RhsMatrixType>
+    void AddEqualNegatedLhs(NekMatrix<DataType, StandardMatrixTag>& result,
+                     const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(result.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(result.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+        ASSERTL1(result.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(result.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+
+        for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
+            {
+                result(i,j) = -result(i,j) + rhs(i,j);
+            }
+        }
+    }
+
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(AddEqual, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(AddEqualNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
 
 
     template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
@@ -209,7 +231,29 @@ namespace Nektar
         }
     }
 
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void AddNegatedLhs(NekMatrix<DataType, StandardMatrixTag>& result,
+                       const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
+                       const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+
+        for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+            {
+                result(i,j) = -lhs(i,j) + rhs(i,j);
+            }
+        }
+    }
+
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Add, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(AddNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
     
             
     template<typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
@@ -246,7 +290,31 @@ namespace Nektar
         }
     }
 
+    template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
+    void SubtractNegatedLhs(NekMatrix<DataType, StandardMatrixTag>& result,
+                const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
+                const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+        ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+
+        for(unsigned int i = 0; i < lhs.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
+            {
+                result(i,j) = -lhs(i,j) - rhs(i,j);
+            }
+        }
+    }
+
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Subtract, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(SubtractNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+
+    
 
     template<typename DataType, typename RhsDataType, typename RhsMatrixType>
     void SubtractEqual(NekMatrix<DataType, StandardMatrixTag>& result,
@@ -268,7 +336,28 @@ namespace Nektar
         }
     }
 
+    template<typename DataType, typename RhsDataType, typename RhsMatrixType>
+    void SubtractEqualNegatedLhs(NekMatrix<DataType, StandardMatrixTag>& result,
+                          const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(result.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
+            boost::lexical_cast<std::string>(result.GetRows()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+        ASSERTL1(result.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
+            boost::lexical_cast<std::string>(result.GetColumns()) + std::string(" and ") +
+            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+
+        for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
+            {
+                result(i,j) = -result(i,j) - rhs(i,j);
+            }
+        }
+    }
+
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(SubtractEqual, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(SubtractEqualNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
     
     template<typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     NekMatrix<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType, StandardMatrixTag> 

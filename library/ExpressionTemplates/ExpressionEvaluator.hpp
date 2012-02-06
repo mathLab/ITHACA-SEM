@@ -34,6 +34,7 @@
 
 #include <ExpressionTemplates/Node.hpp>
 #include <ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp>
+#include <ExpressionTemplates/CreateFromTree.hpp>
 
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
 #include <boost/fusion/include/accumulate.hpp>
@@ -41,45 +42,42 @@
 
 namespace expt
 {
-    template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
-    struct CreateFromTree
-    {
-        template<typename ArgVectorType>
-        static DataType Apply(const ArgVectorType& tree)
-        {
-            return DataType();
-        }
-    };
-
-
-    template<typename NodeType, typename IndicesType, unsigned int index>
+    /// \brief EvaluateNode is responsible for evaluating the tree.
+    ///
+    /// The behavior of this class is different for each type of operator type,
+    /// so all of the work is performed in the specializations below.
+    template<typename NodeType, typename IndicesType, unsigned int index=0>
     struct EvaluateNode;
     
     
     //////////////////////////////////////////////
     // Constant 
     //////////////////////////////////////////////
+
+    /// \brief Evaluates a constant node.
     template<typename Type, typename IndicesType, unsigned int index>
     struct EvaluateNode<Node<Type, void, void>, IndicesType, index>
     {
         static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
+
         template<typename ResultType, typename ArgumentVectorType>
         static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
         {
-            // Will there ever be a case where accumulator and args[index] aren't the 
-            // same type and it isn't caught before here?
             accumulator = boost::fusion::at_c<MappedIndex>(args);
         }
     };
     
-
-    template<typename NodeType, typename OpType, typename IndicesType, unsigned int index>
-    struct EvaluateNode<Node<NodeType, OpType, void>, IndicesType, index>
+    //////////////////////////////////////////////
+    // Unary 
+    //////////////////////////////////////////////
+    template<typename ChildType, typename OpType, typename IndicesType, unsigned int index>
+    struct EvaluateNode<Node<ChildType, OpType, void>, IndicesType, index>
     {
         template<typename ResultType, typename ArgumentVectorType>
         static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
         {
-            EvaluateNode<NodeType, IndicesType, index>::Evaluate(accumulator, args);
+            // Evaluate the child, then apply the unary operation.
+            EvaluateNode<ChildType, IndicesType, index>::Evaluate(accumulator, args);
             OpType::Op(accumulator);
         }
     };
@@ -87,141 +85,158 @@ namespace expt
     //////////////////////////////////////////////////////////////////
     // Binary Nodes
     //////////////////////////////////////////////////////////////////
-    // - Right constant - no temporary.
-    // - Right unary or binary - temporary for the right.
-    // - Left result type is different than accumulator - temporary for left.
-    // 
-    // Four combinations.
-    // Left No Temp, Right no temp.  A = L, OpEqual(A, R).  Left is same result type, right is constant
-    // Left temp, right no temp.  T = L, A = Op(T, R).  Left is not same rsult type, right is constant
-    // Left no temp, right temp.  T = R, A = L, OpEqual(A, R).  Left is same rsult type, right is not constant
-    // Left temp, right temp. T1 = L, t2 = r, A = Op(T1, t2).  Left is not same result type, right is not constant.
-    
-
-    template<typename NodeType, typename IndicesType, unsigned int index>
-    struct EvaluateNodeWithTemporaryIfNeeded;
-    
-    template<typename Type, typename IndicesType, unsigned int index>
-    struct EvaluateNodeWithTemporaryIfNeeded<Node<Type, void, void>, IndicesType, index>
+    namespace impl
     {
-        typedef const Type& ResultType;
-        static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
-
-        template<typename ArgumentVectorType>
-        static ResultType Evaluate(const ArgumentVectorType& args)
-        {
-            return boost::fusion::at_c<MappedIndex>(args);
-        }
-    };
-    
-    template<typename Arg1, typename Op, typename Arg2, typename IndicesType, unsigned int index>
-    struct EvaluateNodeWithTemporaryIfNeeded<Node<Arg1, Op, Arg2>, IndicesType, index>
-    {
-        typedef Node<Arg1, Op, Arg2> NodeType;
-        typedef typename NodeType::ResultType ResultType;
+        // During binary node evaluation, there are time when the only difference between 
+        // two evaluation strategies is whether or not the right child is constant and 
+        // does not need a temporary, or is a unary/binary node and does need a temporary.
+        //
+        // This class takes care of these two scenarios.  
+        template<typename NodeType, typename IndicesType, unsigned int index>
+        struct EvaluateNodeWithTemporaryIfNeeded;
         
-        template<typename ArgumentVectorType>
-        static ResultType Evaluate(const ArgumentVectorType& args)
+        // Constant nodes don't need temporaries, so we can just return a reference.
+        template<typename Type, typename IndicesType, unsigned int index>
+        struct EvaluateNodeWithTemporaryIfNeeded<Node<Type, void, void>, IndicesType, index>
         {
-            ResultType temp = CreateFromTree<ResultType, NodeType, IndicesType, index>::Apply(args);
-            EvaluateNode<NodeType, IndicesType, index>::Evaluate(temp, args);
-            return temp;
-        }
-    };
+            typedef const Type& ResultType;
+            static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
 
+            template<typename ArgumentVectorType>
+            static ResultType Evaluate(const ArgumentVectorType& args)
+            {
+                return boost::fusion::at_c<MappedIndex>(args);
+            }
+        };
+        
+        // Anything else requires the construction of a temporary.
+        template<typename Arg1, typename Op, typename Arg2, typename IndicesType, unsigned int index>
+        struct EvaluateNodeWithTemporaryIfNeeded<Node<Arg1, Op, Arg2>, IndicesType, index>
+        {
+            typedef Node<Arg1, Op, Arg2> NodeType;
+            typedef typename NodeType::ResultType ResultType;
+            
+            template<typename ArgumentVectorType>
+            static ResultType Evaluate(const ArgumentVectorType& args)
+            {
+                ResultType temp = CreateFromTree<ResultType, NodeType, IndicesType, index>::Apply(args);
+                EvaluateNode<NodeType, IndicesType, index>::Evaluate(temp, args);
+                return temp;
+            }
+        };
+    }
     
-    // Binary specialization when both children are leaf nodes.  Using the general purpose
-    // algorithm results in unecessary temporaries.
-    template<typename L, typename Op, typename R, typename IndicesType, unsigned int index>
-    struct EvaluateNode<Node<Node<L, void, void>, Op, Node<R, void, void> >, IndicesType, index>
-    {
-        static const unsigned int LhsMappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
-        static const unsigned int RhsMappedIndex = boost::mpl::at_c<IndicesType, index+1>::type::value;
 
-        template<typename ResultType, typename ArgumentVectorType>
-        static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
-        {
-            Op::Op(accumulator, boost::fusion::at_c<LhsMappedIndex>(args),
-                boost::fusion::at_c<RhsMappedIndex>(args));
-
-            // Doesn't compile for m*v
-            //accumulator = boost::fusion::at_c<LhsMappedIndex>(args);
-            //Op::OpEqual(accumulator, boost::fusion::at_c<RhsMappedIndex>(args));
-
-            // Causes a temp.
-            //accumulator = Op::Op(boost::fusion::at_c<LhsMappedIndex>(args),
-            //    boost::fusion::at_c<RhsMappedIndex>(args));
-        }
-    };
-
-    // To override, provide a specialized version of this class.
+    // To override the default behavior during binary node evaluation, create a specialization of 
+    // this class with an Evaluate method defined as below.
     template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index, typename enabled = void>
     struct BinaryBinaryEvaluateNodeOverride : public boost::false_type {};
 
-    template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
-    struct EvaluateNode<Node<LhsType, Op, RhsType >, IndicesType, index>
+    namespace impl
     {
-        static const int rhsNodeIndex = index + LhsType::TotalCount;
-        typedef typename LhsType::ResultType LhsResultType;
-        typedef EvaluateNodeWithTemporaryIfNeeded<RhsType, IndicesType, rhsNodeIndex> EvaluateNodeWithTemporaryIfNeededType;
-        typedef typename EvaluateNodeWithTemporaryIfNeededType::ResultType RhsTempType;    
-    
-        typedef Node<LhsType, Op, RhsType> Expression;
+        template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index, typename enabled=void>
+        struct EvaluateBinaryNode
+        {
+            static const int rhsNodeIndex = index + LhsType::TotalCount;
+            typedef typename LhsType::ResultType LhsResultType;
+            typedef EvaluateNodeWithTemporaryIfNeeded<RhsType, IndicesType, rhsNodeIndex> EvaluateNodeWithTemporaryIfNeededType;
+            typedef typename EvaluateNodeWithTemporaryIfNeededType::ResultType RhsTempType;    
         
-        template<typename ResultType, typename ArgumentVectorType>
-        static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args, 
-            typename boost::enable_if
-            <
-                boost::mpl::and_
+            typedef Node<LhsType, Op, RhsType> Expression;
+            
+            // No override and the lhs and result type are the same, so the accumulator 
+            // can be passed to the lhs.
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args, 
+                typename boost::enable_if
                 <
-                    boost::mpl::not_<BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index> >,
-                    boost::is_same<ResultType, LhsResultType>
-                >
-            >::type* dummy = 0)
-        {
-            EvaluateNode<LhsType, IndicesType, index>::Evaluate(accumulator, args);
-            RhsTempType rhs = EvaluateNodeWithTemporaryIfNeededType::Evaluate(args);
-            Op::OpEqual(accumulator, rhs);
-        }
-        
-        template<typename ResultType, typename ArgumentVectorType>
-        static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args, 
-            typename boost::enable_if
-            <
-                boost::mpl::and_
+                    boost::mpl::and_
+                    <
+                        boost::mpl::not_<BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index> >,
+                        boost::is_same<ResultType, LhsResultType>
+                    >
+                >::type* dummy = 0)
+            {
+                EvaluateNode<LhsType, IndicesType, index>::Evaluate(accumulator, args);
+                RhsTempType rhs = EvaluateNodeWithTemporaryIfNeededType::Evaluate(args);
+                Op::OpEqual(accumulator, rhs);
+            }
+            
+            // No override and the lhs is not the same type as the result, so we need 
+            // to create a temporary to evaluate the lhs.
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args, 
+                typename boost::enable_if
                 <
-                    boost::mpl::not_<BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index> >,
-                    boost::mpl::not_<boost::is_same<ResultType, LhsResultType> >
-                >
-            >::type* dummy = 0)
-        {
-            LhsResultType temp = CreateFromTree<LhsResultType, LhsType, IndicesType, index>::Apply(args);
-            EvaluateNode<LhsType, IndicesType, index>::Evaluate(temp, args);
-            RhsTempType rhs = EvaluateNodeWithTemporaryIfNeededType::Evaluate(args);
-            accumulator = Op::Op(temp, rhs);
-        }
+                    boost::mpl::and_
+                    <
+                        boost::mpl::not_<BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index> >,
+                        boost::mpl::not_<boost::is_same<ResultType, LhsResultType> >
+                    >
+                >::type* dummy = 0)
+            {
+                LhsResultType temp = CreateFromTree<LhsResultType, LhsType, IndicesType, index>::Apply(args);
+                EvaluateNode<LhsType, IndicesType, index>::Evaluate(temp, args);
+                RhsTempType rhs = EvaluateNodeWithTemporaryIfNeededType::Evaluate(args);
+                Op::Op(accumulator, temp, rhs);
+            }
 
-        template<typename ResultType, typename ArgumentVectorType>
-        static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args, 
-            typename boost::enable_if
-            <
-                boost::mpl::and_
+            // There is a user supplied override that will be called.
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args, 
+                typename boost::enable_if
                 <
-                    BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index>,
+                    boost::mpl::and_
+                    <
+                        BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index>,
 
-                    // Note that this condition should always be true, so we don't include a 
-                    // version where ResultType and Expression::ResultType aren't the same, but we
-                    // need it so that some parameter of enable_if relies on the function template 
-                    // parameters.
-                    boost::is_same<ResultType, typename Expression::ResultType>
-                >
-            >::type* dummy = 0)
+                        // Note that this condition should always be true, so we don't include a 
+                        // version where ResultType and Expression::ResultType aren't the same, but we
+                        // need it so that some parameter of enable_if relies on the function template 
+                        // parameters.
+                        boost::is_same<ResultType, typename Expression::ResultType>
+                    >
+                >::type* dummy = 0)
+            {
+                return BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index>::Evaluate(accumulator, args);
+            }
+        };
+
+        // Binary, two constant children.  A+B
+        template<typename L, typename Op, typename R, typename IndicesType, unsigned int index>
+        struct EvaluateBinaryNode<Node<L, void, void>, Op, Node<R, void, void>, IndicesType, index>
         {
-            return BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index>::Evaluate(accumulator, args);
+            static const unsigned int LhsMappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
+            static const unsigned int RhsMappedIndex = boost::mpl::at_c<IndicesType, index+1>::type::value;
+
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
+            {
+                Op::Op(accumulator, boost::fusion::at_c<LhsMappedIndex>(args),
+                    boost::fusion::at_c<RhsMappedIndex>(args));
+            }
+        };
+    }
+
+    template<typename LhsType, typename OpType, typename RhsType, typename IndicesType, unsigned int index>
+    struct EvaluateNode<Node<LhsType, OpType, RhsType>, IndicesType, index>
+    {
+        template<typename ResultType, typename ArgumentVectorType>
+        static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
+        {
+            impl::EvaluateBinaryNode<LhsType, OpType, RhsType, IndicesType, index>::Evaluate(accumulator, args);
         }
     };
 
-    template<typename T, typename R, typename enabled = void>
+    // During evaluation, we need to detect scenarios such as 
+    // A = A*B + A
+    //
+    // If we evaluate A*B first, then the accumulator value will be overwritten and the 
+    // expression will be incorrect.  When an alias is detected, the expression evaluator
+    // creates a temporary for the accumulator.
+    //
+    // Users can specialize this if the default behaviors are not adequate.
+    template<typename T, typename R>
     struct IsAlias
     {
         static bool Apply(const T& lhs, const R& rhs)
@@ -241,6 +256,8 @@ namespace expt
 
     struct ExpressionEvaluator
     {
+        /// \brief A class that is used with boost::fusion::accumulate to iterate an expression's
+        /// argument list to determine if there are any aliases.
         template<typename T>
         struct ContainsAliasAccumulator
         {
@@ -249,6 +266,8 @@ namespace expt
             {
             }
 
+            // The ordering of the parameters passed to this class in boost::fusion::accumulate
+            // changed in boost 1.42
 #if BOOST_VERSION < 104200
             template<typename ElementType>
             unsigned int operator()(const ElementType& rhs, const unsigned int& accum) const
@@ -266,6 +285,7 @@ namespace expt
             const T& value;
         };
 
+        /// \brief Determines if the accumulator is aliased anywhere in the expression.
         template<typename Expression>
         static bool ContainsAlias(const Expression& expression, typename Expression::ResultType& accum)
         {
@@ -274,38 +294,47 @@ namespace expt
             return numAliases > 0;
         }
 
+        /// \brief Evaluates an expression, creating a new object as the accumulator.
+        ///
+        /// It is not always possible to modify the class definitions of the objects for which 
+        /// expression templates will be used.  In those cases, user code can call this evaluate 
+        /// method to evaluate the expression.
         template<typename Expression>
         static typename Expression::ResultType Evaluate(const Expression& expression)
         {
             typedef typename Expression::Indices Indices;
 
             // Perform the optimizations on the parse three.
-            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType OptimizedParseTree;
-            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+            typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedNodeType OptimizedParseTree;
+            typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
 
             typename Expression::ResultType result = CreateFromTree<typename Expression::ResultType, OptimizedParseTree, TransformedIndicesType, 0>::Apply(expression.GetData());
-            EvaluateNode<OptimizedParseTree, TransformedIndicesType, 0>::Evaluate(result, expression.GetData());
+            EvaluateNode<OptimizedParseTree, TransformedIndicesType>::Evaluate(result, expression.GetData());
             return result;
         }
 
+        /// \brief This method evaluates the expression, storing the results in accum.
+        ///
+        /// It is expected that this method is called from within a class constructor or assignment operator, 
+        /// with accum = *this.
         template<typename Expression>
         static void Evaluate(const Expression& expression, typename Expression::ResultType& accum)
         {
             typedef typename Expression::Indices Indices;
 
             // Perform the optimizations on the parse three.
-            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedNodeType OptimizedParseTree;
-            typedef typename RemoveUnecessaryTemporaries<Expression, Indices>::TransformedIndicesType TransformedIndicesType;
+            typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedNodeType OptimizedParseTree;
+            typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
 
             if( ContainsAlias(expression, accum) )
             {
                 typename Expression::ResultType temp = CreateFromTree<typename Expression::ResultType, OptimizedParseTree, TransformedIndicesType, 0>::Apply(expression.GetData());
-                EvaluateNode<OptimizedParseTree, TransformedIndicesType, 0>::Evaluate(temp, expression.GetData());
+                EvaluateNode<OptimizedParseTree, TransformedIndicesType>::Evaluate(temp, expression.GetData());
                 accum = temp;
             }
             else
             {
-                EvaluateNode<OptimizedParseTree, TransformedIndicesType, 0>::Evaluate(accum, expression.GetData());
+                EvaluateNode<OptimizedParseTree, TransformedIndicesType>::Evaluate(accum, expression.GetData());
             }
         } 
     };

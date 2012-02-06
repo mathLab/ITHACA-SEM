@@ -123,13 +123,13 @@ namespace Nektar
             typedef expt::Node<expt::Node<Nektar::NekMatrix<Nektar::NekMatrix<Nektar::NekMatrix<Nektar::NekDouble,Nektar::StandardMatrixTag>,Nektar::ScaledMatrixTag>,Nektar::BlockMatrixTag>,void,void>,expt::MultiplyOp,expt::Node<expt::Node<Nektar::NekVector<Nektar::NekDouble>,void,void>,expt::AddOp,expt::Node<Nektar::NekVector<Nektar::NekDouble>,void,void> > > TreeType;
             typedef expt::CreateVectorC<int, boost::mpl::int_, 3>::type Indices;
 
-            typedef expt::RemoveUnecessaryTemporaries<TreeType, Indices>::TransformedNodeType OptimizedParseTree;
+            typedef expt::RemoveUnecessaryTemporaries<TreeType>::TransformedNodeType OptimizedParseTree;
 
-            BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::RightNode0Type, expt::Node<expt::Node<Nektar::NekVector<Nektar::NekDouble>,void,void>,expt::AddOp,expt::Node<Nektar::NekVector<Nektar::NekDouble>,void,void> > > ));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree0Type, TreeType > ));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree1Type, TreeType > ));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree2Type, TreeType > ));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree3Type, TreeType > ));
+            BOOST_MPL_ASSERT(( boost::is_same<expt::impl::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::RightNode0Type, expt::Node<expt::Node<Nektar::NekVector<Nektar::NekDouble>,void,void>,expt::AddOp,expt::Node<Nektar::NekVector<Nektar::NekDouble>,void,void> > > ));
+            BOOST_MPL_ASSERT(( boost::is_same<expt::impl::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree0Type, TreeType > ));
+            BOOST_MPL_ASSERT(( boost::is_same<expt::impl::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree1Type, TreeType > ));
+            BOOST_MPL_ASSERT(( boost::is_same<expt::impl::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree2Type, TreeType > ));
+            BOOST_MPL_ASSERT(( boost::is_same<expt::impl::RemoveUnecessaryTemporariesInternal<TreeType, Indices, 0>::Tree3Type, TreeType > ));
             BOOST_MPL_ASSERT(( boost::is_same<TreeType, OptimizedParseTree> ));
 
             NekVector<NekDouble> result1 = (*m)*(lhs + (*m)*rhs - (*m)*rhs);

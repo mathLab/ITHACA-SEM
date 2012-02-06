@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <UnitTests/testNekMatrix.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>

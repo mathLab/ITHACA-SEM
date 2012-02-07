@@ -966,10 +966,7 @@ namespace Nektar
 
         if(dumpInitialConditions)
         {
-            std::string outname = m_sessionName +"_0.chk";
-            
-            // dump initial conditions to file
-            WriteFld(outname);
+            Checkpoint_Output(0);
         }
     }
     
@@ -1698,18 +1695,16 @@ namespace Nektar
      */
     void EquationSystem::Checkpoint_Output(const int n)
     {
-        char chkout[16] = "";
-        char procout[16] = "";
+        std::stringstream outname;
+        outname << m_sessionName << "_" << n;
 
-        sprintf(chkout, "%d", n);
-        std::string outname = m_sessionName + "_" + chkout;
         if (m_comm->GetSize() > 1)
         {
-            outname += "_P" + m_comm->GetRank();
+            outname << "_P" << m_comm->GetRank();
         }
-        outname += ".chk";
+        outname << ".chk";
 
-        WriteFld(outname);
+        WriteFld(outname.str());
     }
 
     /**

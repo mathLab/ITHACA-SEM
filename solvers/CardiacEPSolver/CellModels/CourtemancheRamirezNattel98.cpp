@@ -251,7 +251,7 @@ namespace Nektar
         Vmath::Vsub(n, outarray[18], 1, tmp_I_kur, 1, outarray[18], 1);
 
         // Rapid delayed outward rectifier K+ current
-        Array<OneD, NekDouble> &tmp_I_Kr = outarray[16];
+        Array<OneD, NekDouble> &tmp_I_Kr = outarray[15];
         Vmath::Sadd(n, 15.0, inarray[0], 1, tmp_I_Kr, 1);
         Vmath::Smul(n, 1.0/22.4, tmp_I_Kr, 1, tmp_I_Kr, 1);
         Vmath::Vexp(n, tmp_I_Kr, 1, tmp_I_Kr, 1);

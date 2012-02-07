@@ -55,8 +55,14 @@ namespace Nektar
             eGLL_Lagrange, //!< Lagrange for SEM basis \f$ h_p(z_i) \f$
             eLegendre,     //!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
             eChebyshev,    //!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
-            eMonomial,     //!< Monomial polynomials 
-			eLagrange,
+            eMonomial,     //!< Monomial polynomials \f$ L_p(z_i) = z_i^{p}\f$
+			eLagrange,     //!< Lagrange Polynomials
+            eDG_DG_Left,   //!< Derivative of the left correction function for DG FR  \f$ dGL_{p}(z_i) \f$
+            eDG_DG_Right,  //!< Derivative of the Right correction function for DG FR \f$ dGR_{p}(z_i) \f$
+            eDG_SD_Left,   //!< Derivative of the left correction function for SD FR  \f$ dGL_{p}(z_i) \f$
+            eDG_SD_Right,  //!< Derivative of the Right correction function for SD FR \f$ dGR_{p}(z_i) \f$
+            eDG_HU_Left,   //!< Derivative of the left correction function for HU FR  \f$ dGL_{p}(z_i) \f$
+            eDG_HU_Right,  //!< Derivative of the Right correction function for HU FR \f$ dGR_{p}(z_i) \f$
             SIZE_BasisType //!< Length of enum list
         };
 
@@ -74,7 +80,13 @@ namespace Nektar
             "Legendre",
             "Chebyshev",
             "Monomial",
-			"Lagrange"
+			"Lagrange",
+            "DG_DG_Left",
+            "DG_DG_Right",
+            "DG_SD_Left",
+            "DG_SD_Right",
+            "DG_HU_Left"
+            "DG_HU_Right"
         };
 
         enum PointsType
@@ -94,9 +106,9 @@ namespace Nektar
             eGaussRadauMAlpha2Beta0,        //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
             eGaussKronrodLegendre,          //!<  1D Gauss-Kronrod-Legendre quadrature points
             eGaussRadauKronrodMLegendre,    //!<  1D Gauss-Radau-Kronrod-Legendre quadrature points, pinned at x=-1
-	    eGaussRadauKronrodMAlpha1Beta0, //!<  1D Gauss-Radau-Kronrod-Legendre pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
-	    eGaussLobattoKronrodLegendre,   //!<  1D Lobatto Kronrod quadrature points
-	    ePolyEvenlySpaced,              //!<  1D Evenly-spaced points using Lagrange polynomial
+            eGaussRadauKronrodMAlpha1Beta0, //!<  1D Gauss-Radau-Kronrod-Legendre pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
+            eGaussLobattoKronrodLegendre,   //!<  1D Lobatto Kronrod quadrature points
+            ePolyEvenlySpaced,              //!<  1D Evenly-spaced points using Lagrange polynomial
             eFourierEvenlySpaced,           //!<  1D Evenly-spaced points using Fourier Fit
             eNodalTriElec,                  //!<  2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
@@ -121,10 +133,10 @@ namespace Nektar
             "GaussRadauMAlpha0Beta2",
             "GaussRadauMAlpha1Beta0",
             "GaussRadauMAlpha2Beta0",
-	    "GaussKronrodLegendre",
-	    "GaussRadauKronrodMLegendre",
-	    "GaussRadauKronrodMAlpha1Beta0",
-	    "GaussLobattoKronrodLegendre",
+            "GaussKronrodLegendre",
+            "GaussRadauKronrodMLegendre",
+            "GaussRadauKronrodMAlpha1Beta0",
+            "GaussLobattoKronrodLegendre",
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
             "NodalTriElec",

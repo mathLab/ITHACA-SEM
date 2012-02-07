@@ -110,9 +110,15 @@ namespace Nektar
                 case eLegendre:
                 case eChebyshev:
                 case eMonomial:
-                    value = m_nummodes;
-                    break;
-
+                case eDG_DG_Left:
+                case eDG_DG_Right:
+                case eDG_SD_Left:
+                case eDG_SD_Right:
+                case eDG_HU_Left:
+                case eDG_HU_Right:
+                        value = m_nummodes;
+                        break;
+                        
                 default:
                     NEKERROR(ErrorUtil::efatal,"Unknown basis being used");
                 }
@@ -168,7 +174,7 @@ namespace Nektar
             /// Determine if basis has collocation properties.
             LIB_UTILITIES_EXPORT  bool  Collocation() const;
 
-            //Overloaded Operators
+            /// Overloaded Operators
             LIB_UTILITIES_EXPORT friend bool operator  == (const BasisKey& x, const BasisKey& y);
             LIB_UTILITIES_EXPORT friend bool operator  == (const BasisKey* x, const BasisKey& y);
             LIB_UTILITIES_EXPORT friend bool operator  == (const BasisKey& x, const BasisKey *y);
@@ -325,12 +331,12 @@ namespace Nektar
             LIB_UTILITIES_EXPORT virtual void Initialize();
 
         protected:
-            BasisKey            m_basisKey; ///< Basis specification.
-            PointsSharedPtr     m_points;   ///< Set of points.
-            Array<OneD, NekDouble> m_bdata; ///< Basis definition.
-            Array<OneD, NekDouble> m_dbdata;///< Derivative Basis definition.
+            BasisKey                m_basisKey; ///< Basis specification.
+            PointsSharedPtr         m_points;   ///< Set of points.
+            Array<OneD, NekDouble>  m_bdata;    ///< Basis definition.
+            Array<OneD, NekDouble>  m_dbdata;   ///< Derivative Basis definition.
             NekManager<BasisKey, NekMatrix<NekDouble>, BasisKey::opLess>
-                                m_InterpManager;
+                                    m_InterpManager;
 
         private:
             /// Private constructor with BasisKey.

@@ -179,7 +179,7 @@ namespace Nektar
 		
         
 		//! 1.3) Calculating the discontinous flux fd = (Adv * Ud) = (A * Ud)
-		Vmath::Vmul(nq,Adv[0],1,inarray[0],1,fd,1);
+		Vmath::Vmul(nq, Adv[0], 1, inarray[0], 1, fd, 1);
 		
         
 		//! 1.4) Taking the gradient of gradfd = d(fd)/dx on the reference element
@@ -202,12 +202,13 @@ namespace Nektar
         
 		//! 1.7) Calculate the interface fluxes fi
 		RiemannSolver(udi, fi);
-        		        
+        		
+        //SpatialDomains::GeomFactors1D::GeomFactors1D(eRegular, 1, xi, Basis); 
+        
 		//! 1.8) Calculate the final correction flux gradient ==> (df/dx) and putting 
         //! it into the output vector ==> outarray
 		FluxesReconstruction(gradfd, fdi, fi, outarray[0]);
-
-        //! Temporary scale factor for the solution (multiplication for the Jacobian)
+		
         Vmath::Smul(nq, 10.0, outarray[0], 1.0, outarray[0], 1.0);
 		
         // 1.9) Negate advection term ?
@@ -300,15 +301,64 @@ namespace Nektar
     void Advection1DFR::GFunctionsGrad(Array<OneD, NekDouble> & dGL,
 									   Array<OneD, NekDouble> & dGR)
 	{	
-		LibUtilities::BasisSharedPtr Basis;		
+		LibUtilities::BasisSharedPtr Basis;
+		LibUtilities::BasisSharedPtr BasisFR_Left;
+        LibUtilities::BasisSharedPtr BasisFR_Right;
 		Basis = Domain->GetExp(0)->GetBasis(0);
-		StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
 		
+        // How many modes:
 		int k  = Basis->GetNumModes();
         
+        // How many points:
 		int np = Basis->GetNumPoints();
-		
-		Array<OneD,NekDouble> zeros(np,0.0);
+        
+        // Which type of points:
+        const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
+        
+        if      (GFtype == "DG")
+        {
+            std::cout << "\n======= Scheme recovered: DG ========" << std::endl;
+            const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_DG_Left,  np, FRpoints);
+            const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_DG_Right, np, FRpoints);
+            
+            BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
+            BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
+            
+            dGL = BasisFR_Left ->GetBdata();
+            dGR = BasisFR_Right->GetBdata();
+        }
+        
+		else if (GFtype == "SD")
+        {   
+            std::cout << "\n======= Scheme recovered: SD ========" << std::endl;
+            const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_SD_Left,  np, FRpoints);
+            const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_SD_Right, np, FRpoints);
+            
+            BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
+            BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
+            
+            dGL = BasisFR_Left ->GetBdata();
+            dGR = BasisFR_Right->GetBdata();
+        }
+        
+		else if (GFtype == "HU")
+        { 
+            std::cout << "\n======= Scheme recovered: HU ========" << std::endl;
+            const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_HU_Left,  np, FRpoints);
+            const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_HU_Right, np, FRpoints);
+            
+            BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
+            BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
+            
+            dGL = BasisFR_Left ->GetBdata();
+            dGR = BasisFR_Right->GetBdata();
+        }
+        
+		else                    {ASSERTL0(false,"options for the g functions are DG, SD and HU");}
+
+/*		
+        
+        Array<OneD,NekDouble> zeros(np,0.0);
 		
 		zeros = Basis->GetZ();
 		
@@ -437,7 +487,7 @@ namespace Nektar
 		Vmath::Vadd(np,plot_dLk,1,plot_dGR,1,plot_dGR,1);
 		Vmath::Smul(np,0.5,plot_dGR,1,plot_dGR,1);
         
-
+*/
     
         // Derivative of plot_gL = plot_dgL
 		//StdSeg.PhysDeriv(plot_GL,plot_dGL);
@@ -445,8 +495,8 @@ namespace Nektar
         // Derivative of plot_gR = plot_dgR
 		//StdSeg.PhysDeriv(plot_GR,plot_dGR);
 		
-        ofstream outfile;
-		outfile.open("GL.dat");
+    //    ofstream outfile;
+/*		outfile.open("GL.dat");
 		for(int i = 0; i < np; i++)
 		{
 			outfile << scientific 
@@ -500,8 +550,7 @@ namespace Nektar
 			<< endl;
 		}
 		outfile << endl << endl;
-		outfile.close();
-    
+		outfile.close();*/
     }
 
     
@@ -542,7 +591,7 @@ namespace Nektar
 		{
 			outfile << scientific 
 			<< setw (17) 
-			<< setprecision(10) 
+			<< setprecision(16) 
 			<< x[i]
 			<< "  " 
 			<< approx[i] 
@@ -588,10 +637,6 @@ namespace Nektar
 		outfile << "% ========= Matlab Script File =========" << endl;
 		outfile << "clc; clear all; close all;"               << endl;                       
 		outfile << "solution    = load('Solution.dat');"      << endl;                           
-		outfile << "gL_function = load('GL.dat');"            << endl;
-        outfile << "gR_function = load('GR.dat');"            << endl; 
-        outfile << "dgL_function = load('dGL.dat');"          << endl;
-        outfile << "dgR_function = load('dGR.dat');"          << endl;
 		outfile << "x           = solution(1:end,1);"         << endl;                    
 		outfile << "approx      = solution(1:end,2);"         << endl;                        
 		outfile << "exact       = solution(1:end,3);"         << endl;
@@ -646,9 +691,9 @@ namespace Nektar
 		cout << "Initial Condition           : " << InitCond->GetEquation()<< endl;
 
 		cout << endl;
-		cout << "Exact Solution              : " << ExSol->GetEquation()<< endl;
-		cout << "Linf error                  : " << L2                  << endl;
-		cout << "L2   error                  : " << Linf                << endl;
+		cout << "Exact Solution              : " << ExSol->GetEquation()    << endl;
+		cout << "Linf error                  : " << setprecision(16) << L2  << endl;
+		cout << "L2   error                  : " << setprecision(16) << Linf<< endl;
 	}
 
     

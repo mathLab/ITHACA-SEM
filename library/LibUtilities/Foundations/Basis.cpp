@@ -512,14 +512,14 @@ namespace Nektar
             case eGLL_Lagrange:
                 {
                     mode = m_bdata.data();
-                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
+                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussLobattoLegendre)];
                     const Array<OneD, const NekDouble>& zp(m_points->GetZ());
-
-                    for (p=0; p<numModes; ++p,mode += numPoints)
+                    
+                    for (p=0; p<numModes; ++p, mode += numPoints)
                     {
                         for(q = 0; q < numPoints; ++q)
                         {
-                            mode[q] = Polylib::hglj(p,z[q],zp.data(),numModes,0.0,0.0);
+                            mode[q] = Polylib::hglj(p, z[q], zp.data(), numModes, 0.0, 0.0);
                         }
                     }
 
@@ -530,17 +530,18 @@ namespace Nektar
 
                 }//end scope
                 break;
+                    
 			case eLagrange:
                 {
                     mode = m_bdata.data();
-                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes,eGaussGaussLegendre)];
+                    boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
                     const Array<OneD, const NekDouble>& zp(m_points->GetZ());
 					
                     for (p=0; p<numModes; ++p,mode += numPoints)
                     {
                         for(q = 0; q < numPoints; ++q)
                         {
-                            mode[q] = Polylib::hglj(p,z[q],zp.data(),numModes,0.0,0.0);
+                            mode[q] = Polylib::hglj(p, z[q], zp.data(), numModes, 0.0, 0.0);
                         }
                     }
 					
@@ -551,6 +552,7 @@ namespace Nektar
 					
                 }//end scope
 				break;
+                    
             case eFourier:
 
                 ASSERTL0(numModes%2==0, "Fourier modes should be a factor of 2");
@@ -615,7 +617,7 @@ namespace Nektar
                     // define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
                                 m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
-                }
+                }//end scope
                 break;
                     
             /** \brief Left derivative of the correction function for FR DG method (see J Sci Comput (2011) 47: 50–72)
@@ -625,20 +627,19 @@ namespace Nektar
             */
             case eDG_DG_Left:
                 {                                        
-                    // Number of modes (here the left and right polynomials DG_DG of degree p + 1 are stored) 
+                    // Number of modes (here the left polynomial DG_DG_Left of degree p is stored) 
                     mode = m_bdata.data();
                     int p = numModes - 1;
-                    std::cout << "numModes = " << numModes << std::endl;
-                    
-                    // Auxiliary vectors to build up the auxiliary Legendre polynomials
+
+                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
                     Array<OneD,NekDouble> dLp   (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
 
-                    // Function sign to build up DG_DG
+                    // Function sign to build up DG_DG_Left
                     NekDouble sign = pow(-1.0, p);
                     
-                    // Factor to build up DG_Left_DG recovering the DG scheme
+                    // Factor to build up DG_DG_Left recovering the DG scheme
                     NekDouble etap = 0.0;
                     
                     // Derivative of the Legendre polynomials
@@ -649,7 +650,7 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
                     
-                    // Building the DG_Left_DG                    
+                    // Building the DG_DG_Left                    
                     for(int i = 0; i < numPoints; ++i)
                     {
                         mode[i]  = etap * dLpm[i];
@@ -657,18 +658,7 @@ namespace Nektar
                         mode[i]  = dLp[i] - mode[i];
                         mode[i]  = 0.5 * sign * m_bdata[i]; 
                     }
-                    
-                    // normalise
-                    //scal = sqrt(0.5*(2.0*p+1.0));
-                    //for(i = 0; i < numPoints; ++i)
-                    //{
-                      //  mode[i] *= scal;
-                    //}
-                
-                    // define derivative basis
-                    //Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                      //          m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);   
-                }
+                }//end scope
                 break;
                     
                     
@@ -678,20 +668,20 @@ namespace Nektar
                      
                 */
                 case eDG_DG_Right:
-                {                                        
-                    // Number of modes (here the left and right polynomials DG_DG of degree p + 1 are stored) 
+                {            
+                    // Number of modes (here the right polynomial DG_DG_Right of degree p is stored) 
                     mode = m_bdata.data();
                     int p = numModes - 1;
-
-                    // Auxiliary vectors to build up the auxiliary Legendre polynomials
+                    
+                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
                     Array<OneD,NekDouble> dLp   (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
                     
-                    // Function sign to build up DG_DG
+                    // Function sign to build up DG_DG_Right
                     NekDouble sign = pow(-1.0, p);
                     
-                    // Factor to build up DG_Left_DG recovering the DG scheme
+                    // Factor to build up DG_DG_Right recovering the DG scheme
                     NekDouble etap = 0.0;
                     
                     // Derivative of the Legendre polynomials
@@ -702,7 +692,7 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
                     
-                    // Building the DG_Right                    
+                    // Building the DG_DG_Right                    
                     for(int i = 0; i < numPoints; ++i)
                     {
                         mode[i]  = etap * dLpm[i];
@@ -710,18 +700,8 @@ namespace Nektar
                         mode[i] += dLp[i];
                         mode[i]  = 0.5 * mode[i]; 
                     }
-                    
-                    // normalise
-                    //scal = sqrt(0.5*(2.0*p+1.0));
-                    //for(i = 0; i < numPoints; ++i)
-                    //{
-                    //  mode[i] *= scal;
-                    //}
-                    
-                    // define derivative basis
-                    //Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                    //          m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);   
-                }
+  
+                }//end scope
                 break;
                     
                  
@@ -732,22 +712,22 @@ namespace Nektar
                 */
                 case eDG_SD_Left:
                 {              
-                    // Number of modes (here the left and right polynomials DG_SD of degree p + 1 are stored)
+                    // Number of modes (here the left polynomial DG_SD_Left of degree p is stored)
                     mode = m_bdata.data();
                     int p = numModes - 1;
 
-                    // Auxiliary vectors to build up the auxiliary Legendre polynomials
+                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
                     Array<OneD,NekDouble> dLp   (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
                     
-                    // Function sign to build up DG_Left_SD
+                    // Function sign to build up DG_SD_Left
                     NekDouble sign = pow(-1.0, p);
                     
-                    // Factor to build up DG_Left_SD recovering the SD scheme
+                    // Factor to build up DG_SD_Left recovering the SD scheme
                     NekDouble etap = p / (1.0 + p);
                     
-                    // Factor to build up DG_Left_SD
+                    // Factor to build up DG_SD_Left
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     
                     // Derivative of the Legendre polynomials
@@ -758,7 +738,7 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
                     
-                    // Building the DG_Left_SD
+                    // Building the DG_SD_Left
                     for(i = 0; i < numPoints; ++i)
                     {
                         mode[i]  = etap * dLpm[i];
@@ -767,18 +747,7 @@ namespace Nektar
                         mode[i]  = dLp[i] - mode[i];
                         mode[i]  = 0.5 * sign * mode[i]; 
                     }
-                    
-                    // normalise
-                    //scal = sqrt(0.5*(2.0*p+1.0));
-                    //for(i = 0; i < numPoints; ++i)
-                    //{
-                    //  mode[i] *= scal;
-                    //}
-                    
-                    // define derivative basis
-                    //Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                    //          m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);   
-                }
+                }//end scope
                 break;
                     
                 /** \brief Right derivative of the correction function for FR SD method (see J Sci Comput (2011) 47: 50–72)
@@ -788,22 +757,22 @@ namespace Nektar
                 */
                 case eDG_SD_Right:
                 {              
-                    // Number of modes (here the left and right polynomials DG_SD of degree p + 1 are stored)
+                    // Number of modes (here the right polynomials DG_SD_Right of degree p is stored)
                     mode = m_bdata.data();
                     int p = numModes - 1;
 
-                    // Auxiliary vectors to build up the auxiliary Legendre polynomials
+                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
                     Array<OneD,NekDouble> dLp   (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
                     
-                    // Function sign to build up DG_Left_SD
+                    // Function sign to build up DG_SD_Right
                     NekDouble sign = pow(-1.0, p);
                     
-                    // Factor to build up DG_Left_SD recovering the SD scheme
+                    // Factor to build up DG_SD_Right recovering the SD scheme
                     NekDouble etap = p / (1.0 + p);
                     
-                    // Factor to build up DG_Left_SD
+                    // Factor to build up DG_SD_Right
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     
                     // Derivative of the Legendre polynomials
@@ -814,7 +783,7 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
 
-                    // Building the DG_Right_SD
+                    // Building the DG_SD_Right
                     for(i = 0; i < numPoints; ++i)
                     {
                         mode[i]  = etap * dLpm[i];
@@ -823,18 +792,7 @@ namespace Nektar
                         mode[i] += dLp[i];
                         mode[i]  = 0.5 * mode[i]; 
                     }
-                    
-                    // normalise
-                    //scal = sqrt(0.5*(2.0*p+1.0));
-                    //for(i = 0; i < numPoints; ++i)
-                    //{
-                    //  mode[i] *= scal;
-                    //}
-                    
-                    // define derivative basis
-                    //Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                    //          m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);   
-                }
+                }//end scope
                 break;
 
                     
@@ -845,22 +803,22 @@ namespace Nektar
                 */                   
                 case eDG_HU_Left:
                 {  
-                    // Number of modes (here the left and right polynomials DG_HU of degree p + 1 are stored) 
+                    // Number of modes (here the left polynomial DG_HU_Left of degree p is stored) 
                     mode = m_bdata.data();
                     int p = numModes - 1;
 
-                    // Auxiliary vectors to build up the auxiliary Legendre polynomials
+                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
                     Array<OneD,NekDouble> dLp   (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
                     
-                    // Function sign to build up DG_Left_HU
+                    // Function sign to build up DG_HU_Left
                     NekDouble sign = pow(-1.0, p);
                     
-                    // Factor to build up DG_Left_HU recovering the HU scheme
+                    // Factor to build up DG_HU_Left recovering the HU scheme
                     NekDouble etap = (1.0 + p) / p;
                     
-                    // Factor to build up DG_Left_HU
+                    // Factor to build up DG_HU_Left
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     
                     // Derivative of the Legendre polynomials
@@ -871,7 +829,7 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
                     
-                    // Building the DG_Left_HU
+                    // Building the DG_HU_Left
                     for(i = 0; i < numPoints; ++i)
                     {
                         mode[i]  = etap * dLpm[i];
@@ -880,18 +838,7 @@ namespace Nektar
                         mode[i]  = dLp[i] - mode[i];
                         mode[i]  = 0.5 * sign * mode[i]; 
                     }
-                    
-                    // normalise
-                    //scal = sqrt(0.5*(2.0*p+1.0));
-                    //for(i = 0; i < numPoints; ++i)
-                    //{
-                    //  mode[i] *= scal;
-                    //}
-                    
-                    // define derivative basis
-                    //Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                    //          m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);   
-                }
+                }//end scope
                 break;
                     
                 /** \brief Right derivative of the correction function for FR HU method (see J Sci Comput (2011) 47: 50–72)
@@ -901,22 +848,22 @@ namespace Nektar
                 */
                 case eDG_HU_Right:
                 {                      
-                    // Number of modes (here the left and right polynomials DG_HU of degree p + 1 are stored) 
+                    // Number of modes (here the right polynomial DG_HU_Right of degree p is stored) 
                     mode = m_bdata.data();
                     int p = numModes - 1;
 
-                    // Auxiliary vectors to build up the auxiliary Legendre polynomials
+                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
                     Array<OneD,NekDouble> dLp   (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
                     Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
                     
-                    // Function sign to build up DG_Left_HU
+                    // Function sign to build up DG_HU_Right
                     NekDouble sign = pow(-1.0, p);
                     
-                    // Factor to build up DG_Left_HU recovering the HU scheme
+                    // Factor to build up DG_HU_Right recovering the HU scheme
                     NekDouble etap = (1.0 + p) / p;
                     
-                    // Factor to build up DG_Left_HU
+                    // Factor to build up DG_HU_Right
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     
                     // Derivative of the Legendre polynomials
@@ -927,7 +874,7 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
                     
-                    // Building the DG_Right_HU
+                    // Building the DG_HU_Right
                     for(i = 0; i < numPoints; ++i)
                     {
                         mode[i]  = etap * dLpm[i];
@@ -935,19 +882,8 @@ namespace Nektar
                         mode[i] *= overeta;
                         mode[i] += dLp[i];
                         mode[i]  = 0.5 * mode[i]; 
-                    }
-                    
-                    // normalise
-                    //scal = sqrt(0.5*(2.0*p+1.0));
-                    //for(i = 0; i < numPoints; ++i)
-                    //{
-                    //  mode[i] *= scal;
-                    //}
-                    
-                    // define derivative basis
-                    //Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                    //          m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);   
-                }
+                    } 
+                }//end scope
                 break;
 
                     
@@ -993,7 +929,6 @@ namespace Nektar
                 GetNumModes() == GetNumPoints() || m_basistype == eLagrange);
         }
 
-
         // BasisKey compared to BasisKey
         bool operator  == (const BasisKey& x, const BasisKey& y)
         {
@@ -1001,7 +936,6 @@ namespace Nektar
                 x.m_basistype == y.m_basistype &&
                 x.GetNumModes() == y.GetNumModes());
         }
-
 
         // BasisKey* compared to BasisKey
         bool operator  == (const BasisKey* x, const BasisKey& y)
@@ -1026,7 +960,6 @@ namespace Nektar
         {
             return (!(*x == y));
         }
-
 
         // BasisKey compared to BasisKey*
         bool operator  != (const BasisKey& x, const BasisKey* y)

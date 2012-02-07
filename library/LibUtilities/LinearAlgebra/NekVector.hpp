@@ -105,7 +105,7 @@ namespace Nektar
                     m_size = sizes.get<0>();
                     m_data = Array<OneD, DataType>(m_size);
 
-                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
+                    expt::ExpressionEvaluator::EvaluateWithoutAliasingCheck(rhs, *this);
                 }
 
                 template<typename L, typename Op, typename R>

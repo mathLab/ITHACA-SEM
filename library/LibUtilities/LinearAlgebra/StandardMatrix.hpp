@@ -326,7 +326,7 @@ namespace Nektar
                     m_data = Array<OneD, DataType>(bufferCapacity);
                     this->Resize(rows, columns);
 
-                    expt::ExpressionEvaluator::Evaluate(rhs, *this);
+                    expt::ExpressionEvaluator::EvaluateWithoutAliasingCheck(rhs, *this);
                     this->RemoveExcessCapacity();
                 }
 

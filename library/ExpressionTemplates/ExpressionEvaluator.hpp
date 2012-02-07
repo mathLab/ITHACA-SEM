@@ -337,6 +337,18 @@ namespace expt
                 EvaluateNode<OptimizedParseTree, TransformedIndicesType>::Evaluate(accum, expression.GetData());
             }
         } 
+
+        template<typename Expression>
+        static void EvaluateWithoutAliasingCheck(const Expression& expression, typename Expression::ResultType& accum)
+        {
+            typedef typename Expression::Indices Indices;
+
+            // Perform the optimizations on the parse three.
+            typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedNodeType OptimizedParseTree;
+            typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
+
+            EvaluateNode<OptimizedParseTree, TransformedIndicesType>::Evaluate(accum, expression.GetData());
+        } 
     };
 }
 

@@ -142,7 +142,7 @@ decomment the lines which follow '//decomment'
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();      
     Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
     //3 internal layers:
-    Array<OneD, int> Ilayers =Array<OneD, int>(1,-1);     
+    Array<OneD, int> Ilayers =Array<OneD, int>(3,-1);     
     nIregions=0;
     int nbnd= bndConditions.num_elements();    
     for(int r=0; r<nbnd; r++)
@@ -153,7 +153,7 @@ decomment the lines which follow '//decomment'
     	  	  Iregions[r]=r;
     	  	  Ilayers[nIregions]=r;
     	  	  nIregions++;
-cout<<"Iregion="<<r<<endl;    	  	  
+//cout<<"Iregion="<<r<<endl;    	  	  
     	  }    	  
     } 
     ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""CalcBC"" specified");
@@ -426,9 +426,9 @@ cout<<"OOOK"<<endl;
        	       MultiRegions::ExpListSharedPtr &streak)
         {
             //1 I regions is expected: (the layer is the last region)
-            ASSERTL0(Iregions.num_elements()==1, "something wrong with the number of I layers");
+            ASSERTL0(Iregions.num_elements()==3, "something wrong with the number of I layers");
             //int Iup =Iregions[0];
-            int Ireg =Iregions[0];
+            int Ireg =Iregions[2];
 cout<<"layer region="<<Ireg<<endl;   
 
     
@@ -488,16 +488,6 @@ cout<<"layer region="<<Ireg<<endl;
             
             
             
-         
-            
-            
-            
-            
-            
-            
-            
-            
-cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
 
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -603,7 +593,7 @@ cout<<"region="<<Iregions[0]<<" nq1D="<<nq1D<<endl;
 		     
 		     int EIDreg = segmentGeomreg->GetEid();	     
                      offsetregIExp = Ilayer->GetPlane(0)->GetCoeff_Offset(k);
-cout<<"edge="<<EIDreg<<"  CHECK OFFSET="<<offsetregIExp<<endl;                                   
+//cout<<"edge="<<EIDreg<<"  CHECK OFFSET="<<offsetregIExp<<endl;                                   
                      elementreg = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)
                                     ->GetElementsFromEdge(segmentGeomreg);
 	     	     int elmtidreg = ((*elementreg)[0]->m_Element)->GetGlobalID();   
@@ -626,11 +616,11 @@ cout<<"edge="<<EIDreg<<"  CHECK OFFSET="<<offsetregIExp<<endl;
                      	           ((*elementreg)[0]->m_Element))->GetEid(f);
 			   EdgeGIDreg[id]=cnt++;		     	     
 		     }
-cout<<" GIDreg="<<elmtidreg<<"  num edges in this element="<<dimelmtreg<<endl;
+//cout<<" GIDreg="<<elmtidreg<<"  num edges in this element="<<dimelmtreg<<endl;
 	             int localidedge = EdgeGIDreg.find(EIDreg)->second;
-cout<<"locaidedge from m_EdgeInx ="<<localidedge<<endl;	             
+//cout<<"locaidedge from m_EdgeInx ="<<localidedge<<endl;	             
 	             localidedge = (*elementreg)[0]->m_EdgeIndx;
-cout<<"check map local id of Eid="<<EIDreg<<"  is="<<localidedge<<endl;	             
+//cout<<"check map local id of Eid="<<EIDreg<<"  is="<<localidedge<<endl;	             
 
 
 		     //set bmaps -------------
@@ -639,7 +629,7 @@ cout<<"check map local id of Eid="<<EIDreg<<"  is="<<localidedge<<endl;
 		     pressure->GetExp(elmtidreg)->GetEdgeToElementMap(EdgeGIDreg.find(EIDreg)->second,
 		     	     orientreg,bmapedgereg,signreg);		     		     
 
-cout<<"SIGN down="<<signreg[0]<<endl;
+//cout<<"SIGN down="<<signreg[0]<<endl;
 		     //Extracting the coeffs...
 		     Array<OneD, NekDouble> Recoeffs = pressure->GetPlane(0)->GetCoeffs();
 		     Array<OneD, NekDouble> Imcoeffs = pressure->GetPlane(1)->GetCoeffs();  
@@ -649,7 +639,7 @@ cout<<"SIGN down="<<signreg[0]<<endl;
 		     int Imoffsetreg = pressure->GetPlane(1)->GetCoeff_Offset(elmtidreg);
 		     int stoffsetreg = streak->GetCoeff_Offset(elmtidreg);
 		     
-cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
+//cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
 		     
 
 
@@ -658,7 +648,7 @@ cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;
                      int ImNumoffset = Ilayer->GetPlane(1)->GetNcoeffs();	
 //cout<<" OFFSET TEst Re="<<ReNumoffset<<"  Im="<<ImNumoffset<<endl;                     
 		     int Reoffsetedgereg = Ilayer->GetPlane(0)->GetCoeff_Offset(k);
-cout<<"k="<<k<<"  Offsetedge="<<Reoffsetedgereg<<endl;		     
+//cout<<"k="<<k<<"  Offsetedge="<<Reoffsetedgereg<<endl;		     
 		     
 		     //hypothesis: 2 planes (0 Re, 1 Im)
 		     int nplanecoeffs = pressure->GetExp(elmtidreg)->GetNcoeffs();
@@ -668,8 +658,8 @@ cout<<"k="<<k<<"  Offsetedge="<<Reoffsetedgereg<<endl;
 		     
 		     
 		     //grad edge coeffs		     
-cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
-<<"  n bmapedge="<<bmapedgereg.num_elements()<<endl;	
+//cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
+//<<"  n bmapedge="<<bmapedgereg.num_elements()<<endl;	
 
 
 
@@ -718,7 +708,7 @@ cout<<" Recoeffsedgeup num elements="<<Recoeffsedgereg.num_elements()
                      edgestdexp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>  (
                      	     Ilayer->GetPlane(0)->GetExp(k)  );
                      edgestdexp->BwdTrans(Recoeffsedgereg, Pre_edge);                     
-cout<<"call PhysTensorDERIV......"<<endl;                     
+//cout<<"call PhysTensorDERIV......"<<endl;                     
                      edgestdexp->StdPhysDeriv(Pre_edge, 
                      	      dPre_edge);
                      for(int q=0; q<nqedge; q++)
@@ -735,8 +725,6 @@ cout<<"call PhysTensorDERIV......"<<endl;
 		     
 		     
 		     
-
-cout<<k<<"ok  dimcoeffarray="<<Recoeffsedgereg.num_elements()<<"  dimedgeup="<<Rephysedgereg.num_elements()<<endl;
 //cout<<"Nlayercoeffs="<<Recoeffsreg.num_elements()<<"   Nlayerphys="<<Rephysreg.num_elements()<<endl;
 		     
 		     
@@ -754,6 +742,7 @@ cout<<k<<"ok  dimcoeffarray="<<Recoeffsedgereg.num_elements()<<"  dimedgeup="<<R
 		     LocalRegions::SegExpSharedPtr  bndSegExp = 
 		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
 	             tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
+
                      for(int e=0; e< nqedge; e++)
                      {
 
@@ -761,7 +750,7 @@ cout<<k<<"ok  dimcoeffarray="<<Recoeffsedgereg.num_elements()<<"  dimedgeup="<<R
                           ny[k*nqedge +e] = normals[1][e];
                           tx[k*nqedge +e] = tangents[0][e];
                           ty[k*nqedge +e] = tangents[1][e];
-cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl; 
+//cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl; 
 //cout<<"tannn tx="<<tangents[0][e]<<"   ty="<<tangents[1][e]<<endl;
                      }
 		
@@ -810,8 +799,7 @@ cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl;
                      pressure->GetPlane(0)->GetExp(elmtidreg)->GetEdgePhysVals(localidedge,gmat3_2D, gmati);
                      Vmath::Vcopy(nqedge, &(gmati[0]),1, &(gmat3[offsetregphys]),1);
 
-                }
-cout<<"comp closed"<<endl;         
+                }       
                 //bwd transform:
 		Ilayer->GetPlane(0)->BwdTrans(Recoeffsreg, Rephysreg);
 		Ilayer->GetPlane(1)->BwdTrans(Imcoeffsreg, Imphysreg);
@@ -830,49 +818,61 @@ cout<<"comp closed"<<endl;
 
 
              //TANGENTS WRONG WITH 3DHOMOGENEOUS 1D...	     
-             //calculate the curvature:
-
-cout<<"Dim Rephysreg="<<Rephysreg.num_elements()<<"  nq1D="<<nq1D<<endl;               
+             //calculate the curvature:     
 
              
 	     //attempt to smooth the tangent components:
-	     //outfieldx->FwdTrans(tx, txcoeffs);
-	     //outfieldx->FwdTrans(ty, tycoeffs);
-	     //outfieldx->BwdTrans(txcoeffs, tx);              
-	     //outfieldx->BwdTrans(tycoeffs, ty);
-             Array<OneD, NekDouble> dtx(nq1D);
-             Array<OneD, NekDouble> dty(nq1D);    
+             Array<OneD, NekDouble> tcoeffs (Nregcoeffs,0.0);
+	     //outfieldx->FwdTrans(tx, tcoeffs);
+	     //outfieldx->BwdTrans(tcoeffs, tx);
+             //Vmath::Zero(Nregcoeffs, tcoeffs,1);
+	     //outfieldx->FwdTrans(ty, tcoeffs);
+    	     //outfieldx->BwdTrans(tcoeffs, ty);
+             //Vmath::Zero(Nregcoeffs, tcoeffs,1);
+             Array<OneD, NekDouble> dtx(nq1D,0.0);
+             Array<OneD, NekDouble> dty(nq1D,0.0);    
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, tx, dtx);
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, ty, dty);
 	     //attempt to smooth the tangent derivative:
-             Array<OneD, NekDouble> tcoeffs (Nregcoeffs);
 	     outfieldx->FwdTrans(dtx, tcoeffs);
+	     outfieldx->BwdTrans(tcoeffs, dtx);  
+             Vmath::Zero(Nregcoeffs, tcoeffs,1);
 	     outfieldx->FwdTrans(dty, tcoeffs);
-	     outfieldx->BwdTrans(tcoeffs, dtx);              
-             Array<OneD, NekDouble> f_z(nq1D);
+	     outfieldx->BwdTrans(tcoeffs, dty);                           
+             Array<OneD, NekDouble> f_z(nq1D,0.0);
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, x1d, f_z);
-             Array<OneD, NekDouble> f_zz(nq1D);
+             Array<OneD, NekDouble> fcoeffs(Nregcoeffs,0.0);
+	     //outfieldx->FwdTrans(f_z, fcoeffs);
+	     //outfieldx->BwdTrans(fcoeffs, f_z); 
+             Vmath::Zero(Nregcoeffs, fcoeffs,1);
+             Array<OneD, NekDouble> f_zz(nq1D,0.0);
+
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, f_z, f_zz);
+	     //outfieldx->FwdTrans(f_zz, fcoeffs);
+	     //outfieldx->BwdTrans(fcoeffs, f_zz); 
              Array<OneD, NekDouble> delta(nq1D);
              Array<OneD, NekDouble> curv_unsigned(nq1D,0.0);
              Array<OneD, NekDouble> curv(nq1D,0.0);
-cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;             
+        
+
+//cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;     
              for(int t=0; t<nq1D; t++)
 	     {
+
 	            curv_unsigned[t]=sqrt(dtx[t]*dtx[t] +dty[t]*dty[t]);     
                     delta[t] = 1+f_z[t]*f_z[t];
                     //Hall's definition...
                     curv[t] = f_zz[t]/sqrt(delta[t]*delta[t]*delta[t]);
-cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<setw(13)<<"     "<<ty[t]<<"     "
-<<nx[t]<<"    "<<ny[t]<<"      "<<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
+//cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<setw(13)<<"     "<<ty[t]<<"     "
+//<<nx[t]<<"    "<<ny[t]<<"      "<<setw(13)<<dtx[t]<<"      "<<dty[t]<<"     "<<curv[t]<<endl;
              }		     
 	
 
 	    
            //attempt to smooth the curvature
-           //Array<OneD, NekDouble> curv_coeffs (Nregcoeffs);
-	   //outfieldx->FwdTrans(curv, curv_coeffs);
-	   //outfieldx->BwdTrans(curv_coeffs, curv); 
+           Array<OneD, NekDouble> curv_coeffs (Nregcoeffs);
+	   outfieldx->FwdTrans(curv, curv_coeffs);
+	   outfieldx->BwdTrans(curv_coeffs, curv); 
 
 
            //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
@@ -894,15 +894,20 @@ cout<<setw(13)<<x0d[t]<<"     "<<setw(13)<<x1d[t]<<"      "<<setw(13)<<tx[t]<<se
 	    //print out the fields
             
 
-cout<<"derivative of the pressure"<<endl;
+//cout<<"derivative of the pressure"<<endl;
             Array<OneD, NekDouble> dP_re = Array<OneD, NekDouble>(nq1D,0.0);
             Array<OneD, NekDouble> dP_im = Array<OneD, NekDouble>(nq1D,0.0);
             Array<OneD, NekDouble> dP_square2 = Array<OneD, NekDouble>(nq1D,0.0);
 
+            //attempt to smooth the normal
+            //Array<OneD, NekDouble> ncoeffs(Nregcoeffs,0.0);
+	    //outfieldx->FwdTrans(nx, ncoeffs);
+	    //outfieldx->BwdTrans(ncoeffs, nx);
+            //Vmath::Zero(Nregcoeffs, ncoeffs,1);
+	    //outfieldx->FwdTrans(ny, ncoeffs);
+    	    //outfieldx->BwdTrans(ncoeffs, ny);
+            //Vmath::Zero(Nregcoeffs, ncoeffs,1);        
 
-            
-
-cout<<"dim streak="<<stphysreg.num_elements()<<endl;
 	    Array<OneD, NekDouble> dUreg (nq1D);
 	    //Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eN, stphysreg,dUreg);
 	    for(int w=0; w<nq1D; w++)
@@ -912,7 +917,9 @@ cout<<"dim streak="<<stphysreg.num_elements()<<endl;
 
  
 
-
+            Array<OneD, NekDouble> dUcoeffs(Nregcoeffs,0.0);
+            outfieldx->FwdTrans(dUreg, dUcoeffs);
+            outfieldx->BwdTrans(dUcoeffs, dUreg);
 
                    
 
@@ -924,21 +931,18 @@ cout<<"dim streak="<<stphysreg.num_elements()<<endl;
 	    outfieldx->BwdTrans(jaccoeffs, Jacreg);
             //outfieldx->FwdTrans(dPre, dPrecoeffs);
             //outfieldx->BwdTrans(dPrecoeffs, dPre);
-	    
-
-cout<<"dP_re call"<<endl;            
+	          
             
-            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS,Rephysreg,dP_re);
-cout<<"dP_im call"<<endl;              
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS,Rephysreg,dP_re);          
             Ilayer->GetPlane(1)->PhysDeriv(MultiRegions::eS,Imphysreg,dP_im);   
             //attempt to smooth the derivative:
-            Array<OneD, NekDouble> dP_re_coeffs (Nregcoeffs); 
-            Array<OneD, NekDouble> dP_im_coeffs (Nregcoeffs);   
+            Array<OneD, NekDouble> dP_re_coeffs (Nregcoeffs,0.0); 
+            Array<OneD, NekDouble> dP_im_coeffs (Nregcoeffs,0.0);   
             Array<OneD, NekDouble> dP_imtest (nq1D);
-	    //outfieldx->FwdTrans(dP_re, dP_re_coeffs);
-	    //outfieldx->FwdTrans(dP_im, dP_im_coeffs);
-	    //outfieldx->BwdTrans(dP_re_coeffs, dP_re);
-	    //outfieldx->BwdTrans(dP_im_coeffs, dP_im);	             
+	    outfieldx->FwdTrans(dP_re, dP_re_coeffs);
+	    outfieldx->FwdTrans(dP_im, dP_im_coeffs);
+	    outfieldx->BwdTrans(dP_re_coeffs, dP_re);
+	    outfieldx->BwdTrans(dP_im_coeffs, dP_im);	             
             
             
             
@@ -953,15 +957,14 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 
  
 	    //attempt to smooth the pressure     
-	    Array<OneD, NekDouble> dPsquare_coeffs (Nregcoeffs);
-	    //outfieldx->FwdTrans(dP_square, dPsquare_coeffs);
-	    //outfieldx->BwdTrans(dPsquare_coeffs, dP_square);	    
+	    Array<OneD, NekDouble> dPsquare_coeffs (Nregcoeffs,0.0);
+	    outfieldx->FwdTrans(dP_square, dPsquare_coeffs);
+	    outfieldx->BwdTrans(dPsquare_coeffs, dP_square);	    
 
 
-	    Array<OneD, NekDouble> mu53  (nq1D);
+	    Array<OneD, NekDouble> mu53  (nq1D,0.0);
 	    Array<OneD, NekDouble> d2v  (nq1D,0.0);
-	    Array<OneD, NekDouble> prod  (nq1D);	    
-	    //Array<OneD, NekDouble> prod2D  (nq1D);	    
+	    Array<OneD, NekDouble> prod  (nq1D,0.0);	    	    
 		    
 	    double pow = 1.0/3.0;
 	    double base;
@@ -970,12 +973,16 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
                 base =dUreg[y];
                 mu53[y] = std::pow ((base*base),pow);
                 mu53[y] = 1/(base*mu53[y]);
-                prod[y] = mu53[y]*dP_square[y];                                
+                //prod[y] = mu53[y]*dP_square[y];                                
             }
-
+            //attempting to smooth mu53
+            Array<OneD, NekDouble> mucoeffs(Nregcoeffs,0.0);
+            outfieldx->FwdTrans(mu53, mucoeffs);
+            outfieldx->BwdTrans(mucoeffs, mu53);
+            Vmath::Vmul(nq1D, mu53,1, dP_square,1, prod,1);
             
 	    //attempting to smooth field...	    
-	    Array<OneD, NekDouble> prod_coeffs (Nregcoeffs);
+	    Array<OneD, NekDouble> prod_coeffs (Nregcoeffs,0.0);
 	    outfieldx->FwdTrans(prod, prod_coeffs);
 	    outfieldx->BwdTrans(prod_coeffs, prod);
             Vmath::Zero(Nregcoeffs,prod_coeffs,1);	           
@@ -985,38 +992,79 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             Vmath::Zero( Nregcoeffs, prod_coeffs,1);
 	    outfieldx->FwdTrans(d2v, prod_coeffs);
 	    outfieldx->BwdTrans(prod_coeffs, d2v);
+            //test prod deriv... add background..
+            //Array<OneD, NekDouble> prod_b(nq1D);
+            //Array<OneD, NekDouble> dersprod_b(nq1D);
+            //Vmath::Sadd(nq1D,0.001, prod,1,prod_b,1);
+	    //Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, prod_b ,dersprod_b);
+
 
 	    Array<OneD, NekDouble> pjump(nq1D);
 	    Array<OneD, NekDouble> vjump(nq1D);
 
-/*
+
             //test a sin curve....
+/*
             Array<OneD, NekDouble> fun1D(nq1D);
             Array<OneD, NekDouble> derfun1D(nq1D);
             NekDouble pi =3.14159265;
             for(int e=0; e<nq1D; e++)
             {
-                   fun1D[e]= std::sin(pi*(x0d[e]));
+                   fun1D[e]= std::sin((x0d[e]));
             }  
-           
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, fun1D, derfun1D);        
+
+            //add noise to a function
+            Array<OneD, NekDouble> fun1D_b(nq1D);
+            Array<OneD, NekDouble> dersfun1D_b(nq1D);
+            int cnt=0;
+            int cnt1=1;
+
+            for(int v=0; v<nq1D/2; v++)
+            {
+
+                 fun1D_b[cnt] = fun1D[cnt] +0.000000;
+//cout<<cnt<<"x="<<x0d[cnt]<<"  fun1D_b="<<fun1D_b[cnt]<<"   fun1D="<<fun1D[cnt]<<"  diff="<<
+//fun1D[cnt]-fun1D_b[cnt]<<endl;
+                 //ASSERTL0((fun1D_b[cnt]-fun1D[cnt])==0.0001, "problem");
+                 cnt = cnt +2;
+                 fun1D_b[cnt1] = fun1D[cnt1] -0.000000;
+//cout<<cnt1<<"x="<<x0d[cnt1]<<"  fun1D_b="<<fun1D_b[cnt1]<<"  fun1D="<<fun1D[cnt1]<<"  diff="<<
+//fun1D[cnt1]-fun1D_b[cnt1]<<endl;
+                 //ASSERTL0((fun1D_b[cnt1]-fun1D[cnt1])==-0.0001, "problem");
+                 cnt1 = cnt1 +2;
+                 if( (v==((nq1D/2) -1)) && (nq1D%2==1) 
+                   )
+                 {
+                    fun1D_b[cnt] = fun1D[cnt] +0.000000;
+//cout<<cnt<<"x="<<x0d[cnt]<<"  fun1D_b="<<fun1D_b[cnt]<<"  fun1D="<<fun1D[cnt]<<"  diff="<<
+//fun1D[cnt]-fun1D_b[cnt]<<endl;
+                 }
+            }
+
+	    Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, fun1D_b ,dersfun1D_b); 
+*/
+/*
 
 	    int nqedge =nq1D/Icompreg->size();
 	    Array<OneD, NekDouble> phys_edge (nqedge);	    
 	    Array<OneD, NekDouble> der_edge (nqedge);
-            Array<OneD, NekDouble> der_Pre_std (nq1D);
+            Array<OneD, NekDouble> der_fun1Db_std (nq1D);
             //extract stdderiv....
+
             for(int w=0; w<Icompreg->size() ; w++)
             {
-            	 Vmath::Vcopy(nqedge,&(prod2D[w*nqedge]),1,&(phys_edge[0]),1);    
+            	 Vmath::Vcopy(nqedge,&(fun1D_b[w*nqedge]),1,&(phys_edge[0]),1);    
                  //check if the metrix is the same for streak and Ilayer obj
                  StdRegions::StdExpansion1DSharedPtr edgestdexp;
                  edgestdexp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>  (
                      	     Ilayer->GetPlane(0)->GetExp(w)  );
                  edgestdexp->StdPhysDeriv(phys_edge, 
                      	      der_edge);                 
-        
+                 Vmath::Vcopy(nqedge, &(der_edge[0]),1, &(der_fun1Db_std[w*nqedge]),1);           
                  Vmath::Zero(nqedge, phys_edge,1);
                  Vmath::Zero(nqedge, der_edge,1);
+/*
                  Vmath::Vcopy(nqedge, &(Rephysreg[w*nqedge]),1, &(phys_edge[0]),1);
                  edgestdexp->StdPhysDeriv(phys_edge, der_edge);
                  Vmath::Vcopy(nqedge, &(der_edge[0]),1, &(der_Pre_std[w*nqedge]),1);
@@ -1028,9 +1076,10 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
                  Vmath::Vcopy(nqedge, &(der_edge[0]),1, &(derfun1D[w*nqedge]),1);                                   
                  Vmath::Zero(nqedge, phys_edge,1);
                  Vmath::Zero(nqedge, der_edge,1);
-            }
-*/
 
+            }
+
+*/
 
 
           
@@ -1056,29 +1105,31 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 	   
 
 	   
-             Array<OneD, NekDouble> txcoeffs (Nregcoeffs);
-             Array<OneD, NekDouble> tycoeffs (Nregcoeffs);
-	     //attempt to smooth the tangent components:
-	     outfieldx->FwdTrans(tx, txcoeffs);
-	     outfieldx->FwdTrans(ty, tycoeffs);
-	     outfieldy->BwdTrans(txcoeffs, tx);              
-	     outfieldy->BwdTrans(tycoeffs, ty);
+           Array<OneD, NekDouble> txcoeffs (Nregcoeffs);
+           Array<OneD, NekDouble> tycoeffs (Nregcoeffs);
+	   //attempt to smooth the tangent components:
+	   outfieldx->FwdTrans(tx, txcoeffs);
+	   outfieldx->FwdTrans(ty, tycoeffs);
+	   outfieldy->BwdTrans(txcoeffs, tx);              
+	   outfieldy->BwdTrans(tycoeffs, ty);
 	     
 	     
 //end
 //PAY ATTENTION to the sign (vjump -/+ pjump)*t!!!!!!!!!!
             for(int j=0; j<nq1D; j++)
             {
-//start            	              	    
+//start   
+         	              	    
             	(outfieldx->UpdatePhys())[j] = 
             	  (vjump[j]*tx[j]-pjump[j]);
             	(outfieldy->UpdatePhys())[j] =
             	   (vjump[j]*ty[j]-pjump[j]);		   
 //end
+
 //decomment
 /*
             	(outfieldx->UpdatePhys())[j] = 
-            	  3;
+            	  20*sin(2*x0d[j]);
             	(outfieldy->UpdatePhys())[j] =
             	   20*2*cos(2*x0d[j])/3.14;
 */
@@ -1094,7 +1145,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 
 
 
-
+/*
 
 	    //calculate J,K
             Array<OneD, NekDouble> lambda(nq1D);            
@@ -1161,15 +1212,13 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             //test d(dP_square)ds
             Array<OneD, NekDouble> ddP_square_ds(nq1D);
             Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, dP_square, ddP_square_ds);
-
+*/
 
 
 
 
             NekDouble jactest;
 
-
-            NekDouble tmpcalc;
 	    for(int g=0; g<nq1D; g++)
 	    {
                 //pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;       
@@ -1177,9 +1226,8 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
                 //vjump[g] = n0*d2v[g];
   
 //NBBB dPre is the stdDERIV!!! 
-                jactest = (gmat0[g]*tx[g] +gmat2[g]*ty[g])-(1/Jac[g]);
-                tmpcalc = (dPim_dz[g]*dPim_dz[g] +dPre_dz[g]*dPre_dz[g])/delta[g];
-
+                //jactest = (gmat0[g]*tx[g] +gmat2[g]*ty[g])-(1/Jac[g]);;
+/*
 cout<<x0d[g]<<"       "<<
 //stphysreg[g]<<"      "<<lambda[g]<<"      "<<
 //delta[g]<<"      "<<
@@ -1199,24 +1247,30 @@ curv[g]<<"        "<<
 outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]
 <<endl;
+*/
 
 
-/*
 cout<<setw(14)<<x0d[g]<<"      "<<setw(13)<<x1d[g]<<
 "      "<<Rephysreg[g]<<"   "<<dP_re[g]<<"     "
 <<stphysreg[g]<<"      "<<mu53[g]<<"       "<<curv[g]
-<<setw(13)<<"      "<<setw(13)<<prod[g]
+<<setw(13)<<"      "<<dP_square[g]<<"      "<<setw(13)<<prod[g]
 <<"       "<<
 //(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<"      "<<1/Jac[g]
 //<<"       "<<dermu53[g]
+//<<"        "<<derfun1D[g]
 //tx[g]<<"     "<<ty[g]
-f1[g]<<"        "<<f2[g]
-<<"     "<<pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
+//f1[g]<<"        "<<f2[g]
+//prod_b[g]<<"      "<<dersprod_b[g]
+//fun1D[g]<<"      "<<derfun1D[g]<<"       "<<
+//der_fun1Db_std[g]<<"       "<<
+//fun1D_b[g]<<"       "<<dersfun1D_b[g]
+pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
 <<outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]<<endl;
 //cout<<"jactest="<<jactest<<endl;
                 ASSERTL0(abs(jactest)<0.5, "jac 1D problem..");
-*/
+
+
 	    }
          
 // gamma(1/3)= 2.6789385347077476337            
@@ -1285,8 +1339,7 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
             	    //outregionfield->AppendFieldData(FieldDef[i], FieldData[i]);
             	    outregionfield->AppendFieldData(FieldDef[0], FieldData[0]);            	    
             	    //outregionfield->AppendFieldData(FieldDef[i], FieldData[i],fieldcoeffs[0]);
-            	//}
-cout<<"fielddata"<<FieldDef.size()<<endl;             	
+            	//}            	
             	mesh->Write(outfile,FieldDef,FieldData);            		
 	}
     

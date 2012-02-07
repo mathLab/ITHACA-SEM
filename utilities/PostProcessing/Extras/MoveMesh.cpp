@@ -277,8 +277,7 @@ cout<<"VIdup="<<Vids_up[v1]<<endl;
              Deltalow[r] = yold_c[r] - yold_low[r];           
              ASSERTL0(Deltaup[r]>0, "distance between upper and layer curve is not positive");
              ASSERTL0(Deltalow[r]>0, "distance between lower and layer curve is not positive");
-     }          
-     
+     }           
      //------------------------------------------------------------------------
          
     //-----------------------------------------------------------------------------------    
@@ -489,23 +488,24 @@ cout<<"VIdup="<<Vids_up[v1]<<endl;
 	 vertex2 = graphShPt->GetVertex(id2);     
 	 vertex1->GetCoords(x1,y1,z1);
 	 vertex2->GetCoords(x2,y2,z2);	
-cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<endl;
-cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
+//cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<endl;
+//cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	 if(x2>x1)
 	 {
 	     Cpointsx[r] = x1 +(x2-x1)/2;             
+cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<"   Cx="<<Cpointsx[r]<<endl;
+cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	     if( Cpointsx[r]>x2 || Cpointsx[r]< x1)
 	     {
 	     	  Cpointsx[r] = -Cpointsx[r];		  
-	     }	     
+	     }    
              for(int w=0; w< npedge-2; w++)
              {    
                  Addpointsx[r*(npedge-2) +w] = x1 +((x2-x1)/(npedge - 1))*(w+1);   
                  if( Addpointsx[r*(npedge-2) +w] > x2 || Addpointsx[r*(npedge-2) +w] < x1)
 	         {
 	              Addpointsx[r*(npedge-2) +w] = -Addpointsx[r*(npedge-2) +w];
-	         }        
-             	 
+	         }                   	 
 	         Addpointsy[r*(npedge-2) +w] = y1 + ((y2-y1)/(x2-x1))*(Addpointsx[r*(npedge-2) +w]-x1);	         
 	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w],
 	              	      Addpointsx[r*(npedge-2) +w],  Addpointsy[r*(npedge-2) +w], streak, derstreak); 
@@ -535,8 +535,8 @@ cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	 {
 	      ASSERTL0(false, "point not generated"); 	 
 	 }    	    
-	 
-	 
+cout<<"calculate cpoints coords"<<endl;	 
+         Cpointsy[r] = y1 + (y2-y1)/2;
          GenerateAddPointsNewtonIt( Cpointsx[r], Cpointsy[r],Cpointsx[r], Cpointsy[r],
     	       streak, derstreak); 
          NekDouble diff = Cpointsy[r]-Addpointsy[r*(npedge-2)];
@@ -1042,7 +1042,7 @@ cout<<" edge="<<edge<<endl;
            ASSERTL0( y_c[q]> y[ineg] && y_c[q]<y[ipos], " wrong position");
 cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" y_pos="<<y[ipos]<<"   y_neg="<<y[ineg]<<endl;           
 */         
-                 
+cout<<q<<"   xup="<<xold_up[q]<<"   yup="<<yold_up[q]<<"    ydown="<<yold_low[q]<<endl;                 
                     //algorithm to determine the closest points to the streak positions
                     //using the weighted mean         
                     for(int j=0; j<nq; j++)
@@ -1063,6 +1063,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" y_pos="<<y[ipos]<<"   y_neg="<<y[
 //cout<<" x="<<x[j]<<"  y="<<y[j]<<"   streak="<<streak->GetPhys()[j]<<endl;
 			 }
 		    }
+cout<<"ipos="<<ipos<<"  ineg="<<ineg<<endl;
 //cout<<"closer streak points ypos="<<y[ipos]<<"   yneg="<<y[ineg]<<endl;
 	          //determine the streak y position as the result of the weighted mean
 	            xc[q]= x[ipos];
@@ -1161,6 +1162,7 @@ cout<<"result x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;
 		coords[1] = yi;	
 cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
 		elmtid = function->GetExpIndex(coords, 0.00001);
+                //@to do if GetType(elmtid)==triangular WRONG!!!
 cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
 		offset = function->GetPhys_Offset(elmtid);
 		F =1000;
@@ -1386,7 +1388,21 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
             string newfile;
 	    TiXmlDocument doc(filename); 
 	    bool loadOkay = doc.LoadFile();
-	    
+            //load xscale parameter (if exists)
+	    TiXmlElement* master = doc.FirstChildElement("NEKTAR");
+	    TiXmlElement* mesh = master->FirstChildElement("GEOMETRY");
+	    TiXmlElement* element = mesh->FirstChildElement("VERTEX");
+            NekDouble xscale = 1.0;
+            LibUtilities::ExpressionEvaluator expEvaluator;
+            const char *xscal = element->Attribute("XSCALE");
+            if(xscal)
+            {
+                 std::string xscalstr = xscal;
+                 expEvaluator.DefineFunction("",xscalstr);
+                 xscale = expEvaluator.Evaluate();
+            }
+            
+
             // Save a new XML file.	          
             newfile = filename.substr(0, filename.find_last_of("."))+"_moved.xml";
  
@@ -1417,8 +1433,13 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
 	    // Now read the vertices
 	    TiXmlElement* elementnew = meshnew->FirstChildElement("VERTEX");
 	    ASSERTL0(elementnew, "Unable to find mesh VERTEX tag in file.");
+            //set xscale 1!!
+            if(xscale!=1.0)
+            {
+                 elementnew->SetAttribute("XSCALE",1.0);
+            }
 	    TiXmlElement *vertexnew = elementnew->FirstChildElement("V");
- 
+
       	    
 	    int indx;
 	    int err, numPts;
@@ -1469,19 +1490,24 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
 	    ASSERTL0(curvednew, "Unable to find mesh CURVED tag in file.");            
    	    TiXmlElement *edgenew = curvednew->FirstChildElement("E");
    	    int cnt =-1;
-   	    std::string chareid;
+            //ID is different from index...
+   	    std::string charindex;
    	    int eid;
+            int index;
    	    int indexeid, v1,v2;
    	    NekDouble x1,x2,y1,y2;
    	    while (edgenew)
    	    {
    	    	   indexeid =-1;
    	    	   cnt++;
-   	    	   TiXmlAttribute *edgeAttr = edgenew->FirstAttribute();
+                   //get the index...
+   	    	   TiXmlAttribute *edgeAttr = edgenew->FirstAttribute();                   
    	    	   std::string attrName(edgeAttr->Name());
-   	    	   chareid = edgeAttr->Value();
-   	    	   std::istringstream iss(chareid);
-   	    	   iss >> std::dec >> eid; 
+   	    	   charindex = edgeAttr->Value();
+   	    	   std::istringstream iss(charindex);
+   	    	   iss >> std::dec >> index; 
+		   //get the eid
+                   edgenew->QueryIntAttribute("EDGEID", &eid);
 cout<<"eid="<<eid<<" neid="<<Eids.num_elements()<<endl;
 	           //find the corresponding index curve point
 	           for(int u=0; u<Eids.num_elements(); u++)

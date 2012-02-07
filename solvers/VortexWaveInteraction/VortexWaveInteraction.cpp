@@ -243,23 +243,35 @@ namespace Nektar
     
     void VortexWaveInteraction::ExecuteRoll(void)
     {
+       //set up the equation system to update the mesh
+       if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
+       {
+              string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
+cout<<"eqtype="<<vEquation<<endl;
+              EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
+              //the forcing terms are inserted as N bcs
+
+       }
+       else
+       {
+            
         
-        // Read vwi file
-        std::string forcefile
-            = m_sessionRoll->GetFunctionFilename("BodyForce");
+             // Read vwi file
+             std::string forcefile
+                = m_sessionRoll->GetFunctionFilename("BodyForce");
 
-        if(forcefile != "")
-        {
-            m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+             if(forcefile != "")
+             {
+                  m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
 
-            // Scale forcing
-            int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
-            for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
-            {
-                Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
-            }
+                  // Scale forcing
+                  int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+                  for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
+                  {
+                     Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+                  }
+             }
         }
-
 
         // Execute Roll 
         cout << "Executing Roll solver" << endl;
@@ -687,8 +699,11 @@ namespace Nektar
         SaveFile(m_sessionName + "_eig_0",SaveDir,i);
         // Save new field file of eigenvalue
         SaveFile(m_sessionName + ".fld",SaveDir,i);
-        // Save new forcing file
-        SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
+        if(!(m_sessionVWI->DefinesSolverInfo("INTERFACE")))
+        {
+             // Save new forcing file
+             SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
+        }
 
     }
 
@@ -703,12 +718,128 @@ namespace Nektar
 #ifndef _WIN32
 	sleep(3);
 #endif
-        ExecuteWave();
 
-        if(CalcWaveForce)
-        {
-            CalcNonLinearWaveForce();
-        }
+	//the global info has to be written in the 
+	//roll session file to use the interface loop
+        if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
+	{
+             static int cnt=0;
+             string syscall;
+             //rewrite the Rollsessionfile (we start from the waleffe forcing)
+             //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
+             //if(cnt==0)
+             //{
+                 //take the conditions tag from meshbndjumps and copy into 
+                 // the rolls session file
+             //}
+             char c[16]="";
+    	     sprintf(c,"%d",cnt);  
+             //save old roll solution
+             string oldroll = m_sessionName +"_roll_"+c +".fld";    
+	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldroll;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
+	     //move the mesh around the critical layer
+             string filePost   = m_sessionName + "_advPost.xml";
+             string filestreak   = m_sessionName + "_streak.fld";
+             syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+                             + filePost +"  "+ filestreak +"  "+ filePost; 
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+	     //interpolate the streak field into the new mesh
+             string movedmesh = m_sessionName + "_advPost_moved.xml";
+
+             //save oldstreak
+             string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
+	     syscall = "cp -f " + filestreak + "  " + oldstreak;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
+             //overwriting the streak file!!
+             string interpfield = filestreak;
+             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                      + filePost + "  " + filestreak + "  " + movedmesh + "  " 
+	              + interpfield;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+             //save the old mesh     
+             string meshfile = m_sessionName + ".xml";                  
+             string meshold = m_sessionName +"_"+ c +".xml";
+	     syscall = "cp -f " + meshfile + "  " + meshold;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
+
+             //overwriting the meshfile with the new mesh
+	     syscall = "cp -f " + movedmesh + "  " + meshfile;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+
+
+             //calculate the wave
+             ExecuteWave();
+             //save old jump conditions:
+             string ujump = m_sessionName+"_u_5.bc";
+	     syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }              
+
+             string vjump = m_sessionName+"_v_5.bc";
+	     syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }    
+             cnt++;
+             char c1[16]="";
+    	     sprintf(c1,"%d",cnt);   
+             //calculate the jump conditions
+             string wavefile  = m_sessionName +".fld"; 
+             syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                     + movedmesh + "  " + wavefile + "  " + interpfield + ">  data"+c1;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+
+	}
+	else
+	{
+            ExecuteWave();
+
+            if(CalcWaveForce)
+            {
+                 CalcNonLinearWaveForce();
+            }
+	}
+
+
+
+
+
+
+
     }
 
     bool VortexWaveInteraction::CheckEigIsStationary(void)

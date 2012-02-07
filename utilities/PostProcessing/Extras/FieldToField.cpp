@@ -30,7 +30,9 @@ int main(int argc, char *argv[])
     void SetFields(SpatialDomains::MeshGraphSharedPtr &graphShPt,
     	        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef,
 		LibUtilities::SessionReaderSharedPtr &session,
-		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
+		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
+                bool homogeneous);
+    void Readflddef(string fieldfile, Array<OneD, std::string> &variables, bool &homogeneous);
 
     void GenerateField(MultiRegions::ExpListSharedPtr field0,
     	               Array<OneD, NekDouble> x1,
@@ -75,20 +77,31 @@ int main(int argc, char *argv[])
     graphShPt->Import(fieldfile0,fielddef,fielddata);
     //----------------------------------------------    
 
+    //read info from fldfile
+    Array<OneD, std::string> variables ;
+cout<<fieldfile0<<endl;
+    bool homo=false;
+    //Readflddef(fieldfile0, variables, homo);
+
+
+
     // Define Expansion    
     int nfields; 
-    nfields = vSession->GetVariables().size();       
+    //nfields = vSession->GetVariables().size();       
+    nfields = variables.num_elements();
+    nfields=1;
     Array<OneD, MultiRegions::ExpListSharedPtr> fields; 
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);  
-    SetFields(graphShPt,fielddef, vSession,fields,nfields);
+    SetFields(graphShPt,fielddef, vSession,fields,nfields,homo);
     int nq = fields[0]->GetTotPoints();
     //-----------------------------------------------
-   
+cout<<"nfields="<<nfields<<endl;   
     // Copy data from file:fill fields with the fielddata
     for(int j = 0; j < nfields; ++j)
     {  	    
         for(int i = 0; i < fielddata.size(); ++i)
         {
+cout<<"fielddef[i]->m_fields[j]="<<fielddef[i]->m_fields[j]<<endl;
             fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
         }             
         fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
@@ -145,7 +158,7 @@ cout<<"x0="<<x0[u]<<"      y0="<<y0[u]<<endl;
     	    cout<<"2D case"<<endl;
 */    	    
             graphShPt1 = SpatialDomains::MeshGraph::Read(meshfile1);  	     	    
-            SetFields(graphShPt1,fielddef, vSession, outfield,nfields);    	    
+            SetFields(graphShPt1,fielddef, vSession, outfield,nfields,homo);    	    
 //    }
     //------------------------------------------------ 
 
@@ -176,9 +189,28 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
     	 GenerateField(fields[t], x1, y1, outfield[t]);
     }
     //------------------------------------------------
+/*
+    //smooth the field
+    if( graphShPt->GetMeshDimension()==2)
+    {
+         MultiRegions::ContField2DSharedPtr contfield;
+           contfield = MemoryManager<MultiRegions::ContField2D>
+           ::AllocateSharedPtr(vSession,graphShPt1,
+                  vSession->GetVariable(0),true);
+         int ncoeffs = outfield[0]->GetNcoeffs();
+         Array<OneD, NekDouble> coeffs(ncoeffs);
+         for(int s=0; s<nfields; s++)
+         {
+             contfield->FwdTrans(outfield[s]->GetPhys(), coeffs);
+             contfield->BwdTrans(coeffs, outfield[s]->UpdatePhys());
+         }
+    }
+*/
+    //------------------------------------------------
     
     //write fieldfile
     Writefield(vSession, fieldfile1, graphShPt1,outfield);        
+    //------------------------------------------------
 }
 
 
@@ -186,7 +218,8 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
 	void SetFields(SpatialDomains::MeshGraphSharedPtr &graphShPt,
 		vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef,
 		LibUtilities::SessionReaderSharedPtr &session,
-		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
+		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
+                bool homogeneous)
 	{
                 //session reader stuff has to be evaluated only from the
 		// first session which refers to mesh0
@@ -212,7 +245,8 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
 			eNotHomogeneous
 		};
 	
-		enum HomogeneousType HomogeneousType = eNotHomogeneous;		
+		enum HomogeneousType HomogeneousType = eNotHomogeneous;
+cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;		
                 if(cnt==0)
                 { 	
 		if(session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -334,10 +368,12 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
                      }
                      break;
              	     case 2:
-             	     {           	     	     
+             	     {
+cout<<"setfields"<<endl;             	     	     
                           ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
-                          if(fielddef[0]->m_numHomogeneousDir == 1)
+                          //if(fielddef[0]->m_numHomogeneousDir == 1)
+                          if(homogeneous==true)
                           {
                           	MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
 
@@ -356,7 +392,8 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
                           	for(i = 1; i < nvariables; ++i)
                           	{                         		
                           		Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
-                          		    AllocateSharedPtr(*Exp3DH1);                        		    
+                          		    AllocateSharedPtr(*Exp3DH1);
+cout<<"set field="<<i<<endl;                           		    
                           	}
                           }
                           else
@@ -393,7 +430,63 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
              	}
         }
 
+	void Readflddef(string fieldfile, Array<OneD, std::string> &variables,
+                        bool &homogeneous)
+        {
+	    TiXmlDocument doc(fieldfile);
+	    bool loadOkay = doc.LoadFile(); 
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+            TiXmlElement* element = master->FirstChildElement("ELEMENTS");
+            ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
+            //determine if the field is homogeneous
+            const char *shape = element->Attribute("SHAPE");
+            string homostr = string(shape);
+            int pos_dash = homostr.find_first_of("-");
+            if( pos_dash < homostr.length())
+            {
+                 homostr = homostr.substr(homostr.find_first_of("-"),homostr.length());
+
+                 if(homostr=="HomogenousExp1D")
+                 {
+                      homogeneous = true;
+                 }
+            }           
+            else
+            {
+                 homogeneous = false;
+            }
+
+
+            const char *vars = element->Attribute("FIELDS");   
+            //convert char into string object 
+            string varstr = string(vars);       
+cout<<"char="<<vars<<endl;           
+            if(varstr=="u" || varstr=="v" || varstr=="w" || varstr=="p")
+            {
+                 variables = Array<OneD, std::string>(1);
+                 variables[0] = varstr;
+cout<<variables[0]<<endl;
+            }
+            else if(varstr=="u,v" || varstr=="v,w" || varstr=="u,w")
+            {
+                 variables = Array<OneD, std::string>(2);
+		 string   v0 = varstr.substr(0,varstr.find_first_of(","));
+                 variables[0] = v0;
+		 string   v1 = varstr.substr(varstr.find_first_of(","), varstr.length());
+                 variables[1] = v1;
+            }
+            else if(varstr=="u,v,p")
+            {
+                 variables = Array<OneD, std::string>(3);
+                 variables[0] = "u";
+                 variables[1] = "v";
+                 variables[2] = "p";
+            }
+        }
 
         void GenerateField(MultiRegions::ExpListSharedPtr field0,
     	                   Array<OneD, NekDouble> x1,
@@ -407,12 +500,12 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
              {
                    coords[0] = x1[r];
                    coords[1] = y1[r];
+//cout<<"x="<<x1[r]<<"   y="<<y1[r]<<endl;                   
                    elmtid = field0->GetExpIndex(coords, 0.00001);
                    offset = field0->GetPhys_Offset(elmtid);
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPhys() +offset);
-             }
-          
+             }        
 	}	
 
        bool Checkbndmeshes(  Array<OneD, NekDouble> x0,
@@ -422,7 +515,7 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
        {
        	       NekDouble x0min,x0max,y0min, y0max;
        	       NekDouble x1min,x1max,y1min, y1max;       	       
-       	       
+       	       NekDouble tol = 0.0000001;
        	       x0min = Vmath::Vmin(x0.num_elements(),x0,1);
        	       x0max = Vmath::Vmax(x0.num_elements(),x0,1);
        	       y0min = Vmath::Vmin(y0.num_elements(),y0,1);
@@ -432,14 +525,22 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
        	       x1max = Vmath::Vmax(x1.num_elements(),x1,1);
        	       y1min = Vmath::Vmin(y1.num_elements(),y1,1);
        	       y1max = Vmath::Vmax(y1.num_elements(),y1,1);       	       
-       	       
-               if( x0min==x1min && x0max==x1max && 
-               	   y0min==y1min && y0max==y1max)
+
+//cout<<"abs(x0min-x1min )="<<abs(x0min-x1min )<<endl;
+//cout<<"abs(x0max-x1max)="<<abs(x0max-x1max)<<endl;
+//cout<<"abs(y0min-y1min)="<<abs(y0min-y1min)<<endl;
+//cout<<"abs(y0max-y1max)="<<abs(y0max-y1max)<<endl;
+
+               if(  abs(x0min-x1min )< tol
+                    && abs(x0max-x1max)< tol
+               	    && abs(y0min-y1min)< tol
+                    && abs(y0max-y1max)< tol
+                 )
                {
                	   return true;
                }
                else
-               {
+               { 
                	   return false;
                }
                	      

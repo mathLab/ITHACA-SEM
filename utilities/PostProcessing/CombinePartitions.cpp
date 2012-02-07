@@ -22,8 +22,12 @@ int main(int argc, char *argv[])
     TiXmlElement *master = new TiXmlElement("NEKTAR");
     for (int n = 0; n < atoi(argv[1]); ++n)
     {
+        std::string basename = argv[2];
+        std::string extension = argv[2];
+        basename = basename.substr(0, basename.find_last_of("."));
+        extension = extension.substr(extension.find_last_of(".") + 1);
         std::stringstream filename;
-        filename << argv[2] << "." << n;
+        filename << basename << "_P" << n << "." << extension;
         TiXmlDocument docInput;
         if (!docInput.LoadFile(filename.str()))
         {

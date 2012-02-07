@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Monodomain.h
+// File TenTusscherPanfilov04.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,81 +29,95 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Monodomain cardiac electrophysiology homogenised model.
+// Description: TenTusscherPanfilov04 cell model
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MONODOMAIN_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MONODOMAIN_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHERPANFILOV04_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHERPANFILOV04_H
 
-#include <Auxiliary/UnsteadySystem.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
 
 namespace Nektar
 {
-
-
-    /// A model for cardiac conduction.
-    class Monodomain : public UnsteadySystem
+    class TenTusscherPanfilov04: public CellModel
     {
-    public:
-        friend class MemoryManager<Monodomain>;
 
+    public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+        static CellModelSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const int nq)
         {
-            EquationSystemSharedPtr p = MemoryManager<Monodomain>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
+            return MemoryManager<TenTusscherPanfilov04>
+                                        ::AllocateSharedPtr(pSession, nq);
         }
 
         /// Name of class
         static std::string className;
 
-        /// Desctructor
-        virtual ~Monodomain();
+        /// Constructor
+        TenTusscherPanfilov04(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const int nq);
+
+        /// Destructor
+        virtual ~TenTusscherPanfilov04();
 
     protected:
-        /// Constructor
-        Monodomain(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        virtual void v_InitObject();
-
-        /// Solve for the diffusion term.
-        void DoImplicitSolve(
+        /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
+        virtual void v_Update(
                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                       Array<OneD, Array<OneD, NekDouble> >&outarray,
-                      NekDouble time,
-                      NekDouble lambda);
-
-        /// Computes the reaction terms \f$f(u,v)\f$ and \f$g(u,v)\f$.
-        void DoOdeRhs(
-                const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                      Array<OneD,        Array<OneD, NekDouble> >&outarray,
                 const NekDouble time);
-
-        /// Sets a custom initial condition.
-        virtual void v_SetInitialConditions(NekDouble initialtime,
-                                bool dumpInitialConditions);
 
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
 
     private:
-        /// Cell model.
-        CellModelSharedPtr m_cell;
-
-        /// Variable diffusivity
-        StdRegions::VarCoeffMap m_vardiff;
-
-        NekDouble m_chi;
-        NekDouble m_capMembrane;
-
-        /// Stimulus current
-        NekDouble m_stimDuration;
-
+        int cell_type;
+        NekDouble R;
+        NekDouble T;
+        NekDouble F;
+        NekDouble C_m;
+        NekDouble S;
+        NekDouble rho;
+        NekDouble V_C;
+        NekDouble V_SR;
+        NekDouble K_o;
+        NekDouble Na_o;
+        NekDouble Ca_o;
+        NekDouble g_Na;
+        NekDouble g_K1;
+        NekDouble g_to;
+        NekDouble g_Kr;
+        NekDouble g_Ks;
+        NekDouble p_KNa;
+        NekDouble g_Ca_L;
+        NekDouble k_NaCa;
+        NekDouble gamma;
+        NekDouble K_m_Ca;
+        NekDouble K_m_Na_i;
+        NekDouble K_sat;
+        NekDouble alpha;
+        NekDouble P_NaK;
+        NekDouble K_m_K;
+        NekDouble K_m_Na;
+        NekDouble g_pk;
+        NekDouble g_pCa;
+        NekDouble K_pCa;
+        NekDouble g_b_Na;
+        NekDouble g_b_Ca;
+        NekDouble V_maxup;
+        NekDouble K_up;
+        NekDouble a_rel;
+        NekDouble b_rel;
+        NekDouble c_rel;
+        NekDouble V_leak;
+        NekDouble Buf_c;
+        NekDouble K_bufc;
+        NekDouble Buf_sr;
+        NekDouble K_bufsr;
     };
 
 }

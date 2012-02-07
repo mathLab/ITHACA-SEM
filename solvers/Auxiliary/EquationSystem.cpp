@@ -95,7 +95,12 @@ namespace Nektar
         m_sessionName = m_filename;
         m_sessionName = m_sessionName.substr(0,
                                 m_sessionName.find_last_of("."));
-        
+        if (m_comm->GetSize() > 1)
+        {
+            m_sessionName = m_sessionName.substr(0,
+                                m_sessionName.find_last_of("_"));
+        }
+
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_filename);
 
@@ -1697,7 +1702,12 @@ namespace Nektar
         char procout[16] = "";
 
         sprintf(chkout, "%d", n);
-        std::string outname = m_sessionName + "_" + chkout + ".chk";
+        std::string outname = m_sessionName + "_" + chkout;
+        if (m_comm->GetSize() > 1)
+        {
+            outname += "_P" + m_comm->GetRank();
+        }
+        outname += ".chk";
 
         WriteFld(outname);
     }

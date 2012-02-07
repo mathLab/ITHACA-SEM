@@ -84,7 +84,9 @@ namespace Nektar
 
         ASSERTL0(vCellModel != "", "Cell Model not specified.");
 
-        m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]->GetNpoints());
+        m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]);
+
+        m_intVariables.push_back(0);
 
         // Load variable coefficients
         /// @todo: move to an EvaluateFunction routine.
@@ -192,7 +194,10 @@ namespace Nektar
         int ncoeffs     = inarray[0].num_elements();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_chi/m_capMembrane;
+        // lambda = \Delta t
+        factors[StdRegions::eFactorLambda] = 1.0/lambda*m_chi*m_capMembrane;
+
+        Array<OneD, NekDouble> tmp(m_fields[0]->GetNcoeffs());
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
@@ -200,13 +205,7 @@ namespace Nektar
         // where \hat = modal coeffs
         for (int i = 0; i < nvariables; ++i)
         {
-            // Only apply diffusion to first variable.
-            if (i > 0) {
-                Vmath::Vcopy(nq, &inarray[i][0], 1, &outarray[i][0], 1);
-                continue;
-            }
-
-            // Multiply 1.0/timestep/lambda
+            // Multiply 1.0/timestep
             Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1,
                                             m_fields[i]->UpdatePhys(), 1);
 
@@ -232,6 +231,10 @@ namespace Nektar
             const NekDouble time)
     {
         int nq = m_fields[0]->GetNpoints();
+        int nvar = inarray.num_elements();
+
+        m_cell->TimeIntegrate(inarray, outarray, time);
+
         if (m_stimDuration > 0 && time < m_stimDuration)
         {
             Array<OneD,NekDouble> x0(nq);
@@ -245,10 +248,10 @@ namespace Nektar
                     = m_session->GetFunction("Stimulus", "u");
             for(int j = 0; j < nq; j++)
             {
-                outarray[0][j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+                outarray[0][j] += ifunc->Evaluate(x0[j],x1[j],x2[j],time);
             }
         }
-        m_cell->Update(inarray, outarray, time);
+        //Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }
 
 
@@ -256,6 +259,7 @@ namespace Nektar
                         bool dumpInitialConditions)
     {
         EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions);
+        m_cell->Initialise();
     }
 
 

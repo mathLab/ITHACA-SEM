@@ -122,7 +122,20 @@ namespace Nektar
         int i,n,nchk = 1;
         int ncoeffs = m_fields[0]->GetNcoeffs();
 		int npoints = m_fields[0]->GetNpoints();
-        int nvariables = m_fields.num_elements();
+		int nvariables = 0;
+
+		if (m_intVariables.empty())
+		{
+		    for (i = 0; i < m_fields.num_elements(); ++i)
+		    {
+		        m_intVariables.push_back(i);
+		    }
+		    nvariables = m_fields.num_elements();
+		}
+		else
+		{
+		    nvariables = m_intVariables.size();
+		}
 
         // Set up wrapper to fields data storage.
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
@@ -130,8 +143,8 @@ namespace Nektar
 		
         for(i = 0; i < nvariables; ++i)
         {
-			fields[i]  = m_fields[i]->UpdatePhys();
-			m_fields[i]->SetPhysState(false);
+            fields[i]  = m_fields[m_intVariables[i]]->UpdatePhys();
+            m_fields[m_intVariables[i]]->SetPhysState(false);
         }
 		
         // Declare an array of TimeIntegrationSchemes For multi-stage
@@ -394,6 +407,8 @@ namespace Nektar
 		
 		else
 		{
+		    m_actTime = Array<OneD, NekDouble> (m_fields[0]->GetNpoints(), 0.0);
+		    m_actThreshold = 0.0;
 			for(n = 0; n < m_steps; ++n)
 			{
                 Timer timer;
@@ -425,16 +440,27 @@ namespace Nektar
 				}
 
 				// Transform data if needed
-				if((m_historysteps && !((n+1)%m_historysteps))
+				if((m_historysteps && m_historyList.size() > 0 && !((n+1)%m_historysteps))
 				        || (n&&(!((n+1)%m_checksteps))))
                 {
-                    for (i = 0; i < nvariables; ++i)
+                    for (i = 0; i < m_intVariables.size(); ++i)
                     {
-                        m_fields[i]->FwdTrans(fields[i],
-                                              m_fields[i]->UpdateCoeffs());
-                        m_fields[i]->SetPhysState(false);
+                        m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(fields[i],
+                                    m_fields[m_intVariables[i]]->UpdateCoeffs());
+                        m_fields[m_intVariables[i]]->SetPhysState(false);
                     }
                 }
+
+				if (m_session->DefinesSolverInfo("ComputeActivationTime"))
+				{
+                    for (i = 0; i < m_fields[0]->GetNpoints(); ++i)
+                    {
+                        if (m_actTime[i] < m_timestep && m_fields[0]->GetPhys()[i] > m_actThreshold)
+                        {
+                            m_actTime[i] = m_time;
+                        }
+                    }
+				}
 
 	            // Write out history data to file
 	            if(m_historysteps && !((n+1)%m_historysteps))
@@ -454,15 +480,42 @@ namespace Nektar
 			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
 
 			// At the end of the time integration, store final solution.
-			for(i = 0; i < nvariables; ++i)
+			for(i = 0; i < m_intVariables.size(); ++i)
 			{
-	            if(m_fields[i]->GetPhysState() == false)
+	            if(m_fields[m_intVariables[i]]->GetPhysState() == false)
 	            {
-	                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+	                m_fields[m_intVariables[i]]->BwdTrans(m_fields[m_intVariables[i]]->GetCoeffs(),m_fields[m_intVariables[i]]->UpdatePhys());
 	            }
-				m_fields[i]->UpdatePhys() = fields[i];
+				m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
 			}
-	    }
+
+			if (m_session->DefinesSolverInfo("ComputeActivationTime"))
+			{
+                NekDouble tmp;
+                // swap in
+                for (i = 0; i < m_fields[0]->GetNpoints(); ++i)
+                {
+                    tmp = m_fields[0]->GetPhys()[i];
+                    m_fields[0]->UpdatePhys()[i] = m_actTime[i];
+                    m_actTime[i] = tmp;
+                    m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
+                    m_fields[0]->SetPhysState(false);
+                }
+
+                // write out
+                Checkpoint_Output(nchk);
+
+                // swap out
+                for (i = 0; i < m_fields[0]->GetNpoints(); ++i)
+                {
+                    tmp = m_fields[0]->GetPhys()[i];
+                    m_fields[0]->UpdatePhys()[i] = m_actTime[i];
+                    m_actTime[i] = tmp;
+                    m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
+                    m_fields[0]->SetPhysState(false);
+                }
+			}
+		}
     }
 
 

@@ -47,10 +47,10 @@ namespace Nektar
         /// Creates an instance of this class
         static CellModelSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
-                const int nq)
+                const MultiRegions::ExpListSharedPtr& pField)
         {
             return MemoryManager<CourtemancheRamirezNattel98>
-                                        ::AllocateSharedPtr(pSession, nq);
+                                        ::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
@@ -59,7 +59,7 @@ namespace Nektar
         /// Constructor
         CourtemancheRamirezNattel98(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
-                const int nq);
+                const MultiRegions::ExpListSharedPtr& pField);
 
         /// Destructor
         virtual ~CourtemancheRamirezNattel98();
@@ -73,6 +73,8 @@ namespace Nektar
 
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
+
+        virtual void v_SetInitialConditions();
 
     private:
         NekDouble C_m;

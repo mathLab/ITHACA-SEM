@@ -65,8 +65,8 @@ L 2 error (variable u) : 3.62709e-05
 L inf error (variable u) : 2.4442e-05
 ----------------------------------------
 Test_Advection1D_m14_Order4.xml
-L 2 error (variable u) : 8.17241e-11
-L inf error (variable u) : 3.02666e-10
+L 2 error (variable u) : 8.1652e-11
+L inf error (variable u) : 3.02622e-10
 ----------------------------------------
 Test_Advection_m12_Order1.xml
 L 2 error (variable u) : 0.0118581
@@ -77,8 +77,8 @@ L 2 error (variable u) : 9.55749e-05
 L inf error (variable u) : 9.27095e-05
 ----------------------------------------
 Test_Advection_m14_Order4.xml
-L 2 error (variable u) : 8.3871e-09
-L inf error (variable u) : 5.3248e-08
+L 2 error (variable u) : 8.38724e-09
+L inf error (variable u) : 5.32505e-08
 ----------------------------------------
 Test_Advection_m12_DG_Order1.xml
 L 2 error (variable u) : 0.0118577
@@ -89,7 +89,7 @@ L 2 error (variable u) : 9.18608e-05
 L inf error (variable u) : 9.63598e-05
 ----------------------------------------
 Test_Advection_m14_DG_Order4.xml
-L 2 error (variable u) : 3.88032e-09
+L 2 error (variable u) : 3.88022e-09
 L inf error (variable u) : 6.24598e-08
 ----------------------------------------
 Test_ImDiffusion_m6.xml
@@ -129,7 +129,7 @@ L 2 error (variable u) : 1.5458e-08
 L inf error (variable u) : 3.64252e-08
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo1D_MVM.xml
-L 2 error (variable u) : 1.16095e-06
+L 2 error (variable u) : 6.99031e-08
 L inf error (variable u) : 1.53887e-07
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml
@@ -137,7 +137,7 @@ L 2 error (variable u) : 5.48207e-09
 L inf error (variable u) : 1.39886e-08
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml
-L 2 error (variable u) : 6.16212e-07
+L 2 error (variable u) : 5.99725e-08
 L inf error (variable u) : 1.02378e-07
 ----------------------------------------
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_FFT.xml

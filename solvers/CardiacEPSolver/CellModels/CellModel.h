@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <SpatialDomains/SpatialData.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -51,16 +52,29 @@ namespace Nektar
     /// Datatype of the NekFactory used to instantiate classes derived from
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory< std::string, CellModel,
-                const LibUtilities::SessionReaderSharedPtr&, int> CellModelFactory;
+                const LibUtilities::SessionReaderSharedPtr&,
+                const MultiRegions::ExpListSharedPtr&> CellModelFactory;
     CellModelFactory& GetCellModelFactory();
 
     /// Cell model base class.
     class CellModel
     {
     public:
-        CellModel(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
+        CellModel(const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField);
+
         virtual ~CellModel() {}
 
+        /// Initialise the cell model storage and set initial conditions
+        void Initialise();
+
+        /// Time integrate the cell model by one PDE timestep
+        void TimeIntegrate(
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
+                const NekDouble time);
+
+        /// Compute the derivatives of cell model variables
         void Update(
                 const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                       Array<OneD,        Array<OneD, NekDouble> >&outarray,
@@ -69,16 +83,38 @@ namespace Nektar
             v_Update(inarray, outarray, time);
         }
 
+        /// Print a summary of the cell model
         void PrintSummary(std::ostream &out)
         {
             v_PrintSummary(out);
         }
 
     protected:
-        /// Spatially varying parameters.
-        SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
+        /// Session
+        LibUtilities::SessionReaderSharedPtr m_session;
+        /// Transmembrane potential field from PDE system
+        MultiRegions::ExpListSharedPtr m_field;
         /// Number of physical points.
         int m_nq;
+        /// Number of variables in cell model (inc. transmembrane voltage)
+        int m_nvar;
+        /// Timestep for pde model
+        NekDouble m_timestep;
+
+        /// Spatially varying parameters.
+        SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
+
+        /// Cell model solution variables
+        Array<OneD, Array<OneD, NekDouble> > m_cellSol;
+        /// Cell model integration workspace
+        Array<OneD, Array<OneD, NekDouble> > m_wsp;
+
+        /// Indices of cell model variables which are concentrations
+        std::vector<int> m_concentrations;
+        /// Indices of cell model variables which are gates
+        std::vector<int> m_gates;
+        /// Storage for gate tau values
+        Array<OneD, Array<OneD, NekDouble> > m_gates_tau;
 
         virtual void v_Update(
                 const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
@@ -86,6 +122,8 @@ namespace Nektar
                 const NekDouble time) = 0;
 
         virtual void v_PrintSummary(std::ostream &out) = 0;
+
+        virtual void v_SetInitialConditions() = 0;
     };
 
 }

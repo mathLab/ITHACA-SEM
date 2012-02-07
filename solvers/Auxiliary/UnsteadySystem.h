@@ -89,6 +89,11 @@ namespace Nektar
         /// Indicates if explicit or implicit treatment of reaction is used.
         bool                                            m_explicitReaction;
 
+        Array<OneD, NekDouble>                          m_actTime;
+        NekDouble                                       m_actThreshold;
+
+        std::vector<int>                                m_intVariables;
+
         /// Initialises UnsteadySystem class members.
         UnsteadySystem(const LibUtilities::SessionReaderSharedPtr& pSession);
 

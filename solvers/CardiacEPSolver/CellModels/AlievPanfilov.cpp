@@ -51,8 +51,8 @@ namespace Nektar
                 "Phenomological model of canine cardiac electrophysiology.");
 
     CellModelAlievPanfilov::CellModelAlievPanfilov(
-                    const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
-            : CellModel(pSession, nq)
+                    const LibUtilities::SessionReaderSharedPtr& pSession, const MultiRegions::ExpListSharedPtr& pField)
+            : CellModel(pSession, pField)
     {
         ASSERTL0(pSession->GetVariables().size() == 2,
                  "Aliev-Panfilov cell model requires 2 variables.");

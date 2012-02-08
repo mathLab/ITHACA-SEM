@@ -100,6 +100,8 @@ namespace Nektar
         int m_nvar;
         /// Timestep for pde model
         NekDouble m_timestep;
+        /// Number of substeps to take
+        int m_substeps;
 
         /// Spatially varying parameters.
         SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;

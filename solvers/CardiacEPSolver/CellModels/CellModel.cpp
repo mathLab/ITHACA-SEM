@@ -67,6 +67,7 @@ namespace Nektar
         m_session = pSession;
         m_field = pField;
         m_timestep = pSession->GetParameter("TimeStep");
+        m_substeps = pSession->GetParameter("Substeps");
         m_nvar = 0;
 //        m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
 //                                          ::AllocateSharedPtr(nq);
@@ -122,14 +123,13 @@ namespace Nektar
     {
         int nq = m_nq;
         int nvar = inarray.num_elements();
-        int substeps = 1;
-        NekDouble delta_t = m_timestep/substeps;
+        NekDouble delta_t = m_timestep/m_substeps;
 
         // Copy new transmembrane potential into cell model
         Vmath::Vcopy(nq, inarray[0], 1, m_cellSol[0], 1);
 
         // Perform substepping
-        for (unsigned int i = 0; i < substeps - 1; ++i)
+        for (unsigned int i = 0; i < m_substeps - 1; ++i)
         {
             Update(m_cellSol, m_wsp, time);
             // Voltage

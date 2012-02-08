@@ -115,9 +115,9 @@ namespace Nektar
                     // Normalise and invert (assuming image intensity data)
                     int nq = m_fields[0]->GetNpoints();
                     NekDouble max = Vmath::Vmax(nq, m_fields[0]->GetPhys(), 1);
-                    Vmath::Smul(nq, 1.0/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Smul(nq, 0.13341/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
                     Vmath::Neg(nq, m_fields[0]->UpdatePhys(), 1);
-                    Vmath::Sadd(nq, 1.0, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Sadd(nq, 0.13341, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
 
                     m_vardiff[varCoeffEnum[i]] = m_fields[0]->GetPhys();
                 }
@@ -251,7 +251,7 @@ namespace Nektar
                 outarray[0][j] += ifunc->Evaluate(x0[j],x1[j],x2[j],time);
             }
         }
-        //Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
+        Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }
 
 

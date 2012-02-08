@@ -114,12 +114,36 @@ namespace Nektar
 
                     // Normalise and invert (assuming image intensity data)
                     int nq = m_fields[0]->GetNpoints();
-                    NekDouble max = Vmath::Vmax(nq, m_fields[0]->GetPhys(), 1);
-                    Vmath::Smul(nq, 0.13341/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-                    Vmath::Neg(nq, m_fields[0]->UpdatePhys(), 1);
-                    Vmath::Sadd(nq, 0.13341, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+//                    NekDouble max = Vmath::Vmax(nq, m_fields[0]->GetPhys(), 1);
+//                    Vmath::Smul(nq, 0.13341/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+//                    Vmath::Neg(nq, m_fields[0]->UpdatePhys(), 1);
+//                    Vmath::Sadd(nq, 0.13341, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
 
-                    m_vardiff[varCoeffEnum[i]] = m_fields[0]->GetPhys();
+                    NekDouble f_min = m_session->GetParameter("d_min");
+                    NekDouble f_max = m_session->GetParameter("d_max");
+                    NekDouble f_range = f_max - f_min;
+                    NekDouble o_min = m_session->GetParameter("o_min");
+                    NekDouble o_max = m_session->GetParameter("o_max");
+                    Vmath::Sadd(nq, -f_min, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    for (int j = 0; j < nq; ++j)
+                    {
+                        if (m_fields[0]->GetPhys()[j] < 0)
+                        {
+                            m_fields[0]->UpdatePhys()[j] = 0.0;
+                        }
+                        if (m_fields[0]->GetPhys()[j] > f_range)
+                        {
+                            m_fields[0]->UpdatePhys()[j] = f_range;
+                        }
+                    }
+                    Vmath::Smul(nq, -1.0/f_range, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Sadd(nq, 1.0, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Smul(nq, o_max-o_min, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+                    Vmath::Sadd(nq, o_min, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
+
+                    Array<OneD, NekDouble> tmp(nq);
+                    Vmath::Vcopy(nq, m_fields[0]->GetPhys(), 1, tmp, 1);
+                    m_vardiff[varCoeffEnum[i]] = tmp;
                 }
                 // Evaluate expression
                 else
@@ -146,7 +170,14 @@ namespace Nektar
                 // Dump actual variable coefficients for verification.
                 m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(),
                                                  m_fields[0]->UpdateCoeffs());
-                WriteFld(varCoeffs[i] + ".fld");
+                std::stringstream filename;
+                filename << varCoeffs[i];
+                if (m_comm->GetSize() > 1)
+                {
+                    filename << "_P" << m_comm->GetRank();
+                }
+                filename << ".fld";
+                WriteFld(filename.str());
             }
         }
 

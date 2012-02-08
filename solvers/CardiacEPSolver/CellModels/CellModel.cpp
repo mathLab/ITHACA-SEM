@@ -95,12 +95,7 @@ namespace Nektar
         m_wsp = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         for (unsigned int i = 0; i < m_nvar; ++i)
         {
-//            LibUtilities::EquationSharedPtr f = m_session->GetFunction("InitialConditions", i);
             m_cellSol[i] = Array<OneD, NekDouble>(nq);
-//            for (unsigned int j = 0; j < nq; ++j)
-//            {
-//                m_cellSol[i][j] = f->Evaluate(xc0[j], xc1[j], xc2[j]);
-//            }
             m_wsp[i] = Array<OneD, NekDouble>(nq);
         }
         m_gates_tau = Array<OneD, Array<OneD, NekDouble> >(m_gates.size());
@@ -127,7 +122,7 @@ namespace Nektar
     {
         int nq = m_nq;
         int nvar = inarray.num_elements();
-        int substeps = 10;
+        int substeps = 1;
         NekDouble delta_t = m_timestep/substeps;
 
         // Copy new transmembrane potential into cell model
@@ -147,6 +142,9 @@ namespace Nektar
             // Gating variables: Rush-Larsen scheme
             for (unsigned int j = 0; j < m_gates.size(); ++j)
             {
+//                Vmath::Vsub(nq, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1);
+//                Vmath::Vdiv(nq, m_wsp[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1);
+//                Vmath::Svtvp(nq, delta_t, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
                 Vmath::Sdiv(nq, -delta_t, m_gates_tau[j], 1, m_gates_tau[j], 1);
                 Vmath::Vexp(nq, m_gates_tau[j], 1, m_gates_tau[j], 1);
                 Vmath::Vsub(nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
@@ -169,6 +167,9 @@ namespace Nektar
         // Gating variables: Rush-Larsen scheme
         for (unsigned int j = 0; j < m_gates.size(); ++j)
         {
+//            Vmath::Vsub(nq, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1);
+//            Vmath::Vdiv(nq, m_wsp[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1);
+//            Vmath::Svtvp(nq, delta_t, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
             Vmath::Sdiv(nq, -delta_t, m_gates_tau[j], 1, m_gates_tau[j], 1);
             Vmath::Vexp(nq, m_gates_tau[j], 1, m_gates_tau[j], 1);
             Vmath::Vsub(nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);

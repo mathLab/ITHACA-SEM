@@ -175,7 +175,6 @@ namespace Nektar
         int i          = 0;
         NekDouble alpha, beta;
         Vmath::Zero(n, outarray[0], 1);
-        //Vmath::Zero(n, outarray[1], 1);
 
         Array<OneD, NekDouble> &tmp = outarray[11];
         Array<OneD, NekDouble> &tmp2 = outarray[12];

@@ -411,6 +411,215 @@ namespace Nektar
              ReadGlobalOptimizationParameters();
           }
 
+        /**
+		 * Specialized constructor for trace expansions. Store 
+		 * expansions for the trace space used in DisContField3D
+         *
+         * @param   bndConstraint   Array of ExpList2D objects each containing a
+         *                      2D spectral/hp element expansion on a single
+         *                      boundary region.
+         * @param   bndCond     Array of BoundaryCondition objects which contain
+         *                      information about the boundary conditions on the
+         *                      different boundary regions.
+         * @param   locexp      Complete domain expansion list.
+         * @param   graph3D     3D mesh corresponding to the expansion list.
+         * @param   periodicFaces   List of periodic faces.
+         * @param   DeclareCoeffPhysArrays If true, set up m_coeffs, m_phys arrays
+		 **/
+		 ExpList2D::ExpList2D(
+				 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+				 const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+				 const StdRegions::StdExpansionVector &locexp,
+				 const SpatialDomains::MeshGraphSharedPtr &graph3D,
+				 const map<int,int> &periodicFaces,
+				 const bool DeclareCoeffPhysArrays):
+			 ExpList()
+		{
+            int i,j,cnt,id, elmtid=0;
+            map<int,int> FaceDone;
+            map<int,int> NormalSet;
+            SpatialDomains::Geometry2DSharedPtr FaceGeom;
+			SpatialDomains::QuadGeomSharedPtr FaceQuadGeom;
+			SpatialDomains::TriGeomSharedPtr FaceTriGeom;
+			LocalRegions::QuadExpSharedPtr FaceQuadExp;
+			LocalRegions::TriExpSharedPtr FaceTriExp;
+
+            // First loop over boundary conditions to renumber
+            // Dirichlet boundaries
+            cnt = 0;
+            for(i = 0; i < bndCond.num_elements(); ++i)
+            {
+                if(bndCond[i]->GetBoundaryConditionType()
+                                            == SpatialDomains::eDirichlet)
+                {
+                    for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
+                    {
+                        LibUtilities::BasisKey bkey0 = bndConstraint[i]
+                                    ->GetExp(j)->GetBasis(0)->GetBasisKey();
+                        LibUtilities::BasisKey bkey1 = bndConstraint[i]
+                                    ->GetExp(j)->GetBasis(1)->GetBasisKey();
+                        FaceGeom = bndConstraint[i]->GetExp(j)->GetGeom2D();
+
+						//if face is a quad
+						if(FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom))
+						{
+							FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+							FaceDone[FaceGeom->GetFid()] = elmtid;
+							FaceQuadExp->SetElmtId(elmtid++);
+							(*m_exp).push_back(FaceQuadExp);
+						}
+						//if face is a triangle
+						else if(FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom))
+						{
+							FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+							FaceDone[FaceGeom->GetFid()] = elmtid;
+							FaceTriExp->SetElmtId(elmtid++);
+							(*m_exp).push_back(FaceTriExp);
+						}
+						else
+						{
+							ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+						}
+                    }
+                }
+            }
+
+            // loop over all other faces and fill out other connectivities
+            for(i = 0; i < locexp.size(); ++i)
+            {
+                for(j = 0; j < locexp[i]->GetNfaces(); ++j)
+                {
+                    FaceGeom = (locexp[i]->GetGeom3D())->GetFace(j);
+
+                    id = FaceGeom->GetFid();
+
+                    if(FaceDone.count(id)==0)
+                    {
+                        LibUtilities::BasisKey bkey0 = 
+							boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0); 
+                        LibUtilities::BasisKey bkey1 = 
+							boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
+                        
+						//if face is a quad
+						if(FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom))
+						{
+							FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+							
+							FaceDone[id] = elmtid;
+							if (periodicFaces.count(id) > 0)
+							{
+								FaceDone[periodicFaces.find(id)->second] = elmtid;
+							}
+							FaceQuadExp->SetElmtId(elmtid++);
+							(*m_exp).push_back(FaceQuadExp);
+						}
+						//if face is a triangle
+						else if(FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom))
+						{
+							FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+							
+							FaceDone[id] = elmtid;
+							if (periodicFaces.count(id) > 0)
+							{
+								FaceDone[periodicFaces.find(id)->second] = elmtid;
+							}
+							FaceTriExp->SetElmtId(elmtid++);
+							(*m_exp).push_back(FaceTriExp);
+						}
+						else
+						{
+							ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+						}
+                        
+
+                    }
+					//variable modes/points
+					//if for the current edge we have more modes/points at least in one direction
+					//we replace the old edge in the trace expansion with the current one
+                    else
+                    {
+                        LibUtilities::BasisKey bkey0 = 
+							boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0); 
+                        LibUtilities::BasisKey bkey1 = 
+							boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
+
+                        if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
+                                >= bkey0.GetNumPoints()
+							|| (*m_exp)[FaceDone[id]]->GetNumPoints(1)
+                                >= bkey1.GetNumPoints())
+                            && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
+                                >= bkey0.GetNumModes()
+							|| (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
+                                >= bkey1.GetNumModes()) )
+                        {
+                        }
+                        else if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
+                                <= bkey0.GetNumPoints()
+							|| (*m_exp)[FaceDone[id]]->GetNumPoints(1)
+                                <= bkey1.GetNumPoints())
+                            && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
+                                <= bkey0.GetNumModes()
+							|| (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
+                                <= bkey1.GetNumModes()) )
+                        {
+							//if face is a quad
+						if(FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom))
+							{
+								FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+								FaceQuadExp->SetElmtId(FaceDone[id]);
+								(*m_exp)[FaceDone[id]] = FaceQuadExp;
+							}
+							//if face is a triangle
+						else if(FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom))
+							{
+								FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+								FaceTriExp->SetElmtId(FaceDone[id]);
+								(*m_exp)[FaceDone[id]] = FaceTriExp;
+							}
+							else
+							{
+								ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+							}
+
+                            NormalSet.erase(id);
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                "inappropriate number of points/modes (max "
+                                "num of points is not set with max order)");
+                        }
+                    }
+
+//                    if (NormalSet.count(id) == 0)
+//                    {
+//                        Seg = boost::dynamic_pointer_cast
+//                                    <LocalRegions::SegExp>(
+//                                        (*m_exp)[EdgeDone.find(id)->second]);
+//
+//                        // Set up normals at all Segment Quadrature points
+//                        Seg->SetUpPhysNormals(locexp[i],j);
+//                        NormalSet[id] = 1;
+//                    }
+                }
+            }
+
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // Set up offset information and array sizes
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys.
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
+		}
+
 
          /**
           * Fills the list of local expansions with the segments from the 3D

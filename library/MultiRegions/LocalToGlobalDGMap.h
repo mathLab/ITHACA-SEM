@@ -38,6 +38,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <SpatialDomains/MeshGraph2D.h>
+#include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
 
@@ -74,6 +75,18 @@ namespace Nektar
                                                                 &bndCond,
                 const map<int,int> &periodicEdges);
 
+            /// Constructor for trace map for three-dimensional expansion.
+            MULTI_REGIONS_EXPORT LocalToGlobalDGMap(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                const ExpList2DSharedPtr &trace,
+                const ExpList &locExp,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>
+                                                                &bndConstraint,
+                const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndCond,
+                const map<int,int> &periodicFaces);
+
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~LocalToGlobalDGMap();
 
@@ -86,6 +99,12 @@ namespace Nektar
 
             inline Array<OneD,Array<OneD,StdRegions::StdExpansion1DSharedPtr> >
                     GetElmtToTrace();
+            
+			inline Array<OneD, StdRegions::StdExpansion2DSharedPtr>
+                    GetElmtToFace(const int i);
+
+            inline Array<OneD,Array<OneD,StdRegions::StdExpansion2DSharedPtr> >
+                    GetElmtToFace();
 
             inline AdjacentTraceOrientation
                     GetBndExpAdjacentOrient(const int i);
@@ -97,8 +116,12 @@ namespace Nektar
             int m_numDirichletBndPhys;
             /// list of edge expansions for a given element
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;
+			/// list of face expansions for a given element
+            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> > m_elmtToFace;
 
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
+			
+			Array<OneD, AdjacentFaceOrientation > m_bndExpAdjacentFaceOrient;
 
             void SetUpUniversalDGMap(const ExpList &locExp);
 
@@ -169,6 +192,20 @@ namespace Nektar
                     LocalToGlobalDGMap::GetElmtToTrace()
         {
             return m_elmtToTrace;
+        }
+        
+		inline Array<OneD, StdRegions::StdExpansion2DSharedPtr>
+                    LocalToGlobalDGMap::GetElmtToFace(const int i)
+        {
+            ASSERTL1(i >= 0 && i < m_elmtToFace.num_elements(),
+                     "i is out of range");
+            return m_elmtToFace[i];
+        }
+
+        inline Array<OneD, Array< OneD, StdRegions::StdExpansion2DSharedPtr> >
+                    LocalToGlobalDGMap::GetElmtToFace()
+        {
+            return m_elmtToFace;
         }
 
         inline AdjacentTraceOrientation

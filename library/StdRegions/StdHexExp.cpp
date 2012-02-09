@@ -920,6 +920,25 @@ namespace Nektar
                      - 4*( nmodes0 + nmodes1 + nmodes2 ) + 8 );
         }
 
+        int StdHexExp::v_NumDGBndryCoeffs() const
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int nmodes0 = m_base[0]->GetNumModes();
+            int nmodes1 = m_base[1]->GetNumModes();
+            int nmodes2 = m_base[2]->GetNumModes();
+
+            return  2*( nmodes0*nmodes1 + nmodes0*nmodes2
+                        + nmodes1*nmodes2 );
+        }
 
         int StdHexExp::v_GetEdgeNcoeffs(const int i) const
         {

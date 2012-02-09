@@ -53,7 +53,7 @@ SET(NEKTAR_USE_MPI OFF CACHE BOOL "Use MPICH2 for parallelisation.")
 SET(MPI_SYNC OFF CACHE BOOL "Use synchronous MPI calls when sending data.")
 MARK_AS_ADVANCED(MPI_SYNC)
 IF( NEKTAR_USE_MPI )
-    INCLUDE (FindGSLib)
+    INCLUDE (FindGSMPI)
 ENDIF( NEKTAR_USE_MPI )
 
 SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
@@ -219,11 +219,11 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/FindMetis.cmake
-	      ${CMAKE_SOURCE_DIR}/FindFFTW.cmake
+	          ${CMAKE_SOURCE_DIR}/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/FindTinyXml.cmake
-              ${CMAKE_SOURCE_DIR}/FindGSLib.cmake
+              ${CMAKE_SOURCE_DIR}/FindGSMPI.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
 
 

@@ -96,6 +96,14 @@ namespace Nektar
                       const LibUtilities::PointsType
                       TriNb = LibUtilities::SIZE_PointsType);
 
+			//Specialized constructor for trace expansions.
+            MULTI_REGIONS_EXPORT ExpList2D(
+                      const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+                      const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+                      const StdRegions::StdExpansionVector &locexp,
+                      const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                      const map<int,int> &periodicFaces,
+                      const bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.

@@ -61,6 +61,20 @@ namespace Nektar
             eAdjacentEdgeIsBackwards
         };
 
+        // Orientation of adjacent face for use with boundary
+        // constraints
+        enum AdjacentFaceOrientation
+        {
+			eAdjacentFaceDir1FwdDir1_Dir2FwdDir2,
+			eAdjacentFaceDir1FwdDir1_Dir2BwdDir2,
+			eAdjacentFaceDir1BwdDir1_Dir2FwdDir2,
+			eAdjacentFaceDir1BwdDir1_Dir2BwdDir2,
+			eAdjacentFaceDir1FwdDir2_Dir2FwdDir1,
+			eAdjacentFaceDir1FwdDir2_Dir2BwdDir1,
+			eAdjacentFaceDir1BwdDir2_Dir2FwdDir1,
+			eAdjacentFaceDir1BwdDir2_Dir2BwdDir1
+        };
+
         enum GlobalSysSolnType
         {
             eNoSolnType,    ///< No Solution type specified

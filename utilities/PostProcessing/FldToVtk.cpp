@@ -263,7 +263,6 @@ int main(int argc, char *argv[])
         //outname += ".vtu";
         ofstream outfile(fname.c_str());
         Exp[0]->WriteVtkHeader(outfile);
-        int factor = Exp[0]->GetNumElmts()/100;
 
         // For each field write out field data for each expansion.
         for(i = 0; i < Exp[0]->GetNumElmts(); ++i)
@@ -275,11 +274,6 @@ int main(int argc, char *argv[])
                 Exp[j]->WriteVtkPieceData(outfile,i, fielddef[0]->m_fields[j]);
             }
             Exp[0]->WriteVtkPieceFooter(outfile,i);
-            if ((i % factor) == 0)
-            {
-                cout << "Writing file..." << (int)floor((double)i/factor)
-                     << "%\r" << flush;
-            }
         }
         Exp[0]->WriteVtkFooter(outfile);
         cout << "Written file: " << fname << endl;

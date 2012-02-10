@@ -815,11 +815,22 @@ namespace Nektar
         // boundary conditions
         void DisContField2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
         {
-            map<int, int> EdgeGID;
+            map<int, int> globalIdMap;
             int i,n,id;
             int bid,cnt,Eid;
             int nbcs = 0;
 
+            SpatialDomains::MeshGraph2DSharedPtr graph2D =
+                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(m_graph);
+
+            // Populate global ID map (takes global geometry ID to local
+            // expansion list ID).
+            for (i = 0; i < GetExpSize(); ++i)
+            {
+                globalIdMap[(*m_exp)[i]->GetGeom2D()->GetGlobalID()] = i;
+            }
+
+            // Determine number of boundary condition expansions.
             for(i = 0; i < m_bndConditions.num_elements(); ++i)
             {
                 nbcs += m_bndCondExpansions[i]->GetExpSize();
@@ -828,11 +839,7 @@ namespace Nektar
             // make sure arrays are of sufficient length
             if(ElmtID.num_elements() != nbcs)
             {
-                ElmtID = Array<OneD, int>(nbcs,-1);
-            }
-            else
-            {
-                fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
+                ElmtID = Array<OneD, int>(nbcs);
             }
 
             if(EdgeID.num_elements() != nbcs)
@@ -840,36 +847,19 @@ namespace Nektar
                 EdgeID = Array<OneD, int>(nbcs);
             }
 
-            // setup map of all global ids along boundary
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i)
+                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                 {
-                    Eid =  m_bndCondExpansions[n]->GetExp(i)->GetGeom1D()->GetEid();
-                    EdgeGID[Eid] = cnt++;
-                }
-            }
-  
-            // Loop over elements and find edges that match;
-            for(cnt = n = 0; n < GetExpSize(); ++n)
-            {
-                for(i = 0; i < (*m_exp)[n]->GetNedges(); ++i)
-                {
-                    id = (*m_exp)[n]->GetGeom2D()->GetEid(i);
+                    // Use face to element map from MeshGraph3D.
+                    SpatialDomains::ElementEdgeVectorSharedPtr tmp =
+                        graph2D->GetElementsFromEdge(
+                            m_bndCondExpansions[n]->GetExp(i)->GetGeom1D());
 
-                    if(EdgeGID.count(id) > 0)
-                    {
-                        bid = EdgeGID.find(id)->second;
-    
-/// @todo check the ASSERTL1(ElmtID[bid] == -1,"Edge already set") about the Robin  bcs 
-                        //ASSERTL1(ElmtID[bid] == -1,"Edge already set");
-                        ElmtID[bid] = n;
-                        EdgeID[bid] = i;
-                        cnt ++;
-                    }
+                    ElmtID[cnt] = globalIdMap[(*tmp)[0]->m_Element->GetGlobalID()];
+                    EdgeID[cnt] = (*tmp)[0]->m_EdgeIndx;
                 }
             }
-            ASSERTL1(cnt >= nbcs,"Failed to visit all boundary conditions");
         }
 
         /// Note this routine changes m_trace->m_coeffs space;

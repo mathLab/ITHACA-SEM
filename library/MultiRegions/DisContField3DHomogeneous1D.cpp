@@ -221,9 +221,16 @@ namespace Nektar
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
-            // Fourier transform forcing function
-			HomogeneousFwdTrans(inarray,fce);
-			
+            // Transform forcing function in half-physical space if required
+			if(m_WaveSpace)
+			{
+				fce = inarray;
+			}
+			else 
+			{
+				HomogeneousFwdTrans(inarray,fce);
+			}
+
             for(n = 0; n < nhom_modes; ++n)
             {
                 beta = 2*M_PI*(n/2)/m_lhom;

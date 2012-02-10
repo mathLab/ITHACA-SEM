@@ -171,8 +171,43 @@ namespace Nektar
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
         static int nchk = 0;
-        
+		
+		bool integrate_in_wave_space = false;
+		
+		if(m_session->DefinesSolverInfo("INTEGRATIONSPACE"))
+		{
+			if(m_HomogeneousType == eNotHomogeneous)
+			{
+				ASSERTL0(false,"INTEGRATIONSPACE type is meant to be for homogeneous cases");
+			}
+			
+			std::string IntegrationSpaceStr = m_session->GetSolverInfo("INTEGRATIONSPACE");
+			
+			if((IntegrationSpaceStr == "WaveSpace") || (IntegrationSpaceStr == "WAVESPACE"))
+			{
+				integrate_in_wave_space = true;
+			}
+			else if((IntegrationSpaceStr == "RealSpace") || (IntegrationSpaceStr == "REALSPACE"))
+			{
+				integrate_in_wave_space = false;
+			}
+			else 
+			{
+				ASSERTL0(false,"INTEGRATIONSPACE type not allowed, try WaveSpace or RealSpace");
+			}
+		}
+
         int n_fields = m_fields.num_elements();
+		
+		if(integrate_in_wave_space)
+		{
+			for(i = 0; i < n_fields; ++i)
+			{
+				m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+				m_fields[i]->SetWaveSpace(true);
+				m_fields[i]->SetPhysState(false);
+			}
+		}
 	
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(m_nConvectiveFields);
@@ -220,7 +255,14 @@ namespace Nektar
             // Write out history data to file
             if(m_historysteps && !((n+1)%m_historysteps))
             {
-                WriteHistoryData(hisFile);
+				if(integrate_in_wave_space)
+				{
+					ASSERTL1(false,"History data output not implemented for wave space integration")
+				}
+				else 
+				{
+					WriteHistoryData(hisFile);
+				}
             }
 
             // Write out energy data to file
@@ -268,13 +310,33 @@ namespace Nektar
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
             {
-                for(i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_fields[i]->SetPhys(fields[i]);
-                    m_fields[i]->SetPhysState(true);
-                }
-				nchk++;
-                Checkpoint_Output(nchk);
+				if(integrate_in_wave_space)
+				{
+					for(i = 0; i< n_fields; i++)
+					{
+						m_fields[i]->SetWaveSpace(false);
+						m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+						m_fields[i]->SetPhysState(true);
+					}
+					nchk++;
+					Checkpoint_Output(nchk);
+					for(i = 0; i< n_fields; i++)
+					{
+						m_fields[i]->SetWaveSpace(true);
+						m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+						m_fields[i]->SetPhysState(false);
+					}
+				}
+				else
+				{
+					for(i = 0; i < m_nConvectiveFields; ++i)
+					{
+						m_fields[i]->SetPhys(fields[i]);
+						m_fields[i]->SetPhysState(true);
+					}
+					nchk++;
+					Checkpoint_Output(nchk);
+				}
             }
 
             
@@ -287,13 +349,26 @@ namespace Nektar
                 }
             }
         }
-        
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            m_fields[i]->SetPhys(fields[i]);
-			m_fields[i]->SetPhysState(true);
-        }
 		
+		if(integrate_in_wave_space)
+		{
+			for(i = 0; i< n_fields; i++)
+			{
+				m_fields[i]->SetWaveSpace(false);
+				m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+				m_fields[i]->SetPhysState(true);
+			}
+		}
+		else 
+		{
+			for(i = 0; i < m_nConvectiveFields; ++i)
+			{
+				m_fields[i]->SetPhys(fields[i]);
+				m_fields[i]->SetPhysState(true);
+			}
+		}
+		
+        
         if (m_historysteps)
         {
             hisFile.close();

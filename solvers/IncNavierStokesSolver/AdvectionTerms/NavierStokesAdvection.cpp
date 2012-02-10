@@ -103,11 +103,11 @@ namespace Nektar
 			grad2 = Array<OneD, NekDouble> (nPointsTot);
 			pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
 			
-			if(m_dealiasing)
+			if(m_dealiasing || pFields[0]->GetWaveSpace())
 			{
-				pFields[0]->DealiasedProd(pV[0],grad0,m_UseContCoeff);
-				pFields[0]->DealiasedProd(pV[1],grad1,m_UseContCoeff);
-				pFields[0]->DealiasedProd(pV[2],grad2,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[0],grad0,grad0,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[1],grad1,grad1,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[2],grad2,grad2,m_UseContCoeff);
 				Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
 				Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
 			}

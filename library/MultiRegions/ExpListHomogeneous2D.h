@@ -98,7 +98,8 @@ namespace Nektar
 
             inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 			
-			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+									  const Array<OneD, NekDouble> &inarray2,
 									  Array<OneD, NekDouble> &outarray, 
 									  bool UseContCoeffs = false);
 
@@ -111,6 +112,8 @@ namespace Nektar
                               const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
+			
+			MULTI_REGIONS_EXPORT void SetPaddingBase(void);
 			
 			MULTI_REGIONS_EXPORT void Transpose(const Array<OneD, const NekDouble> &inarray,
 												Array<OneD, NekDouble> &outarray,
@@ -204,7 +207,8 @@ namespace Nektar
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
-			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+										 const Array<OneD, NekDouble> &inarray2,
 										 Array<OneD, NekDouble> &outarray, 
 										 bool UseContCoeffs = false);
 			
@@ -218,6 +222,12 @@ namespace Nektar
 									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
         private:
+			
+			//Padding operations variables
+			int padsize_y;
+			int padsize_z;
+			DNekMatSharedPtr    MatFwdPAD;
+			DNekMatSharedPtr    MatBwdPAD;
         };
 
         inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -230,11 +240,12 @@ namespace Nektar
             v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
         }
 		
-		inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+		inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+														const Array<OneD, NekDouble> &inarray2,
 														Array<OneD, NekDouble> &outarray, 
 														bool UseContCoeffs)
 		{
-			v_DealiasedProd(inarray,outarray,UseContCoeffs);
+			v_DealiasedProd(inarray1,inarray2,outarray,UseContCoeffs);
 		}
 
     } //end of namespace

@@ -219,8 +219,15 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-			HomogeneousFwdTrans(inarray,fce);
-			
+			if(m_WaveSpace)
+			{
+				fce = inarray;
+			}
+			else 
+			{
+				HomogeneousFwdTrans(inarray,fce);
+			}
+
             for(n = 0; n < nhom_modes_z; ++n)
             {
 				for(m = 0; m < nhom_modes_y; ++m)

@@ -93,7 +93,8 @@ namespace Nektar
 
             inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 			
-			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+									  const Array<OneD, NekDouble> &inarray2,
 									  Array<OneD, NekDouble> &outarray, 
 									  bool UseContCoeffs = false);
 
@@ -106,6 +107,8 @@ namespace Nektar
                               const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
+			
+			MULTI_REGIONS_EXPORT void SetPaddingBase(void);
 			
             LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {
@@ -207,7 +210,8 @@ namespace Nektar
 												 Array<OneD, NekDouble> &outarray, 
 												 bool UseContCoeffs = false);
 			
-			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+										 const Array<OneD, NekDouble> &inarray2,
 										 Array<OneD, NekDouble> &outarray, 
 										 bool UseContCoeffs = false);
 			
@@ -226,6 +230,11 @@ namespace Nektar
             }
 
         private:
+			
+			//Padding operations variables
+			int padsize;
+			DNekMatSharedPtr    MatFwdPAD;
+			DNekMatSharedPtr    MatBwdPAD;
         };
 
         inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
@@ -238,11 +247,12 @@ namespace Nektar
             v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
         }
 		
-		inline void ExpListHomogeneous1D::DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+		inline void ExpListHomogeneous1D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+														const Array<OneD, NekDouble> &inarray2,
 														Array<OneD, NekDouble> &outarray, 
 														bool UseContCoeffs)
 		{
-			v_DealiasedProd(inarray,outarray,UseContCoeffs);
+			v_DealiasedProd(inarray1,inarray2,outarray,UseContCoeffs);
 		}
 
     } //end of namespace

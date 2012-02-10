@@ -87,14 +87,7 @@ namespace Nektar
         typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
-		
-        enum FourierSpaceType
-        {
-            ePhys,
-            eCoef,
-            eNotDef
-        };
-		
+				
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public boost::enable_shared_from_this<ExpList>
         {
@@ -184,13 +177,14 @@ namespace Nektar
             /// the coefficient arrays.
             inline TransState GetTransState(void) const;
 			
-			/// Sets the Fourier Space to the one of the possible configuration
-			/// ePhys, eCoef or eNotSet
-            inline void SetFourierSpace(const FourierSpaceType fourierspace);
+			/// Sets the wave space to the one of the possible configuration
+			/// true or false
+            inline void SetWaveSpace(const bool wavespace);
 			
-            /// This function returns the Fourier Space condition,
-            /// which is stored in the variable m_FourierSpace.
-            inline FourierSpaceType GetFourierSpace(void) const;
+            /// This function returns the third direction expansion condition,
+			/// which can be in wave space (coefficient) or not
+            /// It is stored in the variable m_WaveSpace.
+            inline bool GetWaveSpace(void) const;
 
             /// Fills the array #m_phys
             inline void SetPhys(const Array<OneD, const NekDouble> &inarray);
@@ -329,7 +323,8 @@ namespace Nektar
 											  Array<OneD, NekDouble> &outarray, 
 											  bool UseContCoeffs = false);
 			
-			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray, 
+			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+									  const Array<OneD, NekDouble> &inarray2,
 									  Array<OneD, NekDouble> &outarray, 
 									  bool UseContCoeffs = false);
 			
@@ -846,7 +841,9 @@ namespace Nektar
             BlockMatrixMapShPtr  m_blockMat;
 			
             //@todo should this be in ExpList or ExpListHomogeneous1D.cpp
-            FourierSpaceType m_FourierSpace;
+			// it's a bool which determine if the expansion is in the wave space (coefficient space)
+			// or not
+            bool m_WaveSpace;
 
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
@@ -1046,7 +1043,8 @@ namespace Nektar
                                                Array<OneD, NekDouble> &outarray, 
                                                bool UseContCoeffs = false);
             
-            virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray,
+            virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+										 const Array<OneD, NekDouble> &inarray2,
 										 Array<OneD, NekDouble> &outarray, 
 										 bool UseContCoeffs = false);
             
@@ -1242,17 +1240,17 @@ namespace Nektar
 		/**
          *
          */
-        inline void ExpList::SetFourierSpace(const FourierSpaceType fourierspace)
+        inline void ExpList::SetWaveSpace(const bool wavespace)
         {
-            m_FourierSpace = fourierspace;
+            m_WaveSpace = wavespace;
         }
 		
         /**
          *
          */
-        inline FourierSpaceType ExpList::GetFourierSpace() const
+        inline bool ExpList::GetWaveSpace() const
         {
-            return m_FourierSpace;
+            return m_WaveSpace;
         }
 
         /**
@@ -1517,11 +1515,12 @@ namespace Nektar
 		/**
 		 *
 		 */
-		inline void ExpList::DealiasedProd(const Array<OneD, NekDouble> &inarray,
+		inline void ExpList::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+										   const Array<OneD, NekDouble> &inarray2,
 										   Array<OneD, NekDouble> &outarray, 
 										   bool UseContCoeffs)
 		{
-			v_DealiasedProd(inarray,outarray,UseContCoeffs);
+			v_DealiasedProd(inarray1,inarray2,outarray,UseContCoeffs);
 		}
 		
 		/**

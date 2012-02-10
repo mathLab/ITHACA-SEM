@@ -116,13 +116,30 @@ namespace Nektar
 			gradV2 = Array<OneD, NekDouble> (nPointsTot);
 			gradVV1 = Array<OneD, NekDouble> (nPointsTot);
 			gradVV2 = Array<OneD, NekDouble> (nPointsTot);
+			
 			pFields[0]->PhysDeriv(pU,gradV0,gradV1,gradV2);
-			Vmath::Vmul(nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
-			Vmath::Vvtvp(nPointsTot,gradV1,1,pV[1],1,pOutarray,1,pOutarray,1);
-			Vmath::Vvtvp(nPointsTot,gradV2,1,pV[2],1,pOutarray,1,pOutarray,1);
-			Vmath::Vmul(nPointsTot,pU,1,pV[0],1,gradV0,1);
-			Vmath::Vmul(nPointsTot,pU,1,pV[1],1,gradV1,1);
-			Vmath::Vmul(nPointsTot,pU,1,pV[2],1,gradV2,1);
+			
+			if (m_dealiasing || pFields[0]->GetWaveSpace()) 
+			{
+				pFields[0]->DealiasedProd(pV[0],gradV0,gradV0,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[1],gradV1,gradV1,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[2],gradV2,gradV2,m_UseContCoeff);
+				Vmath::Vadd(nPointsTot,gradV0,1,gradV1,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradV2,1,pOutarray,1,pOutarray,1);
+				pFields[0]->DealiasedProd(pU,pV[0],gradV0,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pU,pV[1],gradV1,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pU,pV[2],gradV2,m_UseContCoeff);
+			}
+			else 
+			{
+				Vmath::Vmul(nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
+				Vmath::Vvtvp(nPointsTot,gradV1,1,pV[1],1,pOutarray,1,pOutarray,1);
+				Vmath::Vvtvp(nPointsTot,gradV2,1,pV[2],1,pOutarray,1,pOutarray,1);
+				Vmath::Vmul(nPointsTot,pU,1,pV[0],1,gradV0,1);
+				Vmath::Vmul(nPointsTot,pU,1,pV[1],1,gradV1,1);
+				Vmath::Vmul(nPointsTot,pU,1,pV[2],1,gradV2,1);
+			}
+
 			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
 			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
 			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);

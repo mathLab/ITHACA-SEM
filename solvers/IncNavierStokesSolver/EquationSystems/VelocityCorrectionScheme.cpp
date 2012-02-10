@@ -573,8 +573,16 @@ namespace Nektar
 			
 			for(int i = 0; i < fields.num_elements(); i++)
 			{
-				m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
-				m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
+				if(m_pressure->GetWaveSpace())
+				{
+					velocity[i] = fields[i];
+					advection[i] = N[i];
+				}
+				else 
+				{
+					m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
+					m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
+				}
 			}
 			
 			for(int j = 0 ; j < m_HBCnumber ; j++)
@@ -658,9 +666,16 @@ namespace Nektar
 			m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[2],qy,uz);
 			Vmath::Vsub(phystot,uy,1,uz,1,qx,1);
 			Vmath::Svtvp(phystot,-m_kinvis,qx,1,N[0],1,qx,1);
-		
-			m_pressure->HomogeneousFwdTrans(qx,Q);
 			
+			if(m_pressure->GetWaveSpace())
+			{
+				Q = qx;
+			}
+			else
+			{
+				m_pressure->HomogeneousFwdTrans(qx,Q);
+			}
+		
 			for(int j = 0 ; j < m_HBCnumber ; j++)
 			{				
 				Qx = Q + m_HBC[2][j];
@@ -684,7 +699,7 @@ namespace Nektar
 			ASSERTL0(false,"High Order Pressure BC not required for this approach");
 		}
 		// Full 3D		
-                else
+		else
 		{
                     int i, cnt;
 

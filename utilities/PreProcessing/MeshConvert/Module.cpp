@@ -75,6 +75,14 @@ namespace Nektar
         }
 
         /**
+         * Set up a processing module.
+         */
+        ProcessModule::ProcessModule(MeshSharedPtr m) : Module(m)
+        {
+            
+        }
+
+        /**
          * Set up an output module by opening output file.
          */
         OutputModule::OutputModule(MeshSharedPtr m) : Module(m)

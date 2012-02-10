@@ -95,7 +95,7 @@ namespace Nektar
             mshFile.seekg(0);
 
             // Check that required sections exist in the file.
-			if (sectionMap["NODES"] == std::streampos(-1))
+            if (sectionMap["NODES"] == std::streampos(-1))
             {
                 cerr << "Unable to locate NODES section in session file." << endl;
                 abort();
@@ -218,7 +218,6 @@ namespace Nektar
                 // Create element tags
                 vector<int> tags;
                 tags.push_back(0); // composite
-                tags.push_back(elType); // element type
                 
                 // Read element node list
                 ss.clear(); ss.str(line);
@@ -367,8 +366,25 @@ namespace Nektar
                         {
                             double x = hoXData[offset+j*stride];
                             double y = hoYData[offset+j*stride];
-                            edgeNodes.push_back(boost::shared_ptr<Node>(
-                                new Node(nodeId, x, y, 0.0)));
+                            NodeSharedPtr n = boost::shared_ptr<Node>(
+                                new Node(nodeId, x, y, 0.0));
+                            edgeNodes.push_back(n);
+                            m->vertexSet.insert(n);
+                        }
+                    }
+                    
+                    // Add internal points.
+                    for (j = 1; j < np-1; ++j)
+                    {
+                        int offset = j*np+1;
+                        for (k = 1; k < np-1; ++k, ++nodeId)
+                        {
+                            double x = hoXData[offset+k];
+                            double y = hoYData[offset+k];
+                            NodeSharedPtr n = boost::shared_ptr<Node>(
+                                new Node(nodeId, x, y, 0.0));
+                            edgeNodes.push_back(n);
+                            m->vertexSet.insert(n);
                         }
                     }
                     
@@ -381,7 +397,7 @@ namespace Nektar
                     
                     // Create new element and replace with an incomplete
                     // quadrilateral of the correct order.
-                    ElmtConfig conf(elType,np-1,false,false,true,
+                    ElmtConfig conf(elType,np-1,true,false,true,
                                     LibUtilities::eGaussLobattoLegendre);
                     m->element[2][elmt] = GetElementFactory().
                         CreateInstance(elType,conf,edgeNodes,tags);
@@ -610,10 +626,9 @@ namespace Nektar
             
             vector<int> tags;
             tags.push_back(tagId);
-            tags.push_back(eLine);
             
             ElementType seg = eLine;
-            ElmtConfig conf(eLine,order,true,false,true,
+            ElmtConfig conf(eLine, order, order > 1, false, true,
                             LibUtilities::eGaussLobattoLegendre);
             ElementSharedPtr E = GetElementFactory().
                 CreateInstance(eLine,conf,edgeNodes,tags);

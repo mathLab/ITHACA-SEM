@@ -105,6 +105,20 @@ namespace Nektar
             /// Input stream
             std::ifstream mshFile;
         };
+
+        /**
+         * @brief Abstract base class for processing modules.
+         * 
+         * Processing modules take a populated %Mesh object and process it in
+         * some fashion; for example the %ProcessJac module calculates the
+         * Jacobian of each element and prints warnings for non-positive
+         * elements.
+         */
+        class ProcessModule : public Module
+        {
+        public:
+            ProcessModule(MeshSharedPtr p_m);
+        };
         
         /**
          * @brief Abstract base class for output modules.

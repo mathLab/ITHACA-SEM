@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputGmsh.h
+//  File: OutputGmsh.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,8 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
+#define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
+
+#include <tinyxml/tinyxml.h>
+#include <boost/unordered_map.hpp>
 
 #include "Module.h"
 
@@ -42,31 +45,47 @@ namespace Nektar
 {
     namespace Utilities
     {
-        /**
-         * Converter for Gmsh files.
-         */
-        class InputGmsh : public InputModule
+        bool operator==(ElmtConfig const &p1, ElmtConfig const &p2);
+
+        struct ElmtConfigHash : std::unary_function<ElmtConfig, std::size_t>
+        {
+            std::size_t operator()(ElmtConfig const& el) const
+            {
+                std::size_t seed = 0;
+                boost::hash_combine(seed, el.e            );
+                boost::hash_combine(seed, el.faceNodes    );
+                boost::hash_combine(seed, el.volumeNodes  );
+                boost::hash_combine(seed, el.order        );
+                return seed;
+            }
+        };
+
+        bool operator==(ElmtConfig const &p1, ElmtConfig const &p2)
+        {
+            return p1.e           == p2.e           &&
+                   p1.faceNodes   == p2.faceNodes   &&
+                   p1.volumeNodes == p2.volumeNodes &&
+                   p1.order       == p2.order;
+        }
+
+        /// Converter for Gmsh files.
+        class OutputGmsh : public OutputModule
         {
         public:
-            InputGmsh(MeshSharedPtr m);
-            virtual ~InputGmsh();
-            virtual void Process();
-
             /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputGmsh>::AllocateSharedPtr(m);
+            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+                return MemoryManager<OutputGmsh>::AllocateSharedPtr(m);
             }
-            /// %ModuleKey for class.
             static ModuleKey className;
-            static std::map<unsigned int, ElmtConfig> GenElmMap();
             
-            /**
-             * Element map; takes a msh id to an %ElmtConfig object.
-             */
-            static std::map<unsigned int, ElmtConfig> elmMap;
+            OutputGmsh(MeshSharedPtr m);
+            virtual ~OutputGmsh();
+            
+            /// Write mesh to output file.
+            virtual void Process();
             
         private:
-            int GetNnodes(unsigned int InputGmshEntity);            
+            boost::unordered_map<ElmtConfig, unsigned int, ElmtConfigHash> elmMap;
         };
     }
 }

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: MeshConvert.cpp
+//  File: ProcessJac.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,39 +29,44 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh conversion utility.
+//  Description: Calculate jacobians of elements.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using namespace std;
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
+#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
+
+#include <tinyxml/tinyxml.h>
+#include <boost/unordered_map.hpp>
 
 #include "Module.h"
-using namespace Nektar::Utilities;
 
-int main(int argc, char* argv[]) {
-    if (argc != 3)
+namespace Nektar
+{
+    namespace Utilities
     {
-        cout << "Usage: " << argv[0] << " [msh-file] [xml-output-file]" << endl;
-        cout << "  [msh-file] - mesh output from Gmsh." << endl;
-        cout << "  [xml-output-file] - output file." << endl;
-        return 1;
+        /**
+         * @brief This processing module calculates the Jacobian of elements
+         * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+         * method. For now it simply prints a list of elements which have
+         * negative Jacobian.
+         */
+        class ProcessJac : public ProcessModule
+        {
+        public:
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+                return MemoryManager<ProcessJac>::AllocateSharedPtr(m);
+            }
+            static ModuleKey className;
+            
+            ProcessJac(MeshSharedPtr m);
+            virtual ~ProcessJac();
+            
+            /// Write mesh to output file.
+            virtual void Process();
+        };
     }
-    
-    string inFilename  = argv[1];
-    string outFilename = argv[2];
-    int    inDot       = inFilename .find_last_of('.');
-    int    outDot      = outFilename.find_last_of('.');
-    string inExt       = inFilename .substr(++inDot,  inFilename .length() - inDot );
-    string outExt      = outFilename.substr(++outDot, outFilename.length() - outDot);
-    MeshSharedPtr m    = boost::shared_ptr<Mesh>(new Mesh(inFilename, outFilename));
-
-    ModuleSharedPtr in  = GetModuleFactory().CreateInstance(ModuleKey(inExt, eInputModule ), m);
-    ModuleSharedPtr out = GetModuleFactory().CreateInstance(ModuleKey(outExt,eOutputModule), m);
-    //ModuleSharedPtr pr  = GetModuleFactory().CreateInstance(ModuleKey("jac", eProcessModule),m);
-    in -> Process();
-    //pr -> Process();
-    out-> Process();
-    
-    return 0;
 }
+
+#endif

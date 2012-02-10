@@ -58,11 +58,12 @@ namespace Nektar
         Element::Element(ElmtConfig   pConf,
                          unsigned int pNumNodes,
                          unsigned int pGotNodes) 
-            : m_conf(pConf)
+            : m_conf(pConf), m_geom()
         {
             if (pNumNodes != pGotNodes)
             {
-                cerr << "Number of modes mismatch for type " << pConf.e << "! Should be " << pNumNodes 
+                cerr << "Number of modes mismatch for type " 
+                     << pConf.e << "! Should be " << pNumNodes 
                      << " but got " << pGotNodes << " nodes." << endl;
                 abort();
             }
@@ -93,7 +94,7 @@ namespace Nektar
         {
             unsigned int nEnt = 0;
             
-            for (unsigned int d = 0; d < expDim; ++d)
+            for (unsigned int d = 0; d <= expDim; ++d)
             {
                 nEnt += element[d].size();
             }
@@ -277,10 +278,10 @@ namespace Nektar
                    vector<int>           pTagList)
             : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
         {
-            m_tag = "S";
-            m_dim = 1;
+            m_tag     = "S";
+            m_dim     = 1;
             m_taglist = pTagList;
-            int n = m_conf.order-1;
+            int n     = m_conf.order-1;
             
             // Add vertices
             for (int i = 0; i < 2; ++i) {
@@ -294,6 +295,43 @@ namespace Nektar
             }
             edge.push_back(boost::shared_ptr<Edge>(
                 new Edge(pNodeList[0], pNodeList[1], edgeNodes, m_conf.edgeCurveType)));
+        }
+        
+        SpatialDomains::GeometrySharedPtr Line::GetGeom()
+        {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+            
+            // Create edge vertices.
+            SpatialDomains::VertexComponentSharedPtr p[2];
+            p[0] = vertex[0]->GetGeom();
+            p[1] = vertex[1]->GetGeom();
+            
+            if (edge[0]->edgeNodes.size() > 0)
+            {
+                SpatialDomains::CurveSharedPtr c = 
+                    MemoryManager<SpatialDomains::Curve>::
+                    AllocateSharedPtr(m_id, edge[0]->curveType);
+                
+                c->m_points.push_back(p[0]);
+                for (int i = 0; i < edge[0]->edgeNodes.size(); ++i)
+                {
+                    c->m_points.push_back(edge[0]->edgeNodes[i]->GetGeom());
+                }
+                c->m_points.push_back(p[1]);
+                
+                m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                    AllocateSharedPtr(m_id, 3, p, c);
+            }
+            else
+            {
+                m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                    AllocateSharedPtr(m_id, 3, p);
+            }
+            
+            return m_geom;
         }
         
         unsigned int Line::GetNumNodes(ElmtConfig pConf)
@@ -311,10 +349,10 @@ namespace Nektar
                            vector<int>           pTagList)
             : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
         {
-            m_tag = "T";
-            m_dim = 2;
+            m_tag     = "T";
+            m_dim     = 2;
             m_taglist = pTagList;
-            int n = m_conf.order-1;
+            int n     = m_conf.order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
             // defining an edge. This is based on the ordering produced by
@@ -346,6 +384,34 @@ namespace Nektar
             }
         }
 
+        SpatialDomains::GeometrySharedPtr Triangle::GetGeom()
+        {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+            
+            SpatialDomains::SegGeomSharedPtr         edges[3];
+            SpatialDomains::VertexComponentSharedPtr verts[3];
+            
+            for (int i = 0; i < 3; ++i)
+            {
+                edges[i] = edge  [i]->GetGeom();
+                verts[i] = vertex[i]->GetGeom();
+            }
+            
+            StdRegions::EdgeOrientation edgeorient[3] = {
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
+            };
+            
+            m_geom = MemoryManager<SpatialDomains::TriGeom>::
+                AllocateSharedPtr(m_id, verts, edges, edgeorient);
+            
+            return m_geom;
+        }
+        
         unsigned int Triangle::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;
@@ -399,6 +465,35 @@ namespace Nektar
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
             }
+        }
+
+        SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom()
+        {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+            
+            SpatialDomains::SegGeomSharedPtr         edges[4];
+            SpatialDomains::VertexComponentSharedPtr verts[4];
+            
+            for (int i = 0; i < 4; ++i)
+            {
+                edges[i] = edge  [i]->GetGeom();
+                verts[i] = vertex[i]->GetGeom();
+            }
+            
+            StdRegions::EdgeOrientation edgeorient[4] = {
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
+                SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
+            };
+            
+            m_geom = MemoryManager<SpatialDomains::QuadGeom>::
+                AllocateSharedPtr(m_id, verts, edges, edgeorient);
+            
+            return m_geom;
         }
 
         unsigned int Quadrilateral::GetNumNodes(ElmtConfig pConf)
@@ -498,6 +593,27 @@ namespace Nektar
                 face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
             }
+        }
+        
+        SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom()
+        {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+            
+            SpatialDomains::TriGeomSharedPtr tfaces[4];
+            
+            for (int i = 0; i < 4; ++i)
+            {
+                tfaces[i] = boost::dynamic_pointer_cast
+                    <SpatialDomains::TriGeom>(face[i]->GetGeom());
+            }
+
+            m_geom = MemoryManager<SpatialDomains::TetGeom>::
+                AllocateSharedPtr(tfaces);
+            
+            return m_geom;
         }
         
         unsigned int Tetrahedron::GetNumNodes(ElmtConfig pConf)
@@ -657,6 +773,26 @@ namespace Nektar
                 return 9*(n+1)-12;
         }
 
+        SpatialDomains::GeometrySharedPtr Prism::GetGeom()
+        {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+            
+            SpatialDomains::Geometry2DSharedPtr faces[5];
+            
+            for (int i = 0; i < 5; ++i)
+            {
+                faces[i] = face[i]->GetGeom();
+            }
+
+            m_geom = MemoryManager<SpatialDomains::PrismGeom>::
+                AllocateSharedPtr(faces);
+            
+            return m_geom;
+        }
+
         void Prism::OrientPrism()
         {
             int lid[6], gid[6];
@@ -804,6 +940,27 @@ namespace Nektar
             }
         }
         
+        SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom()
+        {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+            
+            SpatialDomains::QuadGeomSharedPtr faces[6];
+            
+            for (int i = 0; i < 6; ++i)
+            {
+                faces[i] = boost::dynamic_pointer_cast
+                    <SpatialDomains::QuadGeom>(face[i]->GetGeom());
+            }
+
+            m_geom = MemoryManager<SpatialDomains::HexGeom>::
+                AllocateSharedPtr(faces);
+            
+            return m_geom;
+        }
+
         unsigned int Hexahedron::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;

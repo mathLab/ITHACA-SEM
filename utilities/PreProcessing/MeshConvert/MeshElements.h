@@ -48,6 +48,17 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
+#include <SpatialDomains/InterfaceComponent.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/PyrGeom.h>
+#include <SpatialDomains/PrismGeom.h>
+#include <SpatialDomains/HexGeom.h>
+#include <SpatialDomains/Curve.hpp>
+#include <SpatialDomains/MeshComponents.h>
+
 namespace Nektar
 {
     namespace Utilities
@@ -75,10 +86,11 @@ namespace Nektar
         public:
             /// Create a new node at a specified coordinate.
             Node(unsigned int pId, double pX, double pY, double pZ)
-                : id(pId), x(pX), y(pY), z(pZ) {}
+                : id(pId), x(pX), y(pY), z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
-                : id(pSrc.id), x(pSrc.x), y(pSrc.y), z(pSrc.z) {}
+                : id(pSrc.id), x(pSrc.x), y(pSrc.y), 
+                  z(pSrc.z), m_geom() {}
             ~Node() {}
 
             /// Define node ordering based on ID.
@@ -92,6 +104,18 @@ namespace Nektar
                 return ((x==pSrc.x) && (y==pSrc.y) && (z==pSrc.z));
             }
 
+            /// Generate a %SpatialDomains::VertexComponent for this node.
+            SpatialDomains::VertexComponentSharedPtr GetGeom()
+            {
+                if (!m_geom)
+                {
+                    m_geom = MemoryManager<SpatialDomains::VertexComponent>::
+                        AllocateSharedPtr(3,id,x,y,z);
+                }
+                
+                return m_geom;
+            }
+
             /// ID of node.
             unsigned int id;
             /// X-coordinate.
@@ -100,6 +124,9 @@ namespace Nektar
             double y;
             /// Z-coordinate.
             double z;
+            
+        private:
+            SpatialDomains::VertexComponentSharedPtr m_geom;
         };
         /// Shared pointer to a Node.
         typedef boost::shared_ptr<Node> NodeSharedPtr;
@@ -134,11 +161,11 @@ namespace Nektar
                  std::vector<NodeSharedPtr> pEdgeNodes,
                  LibUtilities::PointsType pCurveType) 
                 : n1(pVertex1), n2(pVertex2), edgeNodes(pEdgeNodes),
-                  curveType(pCurveType) {}
+                  curveType(pCurveType), m_geom() {}
             /// Copies an existing edge.
             Edge(const Edge& pSrc)
                 : n1(pSrc.n1), n2(pSrc.n2), edgeNodes(pSrc.edgeNodes),
-                  curveType(pSrc.curveType){}
+                  curveType(pSrc.curveType), m_geom(pSrc.m_geom) {}
             ~Edge() {}
 
             /// Returns the total number of nodes defining the edge.
@@ -164,6 +191,45 @@ namespace Nektar
                 return s.str();
             }
 
+            /// Generate a %SpatialDomains::SegGeom object for this edge.
+            SpatialDomains::SegGeomSharedPtr GetGeom()
+            {
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
+                // Create edge vertices.
+                SpatialDomains::VertexComponentSharedPtr p[2];
+                p[0] = n1->GetGeom();
+                p[1] = n2->GetGeom();
+                
+                // Create a curve if high-order information exists.
+                if (edgeNodes.size() > 0)
+                {
+                    SpatialDomains::CurveSharedPtr c = 
+                        MemoryManager<SpatialDomains::Curve>::
+                        AllocateSharedPtr(id, curveType);
+                    
+                    c->m_points.push_back(p[0]);
+                    for (int i = 0; i < edgeNodes.size(); ++i)
+                    {
+                        c->m_points.push_back(edgeNodes[i]->GetGeom());
+                    }
+                    c->m_points.push_back(p[1]);
+                    
+                    m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                        AllocateSharedPtr(id, 3, p, c);
+                }
+                else
+                {
+                    m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                        AllocateSharedPtr(id, 3, p);
+                }
+                
+                return m_geom;
+            }
+
             /// ID of edge.
             unsigned int id;
             /// First vertex node.
@@ -174,6 +240,9 @@ namespace Nektar
             std::vector<NodeSharedPtr> edgeNodes;
             /// Distributions of points along edge.
             LibUtilities::PointsType curveType;
+
+        private:
+            SpatialDomains::SegGeomSharedPtr m_geom;
         };
         /// Shared pointer to an edge.
         typedef boost::shared_ptr<Edge> EdgeSharedPtr;
@@ -213,11 +282,14 @@ namespace Nektar
                 : vertexList(pVertexList), 
                   faceNodes (pFaceNodes), 
                   edgeList  (pEdgeList),
-                  curveType (pCurveType){}
+                  curveType (pCurveType),
+                  m_geom    () {}
+            
             /// Copy an existing face.
             Face(const Face& pSrc)
                 : vertexList(pSrc.vertexList), faceNodes(pSrc.faceNodes), 
-                  edgeList  (pSrc.edgeList),   curveType(pSrc.curveType) {}
+                  edgeList  (pSrc.edgeList),   curveType(pSrc.curveType),
+                  m_geom    (pSrc.m_geom) {}
             ~Face() {}
 
             /// Equality is defined by matching all vertices.
@@ -275,6 +347,45 @@ namespace Nektar
                 return s.str();
             }
 
+            /// Generate either %SpatialDomains::TriGeom or
+            /// %SpatialDomains::QuadGeom for this element.
+            SpatialDomains::Geometry2DSharedPtr GetGeom()
+            {
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
+                int nEdge = edgeList.size();
+                
+                SpatialDomains::SegGeomSharedPtr edges[4];
+                StdRegions::EdgeOrientation      edgeo[4];
+                
+                for (int i = 0; i < nEdge; ++i)
+                {
+                    edges[i] = edgeList[i]->GetGeom();
+                }
+                
+                for (int i = 0; i < nEdge; ++i)
+                {
+                    edgeo[i] = SpatialDomains::SegGeom::GetEdgeOrientation(
+                        *edges[i], *edges[(i+1) % nEdge]);
+                }
+                
+                if (nEdge == 3)
+                {
+                    m_geom = MemoryManager<SpatialDomains::TriGeom>::
+                        AllocateSharedPtr(id, edges, edgeo);
+                }
+                else
+                {
+                    m_geom = MemoryManager<SpatialDomains::QuadGeom>::
+                        AllocateSharedPtr(id, edges, edgeo);
+                }
+
+                return m_geom;
+            }
+            
             /// ID of the face.
             unsigned int id;
             /// List of vertex nodes.
@@ -285,6 +396,8 @@ namespace Nektar
             std::vector<NodeSharedPtr> faceNodes;
             /// Distribution of points in this face.
             LibUtilities::PointsType   curveType;
+            
+            SpatialDomains::Geometry2DSharedPtr m_geom;
         };
         /// Shared pointer to a face.
         typedef boost::shared_ptr<Face> FaceSharedPtr;
@@ -306,11 +419,7 @@ namespace Nektar
                 }
                 
                 std::sort(ids.begin(), ids.end());
-                
-                for (int i = 0; i < ids.size(); ++i)
-                {
-                    boost::hash_combine(seed, ids[i]);
-                }
+                boost::hash_range(seed, ids.begin(), ids.end());
                 
                 return seed;
             }
@@ -329,11 +438,16 @@ namespace Nektar
             ElmtConfig(ElementType pE, unsigned int pOrder, 
                        bool pFn, bool pVn, bool pReorient = true,
                        LibUtilities::PointsType pECt=LibUtilities::ePolyEvenlySpaced,
-                       LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced): 
+                       LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced):
                 e(pE), faceNodes(pFn), volumeNodes(pVn), order(pOrder),
                 reorient(pReorient), edgeCurveType(pECt), faceCurveType(pFCt) {}
-            ElmtConfig() {}
+            ElmtConfig(ElmtConfig const &p) :
+                e(p.e), faceNodes(p.faceNodes), volumeNodes(p.volumeNodes), 
+                order(p.order), reorient(p.reorient), 
+                edgeCurveType(p.edgeCurveType), faceCurveType(p.faceCurveType) {}
 
+            ElmtConfig() {}
+            
             /// Element type (e.g. triangle, quad, etc).
             ElementType              e;
             /// Denotes whether the element contains face nodes. For 2D
@@ -342,7 +456,8 @@ namespace Nektar
             bool                     faceNodes;
             /// Denotes whether the element contains volume (i.e. interior)
             /// nodes. These are not supported by either the mesh converter or
-            /// Nektar++ but are included for completeness.
+            /// Nektar++ but are included for completeness and are required
+            /// for some output modules (e.g. Gmsh).
             bool                     volumeNodes;
             /// Order of the element.
             unsigned int             order;
@@ -354,6 +469,7 @@ namespace Nektar
             /// Distribution of points in faces.
             LibUtilities::PointsType faceCurveType;
         };
+        
 
         /**
          * @brief Base class for element definitions.
@@ -474,6 +590,11 @@ namespace Nektar
                 }
                 return s.str();
             }
+            /// Generate a Nektar++ geometry object for this element.
+            virtual SpatialDomains::GeometrySharedPtr GetGeom()
+            {
+                ASSERTL0(false, "This function should be implemented on a shape level.");
+            }
 
         protected:
             /// ID of the element.
@@ -492,11 +613,12 @@ namespace Nektar
             std::vector<EdgeSharedPtr> edge;
             /// List of element faces.
             std::vector<FaceSharedPtr> face;
-
             /// Pointer to the corresponding edge if element is a 2D boundary.
             EdgeSharedPtr m_edgeLink;
             /// Pointer to the corresponding face if element is a 3D boundary.
             FaceSharedPtr m_faceLink;
+            /// Nektar++ geometry object for this element.
+            SpatialDomains::GeometrySharedPtr m_geom;
         };
         /// Shared pointer to an element.
         typedef boost::shared_ptr<Element> ElementSharedPtr;
@@ -673,6 +795,8 @@ namespace Nektar
             Line(const Point& pSrc);
             virtual ~Line() {}
             
+            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
@@ -700,6 +824,8 @@ namespace Nektar
             Triangle(const Triangle& pSrc);
             virtual ~Triangle() {}
             
+            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
@@ -727,6 +853,8 @@ namespace Nektar
             Quadrilateral(const Quadrilateral& pSrc);
             virtual ~Quadrilateral() {}
 
+            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
@@ -753,6 +881,8 @@ namespace Nektar
                         std::vector<int>           pTagList);
             Tetrahedron(const Tetrahedron& pSrc);
             virtual ~Tetrahedron() {}
+
+            virtual SpatialDomains::GeometrySharedPtr GetGeom();
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
@@ -790,6 +920,8 @@ namespace Nektar
             Prism(const Prism& pSrc);
             virtual ~Prism() {}
 
+            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
             /**
@@ -826,6 +958,8 @@ namespace Nektar
             Hexahedron(const Hexahedron& pSrc);
             virtual ~Hexahedron() {}
             
+            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
     }

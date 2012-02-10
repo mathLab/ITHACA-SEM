@@ -573,16 +573,19 @@ namespace Nektar
                         {
                             continue;
                         }
+                        break;
                     case 'F':
                         if (vFaces.find(vIt->second.list[j]) == vFaces.end())
                         {
                             continue;
                         }
+                        break;
                     default:
                         if (vElements.find(vIt->second.list[j]) == vElements.end())
                         {
                             continue;
                         }
+                        break;
                     }
 
                     // Condense consecutive entity IDs into ranges

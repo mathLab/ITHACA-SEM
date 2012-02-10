@@ -389,7 +389,7 @@ namespace Nektar
             // Write Geometry data
             std::string vDim   = pSession->GetElement("Nektar/Geometry")->Attribute("DIM");
             std::string vSpace = pSession->GetElement("Nektar/Geometry")->Attribute("SPACE");
-            std::string vPart  = boost::lexical_cast<std::string>(pGraph[*boost::vertices(pGraph).first].partid);
+            std::string vPart  = boost::lexical_cast<std::string>(pGraph[*boost::vertices(pGraph).first].partition);
             TiXmlElement* vElmtGeometry = new TiXmlElement("GEOMETRY");
             vElmtGeometry->SetAttribute("DIM", vDim);
             vElmtGeometry->SetAttribute("SPACE", vSpace);
@@ -555,40 +555,64 @@ namespace Nektar
                 }
             }
 
+            // Generate composites section comprising only those mesh entities
+            // which belong to this partition.
             for (vIt = m_meshComposites.begin(); vIt != m_meshComposites.end(); ++vIt)
             {
-                bool comma = false;
+                bool comma = false; // Set to true after first entity output
+                bool range = false; // True when entity IDs form a range
+                int last_idx = -2;  // Last entity ID output
                 std::string vCompositeStr = "";
                 for (unsigned int j = 0; j < vIt->second.list.size(); ++j)
                 {
+                    // Based on entity type, check if in this partition
                     switch (vIt->second.type)
                     {
                     case 'E':
-                        if (vEdges.find(vIt->second.list[j]) != vEdges.end())
+                        if (vEdges.find(vIt->second.list[j]) == vEdges.end())
                         {
-                            vCompositeStr += comma ? "," : "";
-                            comma = true;
-                            vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
+                            continue;
                         }
-                        break;
                     case 'F':
-                        if (vFaces.find(vIt->second.list[j]) != vFaces.end())
+                        if (vFaces.find(vIt->second.list[j]) == vFaces.end())
                         {
-                            vCompositeStr += comma ? "," : "";
-                            comma = true;
-                            vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
+                            continue;
                         }
-                        break;
                     default:
-                        if (vElements.find(vIt->second.list[j]) != vElements.end())
+                        if (vElements.find(vIt->second.list[j]) == vElements.end())
                         {
-                            vCompositeStr += comma ? "," : "";
-                            comma = true;
-                            vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
+                            continue;
                         }
-                        break;
                     }
+
+                    // Condense consecutive entity IDs into ranges
+                    // last_idx initially -2 to avoid error for ID=0
+                    if (last_idx + 1 == vIt->second.list[j])
+                    {
+                        last_idx++;
+                        range = true;
+                        continue;
+                    }
+                    // This entity is not in range, so close previous range with
+                    // last_idx
+                    if (range)
+                    {
+                        vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
+                        range = false;
+                    }
+                    // Output ID, which is either standalone, or will start a
+                    // range.
+                    vCompositeStr += comma ? "," : "";
+                    vCompositeStr += boost::lexical_cast<std::string>(vIt->second.list[j]);
+                    last_idx = vIt->second.list[j];
+                    comma = true;
                 }
+                // If last entity is part of a range, it must be output now
+                if (range)
+                {
+                    vCompositeStr += "-" + boost::lexical_cast<std::string>(last_idx);
+                }
+
                 if (vCompositeStr.length() > 0)
                 {
                     vComposites[vIt->first] = vIt->second;

@@ -110,9 +110,9 @@ namespace Nektar
             // Element in a mesh
             struct GraphVertexProperties
             {
-                int id;
-                int partition;
-                int partid;
+                int id;         ///< Universal ID of the vertex
+                int partition;  ///< Index of the partition to which it belongs
+                int partid;     ///< Global ID of the vertex in the partition
             };
 
             // Face/Edge/Vertex between two adjacent elements

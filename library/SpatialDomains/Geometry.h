@@ -44,7 +44,7 @@
 
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
-#include<boost/shared_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
@@ -58,7 +58,7 @@ namespace Nektar
         {
             eNoGeomShapeType,
             eSegment,
-			ePoint,
+            ePoint,
             eTriangle,
             eQuadrilateral,
             eTetrahedron,
@@ -73,7 +73,7 @@ namespace Nektar
         {
             "NoGeomShapeType",
             "Segment",
-			"Point",
+            "Point",
             "Triangle",
             "Quadrilateral",
             "Tetrahedron",

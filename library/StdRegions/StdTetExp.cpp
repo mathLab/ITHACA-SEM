@@ -459,7 +459,6 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD,       NekDouble>& outarray)
         {
-
             ASSERTL1((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                      "Basis[1] is not a general tensor type");
@@ -498,7 +497,7 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
-            Array<OneD, NekDouble> wsp(nquad2*order0*(order1+1)/2+
+            Array<OneD, NekDouble> wsp(nquad2*order0*order1*(order1+1)/2+
                                        nquad2*nquad1*order0);
 
             BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
@@ -533,7 +532,6 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
-
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -543,33 +541,33 @@ namespace Nektar
             int  order2 = m_base[2]->GetNumModes();
 
             Array<OneD, NekDouble > tmp  = wsp;
-            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*(order1+1)/2;
+            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1*(order1+1)/2;
 
             //Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
             //Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
 
-            int i,j, mode,mode1, cnt;
+            int i, j, mode, mode1, cnt;
 
             // Perform summation over '2' direction
             mode = mode1 = cnt = 0;
             for(i = 0; i < order0; ++i)
             {
-                for(j = 0; j < order1-i ; ++j, ++cnt)
+                for(j = 0; j < order1-i; ++j, ++cnt)
                 {
-                    Blas::Dgemv('N', nquad2,order2-i-j,1.0,
-                                base2.get()+mode*nquad2,
-                                nquad2,&inarray[0]+mode1,1,0.0,
-                                &tmp[0]+cnt*nquad2,1);
+                    Blas::Dgemv('N', nquad2, order2-i-j,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     inarray.get()+mode1,     1,
+                                0.0, tmp.get()+cnt*nquad2,    1);
                     mode  += order2-i-j;
                     mode1 += order2-i-j;
                 }
-                //increment mode1 in case order1!=order2
+                //increment mode in case order1!=order2
                 for(j = order1-i; j < order2-i; ++j)
                 {
                     mode += order2-i-j;
                 }
             }
-
+            
             // fix for modified basis by adding split of top singular
             // vertex mode - currently (1+c)/2 x (1-b)/2 x (1-a)/2
             // component is evaluated
@@ -583,15 +581,15 @@ namespace Nektar
                 Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
                             &tmp[0]+order1*nquad2,1);
             }
-
+            
             // Perform summation over '1' direction
             mode = 0;
             for(i = 0; i < order0; ++i)
             {
-                Blas::Dgemm('N','T',nquad1,nquad2,order1-i,1.0,
-                            base1.get()+mode*nquad1,nquad1,
-                            &tmp[0]+mode*nquad2,nquad2,0.0,
-                            &tmp1[0]+i*nquad1*nquad2,nquad1);
+                Blas::Dgemm('N', 'T', nquad1, nquad2, order1-i,
+                            1.0, base1.get()+mode*nquad1,    nquad1,
+                                 tmp.get()+mode*nquad2,      nquad2,
+                            0.0, tmp1.get()+i*nquad1*nquad2, nquad1);
                 mode  += order1-i;
             }
 
@@ -610,10 +608,10 @@ namespace Nektar
             }
 
             // Perform summation over '0' direction
-            Blas::Dgemm('N','T', nquad0,nquad1*nquad2,order0,1.0,
-                        base0.get(),nquad0, &tmp1[0], nquad1*nquad2,
-                        0.0, &outarray[0], nquad0);
-
+            Blas::Dgemm('N', 'T', nquad0, nquad1*nquad2, order0,
+                        1.0, base0.get(),    nquad0, 
+                             tmp1.get(),     nquad1*nquad2,
+                        0.0, outarray.get(), nquad0);
         }
 
 
@@ -693,7 +691,6 @@ namespace Nektar
             {
                 StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray);
             }
-
         }
 
 
@@ -728,9 +725,9 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
-            Array<OneD, NekDouble > tmp (nquad0*nquad1*nquad2);
-            Array<OneD, NekDouble > wsp (nquad1*nquad2*order0
-                                            + nquad2*order0*(order1+1)/2);
+            Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
+            Array<OneD, NekDouble> wsp (nquad1*nquad2*order0 +
+                                        nquad2*order0*(order1+1)/2);
 
             MultiplyByQuadratureMetric(inarray, tmp);
 
@@ -747,8 +744,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
                     const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD,       NekDouble>& outarray,
-                          Array<OneD,       NekDouble>& wsp,
+                          Array<OneD,       NekDouble> &outarray,
+                          Array<OneD,       NekDouble> &wsp,
                           bool                          doCheckCollDir0,
                           bool                          doCheckCollDir1,
                           bool                          doCheckCollDir2)
@@ -767,47 +764,46 @@ namespace Nektar
             int i,j, mode,mode1, cnt;
 
             // Inner product with respect to the '0' direction
-            Blas::Dgemm('T','N', nquad1*nquad2, order0, nquad0, 1.0,
-                        &inarray[0], nquad0, base0.get(), nquad0, 0.0,
-                        &tmp1[0], nquad1*nquad2);
-
+            Blas::Dgemm('T', 'N', nquad1*nquad2, order0, nquad0, 
+                        1.0, inarray.get(), nquad0, 
+                             base0.get(),   nquad0, 
+                        0.0, tmp1.get(),    nquad1*nquad2);
 
             // Inner product with respect to the '1' direction
             for(mode=i=0; i < order0; ++i)
             {
-                Blas::Dgemm('T','N',nquad2,order1-i,nquad1,1.0,
-                            &tmp1[0]+i*nquad1*nquad2, nquad1,
-                            base1.get()+mode*nquad1, nquad1,
-                            0.0, &tmp2[0]+mode*nquad2, nquad2);
+                Blas::Dgemm('T', 'N', nquad2, order1-i, nquad1,
+                            1.0, tmp1.get()+i*nquad1*nquad2, nquad1,
+                                 base1.get()+mode*nquad1,    nquad1,
+                            0.0, tmp2.get()+mode*nquad2,     nquad2);
                 mode  += order1-i;
             }
-
 
             // fix for modified basis for base singular vertex
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 //base singular vertex and singular edge (1+b)/2
                 //(1+a)/2 components (makes tmp[nquad2] entry into (1+b)/2)
-                Blas::Dgemv('T', nquad1,nquad2, 1.0, &tmp1[0]+nquad1*nquad2,
-                            nquad1, base1.get()+nquad1,1, 1.0, &tmp2[nquad2],1);
+                Blas::Dgemv('T', nquad1, nquad2, 
+                            1.0, tmp1.get()+nquad1*nquad2, nquad1,
+                                 base1.get()+nquad1,       1, 
+                            1.0, tmp2.get()+nquad2,        1);
             }
-
 
             // Inner product with respect to the '2' direction
             mode = mode1 = cnt = 0;
             for(i = 0; i < order0; ++i)
             {
-                for(j = 0; j < order1-i ; ++j, ++cnt)
+                for(j = 0; j < order1-i; ++j, ++cnt)
                 {
-                    Blas::Dgemv('T', nquad2, order2-i-j,1.0,
-                                base2.get()+mode*nquad2,
-                                nquad2,&tmp2[0]+cnt*nquad2, 1,
-                                0.0, &outarray[0]+mode1,1);
+                    Blas::Dgemv('T', nquad2, order2-i-j,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     tmp2.get()+cnt*nquad2,   1,
+                                0.0, outarray.get()+mode1,    1);
                     mode  += order2-i-j;
                     mode1 += order2-i-j;
                 }
-
-                //increment mode1 in case order1!=order2
+                //increment mode in case order1!=order2
                 for(j = order1-i; j < order2-i; ++j)
                 {
                     mode += order2-i-j;
@@ -1511,7 +1507,7 @@ namespace Nektar
                 case 0:
                     idx = 0;
                     for (i = 0; i < P; ++i)
-			{
+                    {
                         for (j = 0; j < Q-i; ++j)
                         {
                             if ((int)faceOrient == 2 && i > 1)
@@ -1520,7 +1516,7 @@ namespace Nektar
                             }
                             maparray[idx++] = GetMode(i,j,0);
                         }
-                        }
+                    }
                     break;
                 case 1:
                     idx = 0;
@@ -1941,39 +1937,56 @@ namespace Nektar
         //---------------------------------------
 
         /**
-         * Compute the mode number in the expansion for a particular
+         * @brief Compute the mode number in the expansion for a particular
          * tensorial combination.
+         * 
+         * Modes are numbered with the r index travelling fastest, followed by
+         * q and then p, and each q-r plane is of size
+         * (Q+1)*(Q+2)/2+max(0,R-Q-p)*Q. For example, when P=2, Q=3 and R=4
+         * the indexing inside each q-r plane (with r increasing upwards and q
+         * to the right) is:
+         * 
+         * p = 0:      p = 1:       p = 2:
+         * ----------------------------------
+         * 4
+         * 3 8         17
+         * 2 7 11      16 20        26
+         * 1 6 10 13   15 19 22     25 28
+         * 0 5 9  12   14 18 21 23  24 27 29
+         * 
+         * Note that in this element, we must have that P <= Q <= R.
          */
         int StdTetExp::GetMode(const int I, const int J, const int K)
         {
             const int P = m_base[0]->GetNumModes();
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
+            
+            int i,j,q_hat,k_hat;
+            int cnt = 0;
 
-        	int i,j,q_hat,k_hat;
-        	int cnt = 0;
-
-        	// Skip along the stacks (K)
-        	for (i = 0; i < I; ++i)
-        	{
-        		q_hat = min(Q,P-i);
-        		k_hat = min(R-Q, max(0, R-i));
-				cnt += q_hat*(q_hat+1)/2 - k_hat*Q;
-        	}
-
-        	// Skip across the columns (J)
-    		q_hat = min(Q,P-I);
-    		k_hat = min(R-Q, max(0, R-I));
-        	for (j = 0; j < J; ++j)
-        	{
-        		cnt += q_hat + k_hat - j;
-        	}
-
-        	// Skip up the columns (K)
-        	cnt += K;
-
-        	// Return the final mode number
-        	return cnt;
+            // Traverse to q-r plane number I
+            for (i = 0; i < I; ++i)
+            {
+                // Size of triangle part
+                q_hat = min(Q,R-i);
+                // Size of rectangle part
+                k_hat = max(R-Q-i,0);
+                cnt  += q_hat*(q_hat+1)/2 + k_hat*Q;
+            }
+            
+            // Traverse to q column J
+            q_hat = R-I;
+            for (j = 0; j < J; ++j)
+            {
+                cnt += q_hat;
+                q_hat--;
+            }
+            
+            // Traverse up stacks to K
+            cnt += K;
+            
+            return cnt;
         }
 
         void StdTetExp::MultiplyByQuadratureMetric(
@@ -1999,6 +2012,7 @@ namespace Nektar
                 Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
                             w0.get(),1, &outarray[0]+i*nquad0,1);
             }
+            
             switch(m_base[1]->GetPointsType())
             {
             // Legendre inner product.

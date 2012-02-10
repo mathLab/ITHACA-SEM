@@ -4,6 +4,7 @@
 
 #include "StdRegions/StdExpansion2D.h"
 #include "StdRegions/StdHexExp.h"
+#include "StdRegions/StdPrismExp.h"
 #include "StdRegions/StdTetExp.h"
 
 #include "StdRegions/StdRegions.hpp"
@@ -19,6 +20,14 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
 /// Derivative of solution on Tet expansion.
 NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3);
+
+/// Defines a solution which excites all modes in a prismatic expansion.
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
+                    int order1, int order2, int order3);
+
+/// Derivative of solution on a prismatic expansion.
+NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
+                     int order1, int order2, int order3);
 
 /// Defines a solution which excites all modes in a Hex expansion.
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
@@ -61,6 +70,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
         fprintf(stderr,"\t Tetrahedron   = 4\n");
+        fprintf(stderr,"\t Prism         = 6\n");
         fprintf(stderr,"\t Hexahedron    = 7\n");
 
         fprintf(stderr,"Where type is an integer value which "
@@ -85,8 +95,9 @@ int main(int argc, char *argv[]){
     regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
 
     // Check to see if 3D region
-    if((regionshape != StdRegions::eTetrahedron)
-            && (regionshape != StdRegions::eHexahedron))
+    if (regionshape != StdRegions::eTetrahedron &&
+        regionshape != StdRegions::ePrism       &&
+        regionshape != StdRegions::eHexahedron)
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 3D region");
     }
@@ -128,6 +139,26 @@ int main(int argc, char *argv[]){
         {
             NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
                                         "Ortho_B, Modified_A or Modified_B");
+        }
+        break;
+    case StdRegions::ePrism:
+        if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+                || (btype1 == eModified_B) || (btype1 == eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
+                                        "Ortho_C, Modified_B or Modified_C");
+        }
+        if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
+                || (btype2 == eModified_B) || (btype2 == eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_B, "
+                                        "Ortho_C, Modified_B or Modified_C");
+        }
+        if((btype3 == eOrtho_A) || (btype3 == eOrtho_C)
+                || (btype3 == eModified_A) || (btype3 == eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
+                                        "Ortho_C, Modified_A or Modified_C");
         }
         break;
     case StdRegions::eHexahedron:
@@ -190,8 +221,13 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == StdRegions::eTetrahedron) 
+        {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
+        }
+        else if (regionshape == StdRegions::ePrism) 
+        {
+            Qtype3 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
         {
@@ -225,6 +261,27 @@ int main(int argc, char *argv[]){
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
                 sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
+            }
+            //----------------------------------------------
+        }
+        break;
+    case StdRegions::ePrism:
+        {
+            const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+            const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+            const LibUtilities::PointsKey Pkey3(nq3,Qtype3);
+            const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
+            const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
+            const LibUtilities::BasisKey  Bkey3(btype3,order3,Pkey3);
+
+            E = new StdRegions::StdPrismExp(Bkey1,Bkey2,Bkey3);
+            E->GetCoords(x,y,z);
+
+            //----------------------------------------------
+            // Define solution to be projected
+            for(i = 0; i < nq1*nq2*nq3; ++i)
+            {
+                sol[i]  = Prism_sol(x[i],y[i],z[i],order1,order2,order3);
             }
             //----------------------------------------------
         }
@@ -282,6 +339,14 @@ int main(int argc, char *argv[]){
             }
         }
         break;
+    case StdRegions::ePrism:
+        {
+            for(i = 0; i < nq1*nq2*nq3; ++i)
+            {
+                sol[i] = Prism_Dsol(x[i],y[i],z[i],order1,order2,order3);
+            }
+        }
+        break;
     case StdRegions::eHexahedron:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -323,6 +388,25 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
     return sol;
 }
 
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
+                    int order1, int order2, int order3)
+{
+    int    l,k,m;
+    NekDouble sol = 0;
+
+    for(k = 0; k < order1; ++k)
+    {
+        for(l = 0; l < order2; ++l)
+        {
+            for(m = 0; m < order3-k; ++m)
+            {
+                sol += pow_loc(x,k)*pow_loc(y,l)*pow_loc(z,m);
+            }
+        }
+    }
+
+    return sol;
+}
 
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3,
@@ -379,6 +463,26 @@ NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
     return sol;
 }
 
+NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
+                     int order1, int order2, int order3)
+{
+    int    l,k,m;
+    NekDouble sol = 0;
+
+    for(k = 0; k < order1; ++k)
+    {
+        for(l = 0; l < order2; ++l)
+        {
+            for(m = 0; m < order3-k; ++m)
+            {
+                sol += k*pow_loc(x,k-1)*pow_loc(y,l)*pow_loc(z,m)
+                    + pow_loc(x,k)*l*pow_loc(y,l-1)*pow_loc(z,m)
+                    + pow_loc(x,k)*pow_loc(y,l)*m*pow_loc(z,m-1);
+            }
+        }
+    }
+    return sol;
+}
 
 NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3,

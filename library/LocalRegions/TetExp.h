@@ -125,7 +125,7 @@ namespace Nektar
             virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D()
                                                                         const;
 
-            DNekMatSharedPtr GenMatrix(
+            virtual DNekMatSharedPtr v_GenMatrix(
                             const StdRegions::StdMatrixKey &mkey);
 
             DNekScalMatSharedPtr  CreateMatrix(

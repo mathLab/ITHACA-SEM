@@ -576,33 +576,6 @@ namespace Nektar
         // Inner product functions
         //---------------------------------------
         
-        /**
-         * \brief Inner product of \a inarray over region with respect to the
-         * expansion basis m_base[0]->GetBdata(), m_base[1]->GetBdata(), *
-         * m_base[2]->GetBdata() and return in \a outarray
-         *
-         * Wrapper call to StdPrismExp::IProductWRTBase.
-         * 
-         * Input:\n
-         *
-         * - \a inarray: array of function evaluated at the physical
-         *   collocation points
-         *
-         * Output:\n
-         * 
-         * - \a outarray: array of inner product with respect to each basis
-         *   over region
-         */
-        void StdPrismExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
-        {
-            StdPrismExp::v_IProductWRTBase(m_base[0]->GetBdata(),
-                                           m_base[1]->GetBdata(),
-                                           m_base[2]->GetBdata(),
-                                           inarray,outarray,1);
-        }
-
         /** 
          * \brief Calculate the inner product of inarray with respect to the
          * basis B=base0*base1*base2 and put into outarray:
@@ -630,23 +603,27 @@ namespace Nektar
          * G} \f$
          */
         void StdPrismExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &bx,
-            const Array<OneD, const NekDouble> &by,
-            const Array<OneD, const NekDouble> &bz,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            int                                 coll_check)
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
+            ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
+                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                      "Basis[1] is not a general tensor type");
+
+            ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
+                      (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
+                      "Basis[2] is not a general tensor type");
+
             if(m_base[0]->Collocation() && m_base[1]->Collocation())
             {
                 MultiplyByQuadratureMetric(inarray,outarray);
             }
             else
             {
-                v_IProductWRTBase_SumFac(inarray,outarray);
+                StdPrismExp::v_IProductWRTBase_SumFac(inarray,outarray);
             }
         }
-
+        
         /**
          * Implementation of the local matrix inner product operation.
          */
@@ -696,13 +673,12 @@ namespace Nektar
         {
             // Interior prism implementation based on Spen's book page
             // 119. and 608.
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
+            const int nquad0 = m_base[0]->GetNumPoints();
+            const int nquad1 = m_base[1]->GetNumPoints();
+            const int nquad2 = m_base[2]->GetNumPoints();
+            const int order0 = m_base[0]->GetNumModes ();
+            const int order1 = m_base[1]->GetNumModes ();
+            const int order2 = m_base[2]->GetNumModes ();
             
             int i, mode;
             
@@ -723,7 +699,6 @@ namespace Nektar
                         0.0, tmp0.get(),    nquad1*nquad2);
             
             // fix for modified basis for base singular vertex
-            
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 //base singular vertex and singular edge (1+b)/2
@@ -1900,12 +1875,12 @@ namespace Nektar
         
         DNekMatSharedPtr StdPrismExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
-            return CreateGeneralMatrix(mkey);
+            return StdExpansion::CreateGeneralMatrix(mkey);
         }
         
         DNekMatSharedPtr StdPrismExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
-            return v_GenMatrix(mkey);
+            return StdExpansion::CreateGeneralMatrix(mkey);
         }
         
         
@@ -1914,7 +1889,7 @@ namespace Nektar
         //---------------------------------------
         
         /**
-         * \brief Compute the local mode number in the expansion for a
+         * @brief Compute the local mode number in the expansion for a
          * particular tensorial combination.
          *
          * Modes are numbered with the r index travelling fastest, followed by
@@ -1928,6 +1903,8 @@ namespace Nektar
          * 2   6  10    14  17  20
          * 1   5   9    13  16  19
          * 0   4   8    12  15  18
+         * 
+         * Note that in this element, we must have that P <= R.
          */
         int StdPrismExp::GetMode(int p, int q, int r)
         {
@@ -1942,7 +1919,7 @@ namespace Nektar
 
         void StdPrismExp::MultiplyByQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                  Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
 

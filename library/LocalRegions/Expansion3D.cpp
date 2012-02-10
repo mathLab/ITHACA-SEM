@@ -41,9 +41,8 @@ namespace Nektar
     {
         Expansion3D::Expansion3D(){}
 		
-        DNekMatSharedPtr Expansion3D::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr Expansion3D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
-
             DNekMatSharedPtr returnval;
             ASSERTL0(false,"This matrix type cannot is not set up");
             

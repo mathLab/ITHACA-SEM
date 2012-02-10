@@ -73,7 +73,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT ~HexExp();
 
         protected:
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 

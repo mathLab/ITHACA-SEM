@@ -3,6 +3,7 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+
 namespace Nektar
 {
     namespace SpatialDomains

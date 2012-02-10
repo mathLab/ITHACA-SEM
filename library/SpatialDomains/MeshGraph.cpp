@@ -1023,9 +1023,9 @@ namespace Nektar
           ReadExpansions(doc);
         }
 
-        LibUtilities::BasisKeyVector DefineBasisKeyFromExpansionType(GeometrySharedPtr in,
-                                     ExpansionType type,
-                                     const int order)
+        LibUtilities::BasisKeyVector MeshGraph::DefineBasisKeyFromExpansionType(GeometrySharedPtr in,
+                                                                                ExpansionType type,
+                                                                                const int order)
         {
             LibUtilities::BasisKeyVector returnval;
             
@@ -1787,7 +1787,7 @@ namespace Nektar
                                 ASSERTL0(x != expansionMap->end(), "Expansion not found!!");
                                 if(useExpansionType)
                                 {
-                                    (x->second)->m_basisKeyVector = DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
+                                    (x->second)->m_basisKeyVector = MeshGraph::DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
                                 }
                                 else
                                 {

@@ -135,8 +135,8 @@ int main(int argc, char *argv[])
 
         const int nEdges = 9;
         const int vertexConnectivity[][2] = {
-            {0,1},{1,2},{2,3},{0,3},{0,4},
-            {1,4},{2,5},{3,5},{4,5}
+            {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, 
+            {1,4}, {2,5}, {3,5}, {4,5}
         };
 
 
@@ -160,25 +160,23 @@ int main(int argc, char *argv[])
         const int                  quadId[] = { 0,-1,1,-1,2 }; 
 
          //triangle-edge connectivity side-triface-1, side triface-3 
-        const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,7,6} };
-        const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {1,0,1 } };
+        const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,6,7} };
+        const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {0,0,1} };
         // TriId ordered as 0, 1, otherwise return false
         const int                   triId[] = { -1,0,-1,1,-1 }; 
 
         // Populate the list of faces  
         Geometry2DSharedPtr faces[nFaces]; 
         for(int f = 0; f < nFaces; ++f){
-            cout << "f = " << f << endl;
-            if(f == 1  ||  f==3) {
+            if(f == 1 || f == 3) {
                 int i = triId[f];
                 SegGeomSharedPtr edgeArray[3];
                 EdgeOrientation eorientArray[3];
-                for(int j=0; j < 3; ++j){
+                for(int j = 0; j < 3; ++j){
                     edgeArray[j] = edges[triEdgeConnectivity[i][j]];
                     eorientArray[j] = isTriEdgeFlipped[i][j] ? eBackwards : eForwards;
                 }
                 faces[f] = MemoryManager<TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
-                cout << "tri faces[" << f << "] = " << faces[f] << endl;
             }            
             else {
                 int i = quadId[f];
@@ -189,14 +187,9 @@ int main(int argc, char *argv[])
                     eorientArray[j] = isQuadEdgeFlipped[i][j] ? eBackwards : eForwards;
                 }
                 faces[f] = MemoryManager<QuadGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
-                cout << "quad faces[" << f << "] = " << faces[f] << endl;
-            }
-            cout << "faces[" << f << "] = " << faces[f] << endl;
-            for(int k = 0; k < faces[f]->GetNumEdges(); ++k) {
-                cout << "faces[" << f << "]->GetEid(" << k << ") = " << faces[f]->GetEid(k) << endl;
             }
         } 
-
+        
          const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );    
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y ); 
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
@@ -263,7 +256,7 @@ int main(int argc, char *argv[])
     if( regionShape == StdRegions::ePrism ) {
         solution[0] = Prism_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );
     }
- 
+    
     NekDouble numericSolution = lpr->PhysEvaluate(t);
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;

@@ -317,6 +317,9 @@ namespace Nektar
 
                 inline const std::string GetGeomInfo(std::string parameter);
 
+                static LibUtilities::BasisKeyVector DefineBasisKeyFromExpansionType(
+                    GeometrySharedPtr in, ExpansionType type, const int order);
+
                 /// \brief Adds an edge between two points.  If curveDefinition is 
                 /// null, then the edge is straight, otherwise it is curved according 
                 /// to the curveDefinition.

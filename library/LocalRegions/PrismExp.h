@@ -96,13 +96,14 @@ namespace Nektar
             // Inner product functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& base0, 
-                const Array<OneD, const NekDouble>& base1, 
-                const Array<OneD, const NekDouble>& base2, 
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
+            LOCAL_REGIONS_EXPORT  void v_IProductWRTDerivBase(
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray, 
+                      Array<OneD,       NekDouble>& outarray);
+            LOCAL_REGIONS_EXPORT  void v_IProductWRTDerivBase_SumFac(
+                const int                           dir,
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
 
@@ -142,6 +143,40 @@ namespace Nektar
 
             
             //---------------------------------------
+            // Operator creation functions
+            //---------------------------------------
+            LOCAL_REGIONS_EXPORT virtual void v_MassMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
+                            const int k1,
+                            const int k2,
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const StdRegions::StdMatrixKey     &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_GeneralMatrixOp_MatOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const StdRegions::StdMatrixKey     &mkey);
+
+            //---------------------------------------
             // Matrix creation functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(
@@ -164,6 +199,14 @@ namespace Nektar
             
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+            
+            LOCAL_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
+            LOCAL_REGIONS_EXPORT void LaplacianMatrixOp_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp);
         };
 
         // type defines for use of PrismExp in a boost vector

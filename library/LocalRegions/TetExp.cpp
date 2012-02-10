@@ -1126,7 +1126,7 @@ namespace Nektar
         }
 
 
-        DNekMatSharedPtr TetExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr TetExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
 

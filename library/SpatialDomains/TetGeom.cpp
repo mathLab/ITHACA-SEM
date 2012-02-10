@@ -193,6 +193,7 @@ namespace Nektar
 
         TetGeom::~TetGeom()
         {
+            
         }
 
         void TetGeom::SetUpLocalEdges(){
@@ -673,18 +674,18 @@ namespace Nektar
 
         void TetGeom::FillGeom()
         {
-            // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
                 int i,j,k;
 
                 for(i = 0; i < kNfaces; i++)
                 {
-                    int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();;
+                    m_faces[i]->FillGeom();
+
+                    int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
                     Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                     Array<OneD,          int> signArray(nFaceCoeffs);
-                    
-                    m_faces[i]->FillGeom();
+
                     m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
                                                    m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
                                                    m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
@@ -694,8 +695,8 @@ namespace Nektar
                     	const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
                         for(k = 0; k < nFaceCoeffs; k++)
                         {
-                             double v = signArray[k]* coeffs[k];
-                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
+                            double v = signArray[k] * coeffs[k];
+                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
                         }
                     }
                 }

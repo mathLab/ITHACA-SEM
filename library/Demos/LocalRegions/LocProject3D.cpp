@@ -512,8 +512,8 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
     const int nEdges = 9;
     const int vertexConnectivity[][2] = {
-        {0,1}, {1,2}, {2,3}, {3,0}, {0,4}, 
-        {1,4}, {2,5}, {3,5}, {5,4}
+        {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, 
+        {1,4}, {2,5}, {3,5}, {4,5}
     };
     
     // Populate the list of edges
@@ -536,15 +536,15 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
         {0,1,2,3}, 
         {0,5,4,-1}, // Triangular face
         {1,6,8,5},
-        {2,7,6,-1}, // Triangular face 
+        {2,6,7,-1}, // Triangular face 
         {3,7,8,4}
     };
     const bool   isEdgeFlipped[][4] = {
-        {0,0,0,1},
-        {0,0,1,0},
-        {0,0,0,1},
-        {0,0,1,0},
-        {1,0,0,1}
+        {0,0,1,1}, 
+        {0,0,1,0}, 
+        {0,0,1,1},
+        {0,0,1,0}, 
+        {0,0,1,1}
     };
     
     // Populate the list of faces
@@ -573,7 +573,6 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
                 eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
             }
-            cout << i << endl;
             faces[i] = MemoryManager<QuadGeom>
                 ::AllocateSharedPtr( i, edgeArray, eorientArray);
         }

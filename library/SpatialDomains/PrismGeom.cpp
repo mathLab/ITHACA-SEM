@@ -795,8 +795,8 @@ namespace Nektar
                     m_faces[i]->FillGeom();
                     
                     int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
-                    Array<OneD, unsigned int> mapArray (nFaceCoeffs,1);
-                    Array<OneD, int>          signArray(nFaceCoeffs,1);
+                    Array<OneD, unsigned int> mapArray (nFaceCoeffs);
+                    Array<OneD,          int> signArray(nFaceCoeffs);
                     
                     if (m_forient[i] < 4)
                     {

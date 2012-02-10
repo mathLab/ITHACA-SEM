@@ -235,6 +235,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coords,
                 const Array<OneD, const NekDouble>& physvals);
+            STD_REGIONS_EXPORT virtual void v_GetCoords(
+                Array<OneD, NekDouble> &coords_x,
+                Array<OneD, NekDouble> &coords_y,
+                Array<OneD, NekDouble> &coords_z);
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int                     mode, 
                       Array<OneD, NekDouble>& outarray);
@@ -264,10 +268,6 @@ namespace Nektar
                     std::string var = "v");
             STD_REGIONS_EXPORT virtual void v_WriteCoeffsToFile(
                     std::ofstream &outfile);
-            STD_REGIONS_EXPORT virtual void v_GetCoords(
-                    Array<OneD, NekDouble> &coords_x,
-                    Array<OneD, NekDouble> &coords_y,
-                    Array<OneD, NekDouble> &coords_z);
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
 
 

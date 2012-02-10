@@ -1427,7 +1427,7 @@ namespace Nektar
             return m_staticCondMatrixManager[mkey];
         }
 
-        DNekMatSharedPtr HexExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr HexExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
 
@@ -2359,7 +2359,6 @@ namespace Nektar
 
             StdRegions::FaceOrientation orient=GetFaceorient(face);
         }
-
 
 /*
         void HexExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,

@@ -1,4 +1,42 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: GeomFactors3D.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+// 
+// Description: Implementation of 3D geometric factors.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/lexical_cast.hpp>
+
 #include <SpatialDomains/GeomFactors3D.h>
+#include <SpatialDomains/Geometry.h>
 
 namespace Nektar
 {
@@ -35,6 +73,11 @@ namespace Nektar
             ASSERTL1(tbasis.num_elements()==3,"tbasis should be an array of size three");
             ASSERTL1(LaplMetrics?QuadMetrics:true,
                      "SetUpQuadratureMetrics should be true if SetUpLaplacianMetrics is true");
+
+            for (int i = 0; i < m_coordDim; ++i)
+            {
+                m_coords[i] = Coords[i];
+            }
 
             StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
 
@@ -157,18 +200,18 @@ namespace Nektar
                 m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
                            -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                            +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
-
+                
                 ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
 
                 // Spen's book page 160
                 m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_1
-                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_1
-                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0])/m_jac[0];  // d xi_3/d x_1
-                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d3[0][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_2
+                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];  // d xi_1/d x_2
+                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0])/m_jac[0];  // d xi_1/d x_3
+                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d3[0][0]*d2[2][0])/m_jac[0];  // d xi_2/d x_1
                 m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d3[0][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_2
-                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d2[0][0]*d1[2][0])/m_jac[0];  // d xi_3/d x_2
-                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];  // d xi_1/d x_3
-                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];  // d xi_2/d x_3
+                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d2[0][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_3
+                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];  // d xi_3/d x_1
+                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];  // d xi_3/d x_2
                 m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0])/m_jac[0];  // d xi_3/d x_3
             }
             else // Deformed case
@@ -182,10 +225,10 @@ namespace Nektar
                 // g[0] = d xi_1/d x_1
                 Vmath::Vmul (nqtot,&d3[1][0],1,&d2[2][0],1,&m_gmat[0][0],1);
                 Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
-                // g[1] = d xi_2/d x_1
+                // g[1] = d xi_1/d x_2
                 Vmath::Vmul (nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
                 Vmath::Vvtvm(nqtot,&d3[1][0],1,&d1[2][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
-                // g[2] = d xi_3/d x_1
+                // g[2] = d xi_1/d x_3
                 Vmath::Vmul (nqtot,&d2[1][0],1,&d1[2][0],1,&m_gmat[2][0],1);
                 Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
                 // g[3] = d xi_2/d x_1
@@ -211,9 +254,10 @@ namespace Nektar
                 Vmath::Vmul (nqtot,&d1[0][0],1,&m_gmat[0][0],1,&m_jac[0],1);
                 Vmath::Vvtvp(nqtot,&d2[0][0],1,&m_gmat[1][0],1,&m_jac[0],1,&m_jac[0],1);
                 Vmath::Vvtvp(nqtot,&d3[0][0],1,&m_gmat[2][0],1,&m_jac[0],1,&m_jac[0],1);
-
-                ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, "3D Deformed Jacobian is not positive");
-
+                
+                ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, 
+                         "3D Deformed Jacobian is not positive");
+                
                 // Scale g[i] by 1/J3D
                 Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);

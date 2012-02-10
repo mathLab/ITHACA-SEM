@@ -594,6 +594,7 @@ namespace Nektar
             virtual SpatialDomains::GeometrySharedPtr GetGeom()
             {
                 ASSERTL0(false, "This function should be implemented on a shape level.");
+                return boost::shared_ptr<SpatialDomains::Geometry>();
             }
 
         protected:

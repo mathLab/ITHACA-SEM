@@ -58,140 +58,41 @@ namespace Nektar
         {
             public:
                 SPATIAL_DOMAINS_EXPORT TriGeom();
+
                 SPATIAL_DOMAINS_EXPORT TriGeom(int id, const int coordim);
-                SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[], const CurveSharedPtr &curve);
+
+                SPATIAL_DOMAINS_EXPORT TriGeom(
+                        const int id,
+                        const VertexComponentSharedPtr verts[],
+                        const SegGeomSharedPtr edges[],
+                        const StdRegions::EdgeOrientation eorient[]);
+
+                SPATIAL_DOMAINS_EXPORT TriGeom(
+                        const int id,
+                        const SegGeomSharedPtr edges[],
+                        const StdRegions::EdgeOrientation eorient[]);
+
+                SPATIAL_DOMAINS_EXPORT TriGeom(
+                        const int id,
+                        const SegGeomSharedPtr edges[],
+                        const StdRegions::EdgeOrientation eorient[],
+                        const CurveSharedPtr &curve);
+
                 SPATIAL_DOMAINS_EXPORT TriGeom(const TriGeom &in);
+
                 SPATIAL_DOMAINS_EXPORT ~TriGeom();
 
-                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
-                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
-                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
+                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(
+                        const int i,
+                        const Array<OneD, const NekDouble> &Lcoord);
 
-                inline int GetFid() const
-                {
-                    return m_fid;
-                }
+                /// Get the orientation of face1.
+                SPATIAL_DOMAINS_EXPORT static StdRegions::FaceOrientation
+                            GetFaceOrientation(const TriGeom &face1,
+                                               const TriGeom &face2);
 
-                inline int GetCoordDim() const
-                {
-                    return m_coordim;
-                }
-
-                inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
-                {
-                    return m_xmap[i]->GetBasis(j);
-                }
-
-                inline const LibUtilities::BasisSharedPtr GetEdgeBasis(const int i, const int j)
-                {
-                    ASSERTL1(j <=2,"edge is out of range");
-                    if(j == 0)
-                    {
-                        return m_xmap[i]->GetBasis(0);
-                    }
-                    else
-                    {
-                        return m_xmap[i]->GetBasis(1);
-                    }
-                }
-
-                inline Array<OneD,NekDouble> &UpdatePhys(const int i)
-                {
-                    return m_xmap[i]->UpdatePhys();
-                }
-
-                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
-
-                inline void SetOwnData()
-                {
-                    m_ownData = true;
-                }
-
-                SPATIAL_DOMAINS_EXPORT void FillGeom();
-
-                SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
-
-                inline int GetEid(int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
-                    return m_edges[i]->GetEid();
-                }
-
-                inline int GetVid(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
-                    return m_verts[i]->GetVid();
-                }
-
-                inline const VertexComponentSharedPtr GetVertex(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
-                    return m_verts[i];
-                }
-
-                inline const Geometry1DSharedPtr GetEdge(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 3");
-                    return m_edges[i];
-                }
-
-                inline StdRegions::EdgeOrientation GetEorient(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 2");
-                    return m_eorient[i];
-                }
-
-                inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
-                {
-                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                    if(i < 2)
-                    {
-                        return m_eorient[i];
-                    }
-                    else
-                    {
-                        if(m_eorient[i] == StdRegions::eForwards)
-                        {
-                            return StdRegions::eBackwards;
-                        }
-                        else
-                        {
-                            return StdRegions::eForwards;
-                        }
-                    }
-                }
-
-
-                /// \brief Get the orientation of face1.
-                ///
-                SPATIAL_DOMAINS_EXPORT static StdRegions::FaceOrientation GetFaceOrientation(const TriGeom &face1,
-                                                                      const TriGeom &face2);
-
-                /// \brief Return the edge number of the given edge, or -1, if
-                /// not an edge of this element.
-                int WhichEdge(SegGeomSharedPtr edge)
-                {
-                    int returnval = -1;
-
-                    SegGeomVector::iterator edgeIter;
-                    int i;
-
-                    for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
-                    {
-                        if (*edgeIter == edge)
-                        {
-                            returnval = i;
-                            break;
-                        }
-                    }
-
-                    return returnval;
-                }
-
-                SPATIAL_DOMAINS_EXPORT static const int                kNedges = 3;
-                SPATIAL_DOMAINS_EXPORT static const int                kNverts = 3;
+                SPATIAL_DOMAINS_EXPORT static const int kNedges = 3;
+                SPATIAL_DOMAINS_EXPORT static const int kNverts = 3;
 
             protected:
                 VertexComponentVector           m_verts;
@@ -201,247 +102,78 @@ namespace Nektar
                 bool				            m_ownVerts;
                 std::list<CompToElmt>		    m_elmtMap;
 
-                void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+                SPATIAL_DOMAINS_EXPORT virtual void v_AddElmtConnected(
+                        int gvo_id,
+                        int locid);
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_NumElmtConnected() const;
+
+                SPATIAL_DOMAINS_EXPORT virtual bool v_IsElmtConnected(
+                        int gvo_id,
+                        int locid) const;
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetFid() const;
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetCoordDim() const;
+
+                SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
+                            v_GetBasis(const int i, const int j);
+
+                SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
+                            v_GetEdgeBasis(const int i, const int j);
+
+                SPATIAL_DOMAINS_EXPORT virtual Array<OneD,NekDouble> &
+                            v_UpdatePhys(const int i);
+
+                SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
+                        const int i,
+                        const Array<OneD,const NekDouble> &Lcoord);
+
+                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+
+                SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
+
+                /// Put all quadrature information into edge structure
+                SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom();
+
+                SPATIAL_DOMAINS_EXPORT virtual void v_GetLocCoords(
+                        const Array<OneD,const NekDouble> &coords,
+                              Array<OneD,      NekDouble> &Lcoords);
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetEid(int i) const;
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
+
+                SPATIAL_DOMAINS_EXPORT virtual const VertexComponentSharedPtr
+                            v_GetVertex(int i) const;
+
+                SPATIAL_DOMAINS_EXPORT virtual const Geometry1DSharedPtr
+                            v_GetEdge(int i) const;
+
+                SPATIAL_DOMAINS_EXPORT virtual StdRegions::EdgeOrientation
+                            v_GetEorient(const int i) const;
+
+                SPATIAL_DOMAINS_EXPORT virtual StdRegions::EdgeOrientation
+                            v_GetCartesianEorient(const int i) const;
+
+                /// Return the edge number of the given edge
+                SPATIAL_DOMAINS_EXPORT virtual int v_WhichEdge(
+                        SegGeomSharedPtr edge);
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetNumVerts() const;
+
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetNumEdges() const;
+
+                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord,
+                              NekDouble tol = 0.0);
 
             private:
                 bool                            m_ownData;
-
-                virtual void v_AddElmtConnected(int gvo_id, int locid)
-                {
-                    AddElmtConnected(gvo_id,locid);
-                }
-
-                virtual int  v_NumElmtConnected() const
-                {
-                    return NumElmtConnected();
-                }
-
-                virtual bool v_IsElmtConnected(int gvo_id, int locid) const
-                {
-                    return IsElmtConnected(gvo_id,locid);
-                }
-
-                virtual int v_GetFid() const
-                {
-                    return GetFid();
-                }
-
-                virtual int v_GetCoordDim() const
-                {
-                    return GetCoordDim();
-                }
-
-                virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
-                {
-                    return GetBasis(i,j);
-                }
-
-                virtual const LibUtilities::BasisSharedPtr v_GetEdgeBasis(const int i, const int j)
-                {
-                    return GetEdgeBasis(i,j);
-                }
-
-                virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
-                {
-                    return UpdatePhys(i);
-				}
-
-                virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
-                {
-                    return GetCoord(i,Lcoord);
-                }
-
-                virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-                {
-                    GenGeomFactors(tbasis);
-                }
-
-                virtual void v_SetOwnData()
-                {
-                    SetOwnData();
-                }
-
-                virtual void v_FillGeom()
-                {
-                    FillGeom();
-                }
-
-                virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-                {
-                    GetLocCoords(coords,Lcoords);
-                }
-
-                virtual int v_GetEid(int i) const
-                {
-                    return GetEid(i);
-                }
-
-                virtual int v_GetVid(int i) const
-                {
-                    return GetVid(i);
-                }
-
-                virtual const VertexComponentSharedPtr v_GetVertex(int i) const
-                {
-                    return GetVertex(i);
-                }
-
-                virtual const Geometry1DSharedPtr v_GetEdge(int i) const
-                {
-                    return GetEdge(i);
-                }
-
-                virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
-                {
-                    return GetEorient(i);
-                }
-
-                virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
-                {
-                    return GetCartesianEorient(i);
-                }
-
-                virtual int v_WhichEdge(SegGeomSharedPtr edge)
-                {
-                    return WhichEdge(edge);
-                }
-
-                virtual int v_GetNumVerts() const
-                {
-                    return kNverts;
-                }
-
-                virtual int v_GetNumEdges() const
-                {
-                    return kNedges;
-                }
-
-                virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0);
         };
+
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
 
-#endif //NEKTAR_SPATIALDOMAINS_TRIGEOM_H
-
-//
-// $Log: TriGeom.h,v $
-// Revision 1.29  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.28  2009/07/02 13:32:24  sehunchun
-// *** empty log message ***
-//
-// Revision 1.27  2009/01/21 16:59:04  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.26  2008/11/17 08:58:00  ehan
-// Added GetNumVerts and GetNumEdges
-//
-// Revision 1.25  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.24  2008/07/31 21:27:08  sherwin
-// Updates for Tri's DG advection
-//
-// Revision 1.23  2008/07/29 22:23:36  sherwin
-// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
-//
-// Revision 1.22  2008/06/14 01:25:11  ehan
-// Added a new constructor TriGeom(id, coordim).
-//
-// Revision 1.21  2008/06/11 21:34:42  delisi
-// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
-//
-// Revision 1.20  2008/06/09 21:33:04  jfrazier
-// Moved segment vector to base MeshGraph class since it is used by all derived types.
-//
-// Revision 1.19  2008/05/10 18:27:33  sherwin
-// Modifications necessary for QuadExp Unified DG Solver
-//
-// Revision 1.18  2008/05/09 20:33:39  ehan
-// Fixed infinity loop of recursive function.
-//
-// Revision 1.17  2008/04/06 06:00:38  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.16  2008/04/02 22:19:04  pvos
-// Update for 2D local to global mapping
-//
-// Revision 1.15  2008/02/08 23:05:52  jfrazier
-// More work on 3D components.
-//
-// Revision 1.14  2008/02/03 05:05:16  jfrazier
-// Initial checkin of 3D components.
-//
-// Revision 1.13  2008/01/21 19:58:14  sherwin
-// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
-//
-// Revision 1.12  2007/12/11 21:51:53  jfrazier
-// Updated 2d components so elements could be retrieved from edges.
-//
-// Revision 1.11  2007/07/22 23:04:24  bnelson
-// Backed out Nektar::ptr.
-//
-// Revision 1.10  2007/07/20 02:15:09  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.9  2007/06/06 15:15:21  pvos
-// Some minor updates for 2D routines
-//
-// Revision 1.8  2007/06/01 17:08:07  pvos
-// Modification to make LocalRegions/Project2D run correctly (PART1)
-//
-// Revision 1.7  2007/05/28 21:48:43  sherwin
-// Update for 2D functionality
-//
-// Revision 1.6  2006/07/02 17:16:18  sherwin
-//
-// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-//
-// Revision 1.5  2006/06/01 14:15:31  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.4  2006/05/30 14:00:04  sherwin
-// Updates to make MultiRegions and its Demos work
-//
-// Revision 1.3  2006/05/29 17:05:17  sherwin
-// Updated to use shared_ptr around Geom types - added typedef
-//
-// Revision 1.2  2006/05/07 11:26:38  sherwin
-// Modifications to get the demo LocalRegions::Project2D to compile
-//
-// Revision 1.1  2006/05/04 18:59:05  kirby
-// *** empty log message ***
-//
-// Revision 1.23  2006/04/11 23:18:11  jfrazier
-// Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
-//
-// Revision 1.22  2006/04/09 02:08:36  jfrazier
-// Added precompiled header.
-//
-// Revision 1.21  2006/03/25 00:58:29  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.20  2006/03/12 14:20:44  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.19  2006/03/12 11:06:41  sherwin
-//
-// First complete copy of code standard code but still not compile tested
-//
-// Revision 1.18  2006/03/04 20:26:05  bnelson
-// Added comments after #endif.
-//
-// Revision 1.17  2006/02/19 01:37:35  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//
+#endif

@@ -220,8 +220,8 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(const std::string& infilename);
                 SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(TiXmlDocument &doc);
 
-                void WriteGeometry(const std::string& fileName);
-                void WriteGeometry(TiXmlDocument& doc);
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(const std::string& fileName);
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(TiXmlDocument& doc);
 
                 /// Read geometric information from a file.
                 SPATIAL_DOMAINS_EXPORT void ReadGeometryInfo(const std::string &infilename);
@@ -317,7 +317,7 @@ namespace Nektar
 
                 inline const std::string GetGeomInfo(std::string parameter);
 
-                static LibUtilities::BasisKeyVector DefineBasisKeyFromExpansionType(
+                SPATIAL_DOMAINS_EXPORT static LibUtilities::BasisKeyVector DefineBasisKeyFromExpansionType(
                     GeometrySharedPtr in, ExpansionType type, const int order);
 
                 /// \brief Adds an edge between two points.  If curveDefinition is 
@@ -325,7 +325,7 @@ namespace Nektar
                 /// to the curveDefinition.
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
-                SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
                 SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
                 SPATIAL_DOMAINS_EXPORT QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
@@ -336,16 +336,16 @@ namespace Nektar
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
-                const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
-                const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
-                const QuadGeomMap& GetAllQuadGeoms() const { return m_quadGeoms; }
-                const TetGeomMap& GetAllTetGeoms() const { return m_tetGeoms; }
-                const PyrGeomMap& GetAllPyrGeoms() const { return m_pyrGeoms; }
-                const PrismGeomMap& GetAllPrismGeoms() const { return m_prismGeoms; }
-                const HexGeomMap& GetAllHexGeoms() const { return m_hexGeoms; }
+                SPATIAL_DOMAINS_EXPORT const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
+                SPATIAL_DOMAINS_EXPORT const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
+                SPATIAL_DOMAINS_EXPORT const QuadGeomMap& GetAllQuadGeoms() const { return m_quadGeoms; }
+                SPATIAL_DOMAINS_EXPORT const TetGeomMap& GetAllTetGeoms() const { return m_tetGeoms; }
+                SPATIAL_DOMAINS_EXPORT const PyrGeomMap& GetAllPyrGeoms() const { return m_pyrGeoms; }
+                SPATIAL_DOMAINS_EXPORT const PrismGeomMap& GetAllPrismGeoms() const { return m_prismGeoms; }
+                SPATIAL_DOMAINS_EXPORT const HexGeomMap& GetAllHexGeoms() const { return m_hexGeoms; }
 
                 /// Convenience method for ElVis.
-                template<typename ElementType>
+                SPATIAL_DOMAINS_EXPORT template<typename ElementType>
                 const std::map<int, boost::shared_ptr<ElementType> >& GetAllElementsOfType() const;
 
             protected:

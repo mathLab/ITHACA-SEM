@@ -96,15 +96,10 @@ namespace Nektar
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
                 NekVector(const expt::Node<L, Op, R>& rhs) :
-                    m_size(),
-                    m_data(),
+                    m_size(MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData()).get<0>()),
+                    m_data(m_size),
                     m_wrapperType(eCopy)
                 {
-                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes =
-                        MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
-                    m_size = sizes.get<0>();
-                    m_data = Array<OneD, DataType>(m_size);
-
                     expt::ExpressionEvaluator::EvaluateWithoutAliasingCheck(rhs, *this);
                 }
 

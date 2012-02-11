@@ -345,7 +345,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT const HexGeomMap& GetAllHexGeoms() const { return m_hexGeoms; }
 
                 /// Convenience method for ElVis.
-                SPATIAL_DOMAINS_EXPORT template<typename ElementType>
+                template<typename ElementType>
                 const std::map<int, boost::shared_ptr<ElementType> >& GetAllElementsOfType() const;
 
             protected:

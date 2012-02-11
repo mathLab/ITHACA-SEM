@@ -225,20 +225,16 @@ namespace Nektar
                 i = 0;
                 while(x)
                 {
-                    TiXmlAttribute* y;
-                    y = x->FirstAttribute();
-                    ASSERTL0(y, "Failed to get attribute.");
                     MeshCurved c;
-                    c.id = y->IntValue();
-                    y = y->Next();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    c.edgeid = y->IntValue();
-                    y = y->Next();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    c.type = y->Value();
-                    y = y->Next();
-                    ASSERTL0(y, "Failed to get attribute.");
-                    c.npoints = y->IntValue();
+                    ASSERTL0(x->Attribute("ID", &c.id),
+                             "Failed to get attribute ID");
+                    ASSERTL0(x->Attribute("EDGEID", &c.edgeid),
+                             "Failed to get attribute EDGEID");
+                    c.type = std::string(x->Attribute("TYPE"));
+                    ASSERTL0(!c.type.empty(),
+                             "Failed to get attribute TYPE");
+                    ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
+                             "Failed to get attribute NUMPOINTS");
                     c.data = x->FirstChild()->ToText()->Value();
                     m_meshCurved[c.id] = c;
                     x = x->NextSiblingElement();
@@ -475,9 +471,10 @@ namespace Nektar
                 x = new TiXmlElement("V");
                 x->SetAttribute("ID", vVertIt->first);
                 std::stringstream vCoords;
-                vCoords << std::setw(10) << vVertIt->second.x
-                        << std::setw(10) << vVertIt->second.y
-                        << std::setw(10) << vVertIt->second.z << " ";
+                vCoords.precision(12);
+                vCoords << std::setw(15) << vVertIt->second.x
+                        << std::setw(15) << vVertIt->second.y
+                        << std::setw(15) << vVertIt->second.z << " ";
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);
                 vVertex->LinkEndChild(x);
@@ -673,66 +670,69 @@ namespace Nektar
                 std::map<int, int> vBndRegionIdList;
                 TiXmlElement* vConditions    = new TiXmlElement(*pSession->GetElement("Nektar/Conditions"));
                 TiXmlElement* vBndRegions    = vConditions->FirstChildElement("BOUNDARYREGIONS");
-                if (!vBndRegions)
-                {
-                    std::cout << "no boundary regions" << std::endl;
-                }
-                TiXmlElement* vNewBndRegions = new TiXmlElement("BOUNDARYREGIONS");
-                TiXmlElement* vItem = vBndRegions->FirstChildElement();
-                int p = 0;
-                while (vItem)
-                {
-                    std::string vSeqStr = vItem->FirstChild()->ToText()->Value();
-                    std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
-                    std::string::size_type indxEnd = vSeqStr.find_last_of(']') - 1;
-                    vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
-                    std::vector<unsigned int> vSeq;
-                    ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
-                    std::string vListStr;
-                    bool comma = false;
-                    for (unsigned int i = 0; i < vSeq.size(); ++i)
-                    {
-                        if (vComposites.find(vSeq[i]) != vComposites.end())
-                        {
-                            vListStr += comma ? "," : "";
-                            comma = true;
-                            vListStr += boost::lexical_cast<std::string>(vSeq[i]);
-                        }
-                    }
-                    if (vListStr.length() == 0)
-                    {
-                        vBndRegions->RemoveChild(vItem);
-                    }
-                    else
-                    {
-                        vListStr = "C[" + vListStr + "]";
-                        TiXmlText* vList = new TiXmlText(vListStr);
-                        TiXmlElement* vNewElement = new TiXmlElement("B");
-                        vNewElement->SetAttribute("ID", p);
-                        vNewElement->LinkEndChild(vList);
-                        vNewBndRegions->LinkEndChild(vNewElement);
-                        vBndRegionIdList[atoi(vItem->Attribute("ID"))] = p++;
-                    }
-                    vItem = vItem->NextSiblingElement();
-                }
-                vConditions->ReplaceChild(vBndRegions, *vNewBndRegions);
-
                 TiXmlElement* vBndConditions = vConditions->FirstChildElement("BOUNDARYCONDITIONS");
-                vItem = vBndConditions->FirstChildElement();
-                while (vItem)
+                TiXmlElement* vItem;
+
+                if (vBndRegions)
                 {
-                    std::map<int, int>::iterator x;
-                    if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
+                    TiXmlElement* vNewBndRegions = new TiXmlElement("BOUNDARYREGIONS");
+                    vItem = vBndRegions->FirstChildElement();
+                    int p = 0;
+                    while (vItem)
                     {
-                        vItem->SetAttribute("REF", x->second);
+                        std::string vSeqStr = vItem->FirstChild()->ToText()->Value();
+                        std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
+                        std::string::size_type indxEnd = vSeqStr.find_last_of(']') - 1;
+                        vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
+                        std::vector<unsigned int> vSeq;
+                        ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
+                        std::string vListStr;
+                        bool comma = false;
+                        for (unsigned int i = 0; i < vSeq.size(); ++i)
+                        {
+                            if (vComposites.find(vSeq[i]) != vComposites.end())
+                            {
+                                vListStr += comma ? "," : "";
+                                comma = true;
+                                vListStr += boost::lexical_cast<std::string>(vSeq[i]);
+                            }
+                        }
+                        if (vListStr.length() == 0)
+                        {
+                            vBndRegions->RemoveChild(vItem);
+                        }
+                        else
+                        {
+                            vListStr = "C[" + vListStr + "]";
+                            TiXmlText* vList = new TiXmlText(vListStr);
+                            TiXmlElement* vNewElement = new TiXmlElement("B");
+                            vNewElement->SetAttribute("ID", p);
+                            vNewElement->LinkEndChild(vList);
+                            vNewBndRegions->LinkEndChild(vNewElement);
+                            vBndRegionIdList[atoi(vItem->Attribute("ID"))] = p++;
+                        }
+                        vItem = vItem->NextSiblingElement();
                     }
-                    else
-                    {
-                        vBndConditions->RemoveChild(vItem);
-                    }
-                    vItem = vItem->NextSiblingElement();
+                    vConditions->ReplaceChild(vBndRegions, *vNewBndRegions);
                 }
 
+                if (vBndConditions)
+                {
+                    vItem = vBndConditions->FirstChildElement();
+                    while (vItem)
+                    {
+                        std::map<int, int>::iterator x;
+                        if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
+                        {
+                            vItem->SetAttribute("REF", x->second);
+                        }
+                        else
+                        {
+                            vBndConditions->RemoveChild(vItem);
+                        }
+                        vItem = vItem->NextSiblingElement();
+                    }
+                }
                 pNektar->LinkEndChild(vConditions);
             }
             if (pSession->DefinesElement("Nektar/GlobalOptimizationParameters"))

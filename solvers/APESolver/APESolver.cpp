@@ -43,12 +43,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2)
-    {
-        cout << "\n \t Usage: APESolver  sessionfile \n" << endl;
-        exit(1);
-    }
-
     // Create session reader.
     LibUtilities::SessionReaderSharedPtr session;
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);

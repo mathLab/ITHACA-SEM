@@ -43,20 +43,14 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    std::vector<std::string> vFilenames;
-    for (unsigned int i = 1; i < argc; ++i)
-    {
-        vFilenames.push_back(argv[i]);
-    }
-
     LibUtilities::SessionReaderSharedPtr session;
     string vDriverModule;
     DriverSharedPtr drv;
 
-//    try
-//    {
+    try
+    {
         // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv, vFilenames);
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
@@ -67,15 +61,15 @@ int main(int argc, char *argv[])
 
         // Finalise communications
         session->Finalise();
-//    }
-//    catch (const std::runtime_error& e)
-//    {
-//        return 1;
-//    }
-//    catch (const std::string& eStr)
-//    {
-//        cout << "Error: " << eStr << endl;
-//    }
+    }
+    catch (const std::runtime_error& e)
+    {
+        return 1;
+    }
+    catch (const std::string& eStr)
+    {
+        cout << "Error: " << eStr << endl;
+    }
 
     return 0;
 }

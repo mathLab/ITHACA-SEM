@@ -50,6 +50,8 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 
+namespace po = boost::program_options;
+
 namespace Nektar
 {
     namespace LibUtilities
@@ -129,18 +131,9 @@ namespace Nektar
          */
         SessionReader::SessionReader(int argc, char *argv[])
         {
-            ASSERTL0(argc > 1, "No filename argument specified.");
+            std::vector<std::string> vFilenames = ParseCommandLineArguments(argc, argv);
 
-            std::vector<std::string> vFilenames;
-            for (unsigned int i = 1; i < argc; ++i)
-            {
-                std::string vFile = argv[i];
-
-                if (vFile.substr(vFile.find_last_of('.')) == ".xml")
-                {
-                    vFilenames.push_back(vFile);
-                }
-            }
+            ASSERTL0(vFilenames.size() > 0, "No session file(s) given.");
 
             m_filename = vFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
@@ -151,9 +144,14 @@ namespace Nektar
         }
 
 
+        /**
+         *
+         */
         SessionReader::SessionReader(int argc, char *argv[], const std::vector<std::string> &pFilenames, const CommSharedPtr &pComm)
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
+
+            std::vector<std::string> vFilenames = ParseCommandLineArguments(argc, argv);
 
             m_filename = pFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
@@ -193,6 +191,83 @@ namespace Nektar
 
             // Parse the XML data in #m_xmlDoc
             ParseDocument();
+        }
+
+
+        /**
+         * Parses the command-line arguments for known options and filenames.
+         */
+        std::vector<std::string> SessionReader::ParseCommandLineArguments(int argc, char *argv[])
+        {
+            // List the publically visible options (listed using --help)
+            po::options_description desc("Allowed options");
+            desc.add_options()
+                    ("verbose,v", "be verbose")
+                    ("help,h", "print this help message")
+            ;
+
+            // List hidden options (e.g. session file arguments are not actually
+            // specified using the input-file option by the user).
+            po::options_description hidden("Hidden options");
+            hidden.add_options()
+                    ("input-file", po::value< vector<string> >(), "input filename")
+            ;
+
+            // Combine all options for the parser
+            po::options_description all("All options");
+            all.add(desc).add(hidden);
+
+            // Session file is a positional option
+            po::positional_options_description p;
+            p.add("input-file", -1);
+
+            // Parse the command-line options
+            po::parsed_options parsed = po::command_line_parser(argc, argv).
+                                                options(all).
+                                                positional(p).
+                                                allow_unregistered().
+                                                run();
+
+            // Extract known options to map and update
+            po::store(parsed, m_cmdLineOptions);
+            po::notify(m_cmdLineOptions);
+
+            // Help message
+            if (m_cmdLineOptions.count("help"))
+            {
+                cout << desc << endl;
+                exit(0);
+            }
+
+            // Enable verbose mode
+            if (m_cmdLineOptions.count("verbose"))
+            {
+                m_verbose = true;
+            }
+            else
+            {
+                m_verbose = false;
+            }
+
+            // Print a warning for unknown options
+            std::vector< po::basic_option<char> >::iterator x;
+            for (x = parsed.options.begin(); x != parsed.options.end(); ++x)
+            {
+                if (x->unregistered)
+                {
+                    cout << "Warning: Unknown option: " << x->string_key << endl;
+                }
+            }
+
+            // Return the vector of filename(s) given as positional options
+            if (m_cmdLineOptions.count("input-file"))
+            {
+                return m_cmdLineOptions["input-file"].as< std::vector<std::string> >();
+            }
+            else
+            {
+                return std::vector<std::string>();
+            }
         }
 
 
@@ -1007,6 +1082,17 @@ namespace Nektar
                     // this go.
                 }
             }
+
+            if (m_verbose && m_parameters.size() > 0)
+            {
+                cout << "Parameters:" << endl;
+                ParameterMap::iterator x;
+                for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
+                {
+                    cout << "\t" << x->first << " = " << x->second << endl;
+                }
+                cout << endl;
+            }
         }
 
 
@@ -1074,6 +1160,17 @@ namespace Nektar
                     || m_solverInfo["GLOBALSYSSOLN"] == "IterativeStaticCond",
                     "An iterative solver must be used when run in parallel.");
             }
+
+            if (m_verbose && m_solverInfo.size() > 0 && m_comm)
+            {
+                cout << "Solver Info:" << endl;
+                SolverInfoMap::iterator x;
+                for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
+                {
+                    cout << "\t" << x->first << " = " << x->second << endl;
+                }
+                cout << endl;
+            }
         }
 
 
@@ -1126,6 +1223,17 @@ namespace Nektar
                     m_geometricInfo[geometricProperty] = geometricValue;
                     geometricInfo = geometricInfo->NextSiblingElement("I");
                 }
+            }
+
+            if (m_verbose && m_geometricInfo.size() > 0)
+            {
+                cout << "Geometric Info:" << endl;
+                GeometricInfoMap::iterator x;
+                for (x = m_geometricInfo.begin(); x != m_geometricInfo.end(); ++x)
+                {
+                    cout << "\t" << x->first << " = " << x->second << endl;
+                }
+                cout << endl;
             }
         }
 

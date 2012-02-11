@@ -40,13 +40,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    
-    if(argc != 2)
-    {
-        cerr << "\n \t Usage: IncNavierStokes  input.xml \n" << endl;
-        exit(1);
-    }
-
     LibUtilities::SessionReaderSharedPtr session;
     string vDriverModule;
     DriverSharedPtr drv;

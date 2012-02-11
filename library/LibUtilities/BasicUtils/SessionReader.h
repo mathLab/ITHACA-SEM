@@ -46,6 +46,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/program_options.hpp>
 
 class TiXmlElement;
 class TiXmlDocument;
@@ -235,6 +236,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
         private:
+            boost::program_options::variables_map m_cmdLineOptions;
+
             /// Communication object.
             CommSharedPtr               m_comm;
             /// Filename of the loaded XML document.
@@ -258,6 +261,8 @@ namespace Nektar
             VariableList                m_variables;
             /// Custom tags.
             TagMap                      m_tags;
+            /// Be verbose
+            bool                        m_verbose;
 
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList          m_enums;
@@ -270,6 +275,9 @@ namespace Nektar
 
             /// Returns a shared pointer to the current object.
             inline boost::shared_ptr<SessionReader> GetSharedThisPtr();
+
+            /// Parse the program arguments and fill #m_cmdLineOptions
+            std::vector<std::string> ParseCommandLineArguments(int argc, char *argv[]);
 
             /// Creates an XML document from a list of input files.
             LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(const std::vector<std::string> &pFilenames) const;

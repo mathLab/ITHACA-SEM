@@ -43,19 +43,12 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2)
-    {
-        cout << "\nUsage: ADRSolver  sessionfile" << endl;
-        GetEquationSystemFactory().PrintAvailableClasses();
-        exit(1);
-    }
-
     LibUtilities::SessionReaderSharedPtr session;
     string vDriverModule;
     DriverSharedPtr drv;
 
-  //  try
-  //  {
+    try
+    {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
@@ -68,15 +61,15 @@ int main(int argc, char *argv[])
 
         // Finalise session
         session->Finalise();
-   // }
-    //catch (const std::runtime_error& e)
-   // {
-   //     return 1;
-   // }
-   // catch (const std::string& eStr)
-   // {
-   //     cout << "Error: " << eStr << endl;
-    //}
+    }
+    catch (const std::runtime_error& e)
+    {
+        return 1;
+    }
+    catch (const std::string& eStr)
+    {
+        cout << "Error: " << eStr << endl;
+    }
 
     return 0;
 }

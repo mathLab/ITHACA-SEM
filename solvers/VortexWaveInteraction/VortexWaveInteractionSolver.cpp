@@ -50,13 +50,6 @@ void Mvdir(string dir, NekDouble dir_ending);
 
 int main(int argc, char *argv[])
 {
-    
-    if(argc != 2)
-    {
-        cerr << "\n \t Usage: VortexWaveInteractionSolver  input \n" << endl;
-        exit(1);
-    }
-
     try
     { 
         VortexWaveInteraction vwi(argc,argv);

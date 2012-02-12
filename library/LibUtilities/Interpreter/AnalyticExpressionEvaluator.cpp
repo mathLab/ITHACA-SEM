@@ -1,0 +1,934 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File AnalyticExpressionEvaluator.hpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Parser and evaluator of analytic expressions.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+#include <LibUtilities/LibUtilities.h>
+#include "AnalyticExpressionEvaluator.hpp"
+#include <stdexcept>
+
+#ifdef _MSC_VER
+#include <boost/preprocessor/cat.hpp>
+#endif //MSC_VER
+
+#ifdef _MSC_VER
+#define NEKTAR_MATH_NAME(x) BOOST_PP_CAT(_, x)
+#else
+#define NEKTAR_MATH_NAME(x) x
+#endif
+
+#if( BOOST_VERSION / 100 % 1000 >= 36 )
+using namespace boost::spirit::classic;
+#else
+using namespace boost::spirit;
+#endif
+
+
+namespace Nektar
+{
+    namespace LibUtilities
+    {
+
+        /** Gcc 4.0.1 on the mac did not compile when isspace was passed as the third 
+            parameter to std::remove_if below (it takes an int as a parameter 
+            instead of a char).  This wrapper method gets around this problem. **/
+        static int ConvertIsSpaceForGcc(char c) { return isspace(c); }
+
+        // =========================================================================
+        //                       Math Function Declarations
+        // =========================================================================
+
+        /** This function is called each time a math function is parsed and executed. It checks
+            the errno to see if there was an error that occured in the math.h function. **/
+        static void CheckMathOperationForErrors(std::string const& functionName)
+        {
+            if (errno == EDOM)
+                throw std::runtime_error("Argument of " + functionName + " exceeds the range of the function.");
+            else if (errno == ERANGE)
+                throw std::runtime_error("The result from " + functionName + " overflowed the double type.");
+
+            errno = 0;
+        }
+
+
+        // =========================================================================
+        //             AnalyticExpression definitions for Spirit Parser
+        // =========================================================================
+
+        typedef double (*PFD)();
+        typedef double (*PFD1)(double);
+        typedef double (*PFD2)(double, double);
+        typedef double (*PFD3)(double, double, double);
+        typedef double (*PFD4)(double, double, double, double);
+        struct func
+        {
+            func(PFD1 p) : func1(p), size(1) {};
+            func(PFD2 p) : func2(p), size(2) {};
+            func(PFD3 p) : func3(p), size(3) {};
+            func(PFD4 p) : func4(p), size(4) {};
+
+            union	// Pointer to a function 
+            {
+                PFD1 func1;
+                PFD2 func2;
+                PFD3 func3;
+                PFD4 func4;
+            };
+            size_t size;
+        };
+
+
+
+        /** This struct creates a parser that matches the function
+        definitions from math.h. All of the functions accept one
+        of more doubles as arguments and returns a double. **/
+        static struct functions : symbols<func>
+        {
+            functions()
+            {
+                // Add all of the functions from math.h 
+                add
+                    ("abs",		std::abs)
+                    ("asin",	asin)
+                    ("acos",	acos)
+                    ("atan",	atan)
+                    ("ceil",	ceil)
+                    ("cos",		cos)
+                    ("cosh",	cosh)
+                    ("exp",		exp)
+                    ("fabs",	fabs)	// same as abs
+                    ("floor",	floor)
+                    ("log",		log)
+                    ("log10",	log10)
+                    ("sin",		sin)
+                    ("sinh",	sinh)
+                    ("sqrt",	sqrt)
+                    ("tan",		tan)
+                    ("tanh",	tanh)
+                    ;
+            }
+        } functions_p;
+
+
+        /** This function specifies the grammar of the MathAnalyticExpression parser. **/
+        template <typename ScannerT>
+        AnalyticExpressionEvaluator::AnalyticExpression::definition<ScannerT>::definition(AnalyticExpression const& self)
+        {
+            expression	=	logical_or;
+
+            logical_or	=	logical_and >> *(  (root_node_d[str_p("||")] >> logical_and) );
+
+            logical_and	=	equality >> *(  (root_node_d[str_p("&&")] >> equality) );
+
+            equality	=	lt_gt >> *(  (root_node_d[str_p("==")] >> lt_gt) );
+
+            lt_gt		=	add_sub >>
+                *(  (root_node_d[str_p("<=")] >> add_sub)
+                | (root_node_d[str_p(">=")] >> add_sub)
+                | (root_node_d[ch_p('<')] >> add_sub)
+                | (root_node_d[ch_p('>')] >> add_sub)
+                );
+
+            add_sub		=	mult_div >>
+                *(  (root_node_d[ch_p('+')] >> mult_div)
+                  | (root_node_d[ch_p('-')] >> mult_div)
+                );
+
+            mult_div	=	exponential >>
+                *(  (root_node_d[ch_p('*')] >> exponential)
+                  | (root_node_d[ch_p('/')] >> exponential)
+                );
+
+            exponential	=	factor >>
+                *(	(root_node_d[ch_p('^')] >> factor)	);
+
+            factor		=	number
+                |	function
+                |	variable
+                |	constant
+                |	parameter
+                |	inner_node_d[ch_p('(') >> expression >> ch_p(')')]
+            |	(root_node_d[ch_p('-')] >> factor);
+
+            parameter	=	leaf_node_d[ lexeme_d[
+                (alpha_p | '_' | '$') >> *(alnum_p | '_' | '$') 
+            ] ] >> op;
+
+            function	=	root_node_d[functions_p] >>
+                infix_node_d[inner_node_d[ch_p('(') >> expression >> *(',' >> expression) >> ch_p(')')]];
+
+            variable	=	leaf_node_d[ lexeme_d[
+                self.variables_p
+            ] ] >> op;
+
+            number		=	leaf_node_d[ lexeme_d[
+                real_p
+            ] ] >> op;
+
+            constant	=	leaf_node_d[ lexeme_d[
+                *self.constants_p
+            ] ] >> op;
+
+            op = eps_p( end_p | "||" | "&&" | "==" | "<=" | ">=" | '<' | '>' | '+' | '-' | '*' | '/' | '^' | ')' );
+        }
+
+        // =========================================================================
+        //      AnalyticExpressionEvaluator constructor and setting up methods
+        // =========================================================================
+
+        // \brief Initializes the evaluator. Call DefineFunction(...) next.
+        AnalyticExpressionEvaluator::AnalyticExpressionEvaluator()
+        {
+            m_state_size = 1;
+
+            AddConstant("MEANINGLESS", 0.0);
+            AddConstant("E",           2.71828182845904523536);     // Natural logarithm
+            AddConstant("LOG2E",       1.4426950408889634074);      // log_2 e
+            AddConstant("LOG10E",      0.43429448190325182765);     // log_10 e
+            AddConstant("LN2",         0.69314718055994530942);     // log_e 2
+            AddConstant("LN10",        2.30258509299404568402);     // log_e 10
+            AddConstant("PI",          3.14159265358979323846);     // pi
+            AddConstant("PI_2",        1.57079632679489661923);     // pi/2
+            AddConstant("PI_4",        0.78539816339744830962);     // pi/4
+            AddConstant("1_PI",        0.31830988618379067154);     // 1/pi
+            AddConstant("2_PI",        0.63661977236758134308);     // 2/pi
+            AddConstant("2_SQRTPI",    1.12837916709551257390);     // 2/sqrt(pi)
+            AddConstant("SQRT2",       1.41421356237309504880);     // sqrt(2)
+            AddConstant("SQRT1_2",     0.70710678118654752440);     // 1/sqrt(2)
+            AddConstant("GAMMA",       0.57721566490153286060);     // Euler
+            AddConstant("DEG",         57.2957795130823208768);     // deg/radian
+            AddConstant("PHI",         1.61803398874989484820);     // golden ratio
+
+            m_functionMapNameToInstanceType["abs"]   =  E_ABS;
+            m_functionMapNameToInstanceType["asin"]  =  E_ASIN;
+            m_functionMapNameToInstanceType["acos"]  =  E_ACOS;
+            m_functionMapNameToInstanceType["atan"]  =  E_ATAN;
+            m_functionMapNameToInstanceType["ceil"]  =  E_CEIL;
+            m_functionMapNameToInstanceType["cos"]   =  E_COS;
+            m_functionMapNameToInstanceType["cosh"]  =  E_COSH;
+            m_functionMapNameToInstanceType["exp"]   =  E_EXP;
+            m_functionMapNameToInstanceType["fabs"]  =  E_FABS;
+            m_functionMapNameToInstanceType["floor"] =  E_FLOOR;
+            m_functionMapNameToInstanceType["log"]   =  E_LOG;
+            m_functionMapNameToInstanceType["log10"] =  E_LOG10;
+            m_functionMapNameToInstanceType["sin"]   =  E_SIN;
+            m_functionMapNameToInstanceType["sinh"]  =  E_SINH;
+            m_functionMapNameToInstanceType["sqrt"]  =  E_SQRT;
+            m_functionMapNameToInstanceType["tan"]   =  E_TAN;
+            m_functionMapNameToInstanceType["tanh"]  =  E_TANH;
+
+            m_function[ E_ABS  ] = std::abs;
+            m_function[ E_ASIN ] = asin;
+            m_function[ E_ACOS ] = acos;
+            m_function[ E_ATAN ] = atan;
+            m_function[ E_CEIL ] = ceil;
+            m_function[ E_COS  ] = cos;
+            m_function[ E_COSH ] = cosh;
+            m_function[ E_EXP  ] = exp;
+            m_function[ E_FABS ] = fabs;
+            m_function[ E_FLOOR] = floor;
+            m_function[ E_LOG  ] = log;
+            m_function[ E_LOG10] = log10;
+            m_function[ E_SIN  ] = sin;
+            m_function[ E_SINH ] = sinh;
+            m_function[ E_SQRT ] = sqrt;
+            m_function[ E_TAN  ] = tan;
+            m_function[ E_TANH ] = tanh;
+        }
+
+        AnalyticExpressionEvaluator::~AnalyticExpressionEvaluator(void)
+        {
+            for (std::vector<ExecutionStack>::iterator it_es = m_executionStack.begin(); it_es != m_executionStack.end(); ++it_es)
+            {
+                for (std::vector<EvaluationStep*>::iterator it = (*it_es).begin(); it != (*it_es).end(); ++it)
+                {
+                    delete *it;
+                }
+                (*it_es).clear();
+            }
+            m_executionStack.clear();
+        }
+
+
+        void AnalyticExpressionEvaluator::AddConstants(std::map<std::string, double> const& constants)
+        {
+            for (std::map<std::string, double>::const_iterator it = constants.begin(); it != constants.end(); ++it)
+            {
+                AddConstant(it->first, it->second);
+            }
+        }
+
+        int AnalyticExpressionEvaluator::AddConstant(std::string const& name, double value)
+        {
+            ConstantMap::const_iterator it = m_constantMapNameToId.find(name);
+            if (it == m_constantMapNameToId.end())
+            {
+                // we are trying to avoid duplicating entries in m_constantParser and m_constants
+                m_constantsParser.add(name.c_str(), value);
+                int index = m_constant.size();
+                m_constantMapNameToId[name] = index;
+                m_constant.push_back(value);
+                return index;
+            }
+            else
+            {
+                if (m_constant[it->second] != value)
+                {
+                    throw std::runtime_error("Attempt to add numerically different constants under the same name: " + name);
+                }
+            }
+            return it->second;
+        }
+
+        double AnalyticExpressionEvaluator::GetConstant(std::string const& name)
+        {
+            double* value = find(m_constantsParser, name.c_str());
+            if (value == NULL)
+            {
+                throw std::runtime_error("Constant variable not found: " + name);
+                return -1;
+            }
+
+            return *value;
+        }
+
+        void AnalyticExpressionEvaluator::SetParameters(std::map<std::string, double> const& params)
+        {
+            for (std::map<std::string, double>::const_iterator it = params.begin(); it != params.end(); it++)
+            {
+                SetParameter(it->first, it->second);
+            }
+        }
+
+        void AnalyticExpressionEvaluator::SetParameter(std::string const& name, double value)
+        {
+            ParameterMap::const_iterator it = m_parameterMapNameToId.find(name);
+            if (it == m_parameterMapNameToId.end())
+            {
+                m_parameterMapNameToId[name] = m_parameter.size();
+                m_parameter.push_back(value);
+            }
+            else
+            {
+                // if parameter is known, change its value
+                m_parameter[ it->second ] = value;
+            }
+        }
+
+
+        double AnalyticExpressionEvaluator::GetParameter(std::string const& name)
+        {
+            ParameterMap::const_iterator it = m_parameterMapNameToId.find(name);
+            if (it == m_parameterMapNameToId.end())
+            {
+                throw "Parameter not found: " + name;
+                return -1;
+            }
+
+            return m_parameter[ it->second ];
+        }
+
+        // ======================================================
+        //  Public evaluate methods
+        // ======================================================
+
+        int AnalyticExpressionEvaluator::DefineFunction(const std::string& vlist, const std::string& function)
+        {
+            // Find the previous parsing.
+            ExpressionMap::const_iterator it = m_parsedMapExprToExecStackId.find(function);
+            if (it != m_parsedMapExprToExecStackId.end())
+            {
+                // if this function is already defined, don't do anything but
+                // return its ID.
+                return it->second;
+            }
+
+            // ----------------------------------------------
+            // Prepare an iterator that allows to walk along
+            // the string representing an analytic expression in the order
+            // that respects its recursive structure (thanks to boost::spirit).
+            // ----------------------------------------------
+
+            // Parse the vlist input and separate the variables into ordered entries
+            // in a vector<string> object. These need to be ordered because this is
+            // the order the variables will get assigned to in the Map when Evaluate(...)
+            // is called.
+            std::vector<std::string> variableNames;
+            parse((char*) vlist.c_str(), ( *space_p >>
+                       *(
+                                +(+graph_p)[push_back_a(variableNames)]
+                                    >> +space_p
+                             )
+                        )
+            );
+            // Set up our grammar
+            AnalyticExpression myGrammar(&m_constantsParser, variableNames);
+
+            // Do the actual parsing with boost::spirit and alert the user if there was an error with an exception.
+            ParsedTreeInfo   parseInfo = ast_parse<
+                                                node_val_data_factory<double>,
+                                                std::string::const_iterator,
+                                                AnalyticExpression,
+                                                space_parser
+                                             >
+                                             (function.begin(), function.end(), myGrammar, space_p);
+            if (parseInfo.full == false)
+            {
+                throw std::runtime_error("Unable to fully parse function. Stopped just before: "
+                                         + std::string(parseInfo.stop, parseInfo.stop + 15));
+            }
+
+
+            // ----------------------------------------------
+            // Data parsed, start setting up internal data structures.
+            // ----------------------------------------------
+
+            ExecutionStack    stack;
+            VariableMap     variableMap;
+
+            int stackId = m_executionStack.size();
+
+            // register all variables declared in the expression
+            for (int i = 0; i < variableNames.size(); i++)
+            {
+                variableMap[variableNames[i]] = i;
+            }
+
+            // then prepare an execution stack
+            PrecomputedValue v = PrepareExecutionAsYouParse(parseInfo.trees.begin(), stack, variableMap, 0);
+
+            // constant expression, fully evaluated
+            if (true == v.first)
+            {
+                if (stack.size() != 0)
+                {
+                    throw std::runtime_error("Constant expression yeilds non-empty execution stack. Bug in PrepareExecutionAsYouParse()");
+                    return -1;
+                }
+                int const_index = AddConstant(std::string("EXPRESSION_") + boost::lexical_cast<std::string>(stackId), v.second);
+                stack.push_back ( makeStep<StoreConst>( 0, const_index ) );
+            }
+
+            m_parsedMapExprToExecStackId[function] = stackId;
+
+            // the execution stack and its corresponding variable index map are
+            // two parallel std::vectors that share their ids. This split helps
+            // to achieve some performance improvement
+            m_executionStack.push_back(stack);
+            m_stackVariableMap.push_back(variableMap);
+            return stackId;
+        }
+
+
+        double AnalyticExpressionEvaluator::Evaluate0(const int expression_id)
+        {
+            if (m_executionStack.size() <= expression_id)
+            {
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return -1;
+            }
+            ExecutionStack&  stack    = m_executionStack[expression_id];
+            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+
+            m_variable.resize(4, 0.0);
+            m_state.resize(m_state_size);
+            for (int i = 0; i < stack.size(); i++)
+            {
+                (*stack[i])();
+            }
+            return m_state[0];
+        }
+
+        double AnalyticExpressionEvaluator::Evaluate4(const int expression_id, const double x, const double y, const double z, const double t)
+        {
+            if (m_executionStack.size() <= expression_id)
+            {
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return -1;
+            }
+            ExecutionStack&  stack    = m_executionStack[expression_id];
+            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+
+            // initialise internal vector of variable values
+            m_state.resize(m_state_size);
+
+            // no flexibility, no change of variable ordering in m_variable
+            // container depending on their names ordering in the input vlist
+            // argument of DefineFunction. Ordering convention (x,y,z,t) is assumed.
+            m_variable.resize(4,0.0);
+            m_variable[0] = x;
+            m_variable[1] = y;
+            m_variable[2] = z;
+            m_variable[3] = t;
+
+            // main execution cycle is hidden here
+            for (int i = 0; i < stack.size(); i++)
+            {
+                (*stack[i])();
+            }
+            return m_state[0];
+        }
+
+        double AnalyticExpressionEvaluator::EvaluateAtPoint(const int expression_id, const std::vector<double> point)
+        {
+            if (m_executionStack.size() <= expression_id)
+            {
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return -1;
+            }
+            ExecutionStack&  stack    = m_executionStack[expression_id];
+            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+
+            if (point.size() != variableMap.size())
+            {
+                std::cerr << "Evaluate(int, point): variableMap.size() = " << variableMap.size() << ", point.size() = " << point.size() << std::endl;
+                throw std::runtime_error("The number of variables used to define this expression should match the point dimensionality.");
+                return -1;
+            }
+
+            // initialise internal vector of variable values
+            m_state.resize(m_state_size);
+            m_variable.resize(point.size());
+            VariableMap::const_iterator it;
+            for (it = variableMap.begin(); it != variableMap.end(); ++it)
+            {
+                m_variable[it->second] = point[it->second];
+            }
+            // main execution cycle is hidden here
+            for (int i = 0; i < stack.size(); i++)
+            {
+                (*stack[i])();
+            }
+            return m_state[0];
+        }
+
+
+
+
+
+        Array<OneD, NekDouble> AnalyticExpressionEvaluator::Evaluate4Array(
+                    const int expression_id,
+                    const Array<OneD, const NekDouble>& x,
+                    const Array<OneD, const NekDouble>& y,
+                    const Array<OneD, const NekDouble>& z,
+                    const Array<OneD, const NekDouble>& t)
+        {
+            Array<OneD, NekDouble> empty;
+            if (m_executionStack.size() <= expression_id)
+            {
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return empty;
+            }
+
+            ExecutionStack&  stack    = m_executionStack[expression_id];
+            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+
+            Array<OneD, NekDouble>  result (x.num_elements(), 0.0);
+            m_variable.resize(4,0.0);
+            m_state.resize(m_state_size);
+
+            for (int i = 0; i < x.num_elements(); i++)
+            {
+                m_variable[0] = x[i];
+                m_variable[1] = y[i];
+                m_variable[2] = z[i];
+                m_variable[3] = t[i];
+                for (int j = 0; j < stack.size(); j++)
+                {
+                    (*stack[j])();
+                }
+                result[i] = m_state[0];
+            }
+            return result;
+        }
+
+        Array<OneD, NekDouble> AnalyticExpressionEvaluator::EvaluateAtPoints(
+                    const int expression_id,
+                    const std::vector<Array<OneD, const NekDouble> > points)
+        {
+            Array<OneD, NekDouble> empty;
+            if (m_executionStack.size() <= expression_id)
+            {
+                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
+                return empty;
+            }
+            ExecutionStack&  stack    = m_executionStack[expression_id];
+            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+
+            if (points[0].num_elements() != variableMap.size())
+            {
+                std::cerr << "Evaluate(int, arrays): variableMap.size() = " << variableMap.size() << ", points[0].num_elements() = " << points[0].num_elements() << std::endl;
+                throw std::runtime_error("The number of variables used to define this expression should match the point dimensionality.");
+                return empty;
+            }
+
+            Array<OneD, NekDouble>  result (points.size(), 0.0);
+
+            for (int i = 0; i < points.size(); i++)
+            {
+                m_variable.resize(points[i].num_elements());
+                VariableMap::const_iterator it;
+                for (it = variableMap.begin(); it != variableMap.end(); ++it)
+                {
+                    m_variable[it->second] = points[i][it->second];
+                }
+
+                m_state.resize(m_state_size);
+                for (int j = 0; j < stack.size(); j++)
+                {
+                    (*stack[j])();
+                }
+                result[i] = m_state[0];
+            }
+            return result;
+        }
+
+
+
+
+        AnalyticExpressionEvaluator::PrecomputedValue AnalyticExpressionEvaluator::PrepareExecutionAsYouParse(
+                    const ParsedTreeIterator& location,
+                    ExecutionStack& stack,
+                    VariableMap& variableMap,
+                    int stateIndex)
+        {
+            std::string valueStr(location->value.begin(), location->value.end());
+            boost::algorithm::trim(valueStr);
+
+            const parser_id parserID  = location->value.id();
+            const int num_children    = location->children.size();
+
+            if (parserID == AnalyticExpression::constantID)
+            {
+                if (num_children != 0)
+                {
+                    throw std::runtime_error("Illegal children under constant node: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                ConstantMap::const_iterator it = m_constantMapNameToId.find(valueStr);
+                if (it == m_constantMapNameToId.end())
+                {
+                    throw std::runtime_error("Cannot find the value for the specified constant: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                // stack.push_back ( makeStep<StoreConst> ( stateIndex, it->second ) );
+                return std::make_pair(true, m_constant[it->second]);
+            }
+            else if (parserID == AnalyticExpression::numberID)
+            {
+                if (num_children != 0)
+                {
+                    throw std::runtime_error("Illegal children under number node: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                // int const_index = AddConstant(valueStr, boost::lexical_cast<double>(valueStr.c_str()));
+                // stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
+                // return stateIndex;
+                return std::make_pair(true, boost::lexical_cast<double>(valueStr.c_str()) );
+            }
+            else if (parserID == AnalyticExpression::variableID)
+            {
+                if (num_children != 0)
+                {
+                    throw std::runtime_error("Illegal children under variable node: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                VariableMap::const_iterator it = variableMap.find(valueStr);
+                if (it == variableMap.end())
+                {
+                    throw std::runtime_error("Unknown variable parsed: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                // Variables are not defined at the time of this parse.
+                stack.push_back ( makeStep<StoreVar>( stateIndex, it->second ) );
+                return std::make_pair(false, 0);
+            }
+            else if (parserID == AnalyticExpression::parameterID)
+            {
+                if (num_children != 0)
+                {
+                    throw std::runtime_error("Illegal children under parameter node: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                ParameterMap::const_iterator it = m_parameterMapNameToId.find(valueStr);
+                if (it == m_parameterMapNameToId.end())
+                {
+                    std::cout << "valueStr = " << valueStr << ", m_parameterMapNameToId.size = " << m_parameterMapNameToId.size() << std::endl;
+                    for (it = m_parameterMapNameToId.begin(); it != m_parameterMapNameToId.end(); ++it)
+                    {
+                        std::cout << "param[" << it->first << "] = " << it->second << std::endl;
+                    }
+
+                    throw std::runtime_error("Illegal parameter specified: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+                // Parameters may change in between of evalutions.
+                stack.push_back ( makeStep<StorePrm>( stateIndex, it->second, 0 ) );
+                return std::make_pair(false, 0);
+            }
+            else if (parserID == AnalyticExpression::functionID)
+            {
+                FunctionNameMap::const_iterator it = m_functionMapNameToInstanceType.find(valueStr);
+                if (it == m_functionMapNameToInstanceType.end())
+                {
+                    throw std::runtime_error("Invalid function specified: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                if (location->children.size() != 1)
+                {
+                    throw std::runtime_error("Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
+                    return std::make_pair(false,0);
+                }
+
+                PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
+
+                // if precomputed value is valid, return function(value).
+                if (true == v.first)
+                {
+                    return std::make_pair( true, m_function[it->second](v.second) );
+                }
+
+                // if somewhere down the parse tree there is a variable or parameter, set up an
+                // evaluation sequence.
+                switch (it->second)
+                {
+                    case E_ABS:
+                        stack.push_back ( makeStep<EvalAbs>( stateIndex, stateIndex) );
+                        return std::make_pair(false,0);
+                    case E_ASIN:
+                        stack.push_back ( makeStep<EvalAsin>( stateIndex, stateIndex) );
+                        return std::make_pair(false,0);
+                    case E_ACOS:
+                        stack.push_back ( makeStep<EvalAcos>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_ATAN:
+                        stack.push_back ( makeStep<EvalAtan>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_CEIL:
+                        stack.push_back ( makeStep<EvalCeil>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_COS: 
+                        stack.push_back ( makeStep<EvalCos>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_COSH:
+                        stack.push_back ( makeStep<EvalCosh>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_EXP: 
+                        stack.push_back ( makeStep<EvalExp>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_FABS:
+                        stack.push_back ( makeStep<EvalFabs>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_FLOOR:
+                        stack.push_back ( makeStep<EvalFloor>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_LOG: 
+                        stack.push_back ( makeStep<EvalLog>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_LOG10:
+                        stack.push_back ( makeStep<EvalLog10>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_SIN: 
+                        stack.push_back ( makeStep<EvalSin>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_SINH:
+                        stack.push_back ( makeStep<EvalSinh>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_SQRT:
+                        stack.push_back ( makeStep<EvalSqrt>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_TAN: 
+                        stack.push_back ( makeStep<EvalTan>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_TANH:
+                        stack.push_back ( makeStep<EvalTanh>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    default:
+                        throw std::runtime_error("Evaluation of " + valueStr + " is not implemented yet");
+                        return std::make_pair(false,0);
+                }
+                return std::make_pair(false,0);
+            }
+            else if (parserID == AnalyticExpression::factorID)
+            {
+                if (*valueStr.begin() != '-')
+                {
+                    throw std::runtime_error("Illegal factor - it can only be '-' and it was: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+                if (num_children != 1)
+                {
+                    throw std::runtime_error("Illegal number of children under factor node: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+
+                PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
+
+                // if precomputed value is valid, process it further.
+                if (true == v.first)
+                {
+                    return std::make_pair( true, - v.second );
+                }
+                stack.push_back (makeStep<EvalNeg>( stateIndex, stateIndex) );
+                return std::make_pair(false,0);
+            }
+            else if (parserID == AnalyticExpression::operatorID)
+            {
+                if (num_children != 2)
+                {
+                    throw std::runtime_error("Too few or too many arguments for mathematical operator: " + valueStr);
+                    return std::make_pair(false,0);
+                }
+                PrecomputedValue left  = PrepareExecutionAsYouParse(location->children.begin()+0, stack, variableMap, stateIndex);
+                PrecomputedValue right = PrepareExecutionAsYouParse(location->children.begin()+1, stack, variableMap, stateIndex+1);
+                m_state_size++;
+
+                // if precomputed value is valid, process it further.
+                if ((true == left.first) && (true == right.first))
+                {
+                    switch(*valueStr.begin())
+                    {
+                    case '+':
+                        return std::make_pair( true, left.second + right.second );
+                    case '-':
+                        return std::make_pair( true, left.second - right.second );
+                    case '*':
+                        return std::make_pair( true, left.second * right.second );
+                    case '/':
+                        return std::make_pair( true, left.second / right.second );
+                    case '^':
+                        return std::make_pair( true, std::pow(left.second, right.second) );
+                    case '=':
+                        return std::make_pair( true, left.second == right.second );
+                    case '<':
+                        if (*(valueStr.end()-1) == '=')
+                        {
+                            return std::make_pair( true, left.second <= right.second );
+                        }
+                        else
+                        {
+                            return std::make_pair( true, left.second < right.second );
+                        }
+                        return std::make_pair(false,0);
+                    case '>':
+                        if (*(valueStr.end()-1) == '=')
+                        {
+                            return std::make_pair( true, left.second >= right.second );
+                        }
+                        else
+                        {
+                            return std::make_pair( true, left.second > right.second );
+                        }
+                        return std::make_pair(false,0);
+                    default:
+                        throw "Invalid operator encountered: " + valueStr;
+                        return std::make_pair(false,0);
+                    }
+                    return std::make_pair(false,0);
+                }
+
+                // either operator argument is not fully evaluated
+                // add pre-evaluated value to the contaner of constants
+                if (true == left.first)
+                {
+                    int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), left.second);
+                    stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
+                }
+                if (true == right.first)
+                {
+                    int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), right.second);
+                    stack.push_back ( makeStep<StoreConst>( stateIndex+1, const_index ) );
+                }
+
+                switch(*valueStr.begin())
+                {
+                case '+':
+                    stack.push_back (makeStep<EvalSum>( stateIndex, stateIndex, stateIndex+1 ) );
+                    return std::make_pair(false,0);
+                case '-':
+                    stack.push_back (makeStep<EvalSub> (stateIndex, stateIndex, stateIndex+1 ) );
+                    return std::make_pair(false,0);
+                case '*':
+                    stack.push_back (makeStep<EvalMul>( stateIndex, stateIndex, stateIndex+1 ) );
+                    return std::make_pair(false,0);
+                case '/':
+                    stack.push_back (makeStep<EvalDiv>( stateIndex, stateIndex, stateIndex+1 ) );
+                    return std::make_pair(false,0);
+                case '^':
+                    stack.push_back (makeStep<EvalPow>( stateIndex, stateIndex, stateIndex+1 ) );
+                    return std::make_pair(false,0);
+                case '=':
+                    stack.push_back (makeStep<EvalLogicalEqual>( stateIndex, stateIndex, stateIndex+1 ) );
+                    return std::make_pair(false,0);
+                case '<':
+                    if (*(valueStr.end()-1) == '=')
+                    {
+                        stack.push_back (makeStep<EvalLogicalLeq>( stateIndex, stateIndex, stateIndex+1 ) );
+                    }
+                    else
+                    {
+                        stack.push_back (makeStep<EvalLogicalLess>( stateIndex, stateIndex, stateIndex+1 ) );
+                    }
+                    return std::make_pair(false,0);
+
+                case '>':
+                    if (*(valueStr.end()-1) == '=')
+                    {
+                        stack.push_back (makeStep<EvalLogicalGeq>( stateIndex, stateIndex, stateIndex+1 ) );
+                    }
+                    else
+                    {
+                        stack.push_back (makeStep<EvalLogicalGreater>( stateIndex, stateIndex, stateIndex+1 ) );
+                    }
+                    return std::make_pair(false,0);
+
+                default:
+                    throw "Invalid operator encountered: " + valueStr;
+                    return std::make_pair(false,0);
+                }
+                return std::make_pair(false,0);
+            }
+            throw "Illegal expression encountered: " + valueStr;
+            return std::make_pair(false,0);
+        }
+
+    };
+};

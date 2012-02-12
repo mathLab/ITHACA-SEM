@@ -67,18 +67,21 @@ namespace Nektar
             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
             *  \a outarray as output of the function
             */
-            STD_REGIONS_EXPORT void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble>& outarray);
+            STD_REGIONS_EXPORT void PhysTensorDeriv(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD,       NekDouble>& outarray);
 
 
-            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+            STD_REGIONS_EXPORT void SetCoeffsToOrientation(
+                    StdRegions::EdgeOrientation dir)
             {
                 v_SetCoeffsToOrientation(dir);
             }
 
-            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
-                                        Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD, NekDouble> &outarray)
+            STD_REGIONS_EXPORT void SetCoeffsToOrientation(
+                    StdRegions::EdgeOrientation dir,
+                    Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
             {
                 v_SetCoeffsToOrientation(dir,inarray,outarray);
             }
@@ -86,10 +89,10 @@ namespace Nektar
         protected:
 			std::map<int, NormalVector> m_vertexNormals;
 
-            virtual NekDouble v_PhysEvaluate(
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords);
 
-            virtual NekDouble v_PhysEvaluate(
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords,
                     const Array<OneD, const NekDouble>& physvals);
 

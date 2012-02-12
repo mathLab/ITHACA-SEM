@@ -144,6 +144,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT const std::string &GetFilename() const;
             /// Returns the session name of the loaded XML document.
             LIB_UTILITIES_EXPORT const std::string &GetSessionName() const;
+            /// Returns the session name with process rank
+            LIB_UTILITIES_EXPORT const std::string  GetSessionNameRank() const;
             /// Returns the communication object.
             LIB_UTILITIES_EXPORT CommSharedPtr &GetComm();
             /// Finalises the session.

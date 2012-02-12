@@ -355,6 +355,8 @@ namespace Nektar
 
         std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
                                                     m_historyList;
+        /// Maps index of local history points to the universal vector
+        std::map<int, int>                          m_historyLocalPointMap;
 
         SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
 

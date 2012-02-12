@@ -1308,10 +1308,6 @@ namespace Nektar
                     return i;
                 }
             }
-            ASSERTL0(false, "Cannot find element for this point: " +
-                    boost::lexical_cast<std::string>(gloCoord[0]) + ", " +
-                    boost::lexical_cast<std::string>(gloCoord[1]) + ", " +
-                    boost::lexical_cast<std::string>(gloCoord[2]));
             return -1;
         }
 

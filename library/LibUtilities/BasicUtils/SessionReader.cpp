@@ -363,6 +363,17 @@ namespace Nektar
 
 
         /**
+         * Output is of the form [sessionName]_P[idx] where idx is the rank
+         * of the process.
+         */
+        const std::string SessionReader::GetSessionNameRank() const
+        {
+            return m_sessionName + "_P"
+                    + boost::lexical_cast<std::string>(m_comm->GetRank());
+        }
+
+
+        /**
          *
          */
         CommSharedPtr& SessionReader::GetComm()
@@ -973,8 +984,7 @@ namespace Nektar
 
                 m_comm->Block();
 
-                m_sessionName += "_P" + boost::lexical_cast<std::string>(m_comm->GetRank());
-                m_filename = m_sessionName + ".xml";
+                m_filename = GetSessionNameRank() + ".xml";
 
                 delete m_xmlDoc;
                 m_xmlDoc = new TiXmlDocument(m_filename);

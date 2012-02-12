@@ -250,8 +250,12 @@ namespace Nektar
             }
         }
 
-        std::string outname = m_session->GetSessionName() + ".his";
-        std::ofstream hisFile (outname.c_str());
+        std::ofstream hisFile;
+        if (m_comm->GetRank() == 0)
+        {
+            std::string outname = m_session->GetSessionName() + ".his";
+            hisFile.open(outname.c_str());
+        }
 		
 		const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
 		

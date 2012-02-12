@@ -92,14 +92,7 @@ namespace Nektar
         m_filename = m_session->GetFilename();
 
         // Save the basename of input file name for output details.
-        m_sessionName = m_filename;
-        m_sessionName = m_sessionName.substr(0,
-                                m_sessionName.find_last_of("."));
-        if (m_comm->GetSize() > 1)
-        {
-            m_sessionName = m_sessionName.substr(0,
-                                m_sessionName.find_last_of("_"));
-        }
+        m_sessionName = m_session->GetSessionName();
 
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_filename);
@@ -1947,17 +1940,46 @@ namespace Nektar
      */
     void EquationSystem::ScanForHistoryPoints()
     {
+        int i = 0;
+        int npoints = m_historyPoints->GetNumHistoryPoints();
+        Array<OneD, NekDouble>  gloCoord(3,0.0);
+        Array<OneD, int>        idList(npoints);
+        SpatialDomains::VertexComponentSharedPtr vtx;
+
         m_historyList.clear();
-        Array<OneD, NekDouble> gloCoord(3,0.0);
-        for (int i = 0; i < m_historyPoints->GetNumHistoryPoints(); ++i) 
+
+        // Determine the element in which each history point resides.
+        // If point is not in mesh (on this process), id is -1.
+        for (i = 0; i < npoints; ++i)
         {
-            SpatialDomains::VertexComponentSharedPtr vtx = m_historyPoints->GetHistoryPoint(i);
+            vtx = m_historyPoints->GetHistoryPoint(i);
             vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
 
-            int eId = m_fields[0]->GetExpIndex(gloCoord);
+            idList[i] = m_fields[0]->GetExpIndex(gloCoord);
 
-            m_historyList.push_back(
-                std::pair<SpatialDomains::VertexComponentSharedPtr, int>(vtx, eId));
+            if (idList[i] != -1)
+            {
+                m_historyLocalPointMap[m_historyList.size()] = i;
+                m_historyList.push_back(
+                    std::pair<SpatialDomains::VertexComponentSharedPtr, int>(
+                                                            vtx, idList[i]));
+            }
+        }
+
+        // Collate the element ID list across processes
+        m_comm->AllReduce(idList, LibUtilities::ReduceMax);
+
+        // Check each history point has been located on one process
+        if (m_comm->GetRank() == 0)
+        {
+            for (i = 0; i < npoints; ++i)
+            {
+                ASSERTL0(idList[i] != -1, "History point " +
+                        boost::lexical_cast<std::string>(gloCoord[0]) + ", " +
+                        boost::lexical_cast<std::string>(gloCoord[1]) + ", " +
+                        boost::lexical_cast<std::string>(gloCoord[2]) +
+                        " cannot be found in the mesh.");
+            }
         }
     }
 
@@ -1967,68 +1989,97 @@ namespace Nektar
      */
     void EquationSystem::WriteHistoryData (std::ostream &out)
     {
-        static int  init = 1;
-        int numPoints = m_historyList.size();
+        int k         = 0;
+        int numPoints = m_historyPoints->GetNumHistoryPoints();
         int numFields = m_fields.num_elements();
+        Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
+        Array<OneD, NekDouble> gloCoord(3, 0.0);
+        std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
 
-        vector<NekDouble> data(numPoints*numFields);
-        int k;
-        Array<OneD, NekDouble> gloCoord(3,0.0);
-        std::list<pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
-
-        if(init)
+        // Only the root process writes out history data
+        if (m_comm->GetRank() == 0)
         {
-            out << "# History data for variables (:";
+            static int  init = 1;
 
+            if(init)
+            {
+                out << "# History data for variables (:";
+
+                for (int j = 0; j < m_fields.num_elements(); ++j)
+                {
+                    out << m_boundaryConditions->GetVariable(j) <<",";
+                }
+
+                out << ") at points:" << endl;
+
+                for (k = 0; k < numPoints; ++k)
+                {
+                    m_historyPoints->GetHistoryPoint(k)->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+
+                    out << "# \t" << k;
+                    out.width(8);
+                    out << gloCoord[0];
+                    out.width(8);
+                    out << gloCoord[1];
+                    out.width(8);
+                    out << gloCoord[2];
+                    out << endl;
+                }
+                init = 0;
+            }
+
+            // Pull out data values field by field
             for (int j = 0; j < m_fields.num_elements(); ++j)
             {
-                out << m_boundaryConditions->GetVariable(j) <<",";
+                if(m_fields[j]->GetPhysState() == false)
+                {
+                    m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+                }
+                m_fields[j]->PutPhysInToElmtExp();
+                for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+                {
+                    (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                    data[m_historyLocalPointMap[k]*numFields+j] = m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                }
             }
 
-            out << ") at points:" << endl;
+            // Exchange history data
+            // This could be improved to reduce communication but works for now
+            m_comm->AllReduce(data, LibUtilities::ReduceSum);
 
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+            // Write data values point by point
+            for (k = 0; k < m_historyPoints->GetNumHistoryPoints(); ++k)
             {
-                (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                
-                out << "# \t" << k; 
                 out.width(8);
-                out << gloCoord[0];
-                out.width(8);
-                out << gloCoord[1];
-                out.width(8);
-                out << gloCoord[2];
+                out << m_time;
+                for (int j = 0; j < numFields; ++j)
+                {
+                    out.width(14);
+                    out << data[k*numFields+j];
+                }
                 out << endl;
             }
-            init = 0;
         }
-
-        // Pull out data values field by field
-        for (int j = 0; j < m_fields.num_elements(); ++j)
+        else
         {
-            if(m_fields[j]->GetPhysState() == false)
+            // Pull out data values field by field
+            for (int j = 0; j < m_fields.num_elements(); ++j)
             {
-                m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+                if(m_fields[j]->GetPhysState() == false)
+                {
+                    m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+                }
+                m_fields[j]->PutPhysInToElmtExp();
+                for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+                {
+                    (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                    data[m_historyLocalPointMap[k]*numFields+j] = m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                }
             }
-            m_fields[j]->PutPhysInToElmtExp();
-            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
-            {
-                (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                data[k*numFields+j] = m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
-            }
-        }
 
-        // Write data values point by point
-        for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
-        {
-            out.width(8);
-            out << m_time;
-            for (int j = 0; j < numFields; ++j)
-            {
-                out.width(14);
-                out << data[k*numFields+j];
-            }
-            out << endl;
+            // Exchange history data
+            // This could be improved to reduce communication but works for now
+            m_comm->AllReduce(data, LibUtilities::ReduceSum);
         }
     }
 

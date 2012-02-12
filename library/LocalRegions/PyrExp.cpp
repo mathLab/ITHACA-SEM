@@ -420,7 +420,7 @@ namespace Nektar
 
         NekDouble PyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {
-            return v_PhysEvaluate(coord, m_phys);
+            return PhysEvaluate(coord, m_phys);
         }
 
         NekDouble PyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord,
@@ -433,7 +433,7 @@ namespace Nektar
             //TODO: check GetLocCoords()
             m_geom->GetLocCoords(coord, Lcoord);
             
-            return StdPyrExp::PhysEvaluate(Lcoord, physvals);
+            return StdPyrExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
         

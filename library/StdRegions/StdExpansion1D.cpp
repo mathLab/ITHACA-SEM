@@ -103,12 +103,15 @@ namespace Nektar
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS
     }
 
-        NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
+        NekDouble StdExpansion1D::v_PhysEvaluate(
+                const Array<OneD, const NekDouble>& Lcoord)
         {
             return PhysEvaluate(Lcoord,m_phys);
         }
         
-        NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord, const Array<OneD, const NekDouble> & physvals)
+        NekDouble StdExpansion1D::v_PhysEvaluate(
+                const Array<OneD, const NekDouble>& Lcoord,
+                const Array<OneD, const NekDouble>& physvals)
         {
         int    nquad = GetTotPoints();
         NekDouble  val;

@@ -514,7 +514,7 @@ namespace Nektar
         NekDouble HexExp::v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord)
         {
-            return v_PhysEvaluate(coord,m_phys);
+            return PhysEvaluate(coord,m_phys);
         }
 
         NekDouble HexExp::v_PhysEvaluate(

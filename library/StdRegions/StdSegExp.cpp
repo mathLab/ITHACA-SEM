@@ -452,16 +452,16 @@ namespace Nektar
         }
 
         NekDouble StdSegExp::v_PhysEvaluate(
-                                 Array<OneD, const NekDouble>& coords)
+                const Array<OneD, const NekDouble>& coords)
         {
-            return  StdExpansion1D::PhysEvaluate(coords, m_phys); 
+            return  StdExpansion1D::v_PhysEvaluate(coords, m_phys);
         }
 
         NekDouble StdSegExp::v_PhysEvaluate(
-                                 Array<OneD, const NekDouble>& coords,
-                                 const Array<OneD, const NekDouble> & physvals)
+                const Array<OneD, const NekDouble>& coords,
+                const Array<OneD, const NekDouble>& physvals)
         {
-            return  StdExpansion1D::PhysEvaluate(coords, physvals); 
+            return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,

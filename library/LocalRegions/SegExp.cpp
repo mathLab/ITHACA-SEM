@@ -1159,7 +1159,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
         NekDouble SegExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {
-            return v_PhysEvaluate(coord,m_phys);
+            return PhysEvaluate(coord,m_phys);
         }
 
         NekDouble SegExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord, const Array<OneD, const NekDouble> &physvals)

@@ -808,14 +808,15 @@ namespace Nektar
 
 
         NekDouble StdHexExp::v_PhysEvaluate(
-                                Array<OneD, const NekDouble>& Lcoords)
+                const Array<OneD, const NekDouble>& Lcoords)
         {
-            return StdExpansion3D::v_PhysEvaluate(Lcoords);
+            return StdExpansion3D::v_PhysEvaluate(Lcoords, m_phys);
         }
 
 
         NekDouble StdHexExp::v_PhysEvaluate(
-                                            Array<OneD, const NekDouble>& Lcoords, const Array<OneD, const NekDouble> & physvals)
+                const Array<OneD, const NekDouble>& Lcoords,
+                const Array<OneD, const NekDouble>& physvals)
         {
             return StdExpansion3D::v_PhysEvaluate(Lcoords, physvals);
         }

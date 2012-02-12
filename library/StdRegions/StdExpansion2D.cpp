@@ -114,13 +114,13 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion2D::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
         {
             return PhysEvaluate(coords,m_phys);
         }
 
 
-        NekDouble StdExpansion2D::PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
             NekDouble val;
             int i;

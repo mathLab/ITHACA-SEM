@@ -537,7 +537,7 @@ namespace Nektar
 
         NekDouble PrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {
-            return v_PhysEvaluate(coord, m_phys);
+            return PhysEvaluate(coord, m_phys);
         }
 
         NekDouble PrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord, 
@@ -549,7 +549,7 @@ namespace Nektar
 	
             m_geom->GetLocCoords(coord, Lcoord);
 
-            return StdPrismExp::PhysEvaluate(Lcoord, physvals);
+            return StdPrismExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
 

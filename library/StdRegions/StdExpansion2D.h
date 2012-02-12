@@ -94,6 +94,15 @@ namespace Nektar
                                  Array<OneD, NekDouble> &outarray_d0,
                                  Array<OneD, NekDouble> &outarray_d1);
 
+            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray,
+                               const Array<OneD, const NekDouble>& w0,
+                               const Array<OneD, const NekDouble>& w1);
+
+
+        protected:
+            std::map<int, NormalVector> m_edgeNormals;
+            NormalVector m_surfaceNormal;
+
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
@@ -116,18 +125,9 @@ namespace Nektar
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
-            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
-            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
-
-            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray,
-                               const Array<OneD, const NekDouble>& w0,
-                               const Array<OneD, const NekDouble>& w1);
-
-
-        protected:
-            std::map<int, NormalVector> m_edgeNormals;
-            NormalVector m_surfaceNormal;
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
         private:
 
@@ -145,16 +145,6 @@ namespace Nektar
             virtual int v_GetCoordim(void)
             {
                 return 2;
-            }
-
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-            {
-                return PhysEvaluate(coords);
-            }
-
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
-            {
-                return PhysEvaluate(coords,physvals);
             }
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);

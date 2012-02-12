@@ -672,7 +672,7 @@ namespace Nektar
         NekDouble StdTriExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& coords)
         {
-            return v_PhysEvaluate(coords,m_phys);
+            return PhysEvaluate(coords,m_phys);
         }
 
         NekDouble StdTriExp::v_PhysEvaluate(
@@ -694,7 +694,7 @@ namespace Nektar
                 coll[1] = coords[1]; 
             }
 
-            return StdExpansion2D::PhysEvaluate(coll,physvals); 
+            return StdExpansion2D::v_PhysEvaluate(coll,physvals);
         }
 
         void StdTriExp::v_FillMode(

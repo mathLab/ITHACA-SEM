@@ -71,14 +71,6 @@ namespace Nektar
                 Array<OneD, NekDouble>& outarray);
 
 
-            /** \brief Evaluate a function at points coords which is assumed
-            *  to be in local collapsed coordinate format. The function is
-            *  assumed to be in physical space
-            */
-            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
-
-            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
-
             void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
             {
                 v_SetCoeffsToOrientation(dir);
@@ -93,6 +85,14 @@ namespace Nektar
 
         protected:
 			std::map<int, NormalVector> m_vertexNormals;
+
+            virtual NekDouble v_PhysEvaluate(
+                    const Array<OneD, const NekDouble>& coords);
+
+            virtual NekDouble v_PhysEvaluate(
+                    const Array<OneD, const NekDouble>& coords,
+                    const Array<OneD, const NekDouble>& physvals);
+
 
         private:
 
@@ -116,16 +116,6 @@ namespace Nektar
             virtual int v_GetNfaces() const
             {
                 return 0;
-            }
-
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-            {
-                return PhysEvaluate(coords);
-            }
-
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
-            {
-                return PhysEvaluate(coords,physvals);
             }
 
             virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,

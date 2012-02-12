@@ -556,16 +556,16 @@ namespace Nektar
         //////////////////////////
 
         NekDouble StdQuadExp::v_PhysEvaluate(
-                                 Array<OneD, const NekDouble>& coords)
+                                 const Array<OneD, const NekDouble>& coords)
         {
-            return  StdExpansion2D::PhysEvaluate(coords, m_phys); 
+            return  StdExpansion2D::v_PhysEvaluate(coords, m_phys);
         }
 
         NekDouble StdQuadExp::v_PhysEvaluate(
-                                 Array<OneD, const NekDouble>& coords,
+                                 const Array<OneD, const NekDouble>& coords,
                                  const Array<OneD, const NekDouble> & physvals)
         {
-            return  StdExpansion2D::PhysEvaluate(coords, physvals); 
+            return  StdExpansion2D::v_PhysEvaluate(coords, physvals);
         }
 
         /** \brief Fill outarray with mode \a mode of expansion

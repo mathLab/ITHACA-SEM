@@ -150,7 +150,7 @@ Material</a></p>
           <li>In <em>ThirdParty\</em>, extract the boost_1_40_0.tar.bz2 archive. This will create <em>boost_1_40_0\</em>.</li>
           <li>With the <em>Visual Studio Command Prompt</em>, change to the <em>ThirdParty\boost_1_40_0\</em> directory.</li>
           <li>Type the following 
-<div class="code"><pre>..\bjam-windows.exe --prefix=..\boost -s ZLIB_SOURCE=..\..\..\..\zlib-1.2.3 --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --toolset=msvc-9.0 install</pre></div>
+<div class="code"><pre>..\bjam-windows.exe --prefix=..\boost -s ZLIB_SOURCE=..\..\..\..\zlib-1.2.3 --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --with-program-options --toolset=msvc-9.0 install</pre></div>
  and press enter. This will compile the correct <em>Boost</em> libraries.
             <ul>
               <li>I've seen some reports that Boost might not be able to find the zlib-1.2.3 directory specified by the relative path in the command line above. If this happens, you can replace the relative path with the absolute path of the zlib-1.2.3 directory (surround it in quotes).</li>

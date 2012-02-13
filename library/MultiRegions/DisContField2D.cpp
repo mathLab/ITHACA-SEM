@@ -407,12 +407,12 @@ namespace Nektar
 
                     m_bndCondExpansions[cnt]  = locExpList;
                     m_bndConditions[cnt]    = locBCond;
-                    string type =m_bndConditions[cnt++]->GetUserDefined().GetEquation();                  
-            	    if((type== "I")||(type=="CalcBC"))
-                    {                        	    
-                  	  locExpList->SetUpPhysTangents(*m_exp);               	  
-						SetUpPhysNormals();
-                    }                    
+                    SpatialDomains::BndUserDefinedType type = m_bndConditions[cnt++]->GetUserDefined();
+                    if((type == SpatialDomains::eI)||(type == SpatialDomains::eCalcBC))
+                    {
+                        locExpList->SetUpPhysTangents(*m_exp);
+                        SetUpPhysNormals();
+                    }
                 }
             }
         }
@@ -1240,7 +1240,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                if(time == 0.0 || m_bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
+                if(time == 0.0 || m_bndConditions[i]->GetUserDefined()==SpatialDomains::eTimeDependent)
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints = locExpList->GetNpoints();
@@ -1288,6 +1288,14 @@ namespace Nektar
                         }
                         else
                         {
+/*
+                            LibUtilities::Equation  condition = boost::static_pointer_cast<
+                                                                   SpatialDomains::DirichletBoundaryCondition
+                                                                >(m_bndConditions[i])->m_dirichletCondition;
+                            Array<OneD,NekDouble> timeArray(npoints, time);
+                            locExpList->UpdatePhys() = condition.Evaluate4Array(x0,x1,x2,timeArray);
+*/
+
                             for(j = 0; j < npoints; j++)
                             {
                                (locExpList->UpdatePhys())[j]

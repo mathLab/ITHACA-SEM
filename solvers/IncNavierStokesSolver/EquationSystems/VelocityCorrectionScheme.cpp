@@ -137,7 +137,7 @@ namespace Nektar
 		for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
 		{
 			// High order boundary condition;
-			if(PBndConds[n]->GetUserDefined().GetEquation() == "H")
+			if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
 			{
 				cnt += PBndExp[n]->GetNcoeffs();
 				m_HBCnumber += PBndExp[n]->GetExpSize();
@@ -363,7 +363,7 @@ namespace Nektar
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
-            if(PBndConds[n]->GetUserDefined().GetEquation() == "H")
+            if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
             {
                 int nq = PBndExp[n]->GetNcoeffs();
                 Vmath::Vcopy(nq,&(PBndExp[n]->GetCoeffs()[0]),1,&(m_pressureHBCs[0])[cnt],1);
@@ -385,7 +385,7 @@ namespace Nektar
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
-            if(PBndConds[n]->GetUserDefined().GetEquation() == "H")
+            if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
             {
                 int nq = PBndExp[n]->GetNcoeffs();
                 Vmath::Vcopy(nq,&(m_pressureHBCs[nlevels-1])[cnt],1,&(PBndExp[n]->UpdateCoeffs()[0]),1);
@@ -449,9 +449,9 @@ namespace Nektar
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
             
-            string type = PBndConds[n]->GetUserDefined().GetEquation(); 
+            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
             
-            if(type == "H")
+            if(type == SpatialDomains::eHigh)
             {
                 for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                 {
@@ -500,7 +500,8 @@ namespace Nektar
                     Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
                 }
             }
-            else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
+            // setting if just standard BC no High order
+            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {
                 cnt += PBndExp[n]->GetExpSize();
             }
@@ -709,9 +710,9 @@ namespace Nektar
                     for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
                     {
 
-                        string type = PBndConds[n]->GetUserDefined().GetEquation(); 
+                        SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined();
 
-                        if(type == "H")
+                        if(type == SpatialDomains::eHigh)
                         {
 		            for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
                             {
@@ -815,7 +816,8 @@ namespace Nektar
                                 Pbc->NormVectorIProductWRTBase(Uy,Vx,Wx,Pvals,false); 
                             }
                         }
-                        else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
+                        // setting if just standard BC no High order
+                        else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent)
                         {
                             cnt += PBndExp[n]->GetExpSize();
                         }
@@ -922,7 +924,7 @@ namespace Nektar
 				{
 					exp_size = PBndExp[n]->GetExpSize();
 					exp_size_per_plane = exp_size/m_npointsZ;
-					if(PBndConds[n]->GetUserDefined().GetEquation() == "H")
+					if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
 					{
 						for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
 						{
@@ -992,13 +994,13 @@ namespace Nektar
 					
 					for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 					{
-						string type = PBndConds[n]->GetUserDefined().GetEquation();
+						SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined();
 						
 						exp_size = PBndExp[n]->GetExpSize();
 						
 						exp_size_per_line = exp_size/(m_npointsZ*m_npointsY);
 						
-						if(type == "H")
+						if(type == SpatialDomains::eHigh)
 						{
 							for(int i = 0; i < exp_size_per_line; ++i,cnt++)
 							{

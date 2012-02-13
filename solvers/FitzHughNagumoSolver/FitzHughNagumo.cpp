@@ -101,9 +101,9 @@ namespace Nektar
 	for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
 	  {	
 	    // Time Dependent Boundary Condition (if no use defined then this is empty)
-	    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+	    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
 	      {
-		if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
+		if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
 		  {
 		    ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
 		  }

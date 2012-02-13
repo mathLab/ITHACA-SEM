@@ -219,7 +219,7 @@ namespace Nektar
         for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
             {
                 if (m_expdim == 2)
                 {
@@ -232,7 +232,7 @@ namespace Nektar
             }
 
             // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Symmetry")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eSymmetry)
             {
                 if (m_expdim == 2)
                 {
@@ -245,7 +245,7 @@ namespace Nektar
             }
 
             // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
             {
                 for (int i = 0; i < nvariables; ++i)
                 {
@@ -254,13 +254,13 @@ namespace Nektar
             }
 
             // Isentropic Vortex Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "IsentropicVortex")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eIsentropicVortex)
             {
                 SetBoundaryIsentropicVortex(n,time,cnt,inarray);
             }
 
             // Ringleb Flow Inflow and outflow Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "RinglebFlow")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eRinglebFlow)
             {
                 SetBoundaryRinglebFlow(n,time,cnt,inarray);
             }

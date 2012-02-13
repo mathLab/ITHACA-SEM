@@ -65,16 +65,49 @@ namespace Nektar
             ePeriodic
         };
 
+        enum BndUserDefinedType
+        {
+            eI,
+            eMG,
+            eHigh,
+            eWall,
+            eWALL,
+            eSymmetry,
+            eRinglebFlow,
+            eTimeDependent,
+            eIsentropicVortex,
+            eCalcBC,
+            eNoUserDefined
+        };
+
         struct BoundaryConditionBase
         {
-            BoundaryConditionBase(BoundaryConditionType type):
+            BoundaryConditionBase(BoundaryConditionType type, const std::string &userDefined = std::string("NoUserDefined")):
                 m_boundaryConditionType(type)
             {
-            }
+                std::map<const std::string, BndUserDefinedType>  known_type;
+                known_type["H"] = eHigh;
+                known_type["I"] = eI;
+                known_type["MG"] = eMG;
+                known_type["Wall"] = eWall;
+                known_type["WALL"] = eWALL;
+                known_type["CalcBC"] = eCalcBC;
+                known_type["RinglebFlow"] = eRinglebFlow;
+                known_type["Symmetry"] = eSymmetry;
+                known_type["TimeDependent"] = eTimeDependent;
+                known_type["IsentropicVortex"] = eIsentropicVortex;
+                known_type["NoUserDefined"] = eNoUserDefined;
 
-            BoundaryConditionBase(BoundaryConditionType type, LibUtilities::Equation userDefined):
-                m_boundaryConditionType(type),  m_userDefined(userDefined)
-            {
+                std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
+                if (it != known_type.end())
+                {
+                    m_userDefined = it->second;
+                }
+                else
+                {
+                    //ASSERTL0(false, std::string("Unknown boundary condition user defined type [") + userDefined + std::string("]"));
+                    m_userDefined = eNoUserDefined;
+                }
             }
 
             virtual ~BoundaryConditionBase()
@@ -85,12 +118,12 @@ namespace Nektar
                 return m_boundaryConditionType;
             }
 
-            void SetUserDefined(LibUtilities::Equation equation)
+            void SetUserDefined(BndUserDefinedType type)
             {
-                m_userDefined = equation;
+                m_userDefined = type;
             }
 
-            LibUtilities::Equation GetUserDefined() const
+            BndUserDefinedType GetUserDefined() const
             {
                 return m_userDefined;
             }
@@ -98,7 +131,7 @@ namespace Nektar
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
-            LibUtilities::Equation m_userDefined;
+            BndUserDefinedType   m_userDefined;
         };
 
 

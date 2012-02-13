@@ -208,7 +208,7 @@ namespace Nektar
         for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
             {
                 if (m_expdim == 2)
                 {
@@ -221,7 +221,7 @@ namespace Nektar
             }
     
             // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Symmetry")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eSymmetry)
             {
                 if (m_expdim == 2)
                 {
@@ -234,7 +234,7 @@ namespace Nektar
             }
     
             // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
             {
                 for (int i = 0; i < nvariables; ++i)
                 {

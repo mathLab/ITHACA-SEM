@@ -252,11 +252,11 @@ namespace Nektar
         for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             // Time Dependent Boundary Condition (if no use defined then this is empty)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
             {
-                if  ( (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent" &&
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "MG"   ) &&
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "WALL"  )
+                if  ( (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent &&
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eMG   ) &&
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eWALL  )
 
                 {
                     ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
@@ -1322,12 +1322,12 @@ namespace Nektar
         for (n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             // Read Boundary Condition from a function in this cpp file
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "MG")
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eMG)
             {
                 MGBoundaryCondtions(n,cnt,time);
             }
 
-            else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "WALL")
+            else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWALL)
             {
                 WallBoundary2D(n,cnt,inarray);
             }

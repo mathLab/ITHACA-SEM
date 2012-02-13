@@ -1394,13 +1394,13 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
 	    TiXmlElement* mesh = master->FirstChildElement("GEOMETRY");
 	    TiXmlElement* element = mesh->FirstChildElement("VERTEX");
             NekDouble xscale = 1.0;
-            LibUtilities::ExpressionEvaluator expEvaluator;
+            LibUtilities::AnalyticExpressionEvaluator expEvaluator;
             const char *xscal = element->Attribute("XSCALE");
             if(xscal)
             {
                  std::string xscalstr = xscal;
-                 expEvaluator.DefineFunction("",xscalstr);
-                 xscale = expEvaluator.Evaluate();
+                 int expr_id = expEvaluator.DefineFunction("",xscalstr);
+                 xscale = expEvaluator.Evaluate0(expr_id);
             }
             
 

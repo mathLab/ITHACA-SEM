@@ -69,6 +69,7 @@ namespace Nektar
         m_timestep = pSession->GetParameter("TimeStep");
         m_substeps = pSession->GetParameter("Substeps");
         m_nvar = 0;
+        m_nq = pField->GetTotPoints();
 //        m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
 //                                          ::AllocateSharedPtr(nq);
 
@@ -121,34 +122,29 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble time)
     {
-        int nq = m_nq;
-        int nvar = inarray.num_elements();
         NekDouble delta_t = m_timestep/m_substeps;
 
         // Copy new transmembrane potential into cell model
-        Vmath::Vcopy(nq, inarray[0], 1, m_cellSol[0], 1);
+        Vmath::Vcopy(m_nq, inarray[0], 1, m_cellSol[0], 1);
 
         // Perform substepping
         for (unsigned int i = 0; i < m_substeps - 1; ++i)
         {
             Update(m_cellSol, m_wsp, time);
             // Voltage
-            Vmath::Svtvp(nq, delta_t, m_wsp[0], 1, m_cellSol[0], 1, m_cellSol[0], 1);
+            Vmath::Svtvp(m_nq, delta_t, m_wsp[0], 1, m_cellSol[0], 1, m_cellSol[0], 1);
             // Ion concentrations
             for (unsigned int j = 0; j < m_concentrations.size(); ++j)
             {
-                Vmath::Svtvp(nq, delta_t, m_wsp[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1);
+                Vmath::Svtvp(m_nq, delta_t, m_wsp[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1);
             }
             // Gating variables: Rush-Larsen scheme
             for (unsigned int j = 0; j < m_gates.size(); ++j)
             {
-//                Vmath::Vsub(nq, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1);
-//                Vmath::Vdiv(nq, m_wsp[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1);
-//                Vmath::Svtvp(nq, delta_t, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
-                Vmath::Sdiv(nq, -delta_t, m_gates_tau[j], 1, m_gates_tau[j], 1);
-                Vmath::Vexp(nq, m_gates_tau[j], 1, m_gates_tau[j], 1);
-                Vmath::Vsub(nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
-                Vmath::Vvtvp(nq, m_cellSol[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
+                Vmath::Sdiv(m_nq, -delta_t, m_gates_tau[j], 1, m_gates_tau[j], 1);
+                Vmath::Vexp(m_nq, m_gates_tau[j], 1, m_gates_tau[j], 1);
+                Vmath::Vsub(m_nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
+                Vmath::Vvtvp(m_nq, m_cellSol[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
             }
         }
 
@@ -156,24 +152,21 @@ namespace Nektar
         Update(m_cellSol, m_wsp, time);
 
         // Output dV/dt from last step but integrate remaining cell model vars
-        Vmath::Vcopy(nq, m_wsp[0], 1, outarray[0], 1);
+        Vmath::Vcopy(m_nq, m_wsp[0], 1, outarray[0], 1);
 
         // Ion concentrations
         for (unsigned int j = 0; j < m_concentrations.size(); ++j)
         {
-            Vmath::Svtvp(nq, delta_t, m_wsp[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1);
+            Vmath::Svtvp(m_nq, delta_t, m_wsp[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1, m_cellSol[m_concentrations[j]], 1);
         }
 
         // Gating variables: Rush-Larsen scheme
         for (unsigned int j = 0; j < m_gates.size(); ++j)
         {
-//            Vmath::Vsub(nq, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1);
-//            Vmath::Vdiv(nq, m_wsp[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1);
-//            Vmath::Svtvp(nq, delta_t, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
-            Vmath::Sdiv(nq, -delta_t, m_gates_tau[j], 1, m_gates_tau[j], 1);
-            Vmath::Vexp(nq, m_gates_tau[j], 1, m_gates_tau[j], 1);
-            Vmath::Vsub(nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
-            Vmath::Vvtvp(nq, m_cellSol[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
+            Vmath::Sdiv(m_nq, -delta_t, m_gates_tau[j], 1, m_gates_tau[j], 1);
+            Vmath::Vexp(m_nq, m_gates_tau[j], 1, m_gates_tau[j], 1);
+            Vmath::Vsub(m_nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
+            Vmath::Vvtvp(m_nq, m_cellSol[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
         }
     }
 }

@@ -9,6 +9,7 @@ SET(CardiacEPSolverSource
        ./CellModels/LuoRudy91.cpp
        ./CellModels/Fox02.cpp
        ./CellModels/Winslow99.cpp
+       ./CellModels/TenTusscher06Epi.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp
        ../Auxiliary/Driver.cpp

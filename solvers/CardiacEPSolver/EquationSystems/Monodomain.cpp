@@ -293,10 +293,9 @@ namespace Nektar
     void Monodomain::v_PrintSummary(std::ostream &out)
     {
         UnsteadySystem::v_PrintSummary(out);
-        out << "\tEpsilon         : " << m_epsilon << endl;
-        if (m_session->DefinesParameter("d00"))
+        if (m_session->DefinesFunction("d00") && m_session->GetFunctionType("d00") == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : " << m_session->GetParameter("d00") << endl;
+            out << "\tDiffusivity-x   : " << m_session->GetFunction("d00", "intensity")->GetEquation() << endl;
         }
         m_cell->PrintSummary(out);
     }

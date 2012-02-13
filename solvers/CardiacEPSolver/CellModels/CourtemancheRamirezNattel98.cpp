@@ -58,8 +58,6 @@ namespace Nektar
                 const MultiRegions::ExpListSharedPtr& pField)
             : CellModel(pSession, pField)
     {
-        m_nq = pField->GetTotPoints();
-
         C_m = 100;      // picoF
         g_Na = 7.8;     // nanoS_per_picoF
         g_K1 = 0.09;    // nanoS_per_picoF

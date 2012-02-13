@@ -19,6 +19,7 @@
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <LocalRegions/MatrixKey.h>
+#include <SpatialDomains/Conditions.h>
 
 
 using namespace Nektar;
@@ -147,7 +148,7 @@ decomment the lines which follow '//decomment'
     int nbnd= bndConditions.num_elements();    
     for(int r=0; r<nbnd; r++)
     {
-    	  if(bndConditions[r]->GetUserDefined().GetEquation()=="CalcBC")
+    	  if(bndConditions[r]->GetUserDefined()==SpatialDomains::eCalcBC)
     	  {
     	  	  lastIregion=r;
     	  	  Iregions[r]=r;

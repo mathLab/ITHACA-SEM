@@ -21,6 +21,7 @@
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/lexical_cast.hpp>
+//#include <SpatialDomains/Conditions.h>
 
 using namespace Nektar;
 
@@ -152,7 +153,7 @@ int main(int argc, char *argv[])
     int nbnd= bndConditions.num_elements();
     for(int r=0; r<nbnd; r++)
     {
-    	  if(bndConditions[r]->GetUserDefined().GetEquation()=="CalcBC")
+    	  if(bndConditions[r]->GetUserDefined()==SpatialDomains::eCalcBC)
     	  {
     	  	  lastIregion=r;
     	  	  Iregions[r]=r;

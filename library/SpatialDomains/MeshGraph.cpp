@@ -1025,7 +1025,7 @@ namespace Nektar
 
         LibUtilities::BasisKeyVector MeshGraph::DefineBasisKeyFromExpansionType(GeometrySharedPtr in,
                                                                                 ExpansionType type,
-                                                                                const int order)
+                                                                                const int nummodes)
         {
             LibUtilities::BasisKeyVector returnval;
             
@@ -1040,23 +1040,23 @@ namespace Nektar
                 {
                 case eSegment:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,nummodes,pkey);
                         returnval.push_back(bkey);
                     }
                     break;
                 case eQuadrilateral:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,nummodes,pkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                     }
                     break;
                 case eHexahedron:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,nummodes,pkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
@@ -1064,40 +1064,40 @@ namespace Nektar
                     break;
                 case eTriangle:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,nummodes,pkey);
                         returnval.push_back(bkey);
                         
-                        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,nummodes,pkey1);
                         
                         returnval.push_back(bkey1);
                     }
                     break;
                 case eTetrahedron:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,nummodes,pkey);
                         returnval.push_back(bkey);
                         
-                        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,nummodes,pkey1);
                         returnval.push_back(bkey1);
                         
-                        const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
-                        LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,order,pkey2);
+                        const LibUtilities::PointsKey pkey2(nummodes,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,nummodes,pkey2);
                         returnval.push_back(bkey2);
                     }
                     break;
                 case ePrism:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,nummodes,pkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                         
-                        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,nummodes,pkey1);
                         returnval.push_back(bkey1);
                         
                     }
@@ -1118,15 +1118,15 @@ namespace Nektar
                 {
 					case eSegment:
                     {
-                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
                         returnval.push_back(bkey);
 					}
                     break;
                     case eQuadrilateral:
 					{
-						const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-						LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+						LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
 						returnval.push_back(bkey);
 						returnval.push_back(bkey);
 					}
@@ -1135,12 +1135,12 @@ namespace Nektar
 						            // and change to Ortho on
                                     // construction
 					{
-						const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-						LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+						LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
 						returnval.push_back(bkey);
                     
-						const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-						LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+						const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+						LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,nummodes,pkey1);
 						returnval.push_back(bkey1);
 					}
 					break;
@@ -1159,29 +1159,29 @@ namespace Nektar
                 {
                 case eSegment:
 				{
-					const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-					LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+					const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+					LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,nummodes,pkey);
                         
 					returnval.push_back(bkey);
 				}
 				break;
                 case eTriangle:
                 {
-                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,nummodes,pkey);
                     
                     returnval.push_back(bkey);
                     
-                    const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+                    const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,nummodes,pkey1);
                     
                     returnval.push_back(bkey1);
                 }
                 break;
                 case eQuadrilateral:
                 {
-                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,nummodes,pkey);
                     
                     returnval.push_back(bkey);
                     returnval.push_back(bkey);
@@ -1189,18 +1189,18 @@ namespace Nektar
                 break;
                 case eTetrahedron:
                 {
-                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,nummodes,pkey);
                     
                     returnval.push_back(bkey);
                     
-                    const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+                    const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,nummodes,pkey1);
                     
                     returnval.push_back(bkey1);
                     
-                    const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
-                    LibUtilities::BasisKey bkey2(LibUtilities::eOrtho_C,order,pkey2);
+                    const LibUtilities::PointsKey pkey2(nummodes,LibUtilities::eGaussRadauMAlpha2Beta0);
+                    LibUtilities::BasisKey bkey2(LibUtilities::eOrtho_C,nummodes,pkey2);
                 }
                 break;
                 default:
@@ -1218,16 +1218,16 @@ namespace Nektar
                 {
                 case eSegment:
                 {
-                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
                     
                     returnval.push_back(bkey);
                 }
                 break;
                 case eQuadrilateral:
                 {
-                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
                     
                     returnval.push_back(bkey);
                     returnval.push_back(bkey);
@@ -1235,8 +1235,8 @@ namespace Nektar
                 break;
                 case eHexahedron:
                 {
-                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
                     
                     returnval.push_back(bkey);
                     returnval.push_back(bkey);
@@ -1258,23 +1258,23 @@ namespace Nektar
 				{
 					case eSegment:
 					{
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
-						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,nummodes,pkey);
 						returnval.push_back(bkey);
 					}
 					break;
 					case eQuadrilateral:
 					{
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
-						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,nummodes,pkey);
 						returnval.push_back(bkey);
 						returnval.push_back(bkey);
 					}
 					break;
 					case eHexahedron:
                     {
-                        const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
-						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,nummodes,pkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
@@ -1295,23 +1295,23 @@ namespace Nektar
 				{
 					case eSegment:
 					{
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussGaussChebyshev);
-						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,nummodes,pkey);
 						returnval.push_back(bkey);
 					}
 					break;
 					case eQuadrilateral:
 					{
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussGaussChebyshev);
-						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,nummodes,pkey);
 						returnval.push_back(bkey);
 						returnval.push_back(bkey);
 					}
 					break;
 					case eHexahedron:
                     {
-                        const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussGaussChebyshev);
-						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,order,pkey);
+                        const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey(LibUtilities::eChebyshev,nummodes,pkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
@@ -1332,12 +1332,12 @@ namespace Nektar
 				{
 					case eQuadrilateral:
 					{
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
-						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,nummodes,pkey);
 						returnval.push_back(bkey);
 						
-						const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussGaussChebyshev);
-						LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,order,pkey1);
+						const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,nummodes,pkey1);
 						returnval.push_back(bkey1);
 					}
 					break;
@@ -1356,12 +1356,12 @@ namespace Nektar
 				{
 					case eQuadrilateral:
 					{
-						const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussGaussChebyshev);
-						LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,order,pkey1);
+						const LibUtilities::PointsKey pkey1(nummodes,LibUtilities::eGaussGaussChebyshev);
+						LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,nummodes,pkey1);
 						returnval.push_back(bkey1);
 						
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
-						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,nummodes,pkey);
 						returnval.push_back(bkey);
 					}
 					break;
@@ -1380,12 +1380,12 @@ namespace Nektar
 				{
 					case eQuadrilateral:
 					{
-						const LibUtilities::PointsKey pkey(order,LibUtilities::eFourierEvenlySpaced);
-						LibUtilities::BasisKey bkey(LibUtilities::eFourier,order,pkey);
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierEvenlySpaced);
+						LibUtilities::BasisKey bkey(LibUtilities::eFourier,nummodes,pkey);
 						returnval.push_back(bkey);
 						
-						const LibUtilities::PointsKey pkey1(order+1,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_A,order,pkey1);
+						const LibUtilities::PointsKey pkey1(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_A,nummodes,pkey1);
 						returnval.push_back(bkey1);
 					}
 					break;
@@ -1413,9 +1413,9 @@ namespace Nektar
 																		 ExpansionType type_x,
 																		 ExpansionType type_y,
 																		 ExpansionType type_z,
-																		 const int order_x,
-																		 const int order_y,
-																		 const int order_z)
+																		 const int nummodes_x,
+																		 const int nummodes_y,
+																		 const int nummodes_z)
         {
             LibUtilities::BasisKeyVector returnval;
             
@@ -1441,16 +1441,16 @@ namespace Nektar
 					{
 						case eFourier:
 						{
-							const LibUtilities::PointsKey pkey1(order_x,LibUtilities::eFourierEvenlySpaced);
-							LibUtilities::BasisKey bkey1(LibUtilities::eFourier,order_x,pkey1);
+							const LibUtilities::PointsKey pkey1(nummodes_x,LibUtilities::eFourierEvenlySpaced);
+							LibUtilities::BasisKey bkey1(LibUtilities::eFourier,nummodes_x,pkey1);
 							returnval.push_back(bkey1);
 						}
 							break;
 							
 						case eChebyshev:
 						{
-							const LibUtilities::PointsKey pkey1(order_x,LibUtilities::eGaussGaussChebyshev);
-							LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,order_x,pkey1);
+							const LibUtilities::PointsKey pkey1(nummodes_x,LibUtilities::eGaussGaussChebyshev);
+							LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev,nummodes_x,pkey1);
 							returnval.push_back(bkey1);
 						}
 							break;
@@ -1467,16 +1467,16 @@ namespace Nektar
 					{
 						case eFourier:
 						{
-							const LibUtilities::PointsKey pkey2(order_y,LibUtilities::eFourierEvenlySpaced);
-							LibUtilities::BasisKey bkey2(LibUtilities::eFourier,order_y,pkey2);
+							const LibUtilities::PointsKey pkey2(nummodes_y,LibUtilities::eFourierEvenlySpaced);
+							LibUtilities::BasisKey bkey2(LibUtilities::eFourier,nummodes_y,pkey2);
 							returnval.push_back(bkey2);
 						}
 							break;
 							
 						case eChebyshev:
 						{
-							const LibUtilities::PointsKey pkey2(order_y,LibUtilities::eGaussGaussChebyshev);
-							LibUtilities::BasisKey bkey2(LibUtilities::eChebyshev,order_y,pkey2);
+							const LibUtilities::PointsKey pkey2(nummodes_y,LibUtilities::eGaussGaussChebyshev);
+							LibUtilities::BasisKey bkey2(LibUtilities::eChebyshev,nummodes_y,pkey2);
 							returnval.push_back(bkey2);
 						}
 							break;
@@ -1492,16 +1492,16 @@ namespace Nektar
 					{
 						case eFourier:
 						{
-							const LibUtilities::PointsKey pkey3(order_z,LibUtilities::eFourierEvenlySpaced);
-							LibUtilities::BasisKey bkey3(LibUtilities::eFourier,order_z,pkey3);
+							const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eFourierEvenlySpaced);
+							LibUtilities::BasisKey bkey3(LibUtilities::eFourier,nummodes_z,pkey3);
 							returnval.push_back(bkey3);
 						}
 							break;
 							
 						case eChebyshev:
 						{
-							const LibUtilities::PointsKey pkey3(order_z,LibUtilities::eGaussGaussChebyshev);
-							LibUtilities::BasisKey bkey3(LibUtilities::eChebyshev,order_z,pkey3);
+							const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eGaussGaussChebyshev);
+							LibUtilities::BasisKey bkey3(LibUtilities::eChebyshev,nummodes_z,pkey3);
 							returnval.push_back(bkey3);
 						}
 							break;
@@ -1674,7 +1674,7 @@ namespace Nektar
 
                         bool          useExpansionType = false;
                         ExpansionType expansion_type;
-                        int           expansion_order;
+                        int           num_modes;
 
                         LibUtilities::BasisKeyVector basiskeyvec;
                         const char * tStr = expansion->Attribute("TYPE");
@@ -1695,7 +1695,7 @@ namespace Nektar
 
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 
-                            expansion_order = (int) nummodesEqn.Evaluate0();
+                            num_modes = (int) nummodesEqn.Evaluate0();
 
                             useExpansionType = true;
                         }
@@ -1787,7 +1787,7 @@ namespace Nektar
                                 ASSERTL0(x != expansionMap->end(), "Expansion not found!!");
                                 if(useExpansionType)
                                 {
-                                    (x->second)->m_basisKeyVector = MeshGraph::DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,expansion_order);
+                                    (x->second)->m_basisKeyVector = MeshGraph::DefineBasisKeyFromExpansionType(*geomVecIter,expansion_type,num_modes);
                                 }
                                 else
                                 {
@@ -1881,7 +1881,7 @@ namespace Nektar
 						
                         bool          useExpansionType = false;
                         ExpansionType expansion_type_x, expansion_type_y, expansion_type_z;
-                        int           expansion_order_x, expansion_order_y, expansion_order_z;
+                        int           num_modes_x, num_modes_y, num_modes_z;
 						
                         LibUtilities::BasisKeyVector basiskeyvec;
 						
@@ -1903,7 +1903,7 @@ namespace Nektar
 							
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 							
-                            expansion_order_x = (int) nummodesEqn.Evaluate0();
+                            num_modes_x = (int) nummodesEqn.Evaluate0();
                         }
 						
 						const char * tStr_y = expansion->Attribute("TYPE-Y");
@@ -1924,7 +1924,7 @@ namespace Nektar
 							
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 							
-                            expansion_order_y = (int) nummodesEqn.Evaluate0();
+                            num_modes_y = (int) nummodesEqn.Evaluate0();
                         }
 						
 						const char * tStr_z = expansion->Attribute("TYPE-Z");
@@ -1945,7 +1945,7 @@ namespace Nektar
 							
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 							
-                            expansion_order_z = (int) nummodesEqn.Evaluate0();
+                            num_modes_z = (int) nummodesEqn.Evaluate0();
                         }
 						
                         CompositeMapIter compVecIter;
@@ -1962,9 +1962,9 @@ namespace Nektar
 																												 expansion_type_x,
 																												 expansion_type_y,
 																												 expansion_type_z,
-																												 expansion_order_x,
-																												 expansion_order_y,
-																												 expansion_order_z);
+																												 num_modes_x,
+																												 num_modes_y,
+																												 num_modes_z);
                                 }
                             }
                         }

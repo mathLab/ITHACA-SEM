@@ -391,7 +391,11 @@ namespace Nektar
             ///  This vector stores the execution state (memory) used by the
             ///  sequential execution process.
             std::vector<double>  m_state;
-            int                  m_state_size;
+
+            int    m_state_size;
+
+            ///  Vector of state sizes per each
+            std::vector<int>     m_state_sizes;
 
 
             // ======================================================

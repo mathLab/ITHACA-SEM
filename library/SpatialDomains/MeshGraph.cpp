@@ -795,7 +795,7 @@ namespace Nektar
             
             // check to see if any scaling parameters are in
             // attributes and determine these values
-            LibUtilities::ExpressionEvaluator expEvaluator;
+            LibUtilities::AnalyticExpressionEvaluator expEvaluator;
             const char *xscal =  element->Attribute("XSCALE");
             if(!xscal)
             {
@@ -804,8 +804,8 @@ namespace Nektar
             else
             {
                 std::string xscalstr = xscal;
-                expEvaluator.DefineFunction("",xscalstr);
-                xscale = expEvaluator.Evaluate();
+                int expr_id = expEvaluator.DefineFunction("",xscalstr);
+                xscale = expEvaluator.Evaluate0(expr_id);
             }
 
             const char *yscal =  element->Attribute("YSCALE");
@@ -816,10 +816,10 @@ namespace Nektar
             else
             {
                 std::string yscalstr = yscal;
-                expEvaluator.DefineFunction("",yscalstr);
-                yscale = expEvaluator.Evaluate();
+                int expr_id = expEvaluator.DefineFunction("",yscalstr);
+                yscale = expEvaluator.Evaluate0(expr_id);
             }
-                
+
             const char *zscal = element->Attribute("ZSCALE");
             if(!zscal)
             {
@@ -828,10 +828,10 @@ namespace Nektar
             else
             {
                 std::string zscalstr = zscal;
-                expEvaluator.DefineFunction("",zscalstr);
-                zscale = expEvaluator.Evaluate();
+                int expr_id = expEvaluator.DefineFunction("",zscalstr);
+                zscale = expEvaluator.Evaluate0(expr_id);
             }
-            
+
             TiXmlElement *vertex = element->FirstChildElement("V");
 
             int indx;
@@ -1695,7 +1695,7 @@ namespace Nektar
 
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 
-                            expansion_order = (int) nummodesEqn.Evaluate();
+                            expansion_order = (int) nummodesEqn.Evaluate0();
 
                             useExpansionType = true;
                         }
@@ -1903,7 +1903,7 @@ namespace Nektar
 							
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 							
-                            expansion_order_x = (int) nummodesEqn.Evaluate();
+                            expansion_order_x = (int) nummodesEqn.Evaluate0();
                         }
 						
 						const char * tStr_y = expansion->Attribute("TYPE-Y");
@@ -1924,7 +1924,7 @@ namespace Nektar
 							
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 							
-                            expansion_order_y = (int) nummodesEqn.Evaluate();
+                            expansion_order_y = (int) nummodesEqn.Evaluate0();
                         }
 						
 						const char * tStr_z = expansion->Attribute("TYPE-Z");
@@ -1945,7 +1945,7 @@ namespace Nektar
 							
                             LibUtilities::Equation nummodesEqn(nummodesStr);
 							
-                            expansion_order_z = (int) nummodesEqn.Evaluate();
+                            expansion_order_z = (int) nummodesEqn.Evaluate0();
                         }
 						
                         CompositeMapIter compVecIter;

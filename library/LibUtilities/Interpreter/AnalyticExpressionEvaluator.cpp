@@ -414,10 +414,11 @@ namespace Nektar
             // Data parsed, start setting up internal data structures.
             // ----------------------------------------------
 
-            ExecutionStack    stack;
+            ExecutionStack  stack;
             VariableMap     variableMap;
 
             int stackId = m_executionStack.size();
+            m_state_size = 1;
 
             // register all variables declared in the expression
             for (int i = 0; i < variableNames.size(); i++)
@@ -425,7 +426,9 @@ namespace Nektar
                 variableMap[variableNames[i]] = i;
             }
 
-            // then prepare an execution stack
+            // then prepare an execution stack.
+            // this method also calculates a length of internal
+            // state storage (m_state_size) for this function.
             PrecomputedValue v = PrepareExecutionAsYouParse(parseInfo.trees.begin(), stack, variableMap, 0);
 
             // constant expression, fully evaluated
@@ -444,9 +447,10 @@ namespace Nektar
 
             // the execution stack and its corresponding variable index map are
             // two parallel std::vectors that share their ids. This split helps
-            // to achieve some performance improvement
+            // to achieve some performance improvement.
             m_executionStack.push_back(stack);
             m_stackVariableMap.push_back(variableMap);
+            m_state_sizes.push_back(m_state_size);
             return stackId;
         }
 
@@ -462,7 +466,7 @@ namespace Nektar
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
             m_variable.resize(4, 0.0);
-            m_state.resize(m_state_size);
+            m_state.resize(m_state_sizes[expression_id]);
             for (int i = 0; i < stack.size(); i++)
             {
                 (*stack[i])();
@@ -481,7 +485,7 @@ namespace Nektar
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
             // initialise internal vector of variable values
-            m_state.resize(m_state_size);
+            m_state.resize(m_state_sizes[expression_id]);
 
             // no flexibility, no change of variable ordering in m_variable
             // container depending on their names ordering in the input vlist
@@ -518,7 +522,7 @@ namespace Nektar
             }
 
             // initialise internal vector of variable values
-            m_state.resize(m_state_size);
+            m_state.resize(m_state_sizes[expression_id]);
             m_variable.resize(point.size());
             VariableMap::const_iterator it;
             for (it = variableMap.begin(); it != variableMap.end(); ++it)
@@ -556,7 +560,7 @@ namespace Nektar
 
             Array<OneD, NekDouble>  result (x.num_elements(), 0.0);
             m_variable.resize(4,0.0);
-            m_state.resize(m_state_size);
+            m_state.resize(m_state_sizes[expression_id]);
 
             for (int i = 0; i < x.num_elements(); i++)
             {
@@ -594,17 +598,18 @@ namespace Nektar
             }
 
             Array<OneD, NekDouble>  result (points.size(), 0.0);
+            m_state.resize(m_state_sizes[expression_id]);
 
+            // assuming all points have same # of coordinates
+            m_variable.resize(points[0].num_elements());
+
+            VariableMap::const_iterator it;
             for (int i = 0; i < points.size(); i++)
             {
-                m_variable.resize(points[i].num_elements());
-                VariableMap::const_iterator it;
                 for (it = variableMap.begin(); it != variableMap.end(); ++it)
                 {
                     m_variable[it->second] = points[i][it->second];
                 }
-
-                m_state.resize(m_state_size);
                 for (int j = 0; j < stack.size(); j++)
                 {
                     (*stack[j])();

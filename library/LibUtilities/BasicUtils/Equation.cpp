@@ -73,7 +73,7 @@ namespace Nektar
         *
         */
 
-        LibUtilities::ExpressionEvaluator Equation::m_evaluator;
+        LibUtilities::AnalyticExpressionEvaluator Equation::m_evaluator;
     }
 }
 

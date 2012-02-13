@@ -79,7 +79,7 @@
 #include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
 //#include <LibUtilities/LinearAlgebra/SparseStandardMatrix.hpp>
 
-#include <LibUtilities/Interpreter/ExpressionEvaluator.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/FourierPoints.h>

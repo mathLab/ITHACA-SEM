@@ -203,7 +203,7 @@ namespace Nektar
                     {
                         cnt += bregionIt->second->size();
                     }
-
+/*
                     if( boundaryCondition->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
                     {
                         for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
@@ -211,6 +211,7 @@ namespace Nektar
                             cnt2 += bregionIt->second->size();
                         }
                     }
+*/
                 }
             }
 

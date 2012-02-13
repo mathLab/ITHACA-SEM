@@ -96,7 +96,7 @@ namespace Nektar
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
                 NekVector(const expt::Node<L, Op, R>& rhs) :
-                    m_size(MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData()).get<0>()),
+                    m_size(MatrixSize<expt::Node<L, Op, R>, typename expt::Node<L, Op, R>::Indices, 0>::template GetRequiredSize(rhs.GetData()).template get<0>()),
                     m_data(m_size),
                     m_wrapperType(eCopy)
                 {

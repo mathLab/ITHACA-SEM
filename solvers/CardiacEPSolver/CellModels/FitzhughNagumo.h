@@ -45,15 +45,20 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static CellModelSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+        static CellModelSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField)
         {
-            return MemoryManager<CellModelFitzHughNagumo>::AllocateSharedPtr(pSession, nq);
+            return MemoryManager<CellModelFitzHughNagumo>::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
         static std::string className;
 
-        CellModelFitzHughNagumo(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
+        CellModelFitzHughNagumo(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField);
+
         virtual ~CellModelFitzHughNagumo() {}
 
     protected:
@@ -64,9 +69,12 @@ namespace Nektar
 
         virtual void v_PrintSummary(std::ostream &out);
 
+        virtual void v_SetInitialConditions();
+
     private:
         NekDouble              m_beta;
         NekDouble              m_epsilon;
+
         /// Temporary space for storing \f$u^3\f$ when computing reaction term.
         Array<OneD, NekDouble> m_uuu;
     };

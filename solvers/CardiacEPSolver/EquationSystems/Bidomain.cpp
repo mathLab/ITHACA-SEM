@@ -86,7 +86,7 @@ namespace Nektar
 	
         ASSERTL0(vCellModel != "", "Cell Model not specified.");
 
-        m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]->GetNpoints());
+        m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]);
 
         if (!m_explicitDiffusion)
         {

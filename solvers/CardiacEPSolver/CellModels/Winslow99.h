@@ -45,16 +45,20 @@ namespace Nektar
 
     public:
         /// Creates an instance of this class
-        static CellModelSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+        static CellModelSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField)
         {
-            return MemoryManager<Winslow99>::AllocateSharedPtr(pSession, nq);
+            return MemoryManager<Winslow99>::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
         static std::string className;
 
         /// Constructor
-        Winslow99(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
+        Winslow99(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField);
 
         /// Destructor
         virtual ~Winslow99() {}
@@ -68,6 +72,9 @@ namespace Nektar
 
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
+
+        /// Set initial conditions for cell model
+        virtual void v_SetInitialConditions();
     };
 }
 

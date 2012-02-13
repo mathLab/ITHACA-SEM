@@ -44,16 +44,19 @@ namespace Nektar
 
     public:
         /// Creates an instance of this class
-        static CellModelSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq)
+        static CellModelSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField)
         {
-            return MemoryManager<Fox02>::AllocateSharedPtr(pSession, nq);
+            return MemoryManager<Fox02>::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
         static std::string className;
 
         /// Constructor
-        Fox02(const LibUtilities::SessionReaderSharedPtr& pSession, const int nq);
+        Fox02(  const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField);
 
         /// Destructor
         virtual ~Fox02() {}
@@ -66,6 +69,8 @@ namespace Nektar
                const NekDouble time);
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
+
+        virtual void v_SetInitialConditions();
 
     private:
         //

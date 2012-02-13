@@ -54,8 +54,10 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
-        CellModelAlievPanfilov(const LibUtilities::SessionReaderSharedPtr& pSession,
+        CellModelAlievPanfilov(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
                 const MultiRegions::ExpListSharedPtr& pField);
+
         virtual ~CellModelAlievPanfilov() {}
 
     protected:
@@ -65,6 +67,8 @@ namespace Nektar
                 const NekDouble time);
 
         virtual void v_PrintSummary(std::ostream &out);
+
+        virtual void v_SetInitialConditions();
 
     private:
         /// Trigger parameter a.

@@ -114,11 +114,6 @@ namespace Nektar
 
                     // Normalise and invert (assuming image intensity data)
                     int nq = m_fields[0]->GetNpoints();
-//                    NekDouble max = Vmath::Vmax(nq, m_fields[0]->GetPhys(), 1);
-//                    Vmath::Smul(nq, 0.13341/max, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-//                    Vmath::Neg(nq, m_fields[0]->UpdatePhys(), 1);
-//                    Vmath::Sadd(nq, 0.13341, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-
                     NekDouble f_min = m_session->GetParameter("d_min");
                     NekDouble f_max = m_session->GetParameter("d_max");
                     NekDouble f_range = f_max - f_min;
@@ -227,8 +222,6 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
         // lambda = \Delta t
         factors[StdRegions::eFactorLambda] = 1.0/lambda*m_chi*m_capMembrane;
-
-        Array<OneD, NekDouble> tmp(m_fields[0]->GetNcoeffs());
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}

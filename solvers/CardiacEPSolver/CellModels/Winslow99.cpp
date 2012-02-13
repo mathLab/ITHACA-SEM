@@ -52,9 +52,42 @@ namespace Nektar
     */
     Winslow99::Winslow99(
             const LibUtilities::SessionReaderSharedPtr& pSession,
-            const int nq): CellModel(pSession, nq)
+            const MultiRegions::ExpListSharedPtr& pField):
+        CellModel(pSession, pField)
     {
-        m_nq   = nq;
+        m_nvar = 33;
+        m_gates.push_back(1);
+        m_gates.push_back(2);
+        m_gates.push_back(3);
+        m_gates.push_back(4);
+        m_gates.push_back(5);
+        m_gates.push_back(6);
+        m_gates.push_back(7);
+        m_concentrations.push_back(8);
+        m_concentrations.push_back(9);
+        m_concentrations.push_back(10);
+        m_concentrations.push_back(11);
+        m_concentrations.push_back(12);
+        m_concentrations.push_back(13);
+        m_concentrations.push_back(14);
+        m_concentrations.push_back(15);
+        m_concentrations.push_back(16);
+        m_concentrations.push_back(17);
+        m_concentrations.push_back(18);
+        m_concentrations.push_back(19);
+        m_gates.push_back(20);
+        m_concentrations.push_back(21);
+        m_concentrations.push_back(22);
+        m_concentrations.push_back(23);
+        m_concentrations.push_back(24);
+        m_concentrations.push_back(25);
+        m_concentrations.push_back(26);
+        m_concentrations.push_back(27);
+        m_concentrations.push_back(28);
+        m_concentrations.push_back(29);
+        m_concentrations.push_back(30);
+        m_concentrations.push_back(31);
+        m_concentrations.push_back(32);
     }
     
     
@@ -75,69 +108,69 @@ namespace Nektar
             // Time units: millisecond
             NekDouble var_chaste_interface__membrane__V = inarray[0][i];
             // Units: millivolt; Initial value: -96.1638
-            NekDouble var_chaste_interface__fast_sodium_current_m_gate__m = inarray[2][i];
+            NekDouble var_chaste_interface__fast_sodium_current_m_gate__m = inarray[1][i];
             // Units: dimensionless; Initial value: 0.0328302
-            NekDouble var_chaste_interface__fast_sodium_current_h_gate__h = inarray[3][i];
+            NekDouble var_chaste_interface__fast_sodium_current_h_gate__h = inarray[2][i];
             // Units: dimensionless; Initial value: 0.988354
-            NekDouble var_chaste_interface__fast_sodium_current_j_gate__j = inarray[4][i];
+            NekDouble var_chaste_interface__fast_sodium_current_j_gate__j = inarray[3][i];
             // Units: dimensionless; Initial value: 0.99254
-            NekDouble var_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr = inarray[5][i];
+            NekDouble var_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr = inarray[4][i];
             // Units: dimensionless; Initial value: 0.51
-            NekDouble var_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks = inarray[6][i];
+            NekDouble var_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks = inarray[5][i];
             // Units: dimensionless; Initial value: 0.264
-            NekDouble var_chaste_interface__transient_outward_potassium_current_X_to1_gate__X_to1 = inarray[7][i];
+            NekDouble var_chaste_interface__transient_outward_potassium_current_X_to1_gate__X_to1 = inarray[6][i];
             // Units: dimensionless; Initial value: 2.63
-            NekDouble var_chaste_interface__transient_outward_potassium_current_Y_to1_gate__Y_to1 = inarray[8][i];
+            NekDouble var_chaste_interface__transient_outward_potassium_current_Y_to1_gate__Y_to1 = inarray[7][i];
             // Units: dimensionless; Initial value: 0.99
-            NekDouble var_chaste_interface__L_type_Ca_current__O = inarray[9][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__O = inarray[8][i];
             // Units: dimensionless; Initial value: 9.84546e-21
-            NekDouble var_chaste_interface__L_type_Ca_current__O_Ca = inarray[10][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__O_Ca = inarray[9][i];
             // Units: dimensionless; Initial value: 0
-            NekDouble var_chaste_interface__L_type_Ca_current__C0 = inarray[11][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C0 = inarray[10][i];
             // Units: dimensionless; Initial value: 0.997208
-            NekDouble var_chaste_interface__L_type_Ca_current__C1 = inarray[12][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C1 = inarray[11][i];
             // Units: dimensionless; Initial value: 6.38897e-5
-            NekDouble var_chaste_interface__L_type_Ca_current__C2 = inarray[13][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C2 = inarray[12][i];
             // Units: dimensionless; Initial value: 1.535e-9
-            NekDouble var_chaste_interface__L_type_Ca_current__C3 = inarray[14][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C3 = inarray[13][i];
             // Units: dimensionless; Initial value: 1.63909e-14
-            NekDouble var_chaste_interface__L_type_Ca_current__C4 = inarray[15][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C4 = inarray[14][i];
             // Units: dimensionless; Initial value: 6.56337e-20
-            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca0 = inarray[16][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca0 = inarray[15][i];
             // Units: dimensionless; Initial value: 0.00272826
-            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca1 = inarray[17][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca1 = inarray[16][i];
             // Units: dimensionless; Initial value: 6.99215e-7
-            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca2 = inarray[18][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca2 = inarray[17][i];
             // Units: dimensionless; Initial value: 6.71989e-11
-            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca3 = inarray[19][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca3 = inarray[18][i];
             // Units: dimensionless; Initial value: 2.87031e-15
-            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca4 = inarray[20][i];
+            NekDouble var_chaste_interface__L_type_Ca_current__C_Ca4 = inarray[19][i];
             // Units: dimensionless; Initial value: 4.59752e-20
-            NekDouble var_chaste_interface__L_type_Ca_current_y_gate__y = inarray[21][i];
+            NekDouble var_chaste_interface__L_type_Ca_current_y_gate__y = inarray[20][i];
             // Units: dimensionless; Initial value: 0.798
-            NekDouble var_chaste_interface__RyR_channel__P_O1 = inarray[22][i];
+            NekDouble var_chaste_interface__RyR_channel__P_O1 = inarray[21][i];
             // Units: dimensionless; Initial value: 0
-            NekDouble var_chaste_interface__RyR_channel__P_O2 = inarray[23][i];
+            NekDouble var_chaste_interface__RyR_channel__P_O2 = inarray[22][i];
             // Units: dimensionless; Initial value: 0
-            NekDouble var_chaste_interface__RyR_channel__P_C1 = inarray[24][i];
+            NekDouble var_chaste_interface__RyR_channel__P_C1 = inarray[23][i];
             // Units: dimensionless; Initial value: 0.47
-            NekDouble var_chaste_interface__RyR_channel__P_C2 = inarray[25][i];
+            NekDouble var_chaste_interface__RyR_channel__P_C2 = inarray[24][i];
             // Units: dimensionless; Initial value: 0.53
-            NekDouble var_chaste_interface__intracellular_Ca_fluxes__HTRPNCa = inarray[26][i];
+            NekDouble var_chaste_interface__intracellular_Ca_fluxes__HTRPNCa = inarray[25][i];
             // Units: millimolar; Initial value: 0.98
-            NekDouble var_chaste_interface__intracellular_Ca_fluxes__LTRPNCa = inarray[27][i];
+            NekDouble var_chaste_interface__intracellular_Ca_fluxes__LTRPNCa = inarray[26][i];
             // Units: millimolar; Initial value: 0.078
-            NekDouble var_chaste_interface__intracellular_ion_concentrations__Nai = inarray[28][i];
+            NekDouble var_chaste_interface__intracellular_ion_concentrations__Nai = inarray[27][i];
             // Units: millimolar; Initial value: 10
-            NekDouble var_chaste_interface__intracellular_ion_concentrations__Cai = inarray[29][i];
+            NekDouble var_chaste_interface__intracellular_ion_concentrations__Cai = inarray[28][i];
             // Units: millimolar; Initial value: 0.00008
-            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ki = inarray[30][i];
+            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ki = inarray[29][i];
             // Units: millimolar; Initial value: 157.8
-            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_ss = inarray[31][i];
+            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_ss = inarray[30][i];
             // Units: millimolar; Initial value: 0.00011
-            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_JSR = inarray[32][i];
+            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_JSR = inarray[31][i];
             // Units: millimolar; Initial value: 0.257
-            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_NSR = inarray[33][i];
+            NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_NSR = inarray[32][i];
             // Units: millimolar; Initial value: 0.257
 
 
@@ -576,41 +609,39 @@ namespace Nektar
             const NekDouble var_chaste_interface__membrane__d_V_d_environment__time_converter = var_membrane__d_V_d_environment__time; // ___units_1
             const NekDouble var_chaste_interface__membrane__d_V_d_environment__time = 0.001 * var_chaste_interface__membrane__d_V_d_environment__time_converter; // 'millivolt per millisecond'
             d_dt_chaste_interface__membrane__V = var_chaste_interface__membrane__d_V_d_environment__time; // 'millivolt per millisecond'
-            outarray[0][i] /= var_membrane__chaste_interface__chaste_membrane_capacitance;
-            outarray[0][i] += d_dt_chaste_interface__membrane__V;
-            outarray[1][i] = 0.0;
-            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
-            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
-            outarray[4][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
-            outarray[5][i] = d_dt_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr;
-            outarray[6][i] = d_dt_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks;
-            outarray[7][i] = d_dt_chaste_interface__transient_outward_potassium_current_X_to1_gate__X_to1;
-            outarray[8][i] = d_dt_chaste_interface__transient_outward_potassium_current_Y_to1_gate__Y_to1;
-            outarray[9][i] = d_dt_chaste_interface__L_type_Ca_current__O;
-            outarray[10][i] = d_dt_chaste_interface__L_type_Ca_current__O_Ca;
-            outarray[11][i] = d_dt_chaste_interface__L_type_Ca_current__C0;
-            outarray[12][i] = d_dt_chaste_interface__L_type_Ca_current__C1;
-            outarray[13][i] = d_dt_chaste_interface__L_type_Ca_current__C2;
-            outarray[14][i] = d_dt_chaste_interface__L_type_Ca_current__C3;
-            outarray[15][i] = d_dt_chaste_interface__L_type_Ca_current__C4;
-            outarray[16][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca0;
-            outarray[17][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca1;
-            outarray[18][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca2;
-            outarray[19][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca3;
-            outarray[20][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca4;
-            outarray[21][i] = d_dt_chaste_interface__L_type_Ca_current_y_gate__y;
-            outarray[22][i] = d_dt_chaste_interface__RyR_channel__P_O1;
-            outarray[23][i] = d_dt_chaste_interface__RyR_channel__P_O2;
-            outarray[24][i] = d_dt_chaste_interface__RyR_channel__P_C1;
-            outarray[25][i] = d_dt_chaste_interface__RyR_channel__P_C2;
-            outarray[26][i] = d_dt_chaste_interface__intracellular_Ca_fluxes__HTRPNCa;
-            outarray[27][i] = d_dt_chaste_interface__intracellular_Ca_fluxes__LTRPNCa;
-            outarray[28][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Nai;
-            outarray[29][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Cai;
-            outarray[30][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ki;
-            outarray[31][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_ss;
-            outarray[32][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_JSR;
-            outarray[33][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_NSR;
+            outarray[0][i] = d_dt_chaste_interface__membrane__V;
+            outarray[1][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
+            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
+            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
+            outarray[4][i] = d_dt_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr;
+            outarray[5][i] = d_dt_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks;
+            outarray[6][i] = d_dt_chaste_interface__transient_outward_potassium_current_X_to1_gate__X_to1;
+            outarray[7][i] = d_dt_chaste_interface__transient_outward_potassium_current_Y_to1_gate__Y_to1;
+            outarray[8][i] = d_dt_chaste_interface__L_type_Ca_current__O;
+            outarray[9][i] = d_dt_chaste_interface__L_type_Ca_current__O_Ca;
+            outarray[10][i] = d_dt_chaste_interface__L_type_Ca_current__C0;
+            outarray[11][i] = d_dt_chaste_interface__L_type_Ca_current__C1;
+            outarray[12][i] = d_dt_chaste_interface__L_type_Ca_current__C2;
+            outarray[13][i] = d_dt_chaste_interface__L_type_Ca_current__C3;
+            outarray[14][i] = d_dt_chaste_interface__L_type_Ca_current__C4;
+            outarray[15][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca0;
+            outarray[16][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca1;
+            outarray[17][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca2;
+            outarray[18][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca3;
+            outarray[19][i] = d_dt_chaste_interface__L_type_Ca_current__C_Ca4;
+            outarray[20][i] = d_dt_chaste_interface__L_type_Ca_current_y_gate__y;
+            outarray[21][i] = d_dt_chaste_interface__RyR_channel__P_O1;
+            outarray[22][i] = d_dt_chaste_interface__RyR_channel__P_O2;
+            outarray[23][i] = d_dt_chaste_interface__RyR_channel__P_C1;
+            outarray[24][i] = d_dt_chaste_interface__RyR_channel__P_C2;
+            outarray[25][i] = d_dt_chaste_interface__intracellular_Ca_fluxes__HTRPNCa;
+            outarray[26][i] = d_dt_chaste_interface__intracellular_Ca_fluxes__LTRPNCa;
+            outarray[27][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Nai;
+            outarray[28][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Cai;
+            outarray[29][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ki;
+            outarray[30][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_ss;
+            outarray[31][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_JSR;
+            outarray[32][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_NSR;
         }
         
     }
@@ -623,5 +654,45 @@ namespace Nektar
         out << "	Cell model      : Winslow99" << std::endl;
     }
 
+
+    /**
+     *
+     */
+    void Winslow99::v_SetInitialConditions()
+    {
+        Vmath::Fill(m_nq, -96.1638,     m_cellSol[0],  1);
+        Vmath::Fill(m_nq, 0.0328302,    m_cellSol[1],  1);
+        Vmath::Fill(m_nq, 0.988354,     m_cellSol[2],  1);
+        Vmath::Fill(m_nq, 0.99254,      m_cellSol[3],  1);
+        Vmath::Fill(m_nq, 0.51,         m_cellSol[4],  1);
+        Vmath::Fill(m_nq, 0.264,        m_cellSol[5],  1);
+        Vmath::Fill(m_nq, 2.63,         m_cellSol[6],  1);
+        Vmath::Fill(m_nq, 0.99,         m_cellSol[7],  1);
+        Vmath::Fill(m_nq, 9.84546e-21,  m_cellSol[8],  1);
+        Vmath::Fill(m_nq, 0.0,          m_cellSol[9],  1);
+        Vmath::Fill(m_nq, 0.997208,     m_cellSol[10], 1);
+        Vmath::Fill(m_nq, 6.38897e-5,   m_cellSol[11], 1);
+        Vmath::Fill(m_nq, 1.535e-9,     m_cellSol[12], 1);
+        Vmath::Fill(m_nq, 1.63909e-14,  m_cellSol[13], 1);
+        Vmath::Fill(m_nq, 6.56337e-20,  m_cellSol[14], 1);
+        Vmath::Fill(m_nq, 0.00272826,   m_cellSol[15], 1);
+        Vmath::Fill(m_nq, 6.99215e-7,   m_cellSol[16], 1);
+        Vmath::Fill(m_nq, 6.71989e-11,  m_cellSol[17], 1);
+        Vmath::Fill(m_nq, 2.87031e-15,  m_cellSol[18], 1);
+        Vmath::Fill(m_nq, 4.59752e-20,  m_cellSol[19], 1);
+        Vmath::Fill(m_nq, 0.798,        m_cellSol[20], 1);
+        Vmath::Fill(m_nq, 0.0,          m_cellSol[21],  1);
+        Vmath::Fill(m_nq, 0.0,          m_cellSol[22], 1);
+        Vmath::Fill(m_nq, 0.47,         m_cellSol[23], 1);
+        Vmath::Fill(m_nq, 0.53,         m_cellSol[24], 1);
+        Vmath::Fill(m_nq, 0.98,         m_cellSol[25], 1);
+        Vmath::Fill(m_nq, 0.078,        m_cellSol[26], 1);
+        Vmath::Fill(m_nq, 10.0,         m_cellSol[27], 1);
+        Vmath::Fill(m_nq, 0.00008,      m_cellSol[28], 1);
+        Vmath::Fill(m_nq, 157.8,        m_cellSol[29], 1);
+        Vmath::Fill(m_nq, 0.00011,      m_cellSol[30], 1);
+        Vmath::Fill(m_nq, 0.257,        m_cellSol[31], 1);
+        Vmath::Fill(m_nq, 0.257,        m_cellSol[32], 1);
+    }
 }
 

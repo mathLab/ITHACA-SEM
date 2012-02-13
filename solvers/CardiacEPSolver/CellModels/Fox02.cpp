@@ -49,12 +49,28 @@ namespace Nektar
     /**
     *
     */
-    Fox02::Fox02( const LibUtilities::SessionReaderSharedPtr& pSession,
-            const int nq): CellModel(pSession, nq)
+    Fox02::Fox02(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const MultiRegions::ExpListSharedPtr& pField):
+        CellModel(pSession, pField)
     {
-        m_nq   = nq;
         pSession->LoadParameter("chi",       m_chi);
         pSession->LoadParameter("sigmai",    m_sigmai);
+
+        m_nvar = 13;
+
+        m_gates.push_back(1);
+        m_gates.push_back(2);
+        m_gates.push_back(3);
+        m_gates.push_back(4);
+        m_gates.push_back(5);
+        m_gates.push_back(6);
+        m_gates.push_back(7);
+        m_gates.push_back(8);
+        m_gates.push_back(9);
+        m_gates.push_back(10);
+        m_concentrations.push_back(11);
+        m_concentrations.push_back(12);
     }
     
     
@@ -64,40 +80,38 @@ namespace Nektar
     void Fox02::v_Update(
                      const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                                                           const NekDouble time)
+                     const NekDouble time)
     {
-        int nvariables  = inarray.num_elements();
-        int nq = m_nq;
-        for (unsigned int i = 0; i < nq; ++i)
+        for (unsigned int i = 0; i < m_nq; ++i)
         {
             
             // Inputs:
             // Time units: millisecond
             NekDouble var_chaste_interface__membrane__V = inarray[0][i];
             // Units: millivolt; Initial value: -94.7
-            NekDouble var_chaste_interface__fast_sodium_current_m_gate__m = inarray[2][i];
+            NekDouble var_chaste_interface__fast_sodium_current_m_gate__m = inarray[1][i];
             // Units: dimensionless; Initial value: 0.00024676
-            NekDouble var_chaste_interface__fast_sodium_current_h_gate__h = inarray[3][i];
+            NekDouble var_chaste_interface__fast_sodium_current_h_gate__h = inarray[2][i];
             // Units: dimensionless; Initial value: 0.99869
-            NekDouble var_chaste_interface__fast_sodium_current_j_gate__j = inarray[4][i];
+            NekDouble var_chaste_interface__fast_sodium_current_j_gate__j = inarray[3][i];
             // Units: dimensionless; Initial value: 0.99887
-            NekDouble var_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr = inarray[5][i];
+            NekDouble var_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr = inarray[4][i];
             // Units: dimensionless; Initial value: 0.229
-            NekDouble var_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks = inarray[6][i];
+            NekDouble var_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks = inarray[5][i];
             // Units: dimensionless; Initial value: 0.0001
-            NekDouble var_chaste_interface__transient_outward_potassium_current_X_to_gate__X_to = inarray[7][i];
+            NekDouble var_chaste_interface__transient_outward_potassium_current_X_to_gate__X_to = inarray[6][i];
             // Units: dimensionless; Initial value: 0.00003742
-            NekDouble var_chaste_interface__transient_outward_potassium_current_Y_to_gate__Y_to = inarray[8][i];
+            NekDouble var_chaste_interface__transient_outward_potassium_current_Y_to_gate__Y_to = inarray[7][i];
             // Units: dimensionless; Initial value: 1
-            NekDouble var_chaste_interface__L_type_Ca_current_f_gate__f = inarray[9][i];
+            NekDouble var_chaste_interface__L_type_Ca_current_f_gate__f = inarray[8][i];
             // Units: dimensionless; Initial value: 0.983
-            NekDouble var_chaste_interface__L_type_Ca_current_d_gate__d = inarray[10][i];
+            NekDouble var_chaste_interface__L_type_Ca_current_d_gate__d = inarray[9][i];
             // Units: dimensionless; Initial value: 0.0001
-            NekDouble var_chaste_interface__L_type_Ca_current_f_Ca_gate__f_Ca = inarray[11][i];
+            NekDouble var_chaste_interface__L_type_Ca_current_f_Ca_gate__f_Ca = inarray[10][i];
             // Units: dimensionless; Initial value: 0.942
-            NekDouble var_chaste_interface__calcium_dynamics__Ca_i = inarray[12][i];
+            NekDouble var_chaste_interface__calcium_dynamics__Ca_i = inarray[11][i];
             // Units: micromolar; Initial value: 0.0472
-            NekDouble var_chaste_interface__calcium_dynamics__Ca_SR = inarray[13][i];
+            NekDouble var_chaste_interface__calcium_dynamics__Ca_SR = inarray[12][i];
             // Units: micromolar; Initial value: 320
 
 
@@ -376,21 +390,19 @@ namespace Nektar
             const NekDouble var_membrane__d_V_d_environment__time = -(var_membrane__i_Na + var_membrane__i_Ca + var_membrane__i_CaK + var_membrane__i_Kr + var_membrane__i_Ks + var_membrane__i_to + var_membrane__i_K1 + var_membrane__i_Kp + var_membrane__i_NaCa + var_membrane__i_NaK + var_membrane__i_p_Ca + var_membrane__i_Na_b + var_membrane__i_Ca_b + var_membrane__i_Stim); // 'millivolt per millisecond'
             const NekDouble var_chaste_interface__membrane__d_V_d_environment__time = var_membrane__d_V_d_environment__time; // ___units_1
             d_dt_chaste_interface__membrane__V = var_chaste_interface__membrane__d_V_d_environment__time; // 'millivolt per millisecond'
-            outarray[0][i] /= var_membrane__chaste_interface__chaste_membrane_capacitance;
-            outarray[0][i] += d_dt_chaste_interface__membrane__V;
-            outarray[1][i] = 0.0;
-            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
-            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
-            outarray[4][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
-            outarray[5][i] = d_dt_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr;
-            outarray[6][i] = d_dt_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks;
-            outarray[7][i] = d_dt_chaste_interface__transient_outward_potassium_current_X_to_gate__X_to;
-            outarray[8][i] = d_dt_chaste_interface__transient_outward_potassium_current_Y_to_gate__Y_to;
-            outarray[9][i] = d_dt_chaste_interface__L_type_Ca_current_f_gate__f;
-            outarray[10][i] = d_dt_chaste_interface__L_type_Ca_current_d_gate__d;
-            outarray[11][i] = d_dt_chaste_interface__L_type_Ca_current_f_Ca_gate__f_Ca;
-            outarray[12][i] = d_dt_chaste_interface__calcium_dynamics__Ca_i;
-            outarray[13][i] = d_dt_chaste_interface__calcium_dynamics__Ca_SR;
+            outarray[0][i] = d_dt_chaste_interface__membrane__V;
+            outarray[1][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
+            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
+            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
+            outarray[4][i] = d_dt_chaste_interface__rapid_activating_delayed_rectifiyer_K_current_X_kr_gate__X_kr;
+            outarray[5][i] = d_dt_chaste_interface__slow_activating_delayed_rectifiyer_K_current_X_ks_gate__X_ks;
+            outarray[6][i] = d_dt_chaste_interface__transient_outward_potassium_current_X_to_gate__X_to;
+            outarray[7][i] = d_dt_chaste_interface__transient_outward_potassium_current_Y_to_gate__Y_to;
+            outarray[8][i] = d_dt_chaste_interface__L_type_Ca_current_f_gate__f;
+            outarray[9][i] = d_dt_chaste_interface__L_type_Ca_current_d_gate__d;
+            outarray[10][i] = d_dt_chaste_interface__L_type_Ca_current_f_Ca_gate__f_Ca;
+            outarray[11][i] = d_dt_chaste_interface__calcium_dynamics__Ca_i;
+            outarray[12][i] = d_dt_chaste_interface__calcium_dynamics__Ca_SR;
         }
         
     }
@@ -403,5 +415,25 @@ namespace Nektar
         out << "	Cell model      : Fox02" << std::endl;
     }
 
+
+    /**
+     *
+     */
+    void Fox02::v_SetInitialConditions()
+    {
+        Vmath::Fill(m_nq, -94.7,       m_cellSol[0],  1);
+        Vmath::Fill(m_nq, 0.00024676,  m_cellSol[1],  1);
+        Vmath::Fill(m_nq, 0.99869,     m_cellSol[2],  1);
+        Vmath::Fill(m_nq, 0.99887,     m_cellSol[3],  1);
+        Vmath::Fill(m_nq, 0.229,       m_cellSol[4],  1);
+        Vmath::Fill(m_nq, 0.0001,      m_cellSol[5],  1);
+        Vmath::Fill(m_nq, 0.00003742,  m_cellSol[6],  1);
+        Vmath::Fill(m_nq, 1.0,         m_cellSol[7],  1);
+        Vmath::Fill(m_nq, 0.0472,      m_cellSol[8],  1);
+        Vmath::Fill(m_nq, 0.983,       m_cellSol[9],  1);
+        Vmath::Fill(m_nq, 0.0001,      m_cellSol[10], 1);
+        Vmath::Fill(m_nq, 0.942,       m_cellSol[11], 1);
+        Vmath::Fill(m_nq, 320.0,       m_cellSol[12], 1);
+    }
 }
 

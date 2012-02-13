@@ -28,9 +28,20 @@ namespace Nektar
     *
     */
     LuoRudy91::LuoRudy91(
-                const LibUtilities::SessionReaderSharedPtr& pSession, const int nq): CellModel(pSession, nq)
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField):
+            CellModel(pSession, pField)
     {
-        m_nq   = nq;
+        m_nq   = pField->GetNpoints();
+
+        m_nvar = 8;
+        m_gates.push_back(1);
+        m_gates.push_back(2);
+        m_gates.push_back(3);
+        m_gates.push_back(4);
+        m_gates.push_back(5);
+        m_gates.push_back(6);
+        m_concentrations.push_back(7);
     }
     
     
@@ -50,19 +61,19 @@ namespace Nektar
             // Time units: millisecond
             NekDouble var_chaste_interface__membrane__V = inarray[0][i];
             // Units: millivolt; Initial value: -84.3801107371
-            NekDouble var_chaste_interface__fast_sodium_current_m_gate__m = inarray[2][i];
+            NekDouble var_chaste_interface__fast_sodium_current_m_gate__m = inarray[1][i];
             // Units: dimensionless; Initial value: 0.00171338077730188
-            NekDouble var_chaste_interface__fast_sodium_current_h_gate__h = inarray[3][i];
+            NekDouble var_chaste_interface__fast_sodium_current_h_gate__h = inarray[2][i];
             // Units: dimensionless; Initial value: 0.982660523699656
-            NekDouble var_chaste_interface__fast_sodium_current_j_gate__j = inarray[4][i];
+            NekDouble var_chaste_interface__fast_sodium_current_j_gate__j = inarray[3][i];
             // Units: dimensionless; Initial value: 0.989108212766685
-            NekDouble var_chaste_interface__slow_inward_current_d_gate__d = inarray[5][i];
+            NekDouble var_chaste_interface__slow_inward_current_d_gate__d = inarray[4][i];
             // Units: dimensionless; Initial value: 0.00302126301779861
-            NekDouble var_chaste_interface__slow_inward_current_f_gate__f = inarray[6][i];
+            NekDouble var_chaste_interface__slow_inward_current_f_gate__f = inarray[5][i];
             // Units: dimensionless; Initial value: 0.999967936476325
-            NekDouble var_chaste_interface__time_dependent_potassium_current_X_gate__X = inarray[7][i];
+            NekDouble var_chaste_interface__time_dependent_potassium_current_X_gate__X = inarray[6][i];
             // Units: dimensionless; Initial value: 0.0417603108167287
-            NekDouble var_chaste_interface__intracellular_calcium_concentration__Cai = inarray[8][i];
+            NekDouble var_chaste_interface__intracellular_calcium_concentration__Cai = inarray[7][i];
             // Units: millimolar; Initial value: 0.00017948816388306
 
             
@@ -200,16 +211,14 @@ namespace Nektar
             const NekDouble var_membrane__d_V_d_environment__time = ((-1.0) / var_membrane__C) * (var_membrane__I_stim + var_membrane__i_Na + var_membrane__i_si + var_membrane__i_K + var_membrane__i_K1 + var_membrane__i_Kp + var_membrane__i_b); // 'millivolt per millisecond'
             const NekDouble var_chaste_interface__membrane__d_V_d_environment__time = var_membrane__d_V_d_environment__time; // ___units_1
             d_dt_chaste_interface__membrane__V = var_chaste_interface__membrane__d_V_d_environment__time; // 'millivolt per millisecond'
-            outarray[0][i] /= var_membrane__C;
-            outarray[0][i] += d_dt_chaste_interface__membrane__V;
-            outarray[1][i] = 0.0;
-            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
-            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
-            outarray[4][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
-            outarray[5][i] = d_dt_chaste_interface__slow_inward_current_d_gate__d;
-            outarray[6][i] = d_dt_chaste_interface__slow_inward_current_f_gate__f;
-            outarray[7][i] = d_dt_chaste_interface__time_dependent_potassium_current_X_gate__X;
-            outarray[8][i] = d_dt_chaste_interface__intracellular_calcium_concentration__Cai;
+            outarray[0][i] = d_dt_chaste_interface__membrane__V;
+            outarray[1][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
+            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
+            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
+            outarray[4][i] = d_dt_chaste_interface__slow_inward_current_d_gate__d;
+            outarray[5][i] = d_dt_chaste_interface__slow_inward_current_f_gate__f;
+            outarray[6][i] = d_dt_chaste_interface__time_dependent_potassium_current_X_gate__X;
+            outarray[7][i] = d_dt_chaste_interface__intracellular_calcium_concentration__Cai;
         }
     }
 
@@ -221,5 +230,20 @@ namespace Nektar
         out << "	Cell model      : Luo-Rudy 1991" << std::endl;
     }
 
+
+    /**
+     *
+     */
+    void LuoRudy91::v_SetInitialConditions()
+    {
+        Vmath::Fill(m_nq, -84.3801107371,       m_cellSol[0],  1);
+        Vmath::Fill(m_nq, 0.00171338077730188,  m_cellSol[1],  1);
+        Vmath::Fill(m_nq, 0.982660523699656,    m_cellSol[2],  1);
+        Vmath::Fill(m_nq, 0.989108212766685,    m_cellSol[3],  1);
+        Vmath::Fill(m_nq, 0.00017948816388306,  m_cellSol[4],  1);
+        Vmath::Fill(m_nq, 0.00302126301779861,  m_cellSol[5],  1);
+        Vmath::Fill(m_nq, 0.999967936476325,    m_cellSol[6],  1);
+        Vmath::Fill(m_nq, 0.0417603108167287,   m_cellSol[7],  1);
+    }
 }
         

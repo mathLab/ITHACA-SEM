@@ -46,9 +46,9 @@ namespace Nektar
         /// Creates an instance of this class
         static CellModelSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
-                const int nq)
+                const MultiRegions::ExpListSharedPtr& pField)
         {
-            return MemoryManager<LuoRudy91>::AllocateSharedPtr(pSession, nq);
+            return MemoryManager<LuoRudy91>::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
@@ -56,7 +56,7 @@ namespace Nektar
 
         /// Constructor
         LuoRudy91(const LibUtilities::SessionReaderSharedPtr& pSession,
-                  const int nq);
+                  const MultiRegions::ExpListSharedPtr& pField);
 
         /// Destructor
         virtual ~LuoRudy91() {}
@@ -71,6 +71,8 @@ namespace Nektar
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
 
+        /// Set initial conditions for the cell model
+        virtual void v_SetInitialConditions();
     };
 }
 

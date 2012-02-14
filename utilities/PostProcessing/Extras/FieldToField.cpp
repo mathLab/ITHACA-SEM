@@ -32,7 +32,8 @@ int main(int argc, char *argv[])
 		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
                 bool homogeneous);
-    void Readflddef(string fieldfile, Array<OneD, std::string> &variables, bool &homogeneous);
+    void Readflddef(string fieldfile, 
+                    Array<OneD, std::string> &variables, bool &homogeneous);
 
     void GenerateField(MultiRegions::ExpListSharedPtr field0,
     	               Array<OneD, NekDouble> x1,
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
     	                      Array<OneD, NekDouble> x1,
     	                      Array<OneD, NekDouble> y1); 
     void Writefield(LibUtilities::SessionReaderSharedPtr vSession,
+                    Array<OneD, std::string> &variables,
     	            string fieldfile, SpatialDomains::MeshGraphSharedPtr &graph,  	    
     	            Array<OneD, MultiRegions::ExpListSharedPtr> &outfield);    
 
@@ -81,7 +83,7 @@ int main(int argc, char *argv[])
     Array<OneD, std::string> variables ;
 cout<<fieldfile0<<endl;
     bool homo=false;
-    //Readflddef(fieldfile0, variables, homo);
+    Readflddef(fieldfile0, variables, homo);
 
 
 
@@ -209,7 +211,7 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
     //------------------------------------------------
     
     //write fieldfile
-    Writefield(vSession, fieldfile1, graphShPt1,outfield);        
+    Writefield(vSession, variables, fieldfile1, graphShPt1,outfield);        
     //------------------------------------------------
 }
 
@@ -549,6 +551,7 @@ cout<<variables[0]<<endl;
 
 
 	void Writefield(LibUtilities::SessionReaderSharedPtr vSession,
+                    Array<OneD, std::string> &variables,
     	            string fieldfile, SpatialDomains::MeshGraphSharedPtr &graph,  	    
     	            Array<OneD, MultiRegions::ExpListSharedPtr> &outfield)
     	{
@@ -564,7 +567,8 @@ cout<<variables[0]<<endl;
 		     fieldcoeffs[j] = outfield[j]->UpdateCoeffs();			
 		     for(int i=0; i< FieldDef.size(); i++)
 		     {		     	     
-		     	   var = vSession->GetVariable(j);		     	   		     	   
+		     	   //var = vSession->GetVariable(j);		     	   		    
+                           var =  variables[j];	   
 		     	   FieldDef[i]->m_fields.push_back(var);   
 		     	   outfield[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);  
 		     }

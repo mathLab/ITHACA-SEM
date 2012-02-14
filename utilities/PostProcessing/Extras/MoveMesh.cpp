@@ -21,7 +21,6 @@
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/lexical_cast.hpp>
-//#include <SpatialDomains/Conditions.h>
 
 using namespace Nektar;
 
@@ -577,7 +576,8 @@ cout<<"Cr x--y"<<endl;
           }
 cout<<u<<"      "<<Crlay_pointsx[u]<<"       "<<Crlay_pointsy[u]<<endl;          
     }
-    
+cout<<"num px="<<Crlay_pointsx.num_elements()<<endl;   
+/* 
     for(int r=0; r< Crlay_pointsx.num_elements(); r++)
     {
 cout<<r<<"     "<<Crlay_pointsx[r]<<"                "<<Crlay_pointsy[r]
@@ -587,7 +587,7 @@ cout<<r<<"     "<<Crlay_pointsx[r]<<"                "<<Crlay_pointsy[r]
 *(Crlay_pointsy[r+1]- Crlay_pointsy[r])) <<endl;
     }
     
-   
+*/   
     
     
     Array<OneD, NekDouble> curve_coeffs (nedges*(npedge-2)+nedges+1);
@@ -1399,7 +1399,7 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
             if(xscal)
             {
                  std::string xscalstr = xscal;
-                 int expr_id = expEvaluator.DefineFunction("",xscalstr);
+                 int expr_id  = expEvaluator.DefineFunction("",xscalstr);
                  xscale = expEvaluator.Evaluate0(expr_id);
             }
             

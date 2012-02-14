@@ -19,7 +19,6 @@
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <LocalRegions/MatrixKey.h>
-#include <SpatialDomains/Conditions.h>
 
 
 using namespace Nektar;
@@ -30,7 +29,9 @@ int main(int argc, char *argv[])
         SpatialDomains::BoundaryConditionsSharedPtr& boundaryConditions,
 		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
-    void Extractlayerdata(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
+    void Extractlayerdata(Array<OneD, int> Iregions, int coordim, 
+            SpatialDomains::MeshGraphSharedPtr &mesh,   
+            LibUtilities::SessionReaderSharedPtr &session,
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
@@ -240,7 +241,7 @@ cout<<"OOOK"<<endl;
    
     //for 2 variables(u,v) only:
     int coordim = graphShPt->GetMeshDimension();              	   
-    Extractlayerdata(Ilayers,coordim, graphShPt, bcs, fields, outfieldx,outfieldy,streak);       	       
+    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, fields, outfieldx,outfieldy,streak);       	       
 
     //--------------------------------------------------------------------------------------
 
@@ -419,12 +420,14 @@ cout<<"OOOK"<<endl;
             }   
         }   	    
 
-       void  Extractlayerdata(Array<OneD, int> Iregions,int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,
-       	       SpatialDomains::BoundaryConditions &bcs,
-       	       Array<OneD,MultiRegions::ExpListSharedPtr> &infields, 
-       	       MultiRegions::ContField1DSharedPtr &outfieldx,
-       	       MultiRegions::ContField1DSharedPtr &outfieldy,
-       	       MultiRegions::ExpListSharedPtr &streak)
+       void  Extractlayerdata(Array<OneD, int> Iregions, int coordim, 
+            SpatialDomains::MeshGraphSharedPtr &mesh,   
+            LibUtilities::SessionReaderSharedPtr &session,
+    	    SpatialDomains::BoundaryConditions &bcs,
+    	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
+    	    MultiRegions::ContField1DSharedPtr &outfieldx,
+       	    MultiRegions::ContField1DSharedPtr &outfieldy,
+       	    MultiRegions::ExpListSharedPtr &streak)
         {
             //1 I regions is expected: (the layer is the last region)
             ASSERTL0(Iregions.num_elements()==3, "something wrong with the number of I layers");
@@ -919,8 +922,8 @@ cout<<"layer region="<<Ireg<<endl;
  
 
             Array<OneD, NekDouble> dUcoeffs(Nregcoeffs,0.0);
-            outfieldx->FwdTrans(dUreg, dUcoeffs);
-            outfieldx->BwdTrans(dUcoeffs, dUreg);
+            //outfieldx->FwdTrans(dUreg, dUcoeffs);
+            //outfieldx->BwdTrans(dUcoeffs, dUreg);
 
                    
 
@@ -1090,6 +1093,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
            //n0=2*pi*(2/3)^(2/3)*(-2/3)! = 2*pi*(2/3)^(2/3)*gamma(1/3)
            NekDouble gamma13 = 2.6789385347077476336556929409746776441286893779573011009;
            NekDouble n0 = 12.845424015;
+           //use the session to get the values of rho,alpha...
            NekDouble rho =1;
            NekDouble alpha;
 	   alpha = 1;

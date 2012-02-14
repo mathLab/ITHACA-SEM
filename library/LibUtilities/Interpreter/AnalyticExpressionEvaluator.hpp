@@ -411,7 +411,7 @@ namespace Nektar
 
             ///  Factory method which makes code little less messy
             template<typename StepType>
-            LIB_UTILITIES_EXPORT EvaluationStep* makeStep(int dest, int src_left = 0, int src_right = 0)
+            EvaluationStep* makeStep(int dest, int src_left = 0, int src_right = 0)
             {
                 return ( new StepType ( m_state,m_constant,m_parameter,m_variable,dest,src_left,src_right ) );
             }

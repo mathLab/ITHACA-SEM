@@ -555,7 +555,7 @@ namespace expt
             const unsigned int r = accumulator.GetRows(); \
             for(unsigned int i = 0; i < r; ++i) \
             { \
-                accumulator[i] = t0[i] \
+                a[i] = t0[i] \
                 BOOST_PP_REPEAT_FROM_TO(1, n, NEKTAR_NEKVECTOR_UNROLL_GENERATE_VARIABLE_NAME_IN_ADDITION_SEQUENCE, t); \
             } \
         } \
@@ -648,23 +648,22 @@ namespace expt
         // Lhs and Rhs must result in a vector.
         // Op must be Plus or Minus
         // Must apply recursively.
-        template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
-        struct BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index,
-            typename boost::enable_if
-            <
+    template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
+    struct BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index,
+        typename boost::enable_if
+        <
             NodeCanUnroll<expt::Node<LhsType, Op, RhsType> >
-            >::type
-         > : public boost::true_type 
-        {
-                static const int endIndex = index + LhsType::TotalCount + RhsType::TotalCount;
-                
+        >::type> : public boost::true_type 
+    {
+        static const int endIndex = index + LhsType::TotalCount + RhsType::TotalCount;
+
         template<typename ResultType, typename ArgumentVectorType>
         static inline void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
-                {
+        {
             Unroll<IndicesType, index, endIndex>::Execute(accumulator, args);
-                }
+        }
     };
-            }
+}
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 

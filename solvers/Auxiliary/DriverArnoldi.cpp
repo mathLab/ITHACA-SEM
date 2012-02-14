@@ -32,6 +32,7 @@
 // Description: Base Driver class for the stability solver
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <iomanip>
 
 #include <Auxiliary/DriverArnoldi.h>
 
@@ -62,9 +63,9 @@ namespace Nektar
     {
     	Driver::v_InitObject(out);
     	
-        m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_TimeSteppingAlgorithm, false);
+        m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
 
-        if(m_TimeSteppingAlgorithm)
+        if(m_timeSteppingAlgorithm)
         {
             m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
             m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
@@ -119,7 +120,7 @@ namespace Nektar
             out << "\tBeta set to Zero       : false " << endl;
         }
 
-        if(m_TimeSteppingAlgorithm)
+        if(m_timeSteppingAlgorithm)
         {
             out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
         }
@@ -141,7 +142,7 @@ namespace Nektar
     void DriverArnoldi::CopyArnoldiArrayToField(Array<OneD, NekDouble> &array)
     {
         Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-        if(m_TimeSteppingAlgorithm)
+        if(m_timeSteppingAlgorithm)
         {
             fields = m_equ[0]->UpdateFields();
         }
@@ -184,7 +185,7 @@ namespace Nektar
     {
         Array<OneD, MultiRegions::ExpListSharedPtr> fields;
         
-        if(m_TimeSteppingAlgorithm)
+        if(m_timeSteppingAlgorithm)
         {
             fields = m_equ[0]->UpdateFields();
             int nq = fields[0]->GetNcoeffs();
@@ -236,4 +237,40 @@ namespace Nektar
         m_equ[0]->WriteFld(file,m_equ[0]->UpdateFields()[0], fieldcoeffs, variables);
     }
 
+    void DriverArnoldi::WriteEvs(ostream &evlout, const int i,  const NekDouble re_ev, const NekDouble im_ev, NekDouble resid)
+    {
+        if(m_timeSteppingAlgorithm)
+        {
+            NekDouble abs_ev = hypot (re_ev, im_ev);
+            NekDouble ang_ev = atan2 (im_ev, re_ev);
+
+            evlout << setw(2)  << i
+                   << setw(12) << abs_ev
+                   << setw(12) << ang_ev
+                   << setw(12) << log (abs_ev) / m_period
+                   << setw(12) << ang_ev       / m_period;
+            
+            if(resid != NekConstants::kNekUnsetDouble)
+            {
+                evlout << setw(12) << resid;
+            }
+            evlout << endl;
+        }
+        else
+        {
+            NekDouble invmag = 1.0/(re_ev*re_ev + im_ev*im_ev);
+            
+            evlout << setw(2)  <<  i
+                   << setw(14) <<  re_ev
+                   << setw(14) <<  im_ev
+                   << setw(14) <<  -re_ev*invmag + m_realShift
+                   << setw(14) <<   im_ev*invmag;
+            
+            if(resid != NekConstants::kNekUnsetDouble)
+            {
+                evlout << setw(12) << resid; 
+            }
+            evlout << endl;
+        }
+    }
 }

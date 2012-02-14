@@ -172,9 +172,8 @@ namespace Nektar
         int cycle = 0;
         const char* problem = ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")].c_str();
         
-        FILE *pFile;
         std::string name = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.'))+".evl";
-        pFile= fopen (name.c_str(), "w");
+        ofstream pFile(name.c_str());
         
         ido     = 0;    //At the first call must be initialisedat 0
         
@@ -188,18 +187,28 @@ namespace Nektar
                             &workl[0], lworkl, info);
             
             //Plotting of real and imaginary part of the eigenvalues from workl
-            out << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush <<endl;
+            out << "\rIteration " << cycle << ", output: " << info << ", ido=" << ido << " " << std::flush;
 
             if(!((cycle-1)%m_kdim)&&(cycle> m_kdim))
             {
+                pFile << "Krylov spectrum at iteration: " <<  cycle << endl;
+
+                    if(m_timeSteppingAlgorithm)
+                    {
+                        pFile << "EV  Magnitude   Angle       Growth      Frequency   Residual"    << endl;
+                    }
+                    else
+                    {
+                        pFile << "EV  Real        Imaginary   inverse real  inverse imag  Residual"   << endl;
+                }
+
                 out << endl;
-                fprintf (pFile, "Krylov spectrum at iteration: %i\t \n", cycle);
                 for(int k=0; k<=m_kdim-1; ++k)
                 {                    
                     // write m_nvec eigs to screen
                     if(m_kdim-1-k < m_nvec)
                     {
-                        WriteEvs(stdout,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
+                        WriteEvs(out,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
                     }
                     // write m_kdim eigs to screen
                     WriteEvs(pFile,k, workl[ipntr[5]-1+k],workl[ipntr[6]-1+k]);
@@ -219,7 +228,11 @@ namespace Nektar
 
             m_equ[0]->DoSolve();
 
-            m_equ[0]->Output();
+            if(!(cycle%m_infosteps))
+            {
+                out << endl;
+                m_equ[0]->Output();
+            }
 
             if(m_EvolutionOperator == eTransientGrowth)
             {
@@ -256,12 +269,22 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
         
         out << "Converged Eigenvalues: " << nconv << endl;
-        fprintf(pFile,"Converged Eigenvalues: %d\n:",nconv);
+        pFile << "Converged Eigenvalues:"<< nconv << endl;
+
+        if(m_timeSteppingAlgorithm)
+        {
+            pFile << "EV  Magnitude   Angle       Growth      Frequency" << endl;
+        }
+        else
+        {
+            pFile << "EV  Real        Imaginary   inverse real  inverse imag" << endl;
+        }
+
 		
         for(int i= 0; i< nconv; ++i)
         {
-            WriteEvs(stdout,i,dr[i],di[i]);
-            WriteEvs(pFile ,i,dr[i],di[i]);
+            WriteEvs(out,i,dr[i],di[i]);
+            WriteEvs(pFile,i,dr[i],di[i]);
 			
             std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
             
@@ -270,8 +293,8 @@ namespace Nektar
         
         m_real_evl = dr;
         m_imag_evl = di;
-        fclose (pFile);
-        
+       
+        pFile.close();
         
 	for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
         {
@@ -285,16 +308,4 @@ namespace Nektar
         }
     }
 
-    void DriverArpack::WriteEvs(FILE *fp, const int k,  const NekDouble real, const NekDouble imag)
-    {
-        if(m_TimeSteppingAlgorithm)
-        {
-            fprintf (fp, "EV: %i\t , Mag: %10.6lf\t, angle:  %10.6lf\t, growth:  %10.6le\t, Frequency:  %10.6le \n",k, sqrt(real*real+imag*imag), atan2(imag,real),log(sqrt(real*real+imag*imag))/m_period, atan2(imag,real)/m_period );
-        }
-        else
-        {
-            NekDouble invmag = 1.0/(real*real + imag*imag);
-            fprintf (fp, "EV: %i\t , Re: %10.6lf\t Imag:  %10.6lf\t inverse real:  %10.6le\t, inverse imag:  %10.6le\n",k, real, imag,-real*invmag, imag*invmag);
-        }
-    }
 }

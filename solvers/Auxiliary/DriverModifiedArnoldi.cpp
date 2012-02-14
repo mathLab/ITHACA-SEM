@@ -139,7 +139,7 @@ namespace Nektar
          
          // Normalise first vector in sequence
          alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
-         alpha[0] = std::sqrt(alpha[0]);
+         //alpha[0] = std::sqrt(alpha[0]);
          Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
 
          // Fill initial krylov sequence
@@ -151,14 +151,14 @@ namespace Nektar
              
              // Normalise
              alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
-             alpha[i] = std::sqrt(alpha[i]);
+             //alpha[i] = std::sqrt(alpha[i]);
              Vmath::Smul(ntot, 1.0/alpha[i], Kseq[i], 1, Kseq[i], 1);
              
              // Copy Krylov sequence into temporary storage
              for (int k = 0; k < i + 1; ++k)
              {
                  Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
-            }
+             }
              
              // Generate Hessenberg matrix and compute eigenvalues of it.
              EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
@@ -189,7 +189,7 @@ namespace Nektar
                  
                  // Compute new scale factor
                  alpha[m_kdim] = std::sqrt(Vmath::Dot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1));
-                 alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
+                 //alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
                  Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1, Kseq[m_kdim], 1);
                  
                 // Copy Krylov sequence into temporary storage
@@ -359,49 +359,22 @@ namespace Nektar
 		
         evlout.precision(4);
         evlout.setf(ios::scientific, ios::floatfield);
-        if(m_TimeSteppingAlgorithm)
+        if(m_timeSteppingAlgorithm)
         {
             evlout << "EV  Magnitude   Angle       Growth      Frequency   Residual"
                    << endl;
-            for (int i = 0; i < kdim; i++) 
-            {
-                re_ev  = wr[i];
-                im_ev  = wi[i];
-                abs_ev = hypot (re_ev, im_ev);
-                ang_ev = atan2 (im_ev, re_ev);
-                re_Aev = log (abs_ev) / m_period;
-                im_Aev = ang_ev       / m_period;
-                evlout << setw(2)  << i
-                       << setw(12) << abs_ev
-                       << setw(12) << ang_ev
-                       << setw(12) << re_Aev
-                       << setw(12) << im_Aev
-                       << setw(12) << resid[i]
-                       << endl;
-            }
         }
         else
         {
-            evlout << "EV  Magnitude   Angle      inverse real  inverse imag  Residual"
+            evlout << "EV  Real        Imaginary   inverse real  inverse imag  Residual"
                    << endl;
-            for (int i = 0; i < kdim; i++) 
-            {
-                re_ev  = wr[i];
-                im_ev  = wi[i];
-                abs_ev = hypot (re_ev, im_ev);
-                ang_ev = atan2 (im_ev, re_ev);
-                re_Aev = -wr[i]/(abs_ev*abs_ev) + m_realShift;
-                im_Aev =  wi[i]/(abs_ev*abs_ev);
-                evlout << setw(2)  << i
-                       << setw(12) << abs_ev
-                       << setw(12) << ang_ev
-                       << setw(12) << re_Aev
-                       << setw(12) << im_Aev
-                       << setw(12) << resid[i]
-                       << endl;
-            }
-            
         }
+        
+	for (int i = 0; i < kdim; i++) 
+        {
+             WriteEvs(evlout,i,wr[i],wi[i],resid[i]);
+        }
+            
 	
         resid0 = resid[nvec-1];
         return idone;

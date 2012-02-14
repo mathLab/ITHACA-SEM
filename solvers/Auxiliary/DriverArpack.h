@@ -59,7 +59,6 @@ namespace Nektar
         static std::string className;
 
 
-        void WriteEvs(FILE *fp, const int k, const NekDouble real, const NekDouble imag);
                 
     protected:
         int m_maxn;			//Maximum size of the problem

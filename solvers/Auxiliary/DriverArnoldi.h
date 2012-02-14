@@ -54,7 +54,7 @@ namespace Nektar
         int       m_nits; /// Maxmum number of iterations
         NekDouble m_evtol;/// Tolerance of iteratiosn
         NekDouble m_period;/// Period of time stepping algorithm 
-        bool      m_TimeSteppingAlgorithm; /// underlying operator is time stepping
+        bool      m_timeSteppingAlgorithm; /// underlying operator is time stepping
         
         int       m_infosteps; /// interval to dump information if required. 
 
@@ -85,6 +85,10 @@ namespace Nektar
         void WriteFld(std::string file, Array<OneD, Array<OneD, NekDouble> > coeffs);
 
         void WriteFld(std::string file, Array<OneD, NekDouble> coeffs);
+
+        void WriteEvs(ostream &evlout, const int k, 
+                      const NekDouble real, const NekDouble imag, 
+                      NekDouble resid = NekConstants::kNekUnsetDouble);
 
         virtual void v_InitObject(ostream &out = cout);
 

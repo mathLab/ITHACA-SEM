@@ -99,7 +99,7 @@ namespace Nektar
         /// Number of variables in cell model (inc. transmembrane voltage)
         int m_nvar;
         /// Timestep for pde model
-        NekDouble m_timestep;
+        NekDouble m_lastTime;
         /// Number of substeps to take
         int m_substeps;
 

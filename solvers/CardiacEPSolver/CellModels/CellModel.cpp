@@ -66,7 +66,7 @@ namespace Nektar
     {
         m_session = pSession;
         m_field = pField;
-        m_timestep = pSession->GetParameter("TimeStep");
+        m_lastTime = 0.0;
         m_substeps = pSession->GetParameter("Substeps");
         m_nvar = 0;
         m_nq = pField->GetTotPoints();
@@ -122,7 +122,7 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble time)
     {
-        NekDouble delta_t = m_timestep/m_substeps;
+        NekDouble delta_t = (time - m_lastTime)/m_substeps;
 
         // Copy new transmembrane potential into cell model
         Vmath::Vcopy(m_nq, inarray[0], 1, m_cellSol[0], 1);
@@ -168,5 +168,7 @@ namespace Nektar
             Vmath::Vsub(m_nq, m_cellSol[m_gates[j]], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
             Vmath::Vvtvp(m_nq, m_cellSol[m_gates[j]], 1, m_gates_tau[j], 1, m_wsp[m_gates[j]], 1, m_cellSol[m_gates[j]], 1);
         }
+
+        m_lastTime = time;
     }
 }

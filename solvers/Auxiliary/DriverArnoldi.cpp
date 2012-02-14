@@ -74,6 +74,17 @@ namespace Nektar
             m_period  = 1.0;
             ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
             m_nfields = m_equ[0]->UpdateFields().num_elements();
+
+	    for(int i = 0; i < m_nfields; ++i)
+            {
+               m_equ[0]->UpdateForces()[i]->SetWaveSpace(true);
+            }
+
+        }
+
+	for(int i = 0; i < m_nfields; ++i)
+        {
+	   m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
         }
 
         m_session->LoadParameter("kdim",  m_kdim,  16);

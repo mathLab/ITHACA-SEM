@@ -1974,6 +1974,8 @@ namespace Nektar
         {
             for (i = 0; i < npoints; ++i)
             {
+                vtx = m_historyPoints->GetHistoryPoint(i);
+                vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
                 ASSERTL0(idList[i] != -1, "History point " +
                         boost::lexical_cast<std::string>(gloCoord[0]) + ", " +
                         boost::lexical_cast<std::string>(gloCoord[1]) + ", " +

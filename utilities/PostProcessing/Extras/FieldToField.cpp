@@ -502,11 +502,18 @@ cout<<variables[0]<<endl;
              {
                    coords[0] = x1[r];
                    coords[1] = y1[r];
-//cout<<"x="<<x1[r]<<"   y="<<y1[r]<<endl;                   
+                  
                    elmtid = field0->GetExpIndex(coords, 0.00001);
                    offset = field0->GetPhys_Offset(elmtid);
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->
-                           PhysEvaluate(coords, field0->GetPhys() +offset);
+                           PhysEvaluate(coords, field0->GetPhys() +offset);    
+                   if( isnan(field1->UpdatePhys()[r]) )
+                   {            
+cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
+cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
+                       //ASSERTL0( abs(field1->UpdatePhys()[r])<10000000000, "interp failed");
+                   }
+
              }        
 	}	
 

@@ -1094,7 +1094,9 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
            NekDouble gamma13 = 2.6789385347077476336556929409746776441286893779573011009;
            NekDouble n0 = 12.845424015;
            //use the session to get the values of rho,alpha...
-           NekDouble rho =1;
+           NekDouble rho ;
+           //rho = 0.08;
+           rho = session->GetParameter("RHO");
            NekDouble alpha;
 	   alpha = 1;
            NekDouble alpha53=1;
@@ -1126,9 +1128,9 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 //start   
          	              	    
             	(outfieldx->UpdatePhys())[j] = 
-            	  (vjump[j]*tx[j]-pjump[j]);
+            	  rho*rho*(vjump[j]*tx[j]-pjump[j]);
             	(outfieldy->UpdatePhys())[j] =
-            	   (vjump[j]*ty[j]-pjump[j]);		   
+            	   rho*rho*(vjump[j]*ty[j]-pjump[j]);		   
 //end
 
 //decomment
@@ -1141,6 +1143,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             }
             //FINAL REFINEMENT:::
 //start
+      
             Array<OneD, NekDouble> finalcoeffs (Nregcoeffs);
             outfieldx->FwdTrans(outfieldx->GetPhys(), finalcoeffs);
             outfieldx->BwdTrans(finalcoeffs, outfieldx->UpdatePhys());      

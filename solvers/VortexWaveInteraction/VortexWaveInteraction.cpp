@@ -724,105 +724,121 @@ namespace Nektar
 	//roll session file to use the interface loop
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
 	{
-            static int cnt=0;
-            string syscall;
-            //rewrite the Rollsessionfile (we start from the waleffe forcing)
-            //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
-            //if(cnt==0)
-            //{
-            //take the conditions tag from meshbndjumps and copy into 
-            // the rolls session file
-            //}
-            char c[16]="";
-            sprintf(c,"%d",cnt);  
-            //save old roll solution
-            string oldroll = m_sessionName +"_roll_"+c +".fld";    
-            syscall = "cp -f " + m_sessionName+".fld" + "  " + oldroll;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            } 
-            //move the mesh around the critical layer
-            string filePost   = m_sessionName + "_advPost.xml";
-            string filestreak   = m_sessionName + "_streak.fld";
-            syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
-                + filePost +"  "+ filestreak +"  "+ filePost; 
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            }
-            //interpolate the streak field into the new mesh
-            string movedmesh = m_sessionName + "_advPost_moved.xml";
+             static int cnt=0;
+             string syscall;
+             //rewrite the Rollsessionfile (we start from the waleffe forcing)
+             //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
+             //if(cnt==0)
+             //{
+                 //take the conditions tag from meshbndjumps and copy into 
+                 // the rolls session file
+             //}
+             char c[16]="";
+    	     sprintf(c,"%d",cnt);  
+             //save old roll solution
+             string oldroll = m_sessionName +"_roll_"+c +".fld";    
+	     syscall = "cp -f " + m_sessionName+"-Base.fld" + "  " + oldroll;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
+	     //move the mesh around the critical layer
+             string filePost   = m_sessionName + "_advPost.xml";
+             string filestreak   = m_sessionName + "_streak.fld";
+             syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+                             + filePost +"  "+ filestreak +"  "+ filePost; 
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+	     //interpolate the streak field into the new mesh
+             string movedmesh = m_sessionName + "_advPost_moved.xml";
 
-            //save oldstreak
-            string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
-            syscall = "cp -f " + filestreak + "  " + oldstreak;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            } 
-            //overwriting the streak file!!
-            string interpfield = filestreak;
-            syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
-                + filePost + "  " + filestreak + "  " + movedmesh + "  " 
-                + interpfield;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            }
-            //save the old mesh     
-            string meshfile = m_sessionName + ".xml";                  
-            string meshold = m_sessionName +"_"+ c +".xml";
-            syscall = "cp -f " + meshfile + "  " + meshold;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            } 
+             //save oldstreak
+             string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
+	     syscall = "cp -f " + filestreak + "  " + oldstreak;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
+             //overwriting the streak file!!
+             string interpfield = filestreak;
+             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                      + filePost + "  " + filestreak + "  " + movedmesh + "  " 
+	              + interpfield;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+             //save the old mesh     
+             string meshfile = m_sessionName + ".xml";                  
+             string meshold = m_sessionName +"_"+ c +".xml";
+	     syscall = "cp -f " + meshfile + "  " + meshold;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
 
-            //overwriting the meshfile with the new mesh
-            syscall = "cp -f " + movedmesh + "  " + meshfile;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            }
+             //overwriting the meshfile with the new mesh
+	     syscall = "cp -f " + movedmesh + "  " + meshfile;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
 
 
-            //calculate the wave
-            ExecuteWave();
-            //save old jump conditions:
-            string ujump = m_sessionName+"_u_5.bc";
-            syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            }              
+             //calculate the wave
+             ExecuteWave();
+             //save the wave field:
+             string oldwave = m_sessionName +"_wave_"+c +".fld";    
+	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
 
-            string vjump = m_sessionName+"_v_5.bc";
-            syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            }    
-            cnt++;
-            char c1[16]="";
-            sprintf(c1,"%d",cnt);   
-            //calculate the jump conditions
-            string wavefile  = m_sessionName +".fld"; 
-            syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
-                + movedmesh + "  " + wavefile + "  " + interpfield + ">  data"+c1;
-            cout<<syscall.c_str()<<endl;
-            if(system(syscall.c_str()))
-            {
-                ASSERTL0(false,syscall.c_str());
-            }
+             //save old jump conditions:
+             string ujump = m_sessionName+"_u_5.bc";
+	     syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }              
+
+             string vjump = m_sessionName+"_v_5.bc";
+	     syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }    
+             cnt++;
+             char c1[16]="";
+    	     sprintf(c1,"%d",cnt);   
+             //calculate the jump conditions
+             string wavefile  = m_sessionName +".fld"; 
+             syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                     + movedmesh + "  " + wavefile + "  " + interpfield + ">  data"+c1;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+             //move the new name_advPost_moved.xml into name_advPost.xml
+	     syscall = "cp -f " + movedmesh + "  " + filePost;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }     
 
 	}
 	else

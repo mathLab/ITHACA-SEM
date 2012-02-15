@@ -195,7 +195,7 @@ cout<<"nIregions="<<nIregions<<endl;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-1], 
         	Vids_low, v1, v2 , x_connect, lastedge, xold_low, yold_low );          
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_low[v1]);     
-cout<<"Vids low="<<Vids_low[v1]<<endl;         
+//cout<<"Vids low="<<Vids_low[v1]<<endl;         
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
@@ -215,7 +215,7 @@ cout<<"Vids low="<<Vids_low[v1]<<endl;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2 ], 
         	Vids_up, v1, v2 , 0 ,lastedge, xold_up, yold_up);    
     SpatialDomains::VertexComponentSharedPtr vertexU = graphShPt->GetVertex(Vids_up[v2]);    
-cout<<"VIdup="<<Vids_up[v2]<<endl;
+//cout<<"VIdup="<<Vids_up[v2]<<endl;
     //update x_connect    
     vertexU->GetCoords(x_connect,yt,zt);
       
@@ -226,7 +226,7 @@ cout<<"VIdup="<<Vids_up[v2]<<endl;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2], 
          	Vids_up, v1, v2 , x_connect, lastedge, xold_up, yold_up );          
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_up[v1]);  
-cout<<"VIdup="<<Vids_up[v1]<<endl;   
+//cout<<"VIdup="<<Vids_up[v1]<<endl;   
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
@@ -493,8 +493,8 @@ cout<<"VIdup="<<Vids_up[v1]<<endl;
 	 if(x2>x1)
 	 {
 	     Cpointsx[r] = x1 +(x2-x1)/2;             
-cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<"   Cx="<<Cpointsx[r]<<endl;
-cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
+//cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<"   Cx="<<Cpointsx[r]<<endl;
+//cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	     if( Cpointsx[r]>x2 || Cpointsx[r]< x1)
 	     {
 	     	  Cpointsx[r] = -Cpointsx[r];		  
@@ -535,17 +535,15 @@ cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	 {
 	      ASSERTL0(false, "point not generated"); 	 
 	 }    	    
-cout<<"calculate cpoints coords"<<endl;	 
+//cout<<"calculate cpoints coords"<<endl;	 
          Cpointsy[r] = y1 + (y2-y1)/2;
          GenerateAddPointsNewtonIt( Cpointsx[r], Cpointsy[r],Cpointsx[r], Cpointsy[r],
     	       streak, derstreak); 
          NekDouble diff = Cpointsy[r]-Addpointsy[r*(npedge-2)];
-cout<<"diff="<<diff<<endl;         
+//cout<<"diff="<<diff<<endl;         
 	 Eids[r] = Eid;
 
-    }   
-    //TETST!!!!
-cout<<"test!!!"<<endl;    
+    }      
 
     
     //generate the closest curve to the critical layer positions taking 
@@ -574,9 +572,9 @@ cout<<"Cr x--y"<<endl;
     	       Crlay_pointsy[u] = Addpointsy[cnt2];    	       
     	       cnt2++;
           }
-cout<<u<<"      "<<Crlay_pointsx[u]<<"       "<<Crlay_pointsy[u]<<endl;          
+//cout<<u<<"      "<<Crlay_pointsx[u]<<"       "<<Crlay_pointsy[u]<<endl;          
     }
-cout<<"num px="<<Crlay_pointsx.num_elements()<<endl;   
+//cout<<"num px="<<Crlay_pointsx.num_elements()<<endl;   
 /* 
     for(int r=0; r< Crlay_pointsx.num_elements(); r++)
     {
@@ -594,7 +592,7 @@ cout<<r<<"     "<<Crlay_pointsx[r]<<"                "<<Crlay_pointsy[r]
     //generate the curve
     //NB:: for a high number of points (>20)  it does not work for all 
     // points
-cout<<"CALL generate curve"<<nedges*(npedge-2)+nedges+1<<endl;    
+//cout<<"CALL generate curve"<<nedges*(npedge-2)+nedges+1<<endl;    
     //GenerateCurve(nedges*(npedge-2)+nedges+1, 0, Crlay_pointsx, Crlay_pointsy, curve_coeffs);    
     //calculate the coords of the additional points as y=poly(x)
     //HYPOTHESES: 
@@ -1148,7 +1146,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 	           }
                    yc[e] = coord[1];
 	           //Utilities::Zerofunction(coord[0], coord[1], xtest, ytest, streak, derstreak);
-cout<<"result x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
+//cout<<"result x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
               }
            
 		
@@ -1161,10 +1159,10 @@ cout<<"result x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;
 		Array<OneD, NekDouble> coords(2);	
 		coords[0] = xi;
 		coords[1] = yi;	
-cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
+//cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
 		elmtid = function->GetExpIndex(coords, 0.00001);
                 //@to do if GetType(elmtid)==triangular WRONG!!!
-cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
+//cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
 		offset = function->GetPhys_Offset(elmtid);
 		F =1000;
 		while( abs(F)> 0.00000001)
@@ -1177,7 +1175,7 @@ cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;
 	        }
 	        x0 = xi;
 	        y0 = coords[1];
-cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;	        
+//cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;	        
 	}
 
         void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
@@ -1185,7 +1183,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
     	{
     	    int N= npoints;
     	    int totpoints = npoints + npused;
-cout<<"totppoints="<<totpoints<<endl;    	    
+//cout<<"totppoints="<<totpoints<<endl;    	    
     	    Array<OneD, NekDouble> A (N*N,1.0);
     	    Array<OneD, NekDouble> b (N);
             int row=0;
@@ -1207,7 +1205,7 @@ cout<<"totppoints="<<totpoints<<endl;
     	        row++;       
 	    }
 	    
-cout<<"A elements="<<A.num_elements()<<endl;
+//cout<<"A elements="<<A.num_elements()<<endl;
             Array<OneD, int> ipivot (N);  
             int info =0;
             //Lapack::Dgesv( N, 1, A.get(), N, ipivot.get(),  b.get(), N, info);     
@@ -1241,12 +1239,12 @@ cout<<"A elements="<<A.num_elements()<<endl;
                     boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
                 ASSERTL0(false, message.c_str());
             }
-cout<<"coeffs a,b,c,d..."<<endl;
+//cout<<"coeffs a,b,c,d..."<<endl;
 	    //fill the coeffs array
 	    if(npused==0)
 	    {
 	        Vmath::Vcopy(totpoints, &(b[0]), 1, &(curve[npused]), 1);	
-cout<<b[1]<<"   ipiv="<<ipivot[1]<<endl;    	        
+//cout<<b[1]<<"   ipiv="<<ipivot[1]<<endl;    	        
 	    }
 	    else
 	    {
@@ -1255,7 +1253,7 @@ cout<<b[1]<<"   ipiv="<<ipivot[1]<<endl;
     	        {
     	    	   curve[a] = b[row];
     	    	   row++;
-cout<<curve[a]<<"   ipiv="<<ipivot[row-1]<<endl;    	    
+//cout<<curve[a]<<"   ipiv="<<ipivot[row-1]<<endl;    	    
 	        }
 	    }
 	    
@@ -1329,8 +1327,8 @@ cout<<curve[a]<<"   ipiv="<<ipivot[row-1]<<endl;
             }
             int lastedge  = firstedge + (np-1);
             int lastcoeff  = firstcoeff + np;
-cout<<"firstedge="<<firstedge<<"  lastedge="<<lastedge<<"  firstcoeff="<<firstcoeff
-                              <<"  lastcoeff="<<lastcoeff<<endl;
+//cout<<"firstedge="<<firstedge<<"  lastedge="<<lastedge<<"  firstcoeff="<<firstcoeff
+//                              <<"  lastcoeff="<<lastcoeff<<endl;
             int polorder;	    
             for(int s= firstedge; s< lastedge; s++)
             {
@@ -1342,7 +1340,7 @@ cout<<"firstedge="<<firstedge<<"  lastedge="<<lastedge<<"  firstcoeff="<<firstco
 		 vertex2 = mesh->GetVertex(id2);     
 		 vertex1->GetCoords(x1,y1,z1);
 		 vertex2->GetCoords(x2,y2,z2);	
-cout<<"x1="<<x1<<"  x2="<<x2<<endl;		 
+//cout<<"x1="<<x1<<"  x2="<<x2<<endl;		 
 		 if(x2>x1)
 		 {
 		     outx[s] = x1 +(x2-x1)/2;
@@ -1509,11 +1507,11 @@ cout<<"x1="<<x1<<"  x2="<<x2<<endl;
    	    	   iss >> std::dec >> index; 
 		   //get the eid
                    edgenew->QueryIntAttribute("EDGEID", &eid);
-cout<<"eid="<<eid<<" neid="<<Eids.num_elements()<<endl;
+//cout<<"eid="<<eid<<" neid="<<Eids.num_elements()<<endl;
 	           //find the corresponding index curve point
 	           for(int u=0; u<Eids.num_elements(); u++)
 	           {
-cout<<"Eids="<<Eids[u]<<endl;	           	   
+//cout<<"Eids="<<Eids[u]<<endl;	           	   
 	               if(Eids[u]==eid)
 	               {
 	                  indexeid = u;

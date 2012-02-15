@@ -45,8 +45,9 @@ namespace Nektar
     
     enum VWIIterationType
     {
-        eFixedAlphaWaveForcing,
+        eFixedAlpha,
         eFixedWaveForcing,
+        eFixedAlphaWaveForcing,
         eFixedWaveForcingWithSubIterationOnAlpha,
         eVWIIterationTypeSize
     };
@@ -81,6 +82,7 @@ namespace Nektar
         bool CheckEigIsStationary(void);
         bool CheckIfAtNeutralPoint(void);
         void UpdateAlpha(int n);
+        void UpdateWaveForceMag(int n);
 
         void AppendEvlToFile(std::string file, int n);
         void AppendEvlToFile(std::string file, NekDouble WaveForceMag);
@@ -112,7 +114,7 @@ namespace Nektar
 
         NekDouble GetWaveForceMag(void)
         {
-            return m_waveForceMag;
+            return m_waveForceMag[0];
         }
 
         NekDouble GetWaveForceMagStep(void)
@@ -125,9 +127,9 @@ namespace Nektar
             return m_maxWaveForceMagIter;
         }
         
-        void UpdateWaveForceMag(NekDouble mag)
+        void SetWaveForceMag(NekDouble mag)
         {
-            m_waveForceMag = mag; 
+            m_waveForceMag[0] = mag; 
         }
 
 
@@ -147,9 +149,9 @@ namespace Nektar
         bool m_deltaFcnApprox;  // Activate delta function approximation around wave 
         NekDouble m_deltaFcnDecay;   // Delta function decay level 
 
-        NekDouble m_waveForceMag;
+        Array<OneD, NekDouble>  m_waveForceMag;
         NekDouble m_waveForceMagStep;
-
+        
         NekDouble m_rollForceScale; 
 
         Array<OneD, NekDouble> m_leading_real_evl;   /// < Leading real eigenvalue 
@@ -168,7 +170,7 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr              m_wavePressure;
         
         Array<OneD, Array<OneD, NekDouble > >  m_vwiForcing; 
-
+        
         Array<OneD, MultiRegions::ExpListSharedPtr> m_streakField; 
         
         string m_sessionName;

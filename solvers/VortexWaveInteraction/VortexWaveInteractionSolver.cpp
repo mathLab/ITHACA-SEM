@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
             
             vwi.AppendEvlToFile("ConvergedSolns",WaveForce);            
 
-            vwi.UpdateWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
+            vwi.SetWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
             // Save data directories. 
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
             {
@@ -116,15 +116,51 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
 
     switch(vwi.GetVWIIterationType())
     {
-    case eFixedAlphaWaveForcing:
-        
-        for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+    case eFixedAlpha:
         {
-            vwi.ExecuteLoop();
-            vwi.SaveLoopDetails("Save",i);
-            vwi.AppendEvlToFile("conv.his",i);            
+            int i;
+            int nouter_iter = vwi.GetNOuterIterations();
+            bool exit_iteration = false;
+            
+            while(exit_iteration == false)
+            {
+                for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+                {
+                    vwi.ExecuteLoop();
+                    vwi.SaveLoopDetails("Save", i);
+                    vwi.AppendEvlToFile("conv.his",i);            
+                        
+                    if(vwi.CheckEigIsStationary())
+                    {
+                        vwi.SaveLoopDetails("Save_Outer", nouter_iter);
+                        break;
+                    }
+                }
+                
+                // check to see if growth was converged. 
+                if(i == vwi.GetIterEnd())
+                {
+                    cout << "Failed to converge growth rate in" << 
+                        " inner iteration after " << vwi.GetIterEnd() 
+                         << " loops" << endl;
+                    exit(1);
+                }
+                
+                vwi.AppendEvlToFile("OuterIter.his",nouter_iter++);            
+                exit_iteration = vwi.CheckIfAtNeutralPoint();
+                if(exit_iteration == false)
+                {
+                    vwi.UpdateWaveForceMag(nouter_iter);
+                }
+                
+                if(nouter_iter >= vwi.GetMaxOuterIterations())
+                {
+                    cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
+                    exit_iteration = true;
+                }
+            }
+
         }
-        break;
     case eFixedWaveForcing:
         {
             int i;
@@ -168,6 +204,15 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     exit_iteration = true;
                 }
             }
+        }
+        break;
+    case eFixedAlphaWaveForcing:
+        
+        for(int i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
+        {
+            vwi.ExecuteLoop();
+            vwi.SaveLoopDetails("Save",i);
+            vwi.AppendEvlToFile("conv.his",i);            
         }
         break;
     case eFixedWaveForcingWithSubIterationOnAlpha:

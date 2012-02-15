@@ -67,8 +67,6 @@ namespace Nektar
         m_sessionVWI->LoadParameter("StartIteration", m_iterStart, 0);
         m_sessionVWI->LoadParameter("EndIteration", m_iterEnd, 0);
 
-        m_sessionVWI->LoadParameter("WaveForceMag", m_waveForceMag);
-
         m_sessionVWI->LoadParameter("WaveForceMagStep",m_waveForceMagStep,0.01);
         m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
         m_sessionVWI->LoadParameter("RollForceScale",m_rollForceScale,1.0);
@@ -85,9 +83,12 @@ namespace Nektar
         }
 
         m_alpha = Array<OneD, NekDouble> (storesize);
+        m_alpha[0]        = m_sessionVWI->GetParameter("Alpha");
+        m_waveForceMag      = Array<OneD, NekDouble> (storesize);
+        m_waveForceMag[0]  = m_sessionVWI->GetParameter("WaveForceMag");
+        
         m_leading_real_evl = Array<OneD, NekDouble> (storesize);
         m_leading_imag_evl = Array<OneD, NekDouble> (storesize);
-        m_alpha[0]        = m_sessionVWI->GetParameter("Alpha");
         
         if(m_sessionVWI->DefinesParameter("Relaxation"))
         {
@@ -175,23 +176,7 @@ namespace Nektar
         {
             switch(m_VWIIterationType)
             {
-            case eFixedAlphaWaveForcing:
-                {
-                    string nstr =  boost::lexical_cast<std::string>(m_iterStart);
-                    cout << "Restarting from iteration " << m_iterStart << endl;
-                    std::string rstfile = "cp -f Save/" + m_sessionName + ".rst." + nstr + " " + m_sessionName + ".rst"; 
-                    cout << "      " << rstfile << endl;
-                    if(system(rstfile.c_str()))
-                    {
-                        ASSERTL0(false,rstfile.c_str());
-                    }
-                    std::string vwifile = "cp -f Save/" + m_sessionName + ".vwi." + nstr + " " + m_sessionName + ".vwi"; 
-                    cout << "      " << vwifile << endl;
-                    if(system(vwifile.c_str()))
-                    {
-                        ASSERTL0(false,vwifile.c_str());
-                    }
-                }
+            case  eFixedAlpha:
                 break;
             case  eFixedWaveForcing:
                 {
@@ -229,6 +214,24 @@ namespace Nektar
                     }
                 }
                 break;
+            case eFixedAlphaWaveForcing:
+                {
+                    string nstr =  boost::lexical_cast<std::string>(m_iterStart);
+                    cout << "Restarting from iteration " << m_iterStart << endl;
+                    std::string rstfile = "cp -f Save/" + m_sessionName + ".rst." + nstr + " " + m_sessionName + ".rst"; 
+                    cout << "      " << rstfile << endl;
+                    if(system(rstfile.c_str()))
+                    {
+                        ASSERTL0(false,rstfile.c_str());
+                    }
+                    std::string vwifile = "cp -f Save/" + m_sessionName + ".vwi." + nstr + " " + m_sessionName + ".vwi"; 
+                    cout << "      " << vwifile << endl;
+                    if(system(vwifile.c_str()))
+                    {
+                        ASSERTL0(false,vwifile.c_str());
+                    }
+                }
+                break;
             default:
                 ASSERTL0(false,"Unknown VWIITerationType in restart");
             }
@@ -244,33 +247,31 @@ namespace Nektar
     void VortexWaveInteraction::ExecuteRoll(void)
     {
        //set up the equation system to update the mesh
-       if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
-       {
-              string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
-cout<<"eqtype="<<vEquation<<endl;
-              EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
-              //the forcing terms are inserted as N bcs
-
-       }
-       else
-       {
+        if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
+        {
+            string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
+            cout<<"eqtype="<<vEquation<<endl;
+            EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
+            //the forcing terms are inserted as N bcs
             
-        
-             // Read vwi file
-             std::string forcefile
+        }
+        else
+        {
+            // Read vwi file
+            std::string forcefile
                 = m_sessionRoll->GetFunctionFilename("BodyForce");
-
-             if(forcefile != "")
-             {
-                  m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
-
-                  // Scale forcing
-                  int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
-                  for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
-                  {
-                     Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
-                  }
-             }
+            
+            if(forcefile != "")
+            {
+                m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+                
+                // Scale forcing
+                int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+                for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
+                {
+                    Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+                }
+            }
         }
 
         // Execute Roll 
@@ -472,7 +473,7 @@ cout<<"eqtype="<<vEquation<<endl;
 #else
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[0]);
 #endif
-        Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[0],1,m_vwiForcing[0],1);
+        Vmath::Smul(ncoeffs,-m_waveForceMag[0],m_vwiForcing[0],1,m_vwiForcing[0],1);
 
         // d/dx(u v* + u* v)
         m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
@@ -491,7 +492,7 @@ cout<<"eqtype="<<vEquation<<endl;
         m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
 #endif
 
-        Vmath::Smul(ncoeffs,-m_waveForceMag,m_vwiForcing[1],1,m_vwiForcing[1],1);
+        Vmath::Smul(ncoeffs,-m_waveForceMag[0],m_vwiForcing[1],1,m_vwiForcing[1],1);
         
 #if 0 
         // Symmetrise forcing
@@ -687,10 +688,10 @@ cout<<"eqtype="<<vEquation<<endl;
          fclose(fp);
      }
 
-     void VortexWaveInteraction::SaveLoopDetails(std::string SaveDir, int i)
+    void VortexWaveInteraction::SaveLoopDetails(std::string SaveDir, int i)
 
-     {
-         // Save NS restart file
+    {
+        // Save NS restart file
         SaveFile(m_sessionName + ".rst",SaveDir,i+1);
         // Save Streak Solution
         SaveFile(m_sessionName + "_streak.fld",SaveDir,i);
@@ -701,8 +702,8 @@ cout<<"eqtype="<<vEquation<<endl;
         SaveFile(m_sessionName + ".fld",SaveDir,i);
         if(!(m_sessionVWI->DefinesSolverInfo("INTERFACE")))
         {
-             // Save new forcing file
-             SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
+            // Save new forcing file
+            SaveFile(m_sessionName + ".vwi",SaveDir,i+1);
         }
 
     }
@@ -723,105 +724,105 @@ cout<<"eqtype="<<vEquation<<endl;
 	//roll session file to use the interface loop
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
 	{
-             static int cnt=0;
-             string syscall;
-             //rewrite the Rollsessionfile (we start from the waleffe forcing)
-             //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
-             //if(cnt==0)
-             //{
-                 //take the conditions tag from meshbndjumps and copy into 
-                 // the rolls session file
-             //}
-             char c[16]="";
-    	     sprintf(c,"%d",cnt);  
-             //save old roll solution
-             string oldroll = m_sessionName +"_roll_"+c +".fld";    
-	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldroll;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
-	     //move the mesh around the critical layer
-             string filePost   = m_sessionName + "_advPost.xml";
-             string filestreak   = m_sessionName + "_streak.fld";
-             syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
-                             + filePost +"  "+ filestreak +"  "+ filePost; 
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
-	     //interpolate the streak field into the new mesh
-             string movedmesh = m_sessionName + "_advPost_moved.xml";
+            static int cnt=0;
+            string syscall;
+            //rewrite the Rollsessionfile (we start from the waleffe forcing)
+            //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
+            //if(cnt==0)
+            //{
+            //take the conditions tag from meshbndjumps and copy into 
+            // the rolls session file
+            //}
+            char c[16]="";
+            sprintf(c,"%d",cnt);  
+            //save old roll solution
+            string oldroll = m_sessionName +"_roll_"+c +".fld";    
+            syscall = "cp -f " + m_sessionName+".fld" + "  " + oldroll;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            } 
+            //move the mesh around the critical layer
+            string filePost   = m_sessionName + "_advPost.xml";
+            string filestreak   = m_sessionName + "_streak.fld";
+            syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+                + filePost +"  "+ filestreak +"  "+ filePost; 
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }
+            //interpolate the streak field into the new mesh
+            string movedmesh = m_sessionName + "_advPost_moved.xml";
 
-             //save oldstreak
-             string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
-	     syscall = "cp -f " + filestreak + "  " + oldstreak;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
-             //overwriting the streak file!!
-             string interpfield = filestreak;
-             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
-                      + filePost + "  " + filestreak + "  " + movedmesh + "  " 
-	              + interpfield;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
-             //save the old mesh     
-             string meshfile = m_sessionName + ".xml";                  
-             string meshold = m_sessionName +"_"+ c +".xml";
-	     syscall = "cp -f " + meshfile + "  " + meshold;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
+            //save oldstreak
+            string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
+            syscall = "cp -f " + filestreak + "  " + oldstreak;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            } 
+            //overwriting the streak file!!
+            string interpfield = filestreak;
+            syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                + filePost + "  " + filestreak + "  " + movedmesh + "  " 
+                + interpfield;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }
+            //save the old mesh     
+            string meshfile = m_sessionName + ".xml";                  
+            string meshold = m_sessionName +"_"+ c +".xml";
+            syscall = "cp -f " + meshfile + "  " + meshold;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            } 
 
-             //overwriting the meshfile with the new mesh
-	     syscall = "cp -f " + movedmesh + "  " + meshfile;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+            //overwriting the meshfile with the new mesh
+            syscall = "cp -f " + movedmesh + "  " + meshfile;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }
 
 
-             //calculate the wave
-             ExecuteWave();
-             //save old jump conditions:
-             string ujump = m_sessionName+"_u_5.bc";
-	     syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }              
+            //calculate the wave
+            ExecuteWave();
+            //save old jump conditions:
+            string ujump = m_sessionName+"_u_5.bc";
+            syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }              
 
-             string vjump = m_sessionName+"_v_5.bc";
-	     syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }    
-             cnt++;
-             char c1[16]="";
-    	     sprintf(c1,"%d",cnt);   
-             //calculate the jump conditions
-             string wavefile  = m_sessionName +".fld"; 
-             syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
-                     + movedmesh + "  " + wavefile + "  " + interpfield + ">  data"+c1;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+            string vjump = m_sessionName+"_v_5.bc";
+            syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }    
+            cnt++;
+            char c1[16]="";
+            sprintf(c1,"%d",cnt);   
+            //calculate the jump conditions
+            string wavefile  = m_sessionName +".fld"; 
+            syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                + movedmesh + "  " + wavefile + "  " + interpfield + ">  data"+c1;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }
 
 	}
 	else
@@ -830,7 +831,7 @@ cout<<"eqtype="<<vEquation<<endl;
 
             if(CalcWaveForce)
             {
-                 CalcNonLinearWaveForce();
+                CalcNonLinearWaveForce();
             }
 	}
 
@@ -901,6 +902,122 @@ cout<<"eqtype="<<vEquation<<endl;
         return returnval;
     }
     
+    // Similar routine to UpdateAlpha 
+
+    void VortexWaveInteraction::UpdateWaveForceMag(int outeriter)
+    {
+        NekDouble wavef_new;
+
+
+        if(outeriter == 1)
+        {
+            m_waveForceMag[1] = m_waveForceMag[0];
+            if(m_leading_real_evl[0] > 0.0)
+            {
+                wavef_new = m_waveForceMag[0] - m_waveForceMagStep;
+            }
+            else
+            {
+                wavef_new = m_waveForceMag[0] + m_waveForceMagStep;
+            }
+        }
+        else
+        {
+            int i;
+            int nstore = (m_waveForceMag.num_elements() < outeriter)? m_waveForceMag.num_elements(): outeriter;
+            Array<OneD, NekDouble> WaveForce(nstore);
+            Array<OneD, NekDouble> Growth(nstore);
+            
+            Vmath::Vcopy(nstore,m_waveForceMag,1,WaveForce,1);
+            Vmath::Vcopy(nstore,m_leading_real_evl,1,Growth,1);
+            
+            // Sort WaveForce Growth values; 
+            double store;
+            int k;
+            for(i = 0; i < nstore; ++i)
+            {
+                k = Vmath::Imin(nstore-i,&WaveForce[i],1);
+                
+                store    = WaveForce[i]; 
+                WaveForce[i] = WaveForce[i+k];
+                WaveForce[i+k] = store;
+
+                store     = Growth[i];
+                Growth[i] = Growth[i+k];
+                Growth[i+k] = store; 
+            }
+
+            // See if we have any values that cross zero
+            for(i = 0; i < nstore-1; ++i)
+            {
+                if(Growth[i]*Growth[i+1] < 0.0)
+                {
+                    break;
+                }
+            }
+            
+            if(i != nstore-1)
+            {
+                if(nstore == 2)
+                {
+                    wavef_new = (WaveForce[0]*Growth[1] - WaveForce[1]*Growth[0])/(Growth[1]-Growth[0]);
+                }
+                else
+                {
+                    // use a quadratic fit and step through 10000 points
+                    // to find zero.
+                    int     j; 
+                    int     nsteps = 10000;
+                    int     idx = (i == 0)?1:i;
+                    double  da = WaveForce[idx+1] - WaveForce[idx-1];
+                    double  gval_m1 = Growth[idx-1],a,gval;
+                    double  c1 = Growth[idx-1]/(WaveForce[idx-1]-WaveForce[idx])/
+                        (WaveForce[idx-1]-WaveForce[idx+1]);
+                    double  c2 = Growth[idx]/(WaveForce[idx]-WaveForce[idx-1])/
+                        (WaveForce[idx]-WaveForce[idx+1]);
+                    double  c3 = Growth[idx+1]/(WaveForce[idx+1]-WaveForce[idx-1])/
+                        (WaveForce[idx+1]-WaveForce[idx]);
+                    
+                    for(j = 1; j < nsteps+1; ++j)
+                    {
+                        a = WaveForce[i] + j*da/(double) nsteps;
+                        gval = c1*(a - WaveForce[idx  ])*(a - WaveForce[idx+1]) 
+                            +  c2*(a - WaveForce[idx-1])*(a - WaveForce[idx+1])
+                            +  c3*(a - WaveForce[idx-1])*(a - WaveForce[idx]);
+                        
+                        if(gval*gval_m1 < 0.0)
+                        {
+                            wavef_new = ((a+da/(double)nsteps)*gval - a*gval_m1)/
+                                (gval - gval_m1);
+                            break;
+                        }
+                    }
+                }
+            }
+            else // step backward/forward 
+            {
+                if(Growth[i] > 0.0)
+                {
+                    wavef_new = m_waveForceMag[0] - m_waveForceMagStep;
+                }
+                else
+                {
+                    wavef_new = m_waveForceMag[0] + m_waveForceMagStep;
+                }
+            }
+        }
+        
+        for(int i = m_waveForceMag.num_elements()-1; i > 0; --i)
+        {
+            m_waveForceMag[i] = m_waveForceMag[i-1];
+            m_leading_real_evl[i] = m_leading_real_evl[i-1];
+            m_leading_imag_evl[i] = m_leading_imag_evl[i-1];
+        }
+
+        m_waveForceMag[0] = wavef_new;
+        
+    }
+
     void VortexWaveInteraction::UpdateAlpha(int outeriter)
     {
         NekDouble alp_new;
@@ -991,7 +1108,7 @@ cout<<"eqtype="<<vEquation<<endl;
                     }
                 }
             }
-            else // step backward/forward by 0.1 depending on sign
+            else // step backward/forward 
             {
                 if(Growth[i] > 0.0)
                 {
@@ -1014,6 +1131,7 @@ cout<<"eqtype="<<vEquation<<endl;
         m_alpha[0] = alp_new;
         
     }
+
 
     Array<OneD, int> VortexWaveInteraction::GetReflectionIndex(void)
     {

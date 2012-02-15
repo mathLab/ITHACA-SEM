@@ -54,8 +54,9 @@ namespace Nektar
 
     const std::string VWIIterationTypeMap[] = 
     {
-        "FixedAlphaWaveForcing",
+        "FixedAlpha",
         "FixedWaveForcing",
+        "FixedAlphaWaveForcing",
         "FixedWaveForcingWithSubIterationOnAlpha"
     };
 

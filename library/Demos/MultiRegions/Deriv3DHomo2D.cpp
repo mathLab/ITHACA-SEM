@@ -109,15 +109,14 @@ int main(int argc, char *argv[])
 	LibUtilities::EquationSharedPtr exac_v = vSession->GetFunction("ExactSolution", 1);
 	LibUtilities::EquationSharedPtr exac_w = vSession->GetFunction("ExactSolution", 2);
     	
-    for(int i = 0; i < nq; ++i)
-    {
-        Exp_u->UpdatePhys()[i] = ffunc_u->Evaluate(xc0[i],xc1[i],xc2[i]);
-		Exp_v->UpdatePhys()[i] = ffunc_v->Evaluate(xc0[i],xc1[i],xc2[i]);
-		Exp_w->UpdatePhys()[i] = ffunc_w->Evaluate(xc0[i],xc1[i],xc2[i]);
-		dudx[i] = exac_u->Evaluate(xc0[i],xc1[i],xc2[i]);
-		dvdy[i] = exac_v->Evaluate(xc0[i],xc1[i],xc2[i]);
-		dwdz[i] = exac_w->Evaluate(xc0[i],xc1[i],xc2[i]);
-    }
+
+    ffunc_u->Evaluate3Array(xc0,xc1,xc2,Exp_u->UpdatePhys());
+    ffunc_v->Evaluate3Array(xc0,xc1,xc2,Exp_v->UpdatePhys());
+    ffunc_w->Evaluate3Array(xc0,xc1,xc2,Exp_w->UpdatePhys());
+    exac_u->Evaluate3Array(xc0,xc1,xc2,dudx);
+    exac_v->Evaluate3Array(xc0,xc1,xc2,dvdy);
+    exac_w->Evaluate3Array(xc0,xc1,xc2,dwdz);
+
     //----------------------------------------------
 	
 	//Taking derivative and printing the error

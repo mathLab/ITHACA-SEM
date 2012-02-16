@@ -155,10 +155,7 @@ namespace Nektar
 
                     LibUtilities::EquationSharedPtr ifunc
                             = m_session->GetFunction(varCoeffs[i], varName);
-                    for(int j = 0; j < nq; j++)
-                    {
-                        tmp[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],0.0);
-                    }
+                    ifunc->Evaluate4Array(x0,x1,x2,0.0,tmp);
                     m_vardiff[varCoeffEnum[i]] = tmp;
                 }
 
@@ -264,16 +261,16 @@ namespace Nektar
             Array<OneD,NekDouble> x0(nq);
             Array<OneD,NekDouble> x1(nq);
             Array<OneD,NekDouble> x2(nq);
+            Array<OneD,NekDouble> result(nq);
 
             // get the coordinates
             m_fields[0]->GetCoords(x0,x1,x2);
 
             LibUtilities::EquationSharedPtr ifunc
                     = m_session->GetFunction("Stimulus", "u");
-            for(int j = 0; j < nq; j++)
-            {
-                outarray[0][j] += ifunc->Evaluate(x0[j],x1[j],x2[j],time);
-            }
+            ifunc->Evaluate4Array(x0,x1,x2,time, result);
+
+            Vmath::Vadd(nq, outarray[0], 1, result, 1, outarray[0], 1);
         }
         Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[0],0);
     cout << "Solving 2D Laplace:"  << endl; 
     cout << "         Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
+    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate0() << endl;
     cout << endl;
     //----------------------------------------------
    
@@ -79,10 +79,8 @@ int main(int argc, char *argv[])
     fce = Array<OneD,NekDouble>(nq);
     SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
-    for(i = 0; i < nq; ++i)
-    {
-        fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-    }
+
+    ffunc->Evaluate3Array(xc0,xc1,xc2,fce);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -114,10 +112,7 @@ int main(int argc, char *argv[])
             
             SpatialDomains::ConstUserDefinedEqnShPtr cfunc = bcs.GetUserDefinedEqn(lapcoeffstr[i]);
             
-            for(j = 0; j < nq; j++)
-            {
-                lapcoeff[i][j] = cfunc->Evaluate(xc0[j],xc1[j],xc2[j]);
-            }
+            cfunc->Evaluate3Array(xc0,xc1,xc2,lapcoeff[i]);
         }
     }
     //----------------------------------------------
@@ -160,10 +155,7 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // evaluate exact solution 
-        for(i = 0; i < nq; ++i)
-        {
-            fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-        }
+        ex_sol->Evaluate3Array(xc0,xc1,xc2,fce);
         //----------------------------------------------
 
         //--------------------------------------------

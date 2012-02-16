@@ -99,20 +99,14 @@ int main(int argc, char *argv[])
         {
             Array<OneD, NekDouble> d00(nq,0.0);
             LibUtilities::EquationSharedPtr d00func = vSession->GetFunction("d00",0);
-            for (i = 0; i < nq; ++i)
-            {
-                d00[i] = d00func->Evaluate(xc0[i], xc1[i], xc2[i]);
-            }
+            d00func->Evaluate3Array(xc0, xc1, xc2, d00);
             varcoeffs[StdRegions::eVarCoeffD00] = d00;
         }
         if (vSession->DefinesFunction("d11"))
         {
             Array<OneD, NekDouble> d11(nq,0.0);
             LibUtilities::EquationSharedPtr d11func = vSession->GetFunction("d11",0);
-            for (i = 0; i < nq; ++i)
-            {
-                d11[i] = d11func->Evaluate(xc0[i], xc1[i], xc2[i]);
-            }
+            d11func->Evaluate3Array(xc0, xc1, xc2, d11);
             varcoeffs[StdRegions::eVarCoeffD11] = d11;
         }
         //----------------------------------------------
@@ -121,10 +115,8 @@ int main(int argc, char *argv[])
         // Define forcing function for first variable defined in file
         fce = Array<OneD,NekDouble>(nq);
         LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
-        for(i = 0; i < nq; ++i)
-        {
-            fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-        }
+        ffunc->Evaluate3Array(xc0, xc1, xc2, fce);
+
         //----------------------------------------------
 
         //----------------------------------------------
@@ -183,10 +175,8 @@ int main(int argc, char *argv[])
         {
             //----------------------------------------------
             // evaluate exact solution
-            for(i = 0; i < nq; ++i)
-            {
-                fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-            }
+            ex_sol->Evaluate3Array(xc0, xc1, xc2, fce);
+
             Fce->SetPhys(fce);
             Fce->SetPhysState(true);
             //--------------------------------------------

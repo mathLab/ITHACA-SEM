@@ -118,12 +118,9 @@ namespace Nektar
 		Ini[0]  = Array<OneD,NekDouble>(nq);
 		Exac[0] = Array<OneD,NekDouble>(nq);
 		
-		for(int i = 0; i < nq; ++i)
-		{
-			Adv[0][i] = AdveFunc->Evaluate(x[i],y[i],z[i],Time);
-			Ini[0][i] = InitCond->Evaluate(x[i],y[i],z[i],Time);
-		}
-		
+        AdveFunc->Evaluate4Array(x,y,z,Time,Adv[0]);
+        InitCond->Evaluate4Array(x,y,z,Time,Ini[0]);
+
 		// Setting the physical value of the initial condition inside the 
         // physical space
 		Domain->UpdatePhys() = Ini[0];
@@ -250,9 +247,9 @@ namespace Nektar
 			difInt[i] = inarray[2*i] - inarray[2*i-1];
 		}
 	
+        AdveFunc->Evaluate4Array(xi,yi,zi,Time,a);
 		for(int i = 0; i < ni; ++i)
 		{
-			a[i] = AdveFunc->Evaluate(xi[i],yi[i],zi[i],Time);
 			
 			if      (RiemSol == "Up-Wind")       {K[i] = 0.0;}
 			else if (RiemSol == "Euler-Centered"){K[i] = 1.0;}
@@ -655,10 +652,7 @@ namespace Nektar
 	{
 		// Evaluating the error
 		NekDouble L2, Linf;
-		for(int i = 0; i < nq; ++i)
-		{
-			Exac[0][i] = ExSol->Evaluate(x[i],y[i],z[i],Time);
-		}
+        ExSol->Evaluate4Array(x,y,z,Time,Exac[0]);
 		
 		L2   = Domain->L2(Exac[0]);
 		Linf = Domain->Linf(Exac[0]);

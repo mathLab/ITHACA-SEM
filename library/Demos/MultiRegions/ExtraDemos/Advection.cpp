@@ -69,14 +69,14 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> v2(nTotQuadPoints,0.0);
 
     SpatialDomains::ConstForcingFunctionShPtr u0SolutionEquation 
-	= boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
+        = boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
 
+    u0SolutionEquation->Evaluate2Array(x1,x2, u0);
     for(int i = 0; i < nTotQuadPoints; ++i)
-	{
-	  u0[i] = u0SolutionEquation->Evaluate(x1[i],x2[i]);
-	  v1[i] =  1.0;//2.0*M_PI*x2[i];
-	  v2[i] =  0.0;//-2.0*M_PI*x1[i];
-	}      
+    {
+      v1[i] =  1.0;//2.0*M_PI*x2[i];
+      v2[i] =  0.0;//-2.0*M_PI*x1[i];
+    }
 
     u->SetPhys(u0);
     //-----------------------------------------------
@@ -161,15 +161,12 @@ int main(int argc, char *argv[])
           {
 	      Array<OneD, NekDouble> exactSolution(nTotQuadPoints);
 	      SpatialDomains::ConstForcingFunctionShPtr exactSolutionEquation 
-		= boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
-	      for(int j = 0; j < nTotQuadPoints; ++j)
-		{
-		  exactSolution[j] = exactSolutionEquation->Evaluate(x1[j],x2[j]);
-		}      
-	      
-	      MultiRegions::DisContField2DSharedPtr exactSolutionExp =
-		MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*u);
-	      exactSolutionExp->SetPhys(exactSolution);
+            = boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
+
+        exactSolutionEquation->Evaluate2Array(x1,x2, exactSolution);
+        MultiRegions::DisContField2DSharedPtr exactSolutionExp =
+            MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*u);
+        exactSolutionExp->SetPhys(exactSolution);
 	      
 	      NekDouble error = u->L2(exactSolutionExp->GetPhys());
 	      

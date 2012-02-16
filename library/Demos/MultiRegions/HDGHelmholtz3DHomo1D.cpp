@@ -95,10 +95,9 @@ int main(int argc, char *argv[])
     fce = Array<OneD,NekDouble>(nq);
     LibUtilities::EquationSharedPtr ffunc
                                     = vSession->GetFunction("Forcing", 0);
-    for(i = 0; i < nq; ++i)
-    {
-        fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-    }
+
+    ffunc->Evaluate3Array(xc0, xc1, xc2, fce);
+
     //----------------------------------------------
 
 
@@ -157,10 +156,9 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // evaluate exact solution
-        for(i = 0; i < nq; ++i)
-        {
-            fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-        }
+
+        ex_sol->Evaluate3Array(xc0, xc1, xc2, fce);
+
         //----------------------------------------------
 
         //--------------------------------------------

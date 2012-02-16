@@ -155,32 +155,62 @@ namespace Nektar
                 }
             }
 
-            Array<OneD, NekDouble> Evaluate4Array(
+            void Evaluate2Array(
+                    const Array<OneD, const NekDouble>& x,
+                    const Array<OneD, const NekDouble>& y,
+                    Array<OneD, NekDouble>& result)
+            {
+                Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
+                Evaluate4Array(x,y,zero,zero, result);
+            }
+
+            void Evaluate3Array(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
-                    const Array<OneD, const NekDouble>& t) const
+                    Array<OneD, NekDouble>& result)
+            {
+                Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
+                Evaluate4Array(x,y,z,zero, result);
+            }
+
+            void Evaluate4Array(
+                    const Array<OneD, const NekDouble>& x,
+                    const Array<OneD, const NekDouble>& y,
+                    const Array<OneD, const NekDouble>& z,
+                    const NekDouble t,
+                    Array<OneD, NekDouble>& result) const
+            {
+                Array<OneD, NekDouble>  time(x.num_elements(), t);
+                Evaluate4Array(x,y,z,time, result);
+            }
+
+
+            void Evaluate4Array(
+                    const Array<OneD, const NekDouble>& x,
+                    const Array<OneD, const NekDouble>& y,
+                    const Array<OneD, const NekDouble>& z,
+                    const Array<OneD, const NekDouble>& t,
+                    Array<OneD, NekDouble>& result) const
             {
                 try
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate4Array(m_expr_id, x,y,z,t);
+                        m_evaluator.Evaluate4Array(m_expr_id, x,y,z,t, result);
                     }
                 }
                 catch (const std::runtime_error& e)
                 {
                     std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    Array<OneD, NekDouble> empty;
                     ASSERTL0(false, std::string("ERROR: ") + e.what());
-                    return empty;
+                    return;
                 }
                 catch (const std::string& e)
                 {
                     std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    Array<OneD, NekDouble> empty;
                     std::cout << "ERROR: " << e << std::endl;
-                    return empty;
+                    return;
                 }
             }
 

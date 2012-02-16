@@ -562,11 +562,7 @@ namespace Nektar
         {
             pArray = Array<OneD, NekDouble>(nq);
         }
-        for(int i = 0; i < nq; i++)
-        {
-            pArray[i] = pEqn->Evaluate(x0[i],x1[i],x2[i],pTime);
-        }
-
+        pEqn->Evaluate4Array(x0,x1,x2,pTime,pArray);
     }
 
 
@@ -605,10 +601,7 @@ namespace Nektar
 
             LibUtilities::EquationSharedPtr vEqn
                                 = m_session->GetFunction(pFunctionName,vVar);
-            for(int i = 0; i < nq; i++)
-            {
-                pArray[k][i] = vEqn->Evaluate(x0[i],x1[i],x2[i],pTime);
-            }
+            vEqn->Evaluate4Array(x0,x1,x2,pTime,pArray[k]);
         }
     }
 
@@ -639,7 +632,7 @@ namespace Nektar
             {
                 coeffs[i] = coeffs[i-1] + m_fields[i]->GetNcoeffs();
             }
-            
+
             ImportFld(filename, pFieldNames, coeffs);
             // transform coefficients to physical space. 
             for(int i = 0; i < nfields; ++i)
@@ -662,10 +655,7 @@ namespace Nektar
             {
                 LibUtilities::EquationSharedPtr ffunc
                         = m_session->GetFunction(pFunctionName, pFieldNames[i]);
-                for(int j = 0; j < nq; j++)
-                {
-                    pFields[i][j] = ffunc->Evaluate(x0[j],x1[j],x2[j]);
-                }
+                ffunc->Evaluate3Array(x0,x1,x2,pFields[i]);
             }
         }
     }
@@ -704,11 +694,8 @@ namespace Nektar
             {
                 LibUtilities::EquationSharedPtr ffunc
                         = m_session->GetFunction(pFunctionName, pFieldNames[i]);
-                for(int j = 0; j < nq; j++)
-                {
-                    (pFields[i]->UpdatePhys())[j]
-                                   = ffunc->Evaluate(x0[j],x1[j],x2[j]);
-                }
+
+                ffunc->Evaluate3Array(x0,x1,x2,pFields[i]->UpdatePhys());
             }
         }
     }
@@ -884,10 +871,8 @@ namespace Nektar
          LibUtilities::EquationSharedPtr exSol = m_session->GetFunction("ExactSolution",field);
          // evaluate exact solution
          Array<OneD,NekDouble> ErrorSol(ErrorNq);
-         for(int i = 0; i < ErrorNq; ++i)
-         {
-             ErrorSol[i] = exSol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i],m_time);
-         }
+
+         exSol->Evaluate4Array(ErrorXc0,ErrorXc1,ErrorXc2,m_time,ErrorSol);
 
          // calcualte spectral/hp approximation on the quad points of this new
          // expansion basis
@@ -941,14 +926,12 @@ namespace Nektar
                 {
                     LibUtilities::EquationSharedPtr ifunc
                         = m_session->GetFunction("InitialConditions", i);
-                    for(int j = 0; j < nq; j++)
-                    {
-                        (m_fields[i]->UpdatePhys())[j]
-                            = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
-                    }
+
+                    ifunc->Evaluate4Array(x0,x1,x2, initialtime, m_fields[i]->UpdatePhys());
+
                     m_fields[i]->SetPhysState(true);
-                    
-					m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+
+                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                                                      m_fields[i]->UpdateCoeffs());
 
                     if (m_session->GetComm()->GetRank() == 0)

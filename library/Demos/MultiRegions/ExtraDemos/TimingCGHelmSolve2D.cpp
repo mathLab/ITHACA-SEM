@@ -244,11 +244,8 @@ int main(int argc, char *argv[])
     fce = Array<OneD,NekDouble>(nq);
     SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
-    for(i = 0; i < nq; ++i)
-    {
-        fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-    }
-    //----------------------------------------------
+
+    ffunc->Evaluate3Array(xc0,xc1,xc2,fce);
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
@@ -275,10 +272,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // evaluate exact solution 
     sol = Array<OneD,NekDouble>(nq);
-    for(i = 0; i < nq; ++i)
-    {
-        sol[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-    }
+    ex_sol->Evaluate3Array(xc0,xc1,xc2,sol);
     //----------------------------------------------
     
     //--------------------------------------------
@@ -339,20 +333,16 @@ int main(int argc, char *argv[])
             ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
             break;
         }
-    
-        
+
         // evaluate exact solution 
         Array<OneD,NekDouble> ErrorSol(ErrorNq);
-        for(i = 0; i < ErrorNq; ++i)
-        {
-            ErrorSol[i] = ex_sol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i]);
-        }
-        
+        ex_sol->Evaluate3Array(ErrorXc0,ErrorXc1,ErrorXc2,ErrorSol);
+
         // calcualte spectral/hp approximation on the quad points of this new
         // expansion basis
         Exp->GlobalToLocal(Exp->GetContCoeffs(),ErrorExp->UpdateCoeffs());
         ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
-        
+
         L2ErrorBis    = ErrorExp->L2  (ErrorSol);
         H1ErrorBis    = ErrorExp->H1  (ErrorSol);
         LinfErrorBis  = ErrorExp->Linf(ErrorSol); 

@@ -465,11 +465,11 @@ namespace Nektar
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
-            m_variable.resize(4, 0.0);
+//            m_variable.resize(4, 0.0);
             m_state.resize(m_state_sizes[expression_id]);
             for (int i = 0; i < stack.size(); i++)
             {
-                (*stack[i])();
+                (*stack[i])(1);
             }
             return m_state[0];
         }
@@ -499,7 +499,7 @@ namespace Nektar
             // main execution cycle is hidden here
             for (int i = 0; i < stack.size(); i++)
             {
-                (*stack[i])();
+                (*stack[i])(1);
             }
             return m_state[0];
         }
@@ -532,7 +532,7 @@ namespace Nektar
             // main execution cycle is hidden here
             for (int i = 0; i < stack.size(); i++)
             {
-                (*stack[i])();
+                (*stack[i])(1);
             }
             return m_state[0];
         }
@@ -541,40 +541,43 @@ namespace Nektar
 
 
 
-        Array<OneD, NekDouble> AnalyticExpressionEvaluator::Evaluate4Array(
+        void AnalyticExpressionEvaluator::Evaluate4Array(
                     const int expression_id,
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
-                    const Array<OneD, const NekDouble>& t)
+                    const Array<OneD, const NekDouble>& t,
+                    Array<OneD, NekDouble>& result)
         {
-            Array<OneD, NekDouble> empty;
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return empty;
+                return;
             }
 
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
-            Array<OneD, NekDouble>  result (x.num_elements(), 0.0);
-            m_variable.resize(4,0.0);
-            m_state.resize(m_state_sizes[expression_id]);
+            const int num = x.num_elements();
 
-            for (int i = 0; i < x.num_elements(); i++)
+            m_state.resize(m_state_sizes[expression_id]*num);
+
+            m_variable.resize(4*num,0.0);
+
+            for (int i = 0; i < num; m_variable[i+num*0] = x[i++]) ;
+            for (int i = 0; i < num; m_variable[i+num*1] = y[i++]) ;
+            for (int i = 0; i < num; m_variable[i+num*2] = z[i++]) ;
+            for (int i = 0; i < num; m_variable[i+num*3] = t[i++]) ;
+            for (int j = 0; j < stack.size(); j++)
             {
-                m_variable[0] = x[i];
-                m_variable[1] = y[i];
-                m_variable[2] = z[i];
-                m_variable[3] = t[i];
-                for (int j = 0; j < stack.size(); j++)
-                {
-                    (*stack[j])();
-                }
-                result[i] = m_state[0];
+                (*stack[j])(num);
             }
-            return result;
+            if (result.num_elements() != num)
+            {
+                std::cout << "Evaluate4Array: resulting array resize" << std::endl;
+                result = Array<OneD, NekDouble>(num, 0.0);
+            }
+            for (int i = 0; i < num; result[i] = m_state[i++]) ;
         }
 
         Array<OneD, NekDouble> AnalyticExpressionEvaluator::EvaluateAtPoints(
@@ -599,7 +602,7 @@ namespace Nektar
 
             Array<OneD, NekDouble>  result (points.size(), 0.0);
             m_state.resize(m_state_sizes[expression_id]);
-
+/*
             // assuming all points have same # of coordinates
             m_variable.resize(points[0].num_elements());
 
@@ -612,10 +615,11 @@ namespace Nektar
                 }
                 for (int j = 0; j < stack.size(); j++)
                 {
-                    (*stack[j])();
+                    (*stack[j])(num);
                 }
                 result[i] = m_state[0];
             }
+*/
             return result;
         }
 

@@ -532,10 +532,7 @@ namespace Nektar
             Array<OneD,NekDouble> x2(npoints,0.0);
 
             m_fields[var]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-            for(j = 0; j < npoints; j++)
-            {
-                BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
-            }
+            ifunc->Evaluate4Array(x0,x1,x2,time,BDphysics);
 
             // Weakly impose boundary conditions by modifying flux values
             for (e = 0; e < numBDEdge ; ++e)
@@ -596,10 +593,7 @@ namespace Nektar
             Array<OneD,NekDouble> x2(npoints,0.0);
 
             m_fields[var]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-            for(j = 0; j < npoints; j++)
-            {
-                BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
-            }
+            ifunc->Evaluate4Array(x0,x1,x2,time,BDphysics);
 
             // Weakly impose boundary conditions by modifying flux values
             for (e = 0; e < numBDEdge ; ++e)

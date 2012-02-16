@@ -289,12 +289,9 @@ namespace Nektar
 					{
 						LibUtilities::EquationSharedPtr ifunc
                         = m_session->GetFunction("BaseFlow", i);
-						for(int j = 0; j < nq; j++)
-						{
-							(m_base[i]->UpdatePhys())[j]
-                            = ifunc->Evaluate(x0[j],x1[j],x2[j],0);
-						}
-						
+
+                        ifunc->Evaluate3Array(x0,x1,x2,m_base[i]->UpdatePhys());
+
 						m_base[i]->SetPhysState(true);						
 						m_base[i]->FwdTrans_IterPerExp(m_base[i]->GetPhys(),
 														 m_base[i]->UpdateCoeffs());

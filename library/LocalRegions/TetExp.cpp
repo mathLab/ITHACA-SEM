@@ -1797,6 +1797,7 @@ namespace Nektar
                 }
             }
 
+            /*
             switch(face)
             {
             case 0:
@@ -1838,7 +1839,8 @@ namespace Nektar
             default:
                 ASSERTL0(false,"face value (> 3) is out of range");
                 break;               
-                }
+            }
+            */
          }
     }//end of namespace
 }//end of namespace

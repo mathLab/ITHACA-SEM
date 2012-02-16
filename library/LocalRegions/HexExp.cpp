@@ -2290,6 +2290,7 @@ namespace Nektar
 		}
             }
 
+            /*
             switch(face)
             {
             case 0:
@@ -2358,6 +2359,7 @@ namespace Nektar
             }
 
             StdRegions::FaceOrientation orient=GetFaceorient(face);
+            */
         }
 
 /*

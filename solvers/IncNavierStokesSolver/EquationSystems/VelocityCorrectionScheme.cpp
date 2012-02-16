@@ -128,7 +128,7 @@ namespace Nektar
 		// Set up mapping from pressure boundary condition to pressure
 		// element details.
 		m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
-                                         m_pressureBCtoTraceID);
+                                                 m_pressureBCtoTraceID);
 		// Storage array for high order pressure BCs
 		m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
 
@@ -788,45 +788,14 @@ namespace Nektar
 
                                 boundary = m_pressureBCtoTraceID[cnt];
                                 // Get face values and put into Uy, Vx and Wx
-                                elmt->GetFacePhysVals(boundary,Pbc,Qy,Uy);
-                                elmt->GetFacePhysVals(boundary,Pbc,Qx,Vx);
+                                elmt->GetFacePhysVals(boundary,Pbc,Qx,Uy);
+                                elmt->GetFacePhysVals(boundary,Pbc,Qy,Vx);
                                 elmt->GetFacePhysVals(boundary,Pbc,Qz,Wx);
-
+                                
                                 // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
                                 Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
 
                                 // Determine whether normal is facing inwards
-                                /*switch(boundary)
-                                {
-                                case 0:
-                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-				      || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2BwdDir2) ? false:true; 
-                                    break;
-				case 1:
-                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-                                      || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) ? false:true;
-                                    break;
-                                case 2:
-                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-                                      || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) ? false:true; 
-                                    break;
-                                case 3:
-                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-                                      || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2BwdDir2) ? false:true; 
-                                    break;
-                                case 4:
-                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-                                      || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2BwdDir2) ? false:true; 
-                                    break;
-                                case 5:
-                                    NegateNormals = (elmt->GetFaceorient(boundary) == StdRegions::eDir1FwdDir1_Dir2BwdDir2) 
-                                      || (elmt->GetFaceorient(boundary) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) ? false:true; 
-                                    break;
-                                default:
-                                    ASSERTL0(false,"face value (> 5) is out of range");
-                                    break;
-				    }*/
-                      
                                 Pbc->NormVectorIProductWRTBase(Uy,Vx,Wx,Pvals,false); 
                             }
                         }

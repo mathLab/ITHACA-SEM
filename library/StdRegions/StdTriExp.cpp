@@ -682,7 +682,8 @@ namespace Nektar
             Array<OneD, NekDouble> coll(2);
 
             // set up local coordinate system 
-            if (fabs(coords[0]+1.0) < NekConstants::kNekZeroTol &&
+            if (
+            	//fabs(coords[0]+1.0) < NekConstants::kNekZeroTol &&
                 fabs(coords[1]-1.0) < NekConstants::kNekZeroTol)
             {
                 coll[0] = -1.0;

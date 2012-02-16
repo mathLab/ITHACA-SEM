@@ -1291,7 +1291,6 @@ namespace Nektar
                             LibUtilities::Equation  condition = boost::static_pointer_cast<
                                                                    SpatialDomains::DirichletBoundaryCondition
                                                                 >(m_bndConditions[i])->m_dirichletCondition;
-                            //Array<OneD,NekDouble> timeArray(npoints, time);
                             condition.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
 
                             locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
@@ -1330,7 +1329,6 @@ namespace Nektar
                             LibUtilities::Equation  condition = boost::static_pointer_cast<
                                                                    SpatialDomains::NeumannBoundaryCondition
                                                                 >(m_bndConditions[i])->m_neumannCondition;
-                            //Array<OneD,NekDouble> timeArray(npoints, time);
                             condition.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
 
                             locExpList->IProductWRTBase(locExpList->GetPhys(),
@@ -1382,7 +1380,6 @@ namespace Nektar
                             LibUtilities::Equation  coeff     = boost::static_pointer_cast<
                                                                    SpatialDomains::RobinBoundaryCondition
                                                                 >(m_bndConditions[i])->m_robinPrimitiveCoeff;
-                            //Array<OneD,NekDouble> timeArray(npoints, time);
                             condition.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
 
                             locExpList->IProductWRTBase(locExpList->GetPhys(),

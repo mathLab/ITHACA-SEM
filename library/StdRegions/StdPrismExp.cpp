@@ -520,7 +520,7 @@ namespace Nektar
                             0.0, tmp0.get()    + i*nquad2*nummodes1, nquad2);
                 mode += nummodes2-i;
             }
-
+            
             if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 for(i = 0; i < nummodes1; i++)
@@ -682,9 +682,6 @@ namespace Nektar
             
             int i, mode;
             
-            //Array<OneD, NekDouble> tmp1(nquad1*nquad2*order0);
-            //Array<OneD, NekDouble> tmp2(nquad2*order0*order1);
-            
             ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 + 
                                            nquad2*order0*order1,
                      "Insufficient workspace size");
@@ -698,17 +695,6 @@ namespace Nektar
                              base0.get(),   nquad0,
                         0.0, tmp0.get(),    nquad1*nquad2);
             
-            // fix for modified basis for base singular vertex
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                //base singular vertex and singular edge (1+b)/2
-                //(1+a)/2 components (makes tmp[nquad2] entry into (1+b)/2)
-                Blas::Dgemv('T', nquad0, nquad1*nquad2, 
-                            1.0, inarray.get(),      nquad0, 
-                                 base0.get()+nquad0, 1,
-                            1.0, tmp0.get(),         1);
-            }
-
             // Inner product with respect to the '1' direction
             Blas::Dgemm('T', 'N', nquad2*order0, order1, nquad1,
                         1.0, tmp0.get(),  nquad1,
@@ -723,6 +709,19 @@ namespace Nektar
                                  tmp1.get() + i*nquad2,      nquad2*order0,
                             0.0, outarray.get()+mode*order1, order2-i);
                 mode  += order2-i;
+            }
+            
+            // Fix top singular vertices; performs phi_{0,q,1} +=
+            // phi_1(xi_1)*phi_q(xi_2)*phi_{01}*phi_r(xi_2).
+            if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                for (i = 0; i < order1; ++i)
+                {
+                    mode = GetMode(0,i,1);
+                    outarray[mode] += Blas::Ddot(
+                        nquad2, base2.get()+nquad2, 1, 
+                        tmp1.get()+i*order0*nquad2+nquad2, 1);
+                }
             }
         }
 
@@ -1223,7 +1222,6 @@ namespace Nektar
                 switch (fid)
                 {
                     case 0:
-                    case 2:
                         nummodesA = m_base[0]->GetNumModes();
                         nummodesB = m_base[1]->GetNumModes();
                         break;
@@ -1232,6 +1230,7 @@ namespace Nektar
                         nummodesA = m_base[0]->GetNumModes();
                         nummodesB = m_base[2]->GetNumModes();
                         break;
+                    case 2:
                     case 4:
                         nummodesA = m_base[1]->GetNumModes();
                         nummodesB = m_base[2]->GetNumModes();
@@ -1630,7 +1629,7 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nFaceIntCoeffs, 1);
             }
-
+            
             // Set up an array indexing for quad faces, since the ordering may
             // need to be transposed depending on orientation.
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
@@ -1783,8 +1782,6 @@ namespace Nektar
             }
         }
         
-
-
         void StdPrismExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||

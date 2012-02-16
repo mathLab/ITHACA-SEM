@@ -465,11 +465,10 @@ namespace Nektar
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
-//            m_variable.resize(4, 0.0);
             m_state.resize(m_state_sizes[expression_id]);
             for (int i = 0; i < stack.size(); i++)
             {
-                (*stack[i])(1);
+                (*stack[i]).run_once();
             }
             return m_state[0];
         }
@@ -499,7 +498,7 @@ namespace Nektar
             // main execution cycle is hidden here
             for (int i = 0; i < stack.size(); i++)
             {
-                (*stack[i])(1);
+                (*stack[i]).run_once();
             }
             return m_state[0];
         }
@@ -532,7 +531,7 @@ namespace Nektar
             // main execution cycle is hidden here
             for (int i = 0; i < stack.size(); i++)
             {
-                (*stack[i])(1);
+                (*stack[i]).run_once();
             }
             return m_state[0];
         }
@@ -570,59 +569,50 @@ namespace Nektar
             for (int i = 0; i < num; m_variable[i+num*3] = t[i++]) ;
             for (int j = 0; j < stack.size(); j++)
             {
-                (*stack[j])(num);
+                (*stack[j]).run_many(num);
             }
             if (result.num_elements() != num)
             {
-                std::cout << "Evaluate4Array: resulting array resize" << std::endl;
+                /// \note please don't use this vectorized method if the
+                /// resulting array has different length than input onces.
+                std::cout << "Evaluate4Array: resulting array resize -- possible sourse of weird bugs" << std::endl;
                 result = Array<OneD, NekDouble>(num, 0.0);
             }
             for (int i = 0; i < num; result[i] = m_state[i++]) ;
         }
 
-        Array<OneD, NekDouble> AnalyticExpressionEvaluator::EvaluateAtPoints(
+        void AnalyticExpressionEvaluator::EvaluateAtPoints(
                     const int expression_id,
-                    const std::vector<Array<OneD, const NekDouble> > points)
+                    const std::vector<Array<OneD, const NekDouble> > points,
+                    Array<OneD, NekDouble>& result)
         {
-            Array<OneD, NekDouble> empty;
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return empty;
+                return;
             }
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
-            if (points[0].num_elements() != variableMap.size())
-            {
-                std::cerr << "Evaluate(int, arrays): variableMap.size() = " << variableMap.size() << ", points[0].num_elements() = " << points[0].num_elements() << std::endl;
-                throw std::runtime_error("The number of variables used to define this expression should match the point dimensionality.");
-                return empty;
-            }
+            const int num = points[0].num_elements();
+            m_state.resize(m_state_sizes[expression_id]*num);
 
-            Array<OneD, NekDouble>  result (points.size(), 0.0);
-            m_state.resize(m_state_sizes[expression_id]);
-/*
             // assuming all points have same # of coordinates
-            m_variable.resize(points[0].num_elements());
+            m_variable.resize(4*num,0.0);
 
-            VariableMap::const_iterator it;
             for (int i = 0; i < points.size(); i++)
             {
-                for (it = variableMap.begin(); it != variableMap.end(); ++it)
+                for (VariableMap::const_iterator it = variableMap.begin(); it != variableMap.end(); ++it)
                 {
                     m_variable[it->second] = points[i][it->second];
                 }
-                for (int j = 0; j < stack.size(); j++)
-                {
-                    (*stack[j])(num);
-                }
-                result[i] = m_state[0];
             }
-*/
-            return result;
+            for (int j = 0; j < stack.size(); j++)
+            {
+                (*stack[j]).run_many(num);
+            }
+            for (int i = 0; i < num; result[i] = m_state[i++]) ;
         }
-
 
 
 

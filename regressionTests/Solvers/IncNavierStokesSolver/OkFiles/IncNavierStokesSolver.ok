@@ -89,7 +89,7 @@ L 2 error (variable u) : 0.0372934
 L inf error (variable u) : 0
 L 2 error (variable v) : 0.0228499
 L inf error (variable v) : 0
-L 2 error (variable p) : 0.0123647
+L 2 error (variable p) : 0.0123609
 L inf error (variable p) : 0
 ----------------------------------------
 ChanStability_adj.xml
@@ -97,7 +97,7 @@ L 2 error (variable u) : 2.58928
 L inf error (variable u) : 1
 L 2 error (variable v) : 0.00334392
 L inf error (variable v) : 0.0028285
-L 2 error (variable p) : 0.0059301
+L 2 error (variable p) : 0.00596128
 L inf error (variable p) : 0.00590453
 ----------------------------------------
 ChanStability_Ar.xml
@@ -129,7 +129,7 @@ L 2 error (variable u) : 0.0212141
 L inf error (variable u) : 0
 L 2 error (variable v) : 0.0220853
 L inf error (variable v) : 0
-L 2 error (variable p) : 0.0178261
+L 2 error (variable p) : 0.0157668
 L inf error (variable p) : 0
 ----------------------------------------
 ChanStability_Coupled.xml
@@ -137,6 +137,14 @@ L 2 error (variable u) : 2.58948
 L inf error (variable u) : 1.01298
 L 2 error (variable v) : 0.000352934
 L inf error (variable v) : 0.000295924
+----------------------------------------
+ChanStability_Coupled_3D.xml
+L 2 error (variable u) : 106244
+L inf error (variable u) : 0
+L 2 error (variable v) : 92.8801
+L inf error (variable v) : 0
+L 2 error (variable w) : 228.772
+L inf error (variable w) : 0
 ----------------------------------------
 Test_SinCos_LinNS_3DHom1D.xml
 L 2 error (variable u) : 6.9142e-16

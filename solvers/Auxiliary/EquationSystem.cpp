@@ -122,6 +122,8 @@ namespace Nektar
         m_HomoDirec       = 0;
         m_useFFT          = false;
 		m_dealiasing      = false;
+		m_SingleMode	   =false;
+
         m_HomogeneousType = eNotHomogeneous;
 
         if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -136,6 +138,23 @@ namespace Nektar
                 m_session->LoadParameter("HomModesZ",m_npointsZ);
                 m_session->LoadParameter("LZ",m_LhomZ);
                 m_HomoDirec       = 1;
+				
+				//Single mode
+				if(m_session->DefinesSolverInfo("SingleMode") && 
+				   (m_session->GetSolverInfo("SingleMode")=="True" || m_session->GetSolverInfo("SingleMode")=="TRUE"))
+				{
+					m_SingleMode=true;
+					if(m_session->DefinesParameter("NumMode"))
+					{
+						//read mode from session file
+						m_NumMode=m_session->GetParameter("NumMode");
+					}
+					else 
+					{
+						//first mode by default
+						m_NumMode=1;
+					}					
+				}
             }
 
             if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -2125,6 +2144,12 @@ namespace Nektar
             {
               out << "\tUsing MVM "  << endl;
             }
+			
+			if(m_SingleMode==true)
+			{
+				out << "\tSelected Mode    : " << m_NumMode << endl;
+
+			}
 
         }
         else if(m_HomogeneousType == eHomogeneous2D)

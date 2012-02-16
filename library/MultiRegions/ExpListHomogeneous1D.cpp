@@ -657,6 +657,43 @@ namespace Nektar
                 }
             }
         }
+		
+		
+		
+		//Extract the data in fielddata into the m_coeff list (for 2D files into 3D cases)
+        void ExpListHomogeneous1D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
+        {
+            int i,n;
+            int offset = 0;
+            int nzmodes = m_homogeneousBasis->GetNumModes();
+            int datalen = fielddata.size()/fielddef->m_fields.size();
+            int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
+		
+			
+            // Find data location according to field definition
+            for(i = 0; i < fielddef->m_fields.size(); ++i)
+            {
+                if(fielddef->m_fields[i] == field)
+                {
+                    break;
+                }
+                offset += datalen;
+            }
+			
+            ASSERTL0(i!= fielddef->m_fields.size(),"Field not found in data file");
+			
+            // Determine mapping from element ids to location in
+            // expansion list
+            map<int, int> ElmtID_to_ExpID;
+            for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
+            {
+                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+            }
+			
+			  Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[0],1);
+			
+        }
+		
 
 
         /**

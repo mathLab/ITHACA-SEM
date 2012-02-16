@@ -315,7 +315,6 @@ namespace Nektar
 #else
 		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
 #endif
-		
 
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
@@ -327,9 +326,24 @@ namespace Nektar
         {
 #ifdef UseContCoeffs
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateContCoeffs(),flags,factors);
+			
+			//SingleMode Analysis (putting to zero every plane except the considered mode)
+			if(m_SingleMode==true)
+			{
+				Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
+			}
+			
             m_fields[i]->BwdTrans(m_fields[i]->GetContCoeffs(),outarray[i],true);
 #else
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
+			
+			//SingleMode Analysis (putting to zero every plane except the considered mode)
+			if(m_SingleMode==true)
+			{
+				Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
+			}
+			
+			
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 #endif
         }

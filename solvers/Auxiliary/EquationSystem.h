@@ -401,6 +401,8 @@ namespace Nektar
 
 		bool m_dealiasing;           ///< flag to determine if use dealising or not
 		
+		bool m_SingleMode;			 ///< flag to determine if use single mode or not
+		
         enum HomogeneousType m_HomogeneousType;
 
         NekDouble m_LhomX; ///< physical length in X direction (if homogeneous)
@@ -412,6 +414,9 @@ namespace Nektar
         int m_npointsZ;    ///< number of points in Z direction (if homogeneous)
 
         int m_HomoDirec;   ///< number of homogenous directions
+		
+		int m_NumMode;     ///< Mode to use in case of single mode analysis
+
 
         /// Initialises EquationSystem class members.
         EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);

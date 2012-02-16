@@ -81,6 +81,28 @@ namespace Nektar
                 m_npointsZ        = m_session->GetParameter("HomModesZ");
                 m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 1;
+				m_SingleMode	   =false;
+
+				//Single mode
+				 if(m_session->DefinesSolverInfo("SingleMode") && 
+				   (m_session->GetSolverInfo("SingleMode")=="True" || m_session->GetSolverInfo("SingleMode")=="TRUE"))
+				 {
+					m_SingleMode=true;
+					if(m_session->DefinesParameter("NumMode"))
+					{
+						//read mode from session file
+						m_NumMode=m_session->GetParameter("NumMode");
+					}
+					else 
+					{
+						//first mode by default
+						m_NumMode=1;
+					}
+					 
+					 //number of plane to create in case of single modes analysis.
+					 m_npointsZ=2+2*m_NumMode;
+				 }
+				
             }
 			
             if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -469,23 +491,64 @@ namespace Nektar
 		int numfields=m_base.num_elements();
 		int nqtot = m_base[0]->GetTotPoints();
 
+		//Get Homogeneous
+
+
         pGraph->Import(pInfile,FieldDef,FieldData);
 
         int nvar = m_session->GetVariables().size();
-
+		int s;
+		
+		if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
+		{
+			std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+		}
+		
         // copy FieldData into m_fields
         for(int j = 0; j < nvar; ++j)
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                bool flag = FieldDef[i]->m_fields[j]
-                    == m_session->GetVariable(j);
-                ASSERTL1(flag, (std::string("Order of ") + pInfile
+
+					
+				if(m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"||
+				m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))
+				{
+					// w-component must be ignored and set to zero.
+					if(j!=nvar-2)
+					{
+						// p component (it is 4th variable of the 3D and corresponds 3nd variable of 2D)
+						if(j==nvar-1)
+						{
+							s=2;
+						}
+						else 
+						{
+							s=j;	
+						}
+						
+						//extraction of the 2D
+						m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+													   FieldDef[i]->m_fields[s],true);
+						
+						//Put zero on higher modes
+						int ncplane=(m_base[0]->GetNcoeffs())/m_npointsZ;
+						Vmath::Zero(ncplane*(m_npointsZ-2),&m_base[j]->UpdateCoeffs()[2*ncplane],1);
+						
+					}
+				}
+				//2D cases
+				else
+				{
+					bool flag = FieldDef[i]->m_fields[j]
+							  == m_session->GetVariable(j);
+					ASSERTL1(flag, (std::string("Order of ") + pInfile
                                 + std::string(" data and that defined in "
                                              "m_boundaryconditions differs")).c_str());
                 
-                m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                               FieldDef[i]->m_fields[j]);
+					m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                   FieldDef[i]->m_fields[j]);
+				}
             }
             m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
                                 m_base[j]->UpdatePhys());

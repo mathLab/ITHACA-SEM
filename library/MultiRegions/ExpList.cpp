@@ -1993,6 +1993,12 @@ namespace Nektar
         {
             v_ExtractDataToCoeffs(fielddef,fielddata,field,m_coeffs);
         }
+		
+		//3D-Base Flow (implementation in the homogeneous classes)
+		void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
+		{
+			ASSERTL0(false, "This method is not defined or valid for this class type");
+		}
         
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	

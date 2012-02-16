@@ -154,6 +154,8 @@ namespace Nektar
         };
 		
         bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
+		bool m_SingleMode;			 ///< flag to determine if use single mode or not
+
 		
         enum HomogeneousType m_HomogeneousType;
 		
@@ -166,6 +168,9 @@ namespace Nektar
         int m_npointsZ;    ///< number of points in Z direction (if homogeneous)
 		
         int m_HomoDirec;   ///< number of homogenous directions
+		
+		int m_NumMode;     ///< Mode to use in case of single mode analysis
+
 		
 
 		SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;

@@ -20,6 +20,7 @@
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <LocalRegions/MatrixKey.h>
 
+#include <boost/math/special_functions/fpclassify.hpp>
 
 using namespace Nektar;
 
@@ -507,7 +508,7 @@ cout<<variables[0]<<endl;
                    offset = field0->GetPhys_Offset(elmtid);
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPhys() +offset);    
-                   if( isnan(field1->UpdatePhys()[r]) )
+                   if( boost::math::isnan(field1->UpdatePhys()[r]) )
                    {            
 cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
 cout<<"new val="<<field1->UpdatePhys()[r]<<endl;

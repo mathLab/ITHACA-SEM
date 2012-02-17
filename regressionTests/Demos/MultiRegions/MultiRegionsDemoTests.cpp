@@ -113,6 +113,10 @@ int main(int argc, char* argv[])
 
     Execute("Helmholtz3D", "helmholtz3D_tet.xml","CG Helmholtz3D Tet");
 
+    Execute("Helmholtz3D", "helmholtz3D_prism.xml","CG Helmholtz3D Prism");
+
+    Execute("Helmholtz3D", "helmholtz3D_prism_deformed.xml","CG Helmholtz3D Prism (deformed)");
+
     // 3D Demos Homogeneous1D
     Execute("Helmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","CG Helmholtz3D Homogeneous 1D");
 

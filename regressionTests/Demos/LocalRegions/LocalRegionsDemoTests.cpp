@@ -121,6 +121,10 @@ int main(int argc, char* argv[])
     Execute("LocProject3D", "4 1 2 3 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Reg. Tet Ortho Basis, P=6, Q=7");
 
     Execute("LocProject3D", "4 4 5 6 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Reg. Tet Mod. Basis, P=6, Q=7");
+    
+    Execute("LocProject3D", "6 1 1 2 6 6 6 7 7 6 0 0 0  1 0 0  1 1 0  0 1 0  0.5 0 1  0.5 1 1", "Reg. Prism Ortho Basis, P=6, Q=7");
+
+    Execute("LocProject3D", "6 4 4 5 6 6 6 7 7 6 0 0 0  1 0 0  1 1 0  0 1 0  0.5 0 1  0.5 1 1", "Reg. Prism Mod. Basis, P=6, Q=7");
 
     Execute("LocProject3D", "7 1 1 1 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Reg. Hex Ortho Basis, P=6, Q=7");
 
@@ -138,6 +142,10 @@ int main(int argc, char* argv[])
     Execute("LocProject_Diff3D", "4 1 2 3 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Reg. Tet Ortho Basis, P=6, Q=7");
 
     Execute("LocProject_Diff3D", "4 4 5 6 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Reg. Tet Mod. Basis, P=6, Q=7");
+
+    Execute("LocProject_Diff3D", "6 1 1 2 6 6 6 7 7 6 0 0 0  1 0 0  1 1 0  0 1 0  0.5 0 1  0.5 1 1", "Reg. Prism Ortho Basis, P=6, Q=7");
+
+    Execute("LocProject_Diff3D", "6 4 4 5 6 6 6 7 7 6 0 0 0  1 0 0  1 1 0  0 1 0  0.5 0 1  0.5 1 1", "Reg. Prism Mod. Basis, P=6, Q=7");
 
     Execute("LocProject_Diff3D", "7 1 1 1 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Reg. Hex Ortho Basis, P=6, Q=7");
 

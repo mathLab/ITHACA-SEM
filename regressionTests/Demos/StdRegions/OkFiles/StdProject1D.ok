@@ -1,12 +1,12 @@
 StdProject1D
 ==========================================
 1 6 7
-L infinity error: 1.33227e-15
-L 2 error:        1.07718e-15
-error at x = 0: -4.44089e-16
+L infinity error: 1.16573e-15
+L 2 error:        5.37715e-16
+error at x = 0: 2.22045e-16
 ----------------------------------------
 4 6 7
-L infinity error: 1.33227e-14
-L 2 error:        4.52665e-15
-error at x = 0: 4.21885e-15
+L infinity error: 5.10703e-15
+L 2 error:        5.07435e-15
+error at x = 0: 5.10703e-15
 ----------------------------------------

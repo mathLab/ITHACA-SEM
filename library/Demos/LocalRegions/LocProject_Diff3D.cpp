@@ -86,6 +86,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
         fprintf(stderr,"\t Tetrahedron   = 4\n");
+        fprintf(stderr,"\t Prism         = 6\n");
         fprintf(stderr,"\t Hexahedron    = 7\n");
 
         fprintf(stderr,"Where type is an integer value which "
@@ -697,10 +698,10 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
         {3,7,8,4}
     };
     const bool   isEdgeFlipped[][4] = {
+        {0,0,1,1}, 
+        {0,0,1,0}, 
         {0,0,1,1},
-        {0,0,1,0},
-        {0,0,1,1},
-        {0,0,1,0},
+        {0,0,1,0}, 
         {0,0,1,1}
     };
     

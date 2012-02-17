@@ -116,6 +116,10 @@ int main(int argc, char* argv[])
 
     Execute("StdProject3D", "4 4 5 6 6 6 6 7 7 7", "Tet Modified Basis P=6, Q=7");
 
+    Execute("StdProject3D", "6 1 1 2 6 6 6 7 7 7", "Prism Ortho Basis P=6, Q=7");
+
+    Execute("StdProject3D", "6 4 4 5 6 6 6 7 7 7", "Prism Modified Basis P=6 Q=7");
+
     Execute("StdProject3D", "7 1 1 1 6 6 6 7 7 7", "Hex Ortho Basis, P=4, Q=7");
 
     Execute("StdProject3D", "7 4 4 4 6 6 6 7 7 7", "Hex Modified Basis P=6, Q=7");
@@ -131,9 +135,13 @@ int main(int argc, char* argv[])
 
 
     // 3D Differentiation and Projection Tests
-    Execute("StdProject_Diff3D", "4 1 2 3 6 6 6 7 7 7", "Tet Ortho Basis, P=4, Q=7");
+    Execute("StdProject_Diff3D", "4 1 2 3 6 6 6 7 7 7", "Tet Ortho Basis, P=6, Q=7");
 
     Execute("StdProject_Diff3D", "4 4 5 6 6 6 6 7 7 7", "Tet Modified Basis P=6, Q=7");
+
+    Execute("StdProject_Diff3D", "6 1 1 2 6 6 6 7 7 7", "Prism Ortho Basis P=6, Q=7");
+
+    Execute("StdProject_Diff3D", "6 4 4 5 6 6 6 7 7 7", "Prism Modified Basis P=6 Q=7");
 
     Execute("StdProject_Diff3D", "7 1 1 1 6 6 6 7 7 7", "Hex Ortho Basis, P=4, Q=7");
 

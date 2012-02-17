@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <GEOMETRY DIM="3" SPACE="3">
+    <VERTEX>
+      <V ID="0">  0.0  0.0  0.0  </V>
+      <V ID="1">  1.0  0.0  0.0  </V>
+      <V ID="2">  1.0  1.0  0.0  </V>
+      <V ID="3">  0.0  1.0  0.0  </V>
+      <V ID="4">  0.0  0.0  1.0  </V>
+      <V ID="5">  0.0  1.0  1.0  </V>
+
+      <V ID="6">  1.0  2.0  0.0  </V>
+      <V ID="7">  0.0  2.0  0.0  </V>
+      <V ID="8">  0.0  2.0  1.0  </V>
+      
+      <V ID="9">  1.0  0.0  1.0  </V>
+      <V ID="10"> 1.0  1.0  1.0  </V>
+    </VERTEX>
+    <CURVED>
+      <E ID="0" EDGEID="0" NUMPOINTS="3" TYPE="PolyEvenlySpaced"> 0 0 0  0.5 0 -0.1  1 0 0 </E>
+      <E ID="1" EDGEID="17" NUMPOINTS="3" TYPE="PolyEvenlySpaced"> 1 1 1  0.5 1 1.2  0 1 1 </E>
+    </CURVED>
+    <EDGE>
+      <E ID="0">  0 1  </E>
+      <E ID="1">  1 2  </E>
+      <E ID="2">  2 3  </E>
+      <E ID="3">  3 0  </E>
+      <E ID="4">  0 4  </E>
+      <E ID="5">  1 4  </E>
+      <E ID="6">  2 5  </E>
+      <E ID="7">  3 5  </E>
+      <E ID="8">  4 5  </E>
+
+      <E ID="9">  2 6  </E>
+      <E ID="10"> 7 6  </E>
+      <E ID="11"> 3 7  </E>
+      
+      <E ID="12"> 6 8  </E>
+      <E ID="13"> 7 8  </E>
+      <E ID="14"> 5 8  </E>
+      
+      <E ID="15"> 4 9  </E>
+      <E ID="16"> 9 10 </E>
+      <E ID="17"> 10 5 </E>
+      
+      <E ID="18"> 1 9 </E>
+      <E ID="19"> 2 10 </E>
+    </EDGE>
+    <FACE>
+      <Q ID="0">  3 0 1 2    </Q>
+      <T ID="1">  0 5 4      </T>
+      <Q ID="2">  1 6 8 5    </Q>
+      <T ID="3">  2 6 7      </T>
+      <Q ID="4">  3 7 8 4    </Q>
+      
+      <Q ID="5">  2 9 10 11  </Q>
+      <Q ID="6">  9 12 14 6  </Q>
+      <T ID="7">  10 12 13   </T>
+      <Q ID="8">  11 13 14 7 </Q>
+
+      <Q ID="9">  15 16 17 8 </Q>
+      <T ID="10"> 15 18 5 </T>
+      <T ID="11"> 17 19 6 </T>
+      <Q ID="12"> 1 19 16 18 </Q>
+    </FACE>
+    <ELEMENT>
+      <R ID="0"> 0 1 2 3 4 </R>
+      <R ID="1"> 5 3 6 7 8 </R>
+      <R ID="2"> 9 10 2 11 12 </R>
+    </ELEMENT>
+    <COMPOSITE>
+      <C ID="0"> R[0-2] </C>
+      <C ID="1"> F[0,1,6,7,8,4,5,10,11,12,9] </C>
+    </COMPOSITE>
+    <DOMAIN> C[0] </DOMAIN>
+  </GEOMETRY>
+  <CONDITIONS>
+    <PARAMETERS>
+      <P> Lambda    = 1 </P>
+    </PARAMETERS>
+    
+    <!-- Uses direct full solver to ensure matrix-free Helmholtz operator is
+         called. -->
+    <SOLVERINFO>
+      <I PROPERTY="GlobalSysSoln" VALUE="DirectFull" />
+    </SOLVERINFO>
+    
+    <VARIABLES>
+      <V ID="0"> u </V>
+    </VARIABLES>
+    
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B>
+    </BOUNDARYREGIONS>
+    
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+    
+    <FUNCTION NAME="Forcing">
+      <E VAR="u" VALUE="-(Lambda+3*PI*PI/4)*sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
+    </FUNCTION>
+    
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
+    </FUNCTION>
+  </CONDITIONS>
+  <EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="8" TYPE="MODIFIED" />
+  </EXPANSIONS>
+</NEKTAR>

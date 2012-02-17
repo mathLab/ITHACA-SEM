@@ -37,6 +37,7 @@
 #include <LibUtilities/LibUtilities.h>
 #include "AnalyticExpressionEvaluator.hpp"
 #include <stdexcept>
+#include <algorithm>
 
 #ifdef _MSC_VER
 #include <boost/preprocessor/cat.hpp>

@@ -127,7 +127,6 @@ namespace Nektar
             // Test the associative cluster sorting associated with this expression.
             BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporaries<Exp>::Tree0Type, ExpectedResultNode> ));
             BOOST_MPL_ASSERT(( boost::is_same<expt::RemoveUnecessaryTemporaries<Exp>::TransformedNodeType, ExpectedResultNode> ));
-            BOOST_MPL_ASSERT(( boost::is_same<expt::SortAssociativeCommutativeClusters<ExpectedResultNode, Exp::Indices, 0>::TransformedNodeType, ExpectedResultNode> ));
 
             BOOST_MPL_ASSERT(( boost::is_same<ExpectedResultNode, ResultExpNode> ));
             BOOST_STATIC_ASSERT(( boost::mpl::size<ResultExpIndices>::type::value == 3 ));

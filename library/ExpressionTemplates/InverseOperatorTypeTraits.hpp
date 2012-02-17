@@ -36,6 +36,15 @@
 
 namespace expt
 {    
+    /// \brief Traits class indicating which operators have inverses and what they are.
+    ///
+    /// The ForwardInverseTransform and BackwardInverseTransform modify nodes such as 
+    /// (A-B) to (A+(-B)).  To do this, they need to know if an operator is invertible 
+    /// and what binary and unary operators are required to perform the inversion.  
+    /// This information is specified in this traits class.
+    ///
+    /// This Traits class specified inverses fo BinaryOperators.  Unary operators 
+    /// are handled by UnaryInverseOperatorTypeTraits below.
     template<typename OpType>
     struct InverseOperatorTypeTraits;
 

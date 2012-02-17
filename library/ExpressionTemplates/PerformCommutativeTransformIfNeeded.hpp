@@ -39,6 +39,7 @@
 
 namespace expt
 {
+    // Performs a commutative transform only if the transformation will remove a temporary.
     template<typename NodeType, typename IndicesType, unsigned int StartIndex, typename enabled = void>
     struct PerformCommutativeTransformIfNeeded
     {

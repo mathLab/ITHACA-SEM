@@ -35,6 +35,21 @@
 
 namespace expt
 {
+    // This file contains the operators used by the expression template 
+    // library.  All operators rely on the ability to detect, at 
+    // compile time, the result type of on operation.  Since this is 
+    // not natively supported by all compiles, we rely on the boost
+    // typeof library to perform this detect.  This implies that all 
+    // types used in the expression template library must first be 
+    // registered with the boost typeof machinery.  Details can be found 
+    // in the boost documentation.
+    //
+    // In order for data types to use expression templates, they must not 
+    // define their own operators.  Those are handled by the operator generator
+    // class.  Instead, users must implement the following functions:
+    //
+    // OpEqual(ResultType, DataType) 
+    // Op(ResultType, DataType lhs, DataType rhs)
     struct AddOp 
     {
         template<typename L, typename R>

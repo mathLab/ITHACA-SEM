@@ -249,6 +249,7 @@ namespace expt
     };
 
     
+    // Utility metafunctions to help categorize nodes.
 
     template<typename NodeType>
     struct IsConstantNode : public boost::false_type {};
@@ -272,6 +273,10 @@ namespace expt
     struct IsBinaryNode<Node<L1, void, void> > : public boost::false_type {};
    
     
+    /// \brief Counts the number of temporaries required a tree.
+    /// Value returns the number of temporaries required.
+    /// AsRhs gives the number assuming that the node is on the rhs of a 
+    /// binary node.
     template<typename NodeType, typename enabled = void>
     struct TemporaryCount;
     
@@ -318,6 +323,7 @@ namespace expt
         return os;
     }
 
+    // Operators to combine nodes.
     template<typename L1, typename LOp, typename L2, typename RhsData>
     Node<Node<L1, LOp, L2>, expt::SubtractOp, Node<RhsData> >
     operator-(const Node<L1, LOp, L2>& lhsNode, const RhsData& rhs)

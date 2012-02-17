@@ -36,9 +36,12 @@
 
 namespace expt
 {
-    // Some unary nodes, like - and Invert, can be processed at compile time.
-    // The end result is to move the unary node from the internals of the 
-    // parse tree to the leaves.
+    // Pushes unary operations as far down the tree as possible.  This 
+    // makes helps maximize the size of the clusters.
+    //
+    // For example A - (B-C) can be transformed to 
+    // A + (-B + C) through the use of this class, creating a two node 
+    // cluster of the + operator.
 
     template<typename NodeType>
     struct PushDownUnaryNodes;

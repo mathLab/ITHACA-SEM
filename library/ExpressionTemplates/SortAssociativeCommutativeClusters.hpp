@@ -39,117 +39,13 @@
 
 namespace expt
 {
-    // Input is a node in an AssociativeCommutative cluster, and we are determining if we should swap nodes.
-    template<typename NodeType, typename IndicesType, unsigned int StartIndex, typename enabled=void>
-    struct SortAssociativeCommutativeClusters
-    {
-        typedef NodeType TransformedNodeType;
-        typedef IndicesType TransformedIndicesType;
-    };
 
-    template<typename L1, typename LOp, typename L2, typename OpType, typename R1, typename ROp, typename R2,
-             typename IndicesType, unsigned int StartIndex>
-    struct SortAssociativeCommutativeClusters< expt::Node< expt::Node<L1, LOp, L2>, OpType, expt::Node<R1, ROp, R2> >, IndicesType, StartIndex,
-        typename boost::enable_if
-         <
-            boost::mpl::and_
-            <
-                 boost::mpl::and_
-                 <
-                     boost::is_same<LOp, OpType>,
-                     boost::mpl::not_<IsConstantNode<Node<R1, ROp, R2> > >,
-                     boost::mpl::not_<boost::is_same<ROp, OpType> >,
-                     boost::mpl::less<boost::mpl::int_<expt::TemporaryCount<L2>::Value>, boost::mpl::int_<expt::TemporaryCount<expt::Node<R1, ROp, R2> >::Value+1> >
-                 >,
-                 boost::mpl::and_
-                 <
-                    CommutativeTraits< typename Node<L1, LOp, L2>::ResultType, OpType, typename Node<R1, ROp, R2>::ResultType>,
-                    AssociativeTraits< typename L1::ResultType, LOp, typename L2::ResultType, OpType>
-                 >
-            >
-         >::type>
-    {
-        static const unsigned int SpecializationId = 1;
-
-        // Example tree: A+B+CD
-        typedef expt::Node<expt::Node<L1, LOp, L2>, OpType, expt::Node<R1, ROp, R2> > Tree0;
-
-        // Inverse associative so we have A+(B+CD)
-        typedef typename InverseAssociativeTransform<Tree0>::TransformedNodeType Tree1;
-        typedef typename Tree1::Right RightTree1;
-        typedef typename Tree1::Left LeftTree1;
-        static const int RightStart1 = StartIndex + LeftTree1::TotalCount;
-
-        // Commutative transform on the right so we have A+(CD+B)
-        typedef typename expt::CommutativeTransform<RightTree1, IndicesType, RightStart1>::TransformedNodeType RightTree2;
-        typedef typename expt::CommutativeTransform<RightTree1, IndicesType, RightStart1>::TransformedIndicesType Indices2;
-        typedef typename expt::Node<LeftTree1, typename Tree1::OpType, RightTree2> Tree2;
-
-
-        // Associative transform to get A + CD + B
-        typedef typename AssociativeTransform<Tree2>::TransformedNodeType Tree3;
-        typedef Indices2 Indices3;
-
-        // Recurse down the left side.
-        typedef typename SortAssociativeCommutativeClusters<typename Tree3::Left, Indices3, StartIndex>::TransformedNodeType LeftTree4;
-        typedef typename SortAssociativeCommutativeClusters<typename Tree3::Left, Indices3, StartIndex>::TransformedIndicesType Indices4;
-
-        typedef expt::Node<LeftTree4, OpType, typename Tree3::Right> TransformedNodeType;
-        typedef Indices4 TransformedIndicesType;
-    };
-
-    // If the lhs is constant, and the rhs is not, and the operator is commutative, then swap to 
-    // remove a temporary.
-    template<typename L1, typename LOp, typename L2, typename OpType, typename R1, typename ROp, typename R2,
-             typename IndicesType, unsigned int StartIndex>
-    struct SortAssociativeCommutativeClusters< expt::Node< expt::Node<L1, LOp, L2>, OpType, expt::Node<R1, ROp, R2> >, IndicesType, StartIndex,
-        typename boost::enable_if
-         <
-             boost::mpl::and_
-             <
-                CommutativeTraits< typename Node<L1, LOp, L2>::ResultType, OpType, typename Node<R1, ROp, R2>::ResultType>,
-                IsConstantNode<Node<L1, LOp, L2> >,
-                boost::mpl::not_<IsConstantNode<Node<R1, ROp, R2> > >
-             >
-         >::type>
-    {
-        typedef expt::Node<expt::Node<L1, LOp, L2>, OpType, expt::Node<R1, ROp, R2> > Tree0Type;
-
-        typedef typename CommutativeTransform<Tree0Type, IndicesType, StartIndex>::TransformedNodeType Tree1Type;
-        typedef typename CommutativeTransform<Tree0Type, IndicesType, StartIndex>::TransformedIndicesType Indices1Type;
-
-        typedef Tree1Type TransformedNodeType;
-        typedef Indices1Type TransformedIndicesType;
-    };
-
-    //template<typename NodeType, typename OpType, typename enabled=void>
-    //struct FindCandidateACNodes;
-
-    //template<typename T, typename OpType>
-    //struct FindCandidateACNodes<Node<T, void, void>, OpType>
-    //{
-    //    typedef void LhsNode;
-    //    typedef void LargestNode;
-    //};
-
-    //template<typename L1, typename LOp, typename OpType>
-    //struct FindCandidateACNodes<Node<T, LOp, void>, OpType>
-    //{
-    //    typedef void LhsNode;
-    //    typedef void LargestNode;
-    //};
-
-    //template<typename LhsType, typename OpType, typename RhsType >
-    //struct FindCandidateACNodes<Node<LhsType, OpType, RhsType>, OpType>
-    //{
-
-    //    // Find on Lhs
-    //    // Find on Rhs
-
-    //    // Take the left
-    //    // Take the largest of the others.
-    //};
-
+    /// \brief Finds the furthest left node of the tree rooted at this node.
+    ///
+    /// When optimizing AC clusters, we need to swap the furthest left node 
+    /// and the node requiring the most temporaries to minimize the number of 
+    /// temporaries required by the cluster.  This metafunction finds the 
+    /// furthest left node.
     template<typename NodeType, typename ACOpType, typename enabled = void>
     struct FindFurthestLeftNode
     {
@@ -157,7 +53,7 @@ namespace expt
     };
 
     // Continue searching if it is a binary node on the left with the same operator type
-    // and it is commutative.
+    // and it is commutative.  
     template<typename L1, typename LOp, typename L2, typename ACOpType, typename RhsType>
     struct FindFurthestLeftNode<Node<Node<L1, LOp, L2>, ACOpType, RhsType>, ACOpType,
             typename boost::enable_if
@@ -185,6 +81,7 @@ namespace expt
     {
         typedef Node<L1, LOp, L2> Type;
     };
+
 
     template<typename NodeType, typename ACOpType, unsigned int index = 0, typename enabled = void>
     struct FindNodeWithMostTemporaries;
@@ -278,6 +175,7 @@ namespace expt
             
         };
 
+        // Swaps two nodes in the tree.
         template<typename NodeType, typename TargetNode, typename ReplacementNode, unsigned int TargetIndex, unsigned int StartingIndex = 0, typename enabled=void>
         struct SwapNodes;
         
@@ -525,7 +423,6 @@ namespace expt
         // The index for the furthest lhs node will always be the start index of the entire tree.
         static const unsigned int LhsIndex = StartIndex;
 
-        // For 1/18 - Need to update this to consider commutative property with the most left hand side node.
         typedef typename FindNodeWithMostTemporaries<ThisType,OpType>::Type MostTemps;
         static const unsigned int RhsIndex = FindNodeWithMostTemporaries<ThisType, OpType, StartIndex>::Index;
 

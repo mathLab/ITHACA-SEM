@@ -122,14 +122,13 @@ namespace Nektar
                 {
                     std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
                     ASSERTL0(false, std::string("ERROR: ") + e.what());
-                    return 0;
                 }
                 catch (const std::string& e)
                 {
                     std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
                     std::cout << "ERROR: " << e << std::endl;
-                    return 0;
                 }
+                return 0;
             }
 
             NekDouble Evaluate(NekDouble x=0, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
@@ -145,14 +144,13 @@ namespace Nektar
                 {
                     std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
                     ASSERTL0(false, std::string("ERROR: ") + e.what());
-                    return 0;
                 }
                 catch (const std::string& e)
                 {
                     std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
                     std::cout << "ERROR: " << e << std::endl;
-                    return 0;
                 }
+                return 0;
             }
 
             void Evaluate2Array(

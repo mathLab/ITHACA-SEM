@@ -537,10 +537,7 @@ namespace Nektar
         }
 
 
-
-
-
-        void AnalyticExpressionEvaluator::Evaluate4Array(
+       void AnalyticExpressionEvaluator::Evaluate4Array(
                     const int expression_id,
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
@@ -557,29 +554,43 @@ namespace Nektar
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
-            const int num = x.num_elements();
+            /// If number of points tends to 10^6, one may end up
+            /// with up to ~0.5Gb data allocated for m_state only.
+            /// Lets split the work into cache-sized chunks.
+            /// Ahtung, magic constant!
+            const int chunk_size = 1024;
+            const int num_points = x.num_elements();
 
-            m_state.resize(m_state_sizes[expression_id]*num);
-
-            m_variable.resize(4*num,0.0);
-
-            for (int i = 0; i < num; m_variable[i+num*0] = x[i++]) ;
-            for (int i = 0; i < num; m_variable[i+num*1] = y[i++]) ;
-            for (int i = 0; i < num; m_variable[i+num*2] = z[i++]) ;
-            for (int i = 0; i < num; m_variable[i+num*3] = t[i++]) ;
-            for (int j = 0; j < stack.size(); j++)
-            {
-                (*stack[j]).run_many(num);
-            }
-            if (result.num_elements() != num)
+            if (result.num_elements() != num_points)
             {
                 /// \note please don't use this vectorized method if the
                 /// resulting array has different length than input onces.
                 std::cout << "Evaluate4Array: resulting array resize -- possible sourse of weird bugs" << std::endl;
-                result = Array<OneD, NekDouble>(num, 0.0);
+                result = Array<OneD, NekDouble>(num_points, 0.0);
             }
-            for (int i = 0; i < num; result[i] = m_state[i++]) ;
+
+            m_state.resize( m_state_sizes[expression_id] * std::min(chunk_size, num_points) );
+            m_variable.resize( 4 * std::min(chunk_size, num_points), 0.0);
+
+            int offset = 0;
+            int work_left = num_points;
+            while(work_left > 0)
+            {
+                const int this_chunk_size = std::min(work_left, 1024);
+                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*0] = x[offset + i++]) ;
+                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*1] = y[offset + i++]) ;
+                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*2] = z[offset + i++]) ;
+                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*3] = t[offset + i++]) ;
+                for (int i = 0; i < stack.size(); i++)
+                {
+                    (*stack[i]).run_many(this_chunk_size);
+                }
+                for (int i = 0; i < this_chunk_size; result[offset + i] = m_state[i++]) ;
+                work_left -= this_chunk_size;
+                offset    += this_chunk_size;
+            }
         }
+
 
         void AnalyticExpressionEvaluator::EvaluateAtPoints(
                     const int expression_id,

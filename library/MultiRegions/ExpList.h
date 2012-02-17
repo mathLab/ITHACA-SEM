@@ -563,6 +563,8 @@ namespace Nektar
 			
 			inline boost::shared_ptr<ExpList0D> &GetTrace1D();
 
+			inline boost::shared_ptr<ExpList0D> &GetTrace1D(int i);
+
             inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
 
             inline void AddTraceIntegral(
@@ -914,6 +916,8 @@ namespace Nektar
             virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
 			
 			virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D();
+
+			virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D(int i);
 
             virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap();
 
@@ -1759,7 +1763,12 @@ namespace Nektar
 		inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D()
         {
             return v_GetTrace1D();
-        }		
+        }
+		
+		inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D(int i)
+        {
+            return v_GetTrace1D(i);
+        }
 		
         inline boost::shared_ptr<LocalToGlobalDGMap> &ExpList::GetTraceMap()
         {

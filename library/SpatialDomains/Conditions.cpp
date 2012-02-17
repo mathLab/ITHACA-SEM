@@ -472,6 +472,160 @@ namespace Nektar
                     {
                         NEKERROR(ErrorUtil::ewarning, "Cauchy type boundary conditions not implemented.");
                     }
+					else if (conditionType == "JUNCTION")
+                    {						
+                        if (attrData.empty())
+                        {
+                            ASSERTL0(false, "JUNCTION not set up correctly");
+                        }
+                        else
+                        {
+                            // Use the iterator from above, which must point to the variable.
+                            attr = attr->Next();
+							
+                            if (attr)
+                            {
+                                int P = 0;
+								int D1 = 0;
+								
+                                while(attr) {
+									
+									attrName = attr->Name();
+									
+                                    if (attrName=="P") {
+										
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();	
+                                        m_session->SubstituteExpressions(attrData);
+                                        P = atoi(attrData.c_str());
+                                    }
+									else if (attrName=="D1") {
+						 
+										// Do stuff for the user defined attribute
+										attrData = attr->Value();
+										m_session->SubstituteExpressions(attrData);
+										D1 = atoi(attrData.c_str());
+
+									}
+									attr = attr->Next();
+                                }
+								
+                                BoundaryConditionShPtr junctionCondition(MemoryManager<JunctionBoundaryCondition>::AllocateSharedPtr(P, D1));
+                                (*boundaryConditions)[*iter]  = junctionCondition;
+                            }
+                        }
+						
+                    }
+					else if (conditionType == "BIFURCATION")
+                    {						
+                        if (attrData.empty())
+                        {
+                            ASSERTL0(false, "BIFURCATION not set up correctly");
+                        }
+                        else
+                        {
+                            // Use the iterator from above, which must point to the variable.
+                            attr = attr->Next();
+							
+                            if (attr)
+                            {
+                                int P = 0;
+								int D1 = 0;
+								int D2 = 0;
+								
+								std::string userDefined;
+								
+                                while(attr) {
+									
+									attrName = attr->Name();
+									
+                                    if (attrName=="P") {
+										
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();	
+                                        m_session->SubstituteExpressions(attrData);
+                                        P = atoi(attrData.c_str());
+                                    }
+									else if (attrName=="D1") {
+										
+										// Do stuff for the user defined attribute
+										attrData = attr->Value();
+										m_session->SubstituteExpressions(attrData);
+										D1 = atoi(attrData.c_str());
+										
+									}
+									else if (attrName=="D2") {
+										
+										// Do stuff for the user defined attribute
+										attrData = attr->Value();
+										m_session->SubstituteExpressions(attrData);
+										D2 = atoi(attrData.c_str());
+										
+									}
+									attr = attr->Next();
+                                }
+								
+                                BoundaryConditionShPtr bifurcationCondition(MemoryManager<BifurcationBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
+                                (*boundaryConditions)[*iter]  = bifurcationCondition;
+                            }
+                        }
+                    }
+					else if (conditionType == "MERGING")
+                    {						
+                        if (attrData.empty())
+                        {
+                            ASSERTL0(false, "MERGING flow condition not set up correctly");
+                        }
+                        else
+                        {
+                            // Use the iterator from above, which must point to the variable.
+                            attr = attr->Next();
+							
+                            if (attr)
+                            {
+                                int P = 0;
+								int D1 = 0;
+								int D2 = 0;
+								
+								std::string userDefined;
+								
+                                while(attr) {
+									
+									attrName = attr->Name();
+									
+                                    if (attrName=="P") {
+										
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();	
+                                        m_session->SubstituteExpressions(attrData);
+                                        P = atoi(attrData.c_str());
+                                    }
+									else if (attrName=="D1") {
+										
+										// Do stuff for the user defined attribute
+										attrData = attr->Value();
+										m_session->SubstituteExpressions(attrData);
+										D1 = atoi(attrData.c_str());
+										
+									}
+									else if (attrName=="D2") {
+										
+										// Do stuff for the user defined attribute
+										attrData = attr->Value();
+										m_session->SubstituteExpressions(attrData);
+										D2 = atoi(attrData.c_str());
+										
+									}
+									attr = attr->Next();
+                                }
+								
+                                BoundaryConditionShPtr mergingCondition(MemoryManager<MergingBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
+                                (*boundaryConditions)[*iter]  = mergingCondition;
+                            }
+                        }
+                    }
+					
+					
 
                     conditionElement = conditionElement->NextSiblingElement();
                 }

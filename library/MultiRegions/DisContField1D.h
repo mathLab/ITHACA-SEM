@@ -66,6 +66,15 @@ namespace Nektar
                     const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const std::string &variable);
+			
+			/// Constructor for a DisContField1D from a List of subdomains
+			/// New Constructor
+            MULTI_REGIONS_EXPORT DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+												const SpatialDomains::CompositeMap& domain,
+												const SpatialDomains::MeshGraphSharedPtr &graph1D,
+												const std::string &variable,
+												int i);
+			
 
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
@@ -78,9 +87,14 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~DisContField1D();
 			
 			////2D
-			inline ExpList0DSharedPtr &GetTrace1D(void)
+			inline ExpList0DSharedPtr &GetTrace1D()
             {
-                return m_trace;
+				return m_trace;
+            }
+			
+			inline ExpList0DSharedPtr &GetTrace1D(int i)
+            {
+				return m_traces[i];
             }
 			
 			////2D
@@ -238,6 +252,8 @@ namespace Nektar
 
             /// Trace space storage for points between elements.
 			ExpList0DSharedPtr                                 m_trace;
+			Array<OneD, ExpList0DSharedPtr>                    m_traces;
+
 			Array<OneD,NekDouble>                              tmpBndSol;
 
 
@@ -246,9 +262,14 @@ namespace Nektar
 			
 			
 			////2D
-			inline virtual ExpList0DSharedPtr &v_GetTrace1D(void)
+			inline virtual ExpList0DSharedPtr &v_GetTrace1D()
             {
                 return GetTrace1D();
+            }
+			
+			inline virtual ExpList0DSharedPtr &v_GetTrace1D(int i)
+            {
+                return GetTrace1D(i);
             }
 			
 			inline virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap(void)

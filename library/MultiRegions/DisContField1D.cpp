@@ -133,6 +133,105 @@ namespace Nektar
 			
 			SetUpPhysNormals();
 		}
+		
+		
+		
+		/**
+		 * New Constructor
+         */
+        DisContField1D::DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+									   const SpatialDomains::CompositeMap &domain,
+									   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+									   const std::string &variable,
+									   int i):
+		ExpList1D(pSession,domain,graph1D,i),
+		m_bndCondExpansions(),
+		m_bndConditions()
+        {
+			cout << "---- DisContField1D ----"<<endl;
+			cout << " m_exp has elemnts: "<<m_exp->size()<<endl;
+			
+			//1. a) Read in all boundary conditions specified in inputfile
+			SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
+			cout <<" number of boundary conditions: "<<bcs.GetBoundaryRegions().size()<<endl;
+			
+			//1. b) Generate Boundary Condition Expansions from the read in ones only if the 
+			//      BC is in the currently processed subdomain
+			GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
+			/*cout << " m_bndCondExpansions[0]->GetVertex()->GetVid() = "<<m_bndCondExpansions[0]->GetVertex()->GetVid()<<endl;
+			cout << " m_bndCondExpansions[1]->GetVertex()->GetVid() = "<<m_bndCondExpansions[1]->GetVertex()->GetVid()<<endl;
+			cout << " m_bndCondExpansions[2]->GetVertex()->GetVid() = "<<m_bndCondExpansions[2]->GetVertex()->GetVid()<<endl;
+			cout << " m_bndCondExpansions[3]->GetVertex()->GetVid() = "<<m_bndCondExpansions[3]->GetVertex()->GetVid()<<endl;*/
+
+			//1. c) Evaluate the boundary conditions; timedependent/im Raum???
+			EvaluateBoundaryConditions();
+			/*cout << "\n";
+			cout << " m_bndCondExpansions[0]->GetCoeff(0) = "<<m_bndCondExpansions[0]->GetCoeff(0)<<endl;
+			cout << " m_bndCondExpansions[1]->GetCoeff(0) = "<<m_bndCondExpansions[1]->GetCoeff(0)<<endl;
+			cout << " m_bndCondExpansions[2]->GetCoeff(0) = "<<m_bndCondExpansions[2]->GetCoeff(0)<<endl;
+			cout << " m_bndCondExpansions[3]->GetCoeff(0) = "<<m_bndCondExpansions[3]->GetCoeff(0)<<endl;*/
+			
+			for (int k=0; k<m_bndCondExpansions.num_elements(); k++)
+			{
+				cout << " Boundary vertex: "<<m_bndCondExpansions[k]->GetVertex()->GetVid()<<"\t Value: "<<m_bndCondExpansions[k]->GetCoeff(0)<<endl;
+			}
+			
+			//??? Do we need ApplyGeomInfo ???
+			//ApplyGeomInfo();
+			 
+			
+			//2. Set up trace information
+			map<int,int> periodicVertices;
+			GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
+			 
+			m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+			 
+			m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(pSession,graph1D,*this,m_bndCondExpansions,m_bndConditions);
+			 
+			m_traces = Array<OneD,MultiRegions::ExpList0DSharedPtr> (domain.size());			
+			m_traces[i] = MemoryManager<ExpList0D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph1D,periodicVertices);
+			cout << " m_traces["<<i<<"].num_elements = "<<m_traces[i]->GetExpSize()<<endl;
+		
+			tmpBndSol = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
+			 
+			// Scatter trace points to 1D elements. For each element,
+			// we find the trace point associated to each vertex. The
+			// element then retains a pointer to the trace space points,
+			// to ensure uniqueness of normals when retrieving from two
+			// adjoining elements which do not lie in a plane.
+			int ElmtPointGeom = 0;
+			int TracePointGeom = 0;
+			for (int l = 0; l < m_exp->size(); ++l)
+			{
+				for (int j = 0; j < (*m_exp)[l]->GetNverts(); ++j)
+				{
+					ElmtPointGeom  = ((*m_exp)[l]->GetGeom1D())->GetVid(j);
+			 
+					for (int k = 0; k < m_traces[i]->GetExpSize(); ++k)
+					{
+						TracePointGeom = m_traces[i]->GetPhys_Offset(k);
+			 
+						if (TracePointGeom == ElmtPointGeom)
+						{
+							LocalRegions::Expansion1DSharedPtr exp1d
+							= boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((*m_exp)[l]);
+			 
+							LocalRegions::Expansion0DSharedPtr exp0d
+							= boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(m_traces[i]->GetExp(k));
+			 
+							exp0d->SetAdjacentElementExp(j,exp1d);
+							break;
+						}
+					}
+				}
+			 }
+			 
+			 SetUpPhysNormals();
+		}
+		
+		
+		
+		
 
 
         /**
@@ -367,8 +466,9 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType()
-                        == SpatialDomains::eDirichlet)
+                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
                     for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
@@ -429,7 +529,9 @@ namespace Nektar
                         }
                     }
                 case SpatialDomains::eDirichlet: // do nothing for these types
-                case SpatialDomains::ePeriodic:
+				case SpatialDomains::eJunction: // do nothing for these types
+				case SpatialDomains::eBifurcation:
+				case SpatialDomains::ePeriodic:
                     break;
                 default:
                     ASSERTL0(false,"This type of BC not implemented yet");
@@ -497,6 +599,7 @@ namespace Nektar
 			 int n=0;
 			 int p=0;
 			 int offset=0;
+			 int subdomain_offset = 0;
 			 int phys_offset=0;
 			 double vertnorm =0.0;
 			 Array<OneD,NekDouble> e_tmp;
@@ -505,6 +608,7 @@ namespace Nektar
 			 Vmath::Zero(Fwd.num_elements(),Fwd,1);
 			 Vmath::Zero(Bwd.num_elements(),Bwd,1);
 			
+			 
 			 for(n  = 0; n < nexp; ++n)
 			 {
 				 phys_offset = GetPhys_Offset(n);
@@ -514,6 +618,11 @@ namespace Nektar
 				 {
 					 vertnorm = 0.0;
 					 offset = (*m_exp)[n]->GetGeom1D()->GetVid(p);
+					 subdomain_offset = (*m_exp)[0]->GetGeom1D()->GetVid(0);
+					
+					 //cout << "here 4 offset = "<<offset<<"subdomain_offset = "<<subdomain_offset<< endl;
+					 offset -=subdomain_offset;
+					 //cout << "new offset = "<<offset<<endl;
 					 
 					 for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
 					 {
@@ -521,6 +630,7 @@ namespace Nektar
 					 }
 					 //cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<"\t\t";
 
+					 
 					 if(vertnorm >= 0.0)
 					 {
 						 Fwd[offset] = field[phys_offset+n_quad-1];
@@ -532,50 +642,86 @@ namespace Nektar
 				 }
 			 }
 			 
-			 
 			 // fill boundary conditions into missing elements
 			 int id1 = 0;
 			 int id2 = 0;
-			 cnt = 0;
-			 p=0;
+			 int firstVertex = (*m_exp)[0]->GetGeom1D()->GetVid(0);
+			 int lastVertex = (*m_exp)[nexp-1]->GetGeom1D()->GetVid(1);
+			 Array<OneD, NekDouble>  processed(m_bndCondExpansions.num_elements()+1,-1.0);
+			 
+			 //cout << "First vertex in the subdomain: "<<firstVertex<<endl;
+			 //cout << "Last vertext in the subdomain: "<<lastVertex<<endl;
+			 //cout << endl;
+			
+			 /*cout << "What is actually in BCs"<<endl;
+			 for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+			 {
+				 cout << "m_bndCondExpansions["<<n<<"] = "<<m_bndCondExpansions[n]->GetCoeff(0)<<endl;
+			 }*/
 			 
 			 for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-			 {				 
-				 if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+			 {		
+				 //check if the current boundary condition belongs to the current subdomain
+				 if((m_bndCondExpansions[n]->GetVertex()->GetVid() >= firstVertex) && (m_bndCondExpansions[n]->GetVertex()->GetVid() <= lastVertex) && (processed[n] != m_bndCondExpansions[n]->GetVertex()->GetVid()))
 				 {
-					 if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
+					 //cout << "currently processed vertices: "<<firstVertex<<"\t"<<lastVertex<<endl;
+					 if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+						|| (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eJunction)
+						|| (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eBifurcation))
 					 {
-						 id1 = 0; //GetCoeff_Offset(n)+1;
-						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
-						 Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+						 //cout << "current boundary vertex: " <<m_bndCondExpansions[n]->GetVertex()->GetVid()<<endl;
+						 //cout << "subdomain_offset = "<<subdomain_offset<< endl;
+						 if(m_bndCondExpansions[n]->GetVertex()->GetVid() == lastVertex)
+						 {
+							 id1 = 0; //GetCoeff_Offset(n)+1;
+							 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid()-subdomain_offset;
+							 Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+							 processed[n+1] = m_bndCondExpansions[n]->GetVertex()->GetVid();
+						 }
+						 else
+						 {
+							 id1 = 0; //GetCoeff_Offset(n);
+							 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid()-subdomain_offset;
+							 Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+
+						 }
+						 
+						 
+						 //Previous working version
+						 /*if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
+						 {
+							 id1 = 0; //GetCoeff_Offset(n)+1;
+							 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+							 Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+						 }
+						 else
+						 {
+							 id1 = 0; //GetCoeff_Offset(n);
+							 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+							 Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+						 }*/
+					 }
+					 else if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)||(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eRobin))
+					 {
+						 if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
+						 {
+							 id1 = 0;
+							 ASSERTL0(m_bndCondExpansions[n]->GetCoeff(id1) == 0.0,"method not set up for non-zero Neumann boundary condition");
+							 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+						 }
+						 else
+						 {
+							 id1 = 0;
+							 ASSERTL0(m_bndCondExpansions[n]->GetCoeff(id1) == 0.0,"method not set up for non-zero Neumann boundary condition");
+							 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+						 }
 					 }
 					 else
 					 {
-						 id1 = 0; //GetCoeff_Offset(n);
-						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
-						 Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+						 ASSERTL0(false,"method not set up for non-Dirichlet conditions");
 					 }
-				 }
-				 else if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)||(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eRobin))
-				 {
-					 if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
-					 {
-						 id1 = 0;
-						 ASSERTL0(m_bndCondExpansions[n]->GetCoeff(id1) == 0.0,"method not set up for non-zero Neumann boundary condition");
-						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
-					 }
-					 else
-					 {
-						 id1 = 0;
-						 ASSERTL0(m_bndCondExpansions[n]->GetCoeff(id1) == 0.0,"method not set up for non-zero Neumann boundary condition");
-						 id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
-					 }
-				 }
-				 else
-				 {
-					 ASSERTL0(false,"method not set up for non-Dirichlet conditions");
-				 }
-				 
+					 
+				 }	 
 			 }			 
 			 
 		}
@@ -616,11 +762,17 @@ namespace Nektar
             int p,n,offset, t_offset;
 			double vertnorm =0.0;
 			
+			//cout << "GetExpSize = "<<GetExpSize()<<endl;
             for(n = 0; n < GetExpSize(); ++n)
             {
+				//cout << "n = "<<n<<endl;
                 offset = GetCoeff_Offset(n);
+				//cout << "offset = "<<offset<<endl;
+				
                 for(p = 0; p < 2; ++p)
                 {
+					//cout << "p = "<<p<<endl;
+
 					vertnorm = 0.0;
 					for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
 					{
@@ -628,8 +780,10 @@ namespace Nektar
 					}
 					//cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<"\t\t";
 					
+					//cout << "Here"<<endl;
 					t_offset = GetTrace1D()->GetPhys_Offset(n+p);
-
+					//cout << "Not Here"<<endl;
+					
 					if(vertnorm >= 0.0) 
 					{
 						outarray[offset+1] += Fn[t_offset];
@@ -801,6 +955,28 @@ namespace Nektar
                              ::DirichletBoundaryCondition>(m_bndConditions[i])
                              ->m_dirichletCondition).Evaluate(x0,x1,x2,time));
                 }
+				else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eJunction))
+                {
+                    if (time == 0.0)
+					{
+						//m_bndCondExpansions[i]->SetCoeff(1.0);
+														/* (boost::static_pointer_cast<SpatialDomains
+															::DirichletBoundaryCondition>(m_bndConditions[i])
+															->m_parent).Evaluate(x0,x1,x2,time));*/
+						
+					}
+                }	
+				else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eBifurcation))
+                {
+					if (time == 0.0)
+					{
+						//m_bndCondExpansions[i]->SetCoeff(1.0);
+														/* (boost::static_pointer_cast<SpatialDomains
+															::DirichletBoundaryCondition>(m_bndConditions[i])
+															->m_parent).Evaluate(x0,x1,x2,time));*/
+						
+					}
+				}	
                 else if(m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eNeumann)
                 {
@@ -836,6 +1012,8 @@ namespace Nektar
         // boundary conditions
         void DisContField1D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &VertID)
         {
+			
+			cout << "\n\nGetBoundaryToElmtMap"<<endl;
             map<int, int> VertGID;
             int i,n,id;
             int bid,cnt,Vid;

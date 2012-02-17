@@ -1753,13 +1753,13 @@ namespace Nektar
             int    i;
 
             for(i= 0; i < (*m_exp).size(); ++i)
-            {
+            {				
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 errl2 = (*m_exp)[i]->L2(soln+m_phys_offset[i]);
                 err += errl2*errl2;
             }
-            m_comm->AllReduce(err, LibUtilities::ReduceSum);
+			m_comm->AllReduce(err, LibUtilities::ReduceSum);
             return sqrt(err);
         }
 
@@ -2087,6 +2087,14 @@ namespace Nektar
         }
 		
 		boost::shared_ptr<ExpList0D> &ExpList::v_GetTrace1D()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static boost::shared_ptr<ExpList0D> returnVal;
+            return returnVal;
+        }
+		
+		boost::shared_ptr<ExpList0D> &ExpList::v_GetTrace1D(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

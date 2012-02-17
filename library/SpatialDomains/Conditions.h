@@ -62,7 +62,10 @@ namespace Nektar
             eDirichlet,
             eNeumann,
             eRobin,
-            ePeriodic
+            ePeriodic,
+			eJunction,
+			eBifurcation,
+			eMerging
         };
 
         enum BndUserDefinedType
@@ -77,6 +80,7 @@ namespace Nektar
             eTimeDependent,
             eIsentropicVortex,
             eCalcBC,
+			eQinflow,
             eNoUserDefined
         };
 
@@ -90,6 +94,7 @@ namespace Nektar
                 known_type["I"] = eI;
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
+				known_type["Q-inflow"] = eQinflow;
                 known_type["WALL"] = eWALL;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;
@@ -126,6 +131,45 @@ namespace Nektar
             BndUserDefinedType GetUserDefined() const
             {
                 return m_userDefined;
+            }
+			
+			int m_parent;
+            int m_daughter1;
+			int m_daughter2;
+			
+			void SetJunction(int P, int D1)
+            {
+                m_parent = P;
+				m_daughter1 = D1;
+            }
+			
+			void SetBifurcation(int P, int D1, int D2)
+            {
+                m_parent = P;
+				m_daughter1 = D1;
+				m_daughter2 = D2;
+            }
+			
+			void SetMerging(int P, int D1, int D2)
+            {
+                m_parent = P;
+				m_daughter1 = D1;
+				m_daughter2 = D2;
+            }
+			
+			int GetParent() const
+            {
+                return m_parent;
+            }
+			
+			int GetDaughter1() const
+            {
+                return m_daughter1;
+            }
+			
+			int GetDaughter2() const
+            {
+                return m_daughter2;
             }
 
 
@@ -182,7 +226,46 @@ namespace Nektar
 
             unsigned int m_connectedBoundaryRegion;
         };
+		
+		struct JunctionBoundaryCondition : public BoundaryConditionBase
+        {
+            JunctionBoundaryCondition( const int &P, const int &D1, const std::string &userDefined = std::string("NoUserDefined")):
+			BoundaryConditionBase(eJunction, userDefined),
+			m_parent(P), m_daughter1(D1)
+            {
+				SetJunction(P, D1);
+            }
+            int m_parent;
+            int m_daughter1;
+        };
+		
+		struct BifurcationBoundaryCondition : public BoundaryConditionBase
+        {
+            BifurcationBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
+			BoundaryConditionBase(eBifurcation, userDefined),
+			m_parent(P), m_daughter1(D1), m_daughter2(D2)
+            {
+				SetBifurcation(P, D1, D2);
+            }
+            int m_parent;
+            int m_daughter1;
+			int m_daughter2;
+        };
 
+		struct MergingBoundaryCondition : public BoundaryConditionBase
+        {
+            MergingBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
+			BoundaryConditionBase(eMerging, userDefined),
+			m_parent(P), m_daughter1(D1), m_daughter2(D2)
+            {
+				SetMerging(P, D1, D2);
+            }
+            int m_parent;
+            int m_daughter1;
+			int m_daughter2;
+        };
+		
+		
         typedef std::map<int, Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
@@ -192,6 +275,9 @@ namespace Nektar
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
         typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
         typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
+        typedef boost::shared_ptr<JunctionBoundaryCondition>  JunctionBCShPtr;
+		typedef boost::shared_ptr<BifurcationBoundaryCondition>  BifurcationBCShPtr;
+		typedef boost::shared_ptr<MergingBoundaryCondition>   MergingBCShPtr;
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
         typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;

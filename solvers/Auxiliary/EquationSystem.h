@@ -81,7 +81,7 @@ namespace Nektar
 
         /// Solve the problem.
         inline void DoSolve();
-		
+				
 		/// Transform from coefficient to physical space.
         inline void TransCoeffToPhys();
 		
@@ -90,7 +90,10 @@ namespace Nektar
 		
         /// Perform output operations after solve.
         inline void Output();
-        
+		
+		/// Linf error computation
+		inline NekDouble LinfError(unsigned int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+		
         /// Get Session name
         std::string GetSessionName()
         {
@@ -147,21 +150,17 @@ namespace Nektar
         inline void EvaluateExactSolution(int field,
                                           Array<OneD, NekDouble> &outfield,
                                           const NekDouble time);
-        
-        /// Compute the L2 error between fields and a given exact solution.
+		
+		/// Compute the L2 error between fields and a given exact solution.
         NekDouble L2Error(unsigned int field,
                           const Array<OneD,NekDouble> &exactsoln,
                           bool Normalised = false);
-
+		
         /// Compute the L2 error of the fields
         inline NekDouble L2Error(unsigned int field, bool Normalised = false)
         {
             return L2Error(field,NullNekDouble1DArray,Normalised);
         }
-
-        /// Compute the L_inf error between fields and a given exact solution.
-        NekDouble LinfError(unsigned int field,
-                const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
         ///Compute error (L2 and L_inf) over an larger set of quadrature points return [L2 Linf]
         Array<OneD,NekDouble> ErrorExtraPoints(unsigned int field);
@@ -438,7 +437,13 @@ namespace Nektar
         /// Virtual function for solve implementation.
         virtual void v_DoSolve();
 		
-        /// Virtual function for transformation to physical space.
+		/// Virtual function for the L_inf error computation between fields and a given exact solution.
+		virtual NekDouble v_LinfError(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+		
+		/// Virtual function for the L_2 error computation between fields and a given exact solution.
+		virtual NekDouble v_L2Error(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray, bool Normalised = false);
+        
+		/// Virtual function for transformation to physical space.
         virtual void v_TransCoeffToPhys();
 		
         /// Virtual function for transformation to coefficient space.
@@ -453,7 +458,7 @@ namespace Nektar
         virtual void v_EvaluateExactSolution(unsigned int field,
                         Array<OneD, NekDouble> &outfield,
                         const NekDouble time);
-
+		
         //Initialise m_base in order to store the base flow from a file 
         void SetUpBaseFields( SpatialDomains::MeshGraphSharedPtr &mesh);
         
@@ -558,6 +563,24 @@ namespace Nektar
     inline void EquationSystem::Output(void)
     {
         v_Output();
+    }
+	
+	/**
+     * L_inf Error computation
+     * Public interface routine to virtual function implementation.
+     */
+	inline NekDouble EquationSystem::LinfError(unsigned int field, const Array<OneD,NekDouble> &exactsoln)
+    {
+        return v_LinfError(field, exactsoln);
+    }
+	
+	/**
+     * L_2 Error computation
+     * Public interface routine to virtual function implementation.
+     */
+	inline NekDouble EquationSystem::L2Error(unsigned int field, const Array<OneD,NekDouble> &exactsoln, bool Normalised)
+    {
+        return v_L2Error(field, exactsoln, Normalised);
     }
 
     /**
@@ -669,6 +692,7 @@ namespace Nektar
 			{
                 // can't have two &GetTrace in ExpList.h hmm...
 				return m_fields[0]->GetTrace1D()->GetExpSize();
+				
 				//return m_graph->GetNvertices();
 				break;
 			}
@@ -681,7 +705,7 @@ namespace Nektar
                 return 0;
         }
     }
-
+	
     inline int EquationSystem::GetExpSize(void)
     {
       return m_fields[0]->GetExpSize();

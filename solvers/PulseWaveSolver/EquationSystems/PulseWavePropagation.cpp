@@ -39,18 +39,18 @@
 
 namespace Nektar
 {
-    string PulseWavePropagation::className = GetEquationSystemFactory().RegisterCreatorFunction("PulseWavePropagation", PulseWavePropagation::create, "Pulse Wave Propagation equation.");
+    string PulseWavePropagation::className = GetEquationSystemFactory().RegisterCreatorFunction("PulseWavePropagation", PulseWavePropagation
+																								::create, "Pulse Wave Propagation equation.");
 
     PulseWavePropagation::PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession)
-        : PulseWaveSystem(pSession)
+	: PulseWaveSystem(pSession)
     {
     }
 
-	
     void PulseWavePropagation::v_InitObject()
     {
         PulseWaveSystem::v_InitObject();
-
+		
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs        (&PulseWavePropagation::DoOdeRhs, this);
@@ -62,13 +62,14 @@ namespace Nektar
         }
     }
 
-	
     PulseWavePropagation::~PulseWavePropagation()
     {
-
     }
-
 	
+	
+	/**
+	 * DoOdeRhs
+	 */
     void PulseWavePropagation::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
 										Array<OneD,        Array<OneD, NekDouble> >&outarray,
 										const NekDouble time)
@@ -83,7 +84,6 @@ namespace Nektar
         {
 			case MultiRegions::eDiscontinuousGalerkin:
             {
-				//inarray in physical space
 				Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
 				Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
 				
@@ -97,7 +97,6 @@ namespace Nektar
 				
 				WeakDGAdvection(physarray, modarray, true, true);
 				
-				// negate the outarray since moving terms to the rhs
 				for(i = 0; i < nvariables; ++i)
 				{
 					Vmath::Neg(ncoeffs,modarray[i],1);
@@ -112,7 +111,6 @@ namespace Nektar
 			break;
             case MultiRegions::eGalerkin:
             {
-				// Initialise variables
 				Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
                 for(i = 0; i < nvariables; ++i)
                 {
@@ -144,9 +142,8 @@ namespace Nektar
     }
 
 
-
     /**
-     *
+     *	DoOdeProjection
      */
     void PulseWavePropagation::DoOdeProjection(const Array<OneD,const Array<OneD, NekDouble> >&inarray,
 											   Array<OneD, Array<OneD, NekDouble> >&outarray,
@@ -154,8 +151,34 @@ namespace Nektar
     {
         int i;
         int nvariables = inarray.num_elements();
-        SetBoundaryConditions(time);
-		
+		NekDouble Q, A_r, u_r, Au, uu;
+        
+		SetBoundaryConditions(time);
+				
+		// Loop over Boundary Regions to find the Q-inflow type
+		for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+		{					
+			if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eQinflow)
+			{
+				// Note: The Q value is contained in A in the inputfile, the value in u has to be 1.0 
+				ASSERTL0((m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] == 1.0,
+						 "For the Q-inflow BC the value in u must be 1.0");
+				
+				// Get the values of all variables needed for the Riemann problem
+				Q = (m_fields[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
+				A_r = m_fields[0]->GetCoeffs()[0];
+				u_r = m_fields[1]->GetCoeffs()[0];
+				
+				// Call the Q-inflow Riemann solver
+				Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[0],m_beta[0],Au,uu);
+				
+				// Store the upwinded values in the boundary condition
+				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = Au;
+				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = uu;
+			}
+		}
+			
+	
         switch(m_projectionType)
         {
         case MultiRegions::eDiscontinuousGalerkin:
@@ -187,8 +210,9 @@ namespace Nektar
     }
 
 	
-	/*Calculates the second term of the weak form: dF/dx 
-	 *The variables ot the system are (A;u)
+	/**
+	 * Calculates the second term of the weak form: dF/dx 
+	 * The variables ot the system are (A;u)
 	 * physfield[0] = A
 	 * physfield[1] = u
 	 * flux[0] = F[0] = A*u
@@ -205,33 +229,10 @@ namespace Nektar
 		NekDouble p_t = 0.0;
 		NekDouble h0 = m_h0; 
 		NekDouble nue = m_nue; 
-
-		//cout << "pext = "<<pext<<"\th0 = "<<h0<<"\tnue = "<<nue<<"\trho = "<<rho<<endl;
-		
-		//Get A_0 at equilibrium state
-		Array<OneD, NekDouble> A_0(nq);
-		StaticArea(A_0,0.0);
-		for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-		{
-			//cout << "A_0 = "<<A_0[j]<<endl;
-		}
-		
-
-		//Get the material properties of the artery from the inputfile and calculate the beta
-		Array<OneD, NekDouble> YoungsModulus(nq);
-		Array<OneD, NekDouble> beta(nq);
-		MaterialProperties(YoungsModulus,0.0);
-		for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-		{
-			beta[j] = sqrt(3.1415)*h0*YoungsModulus[j]/((1-nue*nue)*A_0[j]);
-			//cout << "beta = "<<beta[j]<<endl;
-		}
-		
 		
         switch (i)
 		{
-			//flux for A equation	
-			case 0:
+			case 0:   // Flux for A equation
 			{
 				for (int j = 0; j < nq; j++)
 				{
@@ -239,46 +240,40 @@ namespace Nektar
 				}
 			}
 			break;
-				
-			//flux for u equation	
-			case 1:
-			{
+			case 1:  // Flux for u equation
+ 			{
 				for (int j = 0; j < nq; j++)
 				{
 					ASSERTL0(physfield[0][j]>=0,"Negative A not allowed.");
-					p = pext + beta[j]*(sqrt(physfield[0][j]) - sqrt(A_0[j]));
+					p = pext + m_beta[j]*(sqrt(physfield[0][j]) - sqrt(m_A_0[j]));
 					p_t = (physfield[1][j]*physfield[1][j])/2 + p/rho;
-
 					flux[0][j] =  p_t;
 				}
 			}
 			break;
-				
 			default:
 				ASSERTL0(false,"GetFluxVector: illegal vector index");
-				break;
+			break;
 		}
     }
 
 	
-	/*Calculates the third term of the weak form: numerical flux at boundary
+	/**
+	 * Calculates the third term of the weak form: numerical flux at boundary
 	 *
 	 */
-    void PulseWavePropagation::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
+    void PulseWavePropagation::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+											   Array<OneD, Array<OneD, NekDouble> > &numflux)
     {		
         int i;
 		int nTraceNumPoints = GetTraceTotPoints();
 		int nvariables      = 2; //(A,u)
-		int nq = m_fields[0]->GetNpoints();
-		
+		int nq = m_fields[0]->GetNpoints();		
 		NekDouble rho = m_rho; 
 		NekDouble pext = m_pext; 
-		NekDouble p = 0.0;
-		NekDouble p_t = 0.0;
 		NekDouble h0 = m_h0; 
 		NekDouble nue = m_nue; 
 		
-		// get temporary arrays
 		Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
 		for (i = 0; i < nvariables; ++i)
@@ -287,15 +282,20 @@ namespace Nektar
 			Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
 		}
 		
+		/*/ Print the values in physfield
+		for (int i=0; i<physfield[0].num_elements(); i++)
+		{
+			cout << "physfield[A]["<<i<<"] = "<<physfield[0][i]<<"\t";
+			cout << "physfield[u]["<<i<<"] = "<<physfield[1][i]<<endl;
+		}*/
 		
-		// get the physical values at the trace
+		// Get the physical values at the trace
 		for (i = 0; i < nvariables; ++i)
 		{
 			m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
 		}
 				
-		
-		/*/print the values in Fwd and Bwd
+		/*/ Print the values in Fwd and Bwd
 		 for (int i=0; i<Fwd[0].num_elements(); i++)
 		 {
 		 cout << "Fwd[A]["<<i<<"] = "<<Fwd[0][i]<<"\t";
@@ -305,47 +305,17 @@ namespace Nektar
 		 cout << "Bwd[u]["<<i<<"] = "<<Bwd[1][i]<<endl;
 		 }*/
 		
-		
-		//Get A_0 at equilibrium state, !Is hard coded by A_0[0]
-		Array<OneD, NekDouble> A_0(nq);
+		// Get A_0 at the trace
 		Array<OneD, NekDouble> A_trace(GetTraceTotPoints());
-		StaticArea(A_0,0.0);
-		for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-		{
-			//cout << "A_0 = "<<A_0[j]<<endl;
-		}
-		//m_fields[0]->GetFwdBwdTracePhys(A_0,A_trace,A_trace2);
-		m_fields[0]->ExtractTracePhys(A_0,A_trace);
-		A_trace[GetTraceTotPoints()-1]=A_0[GetTotPoints()-1];
+		m_fields[0]->ExtractTracePhys(m_A_0,A_trace);
+		A_trace[GetTraceTotPoints()-1] = m_A_0[GetTotPoints()-1];
 		
-		for (int j = 0; j < GetTraceTotPoints(); ++j)
-		{
-			//cout << "A_trace["<<j<<"] = "<<A_trace[j]<<endl;
-		}
-		
-		
-		
-		//Get the material properties of the artery from the inputfile and calculate the beta
-		Array<OneD, NekDouble> YoungsModulus(nq);
-		Array<OneD, NekDouble> beta(nq);
+		// Get the material properties at the trace
 		Array<OneD, NekDouble> beta_trace(GetTraceTotPoints());
-		MaterialProperties(YoungsModulus,0.0);
-		for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-		{
-			beta[j] = sqrt(3.1415)*h0*YoungsModulus[j]/((1-nue*nue)*A_0[j]);
-			//cout << j<<"\tbeta = "<<beta[j]<<endl;
-		}
-		
-		m_fields[0]->ExtractTracePhys(beta,beta_trace);
-		beta_trace[GetTraceTotPoints()-1]=beta[GetTotPoints()-1];
+		m_fields[0]->ExtractTracePhys(m_beta,beta_trace);
+		beta_trace[GetTraceTotPoints()-1] = m_beta[GetTotPoints()-1];
 
-		for (int j = 0; j < GetTraceTotPoints(); ++j)
-		{
-			//cout << "beta_trace["<<j<<"] = "<<beta_trace[j]<<endl;
-		}
-		
-		
-        // Solve the Riemann problem
+        // Solve the upwinding Riemann problem within one arterial segment
         NekDouble Aflux, uflux;
         for (i = 0; i < nTraceNumPoints; ++i)
 		{
@@ -353,8 +323,7 @@ namespace Nektar
 			{
 				case eUpwindPulse:
 				{
-					RiemannSolverUpwind(Fwd[0][i],Fwd[1][i],
-										Bwd[0][i],Bwd[1][i],
+					RiemannSolverUpwind(Fwd[0][i],Fwd[1][i],Bwd[0][i],Bwd[1][i],
 										Aflux, uflux,i, A_trace[i], beta_trace[i]);
 				}
 					break;
@@ -364,20 +333,18 @@ namespace Nektar
 				}
 					break;
 			}
-			
-			// rotate back to Cartesian
 			numflux[0][i]  = Aflux;
 			numflux[1][i] = uflux;
 		}
     }
 	
 	
-	/*Upwinding Riemann solver for pulse wave propagaiton
+	/**
+	 * Upwinding Riemann solver for pulse wave propagaiton
 	 * 
 	 */
-	void PulseWavePropagation::RiemannSolverUpwind(NekDouble AL,NekDouble uL,
-												   NekDouble AR,NekDouble uR, 
-												   NekDouble &Aflux, NekDouble &uflux, int i, NekDouble A_0, NekDouble beta) //(croth)
+	void PulseWavePropagation::RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, 
+												   NekDouble &Aflux, NekDouble &uflux, int i, NekDouble A_0, NekDouble beta)
 	{
 		int nvariables      = 2;
 		int nq = m_fields[0]->GetNpoints();
@@ -396,8 +363,7 @@ namespace Nektar
 		NekDouble h0 = m_h0; 
 		NekDouble nue = m_nue; 
 		
-		
-		// compute the wave speeds
+		// Compute the wave speeds
 		cL = sqrt(beta*sqrt(AL)/(2*rho));
 		cR = sqrt(beta*sqrt(AR)/(2*rho));
 		c_Roe =(cL+cR)/2;
@@ -410,11 +376,11 @@ namespace Nektar
 		lambda[1]= u_Roe - c_Roe;
 		//cout << "lambda[0] = "<<lambda[0]<<"\tlambda[1] = "<<lambda[1]<<endl;
 		
-		// calculate the caracteristic variables 
-		//left characteristics
+		// Calculate the caracteristic variables 
+		// Left characteristics
 		characteristic[0] = uL + 4*sqrt(sqrt(AL))*sqrt(beta/(2*rho));
 		characteristic[1] = uL - 4*sqrt(sqrt(AL))*sqrt(beta/(2*rho));
-		//right characteristics
+		// Right characteristics
 		characteristic[2] = uR + 4*sqrt(sqrt(AR))*sqrt(beta/(2*rho));
 		characteristic[3] = uR - 4*sqrt(sqrt(AR))*sqrt(beta/(2*rho));
 		
@@ -423,7 +389,7 @@ namespace Nektar
 			//cout << "characteristic["<<k<<"] = "<<characteristic[k]<<endl;
 		}
 		
-		//take left or right value of characteristic variable
+		// Take left or right value of characteristic variable
 		for (int j=0; j<2; j++)
 		{
 			if (lambda[j]>=0.0)
@@ -436,74 +402,91 @@ namespace Nektar
 			}
 		}
 		
-		
-		
 		for (int i=0; i<2; i++)
 		{
 			//cout << "upwinded W["<<i<<"] = "<<W[i]<<endl;
 		}
 		
-		//calculate conservative variables from characteristics
+		// Calculate conservative variables from characteristics
 		upwindedphysfield[0]= ((W[0]-W[1])/4)*((W[0]-W[1])/4)*((W[0]-W[1])/4)*((W[0]-W[1])/4)*(rho/(2*beta))*(rho/(2*beta));
 		upwindedphysfield[1]= (W[0] + W[1])/2;
 		
 		
-		// compute the fluxes
+		// Compute the fluxes
 		Aflux = upwindedphysfield[0] * upwindedphysfield[1];
 		p = pext + beta*(sqrt(upwindedphysfield[0]) - sqrt(A_0));
 		p_t = (upwindedphysfield[1]*upwindedphysfield[1])/2 + p/rho;				
 		uflux =  p_t;
 		
 	}
+
 	
-	
-	
-	
-	/*Gets the Material Properties of the artery
-	 * specified in the inputfile
+	/**
+	 * Q-inflow Riemann solver for pulse wave propagation.
+	 * This Riemann solver is called by SetBoundaryCondition_Pulse()
+	 * in case of the inflow boundary condition is "Q_INFLOW" type.
+	 * Returns the upwinded quantities and stores them in the bc's
 	 */
-	void PulseWavePropagation::MaterialProperties(Array<OneD, NekDouble> &YoungsModulus, const NekDouble time)
-    {
-		int nq = m_fields[0]->GetNpoints();
-		std::string velStr[1] = {"E0"};        
+	void PulseWavePropagation::Q_inflowRiemannSolver(NekDouble Q,NekDouble A_r,NekDouble u_r,NekDouble A_0, NekDouble beta,
+													 NekDouble &Au,NekDouble &uu)
+	{		
+		NekDouble W2 = 0.0;
+		NekDouble c = 0.0;
+		NekDouble A_calc = 0.0;
+		NekDouble fa = 0.0;
+		NekDouble dfa = 0.0;
+		NekDouble delta_A_calc = 0.0;
+		NekDouble p = 0.0;
+		NekDouble pext = 0.0;
+		NekDouble p_t = 0.0;
+		NekDouble rho = m_rho; 
+	 
+		int proceed = 1;
+		int iter = 0;
+		int MAX_ITER = 200;
+	 
+		// Tolerances for the algorithm
+		NekDouble Tol = 1.0e-10;
+	 
+		// Riemann invariant W2(Ar,ur)
+		W2 = u_r - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_r)) - sqrt(sqrt(A_0)));
+	 
+		// Calculate the wave speed
+		c = sqrt(beta/(2*rho))*sqrt(sqrt(A_r));
 		
-		LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("MaterialProperties",velStr[0]);
+		// Newton Iteration (Area only)
+		A_calc = A_r;
+		while ((proceed) && (iter < MAX_ITER))
+		{	
+			iter =iter+1;
+	 
+			fa = Q - W2*A_calc - A_calc*4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0)));
+			dfa = -W2 - A_calc*4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0))) - sqrt(beta/(2*rho))*sqrt(sqrt(A_calc));
+			delta_A_calc = fa/dfa;
+			A_calc = A_calc - delta_A_calc;
+	 
+			if (sqrt(delta_A_calc*delta_A_calc) < Tol)
+				proceed = 0;
+		}
 		
-		EvaluateFunction(YoungsModulus,ifunc,time);
-    }
-	
-	
-	/*Gets the Area at static equilibrium
-	 * specified in the inputfile
-	 */
-	void PulseWavePropagation::StaticArea(Array<OneD, NekDouble> &A_0, const NekDouble time)
-    {
-		int nq = m_fields[0]->GetNpoints();
-		std::string velStr[1] = {"A"};        
+		// Obtain u from W2 and A_calc
+		uu = W2 + 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0))); 
+		Au = A_calc;
 		
-		LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("A_0",velStr[0]);
+		cout << "-----------------------------------------------------"<<endl;
+		cout << "| Q_inflow Riemann solver; number of iterations: "<<iter<<"  |"<<endl;
+		cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
+		cout << "----------------------------------------------------"<< endl;
 		
-		EvaluateFunction(A_0,ifunc,time);
-    }
+	 }
 	
 	
-	/*Handle the pressure boundary condition
-	 * if a boundary condition is set for
-	 * the inflow pressure
-	 */
-	void PulseWavePropagation::SetBoundaryConditions_new(NekDouble time)
-	{
-		
-	}
-	
-	
-	/*Print summary routine
-	 *
+	/**
+	 * Print summary routine
 	 */
     void PulseWavePropagation::v_PrintSummary(std::ostream &out)
     {
         PulseWaveSystem::v_PrintSummary(out);
     }
-
 
 }

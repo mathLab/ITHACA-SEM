@@ -47,22 +47,21 @@ namespace Nektar
         friend class MemoryManager<PulseWavePropagation>;
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-				const LibUtilities::SessionReaderSharedPtr& pSession) {
-				EquationSystemSharedPtr p = MemoryManager<PulseWavePropagation>::AllocateSharedPtr(pSession);
-				p->InitObject();
-				return p;
+        static EquationSystemSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
+		{
+			EquationSystemSharedPtr p = MemoryManager<PulseWavePropagation>::AllocateSharedPtr(pSession);
+			p->InitObject();
+			return p;
         }
+		
         /// Name of class
         static std::string className;
 
         virtual ~PulseWavePropagation();
 
+		
     protected:
-        Array<OneD, Array<OneD, NekDouble> > m_velocity;
-
-        PulseWavePropagation(
-							 const LibUtilities::SessionReaderSharedPtr& pSession);
+        PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,
@@ -74,23 +73,23 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
+        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
+									 Array<OneD, Array<OneD, NekDouble> > &flux);
 		
-        // DG Pulse Wave Propagation routines
-		virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
+        /// DG Pulse Wave Propagation routines:
+		/// Numerical Flux at interelemental boundaries
+		virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+									 Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-		void RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, NekDouble &Aflux, NekDouble &uflux, int i, NekDouble A_0, NekDouble beta);
+		/// Upwinding Riemann solver for interelemental boundaries
+		void RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, NekDouble &Aflux, 
+								 NekDouble &uflux, int i, NekDouble A_0, NekDouble beta);
 		
-		//Routine for Discontinuous material properties
-		void MaterialProperties(Array<OneD, NekDouble> &YoungsModulus, const NekDouble time);
+		/// Q_inflow Riemann solver
+		void Q_inflowRiemannSolver(NekDouble Q, NekDouble A_r, NekDouble u_r, NekDouble A_0, NekDouble beta, 
+								   NekDouble &Au,NekDouble &uu);
 		
-		//Routine for A_0 at equilibrium state
-		void StaticArea(Array<OneD, NekDouble> &A_0, const NekDouble time);
-		
-		//Routine for pressure boundary condition
-		void SetBoundaryConditions_new(NekDouble time);
-		
-        // Print Summary
+        /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
     };
 }

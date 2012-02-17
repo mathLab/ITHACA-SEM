@@ -95,6 +95,13 @@ namespace Nektar
                       const SpatialDomains::CompositeMap &domain,
                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
                       const bool DeclareCoeffPhysArrays = true);
+			
+			
+			MULTI_REGIONS_EXPORT ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+										   const SpatialDomains::CompositeMap &domain,
+										   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+										   int i,
+										   const bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(

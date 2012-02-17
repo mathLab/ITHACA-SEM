@@ -294,6 +294,104 @@ namespace Nektar
             }
         }
 
+		/**
+         * Fills the list of local expansions with the segments in one
+		 * subdomain specified in an inputfile by \a domain. This 
+		 * CompositeMap contains a list of Composites which define the 
+		 * subdomains.
+         * @param   domain      A domain, comprising of one or more composite
+         *                      regions.
+		 * @param   i           Index of currently processed subdomain
+         * @param   graph1D     A mesh, containing information about the
+         *                      domain and the spectral/hp element expansion.
+         * @param   DeclareCoeffPhysArrays If true, create general segment expansions
+         *                      instead of just normal segment expansions.
+         */
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+							 const SpatialDomains::CompositeMap &domain,
+                             const SpatialDomains::MeshGraphSharedPtr &graph1D,
+							 int i,
+                             const bool DeclareCoeffPhysArrays):
+		ExpList(pSession)
+        {
+			
+			cout << "\n---- ExpList1D::ExpList1D(domain, graph1D); subdomain = "<<i<<" ----"<<endl;
+			
+            int id=0;
+            SpatialDomains::Composite comp;
+            SpatialDomains::CompositeMap::const_iterator compIt;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
+            LocalRegions::SegExpSharedPtr seg;
+			
+			int offset = 0;
+			const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
+			SpatialDomains::ExpansionMap::const_iterator expIt;
+			
+			
+            // Find the correct composite region to process
+			compIt = domain.begin();
+            for(int k = 0; k < i; ++k)
+            {
+				offset += compIt->second->size();
+				++compIt;
+			}	
+			cout << "composite to be processed: "<<compIt->first<<endl;
+			comp = compIt->second;
+			
+			//Find the correct expansion start point for the current composite
+			expIt = expansions.begin();
+			for(int k = 0; k < offset; ++k)
+            {
+				++expIt;
+			}	
+			
+			// Process each expansion in the region.
+			cout << "Number of expansions in composite: "<<compIt->second->size()<<endl;
+            for(int j = 0; j < compIt->second->size(); ++j)
+            {
+				if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*compIt->second)[j]))
+				{
+					cout << "procesing segment S["<< offset+j <<"]...";
+					
+					// Retrieve the basis key from the expansion.
+					LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
+															
+					cout << "\t basiskey nummodes = "<<bkey.GetNumModes();
+					cout << "\t basiskey numpoints = "<<bkey.GetNumPoints()<<endl;
+					
+					seg = MemoryManager<LocalRegions::SegExp>
+					::AllocateSharedPtr(bkey, SegmentGeom);
+					
+					// Add the segment to the expansion list.
+					seg->SetElmtId(id++);
+					(*m_exp).push_back(seg);
+					
+					expIt++;
+				}
+				else
+				{
+					ASSERTL0(false,"dynamic cast to a SegGeom failed");
+				}
+			}
+			
+			
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+			::AllocateSharedPtr(nel);
+			
+            // Allocate storage for data and populate element offset lists.
+            SetCoeffPhysOffsets();
+			
+            // Set up m_coeffs, m_phys.
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
+        }
+		
+		
 
         /**
          * Store expansions for the trace space expansions used in

@@ -15,6 +15,24 @@ L inf error (variable u) : 1.00633
 TestPaper3_DG.xml
 L 2 error (variable A) : 10.7976
 L inf error (variable A) : 0.988339
-L 2 error (variable u) : 19.9527
+L 2 error (variable u) : 19.9526
 L inf error (variable u) : 1.99782
+----------------------------------------
+Test_Q_inflow.xml
+L 2 error (variable A) : 14.8393
+L inf error (variable A) : 1.05484
+L 2 error (variable u) : 14.9111
+L inf error (variable u) : 1.53557
+----------------------------------------
+Test_Junction.xml
+L 2 error (variable A) : 10.0006
+L inf error (variable A) : 1.00678
+L 2 error (variable u) : 0.0507248
+L inf error (variable u) : 0.0676101
+----------------------------------------
+Test_Bifurcation.xml
+L 2 error (variable A) : 59.8338
+L inf error (variable A) : 6.00991
+L 2 error (variable u) : 0.063162
+L inf error (variable u) : 0.0691512
 ----------------------------------------

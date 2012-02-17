@@ -724,10 +724,10 @@ namespace Nektar
       * @param   Normalised      Normalise L2-error.
       * @returns                 Error in the L2-norm.
       */
-     NekDouble EquationSystem::L2Error(unsigned int field,
+     NekDouble EquationSystem::v_L2Error(unsigned int field,
                                 const Array<OneD, NekDouble> &exactsoln,
                                 bool Normalised)
-     {    	     
+     {    	
          NekDouble L2error = -1.0;
 
          if(m_NumQuadPointsError == 0)
@@ -784,7 +784,7 @@ namespace Nektar
       * @param   exactsoln       The exact solution to compare with.
       * @returns                 Error in the L_inft-norm.
       */
-     NekDouble EquationSystem::LinfError(unsigned int field,
+     NekDouble EquationSystem::v_LinfError(unsigned int field,
                                   const Array<OneD, NekDouble> &exactsoln)
      {
          NekDouble Linferror = -1.0;
@@ -1485,8 +1485,12 @@ namespace Nektar
             for(i = 0; i < nvariables; ++i)
             {
                 Vmath::Neg(ncoeffs,OutField[i],1);
+				//cout << "\nEnter routine for variable "<<i<<endl;
                 m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
+				//cout << "Done for first var"<<endl;
                 m_fields[i]->SetPhysState(false);
+				//cout << "state set false for first var\n"<<endl;
+
             }
         }
         // if the NumericalFlux function does not include the

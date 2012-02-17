@@ -80,6 +80,9 @@ int main(int argc, char* argv[])
     Execute("PulseWaveSolver","TestPaper1_DG.xml","1D discontinuous material properties, P=5");
 	Execute("PulseWaveSolver","TestPaper2_DG.xml","1D straight vessel, P=5");
 	Execute("PulseWaveSolver","TestPaper3_DG.xml","1D tapering vessel, P=5");
+	Execute("PulseWaveSolver","Test_Q_inflow.xml","Q-inflow Riemann solver, P=5");
+	Execute("PulseWaveSolver","Test_Junction.xml","Junction Riemann solver, P=5");
+	Execute("PulseWaveSolver","Test_Bifurcation.xml","Bifurcation Riemann solver, P=5");
 
     
     if (tests_failed && !quiet)

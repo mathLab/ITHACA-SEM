@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Bidomain.h
+// File TenTusscher06M.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,78 +29,55 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Bidomain cardiac electrophysiology homogenised model.
+// Description: ten Tusscher 2006 Mid-myocardium cell model
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_M_CELL_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_M_CELL_H
 
-#include <Auxiliary/UnsteadySystem.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
 
 namespace Nektar
 {
-
-
-    /// A model for cardiac conduction.
-    class Bidomain : public UnsteadySystem
+    class TenTusscher06M : public CellModel
     {
-    public:
-        friend class MemoryManager<Bidomain>;
 
+    public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+        static CellModelSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField)
         {
-            EquationSystemSharedPtr p = MemoryManager<Bidomain>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
+            return MemoryManager<TenTusscher06M>::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
         static std::string className;
 
-        /// Desctructor
-        virtual ~Bidomain();
+        /// Constructor
+        TenTusscher06M(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField);
+
+        /// Destructor
+        virtual ~TenTusscher06M() {}
 
     protected:
-        /// Constructor
-        Bidomain(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        virtual void v_InitObject();
-
-        /// Solve for the diffusion term.
-        void DoImplicitSolve(
-                const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&outarray,
-                      NekDouble time,
-                      NekDouble lambda);
-
-        /// Computes the reaction terms \f$f(u,v)\f$ and \f$g(u,v)\f$.
-        void DoOdeRhs(
-                const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                      Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                const NekDouble time);
-
-        /// Sets a custom initial condition.
-        virtual void v_SetInitialConditions(NekDouble initialtime,
-                                bool dumpInitialConditions); 
+        /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
+        virtual void v_Update(
+               const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                     Array<OneD,        Array<OneD, NekDouble> >&outarray,
+               const NekDouble time);
 
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
 
+        virtual void v_SetInitialConditions();
+
     private:
-        /// Cell model.
-        CellModelSharedPtr m_cell;
 
-        NekDouble m_uinit, m_vinit, m_beta, m_chi, m_cm, m_sigmai, m_sigmae; 
-
-        /// Stimulus current
-        NekDouble m_stimDuration;
     };
-
 }
 
 #endif

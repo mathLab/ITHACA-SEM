@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN2D_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN2D_H
 
 #include <Auxiliary/UnsteadySystem.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
@@ -44,16 +44,16 @@ namespace Nektar
 
 
     /// A model for cardiac conduction.
-    class Bidomain : public UnsteadySystem
+    class Bidomain2D : public UnsteadySystem
     {
     public:
-        friend class MemoryManager<Bidomain>;
+        friend class MemoryManager<Bidomain2D>;
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            EquationSystemSharedPtr p = MemoryManager<Bidomain>::AllocateSharedPtr(pSession);
+            EquationSystemSharedPtr p = MemoryManager<Bidomain2D>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -62,11 +62,11 @@ namespace Nektar
         static std::string className;
 
         /// Desctructor
-        virtual ~Bidomain();
+        virtual ~Bidomain2D();
 
     protected:
         /// Constructor
-        Bidomain(
+        Bidomain2D(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
@@ -90,15 +90,18 @@ namespace Nektar
 
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
-
     private:
         /// Cell model.
         CellModelSharedPtr m_cell;
 
-        NekDouble m_uinit, m_vinit, m_beta, m_chi, m_cm, m_sigmai, m_sigmae; 
+        NekDouble m_chi, m_capMembrane, m_sigmaix, m_sigmaiy, m_sigmaiz, m_sigmaex, m_sigmaey, m_sigmaez; 
 
-        /// Stimulus current
-        NekDouble m_stimDuration;
+        StdRegions::VarCoeffMap m_vardiffi;
+       	StdRegions::VarCoeffMap m_vardiffie;
+
+       	Array<OneD, Array<OneD, NekDouble> > tmp1;
+       	Array<OneD, Array<OneD, NekDouble> > tmp2;
+       	Array<OneD, Array<OneD, NekDouble> > tmp3;
     };
 
 }

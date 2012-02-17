@@ -10,6 +10,8 @@ SET(CardiacEPSolverSource
        ./CellModels/Fox02.cpp
        ./CellModels/Winslow99.cpp
        ./CellModels/TenTusscher06Epi.cpp
+       ./CellModels/TenTusscher06M.cpp
+       ./CellModels/TenTusscher06Endo.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp
        ../Auxiliary/Driver.cpp

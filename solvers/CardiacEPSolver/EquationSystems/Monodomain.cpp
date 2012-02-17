@@ -60,7 +60,7 @@ namespace Nektar
             = GetEquationSystemFactory().RegisterCreatorFunction(
                 "Monodomain",
                 Monodomain::create,
-                "Phenomological model of canine cardiac electrophysiology.");
+                "Monodomain model of cardiac electrophysiology.");
 
 
     /**
@@ -290,9 +290,26 @@ namespace Nektar
     void Monodomain::v_PrintSummary(std::ostream &out)
     {
         UnsteadySystem::v_PrintSummary(out);
-        if (m_session->DefinesFunction("d00") && m_session->GetFunctionType("d00") == LibUtilities::eFunctionTypeExpression)
+        if (m_session->DefinesFunction("d00") &&
+            m_session->GetFunctionType("d00") == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : " << m_session->GetFunction("d00", "intensity")->GetEquation() << endl;
+            out << "\tDiffusivity-x   : "
+                << m_session->GetFunction("d00", "intensity")->GetEquation()
+                << endl;
+        }
+        if (m_session->DefinesFunction("d11") &&
+            m_session->GetFunctionType("d11") == LibUtilities::eFunctionTypeExpression)
+        {
+            out << "\tDiffusivity-x   : "
+                << m_session->GetFunction("d11", "intensity")->GetEquation()
+                << endl;
+        }
+        if (m_session->DefinesFunction("d22") &&
+            m_session->GetFunctionType("d22") == LibUtilities::eFunctionTypeExpression)
+        {
+            out << "\tDiffusivity-x   : "
+                << m_session->GetFunction("d22", "intensity")->GetEquation()
+                << endl;
         }
         m_cell->PrintSummary(out);
     }

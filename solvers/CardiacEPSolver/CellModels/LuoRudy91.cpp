@@ -53,9 +53,7 @@ namespace Nektar
                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
                                                            const NekDouble time)
     {
-        int nvariables  = inarray.num_elements();
-        int nq = m_nq;
-        for (unsigned int i = 0; i < nq; ++i)
+        for (unsigned int i = 0; i < m_nq; ++i)
         {
             // Inputs:
             // Time units: millisecond
@@ -211,16 +209,36 @@ namespace Nektar
             const NekDouble var_membrane__d_V_d_environment__time = ((-1.0) / var_membrane__C) * (var_membrane__I_stim + var_membrane__i_Na + var_membrane__i_si + var_membrane__i_K + var_membrane__i_K1 + var_membrane__i_Kp + var_membrane__i_b); // 'millivolt per millisecond'
             const NekDouble var_chaste_interface__membrane__d_V_d_environment__time = var_membrane__d_V_d_environment__time; // ___units_1
             d_dt_chaste_interface__membrane__V = var_chaste_interface__membrane__d_V_d_environment__time; // 'millivolt per millisecond'
+            const NekDouble m_inf = var_fast_sodium_current_m_gate__alpha_m/(var_fast_sodium_current_m_gate__alpha_m + var_fast_sodium_current_m_gate__beta_m);
+    	    const NekDouble m_tau = 1.0/(var_fast_sodium_current_m_gate__alpha_m + var_fast_sodium_current_m_gate__beta_m);
+    	    const NekDouble h_inf = var_fast_sodium_current_h_gate__alpha_h/(var_fast_sodium_current_h_gate__alpha_h + var_fast_sodium_current_h_gate__beta_h);
+    	    const NekDouble h_tau = 1.0/(var_fast_sodium_current_h_gate__alpha_h + var_fast_sodium_current_h_gate__beta_h);
+    	    const NekDouble j_inf = var_fast_sodium_current_j_gate__alpha_j/(var_fast_sodium_current_j_gate__alpha_j + var_fast_sodium_current_j_gate__beta_j);
+    	    const NekDouble j_tau = 1.0/(var_fast_sodium_current_j_gate__alpha_j + var_fast_sodium_current_j_gate__beta_j);
+    	    const NekDouble d_inf = var_slow_inward_current_d_gate__alpha_d/(var_slow_inward_current_d_gate__alpha_d + var_slow_inward_current_d_gate__beta_d);
+    	    const NekDouble d_tau = 1.0/(var_slow_inward_current_d_gate__alpha_d + var_slow_inward_current_d_gate__beta_d);
+    	    const NekDouble f_inf = var_slow_inward_current_f_gate__alpha_f/(var_slow_inward_current_f_gate__alpha_f + var_slow_inward_current_f_gate__beta_f);
+    	    const NekDouble f_tau = 1.0/(var_slow_inward_current_f_gate__alpha_f + var_slow_inward_current_f_gate__beta_f);
+    	    const NekDouble X_inf = var_time_dependent_potassium_current_X_gate__alpha_X/(var_time_dependent_potassium_current_X_gate__alpha_X + var_time_dependent_potassium_current_X_gate__beta_X);
+    	    const NekDouble X_tau = 1.0/(var_time_dependent_potassium_current_X_gate__alpha_X + var_time_dependent_potassium_current_X_gate__beta_X);
+
             outarray[0][i] = d_dt_chaste_interface__membrane__V;
-            outarray[1][i] = d_dt_chaste_interface__fast_sodium_current_m_gate__m;
-            outarray[2][i] = d_dt_chaste_interface__fast_sodium_current_h_gate__h;
-            outarray[3][i] = d_dt_chaste_interface__fast_sodium_current_j_gate__j;
-            outarray[4][i] = d_dt_chaste_interface__slow_inward_current_d_gate__d;
-            outarray[5][i] = d_dt_chaste_interface__slow_inward_current_f_gate__f;
-            outarray[6][i] = d_dt_chaste_interface__time_dependent_potassium_current_X_gate__X;
+            outarray[1][i] = m_inf;
+            m_gates_tau[0][i] = m_tau;
+            outarray[2][i] = h_inf;
+            m_gates_tau[1][i] = h_tau;
+            outarray[3][i] = j_inf;
+            m_gates_tau[2][i] = j_tau;
+            outarray[4][i] = d_inf;
+            m_gates_tau[3][i] = d_tau;
+            outarray[5][i] = f_inf;
+            m_gates_tau[4][i] = f_tau;
+            outarray[6][i] = X_inf;
+            m_gates_tau[5][i] = X_tau;
             outarray[7][i] = d_dt_chaste_interface__intracellular_calcium_concentration__Cai;
         }
     }
+
 
     /**
     *

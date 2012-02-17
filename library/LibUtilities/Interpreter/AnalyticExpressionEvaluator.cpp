@@ -55,6 +55,9 @@ using namespace boost::spirit::classic;
 using namespace boost::spirit;
 #endif
 
+// trying to avoid incompatibility between standart <algorithm> header and
+// windows.h header which defines max and min macros.
+using std::min;
 
 namespace Nektar
 {
@@ -570,14 +573,15 @@ namespace Nektar
                 result = Array<OneD, NekDouble>(num_points, 0.0);
             }
 
-            m_state.resize( m_state_sizes[expression_id] * std::min(chunk_size, num_points) );
-            m_variable.resize( 4 * std::min(chunk_size, num_points), 0.0);
+            /// please don't remove brackets around std::min
+            m_state.resize( m_state_sizes[expression_id] * (std::min)(chunk_size, num_points) );
+            m_variable.resize( 4 * (std::min)(chunk_size, num_points), 0.0);
 
             int offset = 0;
             int work_left = num_points;
             while(work_left > 0)
             {
-                const int this_chunk_size = std::min(work_left, 1024);
+                const int this_chunk_size = (std::min)(work_left, 1024);
                 for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*0] = x[offset + i++]) ;
                 for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*1] = y[offset + i++]) ;
                 for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*2] = z[offset + i++]) ;

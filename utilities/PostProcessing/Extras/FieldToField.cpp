@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
+#include <math.h>
 #include <iomanip>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>

@@ -780,9 +780,9 @@ namespace Nektar
                                 // x-component (stored in Qx)
                                 Vmath::Svtvp(nq,-m_kinvis,Qx,1,Nu,1,Qx,1);
                                 // y-component (stored in Qy)
-                                Vmath::Svtvp(nq,m_kinvis,Qy,1,Nv,1,Qy,1);
+                                Vmath::Svtvp(nq,-m_kinvis,Qy,1,Nv,1,Qy,1);
                                 // z-component (stored in Qz)
-                                Vmath::Svtvp(nq,m_kinvis,Qz,1,Nw,1,Qz,1);		
+                                Vmath::Svtvp(nq,-m_kinvis,Qz,1,Nw,1,Qz,1);		
 
                                 Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (PBndExp[n]->GetExp(i));
 
@@ -791,7 +791,7 @@ namespace Nektar
                                 elmt->GetFacePhysVals(boundary,Pbc,Qx,Uy);
                                 elmt->GetFacePhysVals(boundary,Pbc,Qy,Vx);
                                 elmt->GetFacePhysVals(boundary,Pbc,Qz,Wx);
-                                
+
                                 // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
                                 Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
 

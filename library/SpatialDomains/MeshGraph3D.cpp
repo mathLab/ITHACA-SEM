@@ -433,7 +433,6 @@ namespace Nektar
                             else if (face->GetGeomShapeType() == eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                //qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
                             }
                         }
 
@@ -441,14 +440,6 @@ namespace Nektar
                         ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
-
-                        StdRegions::FaceOrientation faceorient[kNfaces] =
-                        {
-                            //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
-                            //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
-                            //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
-                        };
 
                         TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
                         tetgeom->SetGlobalID(indx);
@@ -471,8 +462,8 @@ namespace Nektar
                         const int kNfaces = PyrGeom::kNfaces;
                         const int kNtfaces = PyrGeom::kNtfaces;
                         const int kNqfaces = PyrGeom::kNqfaces;
-                        TriGeomSharedPtr tfaces[kNtfaces];
-                        QuadGeomSharedPtr qfaces[kNqfaces];
+                        Geometry2DSharedPtr faces[kNfaces];
+                        int Nfaces  = 0;
                         int Ntfaces = 0;
                         int Nqfaces = 0;
 
@@ -494,12 +485,14 @@ namespace Nektar
                             else if (face->GetGeomShapeType() == eTriangle)
                             {
                                 ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-                                tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                                Ntfaces++;
                             }
                             else if (face->GetGeomShapeType() == eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-                                qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                                Nqfaces++;
                             }
                         }
 
@@ -508,15 +501,7 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] =
-                        {
-                            //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
-                            //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
-                            //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
-                        };
-
-                        PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
+                        PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(faces));
                         pyrgeom->SetGlobalID(indx);
 
                         m_pyrGeoms[indx] = pyrgeom;
@@ -579,14 +564,6 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] =
-                        {
-                            //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
-                            //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
-                            //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
-                        };
-
                         PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(faces));
                         prismgeom->SetGlobalID(indx);
 
@@ -645,15 +622,6 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] =
-                        {
-                            //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
-                            //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
-                            //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
-                        };
-
-                        //HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
                         HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
                         hexgeom->SetGlobalID(indx);
 
@@ -1160,63 +1128,3 @@ namespace Nektar
         }
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: MeshGraph3D.cpp,v $
-// Revision 1.15  2010/02/26 13:52:45  cantwell
-// Tested and fixed where necessary Hex/Tet projection and differentiation in
-//   StdRegions, and LocalRegions for regular and deformed (where applicable).
-// Added SpatialData and SpatialParameters classes for managing spatiall-varying
-//   data.
-// Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
-//   with some associated input meshes.
-// Added 3D std and loc projection demos for tet and hex.
-// Added 3D std and loc regression tests for tet and hex.
-// Fixed bugs in regression tests in relation to reading OK files.
-// Extended Elemental and Global optimisation parameters for 3D expansions.
-// Added GNUPlot output format option.
-// Updated ADR2DManifoldSolver to use spatially varying data.
-// Added Barkley model to ADR2DManifoldSolver.
-// Added 3D support to FldToVtk and XmlToVtk.
-// Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
-//
-// Revision 1.14  2009/05/01 13:23:21  pvos
-// Fixed various bugs
-//
-// Revision 1.13  2009/04/20 16:13:23  sherwin
-// Modified Import and Write functions and redefined how Expansion is used
-//
-// Revision 1.12  2009/01/12 10:26:59  pvos
-// Added input tags for nodal expansions
-//
-// Revision 1.11  2008/09/23 18:19:56  pvos
-// Updates for working ProjectContField3D demo
-//
-// Revision 1.10  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.9  2008/08/26 02:24:38  ehan
-// Added GetElementFromFace()
-//
-// Revision 1.8  2008/06/30 19:34:26  ehan
-// Fixed infinity recursive-loop error.
-//
-// Revision 1.7  2008/06/12 19:56:05  delisi
-// Changed some error handling for reading 3D geometries.
-//
-// Revision 1.6  2008/06/11 16:10:12  delisi
-// Added the 3D reader.
-//
-// Revision 1.5  2008/06/09 22:36:09  delisi
-// Changed Tet representation from 'E' to 'A', since 'E' is used by edges.
-//
-// Revision 1.4  2008/05/29 19:07:39  delisi
-// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
-//
-// Revision 1.3  2008/02/08 23:05:52  jfrazier
-// More work on 3D components.
-//
-// Revision 1.2  2008/02/03 05:05:16  jfrazier
-// Initial checkin of 3D components.
-//
-//

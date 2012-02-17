@@ -499,7 +499,7 @@ namespace Nektar
 
             // m_geom->FillGeom(); // TODO: implement FillGeom()
 
-            for(i = 0; i < m_geom->GetCoordDim(); ++i)
+            for(i = 0; i < m_geom->GetCoordim(); ++i)
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }

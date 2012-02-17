@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/PrismGeom.cpp,v $
+//  File: PrismGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,14 +29,15 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
-//
+//  Description: Prismatic geometry definition.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/PrismGeom.h>
 #include <iomanip>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -48,21 +49,26 @@ namespace Nektar
         }
 
         PrismGeom::PrismGeom(const Geometry2DSharedPtr faces[]):
-                Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
+            Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_geomShapeType = ePrism;
-
-            /// Copy the face shared pointers
+            
+            /// Copy the face shared pointers.
             m_faces.insert(m_faces.begin(), faces, faces+PrismGeom::kNfaces);
 
+            /// Set up orientation vectors with correct amount of elements.
+            m_eorient.resize(kNedges);
+            m_forient.resize(kNfaces);
+            
+            /// Set up local objects.
             SetUpLocalEdges();
             SetUpLocalVertices();
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
-
+            
             /// Determine necessary order for standard region.
             vector<int> tmp;
-
+            
             int order0, points0, order1, points1;
             
             if (m_forient[0] < 4)
@@ -139,12 +145,15 @@ namespace Nektar
             tmp.push_back(faces[3]->GetEdge(2)->GetBasis(0,0)->GetNumPoints());
             int points2 = *max_element(tmp.begin(), tmp.end());
             
-            const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
-                                           LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order1,
-                                           LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey C(LibUtilities::eModified_B, order2,
-                                           LibUtilities::PointsKey(points2,LibUtilities::eGaussRadauMAlpha1Beta0));
+            const LibUtilities::BasisKey A(
+                LibUtilities::eModified_A, order0,
+                LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B(
+                LibUtilities::eModified_A, order1,
+                LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey C(
+                LibUtilities::eModified_B, order2,
+                LibUtilities::PointsKey(points2,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
@@ -154,79 +163,66 @@ namespace Nektar
             }
         }
 
-        PrismGeom::PrismGeom(const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
-                             const StdRegions::FaceOrientation forient[])
-        {
-            m_geomShapeType = ePrism;
-
-            /// Copy the quad face shared pointers
-            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PrismGeom::kNqfaces);
-
-            /// Copy the triangle face shared pointers
-            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PrismGeom::kNtfaces);
-            
-            for (int j=0; j<kNfaces; ++j)
-            {
-               m_forient[j] = forient[j];
-            }
-            
-            m_coordim = tfaces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
-            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        }
-
-        PrismGeom::PrismGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[],
-                             const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
-                             const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
-        {
-            m_geomShapeType = ePrism;
-
-            /// Copy the vert shared pointers.
-            m_verts.insert(m_verts.begin(), verts, verts+PrismGeom::kNverts);
-
-            /// Copy the edge shared pointers.
-            m_edges.insert(m_edges.begin(), edges, edges+PrismGeom::kNedges);
-
-            /// Copy the quad face shared pointers
-            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PrismGeom::kNfaces);
-
-            /// Copy the triangle face shared pointers
-            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PrismGeom::kNfaces);
-
-            for (int i=0; i<kNedges; ++i)
-            {
-                m_eorient[i] = eorient[i];
-            }
-
-            for (int j=0; j<kNfaces; ++j)
-            {
-               m_forient[j] = forient[j];
-            }
-
-            m_coordim = verts[0]->GetCoordim();
-            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-
-        }
-
-        PrismGeom::PrismGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[])
-        {
-            m_geomShapeType = ePrism;
-
-            /// Copy the face shared pointers
-            m_faces.insert(m_faces.begin(), faces, faces+PrismGeom::kNfaces);
-
-            for (int j=0; j<kNfaces; ++j)
-            {
-               m_forient[j] = forient[j];
-            }
-
-            m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
-            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        }
-
         PrismGeom::~PrismGeom()
         {
         }
         
+        int PrismGeom::v_GetNumVerts() const
+        {
+            return 6;
+        }
+        
+        int PrismGeom::v_GetNumEdges() const
+        {
+            return 9;
+        }
+
+        void PrismGeom::v_GetLocCoords(
+            const Array<OneD, const NekDouble> &coords, 
+                  Array<OneD,       NekDouble> &Lcoords)
+        {
+            v_FillGeom();
+
+            // calculate local coordinate for coord
+            if(GetGtype() == eRegular)
+            {   // Based on Spen's book, page 99
+
+                // Point inside tetrahedron
+                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+                // Edges
+                VertexComponent er0, e10, e30, e40;
+                er0.Sub(r,*m_verts[0]);
+                e10.Sub(*m_verts[1],*m_verts[0]);
+                e30.Sub(*m_verts[3],*m_verts[0]);
+                e40.Sub(*m_verts[4],*m_verts[0]);
+
+
+                // Cross products (Normal times area)
+                VertexComponent cp1030, cp3040, cp4010;
+                cp1030.Mult(e10,e30);
+                cp3040.Mult(e30,e40);
+                cp4010.Mult(e40,e10);
+
+
+                // Barycentric coordinates (relative volume)
+                NekDouble V = e40.dot(cp1030); // Prism Volume = {(e40)dot(e10)x(e30)}/2
+                NekDouble beta  = er0.dot(cp3040) / (2.0*V); // volume1 = {(er0)dot(e30)x(e40)}/4
+                NekDouble gamma = er0.dot(cp4010) / (3.0*V); // volume2 = {(er0)dot(e40)x(e10)}/6
+                NekDouble delta = er0.dot(cp1030) / (2.0*V); // volume3 = {(er0)dot(e10)x(e30)}/4
+
+                // Make Prism bigger
+                Lcoords[0] = 2.0*beta  - 1.0;
+                Lcoords[1] = 2.0*gamma - 1.0;
+                Lcoords[2] = 2.0*delta - 1.0;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "inverse mapping must be set up to use this call");
+            }
+        }
+
         void PrismGeom::SetUpLocalEdges(){
             // find edge 0
             int i,j;
@@ -428,7 +424,6 @@ namespace Nektar
             }
         };
 
-
         void PrismGeom::SetUpEdgeOrientation(){
 
             // This 2D array holds the local id's of all the vertices
@@ -466,9 +461,7 @@ namespace Nektar
 
         };
 
-
         void PrismGeom::SetUpFaceOrientation(){
-
             int f,i;
 
             // These arrays represent the vector of the A and B
@@ -683,269 +676,6 @@ namespace Nektar
                 // Fill the m_forient array
                 m_forient[f] = (StdRegions::FaceOrientation) orientation;
             }
-
-        };
-
-        void PrismGeom::AddElmtConnected(int gvo_id, int locid)
-        {
-            CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
         }
-
-
-        int PrismGeom::NumElmtConnected() const
-        {
-            return int(m_elmtmap.size());
-        }
-
-
-        bool PrismGeom::IsElmtConnected(int gvo_id, int locid) const
-        {
-            std::list<CompToElmt>::const_iterator def;
-            CompToElmt ee(gvo_id,locid);
-
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
-
-            // Found the element connectivity object in the list
-            return (def != m_elmtmap.end());
-        }
-
-        /** given local collapsed coordinate Lcoord return the value of
-        physical coordinate in direction i **/
-        NekDouble PrismGeom::GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord)
-        {
-            ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
-
-            return m_xmap[i]->PhysEvaluate(Lcoord);
-        }
-
-        // Set up GeoFac for this geometry using Coord quadrature distribution
-        void PrismGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-        {
-            GeomType Gtype = eRegular;
-            GeomShapeType GSType = eQuadrilateral;
-            
-            FillGeom();
-
-            // check to see if expansions are linear
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(1) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(2) != 2) )
-                {
-                    Gtype = eDeformed;
-                }
-            }
-            // check to see if all necessary angles are 90 degrees
-//             if(Gtype == eRegular){
-//
-//                     const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] =
-//                         { {0,1,2,3} ,
-//                           {0,3,4,5} };
-//                     int f;
-//                     NekDouble dx1,dx2,dy1,dy2;
-//                     for(f = 0; f < kNqfaces; f++)
-//                     {
-//                         for(int i = 0; i < 3; ++i)
-//                         {
-//                             dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-//                             dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-//
-//                             dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-//                             dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-//
-//                             if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
-//                                                             * kGeomRightAngleTol)
-//                             {
-//                                 Gtype = eDeformed;
-//                                 break;
-//                             }
-//                         }
-//                         if(Gtype == eDeformed)
-//                         {
-//                             break;
-//                         }
-//                     }
-//               }
-
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
-
-		}
-
-
-
-          /** \brief put all quadrature information into edge structure
-        and backward transform
-
-        Note verts, edges, and faces are listed according to anticlockwise
-        convention but points in _coeffs have to be in array format from
-        left to right.
-
-        */
-
-        void PrismGeom::FillGeom()
-        {
-            if(m_state != ePtsFilled)
-            {
-                int i,j,k;
-
-                for(i = 0; i < kNfaces; i++)
-                {
-                    m_faces[i]->FillGeom();
-                    
-                    int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
-                    Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-                    Array<OneD,          int> signArray(nFaceCoeffs);
-                    
-                    if (m_forient[i] < 4)
-                    {
-                        m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
-                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
-                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
-                    }
-                    else
-                    {
-                        m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
-                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1),
-                                                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0));
-                    }
-                    
-                    for(j = 0; j < m_coordim; j++)
-                    {
-                    	const Array<OneD, const NekDouble> &coeffs = (*m_faces[i])[j]->GetCoeffs();
-                        for(k = 0; k < nFaceCoeffs; k++)
-                        {
-                            double v = signArray[k] * coeffs[k];
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-                        }
-                    }
-                }
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
-                }
-
-                m_state = ePtsFilled;
-            }
-        }
-
-        void PrismGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-        {
-            FillGeom();
-
-            // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
-            {   // Based on Spen's book, page 99
-
-                // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
-
-                // Edges
-                VertexComponent er0, e10, e30, e40;
-                er0.Sub(r,*m_verts[0]);
-                e10.Sub(*m_verts[1],*m_verts[0]);
-                e30.Sub(*m_verts[3],*m_verts[0]);
-                e40.Sub(*m_verts[4],*m_verts[0]);
-
-
-                // Cross products (Normal times area)
-                VertexComponent cp1030, cp3040, cp4010;
-                cp1030.Mult(e10,e30);
-                cp3040.Mult(e30,e40);
-                cp4010.Mult(e40,e10);
-
-
-                // Barycentric coordinates (relative volume)
-                NekDouble V = e40.dot(cp1030); // Prism Volume = {(e40)dot(e10)x(e30)}/2
-                NekDouble beta  = er0.dot(cp3040) / (2.0*V); // volume1 = {(er0)dot(e30)x(e40)}/4
-                NekDouble gamma = er0.dot(cp4010) / (3.0*V); // volume2 = {(er0)dot(e40)x(e10)}/6
-                NekDouble delta = er0.dot(cp1030) / (2.0*V); // volume3 = {(er0)dot(e10)x(e30)}/4
-
-                // Make Prism bigger
-                Lcoords[0] = 2.0*beta  - 1.0;
-                Lcoords[1] = 2.0*gamma - 1.0;
-                Lcoords[2] = 2.0*delta - 1.0;
-            }
-            else
-            {
-          NEKERROR(ErrorUtil::efatal,
-                    "inverse mapping must be set up to use this call");
-            }
-        }
-
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: PrismGeom.cpp,v $
-// Revision 1.17  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.16  2009/02/08 07:04:55  sherwin
-// Changed initialisation of maparray to take positive number
-//
-// Revision 1.15  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.14  2009/01/01 02:32:55  ehan
-// cleaned up the code
-//
-// Revision 1.13  2008/12/18 14:08:58  pvos
-// NekConstants update
-//
-// Revision 1.12  2008/12/03 23:41:22  ehan
-// Set GenGeomFactors to the nondeformed case.
-//
-// Revision 1.11  2008/11/24 20:59:55  ehan
-// Fixed bugs and added additional mapping routines for Prism.
-//
-// Revision 1.10  2008/11/17 08:59:37  ehan
-// Added necessary mapping routines for Tet
-//
-// Revision 1.9  2008/06/18 19:27:42  ehan
-// Added implementation for GetLocCoords(..)
-//
-// Revision 1.8  2008/06/16 22:41:55  ehan
-// Added a new constructor PrismGeom(faces, faceorient).
-//
-// Revision 1.7  2008/06/14 01:22:31  ehan
-// Implemented constructor and FillGeom().
-//
-// Revision 1.6  2008/06/12 21:22:55  delisi
-// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
-//
-// Revision 1.5  2008/06/11 16:10:12  delisi
-// Added the 3D reader.
-//
-// Revision 1.4  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.3  2008/04/06 06:00:38  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.2  2008/02/08 23:05:52  jfrazier
-// More work on 3D components.
-//
-// Revision 1.1  2006/05/04 18:59:02  kirby
-// *** empty log message ***
-//
-// Revision 1.10  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.9  2006/03/13 18:20:03  sherwin
-//
-// Fixed error in ResetGmat:
-//
-// Revision 1.8  2006/02/19 01:37:34  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

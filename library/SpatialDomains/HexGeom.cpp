@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  HexGeom.cpp
+//  File: HexGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,24 +29,21 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
-//
+//  Description: Hexahedral geometry definition.
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
+#include "pchSpatialDomains.h"
 #include <SpatialDomains/HexGeom.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-
         HexGeom::HexGeom()
         {
             m_geomShapeType = eHexahedron;
         }
-
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
@@ -55,6 +52,10 @@ namespace Nektar
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
+
+            /// Set up orientation vectors with correct amount of elements.
+            m_eorient.resize(kNedges);
+            m_forient.resize(kNfaces);
 
             SetUpLocalEdges();
             SetUpLocalVertices();
@@ -170,14 +171,15 @@ namespace Nektar
             int order2  = *max_element(tmp1.begin(), tmp1.end());
             int points2 = *max_element(tmp2.begin(), tmp2.end());
 
-            // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
-            //PointsKey (const int &numpoints, const PointsType &pointstype)
-            const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
-                                           LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order1,
-                                           LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey C(LibUtilities::eModified_A, order2,
-                                           LibUtilities::PointsKey(points2,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey A(
+                LibUtilities::eModified_A, order0,
+                LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B(
+                LibUtilities::eModified_A, order1,
+                LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey C(
+                LibUtilities::eModified_A, order2,
+                LibUtilities::PointsKey(points2,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
@@ -187,33 +189,180 @@ namespace Nektar
             }
         }
 
-        HexGeom::HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap) :
+        /*
+        HexGeom::HexGeom(const QuadGeomSharedPtr faces[], 
+                         const Array<OneD, StdRegions::StdExpansion3DSharedPtr> &xMap) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = eHexahedron;
-
-            /// Copy the face shared pointers
-            m_faces.insert(m_faces.begin(), faces, faces + HexGeom::kNfaces);
-
-            SetUpLocalEdges();
-            SetUpLocalVertices();
-            SetUpEdgeOrientation();
-            SetUpFaceOrientation();
-
-
-            ASSERTL2(xMap.num_elements() == 3,"m_xmap needs an array of size matching m_coordim.");
-
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
-
+            HexGeom::HexGeom(faces);
+            
             for(int i = 0; i < xMap.num_elements(); ++i)
             {
                 m_xmap[i] = xMap[i];
             }
         }
-
+        */
 
         HexGeom::~HexGeom()
         {
+            
+        }
+
+        void HexGeom::v_GenGeomFactors(
+            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        {
+            int i,f;
+            GeomType Gtype = eRegular;
+
+            v_FillGeom();
+
+            // check to see if expansions are linear
+            for(i = 0; i < m_coordim; ++i)
+            {
+                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(2) != 2 )
+                {
+                    Gtype = eDeformed;
+                }
+            }
+
+            // check to see if all angles are 90 degrees
+            if(Gtype == eRegular)
+            {
+                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
+                    { {0,1,2,3} ,
+                      {0,1,5,4} ,
+                      {1,2,6,5} ,
+                      {3,2,6,7} ,
+                      {0,3,7,4} ,
+                      {4,5,6,7} };
+
+                for(f = 0; f < kNfaces; f++)
+                {
+                    // This condition ensures each angle is a right-angle.
+                    // It is a stronger condition than necessary.
+                    /*
+                    for(i = 0; i < 3; ++i)
+                    {
+                        dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
+                        dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+                        dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
+
+                        dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
+                        dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+                        dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
+
+                        if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
+                           * NekConstants::kGeomRightAngleTol)
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                    */
+                    
+                    // Ensure each face is a parallelogram? Check this.
+                    for (i = 0; i < m_coordim; i++)
+                    {
+                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
+                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                    
+                    if (Gtype == eDeformed)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                Gtype, m_coordim, m_xmap, tbasis);
+        }
+
+        void HexGeom::v_GetLocCoords(
+            const Array<OneD, const NekDouble> &coords, 
+                  Array<OneD,       NekDouble> &Lcoords)
+        {
+            int i;
+
+            v_FillGeom();
+
+            // calculate local coordinate for coord
+            if(GetGtype() == eRegular)
+            {   // Based on Spen's book, page 99
+                NekDouble len0 = 0.0 ;
+                NekDouble len1 = 0.0;
+                NekDouble len2 = 0.0;
+                NekDouble xi0 = 0.0;
+                NekDouble xi1 = 0.0;
+                NekDouble xi2 = 0.0;
+                Array<OneD, const NekDouble> pts;
+                int nq0, nq1, nq2;
+
+                // get points;
+                //find end points
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    nq0 = m_xmap[i]->GetNumPoints(0);
+                    nq1 = m_xmap[i]->GetNumPoints(1);
+                    nq2 = m_xmap[i]->GetNumPoints(2);
+
+                    pts = m_xmap[i]->GetPhys();
+
+                    // use projection to side 1 to determine xi_1 coordinate based on length
+                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
+                    xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
+
+                    // use projection to side 4 to determine xi_2 coordinate based on length
+                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
+                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
+
+                    // use projection to side 4 to determine xi_2 coordinate based on length
+                    len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
+                    xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
+                }
+
+                Lcoords[0] =  2*xi0/len0-1.0;
+                Lcoords[1] =  2*xi1/len1-1.0;
+                Lcoords[2] =  2*xi2/len2-1.0;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "inverse mapping must be set up to use this call");
+            }
+        }
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            ASSERTL1(gloCoord.num_elements() == 3,
+                     "Three dimensional geometry expects three coordinates.");
+
+            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
+            v_GetLocCoords(gloCoord, stdCoord);
+            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
+                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
+                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        int HexGeom::v_GetNumVerts() const
+        {
+            return 8;
+        }
+        
+        int HexGeom::v_GetNumEdges() const
+        {
+            return 12;
         }
 
         void HexGeom::SetUpLocalEdges()
@@ -685,230 +834,6 @@ namespace Nektar
             }
         }
 
-        void HexGeom::AddElmtConnected(int gvo_id, int locid)
-        {
-            CompToElmt ee(gvo_id,locid);
-            m_elmtMap.push_back(ee);
-        }
-
-        int HexGeom::NumElmtConnected() const
-        {
-            return int(m_elmtMap.size());
-        }
-
-        bool HexGeom::IsElmtConnected(int gvo_id, int locid) const
-        {
-            std::list<CompToElmt>::const_iterator def;
-            CompToElmt ee(gvo_id,locid);
-
-            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
-
-            // Found the element connectivity object in the list
-            return (def != m_elmtMap.end());
-        }
-
-        /** given local collapsed coordinate Lcoord return the value of
-            physical coordinate in direction i **/
-
-
-        NekDouble HexGeom::GetCoord(const int i,
-                                    const Array<OneD, const NekDouble> &Lcoord)
-        {
-            ASSERTL1(m_state == ePtsFilled,
-                     "Goemetry is not in physical space");
-
-            return m_xmap[i]->PhysEvaluate(Lcoord);
-        }
-
-        // Set up GeoFac for this geometry using Coord quadrature distribution
-        void HexGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-        {
-            int i,f;
-            GeomType Gtype = eRegular;
-
-            FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
-            {
-                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(1) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(2) != 2) )
-                {
-                    Gtype = eDeformed;
-                }
-            }
-
-            // check to see if all angles are 90 degrees
-            if(Gtype == eRegular)
-            {
-                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
-                    { {0,1,2,3} ,
-                      {0,1,5,4} ,
-                      {1,2,6,5} ,
-                      {3,2,6,7} ,
-                      {0,3,7,4} ,
-                      {4,5,6,7} };
-
-                for(f = 0; f < kNfaces; f++)
-                {
-                    // This condition ensures each angle is a right-angle.
-                    // It is a stronger condition than necessary.
-/*                    for(i = 0; i < 3; ++i)
-                    {
-                        dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
-
-                        dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
-
-                        if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
-                           * NekConstants::kGeomRightAngleTol)
-                        {
-                            Gtype = eDeformed;
-                            break;
-                        }
-                    }
-*/
-                    // Ensure each face is a parallelogram? Check this.
-                    for(i = 0; i < m_coordim; i++)
-                    {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
-                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
-                        {
-                            Gtype = eDeformed;
-                            break;
-                        }
-                    }
-                    if(Gtype == eDeformed)
-                    {
-                        break;
-                    }
-                }
-            }
-//Gtype = eDeformed;
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
-        }
-
-
-        /** \brief put all quadrature information into edge structure
-            and backward transform
-
-            Note verts, edges, and faces are listed according to anticlockwise
-            convention but points in _coeffs have to be in array format from
-            left to right.
-
-        */
-        void HexGeom::FillGeom()
-        {
-            // check to see if geometry structure is already filled
-            if(m_state != ePtsFilled)
-            {
-                int i,j,k;
-
-                for(i = 0; i < kNfaces; i++)
-                {
-                    int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
-                    Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-                    Array<OneD,          int> signArray(nFaceCoeffs);
-                    
-                    m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
-                                                   m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
-                                                   m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
-                    
-                    for(j = 0 ; j < m_coordim; j++)
-                    {
-                        for(k = 0; k < nFaceCoeffs; k++)
-                        {
-                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
-                            double v = signArray[k]* coeffs[k];
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-
-                        }
-                    }
-                }
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
-                }
-
-                m_state = ePtsFilled;
-            }
-
-        }
-
-        void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-        {
-            int i;
-
-            FillGeom();
-
-            // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
-            {   // Based on Spen's book, page 99
-                NekDouble len0 = 0.0 ;
-                NekDouble len1 = 0.0;
-                NekDouble len2 = 0.0;
-                NekDouble xi0 = 0.0;
-                NekDouble xi1 = 0.0;
-                NekDouble xi2 = 0.0;
-                Array<OneD, const NekDouble> pts;
-                int nq0, nq1, nq2;
-
-                // get points;
-                //find end points
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    nq0 = m_xmap[i]->GetNumPoints(0);
-                    nq1 = m_xmap[i]->GetNumPoints(1);
-                    nq2 = m_xmap[i]->GetNumPoints(2);
-
-                    pts = m_xmap[i]->GetPhys();
-
-                    // use projection to side 1 to determine xi_1 coordinate based on length
-                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
-                    xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
-
-                    // use projection to side 4 to determine xi_2 coordinate based on length
-                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
-                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
-
-                    // use projection to side 4 to determine xi_2 coordinate based on length
-                    len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
-                    xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
-                }
-
-                Lcoords[0] =  2*xi0/len0-1.0;
-                Lcoords[1] =  2*xi1/len1-1.0;
-                Lcoords[2] =  2*xi2/len2-1.0;
-            }
-            else
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "inverse mapping must be set up to use this call");
-            }
-        }
-
-        bool HexGeom::v_ContainsPoint(
-                                      const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
-        {
-            ASSERTL1(gloCoord.num_elements() == 3,
-                     "Three dimensional geometry expects three coordinates.");
-
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
-            GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
-                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
-                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
-            {
-                return true;
-            }
-            return false;
-        }
     }; //end of namespace
 }; //end of namespace
 

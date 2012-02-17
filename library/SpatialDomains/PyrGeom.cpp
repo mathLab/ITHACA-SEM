@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/PyrGeom.cpp,v $
+//  File: PyrGeom.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,31 +29,33 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
-//
+//  Description: Pyramidic geometry information.
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
+#include "pchSpatialDomains.h"
 #include <SpatialDomains/PyrGeom.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-
         PyrGeom::PyrGeom()
         {
             m_geomShapeType = ePyramid;
         }
 
-        PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[]):
-                 Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
+        PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[]) :
+            Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_geomShapeType = ePyramid;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);
+
+            /// Set up orientation vectors with correct amount of elements.
+            m_eorient.resize(kNedges);
+            m_forient.resize(kNfaces);
 
             SetUpLocalEdges();
             SetUpLocalVertices();
@@ -63,12 +65,12 @@ namespace Nektar
             /// TODO: When pyramid is implemented, determine correct order for
             /// standard region here.
             
-            // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
-            //PointsKey (const int &numpoints, const PointsType &pointstype)
-            const LibUtilities::BasisKey A(LibUtilities::eModified_A, 2,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey C(LibUtilities::eModified_C, 2,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
+            const LibUtilities::BasisKey A(
+                LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey C(
+                LibUtilities::eModified_C, 2,
+                LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
@@ -78,81 +80,73 @@ namespace Nektar
             }
         }
 
-
-        PyrGeom::PyrGeom(const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
-                         const StdRegions::FaceOrientation forient[])
-        {
-            m_geomShapeType = ePyramid;
-
-            /// Copy the triangle face shared pointers
-            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PyrGeom::kNfaces);
-
-            /// Copy the quad face shared pointers
-            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PyrGeom::kNfaces);
-
-            for (int j=0; j<kNfaces; ++j)
-            {
-               m_forient[j] = forient[j];
-            }
-
-            m_coordim = tfaces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
-            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        }
-
-        PyrGeom::PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[],
-                         const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
-                         const StdRegions::EdgeOrientation eorient[],const StdRegions::FaceOrientation forient[])
-         {
-            m_geomShapeType = ePyramid;
-
-            /// Copy the vert shared pointers.
-            m_verts.insert(m_verts.begin(), verts, verts+PyrGeom::kNverts);
-
-            /// Copy the edge shared pointers.
-            m_edges.insert(m_edges.begin(), edges, edges+PyrGeom::kNedges);
-
-            /// Copy the quad face shared pointers
-            m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PyrGeom::kNfaces);
-
-            /// Copy the triangle face shared pointers
-            m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PyrGeom::kNfaces);
-
-            for (int i=0; i<kNedges; ++i)
-            {
-                m_eorient[i] = eorient[i];
-            }
-
-            for (int j=0; j<kNfaces; ++j)
-            {
-               m_forient[j] = forient[j];
-            }
-
-            m_coordim = verts[0]->GetCoordim();
-            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        }
-
-        PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[])
-        {
-            m_geomShapeType = ePyramid;
-
-            /// Copy the face shared pointers
-            m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);
-
-            for (int j=0; j<kNfaces; ++j)
-            {
-               m_forient[j] = forient[j];
-            }
-
-            m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
-            ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        }
-
         PyrGeom::~PyrGeom()
         {
+            
         }
 
-        void PyrGeom::SetUpLocalEdges(){
+        void PyrGeom::v_GetLocCoords(
+            const Array<OneD, const NekDouble> &coords,
+                  Array<OneD,       NekDouble> &Lcoords)
+        {
+            v_FillGeom();
 
+            // calculate local coordinate for coord
+            if(GetGtype() == eRegular)
+            {   // Based on Spen's book, page 99
+
+                // Point inside tetrahedron
+                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+                // Edges
+                VertexComponent er0, e10, e30, e40;
+                er0.Sub(r,*m_verts[0]);
+                e10.Sub(*m_verts[1],*m_verts[0]);
+                e30.Sub(*m_verts[3],*m_verts[0]);
+                e40.Sub(*m_verts[4],*m_verts[0]);
+
+
+                // Cross products (Normal times area)
+                VertexComponent cp1030, cp3040, cp4010;
+                cp1030.Mult(e10,e30);
+                cp3040.Mult(e30,e40);
+                cp4010.Mult(e40,e10);
+
+
+                // Barycentric coordinates (relative volume)
+                NekDouble V = e40.dot(cp1030); // Pyramid Volume = {(e40)dot(e10)x(e30)}/4
+                NekDouble scaleFactor = 2.0/3.0;
+                NekDouble v1 = er0.dot(cp3040) / V; // volume1 = {(er0)dot(e30)x(e40)}/6
+                NekDouble v2 = er0.dot(cp4010) / V; // volume2 = {(er0)dot(e40)x(e10)}/6
+                NekDouble beta  = v1 * scaleFactor;
+                NekDouble gamma = v2 * scaleFactor;
+                NekDouble delta = er0.dot(cp1030) / V; // volume3 = {(er0)dot(e10)x(e30)}/4
+
+
+                // Make Pyramid bigger
+                Lcoords[0] = 2.0*beta  - 1.0;
+                Lcoords[1] = 2.0*gamma - 1.0;
+                Lcoords[2] = 2.0*delta - 1.0;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "inverse mapping must be set up to use this call");
+            }
+        }
+
+        int PyrGeom::v_GetNumVerts() const
+        {
+            return 5;
+        }
+        
+        int PyrGeom::v_GetNumEdges() const
+        {
+            return 8;
+        }
+
+        void PyrGeom::SetUpLocalEdges()
+        {
             // find edge 0
             int i,j;
             unsigned int check;
@@ -303,12 +297,10 @@ namespace Nektar
 
             // set up top vertices
             // First, set up top vertice 4 TODO
-
-
-
-        };
-        void PyrGeom::SetUpEdgeOrientation(){
-
+        }
+        
+        void PyrGeom::SetUpEdgeOrientation()
+        {
             // This 2D array holds the local id's of all the vertices
             // for every edge. For every edge, they are ordered to what we
             // define as being Forwards
@@ -339,13 +331,10 @@ namespace Nektar
                     ASSERTL0(false,"Could not find matching vertex for the edge");
                 }
             }
+        }
 
-
-        };
-
-        void PyrGeom::SetUpFaceOrientation(){
-
-
+        void PyrGeom::SetUpFaceOrientation()
+        {
             int f,i;
 
             // These arrays represent the vector of the A and B
@@ -551,203 +540,7 @@ namespace Nektar
                 // Fill the m_forient array
                 m_forient[f] = (StdRegions::FaceOrientation) orientation;
             }
-
-
-        };
-
-        void PyrGeom::AddElmtConnected(int gvo_id, int locid)
-        {
-            CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
         }
-
-
-        int PyrGeom::NumElmtConnected() const
-        {
-            return int(m_elmtmap.size());
-        }
-
-
-        bool PyrGeom::IsElmtConnected(int gvo_id, int locid) const
-        {
-            std::list<CompToElmt>::const_iterator def;
-            CompToElmt ee(gvo_id,locid);
-
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
-
-            // Found the element connectivity object in the list
-            return (def != m_elmtmap.end());
-        }
-
-        /** given local collapsed coordinate Lcoord return the value of
-        physical coordinate in direction i **/
-
-
-        NekDouble PyrGeom::GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord)
-        {
-            ASSERTL1(m_state == ePtsFilled,
-                "Goemetry is not in physical space");
-
-            return m_xmap[i]->PhysEvaluate(Lcoord);
-        }
-
-        // Set up GeoFac for this geometry using Coord quadrature distribution
-
-        void PyrGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-        {
-            int i;
-            GeomType Gtype = eRegular;
-            GeomShapeType GSType = eQuadrilateral;
-
-            FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
-            {
-                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(1) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(2) != 2) )
-                {
-                    Gtype = eDeformed;
-                }
-            }
-
-            // check to see if all angles are 90 degrees
-            if(Gtype == eRegular){
-                if(GSType == eQuadrilateral)
-                {
-                    const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] =
-                        { {0,1,2,3} };
-                    int f;
-                    NekDouble dx1,dx2,dy1,dy2;
-                    for(f = 0; f < kNfaces; f++)
-                    {
-                        for(i = 0; i < 3; ++i)
-                        {
-                            dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                            dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-
-                            dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                            dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-
-                            if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
-                               * NekConstants::kGeomRightAngleTol)
-                            {
-                                Gtype = eDeformed;
-                                break;
-                            }
-                        }
-                        if(Gtype == eDeformed)
-                        {
-                            break;
-                        }
-                    }
-                 }
-                 else if(GSType == eTriangle) {
-                    Gtype = eDeformed;
-                 }
-              }
-
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
-        }
-
-
-        /** \brief put all quadrature information into edge structure
-        and backward transform
-
-        Note verts, edges, and faces are listed according to anticlockwise
-        convention but points in _coeffs have to be in array format from
-        left to right.
-
-        */
-		void PyrGeom::FillGeom()
-		{
-              // check to see if geometry structure is already filled
-            if(m_state != ePtsFilled)
-            {
-                int i,j,k;
-                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0);
-
-                Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-                Array<OneD, int>    signArray(nFaceCoeffs);
-
-                for(i = 0; i < kNfaces; i++)
-                {
-                    m_faces[i]->FillGeom();
-                    nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray,
-                                                   m_faces[i]->GetEdge(0)->GetBasis(0,0)->GetNumModes(),
-                                                   m_faces[i]->GetEdge(1)->GetBasis(0,0)->GetNumModes());
-
-
-                    for(j = 0 ; j < m_coordim; j++)
-                    {
-                        for(k = 0; k < nFaceCoeffs; k++)
-                        {
-                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();                            double v = signArray[k]* coeffs[k];
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-                        }
-                    }
-                }
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
-                }
-                
-                m_state = ePtsFilled;
-            }
-            
-                }
-        
-        void PyrGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-        {
-            FillGeom();
-
-            // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
-            {   // Based on Spen's book, page 99
-
-                // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
-
-                // Edges
-                VertexComponent er0, e10, e30, e40;
-                er0.Sub(r,*m_verts[0]);
-                e10.Sub(*m_verts[1],*m_verts[0]);
-                e30.Sub(*m_verts[3],*m_verts[0]);
-                e40.Sub(*m_verts[4],*m_verts[0]);
-
-
-                // Cross products (Normal times area)
-                VertexComponent cp1030, cp3040, cp4010;
-                cp1030.Mult(e10,e30);
-                cp3040.Mult(e30,e40);
-                cp4010.Mult(e40,e10);
-
-
-                // Barycentric coordinates (relative volume)
-                NekDouble V = e40.dot(cp1030); // Pyramid Volume = {(e40)dot(e10)x(e30)}/4
-                NekDouble scaleFactor = 2.0/3.0;
-                NekDouble v1 = er0.dot(cp3040) / V; // volume1 = {(er0)dot(e30)x(e40)}/6
-                NekDouble v2 = er0.dot(cp4010) / V; // volume2 = {(er0)dot(e40)x(e10)}/6
-                NekDouble beta  = v1 * scaleFactor;
-                NekDouble gamma = v2 * scaleFactor;
-                NekDouble delta = er0.dot(cp1030) / V; // volume3 = {(er0)dot(e10)x(e30)}/4
-
-
-                // Make Pyramid bigger
-                Lcoords[0] = 2.0*beta  - 1.0;
-                Lcoords[1] = 2.0*gamma - 1.0;
-                Lcoords[2] = 2.0*delta - 1.0;
-            }
-            else
-            {
-          NEKERROR(ErrorUtil::efatal,
-                    "inverse mapping must be set up to use this call");
-            }
-        }
-
     }; //end of namespace
 }; //end of namespace
 

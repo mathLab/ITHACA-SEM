@@ -966,10 +966,9 @@ namespace Nektar
             QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces])
         {
             // Setting the orientation is disabled in the reader.  Why?
-            StdRegions::FaceOrientation faceorient[PrismGeom::kNtfaces + PrismGeom::kNqfaces];
-
+            Geometry2DSharedPtr faces[] = { qfaces[0], tfaces[0], qfaces[1], tfaces[1], qfaces[2] };
             unsigned int index = m_prismGeoms.rbegin()->first + 1;
-            PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
+            PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(faces));
             prismgeom->SetGlobalID(index);
 
             m_prismGeoms[index] = prismgeom;
@@ -989,10 +988,10 @@ namespace Nektar
         PyrGeomSharedPtr MeshGraph::AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
             QuadGeomSharedPtr qfaces[PyrGeom::kNqfaces])
         {
+            Geometry2DSharedPtr faces[] = { qfaces[0], tfaces[0], tfaces[1], tfaces[2], tfaces[3] };
             unsigned int index = m_pyrGeoms.rbegin()->first + 1;
 
-            StdRegions::FaceOrientation faceorient[PyrGeom::kNtfaces + PyrGeom::kNqfaces];
-            PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
+            PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(faces));
             pyrgeom->SetGlobalID(index);
 
             m_pyrGeoms[index] = pyrgeom;

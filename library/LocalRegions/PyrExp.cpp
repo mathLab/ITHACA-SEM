@@ -412,7 +412,7 @@ namespace Nektar
             
             // m_geom->FillGeom(); // TODO: implement FillGeom()
             
-            for(i = 0; i < m_geom->GetCoordDim(); ++i) 
+            for(i = 0; i < m_geom->GetCoordim(); ++i) 
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
@@ -623,7 +623,7 @@ namespace Nektar
                     {
                         // TODO: make sure 3D Laplacian is set up for Hex in three-dimensional in Standard Region.
                         // ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
-                        ASSERTL1(m_geom->GetCoordDim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
+                        ASSERTL1(m_geom->GetCoordim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetExpansionType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,

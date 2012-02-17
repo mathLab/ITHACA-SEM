@@ -29,15 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
-//
+//  Description: 3D geometry information.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "pchSpatialDomains.h"
-
 #include <SpatialDomains/Geometry3D.h>
-
 
 namespace Nektar
 {
@@ -51,39 +48,417 @@ namespace Nektar
           Geometry(coordim)
       {
           ASSERTL0(m_coordim > 2,
-                   "Coordinate dimension should be at least 3 for a 3D geometry");
+                   "Coordinate dimension should be at least 3 for a 3D geometry.");
       }
       
       Geometry3D::~Geometry3D()
       {
       }
+      
+      //---------------------------------------
+      // 3D Geometry Methods
+      //---------------------------------------
 
+      /** 
+       * @brief Put all quadrature information into face/edge structure and
+       * backward transform.
+       * 
+       * @see v_FillGeom()
+       */
+      void Geometry3D::FillGeom()
+      {
+          Geometry3D::v_FillGeom();
+      }
+      
+      void Geometry3D::GetLocCoords(
+          const Array<OneD, const NekDouble> &coords,
+                Array<OneD,       NekDouble> &Lcoords)
+      {
+          v_GetLocCoords(coords, Lcoords);
+      }
+
+      /** 
+       * @brief Given local collapsed coordinate Lcoord return the value of
+       * physical coordinate in direction i.
+       */
+      NekDouble Geometry3D::GetCoord(
+          const int i, const Array<OneD, const NekDouble> &Lcoord)
+      {
+          return v_GetCoord(i, Lcoord);
+      }
+      
+
+      //---------------------------------------
+      // Helper functions
+      //---------------------------------------
+
+      /**
+       * @brief Return the ID of edge i in this element.
+       */
+      int Geometry3D::GetEid(int i) const
+      {
+          return v_GetEid(i);
+      }
+
+      /**
+       * @brief Return face i in this element.
+       */
+      Geometry2DSharedPtr Geometry3D::GetFace(int i)
+      {
+          return v_GetFace(i);
+      }
+
+      /**
+       * @brief Return the orientation of face i in this element.
+       */
+      StdRegions::FaceOrientation Geometry3D::GetFaceorient(const int i) const
+      {
+          return v_GetFaceorient(i);
+      }
+
+      /**
+       * @brief Return the ID of face i in this element.
+       */
+      int Geometry3D::GetFid(int i) const
+      {
+          return v_GetFid(i);
+      }
+      
+      /**
+       * @brief Return a reference to the physical space of co-ordinate
+       * dimension i.
+       */
+      Array<OneD, NekDouble> &Geometry3D::UpdatePhys(const int i)
+      {
+          return v_UpdatePhys(i);
+      }
+
+      /**
+       * @brief Return the j-th basis of the i-th co-ordinate dimension.
+       */
+      const LibUtilities::BasisSharedPtr Geometry3D::GetBasis(
+          const int i, const int j)
+      {
+          return v_GetBasis(i, j);
+      }
+      
+      //---------------------------------------
+      // Element connection functions
+      //---------------------------------------
+
+      void Geometry3D::SetOwnData()
+      {
+          v_SetOwnData();
+      }
+      
+      
+      //---------------------------------------
+      // 3D Geometry Methods
+      //---------------------------------------
+
+      /** 
+       * @brief Put all quadrature information into face/edge structure and
+       * backward transform.
+       * 
+       * Note verts, edges, and faces are listed according to anticlockwise
+       * convention but points in _coeffs have to be in array format from left
+       * to right.
+       */
+      void Geometry3D::v_FillGeom()
+      {
+          if (m_state == ePtsFilled)
+              return;
+          
+          int i,j,k;
+          
+          for(i = 0; i < m_forient.size(); i++)
+          {
+              m_faces[i]->FillGeom();
+              
+              int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
+              Array<OneD, unsigned int> mapArray (nFaceCoeffs);
+              Array<OneD,          int> signArray(nFaceCoeffs);
+              
+              if (m_forient[i] < 4)
+              {
+                  m_xmap[0]->GetFaceToElementMap(
+                      i,m_forient[i],mapArray,signArray,
+                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
+                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
+              }
+              else
+              {
+                  m_xmap[0]->GetFaceToElementMap(
+                      i,m_forient[i],mapArray,signArray,
+                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1),
+                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0));
+              }
+              
+              for(j = 0; j < m_coordim; j++)
+              {
+                  const Array<OneD, const NekDouble> &coeffs = 
+                      (*m_faces[i])[j]->GetCoeffs();
+                  
+                  for(k = 0; k < nFaceCoeffs; k++)
+                  {
+                      double v = signArray[k] * coeffs[k];
+                      (m_xmap[j]->UpdateCoeffs())[mapArray[k]] = v;
+                  }
+              }
+          }
+          
+          for(i = 0; i < m_coordim; ++i)
+          {
+              m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs (),
+                                  m_xmap[i]->UpdatePhys());
+          }
+          
+          m_state = ePtsFilled;
+      }
+
+      void Geometry3D::v_GetLocCoords(
+          const Array<OneD, const NekDouble> &coords,
+                Array<OneD,       NekDouble> &Lcoords)
+      {
+          ASSERTL0(false, 
+                   "This function must be implemented at a shape level.");
+      }
+
+      /**
+       * Generate the geometry factors for this element.
+       */
+      void Geometry3D::v_GenGeomFactors(
+          const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+      {
+            GeomType      Gtype  = eRegular;
+            GeomShapeType GSType = eQuadrilateral;
+            
+            v_FillGeom();
+
+            // check to see if expansions are linear
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(2) != 2)
+                {
+                    Gtype = eDeformed;
+                }
+            }
+            
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                Gtype, m_coordim, m_xmap, tbasis);
+      }
+      
+      /** 
+       * @brief Given local collapsed coordinate Lcoord return the value of
+       * physical coordinate in direction i.
+       */
+      NekDouble Geometry3D::v_GetCoord(
+          const int i, const Array<OneD, const NekDouble> &Lcoord)
+      {
+          ASSERTL1(m_state == ePtsFilled, "Geometry is not in physical space.");
+          return m_xmap[i]->PhysEvaluate(Lcoord);
+      }
+
+
+      //---------------------------------------
+      // Helper functions
+      //---------------------------------------
+      
+      /**
+       * @brief Return the co-ordinate mapping for dimension i.
+       */
+      StdRegions::StdExpansion3DSharedPtr Geometry3D::v_GetXmap(const int i)
+      {
+          return m_xmap[i];
+      }
+
+      /**
+       * @brief Return the dimension of this element.
+       */
+      int Geometry3D::v_GetShapeDim() const 
+      {
+          return 3;
+      }
+
+      /**
+       * @brief Return the vertex ID of vertex i.
+       */
+      int Geometry3D::v_GetVid(const int i) const
+      {
+          ASSERTL2(i >= 0 && i <= m_verts.num_elements()-1, 
+                   "Vertex ID must be between 0 and "+
+                   boost::lexical_cast<string>(m_verts.num_elements()-1));
+          return m_verts[i]->GetVid();
+      }
+
+      /**
+       * @brief Return edge i of this element.
+       */
+      const SegGeomSharedPtr Geometry3D::v_GetEdge(int i) const
+      {
+          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+                   "Edge ID must be between 0 and "+
+                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+          return m_edges[i];
+      }
+      
+      /**
+       * @brief Return the orientation of edge i in this element.
+       */
+      inline StdRegions::EdgeOrientation Geometry3D::v_GetEorient(
+          const int i) const
+      {
+          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+                   "Edge ID must be between 0 and "+
+                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+          return m_eorient[i];
+      }
+
+      /**
+       * @brief Return the ID of edge i in this element.
+       */
+      int Geometry3D::v_GetEid(int i) const
+      {
+          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+                   "Edge ID must be between 0 and "+
+                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+          return m_edges[i]->GetEid();
+      }
+      
+      /**
+       * @brief Return face i in this element.
+       */
+      const Geometry2DSharedPtr Geometry3D::v_GetFace(int i) const
+      {
+          ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
+          return m_faces[i];
+      }
+
+      /**
+       * @brief Return the orientation of face i in this element.
+       */
+      StdRegions::FaceOrientation Geometry3D::v_GetFaceorient(const int i) const
+      {
+          ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
+                   "Face ID must be between 0 and "+
+                   boost::lexical_cast<string>(m_faces.num_elements()-1));
+          return m_forient[i];
+      }
+
+      /**
+       * @brief Return the ID of face i in this element.
+       */
+      int Geometry3D::v_GetFid(int i) const
+      {
+          ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
+                   "Face ID must be between 0 and "+
+                   boost::lexical_cast<string>(m_faces.num_elements()-1));
+          return m_faces[i]->GetFid();
+      }
+      
+      /**
+       * @brief Return the ID of this element.
+       */
+      int Geometry3D::v_GetEid() const 
+      {
+          return m_eid;
+      }
+      
+      /**
+       * @brief Return the j-th basis of the i-th co-ordinate dimension.
+       */
+      const LibUtilities::BasisSharedPtr Geometry3D::v_GetBasis(
+          const int i, const int j)
+      {
+          return m_xmap[i]->GetBasis(j);
+      }
+
+      /**
+       * @brief Return a reference to the physical space of co-ordinate
+       * dimension i.
+       */
+      Array<OneD,NekDouble> &Geometry3D::v_UpdatePhys(const int i)
+      {
+          return m_xmap[i]->UpdatePhys();
+      }
+
+      /**
+       * @brief Return the local ID of a given edge.
+       * 
+       * The local ID of an edge is a number between 0 and the number of edges
+       * in this element. If the edge is not found, this function returns -1.
+       */
+      int Geometry3D::v_WhichEdge(SegGeomSharedPtr edge)
+      {
+          int returnval = -1;
+          
+          SegGeomVector::iterator edgeIter;
+          int i;
+          
+          for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+          {
+              if (*edgeIter == edge)
+              {
+                  returnval = i;
+                  break;
+              }
+          }
+          
+          return returnval;
+      }
+      
+      /**
+       * @brief Return the local ID of a given face.
+       * 
+       * The local ID of a face is a number between 0 and the number of faces
+       * in this element. If the face is not found, this function returns -1.
+       */
+      int Geometry3D::v_WhichFace(Geometry2DSharedPtr face)
+      {
+          int i = 0;
+          
+          Geometry2DVector::iterator f;
+          for (i = 0, f = m_faces.begin(); f != m_faces.end(); ++f,++i)
+          {
+              if (*f == face)
+              {
+                  break;
+              }
+          }
+          return i;
+      }
+      
+      //---------------------------------------
+      // Element connection functions
+      //---------------------------------------
+      
+      void Geometry3D::v_AddElmtConnected(int gvo_id, int locid)
+      { 
+          CompToElmt ee(gvo_id,locid);
+          m_elmtmap.push_back(ee);
+      }
+      
+      int Geometry3D::v_NumElmtConnected() const
+      {
+          return int(m_elmtmap.size());
+      }
+
+      bool Geometry3D::v_IsElmtConnected(int gvo_id, int locid) const
+      {
+          std::list<CompToElmt>::const_iterator def;
+          CompToElmt ee(gvo_id,locid);
+          
+          def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+          
+          // Found the element connectivity object in the list
+          return (def != m_elmtmap.end());
+      }
+      
+      void Geometry3D::v_SetOwnData()
+      {
+          m_owndata = true; 
+      }
   }; //end of namespace
 }; //end of namespace
-
-
-
-// $Log: Geometry3D.cpp,v $
-// Revision 1.3  2008/08/26 02:28:07  ehan
-// Added various virtual functions.
-//
-// Revision 1.2  2008/01/31 11:02:25  ehan
-// Added constructor and destructor.
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.12  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.11  2006/03/25 00:58:28  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.10  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.9  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

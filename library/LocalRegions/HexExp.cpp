@@ -546,8 +546,8 @@ namespace Nektar
             ASSERTL0(m_geom, "m_geom not define");
 
             // get physical points defined in Geom
-             m_geom->FillGeom();
-
+            m_geom->FillGeom();
+             
             switch(m_geom->GetCoordim())
             {
             case 3:
@@ -659,7 +659,7 @@ namespace Nektar
 
               m_geom->FillGeom();
 
-            for(i = 0; i < m_geom->GetCoordDim(); ++i)
+            for(i = 0; i < m_geom->GetCoordim(); ++i)
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }

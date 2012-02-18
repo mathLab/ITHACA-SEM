@@ -99,10 +99,13 @@ namespace Nektar
                                      enum ReduceOperator pOp);
             virtual void v_AllReduce(Array<OneD, int      >& pData,
                                      enum ReduceOperator pOp);
+            virtual void v_SplitComm(int pRows, int pColumns);
 
         private:
-            MPI_Comm m_world;
+            MPI_Comm m_comm;
             int m_rank;
+
+            CommMpi(MPI_Comm pComm);
         };
     }
 }

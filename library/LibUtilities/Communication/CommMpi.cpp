@@ -58,9 +58,23 @@ namespace Nektar
             {
                 ASSERTL0(false, "Failed to initialise MPI");
             }
+            m_comm = MPI_COMM_WORLD;
+            MPI_Comm_size( m_comm, &m_size );
+            MPI_Comm_rank( m_comm, &m_rank );
 
-            MPI_Comm_size( MPI_COMM_WORLD, &m_size );
-            MPI_Comm_rank( MPI_COMM_WORLD, &m_rank );
+            m_type = "Parallel MPI";
+        }
+
+
+        /**
+         *
+         */
+        CommMpi::CommMpi(MPI_Comm pComm)
+                : Comm()
+        {
+            m_comm = pComm;
+            MPI_Comm_size( m_comm, &m_size );
+            MPI_Comm_rank( m_comm, &m_rank );
 
             m_type = "Parallel MPI";
         }
@@ -80,7 +94,7 @@ namespace Nektar
          */
         MPI_Comm CommMpi::GetComm()
         {
-            return MPI_COMM_WORLD;
+            return m_comm;;
         }
 
 
@@ -107,7 +121,7 @@ namespace Nektar
          */
         void CommMpi::v_Block()
         {
-            MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Barrier(m_comm);
         }
 
 
@@ -123,7 +137,7 @@ namespace Nektar
                           MPI_DOUBLE,
                           pProc,
                           0,
-                          MPI_COMM_WORLD);
+                          m_comm);
             }
             else
             {
@@ -132,7 +146,7 @@ namespace Nektar
                           MPI_DOUBLE,
                           pProc,
                           0,
-                          MPI_COMM_WORLD);
+                          m_comm);
             }
         }
 
@@ -350,5 +364,35 @@ namespace Nektar
                      "MPI error performing All-reduce.");
         }
 
+
+        /**
+         * Processes are considered as a grid of size pRows*pColumns. Comm
+         * objects are created corresponding to the rows and columns of this
+         * grid. The row and column to which this process belongs is stored in
+         * #m_commRow and #m_commColumn.
+         */
+        void CommMpi::v_SplitComm(int pRows, int pColumns)
+        {
+            ASSERTL0(pRows*pColumns == m_size,
+                    "Rows/Columns do not match comm size.");
+
+            MPI_Comm newComm;
+
+            // Compute row and column in grid.
+            int myCol = m_rank % pColumns;
+            int myRow = (m_rank - myCol) / pColumns;
+
+            // Split Comm into rows - all processes with same myRow are put in
+            // the same communicator. The rank within this communicator is the
+            // column index.
+            MPI_Comm_split(m_comm, myRow, myCol, &newComm);
+            m_commRow = boost::shared_ptr<Comm>(new CommMpi(newComm));
+
+            // Split Comm into columns - all processes with same myCol are put
+            // in the same communicator. The rank within this communicator is
+            // the row index.
+            MPI_Comm_split(m_comm, myCol, myRow, &newComm);
+            m_commColumn = boost::shared_ptr<Comm>(new CommMpi(newComm));
+        }
     }
 }

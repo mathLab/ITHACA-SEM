@@ -44,6 +44,11 @@ namespace Nektar
 
         }
 
+        Comm::Comm()
+        {
+
+        }
+
         Comm::~Comm()
         {
 

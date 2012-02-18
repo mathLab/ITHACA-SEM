@@ -170,5 +170,13 @@ namespace Nektar
 
         }
 
+
+        /**
+         *
+         */
+        void CommSerial::v_SplitComm(int pRows, int pColumns)
+        {
+            ASSERTL0(false, "Cannot split a serial process.");
+        }
     }
 }

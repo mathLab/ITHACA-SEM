@@ -98,9 +98,17 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, int      >& pData,
                                          enum ReduceOperator pOp);
 
+                LIB_UTILITIES_EXPORT inline void SplitComm(int pRows, int pColumns);
+                LIB_UTILITIES_EXPORT inline CommSharedPtr GetRowComm();
+                LIB_UTILITIES_EXPORT inline CommSharedPtr GetColumnComm();
+
             protected:
-                int m_size;     ///< Number of processes
-                std::string m_type;
+                int m_size;                 ///< Number of processes
+                std::string m_type;         ///< Type of communication
+                CommSharedPtr m_commRow;    ///< Row communicator
+                CommSharedPtr m_commColumn; ///< Column communicator
+
+                Comm();
 
                 virtual void v_Finalise() = 0;
                 virtual int  v_GetRank() = 0;
@@ -125,6 +133,7 @@ namespace Nektar
                                          enum ReduceOperator pOp) = 0;
                 virtual void v_AllReduce(Array<OneD, int      >& pData,
                                          enum ReduceOperator pOp) = 0;
+                virtual void v_SplitComm(int pRows, int pColumns) = 0;
         };
 
 
@@ -258,6 +267,39 @@ namespace Nektar
         inline void Comm::AllReduce(Array<OneD, int>& pData, enum ReduceOperator pOp)
         {
             v_AllReduce(pData, pOp);
+        }
+
+
+        /**
+         * @brief Splits this communicator into a grid of size pRows*pColumns
+         * and creates row and column communicators.
+         */
+        inline void Comm::SplitComm(int pRows, int pColumns)
+        {
+            v_SplitComm(pRows, pColumns);
+        }
+
+
+        /**
+         * @brief Retrieve the row communicator to which this process belongs.
+         */
+        inline CommSharedPtr Comm::GetRowComm()
+        {
+            ASSERTL1(m_commRow.get(),
+                     "Row not available.");
+            return m_commRow;
+        }
+
+
+        /**
+         * @brief Retrieve the column communicator to which this process
+         * belongs.
+         */
+        inline CommSharedPtr Comm::GetColumnComm()
+        {
+            ASSERTL1(m_commColumn.get(),
+                     "Column not available.");
+            return m_commColumn;
         }
 
     }

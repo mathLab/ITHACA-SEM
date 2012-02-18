@@ -974,6 +974,24 @@ namespace Nektar
                 v_AddNormTraceInt(dir,inarray,outarray);
             }
 
+            void StdExpansion::AddFaceNormBoundaryInt(const int face,
+                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
+                                                const Array<OneD, const NekDouble> &Fx,
+                                                const Array<OneD, const NekDouble> &Fy,
+                                                const Array<OneD, const NekDouble> &Fz,
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddFaceNormBoundaryInt(face,FaceExp,Fx,Fy,Fz,outarray);
+            }
+
+            void StdExpansion::AddFaceNormBoundaryInt(const int face,
+                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
+                                                const Array<OneD, const NekDouble> &Fn,
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
+            }
+
             const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
@@ -1111,6 +1129,24 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
+        
+            void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
+                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
+                                                  const Array<OneD, const NekDouble> &Fz,
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+             void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
+                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
+                                                  const Array<OneD, const NekDouble> &Fn,
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
 
             int StdExpansion::v_GetNedges() const
             {
@@ -1161,6 +1197,11 @@ namespace Nektar
                 return LibUtilities::NullBasisKey;
             }
 
+            int StdExpansion::v_GetFaceNumPoints(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
 
             int StdExpansion::v_GetFaceNcoeffs(const int i) const
             {
@@ -1169,6 +1210,12 @@ namespace Nektar
             }
 
             int StdExpansion::v_GetFaceIntNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+ 
+            bool StdExpansion::v_GetFaceDGForwards(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;

@@ -214,6 +214,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetFaceNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int  v_GetFaceIntNcoeffs(
                     const int i) const;
+            STD_REGIONS_EXPORT virtual int  v_GetFaceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int  v_CalcNumberOfCoefficients(
                     const std::vector<unsigned int> &nummodes,
                     int &modes_offset);

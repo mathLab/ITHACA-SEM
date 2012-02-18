@@ -1370,6 +1370,16 @@ namespace Nektar
             return StdExpansion::L2();
         }
 
+        bool HexExp::v_GetFaceDGForwards(const int i) const
+        {
+            StdRegions::FaceOrientation fo = m_geom->GetFaceorient(i);
+            
+            return fo == StdRegions::eDir1FwdDir1_Dir2FwdDir2 || 
+                   fo == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
+                   fo == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+                   fo == StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+        }
+
         DNekMatSharedPtr HexExp::v_CreateStdMatrix(
                             const StdRegions::StdMatrixKey &mkey)
         {

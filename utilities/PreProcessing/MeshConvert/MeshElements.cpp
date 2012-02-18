@@ -673,10 +673,10 @@ namespace Nektar
                      vector<int>           pTagList)
             : Element(pConf, GetNumNodes(pConf), pNodeList.size())
         {
-            m_tag = "R";
-            m_dim = 3;
+            m_tag     = "R";
+            m_dim     = 3;
             m_taglist = pTagList;
-            int n = m_conf.order-1;
+            int n     = m_conf.order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
             // defining an edge. This is based on the ordering produced by
@@ -696,7 +696,8 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(5,6)] = 7 + 8*n;
 
             // Add vertices
-            for (int i = 0; i < 6; ++i) {
+            for (int i = 0; i < 6; ++i)
+            {
                 vertex.push_back(pNodeList[i]);
             }
 
@@ -796,7 +797,7 @@ namespace Nektar
         void Prism::OrientPrism()
         {
             int lid[6], gid[6];
-            
+     
             for (int i = 0; i < 6; ++i)
             {
                 lid[i] = i;

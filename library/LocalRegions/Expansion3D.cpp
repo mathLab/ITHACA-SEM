@@ -50,18 +50,74 @@ namespace Nektar
         }
 
         void Expansion3D::SetFaceExp(const int face, Expansion2DSharedPtr &f)
+        {
+            int nFaces = GetNfaces();
+            ASSERTL1(face < nFaces, "Face is out of range.");
+            if (m_faceExp.size() < nFaces)
             {
-               int nFaces = GetNfaces();
-               ASSERTL1(face < nFaces, "Face is out of range.");
-               if (m_faceExp.size() < nFaces)
-                  {
-                      m_faceExp.resize(nFaces);
-                  }
-               m_faceExp[face] = f;
+                m_faceExp.resize(nFaces);
             }
+            m_faceExp[face] = f;
+        }
+        
+        void Expansion3D::v_AddFaceNormBoundaryInt(
+            const int                            face,
+            StdRegions::StdExpansion2DSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>  &Fx,
+            const Array<OneD, const NekDouble>  &Fy,
+            const Array<OneD, const NekDouble>  &Fz,
+                  Array<OneD,       NekDouble>  &outarray)
+        {
+            const Array<OneD, const Array<OneD, NekDouble> > normals
+                                    = GetFaceNormal(face);
 
+            int nquad_f = normals[0].num_elements();
 
+            Vmath::Zero (nquad_f,FaceExp->UpdatePhys(),1);
+            Vmath::Vmul (nquad_f,normals[0],1,Fx,1,FaceExp->UpdatePhys(),1);
+            Vmath::Vvtvp(nquad_f,normals[1],1,Fy,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
+            Vmath::Vvtvp(nquad_f,normals[2],1,Fz,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
+            
+            AddFaceNormBoundaryInt(face, FaceExp, FaceExp->GetPhys(), outarray);
+        }
 
+        void Expansion3D::v_AddFaceNormBoundaryInt(
+            const int                            face,
+            StdRegions::StdExpansion2DSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>  &Fn,
+                  Array<OneD,       NekDouble>  &outarray)
+        {
+            int                         i;
+            Array<OneD, unsigned int>   map;
+            Array<OneD, int>            sign;
+            StdRegions::FaceOrientation facedir = GetFaceorient(face);
+            
+            GetFaceToElementMap(face,facedir,map,sign);
+            int order_e = map.num_elements(); // Order of the element
+            int n_coeffs = (FaceExp->GetCoeffs()).num_elements(); // Order of the trace
+            
+            
+            if(n_coeffs!=order_e) // Going to orthogonal space
+            {
+                ASSERTL0(false, "Variable order not supported in 3D.");
+            }
+            else
+            {
+                FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
+
+                /*
+                if(edgedir == StdRegions::eBackwards)
+                {
+                    Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
+                }
+                */
+            }
+			
+            for(i = 0; i < order_e; ++i)
+            {
+                outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);
+            }
+        }
 
 
 #if 0 //needs m_faceMap to be defined and setupin Expansion3D similar to 2D case

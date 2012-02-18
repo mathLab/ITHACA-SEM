@@ -558,12 +558,14 @@ namespace Nektar
             inline const Array<OneD, const  boost::shared_ptr<ExpList> > &GetBndCondExpansions();
 
             inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
-			
+            
+            inline boost::shared_ptr<ExpList2D> &GetTrace3D();
+            
             inline boost::shared_ptr<ExpList1D> &GetTrace();
 			
-			inline boost::shared_ptr<ExpList0D> &GetTrace1D();
-
-			inline boost::shared_ptr<ExpList0D> &GetTrace1D(int i);
+            inline boost::shared_ptr<ExpList0D> &GetTrace1D();
+            
+            inline boost::shared_ptr<ExpList0D> &GetTrace1D(int i);
 
             inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
 
@@ -913,11 +915,13 @@ namespace Nektar
 
             virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 			
+            virtual boost::shared_ptr<ExpList2D> &v_GetTrace3D();
+
             virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
 			
-			virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D();
-
-			virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D(int i);
+            virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D();
+            
+            virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D(int i);
 
             virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap();
 
@@ -1754,18 +1758,23 @@ namespace Nektar
         {
             return v_UpdateBndCondExpansion(i);
         }
-		
+        
+        inline boost::shared_ptr<ExpList2D> &ExpList::GetTrace3D()
+        {
+            return v_GetTrace3D();
+        }
+
         inline boost::shared_ptr<ExpList1D> &ExpList::GetTrace()
         {
             return v_GetTrace();
         }
 
-		inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D()
+        inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D()
         {
             return v_GetTrace1D();
         }
 		
-		inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D(int i)
+        inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D(int i)
         {
             return v_GetTrace1D(i);
         }

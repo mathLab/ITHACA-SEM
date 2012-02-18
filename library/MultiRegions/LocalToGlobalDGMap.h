@@ -109,6 +109,9 @@ namespace Nektar
             inline AdjacentTraceOrientation
                     GetBndExpAdjacentOrient(const int i);
 
+            inline AdjacentFaceOrientation
+                    GetBndExpAdjacentFaceOrient(const int i);
+
         protected:
 
         private:
@@ -212,6 +215,12 @@ namespace Nektar
                     LocalToGlobalDGMap::GetBndExpAdjacentOrient(const int i)
         {
             return m_bndExpAdjacentOrient[i];
+        }
+
+        inline AdjacentFaceOrientation
+                    LocalToGlobalDGMap::GetBndExpAdjacentFaceOrient(const int i)
+        {
+            return m_bndExpAdjacentFaceOrient[i];
         }
     } // end of namespace
 } // end of namespace

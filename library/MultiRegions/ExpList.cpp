@@ -2077,7 +2077,15 @@ namespace Nektar
             static boost::shared_ptr<ExpList> result;
             return result;
         }
-		
+        
+        boost::shared_ptr<ExpList2D> &ExpList::v_GetTrace3D()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static boost::shared_ptr<ExpList2D> returnVal;
+            return returnVal;
+        }
+
         boost::shared_ptr<ExpList1D> &ExpList::v_GetTrace()
         {
             ASSERTL0(false,
@@ -2085,8 +2093,8 @@ namespace Nektar
             static boost::shared_ptr<ExpList1D> returnVal;
             return returnVal;
         }
-		
-		boost::shared_ptr<ExpList0D> &ExpList::v_GetTrace1D()
+        
+        boost::shared_ptr<ExpList0D> &ExpList::v_GetTrace1D()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

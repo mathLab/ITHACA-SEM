@@ -204,30 +204,28 @@ namespace Nektar
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
             Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);			
-		}
-		
+        }
+	
         for(i = 0; i < numflux.num_elements(); ++i)
         {
             m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
-			
-			//evaulate upwinded m_fields[i]
-			if (m_expdim == 1)
-			{
-				m_fields[i]->GetTrace1D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-			}
-			else if (m_expdim == 2)
-			{
-				m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            
+            //evaulate upwinded m_fields[i]
+            if (m_expdim == 1)
+            {
+                m_fields[i]->GetTrace1D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
             }
-			// calculate m_fields[i]*Vn
-			Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
+            else if (m_expdim == 2)
+            {
+                m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            }
+            // calculate m_fields[i]*Vn
+            Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
         }
     }
-
+    
     void UnsteadyAdvection::v_PrintSummary(std::ostream &out)
     {
         UnsteadySystem::v_PrintSummary(out);
     }
-
-
 }

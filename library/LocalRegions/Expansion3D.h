@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Expansion3D.h
+// File: Expansion3D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -43,22 +43,37 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        class Expansion3D: virtual public Expansion, virtual public StdRegions::StdExpansion3D
+        class Expansion3D: virtual public Expansion, 
+                           virtual public StdRegions::StdExpansion3D
         {
-            public:
-				LOCAL_REGIONS_EXPORT Expansion3D();
-				LOCAL_REGIONS_EXPORT virtual ~Expansion3D() {}
-
-                LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                       
-            protected:
-                LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
-
-            private:
+        public:
+            LOCAL_REGIONS_EXPORT Expansion3D();
+            LOCAL_REGIONS_EXPORT virtual ~Expansion3D() {}
+            
+            LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                       
+            
+        protected:
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+            
+            LOCAL_REGIONS_EXPORT void v_AddFaceNormBoundaryInt(
+                const int                            face,
+                StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>  &Fx,
+                const Array<OneD, const NekDouble>  &Fy,
+                const Array<OneD, const NekDouble>  &Fz,
+                      Array<OneD,       NekDouble>  &outarray);
+            
+            LOCAL_REGIONS_EXPORT void v_AddFaceNormBoundaryInt(
+                const int                            face,
+                StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>  &Fn,
+                      Array<OneD,       NekDouble>  &outarray);
+            
+        private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
-
+            
             std::vector<Expansion2DWeakPtr> m_faceExp;
-
         };
         
         // type defines for use of PrismExp in a boost vector
@@ -66,17 +81,8 @@ namespace Nektar
         typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
         typedef std::vector< Expansion3DSharedPtr > Expansion3DVector;
         typedef std::vector< Expansion3DSharedPtr >::iterator Expansion3DVectorIter;
-        
     } //end of namespace
 } //end of namespace
 
 #define EXPANSION3D_H
 #endif
-
-/** 
- *    $Log: Expansion3D.h,v $
- *    Revision 1.1  2008/08/14 22:12:56  sherwin
- *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
- *
- *
- **/

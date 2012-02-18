@@ -462,6 +462,22 @@ namespace Nektar
                 return v_DetEdgeBasisKey(i);
             }
 
+            /** 
+             * \brief This function returns the number of quadrature points
+             * belonging to the \a i-th face.
+             *
+             * This function is a wrapper around the virtual function \a
+             * v_GetFaceNcoeffs()
+             *
+             * \param i specifies which face
+             * \return returns the number of expansion coefficients belonging to
+             * the \a i-th face
+             */
+            int GetFaceNumPoints(const int i) const
+            {
+                return v_GetFaceNumPoints(i);
+            }
+
             /** \brief This function returns the number of expansion coefficients
              *  belonging to the \a i-th face
              *
@@ -480,6 +496,11 @@ namespace Nektar
             int GetFaceIntNcoeffs(const int i) const
             {
                 return v_GetFaceIntNcoeffs(i);
+            }
+
+            bool GetFaceDGForwards(const int i) const
+            {
+                return v_GetFaceDGForwards(i);
             }
 
             int NumBndryCoeffs(void)  const
@@ -897,6 +918,17 @@ namespace Nektar
                                          Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
+                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
+                                                const Array<OneD, const NekDouble> &Fx,
+                                                const Array<OneD, const NekDouble> &Fy,
+                                                const Array<OneD, const NekDouble> &Fz,
+                                                Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
+                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
+                                                const Array<OneD, const NekDouble> &Fn,
+                                                Array<OneD, NekDouble> &outarray);
 
             int GetCoordim()
             {
@@ -1485,7 +1517,7 @@ namespace Nektar
                                                   const Array<OneD, const NekDouble> &Fy,
                                                   Array<OneD, NekDouble> &outarray);
 
-             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
+            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion1D> &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray);
@@ -1500,6 +1532,17 @@ namespace Nektar
                                            Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
+                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
+                                                  const Array<OneD, const NekDouble> &Fz,
+                                                  Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
+                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
+                                                  const Array<OneD, const NekDouble> &Fn,
+                                                  Array<OneD, NekDouble> &outarray);
 
         private:
             // Virtual functions
@@ -1520,9 +1563,13 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
 
+            STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
+
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
+
+            STD_REGIONS_EXPORT virtual bool v_GetFaceDGForwards(const int i) const;
 
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 

@@ -148,6 +148,8 @@ namespace Nektar
             virtual void v_GetCoord(  const Array<OneD, const NekDouble> &Lcoords, 
                             Array<OneD,NekDouble> &coords);
       
+            virtual bool v_GetFaceDGForwards(const int i) const;
+
             /// Writes out values at quadrature points to text file.
             virtual void v_WriteToFile( std::ofstream &outfile, 
                             OutputFormat format, 

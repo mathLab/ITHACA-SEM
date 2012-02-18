@@ -378,14 +378,18 @@ namespace Nektar
                 }
             case 3:
                 {
-                    //if(m_HomogeneousType == eHomogeneous3D)
-                    //{
-                    //    ASSERTL0(false,"3D fully periodic problems not implemented yet");
-                    //}
-                    //else
-                    //{
-                        ASSERTL0(false,"3 D not set up");
-                    //}c
+                    if(m_HomogeneousType == eHomogeneous3D)
+                    {
+                        ASSERTL0(false,"3D fully periodic problems not implemented yet");
+                    }
+                    else
+                    {
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::DisContField3D>::
+                                AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i));
+                        }
+                    }
                     break;
                 }
             default:
@@ -396,35 +400,46 @@ namespace Nektar
             // Set up Normals.
             switch(m_expdim)
             {
-            case 1:
-				{
-					m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-					
+                case 1:
+                {
+                    m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                    
                     for(i = 0; i < m_spacedim; ++i)
                     {
                         m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
                     }
-					m_fields[0]->GetTrace1D()->GetNormals(m_traceNormals);
-					break;
-				}
-			case 2:
+                    m_fields[0]->GetTrace1D()->GetNormals(m_traceNormals);
+                    break;
+                }
+                case 2:
                 {
                     m_traceNormals
                         = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-
+                    
                     for(i = 0; i < m_spacedim; ++i)
                     {
                         m_traceNormals[i] = Array<OneD, NekDouble> (m_fields[0]
                                                                     ->GetTrace()->GetNpoints());
                     }
-
+                    
                     m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
                     break;
                 }
-            case 3:
-                ASSERTL0(false,"3 D not set up");
+                case 3:
+                {
+                    m_traceNormals
+                        = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                    
+                    for(i = 0; i < m_spacedim; ++i)
+                    {
+                        m_traceNormals[i] = Array<OneD, NekDouble>(
+                            m_fields[0]->GetTrace()->GetNpoints());
+                    }
+                    
+                    m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
                     break;
-            default:
+                }
+                default:
                     ASSERTL0(false,"Expansion dimension not recognised");
                     break;
             }

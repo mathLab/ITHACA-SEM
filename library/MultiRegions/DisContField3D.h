@@ -82,6 +82,29 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~DisContField3D();
 
+            // 3D DG functions.
+            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(
+                Array<OneD,NekDouble> &Fwd,
+                Array<OneD,NekDouble> &Bwd);
+            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(
+                const Array<OneD,const NekDouble>  &field,
+                      Array<OneD,      NekDouble> &Fwd,
+                      Array<OneD,      NekDouble> &Bwd);
+            MULTI_REGIONS_EXPORT void ExtractTracePhys();
+            MULTI_REGIONS_EXPORT void ExtractTracePhys(
+                Array<OneD,NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void ExtractTracePhys(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void AddTraceIntegral(
+                const Array<OneD, const NekDouble> &Fx,
+                const Array<OneD, const NekDouble> &Fy,
+                const Array<OneD, const NekDouble> &Fz,
+                      Array<OneD,       NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void AddTraceIntegral(
+                const Array<OneD, const NekDouble> &Fn,
+                      Array<OneD,       NekDouble> &outarray);
+                
         protected:
 
             /// An object which contains the discretised boundary conditions.
@@ -130,6 +153,11 @@ namespace Nektar
             /// for a robin aboundary condition in the location of the
             /// element id
             map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
+
+            inline virtual ExpList2DSharedPtr &v_GetTrace3D(void)
+            {
+                return m_trace;
+            }
 
         private:
             GlobalLinSysMapShPtr                                m_globalBndMat;

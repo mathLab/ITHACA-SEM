@@ -693,5 +693,210 @@ namespace Nektar
             return GetRobinBCInfo();
         }
 
+        void DisContField3D::GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
+                                                Array<OneD, NekDouble> &Bwd)
+        {
+            GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+        }
+        
+        void DisContField3D::GetFwdBwdTracePhys(
+            const Array<OneD, const NekDouble> &field,
+                  Array<OneD,       NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
+        {
+            // Loop over elements and collect forward and backward expansions.
+            int nexp = GetExpSize();
+            int nquad_e,cnt,n,e,npts,offset, phys_offset;
+            Array<OneD,NekDouble> e_tmp;
+            
+            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
+                elmtToTrace = m_traceMap->GetElmtToFace();
+            
+            // Zero vectors.
+            Vmath::Zero(Fwd.num_elements(),Fwd,1);
+            Vmath::Zero(Bwd.num_elements(),Bwd,1);
+
+            for(n = 0; n < nexp; ++n)
+            {
+                phys_offset = GetPhys_Offset(n);
+
+                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                {
+                    nquad_e = (*m_exp)[n]->GetFaceNumPoints(e);
+                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    if ((*m_exp)[n]->GetFaceDGForwards(e))
+                    {
+                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                                                     field + phys_offset,
+                                                     e_tmp = Fwd + offset);
+                    }
+                    else
+                    {
+                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                                                     field + phys_offset,
+                                                     e_tmp = Bwd + offset);
+                    }
+                }
+            }
+			
+            // fill boundary conditions into missing elements
+            int id1,id2 = 0;
+            cnt = 0;
+            
+            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {				
+                if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        AdjacentFaceOrientation afo = m_traceMap->GetBndExpAdjacentFaceOrient(cnt+e);
+                        
+                        if (afo == eAdjacentFaceDir1FwdDir1_Dir2FwdDir2 ||
+                            afo == eAdjacentFaceDir1BwdDir1_Dir2BwdDir2 ||
+                            afo == eAdjacentFaceDir1FwdDir2_Dir2BwdDir1 ||
+                            afo == eAdjacentFaceDir1BwdDir2_Dir2FwdDir1)
+                        {
+                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
+                        }
+                        else
+                        {
+                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
+                        }
+                    }
+
+                    cnt +=e;
+                }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann || 
+                         m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                {
+                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        AdjacentFaceOrientation afo = m_traceMap->GetBndExpAdjacentFaceOrient(cnt+e);
+
+                        ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,
+                                 "method not set up for non-zero Neumann boundary condition");
+
+                        if (afo == eAdjacentFaceDir1FwdDir1_Dir2FwdDir2 ||
+                            afo == eAdjacentFaceDir1BwdDir1_Dir2BwdDir2 ||
+                            afo == eAdjacentFaceDir1FwdDir2_Dir2BwdDir1 ||
+                            afo == eAdjacentFaceDir1BwdDir2_Dir2FwdDir1)
+                        {
+                            Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                        }
+                        else
+                        {
+                            Vmath::Vcopy(npts,&Bwd[id2],1,&Fwd[id2],1);
+                        }
+                    }
+
+                    cnt += e;
+                }
+                else
+                {
+                    ASSERTL0(false, "Method only set up for Dirichlet, Neumann and Robin conditions.");
+                }
+            }
+        }
+
+        void DisContField3D::ExtractTracePhys()
+        {
+            ExtractTracePhys(m_trace->UpdatePhys());
+        }
+
+        void DisContField3D::ExtractTracePhys(Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL1(m_physState == true,
+                     "Field is not in physical space.");
+            
+            ExtractTracePhys(m_phys, outarray);
+        }
+
+        void DisContField3D::ExtractTracePhys(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            // Loop over elemente and collect forward expansion
+            int nexp = GetExpSize();
+            int nquad_e,n,e,offset,phys_offset;
+            Array<OneD,NekDouble> e_tmp;
+            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
+                elmtToTrace = m_traceMap->GetElmtToFace();
+            
+            ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
+                     "input array is of insufficient length");
+            
+            // use m_trace tmp space in element to fill values
+            for(n  = 0; n < nexp; ++n)
+            {
+                phys_offset = GetPhys_Offset(n);
+		
+                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                {
+                    nquad_e = (*m_exp)[n]->GetFaceNumPoints(e);
+                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                                                 inarray + phys_offset,
+                                                 e_tmp = outarray + offset);
+                }
+            }
+        }
+        
+        /// Note this routine changes m_trace->m_coeffs space;
+        void DisContField3D::AddTraceIntegral(
+            const Array<OneD, const NekDouble> &Fx,
+            const Array<OneD, const NekDouble> &Fy,
+            const Array<OneD, const NekDouble> &Fz,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
+                elmtToTrace = m_traceMap->GetElmtToFace();
+            
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                {
+                    t_offset = GetTrace3D()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+
+                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
+                                                        Fx + t_offset,
+                                                        Fy + t_offset,
+                                                        Fz + t_offset,
+                                                        e_outarray = outarray+offset);
+                }
+            }
+        }
+
+        /// Note this routine changes m_trace->m_coeffs space;
+        void DisContField3D::AddTraceIntegral(
+            const Array<OneD, const NekDouble> &Fn,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+			
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
+                elmtToTrace = m_traceMap->GetElmtToFace();
+
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                {
+                    t_offset = GetTrace3D()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
+                                                        Fn + t_offset,
+                                                        e_outarray = outarray+offset);
+                }
+            }
+        }
     } // end of namespace
 } // end of namespace

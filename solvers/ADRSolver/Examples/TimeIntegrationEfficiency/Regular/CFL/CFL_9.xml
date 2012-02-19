@@ -375,7 +375,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="#NUMMODES#" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="#NUMMODES#" FIELDS="u" TYPE="#BASISTYPE#" />
     </EXPANSIONS>
     
     <CONDITIONS>
@@ -390,8 +390,8 @@
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="CFLtester"/>
-      <I PROPERTY="Projection" VALUE="DisContinuous"/>    
+      <I PROPERTY="EQTYPE" VALUE="#EQUATIONTYPE#"/>
+      <I PROPERTY="Projection" VALUE="#PROJECTION#"/>    
       <I PROPERTY="TimeIntegrationMethod"  VALUE="#TimeScheme#"/>
     </SOLVERINFO> 
 

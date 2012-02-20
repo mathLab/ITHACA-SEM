@@ -1398,7 +1398,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
             {
                  std::string xscalstr = xscal;
                  int expr_id  = expEvaluator.DefineFunction("",xscalstr);
-                 xscale = expEvaluator.Evaluate0(expr_id);
+                 xscale = expEvaluator.Evaluate(expr_id);
             }
             
 

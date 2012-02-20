@@ -41,13 +41,18 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        /// Default constructor
-
+        /**
+         *
+         */
         QuadGeom::QuadGeom()
         {
             m_geomShapeType = eQuadrilateral;
         }
 
+
+        /**
+         *
+         */
         QuadGeom::QuadGeom(int id, const int coordim):
                           Geometry2D(coordim), m_fid(id)
         {
@@ -66,6 +71,10 @@ namespace Nektar
 
         }
 
+
+        /**
+         *
+         */
         QuadGeom::QuadGeom(const int id,
                            const VertexComponentSharedPtr verts[],
                            const SegGeomSharedPtr edges[],
@@ -113,6 +122,10 @@ namespace Nektar
             }
         }
 
+
+        /**
+         *
+         */
         QuadGeom::QuadGeom(const int id,
                            const SegGeomSharedPtr edges[],
                            const StdRegions::EdgeOrientation eorient[],
@@ -201,6 +214,10 @@ namespace Nektar
             }
         }
 
+
+        /**
+         *
+         */
         QuadGeom::QuadGeom(const int id,
                            const SegGeomSharedPtr edges[],
                            const StdRegions::EdgeOrientation eorient[]):
@@ -257,6 +274,10 @@ namespace Nektar
             }
         }
 
+
+        /**
+         *
+         */
         QuadGeom::QuadGeom(const QuadGeom &in)
         {
             // From Geometry
@@ -281,22 +302,71 @@ namespace Nektar
             m_ownData = in.m_ownData;
         }
 
+
+        /**
+         *
+         */
         QuadGeom::~QuadGeom()
         {
         }
 
-        void QuadGeom::AddElmtConnected(int gvo_id, int locid)
+
+        /**
+         *
+         */
+        NekDouble QuadGeom::GetCoord(const int i,
+                                  const Array<OneD, const NekDouble> &Lcoord)
+        {
+            ASSERTL1(m_state == ePtsFilled,
+                "Geometry is not in physical space");
+
+            return m_xmap[i]->PhysEvaluate(Lcoord);
+        }
+
+
+       /**
+        * TODO: implement eight different case of face orientation
+        */
+       StdRegions::FaceOrientation QuadGeom::GetFaceOrientation(
+                   const QuadGeom &face1,
+                   const QuadGeom &face2)
+       {
+           StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+           // TODO : implement
+	   // eDir1FwdDir1_Dir2BwdDir2
+	   // eDir1BwdDir1_Dir2FwdDir2
+	   // eDir1BwdDir1_Dir2BwdDir2
+	   // eDir1FwdDir2_Dir2FwdDir1
+	   // eDir1FwdDir2_Dir2BwdDir1
+	   // eDir1BwdDir2_Dir2FwdDir1
+	   // eDir1BwdDir2_Dir2BwdDir1
+	   return returnval;
+        }
+
+
+        /**
+         *
+         */
+        void QuadGeom::v_AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
             m_elmtMap.push_back(ee);
         }
 
-        int QuadGeom::NumElmtConnected() const
+
+        /**
+         *
+         */
+        int QuadGeom::v_NumElmtConnected() const
         {
             return int(m_elmtMap.size());
         }
 
-        bool QuadGeom::IsElmtConnected(int gvo_id, int locid) const
+
+        /**
+         *
+         */
+        bool QuadGeom::v_IsElmtConnected(int gvo_id, int locid) const
         {
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
@@ -312,22 +382,78 @@ namespace Nektar
             return(false);
         }
 
-        NekDouble QuadGeom::GetCoord(const int i,
-                                  const Array<OneD, const NekDouble> &Lcoord)
-        {
-            ASSERTL1(m_state == ePtsFilled,
-                "Goemetry is not in physical space");
 
-            return m_xmap[i]->PhysEvaluate(Lcoord);
+        /**
+         *
+         */
+        int QuadGeom::v_GetFid() const
+        {
+            return m_fid;
         }
 
-        // Set up GeoFac for this geometry using Coord quadrature distribution
-        void QuadGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+
+        /**
+         *
+         */
+        int QuadGeom::v_GetCoordDim() const
+        {
+            return m_coordim;
+        }
+
+
+        /**
+         *
+         */
+        const LibUtilities::BasisSharedPtr QuadGeom::v_GetBasis(const int i, const int j)
+        {
+            return m_xmap[i]->GetBasis(j);
+        }
+
+
+        /**
+         *
+         */
+        const LibUtilities::BasisSharedPtr QuadGeom::v_GetEdgeBasis(const int i, const int j)
+        {
+            ASSERTL1(j <= 3,"edge is out of range");
+            if((j == 0)||(j == 2))
+            {
+                return m_xmap[i]->GetBasis(0);
+            }
+            else
+            {
+                return m_xmap[i]->GetBasis(1);
+            }
+        }
+
+
+        /**
+         *
+         */
+        Array<OneD,NekDouble> & QuadGeom::v_UpdatePhys(const int i)
+        {
+            return m_xmap[i]->UpdatePhys();
+        }
+
+
+        /**
+         *
+         */
+        NekDouble QuadGeom::v_GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord)
+	{
+            return GetCoord(i,Lcoord);
+	}
+
+
+        /**
+         * Set up GeoFac for this geometry using Coord quadrature distribution
+         */
+        void QuadGeom::v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             int i;
             GeomType Gtype = eRegular;
 
-            FillGeom();
+	    QuadGeom::v_FillGeom();
 
             // We will first check whether we have a regular or deformed geometry.
             // We will define regular as those cases where the Jacobian and the metric
@@ -382,16 +508,22 @@ namespace Nektar
             m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
-        /** \brief put all quadrature information into edge structure
-        and backward transform
 
-        Note verts and edges are listed according to anticlockwise
-        convention but points in _coeffs have to be in array format from
-        left to right.
+        /**
+         *
+         */
+        void QuadGeom::v_SetOwnData()
+        {
+            m_ownData = true;
+        }
 
-        */
 
-        void QuadGeom::FillGeom()
+        /**
+         * Note verts and edges are listed according to anticlockwise
+         * convention but points in _coeffs have to be in array format from
+         * left to right.
+         */
+        void QuadGeom::v_FillGeom()
         {
             // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
@@ -430,12 +562,15 @@ namespace Nektar
             }
         }
 
-        void QuadGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords,
-                                    Array<OneD,NekDouble> &Lcoords)
+        
+        /**
+         *
+         */
+        void QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
-            FillGeom();                       
+	    QuadGeom::v_FillGeom();                       
             // calculate local coordinate for coord
-/*
+	/*
 	//this method works only for strictly regular elements and sometimes fails
             if(GetGtype() == eRegular)
             { // can assume it is right angled rectangle
@@ -527,26 +662,126 @@ namespace Nektar
 
         }
 
-        //TODO: implement eight different case of face orientation
-       StdRegions::FaceOrientation QuadGeom::GetFaceOrientation(const QuadGeom &face1,
-                                                                const QuadGeom &face2)
-       {
-            StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
 
-             // TODO : implement
-//             eDir1FwdDir1_Dir2BwdDir2
-//             eDir1BwdDir1_Dir2FwdDir2
-//             eDir1BwdDir1_Dir2BwdDir2
-//             eDir1FwdDir2_Dir2FwdDir1
-//             eDir1FwdDir2_Dir2BwdDir1
-//             eDir1BwdDir2_Dir2FwdDir1
-//             eDir1BwdDir2_Dir2BwdDir1
+        /**
+         *
+         */
+        int QuadGeom::v_GetEid(int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+            return m_edges[i]->GetEid();
+        }
+
+
+        /**
+         *
+         */
+        int QuadGeom::v_GetVid(int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 3),"Verted id must be between 0 and 3");
+            return m_verts[i]->GetVid();
+        }
+
+
+        /**
+         *
+         */
+        const VertexComponentSharedPtr QuadGeom::v_GetVertex(const int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
+            return m_verts[i];
+        }
+
+
+        /**
+         *
+         */
+        const Geometry1DSharedPtr QuadGeom::v_GetEdge(const int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+            return m_edges[i];
+        }
+
+
+        /**
+         *
+         */
+        StdRegions::EdgeOrientation QuadGeom::v_GetEorient(const int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+            return m_eorient[i];
+        }
+
+
+        /**
+         *
+         */
+        StdRegions::EdgeOrientation QuadGeom::v_GetCartesianEorient(const int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+            if(i < 2)
+            {
+                return m_eorient[i];
+            }
+            else
+            {
+                if(m_eorient[i] == StdRegions::eForwards)
+                {
+                    return StdRegions::eBackwards;
+                }
+                else
+                {
+                    return StdRegions::eForwards;
+                }
+            }
+        }
+
+
+        /** 
+         *
+         */
+        int QuadGeom::v_WhichEdge(SegGeomSharedPtr edge)
+        {
+            int returnval = -1;
+
+            SegGeomVector::iterator edgeIter;
+            int i;
+
+            for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
+            {
+                if (*edgeIter == edge)
+                {
+                    returnval = i;
+                    break;
+                }
+            }
 
             return returnval;
         }
 
-        bool QuadGeom::v_ContainsPoint(
-                                       const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+
+        /**
+         *
+         */
+        int QuadGeom::v_GetNumVerts() const
+        {
+            return kNverts;
+        }
+
+
+        /**
+         *
+         */
+        int QuadGeom::v_GetNumEdges() const
+        {
+            return kNedges;
+        }
+ 
+
+        /**
+         *
+         */
+        bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                  "Two dimensional geometry expects at least two coordinates.");
@@ -562,124 +797,3 @@ namespace Nektar
         }
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: QuadGeom.cpp,v $
-// Revision 1.26  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.25  2009/05/15 14:38:41  pvos
-// Changed check for regular quads so that it also includes parallellograms
-//
-// Revision 1.24  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.23  2008/12/18 14:08:58  pvos
-// NekConstants update
-//
-// Revision 1.22  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.21  2008/09/09 14:26:22  sherwin
-// Updates for deformed curved quads
-//
-// Revision 1.20  2008/08/14 22:11:03  sherwin
-// Mods for HDG update
-//
-// Revision 1.19  2008/06/30 19:35:22  ehan
-// Fixed infinity recursive-loop error.
-//
-// Revision 1.18  2008/06/14 01:23:07  ehan
-// Implemented constructor and FillGeom().
-//
-// Revision 1.17  2008/06/11 21:34:42  delisi
-// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
-//
-// Revision 1.16  2008/05/29 19:01:45  delisi
-// Renamed eQuad to eQuadrilateral.
-//
-// Revision 1.15  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.14  2008/05/07 16:05:37  pvos
-// Mapping + Manager updates
-//
-// Revision 1.13  2008/04/06 06:00:38  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.12  2008/01/21 19:58:14  sherwin
-// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
-//
-// Revision 1.11  2007/07/20 02:15:09  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.10  2007/06/06 15:15:21  pvos
-// Some minor updates for 2D routines
-//
-// Revision 1.9  2007/06/06 11:29:31  pvos
-// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
-//
-// Revision 1.8  2007/05/28 21:48:42  sherwin
-// Update for 2D functionality
-//
-// Revision 1.7  2006/08/05 19:03:47  sherwin
-// Update to make the multiregions 2D expansion in connected regions work
-//
-// Revision 1.6  2006/07/02 17:16:17  sherwin
-//
-// Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-//
-// Revision 1.5  2006/06/02 18:48:40  sherwin
-// Modifications to make ProjectLoc2D run bit there are bus errors for order > 3
-//
-// Revision 1.4  2006/06/01 14:15:30  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.3  2006/05/16 22:28:31  sherwin
-// Updates to add in FaceComponent call to constructors
-//
-// Revision 1.2  2006/05/07 11:26:38  sherwin
-// Modifications to get the demo LocalRegions::Project2D to compile
-//
-// Revision 1.1  2006/05/04 18:59:03  kirby
-// *** empty log message ***
-//
-// Revision 1.23  2006/05/02 21:21:11  sherwin
-// Corrected libraries to compile new version of spatialdomains and demo Graph1D
-//
-// Revision 1.22  2006/04/11 23:18:11  jfrazier
-// Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
-//
-// Revision 1.21  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.20  2006/03/25 00:58:29  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.19  2006/03/13 19:47:54  sherwin
-//
-// Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts
-//
-// Revision 1.18  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.17  2006/03/12 11:06:40  sherwin
-//
-// First complete copy of code standard code but still not compile tested
-//
-// Revision 1.16  2006/02/26 21:19:43  bnelson
-// Fixed a variety of compiler errors caused by updates to the coding standard.
-//
-// Revision 1.15  2006/02/19 01:37:34  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

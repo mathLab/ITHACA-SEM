@@ -133,6 +133,13 @@ int main(int argc, char* argv[])
 	//Test Modified Arnoldi direct stability  (CoupledSolver)
 	//Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
 #endif
+
+    //Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
+    Execute("IncNavierStokesSolver","Test_Hex_channel_m3.xml","3D channel flow, Hexahedral elements, P=3");
+    Execute("IncNavierStokesSolver","Test_Hex_channel_m8.xml","3D channel flow, Hexahedral elements, P=8");
+    Execute("IncNavierStokesSolver","Test_Tet_channel_m3.xml","3D channel flow, Tetrahedral elements, P=3");
+    Execute("IncNavierStokesSolver","Test_Tet_channel_m8.xml","3D channel flow, Tetrahedral elements, P=8");
+
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;

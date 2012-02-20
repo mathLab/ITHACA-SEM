@@ -228,3 +228,42 @@ L inf error (variable w) : 4.03102e-05
 L 2 error (variable p) : 8.91694e-05
 L inf error (variable p) : 0.000565207
 ----------------------------------------
+Test_Hex_channel_m3.xml
+L 2 error (variable u) : 0
+L inf error (variable u) : 1.78015e-16
+L 2 error (variable v) : 0
+L inf error (variable v) : 1.95186e-16
+L 2 error (variable w) : 4.86964e-16
+L inf error (variable w) : 9.10383e-15
+L 2 error (variable p) : 6.69157e-15
+L inf error (variable p) : 6.83897e-14
+----------------------------------------
+Test_Hex_channel_m8.xml
+L 2 error (variable u) : 2.48774e-15
+L inf error (variable u) : 1.71195e-14
+L 2 error (variable v) : 1.48847e-15
+L inf error (variable v) : 1.68209e-14
+L 2 error (variable w) : 7.45701e-15
+L inf error (variable w) : 1.22669e-12
+L 2 error (variable p) : 2.57963e-13
+L inf error (variable p) : 2.69917e-12
+----------------------------------------
+Test_Tet_channel_m3.xml
+L 2 error (variable u) : 0
+L inf error (variable u) : 9.77232e-17
+L 2 error (variable v) : 0
+L inf error (variable v) : 1.3292e-16
+L 2 error (variable w) : 0
+L inf error (variable w) : 6.93889e-16
+L 2 error (variable p) : 3.10062e-15
+L inf error (variable p) : 2.13163e-14
+----------------------------------------
+Test_Tet_channel_m8.xml
+L 2 error (variable u) : 2.49266e-16
+L inf error (variable u) : 2.13107e-15
+L 2 error (variable v) : 2.53394e-16
+L inf error (variable v) : 2.12598e-15
+L 2 error (variable w) : 1.4014e-15
+L inf error (variable w) : 3.2141e-14
+L 2 error (variable p) : 1.95412e-14
+L inf error (variable p) : 4.68514e-13

@@ -72,7 +72,18 @@ namespace Nektar
             virtual void Process() = 0;
             
         protected:
+            /// Mesh object
             MeshSharedPtr m;
+            /// Extract element vertices
+            virtual void ProcessVertices();
+            /// Extract element edges
+            virtual void ProcessEdges();
+            /// Extract element faces
+            virtual void ProcessFaces();
+            /// Generate element IDs
+            virtual void ProcessElements();
+            /// Generate composites
+            virtual void ProcessComposites();
         };
         
         /**
@@ -90,16 +101,6 @@ namespace Nektar
             InputModule(MeshSharedPtr p_m);
             
         protected:
-            /// Extract element vertices
-            virtual void ProcessVertices();
-            /// Extract element edges
-            virtual void ProcessEdges();
-            /// Extract element faces
-            virtual void ProcessFaces();
-            /// Generate element IDs
-            virtual void ProcessElements();
-            /// Generate composites
-            virtual void ProcessComposites();
             /// Print summary of elements.
             void         PrintSummary();
             /// Input stream

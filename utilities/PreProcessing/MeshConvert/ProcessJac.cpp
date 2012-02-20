@@ -67,7 +67,7 @@ namespace Nektar
             for (int i = 0; i < el.size(); ++i)
             {
                 // Create elemental geometry.
-                SpatialDomains::GeometrySharedPtr geom = el[i]->GetGeom();
+                SpatialDomains::GeometrySharedPtr geom = el[i]->GetGeom(m->spaceDim);
                 
                 // Define basis key using MeshGraph functions. Need a better
                 // way of determining the number of modes!

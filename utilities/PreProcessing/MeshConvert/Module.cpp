@@ -100,19 +100,25 @@ namespace Nektar
          * inserted into #m_vertexSet, which at the end of the routine
          * contains all unique vertices in the mesh.
          */
-        void InputModule::ProcessVertices()
+        void Module::ProcessVertices()
         {
             vector<ElementSharedPtr> &elmt = m->element[m->expDim];
+            
+            m->vertexSet.clear();
             
             for (int i = 0, vid = 0; i < elmt.size(); ++i)
             {
                 for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
                 {
-                    pair<NodeSet::iterator,bool> insTest =
+                    pair<NodeSet::iterator,bool> testIns =
                         m->vertexSet.insert(elmt[i]->GetVertex(j));
-                    if (insTest.second)
+                    if (testIns.second)
                     {
-                        (*(insTest.first))->id = vid++;
+                        (*(testIns.first))->id = vid++;
+                    }
+                    else
+                    {
+                        elmt[i]->SetVertex(j,*testIns.first);
                     }
                 }
             }
@@ -130,11 +136,13 @@ namespace Nektar
          * #m_edgeSet. For such elements, we set its edgeLink to reference the
          * corresponding edge in #m_edgeSet.
          */
-        void InputModule::ProcessEdges()
+        void Module::ProcessEdges()
         {
             if (m->expDim < 2) return;
 
             vector<ElementSharedPtr> &elmt = m->element[m->expDim];
+
+            m->edgeSet.clear();
             
             // Scan all elements and generate list of unique edges
             for (int i = 0, eid = 0; i < elmt.size(); ++i)
@@ -151,7 +159,13 @@ namespace Nektar
                     }
                     else
                     {
-                        elmt[i]->SetEdge(j,*testIns.first);
+                        EdgeSharedPtr e2 = *(testIns.first);
+                        elmt[i]->SetEdge(j, e2);
+                        if (e2->edgeNodes.size() == 0 && 
+                            ed->edgeNodes.size() > 0)
+                        {
+                            e2->edgeNodes = ed->edgeNodes;
+                        }
                     }
                 }
             }
@@ -188,11 +202,13 @@ namespace Nektar
          * #m_faceSet. For such elements, we set its faceLink to reference the
          * corresponding face in #m_faceSet.
          */
-        void InputModule::ProcessFaces()
+        void Module::ProcessFaces()
         {
             if (m->expDim < 3) return;
 
             vector<ElementSharedPtr> &elmt = m->element[m->expDim];
+            
+            m->faceSet.clear();
             
             // Scan all elements and generate list of unique faces
             for (int i = 0, fid = 0; i < elmt.size(); ++i)
@@ -240,7 +256,7 @@ namespace Nektar
          * lower dimension and have ID set by a corresponding edgeLink or
          * faceLink (as set in #ProcessEdges or #ProcessFaces).
          */
-        void InputModule::ProcessElements()
+        void Module::ProcessElements()
         {
             int cnt = 0;
             for (int i = 0; i < m->element[m->expDim].size(); ++i)
@@ -248,22 +264,25 @@ namespace Nektar
                 m->element[m->expDim][i]->SetId(cnt++);
             }
         }
-
-
+        
+        
         /**
          * Each element is assigned to a composite ID by Gmsh. First we scan
          * the element list and generate a list of composite IDs. We then
          * generate the composite objects and populate them with a second scan
          * through the element list.
          */
-        void InputModule::ProcessComposites()
+        void Module::ProcessComposites()
         {
+            m->composite.clear();
+            
             // For each element, check to see if a composite has been
             // created. If not, create a new composite. Otherwise, add the
             // element to the composite.
             for (int d = 0; d <= m->expDim; ++d)
             {
                 vector<ElementSharedPtr> &elmt = m->element[d];
+                
                 for (int i = 0; i < elmt.size(); ++i)
                 {
                     CompositeMap::iterator it;

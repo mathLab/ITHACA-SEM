@@ -105,12 +105,12 @@ namespace Nektar
             }
 
             /// Generate a %SpatialDomains::VertexComponent for this node.
-            SpatialDomains::VertexComponentSharedPtr GetGeom()
+            SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {
                 if (!m_geom)
                 {
                     m_geom = MemoryManager<SpatialDomains::VertexComponent>::
-                        AllocateSharedPtr(3,id,x,y,z);
+                        AllocateSharedPtr(coordDim,id,x,y,z);
                 }
                 
                 return m_geom;
@@ -133,7 +133,13 @@ namespace Nektar
 
         bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
         bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
-        
+
+        /**
+         * @brief Defines a hash function for nodes.
+         * 
+         * The hash of a node is straight-forward; a combination of the x, y,
+         * and z co-ordinates in this order.
+         */
         struct NodeHash : std::unary_function<NodeSharedPtr, std::size_t>
         {
             std::size_t operator()(NodeSharedPtr const& p) const
@@ -174,7 +180,8 @@ namespace Nektar
                 return edgeNodes.size() + 2;
             }
 
-            /// Creates a string listing the coordinates of all the nodes.
+            /// Creates a Nektar++ string listing the coordinates of all the
+            /// nodes.
             std::string GetXmlCurveString() const
             {
                 std::stringstream s;
@@ -191,8 +198,8 @@ namespace Nektar
                 return s.str();
             }
 
-            /// Generate a %SpatialDomains::SegGeom object for this edge.
-            SpatialDomains::SegGeomSharedPtr GetGeom()
+            /// Generate a SpatialDomains::SegGeom object for this edge.
+            SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
             {
                 if (m_geom)
                 {
@@ -201,8 +208,8 @@ namespace Nektar
                 
                 // Create edge vertices.
                 SpatialDomains::VertexComponentSharedPtr p[2];
-                p[0] = n1->GetGeom();
-                p[1] = n2->GetGeom();
+                p[0] = n1->GetGeom(coordDim);
+                p[1] = n2->GetGeom(coordDim);
                 
                 // Create a curve if high-order information exists.
                 if (edgeNodes.size() > 0)
@@ -214,17 +221,17 @@ namespace Nektar
                     c->m_points.push_back(p[0]);
                     for (int i = 0; i < edgeNodes.size(); ++i)
                     {
-                        c->m_points.push_back(edgeNodes[i]->GetGeom());
+                        c->m_points.push_back(edgeNodes[i]->GetGeom(coordDim));
                     }
                     c->m_points.push_back(p[1]);
                     
                     m_geom = MemoryManager<SpatialDomains::SegGeom>::
-                        AllocateSharedPtr(id, 3, p, c);
+                        AllocateSharedPtr(id, coordDim, p, c);
                 }
                 else
                 {
                     m_geom = MemoryManager<SpatialDomains::SegGeom>::
-                        AllocateSharedPtr(id, 3, p);
+                        AllocateSharedPtr(id, coordDim, p);
                 }
                 
                 return m_geom;
@@ -250,6 +257,13 @@ namespace Nektar
         bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
         bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2);
         
+        /**
+         * @brief Defines a hash function for edges.
+         * 
+         * The hash of an edge is defined using the IDs of the two nodes which
+         * define it. First the minimum ID is hashed, then the maximum
+         * ID, which takes the two possible orientations into account.
+         */
         struct EdgeHash : std::unary_function<EdgeSharedPtr, std::size_t>
         {
             std::size_t operator()(EdgeSharedPtr const& p) const
@@ -349,7 +363,7 @@ namespace Nektar
 
             /// Generate either %SpatialDomains::TriGeom or
             /// %SpatialDomains::QuadGeom for this element.
-            SpatialDomains::Geometry2DSharedPtr GetGeom()
+            SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
             {
                 if (m_geom)
                 {
@@ -363,7 +377,7 @@ namespace Nektar
                 
                 for (int i = 0; i < nEdge; ++i)
                 {
-                    edges[i] = edgeList[i]->GetGeom();
+                    edges[i] = edgeList[i]->GetGeom(coordDim);
                 }
                 
                 for (int i = 0; i < nEdge; ++i)
@@ -549,6 +563,8 @@ namespace Nektar
             void SetId(unsigned int p) {
                 m_id = p;
             }
+            /// Replace a vertex with another vertex object.
+            void SetVertex(unsigned int p, NodeSharedPtr pNew);
             /// Replace an edge with another edge object.
             void SetEdge(unsigned int p, EdgeSharedPtr pNew);
             /// Replace a face with another face object.
@@ -591,7 +607,7 @@ namespace Nektar
                 return s.str();
             }
             /// Generate a Nektar++ geometry object for this element.
-            virtual SpatialDomains::GeometrySharedPtr GetGeom()
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
             {
                 ASSERTL0(false, "This function should be implemented on a shape level.");
                 return boost::shared_ptr<SpatialDomains::Geometry>();
@@ -679,6 +695,9 @@ namespace Nektar
         /// composite.
         typedef std::map<unsigned int, CompositeSharedPtr> CompositeMap;
 
+        /**
+         * Enumeration of condition types (Dirichlet, Neumann, etc).
+         */
         enum ConditionType
         {
             eDirichlet,
@@ -689,6 +708,13 @@ namespace Nektar
             SIZE_ConditionType
         };
 
+        /**
+         * @brief Defines a boundary condition.
+         * 
+         * A boundary condition is defined by its type (e.g. Dirichlet), the
+         * field it applies to, the value imposed on this field and the
+         * composite which the boundary condition is applied to.
+         */
         struct Condition
         {
             Condition() : type(), field(), value(), composite() {}
@@ -796,7 +822,7 @@ namespace Nektar
             Line(const Point& pSrc);
             virtual ~Line() {}
             
-            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
             
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
@@ -825,7 +851,7 @@ namespace Nektar
             Triangle(const Triangle& pSrc);
             virtual ~Triangle() {}
             
-            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
@@ -854,7 +880,7 @@ namespace Nektar
             Quadrilateral(const Quadrilateral& pSrc);
             virtual ~Quadrilateral() {}
 
-            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
@@ -883,7 +909,7 @@ namespace Nektar
             Tetrahedron(const Tetrahedron& pSrc);
             virtual ~Tetrahedron() {}
 
-            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
@@ -921,7 +947,7 @@ namespace Nektar
             Prism(const Prism& pSrc);
             virtual ~Prism() {}
 
-            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
@@ -959,7 +985,7 @@ namespace Nektar
             Hexahedron(const Hexahedron& pSrc);
             virtual ~Hexahedron() {}
             
-            virtual SpatialDomains::GeometrySharedPtr GetGeom();
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };

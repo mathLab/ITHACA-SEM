@@ -226,6 +226,8 @@ namespace Nektar
                 }
             }
 
+            // This code is commented out until face nodes are fully supported
+            // in Nektar++.
             /*
             FaceSet::iterator it2;
             for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
@@ -258,7 +260,7 @@ namespace Nektar
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
                     TiXmlElement *elm_tag;
-
+                    
                     comp_tag->SetAttribute("ID", it->second->id);
                     comp_tag->LinkEndChild( new TiXmlText(it->second->GetXmlString()) );
                     verTag->LinkEndChild(comp_tag);

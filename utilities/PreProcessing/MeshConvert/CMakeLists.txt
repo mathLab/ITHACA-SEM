@@ -8,6 +8,7 @@ SET(MeshConvertHeaders
     InputSwan.h
     OutputGmsh.h
     OutputNekpp.h
+    ProcessBL.h
     ProcessJac.h
     MeshElements.h
 )
@@ -21,6 +22,7 @@ SET(MeshConvertSources
     InputSwan.cpp
     OutputGmsh.cpp
     OutputNekpp.cpp
+    ProcessBL.cpp
     ProcessJac.cpp
     MeshConvert.cpp
     MeshElements.cpp)

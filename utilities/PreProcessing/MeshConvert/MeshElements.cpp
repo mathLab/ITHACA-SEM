@@ -75,11 +75,18 @@ namespace Nektar
             
         }
 
+        /**
+         * @brief Return the number of elements of the expansion dimension.
+         */
         unsigned int Mesh::GetNumElements()
         {
             return element[expDim].size();
         }
 
+        /**
+         * @brief Return the number of boundary elements (i.e. one below the
+         * expansion dimension).
+         */
         unsigned int Mesh::GetNumBndryElements()
         {
             unsigned int i, nElmt = 0;
@@ -90,6 +97,10 @@ namespace Nektar
             return nElmt;
         }
         
+        /**
+         * @brief Return the total number of entities in the mesh (i.e. all
+         * elements, regardless of dimension).
+         */
         unsigned int Mesh::GetNumEntities()
         {
             unsigned int nEnt = 0;
@@ -132,8 +143,109 @@ namespace Nektar
         }
 
         /**
+         * @brief Defines equality between two #NodeSharedPtr objects.
+         */
+        bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
+        {
+            return *p1 == *p2;
+        }
+
+        /**
+         * @brief Defines ordering between two #NodeSharedPtr objects.
+         */
+        bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2)
+        {
+            return *p1 < *p2;
+        }
+
+        /**
+         * @brief Defines equality of two edges (equal if IDs of end nodes
+         * match in either ordering).
+         */
+        bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
+        {
+            return ( ((*(p1->n1) == *(p2->n1)) && (*(p1->n2) == *(p2->n2)))
+                  || ((*(p1->n2) == *(p2->n1)) && (*(p1->n1) == *(p2->n2))));
+        }
+
+        /**
+         * @brief Defines ordering between two edges (based on ID of edges).
+         */
+        bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
+        {
+            return p1->id < p2->id;
+        }
+
+        /**
+         * @brief Defines equality of two faces (equal if IDs of vertices are
+         * the same.)
+         */
+        bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
+        {
+            bool e = true;
+            std::vector<NodeSharedPtr>::iterator it1, it2;
+            for (it1 = p1->vertexList.begin(); it1 != p1->vertexList.end(); ++it1)
+            {
+                if (find(p2->vertexList.begin(), p2->vertexList.end(), *it1)
+                    == p2->vertexList.end())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * @brief Defines ordering between two faces (depending on ID of
+         * faces).
+         */
+        bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2)
+        {
+            return p1->id < p2->id;
+        }
+
+        /**
+         * @brief Replace a vertex in the element.
+         * 
+         * When a vertex is replaced, the element edges and faces are also
+         * searched and the corresponding edge/face nodes are updated to
+         * maintain consistency.
+         * 
+         * @param  p     Index of the vertex to replace.
+         * @param  pNew  New vertex.
+         */
+        void Element::SetVertex(unsigned int p, NodeSharedPtr pNew)
+        {
+            NodeSharedPtr vOld = vertex[p];
+            vertex[p] = pNew;
+            for (unsigned int i = 0; i < edge.size(); ++i)
+            {
+                if (edge[i]->n1 == vOld)
+                    edge[i]->n1 = pNew;
+                else if (edge[i]->n2 == vOld)
+                    edge[i]->n2 = pNew;
+            }
+            
+            for (unsigned int i = 0; i < face.size(); ++i)
+            {
+                for (unsigned int j = 0; j < face[i]->edgeList.size(); ++j)
+                {
+                    if (face[i]->edgeList[j]->n1 == vOld)
+                        face[i]->edgeList[j]->n1 = pNew;
+                    else if (face[i]->edgeList[j]->n2 == vOld)
+                        face[i]->edgeList[j]->n2 = pNew;
+                }
+            }
+        }
+
+        /**
+         * @brief Replace an edge in the element.
+         * 
          * When an edge is replaced, the element faces are also searched and
          * the corresponding face edges are updated to maintain consistency.
+         * 
+         * @param  p     Index of the edge to replace.
+         * @param  pNew  New edge.
          */
         void Element::SetEdge(unsigned int p, EdgeSharedPtr pNew)
         {
@@ -150,58 +262,23 @@ namespace Nektar
                 }
             }
         }
-
-        bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2)
-        {
-            return p1->x == p2->x && p1->y == p2->y && p1->z == p2->z;
-        }
-
-        bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2)
-        {
-            return p1->id < p2->id;
-        }
-
-        bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
-        {
-            return ( ((*(p1->n1) == *(p2->n1)) && (*(p1->n2) == *(p2->n2)))
-                  || ((*(p1->n2) == *(p2->n1)) && (*(p1->n1) == *(p2->n2))));
-        }
-
-        bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
-        {
-            return p1->id < p2->id;
-        }
-
-        bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
-        {
-            bool e = true;
-            std::vector<NodeSharedPtr>::iterator it1, it2;
-            for (it1 = p1->vertexList.begin(); it1 != p1->vertexList.end(); ++it1)
-            {
-                if (find(p2->vertexList.begin(), p2->vertexList.end(), *it1)
-                    == p2->vertexList.end())
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
         
-        bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2)
-        {
-            return p1->id < p2->id;
-        }
-
         /**
+         * @brief Replace a face in the element.
+         * 
          * When a face is replaced, no other consistency checks are required.
+         * 
+         * @param  p     Index of the face to replace.
+         * @param  pNew  New face.
          */
         void Element::SetFace(unsigned int p, FaceSharedPtr pNew)
         {
             face[p] = pNew;
         }
 
-
         /**
+         * @brief Generate a Nektar++ string describing the composite.
+         * 
          * The list of composites may include individual element IDs or ranges
          * of element IDs.
          */
@@ -253,17 +330,23 @@ namespace Nektar
         ElementType Point::type = GetElementFactory().
             RegisterCreatorFunction(ePoint, Point::create, "Point");
         
+        /**
+         * @brief Create a point element.
+         */
         Point::Point(ElmtConfig            pConf,
                      vector<NodeSharedPtr> pNodeList, 
                      vector<int>           pTagList)
             : Element(pConf, GetNumNodes(pConf), pNodeList.size()) 
         {
-            m_tag = "";
-            m_dim = 0;
+            m_tag     = "";
+            m_dim     = 0;
             m_taglist = pTagList;
             vertex.push_back(pNodeList[0]);
         }
 
+        /**
+         * @brief Return the number of nodes defining a point (i.e. return 1).
+         */
         unsigned int Point::GetNumNodes(ElmtConfig pConf)
         {
             return 1;
@@ -273,6 +356,9 @@ namespace Nektar
         ElementType Line::type = GetElementFactory().
             RegisterCreatorFunction(eLine, Line::create, "Line");
         
+        /**
+         * @brief Create a line element.
+         */
         Line::Line(ElmtConfig            pConf,
                    vector<NodeSharedPtr> pNodeList, 
                    vector<int>           pTagList)
@@ -297,7 +383,7 @@ namespace Nektar
                 new Edge(pNodeList[0], pNodeList[1], edgeNodes, m_conf.edgeCurveType)));
         }
         
-        SpatialDomains::GeometrySharedPtr Line::GetGeom()
+        SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
             if (m_geom)
             {
@@ -306,8 +392,8 @@ namespace Nektar
             
             // Create edge vertices.
             SpatialDomains::VertexComponentSharedPtr p[2];
-            p[0] = vertex[0]->GetGeom();
-            p[1] = vertex[1]->GetGeom();
+            p[0] = vertex[0]->GetGeom(coordDim);
+            p[1] = vertex[1]->GetGeom(coordDim);
             
             if (edge[0]->edgeNodes.size() > 0)
             {
@@ -318,22 +404,25 @@ namespace Nektar
                 c->m_points.push_back(p[0]);
                 for (int i = 0; i < edge[0]->edgeNodes.size(); ++i)
                 {
-                    c->m_points.push_back(edge[0]->edgeNodes[i]->GetGeom());
+                    c->m_points.push_back(edge[0]->edgeNodes[i]->GetGeom(coordDim));
                 }
                 c->m_points.push_back(p[1]);
                 
                 m_geom = MemoryManager<SpatialDomains::SegGeom>::
-                    AllocateSharedPtr(m_id, 3, p, c);
+                    AllocateSharedPtr(m_id, 2, p, c);
             }
             else
             {
                 m_geom = MemoryManager<SpatialDomains::SegGeom>::
-                    AllocateSharedPtr(m_id, 3, p);
+                    AllocateSharedPtr(m_id, 2, p);
             }
             
             return m_geom;
         }
-        
+
+        /**
+         * @brief Return the number of nodes defining a line.
+         */
         unsigned int Line::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;
@@ -344,6 +433,9 @@ namespace Nektar
         ElementType Triangle::type = GetElementFactory().
             RegisterCreatorFunction(eTriangle, Triangle::create, "Triangle");
         
+        /**
+         * @brief Create a triangle element.
+         */
         Triangle::Triangle(ElmtConfig            pConf,
                            vector<NodeSharedPtr> pNodeList, 
                            vector<int>           pTagList)
@@ -384,7 +476,7 @@ namespace Nektar
             }
         }
 
-        SpatialDomains::GeometrySharedPtr Triangle::GetGeom()
+        SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
             if (m_geom)
             {
@@ -396,8 +488,8 @@ namespace Nektar
             
             for (int i = 0; i < 3; ++i)
             {
-                edges[i] = edge  [i]->GetGeom();
-                verts[i] = vertex[i]->GetGeom();
+                edges[i] = edge  [i]->GetGeom(coordDim);
+                verts[i] = vertex[i]->GetGeom(coordDim);
             }
             
             StdRegions::EdgeOrientation edgeorient[3] = {
@@ -412,6 +504,9 @@ namespace Nektar
             return m_geom;
         }
         
+        /**
+         * @brief Return the number of nodes defining a triangle.
+         */
         unsigned int Triangle::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;
@@ -426,6 +521,9 @@ namespace Nektar
             RegisterCreatorFunction(eQuadrilateral, Quadrilateral::create, 
                                     "Quadrilateral");
         
+        /**
+         * @brief Create a quadrilateral element.
+         */
         Quadrilateral::Quadrilateral(ElmtConfig            pConf,
                                      vector<NodeSharedPtr> pNodeList,
                                      vector<int>           pTagList)
@@ -467,7 +565,7 @@ namespace Nektar
             }
         }
 
-        SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom()
+        SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
             if (m_geom)
             {
@@ -479,8 +577,8 @@ namespace Nektar
             
             for (int i = 0; i < 4; ++i)
             {
-                edges[i] = edge  [i]->GetGeom();
-                verts[i] = vertex[i]->GetGeom();
+                edges[i] = edge  [i]->GetGeom(coordDim);
+                verts[i] = vertex[i]->GetGeom(coordDim);
             }
             
             StdRegions::EdgeOrientation edgeorient[4] = {
@@ -496,6 +594,9 @@ namespace Nektar
             return m_geom;
         }
 
+        /**
+         * @brief Return the number of nodes defining a quadrilateral.
+         */
         unsigned int Quadrilateral::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;
@@ -509,6 +610,9 @@ namespace Nektar
         ElementType Tetrahedron::type = GetElementFactory().
             RegisterCreatorFunction(eTetrahedron, Tetrahedron::create, "Tetrahedron");
 
+        /**
+         * @brief Create a tetrahedron element.
+         */
         Tetrahedron::Tetrahedron(ElmtConfig            pConf,
                                  vector<NodeSharedPtr> pNodeList,
                                  vector<int>           pTagList)
@@ -595,7 +699,7 @@ namespace Nektar
             }
         }
         
-        SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom()
+        SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
         {
             if (m_geom)
             {
@@ -607,7 +711,7 @@ namespace Nektar
             for (int i = 0; i < 4; ++i)
             {
                 tfaces[i] = boost::dynamic_pointer_cast
-                    <SpatialDomains::TriGeom>(face[i]->GetGeom());
+                    <SpatialDomains::TriGeom>(face[i]->GetGeom(coordDim));
             }
 
             m_geom = MemoryManager<SpatialDomains::TetGeom>::
@@ -616,6 +720,9 @@ namespace Nektar
             return m_geom;
         }
         
+        /**
+         * @brief Return the number of nodes defining a tetrahedron.
+         */
         unsigned int Tetrahedron::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;
@@ -627,6 +734,19 @@ namespace Nektar
                 return 6*(n+1)-8;
         }
 
+        /**
+         * @brief Orient tetrahedron to align degenerate vertices.
+         * 
+         * Orientation of tetrahedral elements is required so that the
+         * singular vertices of triangular faces (which occur as a part of the
+         * collapsed co-ordinate system) align. The algorithm is based on that
+         * used in T. Warburton's thesis and in the original Nektar source.
+         * 
+         * First the vertices are ordered with the highest global vertex at
+         * the top degenerate point, and the base degenerate point has second
+         * lowest ID. These vertices are swapped if the element is incorrectly
+         * oriented.
+         */
         void Tetrahedron::OrientTet() {
             // Order vertices with highest global vertex at top degenerate
             // point. Place second highest global vertex at base degenerate
@@ -668,6 +788,9 @@ namespace Nektar
         ElementType Prism::type = GetElementFactory().
             RegisterCreatorFunction(ePrism, Prism::create, "Prism");
         
+        /**
+         * @brief Create a prism element.
+         */
         Prism::Prism(ElmtConfig            pConf,
                      vector<NodeSharedPtr> pNodeList,
                      vector<int>           pTagList)
@@ -763,6 +886,9 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Return the number of nodes defining a prism.
+         */
         unsigned int Prism::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;
@@ -774,7 +900,7 @@ namespace Nektar
                 return 9*(n+1)-12;
         }
 
-        SpatialDomains::GeometrySharedPtr Prism::GetGeom()
+        SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
         {
             if (m_geom)
             {
@@ -785,7 +911,7 @@ namespace Nektar
             
             for (int i = 0; i < 5; ++i)
             {
-                faces[i] = face[i]->GetGeom();
+                faces[i] = face[i]->GetGeom(coordDim);
             }
 
             m_geom = MemoryManager<SpatialDomains::PrismGeom>::
@@ -794,10 +920,32 @@ namespace Nektar
             return m_geom;
         }
 
+        /**
+         * @brief Orient tetrahedron to align degenerate vertices.
+         * 
+         * Orientation of prismatric elements is required so that the singular
+         * vertices of triangular faces (which occur as a part of the
+         * collapsed co-ordinate system) align. The algorithm is based on that
+         * used in T. Warburton's thesis and in the original Nektar source.
+         * 
+         * First the points are re-ordered so that the highest global IDs
+         * represent the two singular points of the prism. Then, if necessary,
+         * the nodes are rotated either clockwise or counter-clockwise (w.r.t
+         * to the p-r plane) to correctly align the prism. The #orientation
+         * variable is set to:
+         * 
+         * - 0 if the prism is not rotated;
+         * - 1 if the prism is rotated clockwise;
+         * - 2 if the prism is rotated counter-clockwise.
+         * 
+         * This is necessary for some input modules (e.g. #InputNek) which add
+         * high-order information to faces.
+         */
         void Prism::OrientPrism()
         {
             int lid[6], gid[6];
-     
+
+            // Re-order vertices.
             for (int i = 0; i < 6; ++i)
             {
                 lid[i] = i;
@@ -857,6 +1005,9 @@ namespace Nektar
         ElementType Hexahedron::type = GetElementFactory().
             RegisterCreatorFunction(eHexahedron, Hexahedron::create, "Hexahedron");
 
+        /**
+         * @brief Create a hexahedral element.
+         */
         Hexahedron::Hexahedron(ElmtConfig            pConf,
                                vector<NodeSharedPtr> pNodeList,
                                vector<int>           pTagList)
@@ -941,7 +1092,7 @@ namespace Nektar
             }
         }
         
-        SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom()
+        SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
         {
             if (m_geom)
             {
@@ -953,7 +1104,7 @@ namespace Nektar
             for (int i = 0; i < 6; ++i)
             {
                 faces[i] = boost::dynamic_pointer_cast
-                    <SpatialDomains::QuadGeom>(face[i]->GetGeom());
+                    <SpatialDomains::QuadGeom>(face[i]->GetGeom(coordDim));
             }
 
             m_geom = MemoryManager<SpatialDomains::HexGeom>::
@@ -962,6 +1113,9 @@ namespace Nektar
             return m_geom;
         }
 
+        /**
+         * @brief Return the number of nodes defining a hexahedron.
+         */
         unsigned int Hexahedron::GetNumNodes(ElmtConfig pConf)
         {
             int n = pConf.order;

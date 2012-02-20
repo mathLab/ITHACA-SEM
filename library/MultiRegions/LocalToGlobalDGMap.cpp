@@ -705,7 +705,7 @@ namespace Nektar
                     id = (locQuadExp->GetGeom2D())->GetFid();
                 }
 				//tri face
-				if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(trace->GetExp(i)))
+				else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(trace->GetExp(i)))
 				{
                     id = (locTriExp->GetGeom2D())->GetFid();
 				}
@@ -1370,7 +1370,7 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-            SetUpUniversalDGMap(locExp);
+            SetUpUniversalDGMap3D(locExp);
 
             // Initialise GSlib and populate the unique map.
             Nektar::Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
@@ -1454,6 +1454,81 @@ namespace Nektar
             }
         }
 
+        /**
+		 * Temporary implementation for 3D trace, will be merged with the
+		 * SetUpUniversalDGMap
+         */
+        void LocalToGlobalDGMap::SetUpUniversalDGMap3D(const ExpList &locExp)
+        {
+            LocalRegions::QuadExpSharedPtr locQuadExp;
+            LocalRegions::TriExpSharedPtr locTriExp;
+
+            int fid = 0;
+            int cnt = 0;
+            int i,j,k;
+            int id = 0;
+            int order_f = 0;
+            int vGlobalId = 0;
+            int maxFaceDof = 0;
+            int dof = 0;
+            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+
+            // Initialise the global to universal maps.
+            m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
+            m_globalToUniversalBndMapUnique = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
+
+            // Loop over all the elements in the domain and compute max face
+            // DOF. Reduce across all processes to get universal maximum.
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                // Loop over all edges of element i
+                for(j = 0; j < locExpVector[i]->GetNfaces(); ++j)
+                {
+                    dof = locExpVector[i]->GetFaceNcoeffs(j);
+                    maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
+                }
+            }
+            m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
+
+            // Now have trace faces Gid position
+            cnt = 0;
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                // order list according to m_offset_elmt_id details in
+                // Exp2D so that triangules are listed first and then
+                // quads
+                fid = locExp.GetOffset_Elmt_Id(i);
+
+                // Populate mapping for each edge of the element.
+				for(j = 0; j < locExpVector[fid]->GetNfaces(); ++j)
+				{
+					//if face is a quad
+					if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToFace[fid][j]))
+					{
+						id  = locQuadExp->GetGeom2D()->GetFid();
+					}
+					//else if face is a triangle
+					else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToFace[fid][j]))
+					{
+						id  = locTriExp->GetGeom2D()->GetFid();
+					}
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
+                    }
+					
+					order_f = locExpVector[fid]->GetFaceNcoeffs(j);
+
+					for(k = 0; k < order_f; ++k)
+					{
+						vGlobalId = m_localToGlobalBndMap[k+cnt];
+						m_globalToUniversalBndMap[vGlobalId]
+							= id * maxFaceDof + k + 1;
+					}
+					cnt += order_f;
+                }
+            }
+        }
         int LocalToGlobalDGMap::v_GetLocalToGlobalMap(const int i) const
         {
             return m_localToGlobalBndMap[i];

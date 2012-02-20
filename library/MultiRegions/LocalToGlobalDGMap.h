@@ -127,6 +127,8 @@ namespace Nektar
 			Array<OneD, AdjacentFaceOrientation > m_bndExpAdjacentFaceOrient;
 
             void SetUpUniversalDGMap(const ExpList &locExp);
+            
+			void SetUpUniversalDGMap3D(const ExpList &locExp);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;
 

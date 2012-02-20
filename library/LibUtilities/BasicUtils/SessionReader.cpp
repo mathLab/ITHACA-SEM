@@ -1012,6 +1012,7 @@ namespace Nektar
             {
                 TiXmlElement *parameter = parametersElement->FirstChildElement("P");
                 LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+                //LibUtilities::ExpressionEvaluator expEvaluator;
                 ParameterMap caseSensitiveParameters;
 
                 // Multiple nodes will only occur if there is a comment in between
@@ -1065,7 +1066,7 @@ namespace Nektar
                             try
                             {
                                 int expr_id = expEvaluator.DefineFunction("", rhs);
-                                value = expEvaluator.Evaluate0(expr_id);
+                                value = expEvaluator.Evaluate(expr_id);
                             }
                             catch (const std::runtime_error &)
                             {

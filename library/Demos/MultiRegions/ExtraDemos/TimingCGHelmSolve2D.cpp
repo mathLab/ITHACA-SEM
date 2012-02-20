@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
     SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
 
-    ffunc->Evaluate3Array(xc0,xc1,xc2,fce);
+    ffunc->Evaluate(xc0,xc1,xc2,fce);
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // evaluate exact solution 
     sol = Array<OneD,NekDouble>(nq);
-    ex_sol->Evaluate3Array(xc0,xc1,xc2,sol);
+    ex_sol->Evaluate(xc0,xc1,xc2,sol);
     //----------------------------------------------
     
     //--------------------------------------------
@@ -336,7 +336,7 @@ int main(int argc, char *argv[])
 
         // evaluate exact solution 
         Array<OneD,NekDouble> ErrorSol(ErrorNq);
-        ex_sol->Evaluate3Array(ErrorXc0,ErrorXc1,ErrorXc2,ErrorSol);
+        ex_sol->Evaluate(ErrorXc0,ErrorXc1,ErrorXc2,ErrorSol);
 
         // calcualte spectral/hp approximation on the quad points of this new
         // expansion basis

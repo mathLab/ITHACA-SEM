@@ -212,7 +212,9 @@ namespace Nektar
         // =========================================================================
 
         // \brief Initializes the evaluator. Call DefineFunction(...) next.
-        AnalyticExpressionEvaluator::AnalyticExpressionEvaluator()
+        AnalyticExpressionEvaluator::AnalyticExpressionEvaluator():
+              m_total_eval_time(0),
+              m_timer()
         {
             m_state_size = 1;
 
@@ -363,6 +365,13 @@ namespace Nektar
             return m_parameter[ it->second ];
         }
 
+
+        double AnalyticExpressionEvaluator::GetTime() const
+        {
+            return m_total_eval_time;
+        }
+
+
         // ======================================================
         //  Public evaluate methods
         // ======================================================
@@ -459,8 +468,10 @@ namespace Nektar
         }
 
 
-        double AnalyticExpressionEvaluator::Evaluate0(const int expression_id)
+        double AnalyticExpressionEvaluator::Evaluate(const int expression_id)
         {
+            m_timer.Start();
+
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
@@ -474,11 +485,17 @@ namespace Nektar
             {
                 (*stack[i]).run_once();
             }
+
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
+
             return m_state[0];
         }
 
-        double AnalyticExpressionEvaluator::Evaluate4(const int expression_id, const double x, const double y, const double z, const double t)
+        double AnalyticExpressionEvaluator::Evaluate(const int expression_id, const double x, const double y, const double z, const double t)
         {
+            m_timer.Start();
+
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
@@ -504,11 +521,17 @@ namespace Nektar
             {
                 (*stack[i]).run_once();
             }
+
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
+
             return m_state[0];
         }
 
         double AnalyticExpressionEvaluator::EvaluateAtPoint(const int expression_id, const std::vector<double> point)
         {
+            m_timer.Start();
+
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
@@ -537,11 +560,15 @@ namespace Nektar
             {
                 (*stack[i]).run_once();
             }
+
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
+
             return m_state[0];
         }
 
 
-       void AnalyticExpressionEvaluator::Evaluate4Array(
+       void AnalyticExpressionEvaluator::Evaluate(
                     const int expression_id,
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
@@ -549,6 +576,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& t,
                     Array<OneD, NekDouble>& result)
         {
+            m_timer.Start();
+
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
@@ -594,6 +623,9 @@ namespace Nektar
                 work_left -= this_chunk_size;
                 offset    += this_chunk_size;
             }
+
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
         }
 
 
@@ -602,6 +634,8 @@ namespace Nektar
                     const std::vector<Array<OneD, const NekDouble> > points,
                     Array<OneD, NekDouble>& result)
         {
+            m_timer.Start();
+
             if (m_executionStack.size() <= expression_id)
             {
                 throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
@@ -628,6 +662,9 @@ namespace Nektar
                 (*stack[j]).run_many(num);
             }
             for (int i = 0; i < num; result[i] = m_state[i++]) ;
+
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
         }
 
 
@@ -658,8 +695,6 @@ namespace Nektar
                     throw std::runtime_error("Cannot find the value for the specified constant: " + valueStr);
                     return std::make_pair(false,0);
                 }
-
-                // stack.push_back ( makeStep<StoreConst> ( stateIndex, it->second ) );
                 return std::make_pair(true, m_constant[it->second]);
             }
             else if (parserID == AnalyticExpression::numberID)
@@ -669,10 +704,6 @@ namespace Nektar
                     throw std::runtime_error("Illegal children under number node: " + valueStr);
                     return std::make_pair(false,0);
                 }
-
-                // int const_index = AddConstant(valueStr, boost::lexical_cast<double>(valueStr.c_str()));
-                // stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
-                // return stateIndex;
                 return std::make_pair(true, boost::lexical_cast<double>(valueStr.c_str()) );
             }
             else if (parserID == AnalyticExpression::variableID)
@@ -714,8 +745,9 @@ namespace Nektar
                     throw std::runtime_error("Illegal parameter specified: " + valueStr);
                     return std::make_pair(false,0);
                 }
+
                 // Parameters may change in between of evalutions.
-                stack.push_back ( makeStep<StorePrm>( stateIndex, it->second, 0 ) );
+                stack.push_back ( makeStep<StorePrm>( stateIndex, it->second ) );
                 return std::make_pair(false, 0);
             }
             else if (parserID == AnalyticExpression::functionID)
@@ -836,7 +868,7 @@ namespace Nektar
                 PrecomputedValue right = PrepareExecutionAsYouParse(location->children.begin()+1, stack, variableMap, stateIndex+1);
                 m_state_size++;
 
-                // if precomputed value is valid, process it further.
+                // if both precomputed values are valid, process them further.
                 if ((true == left.first) && (true == right.first))
                 {
                     switch(*valueStr.begin())
@@ -892,6 +924,7 @@ namespace Nektar
                     int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), right.second);
                     stack.push_back ( makeStep<StoreConst>( stateIndex+1, const_index ) );
                 }
+
 
                 switch(*valueStr.begin())
                 {

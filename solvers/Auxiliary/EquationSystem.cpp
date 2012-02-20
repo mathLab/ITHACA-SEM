@@ -577,7 +577,7 @@ namespace Nektar
         {
             pArray = Array<OneD, NekDouble>(nq);
         }
-        pEqn->Evaluate4Array(x0,x1,x2,pTime,pArray);
+        pEqn->Evaluate(x0,x1,x2,pTime,pArray);
     }
 
 
@@ -616,7 +616,7 @@ namespace Nektar
 
             LibUtilities::EquationSharedPtr vEqn
                                 = m_session->GetFunction(pFunctionName,vVar);
-            vEqn->Evaluate4Array(x0,x1,x2,pTime,pArray[k]);
+            vEqn->Evaluate(x0,x1,x2,pTime,pArray[k]);
         }
     }
 
@@ -670,7 +670,7 @@ namespace Nektar
             {
                 LibUtilities::EquationSharedPtr ffunc
                         = m_session->GetFunction(pFunctionName, pFieldNames[i]);
-                ffunc->Evaluate3Array(x0,x1,x2,pFields[i]);
+                ffunc->Evaluate(x0,x1,x2,pFields[i]);
             }
         }
     }
@@ -710,7 +710,7 @@ namespace Nektar
                 LibUtilities::EquationSharedPtr ffunc
                         = m_session->GetFunction(pFunctionName, pFieldNames[i]);
 
-                ffunc->Evaluate3Array(x0,x1,x2,pFields[i]->UpdatePhys());
+                ffunc->Evaluate(x0,x1,x2,pFields[i]->UpdatePhys());
             }
         }
     }
@@ -887,7 +887,7 @@ namespace Nektar
          // evaluate exact solution
          Array<OneD,NekDouble> ErrorSol(ErrorNq);
 
-         exSol->Evaluate4Array(ErrorXc0,ErrorXc1,ErrorXc2,m_time,ErrorSol);
+         exSol->Evaluate(ErrorXc0,ErrorXc1,ErrorXc2,m_time,ErrorSol);
 
          // calcualte spectral/hp approximation on the quad points of this new
          // expansion basis
@@ -942,7 +942,7 @@ namespace Nektar
                     LibUtilities::EquationSharedPtr ifunc
                         = m_session->GetFunction("InitialConditions", i);
 
-                    ifunc->Evaluate4Array(x0,x1,x2, initialtime, m_fields[i]->UpdatePhys());
+                    ifunc->Evaluate(x0,x1,x2, initialtime, m_fields[i]->UpdatePhys());
 
                     m_fields[i]->SetPhysState(true);
 

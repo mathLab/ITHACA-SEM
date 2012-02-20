@@ -99,14 +99,14 @@ int main(int argc, char *argv[])
         {
             Array<OneD, NekDouble> d00(nq,0.0);
             LibUtilities::EquationSharedPtr d00func = vSession->GetFunction("d00",0);
-            d00func->Evaluate3Array(xc0, xc1, xc2, d00);
+            d00func->Evaluate(xc0, xc1, xc2, d00);
             varcoeffs[StdRegions::eVarCoeffD00] = d00;
         }
         if (vSession->DefinesFunction("d11"))
         {
             Array<OneD, NekDouble> d11(nq,0.0);
             LibUtilities::EquationSharedPtr d11func = vSession->GetFunction("d11",0);
-            d11func->Evaluate3Array(xc0, xc1, xc2, d11);
+            d11func->Evaluate(xc0, xc1, xc2, d11);
             varcoeffs[StdRegions::eVarCoeffD11] = d11;
         }
         //----------------------------------------------
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         // Define forcing function for first variable defined in file
         fce = Array<OneD,NekDouble>(nq);
         LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
-        ffunc->Evaluate3Array(xc0, xc1, xc2, fce);
+        ffunc->Evaluate(xc0, xc1, xc2, fce);
 
         //----------------------------------------------
 
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
         {
             //----------------------------------------------
             // evaluate exact solution
-            ex_sol->Evaluate3Array(xc0, xc1, xc2, fce);
+            ex_sol->Evaluate(xc0, xc1, xc2, fce);
 
             Fce->SetPhys(fce);
             Fce->SetPhysState(true);

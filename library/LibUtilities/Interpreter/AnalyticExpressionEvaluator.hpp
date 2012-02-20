@@ -38,6 +38,7 @@
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 #include <boost/version.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -180,6 +181,8 @@ namespace Nektar
             ///  parameter stores. If the parameter doesn't exist, it throws an exception.
             LIB_UTILITIES_EXPORT double GetParameter(std::string const& name);
 
+            ///  Returns the total time spent in evaluation procedures, seconds.
+            LIB_UTILITIES_EXPORT double GetTime() const;
 
 
             // ======================================================
@@ -197,10 +200,10 @@ namespace Nektar
 
 
             ///  Evaluation method for expressions depending on parameters only.
-            LIB_UTILITIES_EXPORT double Evaluate0(const int AnalyticExpression_id);
+            LIB_UTILITIES_EXPORT double Evaluate(const int AnalyticExpression_id);
 
             ///  Evaluation method for expressions depending on 4 variables (+parameters).
-            LIB_UTILITIES_EXPORT double Evaluate4(
+            LIB_UTILITIES_EXPORT double Evaluate(
                         const int AnalyticExpression_id,
                         const double,
                         const double,
@@ -216,7 +219,7 @@ namespace Nektar
                         std::vector<double> point);
 
             ///  Vectorized evaluation method for expressions depending on 4 variables.
-            LIB_UTILITIES_EXPORT void Evaluate4Array(
+            LIB_UTILITIES_EXPORT void Evaluate(
                         const int expression_id,
                         const Array<OneD, const NekDouble>&,
                         const Array<OneD, const NekDouble>&,
@@ -390,7 +393,6 @@ namespace Nektar
             std::vector<double>  m_parameter;
             std::vector<double>  m_constant;
             std::vector<double>  m_variable;
-            // VariableArray m_variable;
 
 
             ///  This vector stores the execution state (memory) used by the
@@ -403,6 +405,12 @@ namespace Nektar
             ///  This counter is used by PrepareExecutionAsYouParse for finding
             ///  the minimal state size necessary for evaluation of function parsed.
             int                  m_state_size;
+
+
+            ///  Timer and sum of evaluation times
+            Timer        m_timer;
+            double       m_total_eval_time;
+
 
 
             // ======================================================
@@ -422,7 +430,6 @@ namespace Nektar
             typedef std::vector<double>& vr;
             typedef const std::vector<double>& cvr;
             typedef const int  ci;
-            // typedef const VariableArray cva;
 
             ///  Factory method which makes code little less messy
             template<typename StepType>
@@ -461,6 +468,12 @@ namespace Nektar
                 ///  declaring this guy pure virtual shortens virtual table. It saves some execution time.
                 virtual void run_many(ci n) = 0;
                 virtual void run_once() = 0;
+            };
+            struct CopyState: public EvaluationStep
+            {
+                CopyState(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = state[argIdx1]; }
+                virtual void run_once() { state[storeIdx] = state[argIdx1]; }
             };
             struct StoreConst: public EvaluationStep
             {

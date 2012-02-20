@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[0],0);
     cout << "Solving 2D Laplace:"  << endl; 
     cout << "         Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate0() << endl;
+    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
     cout << endl;
     //----------------------------------------------
    
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
 
-    ffunc->Evaluate3Array(xc0,xc1,xc2,fce);
+    ffunc->Evaluate(xc0,xc1,xc2,fce);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
             
             SpatialDomains::ConstUserDefinedEqnShPtr cfunc = bcs.GetUserDefinedEqn(lapcoeffstr[i]);
             
-            cfunc->Evaluate3Array(xc0,xc1,xc2,lapcoeff[i]);
+            cfunc->Evaluate(xc0,xc1,xc2,lapcoeff[i]);
         }
     }
     //----------------------------------------------
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // evaluate exact solution 
-        ex_sol->Evaluate3Array(xc0,xc1,xc2,fce);
+        ex_sol->Evaluate(xc0,xc1,xc2,fce);
         //----------------------------------------------
 
         //--------------------------------------------

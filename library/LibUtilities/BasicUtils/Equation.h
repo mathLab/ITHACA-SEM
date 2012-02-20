@@ -71,16 +71,12 @@ namespace Nektar
                     m_expr_id = -1;
                     std::cout << "Equation::Constructor fails on expression [" << m_expr << "]" << std::endl;
 
-                    // this instanse is wrongly used by {DisContField2D,BoundaryCondition,...}
+                    // this instanse is wrongly used by DisContField2D
                     // classes as a wrapper to a string container holding the link to the file
-                    // with boundary conditions or type modifier for the solver-dependent
-                    // type of boundary conditions.
+                    // with boundary conditions
                     //
                     // AnalyticExpressionEvaluator cannot parse the expression of the form
                     // e.g. "FILE:whatever.bc" and throws an instance of std::runtime_error.
-                    // In case of "TimeDependent" and others it throws parse exception
-                    // 'illegal parameter specified' since it looks like an unspecified
-                    // parameter in an analytic expression.
                     //
                     // In order not to destroy the currently existing code we catch
                     // this exception in order to ignore it. Hope it does not affect
@@ -109,13 +105,13 @@ namespace Nektar
                 return *this;
             }
 
-            NekDouble Evaluate0() const
+            NekDouble Evaluate() const
             {
                 try
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate0(m_expr_id);
+                        return m_evaluator.Evaluate(m_expr_id);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -131,13 +127,13 @@ namespace Nektar
                 return 0;
             }
 
-            NekDouble Evaluate(NekDouble x=0, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
+            NekDouble Evaluate(NekDouble x, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
             {
                 try
                 {
                     if (m_expr_id != -1)
                     {
-                        return m_evaluator.Evaluate4(m_expr_id, x,y,z,t);
+                        return m_evaluator.Evaluate(m_expr_id, x,y,z,t);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -153,26 +149,26 @@ namespace Nektar
                 return 0;
             }
 
-            void Evaluate2Array(
+            void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     Array<OneD, NekDouble>& result)
             {
                 Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
-                Evaluate4Array(x,y,zero,zero, result);
+                Evaluate(x,y,zero,zero, result);
             }
 
-            void Evaluate3Array(
+            void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
                     Array<OneD, NekDouble>& result)
             {
                 Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
-                Evaluate4Array(x,y,z,zero, result);
+                Evaluate(x,y,z,zero, result);
             }
 
-            void Evaluate4Array(
+            void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
@@ -180,11 +176,11 @@ namespace Nektar
                     Array<OneD, NekDouble>& result) const
             {
                 Array<OneD, NekDouble>  time(x.num_elements(), t);
-                Evaluate4Array(x,y,z,time, result);
+                Evaluate(x,y,z,time, result);
             }
 
 
-            void Evaluate4Array(
+            void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
@@ -195,7 +191,7 @@ namespace Nektar
                 {
                     if (m_expr_id != -1)
                     {
-                        m_evaluator.Evaluate4Array(m_expr_id, x,y,z,t, result);
+                        m_evaluator.Evaluate(m_expr_id, x,y,z,t, result);
                     }
                 }
                 catch (const std::runtime_error& e)
@@ -220,6 +216,11 @@ namespace Nektar
             std::string GetEquation(void) const
             {
               return m_expr;
+            }
+
+            double GetTime() const
+            {
+                return m_evaluator.GetTime();
             }
 
         private:

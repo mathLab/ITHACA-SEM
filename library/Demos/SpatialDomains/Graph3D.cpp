@@ -49,13 +49,13 @@ int main(int argc, char *argv[]){
     try
     {
         ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
-        NekDouble val = ffunc->Evaluate0(8.0);
+        NekDouble val = ffunc->Evaluate(8.0);
 
         ConstForcingFunctionShPtr ffunc2  = bcs.GetForcingFunction("v");
-        val = ffunc->Evaluate0(1.5);
+        val = ffunc->Evaluate(1.5);
 
         ConstInitialConditionShPtr ic = bcs.GetInitialCondition("v");
-        val = ic->Evaluate0(1.5);
+        val = ic->Evaluate(1.5);
 
         NekDouble tolerance = bcs.GetParameter("Tolerance");
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
         if (bcShPtr->GetBoundaryConditionType() == eDirichlet)
         {
             DirichletBCShPtr dirichletBCShPtr = boost::static_pointer_cast<DirichletBoundaryCondition>(bcShPtr);
-            val = dirichletBCShPtr->m_dirichletCondition.Evaluate0(1.5);
+            val = dirichletBCShPtr->m_dirichletCondition.Evaluate(1.5);
         }
 
         std::string fcn1 = bcs.GetFunction("F1");

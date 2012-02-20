@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     SpatialDomains::ConstForcingFunctionShPtr u0SolutionEquation 
         = boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
 
-    u0SolutionEquation->Evaluate2Array(x1,x2, u0);
+    u0SolutionEquation->Evaluate(x1,x2, u0);
     for(int i = 0; i < nTotQuadPoints; ++i)
     {
       v1[i] =  1.0;//2.0*M_PI*x2[i];
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 	      SpatialDomains::ConstForcingFunctionShPtr exactSolutionEquation 
             = boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
 
-        exactSolutionEquation->Evaluate2Array(x1,x2, exactSolution);
+        exactSolutionEquation->Evaluate(x1,x2, exactSolution);
         MultiRegions::DisContField2DSharedPtr exactSolutionExp =
             MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*u);
         exactSolutionExp->SetPhys(exactSolution);

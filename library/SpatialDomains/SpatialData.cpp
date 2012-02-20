@@ -228,7 +228,7 @@ namespace Nektar
                 SpatialDataSharedPtr fn(MemoryManager<SpatialData>
                                                     ::AllocateSharedPtr(m_nq));
                 LibUtilities::Equation E(q->second);
-                E.Evaluate3Array(x, y, z, fn->UpdatePhys());
+                E.Evaluate(x, y, z, fn->UpdatePhys());
 
                 m_spatialMap[q->first] = fn;
             }

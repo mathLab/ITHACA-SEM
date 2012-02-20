@@ -668,7 +668,7 @@ namespace Nektar
                                                            SpatialDomains::DirichletBoundaryCondition
                                                         >(m_bndConditions[i])->m_dirichletCondition;
 
-                    condition.Evaluate4Array(x0,x1,x2,time,locExpList->UpdatePhys());
+                    condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
 
                     locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
@@ -680,7 +680,7 @@ namespace Nektar
                                                            SpatialDomains::NeumannBoundaryCondition
                                                         >(m_bndConditions[i])->m_neumannCondition;
 
-                    condition.Evaluate4Array(x0,x1,x2,time,locExpList->UpdatePhys());
+                    condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
 
                     locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                 locExpList->UpdateCoeffs());
@@ -692,7 +692,7 @@ namespace Nektar
                                                            SpatialDomains::RobinBoundaryCondition
                                                         >(m_bndConditions[i])->m_robinFunction;
 
-                    condition.Evaluate4Array(x0,x1,x2,time,locExpList->UpdatePhys());
+                    condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
 
                     locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                 locExpList->UpdateCoeffs());

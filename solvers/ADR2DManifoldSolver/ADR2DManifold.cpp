@@ -373,7 +373,7 @@ namespace Nektar
             for(int i = 0 ; i < m_velocity.num_elements(); i++)
             {
                 LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("AdvectionVelocity", velStr[i]);
-                ifunc->Evaluate3Array(x0,x1,x2,m_velocity[i]);
+                ifunc->Evaluate(x0,x1,x2,m_velocity[i]);
             }
         }
 
@@ -1738,7 +1738,7 @@ namespace Nektar
             Array<OneD,NekDouble> x2(npoints,0.0);
 
             m_fields[0]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-            ifunc->Evaluate4Array(x0,x1,x2,time,BDphysics);
+            ifunc->Evaluate(x0,x1,x2,time,BDphysics);
 
             // Weakly impose boundary conditions by modifying flux values
             for (e = 0; e < numBDEdge ; ++e)
@@ -1793,7 +1793,7 @@ namespace Nektar
             Array<OneD,NekDouble> x2(npoints,0.0);
 
             m_fields[0]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-            ifunc->Evaluate4Array(x0,x1,x2,time,BDphysics);
+            ifunc->Evaluate(x0,x1,x2,time,BDphysics);
 
             // Weakly impose boundary conditions by modifying flux values
             for (e = 0; e < numBDEdge ; ++e)

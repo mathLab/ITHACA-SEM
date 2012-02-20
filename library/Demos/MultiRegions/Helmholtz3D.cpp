@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         LibUtilities::EquationSharedPtr ffunc
                                     = vSession->GetFunction("Forcing", 0);
 
-        ffunc->Evaluate3Array(xc0, xc1, xc2, fce);
+        ffunc->Evaluate(xc0, xc1, xc2, fce);
 
         //----------------------------------------------
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
             //----------------------------------------------
             // evaluate exact solution
 
-            ex_sol->Evaluate3Array(xc0, xc1, xc2, fce);
+            ex_sol->Evaluate(xc0, xc1, xc2, fce);
 
             //----------------------------------------------
 
@@ -152,6 +152,8 @@ int main(int argc, char *argv[])
                 cout << "L infinity error: " << vLinfError << endl;
                 cout << "L 2 error:        " << vL2Error << endl;
                 cout << "H 1 error:        " << vH1Error << endl;
+
+                cout << "Time in ExpEval:  " << ex_sol->GetTime() << endl;
             }
             //--------------------------------------------
         }

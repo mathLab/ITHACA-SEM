@@ -1291,7 +1291,7 @@ namespace Nektar
                             LibUtilities::Equation  condition = boost::static_pointer_cast<
                                                                    SpatialDomains::DirichletBoundaryCondition
                                                                 >(m_bndConditions[i])->m_dirichletCondition;
-                            condition.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
+                            condition.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
 
                             locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                         locExpList->UpdateCoeffs());
@@ -1329,7 +1329,7 @@ namespace Nektar
                             LibUtilities::Equation  condition = boost::static_pointer_cast<
                                                                    SpatialDomains::NeumannBoundaryCondition
                                                                 >(m_bndConditions[i])->m_neumannCondition;
-                            condition.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
+                            condition.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
 
                             locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
@@ -1370,7 +1370,7 @@ namespace Nektar
                                                                 >(m_bndConditions[i])->m_robinPrimitiveCoeff;
                             // Array<OneD,NekDouble> timeArray(npoints, time);
                             // put primitive coefficient into the physical space storage
-                            coeff.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
+                            coeff.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
                         }
                         else
                         {
@@ -1380,13 +1380,13 @@ namespace Nektar
                             LibUtilities::Equation  coeff     = boost::static_pointer_cast<
                                                                    SpatialDomains::RobinBoundaryCondition
                                                                 >(m_bndConditions[i])->m_robinPrimitiveCoeff;
-                            condition.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
+                            condition.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
 
                             locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
 
                             // put primitive coefficient into the physical space storage
-                            coeff.Evaluate4Array(x0,x1,x2,time, locExpList->UpdatePhys());
+                            coeff.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
 
                         }
                     }    

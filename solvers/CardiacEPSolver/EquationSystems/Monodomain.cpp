@@ -155,7 +155,7 @@ namespace Nektar
 
                     LibUtilities::EquationSharedPtr ifunc
                             = m_session->GetFunction(varCoeffs[i], varName);
-                    ifunc->Evaluate4Array(x0,x1,x2,0.0,tmp);
+                    ifunc->Evaluate(x0,x1,x2,0.0,tmp);
                     m_vardiff[varCoeffEnum[i]] = tmp;
                 }
 
@@ -268,7 +268,7 @@ namespace Nektar
 
             LibUtilities::EquationSharedPtr ifunc
                     = m_session->GetFunction("Stimulus", "u");
-            ifunc->Evaluate4Array(x0,x1,x2,time, result);
+            ifunc->Evaluate(x0,x1,x2,time, result);
 
             Vmath::Vadd(nq, outarray[0], 1, result, 1, outarray[0], 1);
         }

@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
     LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing", 0);
 
-    ffunc->Evaluate3Array(xc0, xc1, xc2, fce);
+    ffunc->Evaluate(xc0, xc1, xc2, fce);
 
     //----------------------------------------------
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // evaluate exact solution
 
-        ex_sol->Evaluate3Array(xc0, xc1, xc2, fce);
+        ex_sol->Evaluate(xc0, xc1, xc2, fce);
 
         //----------------------------------------------
 

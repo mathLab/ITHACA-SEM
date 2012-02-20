@@ -110,12 +110,12 @@ int main(int argc, char *argv[])
 	LibUtilities::EquationSharedPtr exac_w = vSession->GetFunction("ExactSolution", 2);
     	
 
-    ffunc_u->Evaluate3Array(xc0,xc1,xc2,Exp_u->UpdatePhys());
-    ffunc_v->Evaluate3Array(xc0,xc1,xc2,Exp_v->UpdatePhys());
-    ffunc_w->Evaluate3Array(xc0,xc1,xc2,Exp_w->UpdatePhys());
-    exac_u->Evaluate3Array(xc0,xc1,xc2,dudx);
-    exac_v->Evaluate3Array(xc0,xc1,xc2,dvdy);
-    exac_w->Evaluate3Array(xc0,xc1,xc2,dwdz);
+    ffunc_u->Evaluate(xc0,xc1,xc2,Exp_u->UpdatePhys());
+    ffunc_v->Evaluate(xc0,xc1,xc2,Exp_v->UpdatePhys());
+    ffunc_w->Evaluate(xc0,xc1,xc2,Exp_w->UpdatePhys());
+    exac_u->Evaluate(xc0,xc1,xc2,dudx);
+    exac_v->Evaluate(xc0,xc1,xc2,dvdy);
+    exac_w->Evaluate(xc0,xc1,xc2,dwdz);
 
     //----------------------------------------------
 	

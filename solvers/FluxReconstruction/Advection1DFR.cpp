@@ -118,8 +118,8 @@ namespace Nektar
 		Ini[0]  = Array<OneD,NekDouble>(nq);
 		Exac[0] = Array<OneD,NekDouble>(nq);
 		
-        AdveFunc->Evaluate4Array(x,y,z,Time,Adv[0]);
-        InitCond->Evaluate4Array(x,y,z,Time,Ini[0]);
+        AdveFunc->Evaluate(x,y,z,Time,Adv[0]);
+        InitCond->Evaluate(x,y,z,Time,Ini[0]);
 
 		// Setting the physical value of the initial condition inside the 
         // physical space
@@ -247,7 +247,7 @@ namespace Nektar
 			difInt[i] = inarray[2*i] - inarray[2*i-1];
 		}
 	
-        AdveFunc->Evaluate4Array(xi,yi,zi,Time,a);
+        AdveFunc->Evaluate(xi,yi,zi,Time,a);
 		for(int i = 0; i < ni; ++i)
 		{
 			
@@ -652,7 +652,7 @@ namespace Nektar
 	{
 		// Evaluating the error
 		NekDouble L2, Linf;
-        ExSol->Evaluate4Array(x,y,z,Time,Exac[0]);
+        ExSol->Evaluate(x,y,z,Time,Exac[0]);
 		
 		L2   = Domain->L2(Exac[0]);
 		Linf = Domain->Linf(Exac[0]);

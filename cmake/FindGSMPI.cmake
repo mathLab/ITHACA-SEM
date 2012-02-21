@@ -1,9 +1,9 @@
 
 SET(GSMPI_SEARCH_PATHS 
+	${CMAKE_SOURCE_DIR}/ThirdParty/gsmpi-1.0/
+	${CMAKE_SOURCE_DIR}/ThirdParty/gsmpi-1.0/build/
 	${CMAKE_SOURCE_DIR}/../ThirdParty/gsmpi-1.0/
-	${CMAKE_SOURCE_DIR}/../ThirdParty/gsmpi-1.0/build/
-	${CMAKE_SOURCE_DIR}/../../ThirdParty/gsmpi-1.0/
-	${CMAKE_SOURCE_DIR}/../../ThirdParty/gsmpi-1.0/build )
+	${CMAKE_SOURCE_DIR}/../ThirdParty/gsmpi-1.0/build )
 
 FIND_LIBRARY(GSMPI_LIBRARY NAMES gsmpi PATHS ${GSMPI_SEARCH_PATHS})
 

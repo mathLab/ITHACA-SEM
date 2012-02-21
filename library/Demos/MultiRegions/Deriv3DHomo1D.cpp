@@ -44,14 +44,15 @@ int main(int argc, char *argv[])
 	vSession->LoadParameter("USEFFT",    FFT);
 	
 	bool useFFT = false;
+	bool deal = false;
 	if(FFT==1){useFFT = true;}
 			
 	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,nzpoints,PkeyZ);
     
-	Exp_u = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,graph2D,vSession->GetVariable(0));
-	Exp_v = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,graph2D,vSession->GetVariable(1));
-	Exp_w = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,graph2D,vSession->GetVariable(2));
+	Exp_u = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,deal,graph2D,vSession->GetVariable(0));
+	Exp_v = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,deal,graph2D,vSession->GetVariable(1));
+	Exp_w = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,deal,graph2D,vSession->GetVariable(2));
 
 	//----------------------------------------------
 

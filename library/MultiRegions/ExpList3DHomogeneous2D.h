@@ -71,7 +71,8 @@ namespace Nektar
 														const LibUtilities::BasisKey &HomoBasis_z,
 														const NekDouble lhom_y,
 														const NekDouble lhom_z,
-														const bool useFFT);
+														const bool useFFT,
+														const bool dealiasing);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -80,6 +81,7 @@ namespace Nektar
 														const NekDouble lhom_y,
 														const NekDouble lhom_z,
 														const bool useFFT,
+														const bool dealiasing,
 														const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// Copy constructor.

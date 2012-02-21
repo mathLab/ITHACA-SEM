@@ -72,6 +72,7 @@ namespace Nektar
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lz,
 								   const bool useFFT,
+								   const bool dealiasing,
                                    const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
@@ -79,6 +80,7 @@ namespace Nektar
                                    const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
 								   const bool useFFT,
+								   const bool dealiasing,
                                    const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
                                    const Array<OneD, ExpListSharedPtr> &planes);
 

@@ -56,13 +56,15 @@ namespace Nektar
                                         const LibUtilities::SessionReaderSharedPtr &pSession,
                                         const LibUtilities::BasisKey &HomoBasis,
                                         const NekDouble lhom,
-                                        const bool useFFT);
+                                        const bool useFFT,
+										const bool dealiasing);
 
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
                            const LibUtilities::SessionReaderSharedPtr &pSession,
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
 						   const bool useFFT,
+						   const bool dealiasing,
                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string &variable);
 

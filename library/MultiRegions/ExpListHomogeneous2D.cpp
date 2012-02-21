@@ -55,11 +55,13 @@ namespace Nektar
 												   const LibUtilities::BasisKey &HomoBasis_z, 
 												   const NekDouble lhom_y,
 												   const NekDouble lhom_z,
-												   const bool useFFT):
+												   const bool useFFT,
+												   const bool dealiasing):
             ExpList(pSession),
             m_lhom_y(lhom_y),
 		    m_lhom_z(lhom_z),
 		    m_useFFT(useFFT),
+		    m_dealiasing(dealiasing),
             m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr())
         {
             ASSERTL2(HomoBasis_y != LibUtilities::NullBasisKey,
@@ -81,7 +83,7 @@ namespace Nektar
 				m_FFT_z = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_nz);
 			}
 			
-			if((m_ny%2 == 0) && (m_nz%2 == 0))
+			if(m_dealiasing)
 			{
 				SetPaddingBase();
 			}
@@ -99,7 +101,15 @@ namespace Nektar
             m_lhom_y(In.m_lhom_y),
 		    m_lhom_z(In.m_lhom_z),
 		    m_ny(In.m_ny),
-		    m_nz(In.m_nz)
+		    m_nz(In.m_nz),
+		    m_useFFT(In.m_useFFT),
+		    m_FFT_y(In.m_FFT_y),
+		    m_FFT_z(In.m_FFT_z),
+		    m_dealiasing(In.m_dealiasing),
+		    m_padsize_y(In.m_padsize_y),
+		    m_padsize_z(In.m_padsize_z),
+		    MatBwdPAD(In.MatBwdPAD),
+		    MatFwdPAD(In.MatFwdPAD)
         {
             m_lines = Array<OneD, ExpListSharedPtr>(In.m_lines.num_elements());
         }
@@ -153,22 +163,22 @@ namespace Nektar
 			ShuffleIntoHomogeneous2DClosePacked(V1,ShufV1,false);
 			ShuffleIntoHomogeneous2DClosePacked(V2,ShufV2,false);
 
-			Array<OneD, NekDouble> PadV1_slab_coeff(padsize_y*padsize_z,0.0);
-			Array<OneD, NekDouble> PadV2_slab_coeff(padsize_y*padsize_z,0.0);
-			Array<OneD, NekDouble> PadRe_slab_coeff(padsize_y*padsize_z,0.0);
+			Array<OneD, NekDouble> PadV1_slab_coeff(m_padsize_y*m_padsize_z,0.0);
+			Array<OneD, NekDouble> PadV2_slab_coeff(m_padsize_y*m_padsize_z,0.0);
+			Array<OneD, NekDouble> PadRe_slab_coeff(m_padsize_y*m_padsize_z,0.0);
 			
-			Array<OneD, NekDouble> PadV1_slab_phys(padsize_y*padsize_z,0.0);
-			Array<OneD, NekDouble> PadV2_slab_phys(padsize_y*padsize_z,0.0);
-			Array<OneD, NekDouble> PadRe_slab_phys(padsize_y*padsize_z,0.0);
+			Array<OneD, NekDouble> PadV1_slab_phys(m_padsize_y*m_padsize_z,0.0);
+			Array<OneD, NekDouble> PadV2_slab_phys(m_padsize_y*m_padsize_z,0.0);
+			Array<OneD, NekDouble> PadRe_slab_phys(m_padsize_y*m_padsize_z,0.0);
 			
-			NekVector<NekDouble> PadIN_V1(padsize_y*padsize_z,PadV1_slab_coeff,eWrapper);
-			NekVector<NekDouble> PadOUT_V1(padsize_y*padsize_z,PadV1_slab_phys,eWrapper);
+			NekVector<NekDouble> PadIN_V1(m_padsize_y*m_padsize_z,PadV1_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V1(m_padsize_y*m_padsize_z,PadV1_slab_phys,eWrapper);
 			
-			NekVector<NekDouble> PadIN_V2(padsize_y*padsize_z,PadV2_slab_coeff,eWrapper);
-			NekVector<NekDouble> PadOUT_V2(padsize_y*padsize_z,PadV2_slab_phys,eWrapper);
+			NekVector<NekDouble> PadIN_V2(m_padsize_y*m_padsize_z,PadV2_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V2(m_padsize_y*m_padsize_z,PadV2_slab_phys,eWrapper);
 			
-			NekVector<NekDouble> PadIN_Re(padsize_y*padsize_z,PadRe_slab_phys,eWrapper);
-			NekVector<NekDouble> PadOUT_Re(padsize_y*padsize_z,PadRe_slab_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_Re(m_padsize_y*m_padsize_z,PadRe_slab_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(m_padsize_y*m_padsize_z,PadRe_slab_coeff,eWrapper);
 			
 			//Looping on the slabs
 			for(int j = 0 ; j< nslabs ; j++)
@@ -186,7 +196,7 @@ namespace Nektar
 				PadOUT_V2 = (*MatBwdPAD)*PadIN_V2;
 				
 				//Perfroming the vectors multiplication in physical space on the padded system
-				Vmath::Vmul(padsize_y*padsize_z,PadV1_slab_phys,1,PadV2_slab_phys,1,PadRe_slab_phys,1);
+				Vmath::Vmul(m_padsize_y*m_padsize_z,PadV1_slab_phys,1,PadV2_slab_phys,1,PadRe_slab_phys,1);
 				
 				//Moving back the result (V1*V2)_phys in Fourier space, padded system
 				PadOUT_Re = (*MatFwdPAD)*PadIN_Re;
@@ -1012,14 +1022,16 @@ namespace Nektar
 		
 		void ExpListHomogeneous2D::SetPaddingBase(void)
 		{
-			padsize_y = (3/2)*m_ny;
-			padsize_z = (3/2)*m_nz;
+			NekDouble size_y = 1.5*m_ny;
+			NekDouble size_z = 1.5*m_nz;
+			m_padsize_y = int(size_y);
+			m_padsize_z = int(size_z);
 			
-			const LibUtilities::PointsKey Ppad_y(padsize_y,LibUtilities::eFourierEvenlySpaced);
-			const LibUtilities::BasisKey  Bpad_y(LibUtilities::eFourier,padsize_y,Ppad_y);
+			const LibUtilities::PointsKey Ppad_y(m_padsize_y,LibUtilities::eFourierEvenlySpaced);
+			const LibUtilities::BasisKey  Bpad_y(LibUtilities::eFourier,m_padsize_y,Ppad_y);
 			
-			const LibUtilities::PointsKey Ppad_z(padsize_z,LibUtilities::eFourierEvenlySpaced);
-			const LibUtilities::BasisKey  Bpad_z(LibUtilities::eFourier,padsize_z,Ppad_z);
+			const LibUtilities::PointsKey Ppad_z(m_padsize_z,LibUtilities::eFourierEvenlySpaced);
+			const LibUtilities::BasisKey  Bpad_z(LibUtilities::eFourier,m_padsize_z,Ppad_z);
 			
 			m_paddingBasis_y = LibUtilities::BasisManager()[Bpad_y];
 			m_paddingBasis_z = LibUtilities::BasisManager()[Bpad_z];

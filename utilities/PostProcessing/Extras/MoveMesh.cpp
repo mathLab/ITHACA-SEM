@@ -747,7 +747,8 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
 		int npointsY;              ///< number of points in Y direction (if homogeneous)
 		int npointsZ;              ///< number of points in Z direction (if homogeneous)		
 		int HomoDirec       = 0;
-		bool useFFT = false;	        
+		bool useFFT = false;
+		bool dealiasing = false;
 		///Parameter for homogeneous expansions		
 		enum HomogeneousType
 		{

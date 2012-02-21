@@ -56,6 +56,7 @@ namespace Nektar
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
 						   const bool useFFT,
+						   const bool dealiasing,
                            const SpatialDomains::MeshGraphSharedPtr &graph2D,
                            const std::string &variable,
 						   const bool CheckIfSingularSystem = false);

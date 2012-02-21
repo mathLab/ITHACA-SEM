@@ -238,7 +238,8 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
 		int static npointsY;              ///< number of points in Y direction (if homogeneous)
                 int static npointsZ;              ///< number of points in Z direction (if homogeneous)	
 		int static HomoDirec       = 0;
-		bool static useFFT = false;	        
+		bool static useFFT = false;
+		bool static dealiasing = false;
 		///Parameter for homogeneous expansions		
 		enum HomogeneousType
 		{
@@ -322,7 +323,7 @@ cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;
                                NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
                                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::
-                                   AllocateSharedPtr(session,Bkey,ly,useFFT,graphShPt);
+                                   AllocateSharedPtr(session,Bkey,ly,useFFT,dealiasing,graphShPt);
                                Exp[0] = Exp2DH1;
 
                                for(i = 1; i < nvariables; ++i)
@@ -349,7 +350,7 @@ cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;
                                 NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
 				
                                 Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::
-                                      AllocateSharedPtr(session,BkeyY,BkeyZ,ly,lz,useFFT,graphShPt);
+                                      AllocateSharedPtr(session,BkeyY,BkeyZ,ly,lz,useFFT,dealiasing,graphShPt);
                                 Exp[0] = Exp3DH2;
 				
                                 for(i = 1; i < nvariables; ++i)
@@ -390,7 +391,7 @@ cout<<"setfields"<<endl;
                           	NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
                           	Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
-                          	     AllocateSharedPtr(session,Bkey,lz,useFFT,graphShPt,fielddef[0]->m_fields[0]);
+                          	     AllocateSharedPtr(session,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
                           	Exp[0] = Exp3DH1;
                           	for(i = 1; i < nvariables; ++i)
                           	{                         		

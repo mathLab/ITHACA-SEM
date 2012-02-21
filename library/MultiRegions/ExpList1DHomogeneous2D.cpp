@@ -53,8 +53,9 @@ namespace Nektar
 													   const NekDouble lhom_y,
 													   const NekDouble lhom_z,
 													   const bool useFFT,
+													   const bool dealiasing,
 													   const Array<OneD, ExpListSharedPtr> &points):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int n,nel;
 			

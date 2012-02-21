@@ -71,9 +71,10 @@ namespace Nektar
 														   const NekDouble lhom_y,
 														   const NekDouble lhom_z,
 														   const bool useFFT,
+														   const bool dealiasing,
 														   const SpatialDomains::MeshGraphSharedPtr &graph1D,
 														   const std::string &variable):
-            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int i,n,nel;
             bool False = false;

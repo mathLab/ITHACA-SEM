@@ -70,10 +70,11 @@ namespace Nektar
                                        const LibUtilities::BasisKey &HomoBasis,
                                        const NekDouble lhom,
 									   const bool useFFT,
+									   const bool dealiasing,
                                        const SpatialDomains::MeshGraphSharedPtr &graph2D,
                                        const std::string &variable,
 									   const bool CheckIfSingularSystem):
-            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
+            DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             int i,n,nel;
             bool False = false;

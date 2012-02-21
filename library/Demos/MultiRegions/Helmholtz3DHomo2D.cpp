@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 	vSession->LoadParameter("USEFFT",    FFT);
 	
 	bool useFFT = false;
+	bool deal = false;
 	if(FFT==1){useFFT = true;}
 		
     
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
 	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,nzpoints,PkeyZ);
     
-	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,graph1D,vSession->GetVariable(0));
+	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,deal,graph1D,vSession->GetVariable(0));
     //----------------------------------------------
 
     //----------------------------------------------

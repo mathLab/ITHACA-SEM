@@ -49,10 +49,11 @@ namespace Nektar
         }
 
         ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
-                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT):
+                &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT, const bool dealiasing):
             ExpList(pSession),
             m_lhom(lhom),
             m_useFFT(useFFT),
+		    m_dealiasing(dealiasing),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
         {
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
@@ -68,7 +69,7 @@ namespace Nektar
                 m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nzplanes);
             }
 			
-			if(nzplanes%2 == 0)
+			if(m_dealiasing)
 			{
 				SetPaddingBase();
 			}
@@ -84,7 +85,11 @@ namespace Nektar
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
             m_lhom(In.m_lhom),
             m_useFFT(In.m_useFFT),
-            m_FFT(In.m_FFT),
+		    m_FFT(In.m_FFT),
+		    m_dealiasing(In.m_dealiasing),
+		    m_padsize(In.m_padsize),
+            MatBwdPAD(In.MatBwdPAD),
+		    MatFwdPAD(In.MatFwdPAD),
             m_tmpIN(In.m_tmpIN),
             m_tmpOUT(In.m_tmpOUT)
         {
@@ -147,22 +152,22 @@ namespace Nektar
 			
 			/////////////////////////////////////////////////////////////////////////////
 			// Creating padded vectors for each pencil
-			Array<OneD, NekDouble> PadV1_pencil_coeff(padsize,0.0);
-			Array<OneD, NekDouble> PadV2_pencil_coeff(padsize,0.0);
-			Array<OneD, NekDouble> PadRe_pencil_coeff(padsize,0.0);
+			Array<OneD, NekDouble> PadV1_pencil_coeff(m_padsize,0.0);
+			Array<OneD, NekDouble> PadV2_pencil_coeff(m_padsize,0.0);
+			Array<OneD, NekDouble> PadRe_pencil_coeff(m_padsize,0.0);
 			
-			Array<OneD, NekDouble> PadV1_pencil_phys(padsize,0.0);
-			Array<OneD, NekDouble> PadV2_pencil_phys(padsize,0.0);
-			Array<OneD, NekDouble> PadRe_pencil_phys(padsize,0.0);
+			Array<OneD, NekDouble> PadV1_pencil_phys(m_padsize,0.0);
+			Array<OneD, NekDouble> PadV2_pencil_phys(m_padsize,0.0);
+			Array<OneD, NekDouble> PadRe_pencil_phys(m_padsize,0.0);
 			
-			NekVector<NekDouble> PadIN_V1(padsize,PadV1_pencil_coeff,eWrapper);
-			NekVector<NekDouble> PadOUT_V1(padsize,PadV1_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadIN_V1(m_padsize,PadV1_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V1(m_padsize,PadV1_pencil_phys,eWrapper);
 			
-			NekVector<NekDouble> PadIN_V2(padsize,PadV2_pencil_coeff,eWrapper);
-			NekVector<NekDouble> PadOUT_V2(padsize,PadV2_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadIN_V2(m_padsize,PadV2_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadOUT_V2(m_padsize,PadV2_pencil_phys,eWrapper);
 			
-			NekVector<NekDouble> PadIN_Re(padsize,PadRe_pencil_phys,eWrapper);
-			NekVector<NekDouble> PadOUT_Re(padsize,PadRe_pencil_coeff,eWrapper);
+			NekVector<NekDouble> PadIN_Re(m_padsize,PadRe_pencil_phys,eWrapper);
+			NekVector<NekDouble> PadOUT_Re(m_padsize,PadRe_pencil_coeff,eWrapper);
 			
 			//Looping on the pencils
 			for(int i = 0 ; i< npencils ; i++)
@@ -177,7 +182,7 @@ namespace Nektar
 				PadOUT_V2 = (*MatBwdPAD)*PadIN_V2;
 				
 				//Perfroming the vectors multiplication in physical space on the padded system
-				Vmath::Vmul(padsize,PadV1_pencil_phys,1,PadV2_pencil_phys,1,PadRe_pencil_phys,1);
+				Vmath::Vmul(m_padsize,PadV1_pencil_phys,1,PadV2_pencil_phys,1,PadRe_pencil_phys,1);
 				
 				//Moving back the result (V1*V2)_phys in Fourier space, padded system
 				PadOUT_Re = (*MatFwdPAD)*PadIN_Re;
@@ -932,10 +937,11 @@ namespace Nektar
 		
 		void ExpListHomogeneous1D::SetPaddingBase(void)
 		{
-			padsize = (3/2)*m_homogeneousBasis->GetNumPoints();
+			NekDouble size = 1.5*m_homogeneousBasis->GetNumPoints();
+			m_padsize = int(size);
 			
-			const LibUtilities::PointsKey Ppad(padsize,LibUtilities::eFourierEvenlySpaced);
-            const LibUtilities::BasisKey  Bpad(LibUtilities::eFourier,padsize,Ppad);
+			const LibUtilities::PointsKey Ppad(m_padsize,LibUtilities::eFourierEvenlySpaced);
+            const LibUtilities::BasisKey  Bpad(LibUtilities::eFourier,m_padsize,Ppad);
             
             m_paddingBasis = LibUtilities::BasisManager()[Bpad];
 			

@@ -49,8 +49,9 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
-                                                       const bool useFFT):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
+                                                       const bool useFFT,
+													   const bool dealiasing):
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
         }
 
@@ -59,9 +60,10 @@ namespace Nektar
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
                                                        const bool useFFT,
+													   const bool dealiasing,
                                                        const SpatialDomains::MeshGraphSharedPtr &graph2D,
                                                        const std::string &var):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var));
         }
@@ -71,8 +73,9 @@ namespace Nektar
                                                        const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
                                                        const bool useFFT,
+													   const bool dealiasing,
                                                        const SpatialDomains::ExpansionMap  &expansions):                                                      
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT)
+            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             GenExpList3DHomogeneous1D(expansions);
         }

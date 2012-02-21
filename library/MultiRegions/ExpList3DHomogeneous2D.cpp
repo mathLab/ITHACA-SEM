@@ -51,8 +51,9 @@ namespace Nektar
 													   const LibUtilities::BasisKey &HomoBasis_z,
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
-													   const bool useFFT):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+													   const bool useFFT,
+													   const bool dealiasing):
+            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
         }
 
@@ -63,8 +64,9 @@ namespace Nektar
                                                        const NekDouble lhom_y,
 													   const NekDouble lhom_z,
 													   const bool useFFT,
+													   const bool dealiasing,
                                                        const SpatialDomains::MeshGraphSharedPtr &graph1D):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT)
+            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int n,j,nel;
             bool False = false;

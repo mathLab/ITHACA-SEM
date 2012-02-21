@@ -73,6 +73,7 @@ namespace Nektar
 														const NekDouble lhom_y,
 														const NekDouble lhom_z,
 														const bool useFFT,
+														const bool dealiasing,
 														const Array<OneD, ExpListSharedPtr> &points);
 
             /// Copy constructor.

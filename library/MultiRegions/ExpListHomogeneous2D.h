@@ -84,7 +84,8 @@ namespace Nektar
 													  const LibUtilities::BasisKey &HomoBasis_z,
 													  const NekDouble ly,
 													  const NekDouble lz,
-													  const bool useFFT);
+													  const bool useFFT,
+													  const bool dealiasing);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpListHomogeneous2D &In);
@@ -224,8 +225,9 @@ namespace Nektar
         private:
 			
 			//Padding operations variables
-			int padsize_y;
-			int padsize_z;
+			bool m_dealiasing;
+			int m_padsize_y;
+			int m_padsize_z;
 			DNekMatSharedPtr    MatFwdPAD;
 			DNekMatSharedPtr    MatBwdPAD;
         };

@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
     }
     graphShPt->SetExpansions(fielddef,pointstype);
 	bool useFFT = false;
+	bool dealiasing = false;
     //----------------------------------------------
 
 
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,ly,useFFT,graphShPt);
+                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,ly,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp2DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
 				NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 				NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
 				
-                Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,graphShPt);
+                Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp3DH2;
 				
                 for(i = 1; i < nfields; ++i)
@@ -149,7 +150,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,graphShPt);
+                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp3DH1;
 
                 for(i = 1; i < nfields; ++i)

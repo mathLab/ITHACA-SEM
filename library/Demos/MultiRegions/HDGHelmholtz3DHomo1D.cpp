@@ -52,11 +52,12 @@ int main(int argc, char *argv[])
     // Define Expansion
     lz      = vSession->GetParameter("Lz");
 	bool useFFT = false;
+	bool deal = false;
     int nplanes = 8;
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>::
-        AllocateSharedPtr(vSession,Bkey,lz,useFFT,graph2D,vSession->GetVariable(0));
+        AllocateSharedPtr(vSession,Bkey,lz,useFFT,deal,graph2D,vSession->GetVariable(0));
     //----------------------------------------------
     Timing("Read files and define exp ..");
 

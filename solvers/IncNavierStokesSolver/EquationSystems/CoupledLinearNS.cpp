@@ -84,7 +84,7 @@ namespace Nektar
                 ASSERTL0(nvel > 2,"Expect to have three at least three components of velocity variables");
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
-                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_dealiasing, pressure_exp);
 
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                

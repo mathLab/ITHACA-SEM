@@ -55,6 +55,7 @@ namespace Nektar
 														  const NekDouble lhom_y,
 														  const NekDouble lhom_z,
 														  const bool useFFT,
+														  const bool dealiasing,
 														  const SpatialDomains::MeshGraphSharedPtr &graph1D,
 														  const std::string &variable);
             

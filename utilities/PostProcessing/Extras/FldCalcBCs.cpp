@@ -111,7 +111,7 @@ decomment the lines which follow '//decomment'
          const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
          NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
          MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
-         Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,graphShPt,fielddef[0]->m_fields[0]);
+         Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt,fielddef[0]->m_fields[0]);
          fields[lastfield] = Exp3DH1;        
 //end       
     }
@@ -273,7 +273,8 @@ cout<<"OOOK"<<endl;
 		int npointsY;              ///< number of points in Y direction (if homogeneous)
                 int npointsZ;              ///< number of points in Z direction (if homogeneous)	
 		int HomoDirec       = 0;
-		bool useFFT = false;	        
+		bool useFFT = false;	    
+		bool deal = false;
 		///Parameter for homogeneous expansions		
 		enum HomogeneousType
 		{
@@ -349,7 +350,7 @@ cout<<"OOOK"<<endl;
                         for(i = 0 ; i < nvariables; i++)
                         {
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,mesh,session->GetVariable(i));
+                                ::AllocateSharedPtr(session,BkeyY,BkeyZ,LhomY,LhomZ,useFFT,deal,mesh,session->GetVariable(i));
                         }
                     }
                     else
@@ -372,7 +373,7 @@ cout<<"OOOK"<<endl;
                         for(i = 0 ; i < nvariables; i++)
                         {                        	
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,mesh,session->GetVariable(i));                                
+                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));                                
                         }
                     }
                     else

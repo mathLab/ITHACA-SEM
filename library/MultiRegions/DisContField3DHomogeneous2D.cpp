@@ -54,8 +54,9 @@ namespace Nektar
 																 const LibUtilities::BasisKey &HomoBasis_z,
                                                                  const NekDouble lhom_y,
 																 const NekDouble lhom_z,
-																 const bool useFFT):
-            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
+																 const bool useFFT,
+																 const bool dealiasing):
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -86,9 +87,10 @@ namespace Nektar
 																 const NekDouble lhom_y,
 																 const NekDouble lhom_z,
 																 const bool useFFT,
+																 const bool dealiasing,
 																 const SpatialDomains::MeshGraphSharedPtr &graph1D,
 																 const std::string &variable):
-            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT),
+            ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -168,7 +170,7 @@ namespace Nektar
                     LinesBndCondExp[n] = m_lines[n]->UpdateBndCondExpansion(i);
                 }
                 
-                m_bndCondExpansions[i] = MemoryManager<ExpList1DHomogeneous2D>::AllocateSharedPtr(m_session,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,m_useFFT,LinesBndCondExp);
+                m_bndCondExpansions[i] = MemoryManager<ExpList1DHomogeneous2D>::AllocateSharedPtr(m_session,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,m_useFFT,false,LinesBndCondExp);
                 
             }
             

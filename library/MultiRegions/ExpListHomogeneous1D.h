@@ -79,7 +79,7 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D();
 
-            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lz, const bool useFFT);
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lz, const bool useFFT, const bool dealiasing);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
@@ -235,7 +235,8 @@ namespace Nektar
         private:
 			
 			//Padding operations variables
-			int padsize;
+			bool m_dealiasing;
+			int m_padsize;
 			DNekMatSharedPtr    MatFwdPAD;
 			DNekMatSharedPtr    MatBwdPAD;
         };

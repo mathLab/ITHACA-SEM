@@ -433,7 +433,7 @@ namespace Nektar
 
 
         /**
-	 * \brief et the coordinates "coords" at the local coordinates "Lcoords"
+	 * \brief Get the coordinates "coords" at the local coordinates "Lcoords"
 	 */
         void TetExp::v_GetCoord(
                   const Array<OneD, const NekDouble> &Lcoords, 
@@ -937,6 +937,8 @@ namespace Nektar
 
 
         /**
+	 * \brief Evaluates the Helmholtz operator using a matrix-free approach.
+	 *
          * To construct the Helmholtz operator in a physical tetrahedron
          * requires coordinate transforms from both the collapsed coordinate
          * system to the standard region and from the standard region to the

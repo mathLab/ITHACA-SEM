@@ -125,7 +125,6 @@ namespace Nektar
                 const bool dumpVar = true,
                 std::string var = "v");
 
-            /// Return Shape of region, using  ShapeType enum list.
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::ExpansionType v_DetExpansionType() const;
 
@@ -143,7 +142,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::FaceOrientation v_GetFaceorient(int face);
 
-            //Extract physical values on a face
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int face,
                 const StdRegions::StdExpansion2DSharedPtr &FaceExp,
@@ -171,7 +169,6 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
 
-            /// Evaluates the Helmholtz operator using a matrix-free approach.
             LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,

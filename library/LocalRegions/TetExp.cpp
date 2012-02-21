@@ -39,7 +39,19 @@ namespace Nektar
 {
     namespace LocalRegions
     {
+        /**
+         * @class TetExp
+         * Defines a Tetrahedral local expansion.
+         */
 
+        /**
+	 * \brief Constructor using BasisKey class for quadrature points and 
+	 * order definition 
+	 *
+         * @param   Ba          Basis key for first coordinate.
+         * @param   Bb          Basis key for second coordinate.
+         * @param   Bc          Basis key for third coordinate.
+         */
         TetExp::TetExp( const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::BasisKey &Bc,
@@ -62,6 +74,9 @@ namespace Nektar
         }
 
 
+        /**
+	 * \brief Copy Constructor
+	 */
         TetExp::TetExp(const TetExp &T):
             StdExpansion(T),
             Expansion(T),
@@ -76,174 +91,20 @@ namespace Nektar
         }
 
 
+        /**
+	 * \brief Destructor
+	 */
         TetExp::~TetExp()
         {
         }
 
 
+        //-----------------------------
+        // Integration Methods
+        //-----------------------------
         /**
-         * \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta}
-         *   & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
-         *     \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c}
-         *     (\eta_{3k}) w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
-         * J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
-         *   \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2}
-         *   \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k}) J_{i,j,k}
-         * \end{array} \f$ \n
-         * where
-         * \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3)
-         *   = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
-         * which can be implemented as \n
-         * \f$f_{pqr} (\xi_{3k})
-         *   = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-         * J_{i,j,k} = {\bf B_3 U}   \f$ \n
-         * \f$ g_{pq} (\xi_{3k})
-         *   = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})
-         *   = {\bf B_2 F}  \f$ \n
-         * \f$ (\phi_{pqr}, u)_{\delta}
-         *   = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})
-         *   = {\bf B_1 G} \f$
-         */
-        void TetExp::v_IProductWRTBase(
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> & outarray)
-        {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
-
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,
-                            (NekDouble*)&inarray[0],1,&tmp[0],1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0*nquad1*nquad2,jac[0],
-                            (NekDouble*)&inarray[0],1,&tmp[0],1);
-            }
-
-            StdTetExp::v_IProductWRTBase(tmp,outarray);
-        }
-
-        /// @todo add functionality for IsUsingQuadMetrics
-        void TetExp::MultiplyByQuadratureMetric(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray)
-        {
-            int i, j;
-
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
-            int  nqtot  = nquad0*nquad1*nquad2;
-
-            const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
-            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-            const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
-
-            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
-            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
-
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
-            }
-            else
-            {
-                Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
-            }
-
-            // multiply by integration constants
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vmul(nquad0, outarray.get()+i*nquad0,1,
-                            w0.get(),1, outarray.get()+i*nquad0,1);
-            }
-
-            switch(m_base[1]->GetPointsType())
-            {
-            // Legendre inner product.
-            case LibUtilities::eGaussLobattoLegendre:
-
-                for(j = 0; j < nquad2; ++j)
-                {
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,
-                                    0.5*(1-z1[i])*w1[i],
-                                    &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                    1 );
-                    }
-                }
-                break;
-
-            // (1,0) Jacobi Inner product.
-            case LibUtilities::eGaussRadauMAlpha1Beta0:
-                for(i = 0; i < nquad1*nquad2; ++i)
-                {
-                    Vmath::Smul(nquad0, 0.5*w1[i%nquad2], outarray.get()+i*nquad0, 1,
-                                outarray.get()+i*nquad0, 1);
-                }
-                break;
-            }
-
-            switch(m_base[2]->GetPointsType())
-            {
-            // Legendre inner product.
-            case LibUtilities::eGaussLobattoLegendre:
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                &outarray[0]+i*nquad0*nquad1,1);
-                }
-                break;
-            // (2,0) Jacobi inner product.
-            case LibUtilities::eGaussRadauMAlpha2Beta0:
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Vmath::Smul(nquad0*nquad1, 0.25*w2[i], outarray.get()+i*nquad0*nquad1, 1,
-                                outarray.get()+i*nquad0*nquad1, 1);
-                }
-                break;
-            }
-        }
-
-        /**
-         * @param   inarray     Array of physical quadrature points to be
-         *                      transformed.
-         * @param   outarray    Array of coefficients to update.
-         */
-        void TetExp::v_FwdTrans( const Array<OneD, const NekDouble> & inarray,
-                            Array<OneD,NekDouble> &outarray)
-        {
-            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
-            {
-                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
-            }
-            else
-            {
-                IProductWRTBase(inarray,outarray);
-
-                // get Mass matrix inverse
-                MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
-                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
-
-                // copy inarray in case inarray == outarray
-                DNekVec in (m_ncoeffs,outarray);
-                DNekVec out(m_ncoeffs,outarray,eWrapper);
-
-                out = (*matsys)*in;
-            }
-        }
-
-
-        /**
+         * \brief Integrate the physical point list \a inarray over region
+         *
          * @param   inarray     Definition of function to be returned at
          *                      quadrature point of expansion.
          * @returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1}
@@ -253,7 +114,7 @@ namespace Nektar
          * point.
          */
         NekDouble TetExp::v_Integral(
-                            const Array<OneD, const NekDouble> &inarray)
+                  const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -279,42 +140,25 @@ namespace Nektar
 
             return retrunVal;
         }
+        
 
-
-        void TetExp::GeneralMatrixOp_MatOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
-        {
-            DNekScalMatSharedPtr   mat = GetLocMatrix(mkey);
-
-            if(inarray.get() == outarray.get())
-            {
-                Array<OneD,NekDouble> tmp(m_ncoeffs);
-                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
-
-                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
-            }
-            else
-            {
-                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
-            }
-        }
-
-
+        //-----------------------------
+        // Differentiation Methods
+        //-----------------------------
         /**
+	 * \brief Differentiate \a inarray in the three coordinate directions.
+	 * 
          * @param   inarray     Input array of values at quadrature points to
          *                      be differentiated.
          * @param   out_d0      Derivative in first coordinate direction.
          * @param   out_d1      Derivative in second coordinate direction.
          * @param   out_d2      Derivative in third coordinate direction.
          */
-        void TetExp::v_PhysDeriv(const Array<OneD, const NekDouble> & inarray,
-                               Array<OneD,NekDouble> &out_d0,
-                               Array<OneD,NekDouble> &out_d1,
-                               Array<OneD,NekDouble> &out_d2)
+        void TetExp::v_PhysDeriv(
+                 const Array<OneD, const NekDouble> & inarray,
+                       Array<OneD,NekDouble> &out_d0,
+                       Array<OneD,NekDouble> &out_d1,
+                       Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -375,22 +219,119 @@ namespace Nektar
         }
 
 
+        //-----------------------------
+        // Transforms
+        //-----------------------------
+        /**
+	 * \brief Forward transform from physical quadrature space stored in
+	 * \a inarray and evaluate the expansion coefficients and store
+	 * in \a (this)->_coeffs
+	 *
+         * @param   inarray     Array of physical quadrature points to be
+         *                      transformed.
+         * @param   outarray    Array of coefficients to update.
+         */
+        void TetExp::v_FwdTrans( 
+                 const Array<OneD, const NekDouble> & inarray,
+                       Array<OneD,NekDouble> &outarray)
+        {
+            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
+            {
+                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
+            }
+            else
+            {
+                IProductWRTBase(inarray,outarray);
+
+                // get Mass matrix inverse
+                MatrixKey             masskey(StdRegions::eInvMass,
+                                              DetExpansionType(),*this);
+                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
+
+                out = (*matsys)*in;
+            }
+        }
+
+        //-----------------------------
+        // Inner product functions
+        //-----------------------------
+        /**
+	 * \brief Calculate the inner product of inarray with respect to the
+	 * basis B=m_base0*m_base1*m_base2 and put into outarray:
+	 *
+         * \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta}
+         *   & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+         *     \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c}
+         *     (\eta_{3k}) w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
+         * J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
+         *   \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2}
+         *   \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k}) J_{i,j,k}
+         * \end{array} \f$ \n
+         * where
+         * \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3)
+         *   = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
+         * which can be implemented as \n
+         * \f$f_{pqr} (\xi_{3k})
+         *   = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
+         * J_{i,j,k} = {\bf B_3 U}   \f$ \n
+         * \f$ g_{pq} (\xi_{3k})
+         *   = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})
+         *   = {\bf B_2 F}  \f$ \n
+         * \f$ (\phi_{pqr}, u)_{\delta}
+         *   = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})
+         *   = {\bf B_1 G} \f$
+         */
+         void TetExp::v_IProductWRTBase(
+                 const Array<OneD, const NekDouble>& inarray,
+                       Array<OneD, NekDouble> & outarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
+
+            // multiply inarray with Jacobian
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,
+                            (NekDouble*)&inarray[0],1,&tmp[0],1);
+            }
+            else
+            {
+                Vmath::Smul(nquad0*nquad1*nquad2,jac[0],
+                            (NekDouble*)&inarray[0],1,&tmp[0],1);
+            }
+
+            StdTetExp::v_IProductWRTBase(tmp,outarray);
+        }
+
+
+        //-----------------------------
+        // Evaluation functions
+        //-----------------------------
         /**
          * @param   coord       Physical space coordinate
          * @returns Evaluation of expansion at given coordinate.
          */
         NekDouble TetExp::v_PhysEvaluate(
-                            const Array<OneD, const NekDouble> &coord)
+                  const Array<OneD, const NekDouble> &coord)
         {
             return PhysEvaluate(coord,m_phys);
         }
+
+
         /**
          * @param   coord       Physical space coordinate
          * @returns Evaluation of expansion at given coordinate.
          */
         NekDouble TetExp::v_PhysEvaluate(
-                            const Array<OneD, const NekDouble> &coord,
-                            const Array<OneD, const NekDouble> & physvals)
+                  const Array<OneD, const NekDouble> &coord,
+                  const Array<OneD, const NekDouble> & physvals)
         {
             ASSERTL0(m_geom,"m_geom not defined");
 
@@ -404,9 +345,13 @@ namespace Nektar
         }
 
 
-        void TetExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
-                               Array<OneD,NekDouble> &coords_1,
-                               Array<OneD,NekDouble> &coords_2)
+        /** 
+	 * \brief Get the x,y,z coordinates of each quadrature point.
+	 */
+        void TetExp::v_GetCoords(
+                  Array<OneD,NekDouble> &coords_0,
+                  Array<OneD,NekDouble> &coords_1,
+                  Array<OneD,NekDouble> &coords_2)
         {
             LibUtilities::BasisSharedPtr CBasis0;
             LibUtilities::BasisSharedPtr CBasis1;
@@ -487,8 +432,12 @@ namespace Nektar
         }
 
 
-        // get the coordinates "coords" at the local coordinates "Lcoords"
-        void TetExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
+        /**
+	 * \brief et the coordinates "coords" at the local coordinates "Lcoords"
+	 */
+        void TetExp::v_GetCoord(
+                  const Array<OneD, const NekDouble> &Lcoords, 
+                        Array<OneD,NekDouble> &coords)
         {
             int  i;
 
@@ -506,7 +455,14 @@ namespace Nektar
         }
 
 
-        void TetExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+        //-----------------------------
+        // Helper functions
+        //-----------------------------
+        void TetExp::v_WriteToFile(
+                  std::ofstream &outfile, 
+                  OutputFormat format, 
+                  const bool dumpVar, 
+                  std::string var)
         {
             int i,j,k;
             int nquad0 = m_base[0]->GetNumPoints();
@@ -581,6 +537,21 @@ namespace Nektar
         }
 
 
+       /**
+        * \brief Return Shape of region, using  ShapeType enum list.
+	*/
+        StdRegions::ExpansionType TetExp::v_DetExpansionType() const
+        {
+            return StdRegions::eTetrahedron;
+        }
+
+
+        const SpatialDomains::GeomFactorsSharedPtr& TetExp::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
+
         const SpatialDomains::GeometrySharedPtr TetExp::v_GetGeom() const
         {
             return m_geom;
@@ -593,10 +564,373 @@ namespace Nektar
         }
 
 
+        int TetExp::v_GetCoordim()
+        {
+            return m_geom->GetCoordim();
+        }
+
+
+        StdRegions::FaceOrientation TetExp::v_GetFaceorient(int face)
+        {
+            return m_geom->GetFaceorient(face);
+        }
+
+      
+        /**
+         * \brief Returns the physical values at the quadrature points of a face
+         */
+        void TetExp::v_GetFacePhysVals(
+                  const int face,
+                  const StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                  const Array<OneD,const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+
+            Array<OneD,const NekDouble> e_tmp;
+            Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
+
+            StdRegions::FaceOrientation facedir = GetFaceorient(face);
+
+            switch(face)
+            {
+            case 0:
+	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+	        {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad0*nquad1,inarray,1,o_tmp,1);
+                }
+                else
+                {
+                    //Direction A negative and B positive
+                    for (int j=0; j<nquad1; j++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+j*nquad0,-1,o_tmp=outarray+(j*nquad0),1);
+                    }
+                    o_tmp=outarray;
+                }
+
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp,
+                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
+	        break;
+	    case 1:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Direction A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*k),1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                    o_tmp=outarray;
+                }
+                else
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(nquad0*nquad1*k),-1,o_tmp=outarray+(k*nquad0),1);
+                    }
+                    o_tmp=outarray;
+                 }
+
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
+                break;
+            case 2:
+                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad1*nquad2,e_tmp=inarray+(nquad0-1),nquad0,o_tmp,1);
+                }
+                else
+                {
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        Vmath::Vcopy(nquad1,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad1),1);
+                    }
+                    o_tmp=outarray;
+                }
+
+                //interpolate
+                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
+                break;
+            case 3:
+	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad1*nquad2,inarray,nquad0,o_tmp,1);
+	        }
+	        else
+		{
+                    //Direction A negative and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+		        Vmath::Vcopy(nquad1,e_tmp=inarray+nquad0*(nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad1),1);
+                    }
+                    o_tmp=outarray;
+		}
+
+                //interpolate
+                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
+
+                break;
+            default:
+                ASSERTL0(false,"face value (> 3) is out of range");
+                break;
+                }
+        }
+
+
+        /**
+	 * \brief Compute the normal of a triangular face
+	 */
+        void TetExp::v_ComputeFaceNormal(const int face)
+        {
+            int i;
+            const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+            SpatialDomains::GeomType type = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
+            int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            int vCoordDim = GetCoordim();
+
+            m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
+            for (i = 0; i < vCoordDim; ++i)
+            {
+                normal[i] = Array<OneD, NekDouble>(nqe);
+            }
+
+            // Regular geometry case
+            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            {
+                NekDouble fac;
+                // Set up normals
+                switch(face)
+                {
+                case 0:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[3*i+2][0],normal[i],1);
+                    }
+                    break;
+                case 1:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[3*i+1][0],normal[i],1);
+                    }
+                    break;
+                case 2:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,gmat[3*i][0]+gmat[3*i+1][0]+gmat[3*i+2][0],normal[i],1);
+                    }
+                    break;
+                case 3:
+                    for(i = 0; i < vCoordDim; ++i)
+                    {
+                        Vmath::Fill(nqe,-gmat[3*i][0],normal[i],1);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"face is out of range (edge < 3)");
+                }
+
+                // normalise
+                fac = 0.0;
+                for(i =0 ; i < vCoordDim; ++i)
+                {
+                    fac += normal[i][0]*normal[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < vCoordDim; ++i)
+                {
+                    Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
+                }
+
+	    }
+            else   // Set up deformed normals
+            {
+                int j, k;
+
+                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
+                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
+                int nquad2 = geomFactors->GetPointsKey(2).GetNumPoints();
+                int nqtot = nquad0*nquad1;
+
+                LibUtilities::PointsKey points0;
+                LibUtilities::PointsKey points1;
+
+                int nq;
+                Array<OneD,NekDouble> work(nqe,0.0);
+                Array<OneD,NekDouble> normals(vCoordDim*nquad0*nquad1,0.0);
+
+                // Extract Jacobian along face and recover local
+                // derivates (dx/dr) for polynomial interpolation by
+                // multiplying m_gmat by jacobian
+                switch(face)
+	        {
+                case 0:
+                    for(j = 0; j < nquad0*nquad1; ++j)
+                    {
+                        normals[j] = -gmat[2][j]*jac[j];
+                        normals[nqtot+j] = -gmat[5][j]*jac[j];
+                        normals[2*nqtot+j] = -gmat[8][j]*jac[j];
+                    }
+                    points0 = geomFactors->GetPointsKey(0);
+                    points1 = geomFactors->GetPointsKey(1);
+                    nq=points0.GetNumPoints()*points1.GetNumPoints();
+
+                    // interpolate Jacobian and invert
+                    LibUtilities::Interp2D(points0,points1,jac,m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),work);
+                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+
+                    // interpolate
+                    for(i = 0; i < GetCoordim(); ++i)
+                    {
+                        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&normal[i][0]); 
+                        Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
+                    }
+                    break;
+                case 1:
+		    for (j=0; j< nquad0; ++j)
+                    {
+                        for(k=0; k<nquad2; ++k)
+                        {
+                            normals[j+k*nquad0]  = -gmat[1][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
+                            normals[nqtot+j+k*nquad0]  = -gmat[4][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
+                            normals[2*nqtot+j+k*nquad0]  = -gmat[7][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
+                        } 
+                    }
+                    points0 = geomFactors->GetPointsKey(0);
+                    points1 = geomFactors->GetPointsKey(2);
+                    nq=points0.GetNumPoints()*points1.GetNumPoints();
+
+                    // interpolate Jacobian and invert
+                    LibUtilities::Interp2D(points0,points1,jac,m_base[0]->GetPointsKey(),m_base[2]->GetPointsKey(),work);
+                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+
+                    // interpolate
+                    for(i = 0; i < GetCoordim(); ++i)
+                    {
+                        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[0]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
+                        Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
+                    }
+                    break;
+                case 2:
+                    for (j=0; j< nquad1; ++j)
+                    {
+                        for(k=0; k<nquad2; ++k)
+                        {
+                            normals[j+k*nquad0]  = (gmat[0][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[1][nquad0-1+nquad0*j+nquad0*nquad1*k]
+                                               +gmat[2][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
+                            normals[nqtot+j+k*nquad0]  = (gmat[3][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[4][nquad0-1+nquad0*j+nquad0*nquad1*k]
+                                               +gmat[5][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
+                            normals[2*nqtot+j+k*nquad0]  = (gmat[6][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[7][nquad0-1+nquad0*j+nquad0*nquad1*k]
+                                               +gmat[8][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
+                        } 
+                    }
+                    points0 = geomFactors->GetPointsKey(1);
+                    points1 = geomFactors->GetPointsKey(2);
+                    nq=points0.GetNumPoints()*points1.GetNumPoints();
+
+                    // interpolate Jacobian and invert
+                    LibUtilities::Interp2D(points0,points1,jac,m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),work);
+                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+
+                    // interpolate
+                    for(i = 0; i < GetCoordim(); ++i)
+                    {
+                        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
+                        Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
+                    }
+                    break;                
+                case 3:
+                    for (j=0; j< nquad0; ++j)
+                    {
+                        for(k=0; k<nquad2; ++k)
+                        {
+                            normals[j+k*nquad0]  = -gmat[0][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
+                            normals[nqtot+j+k*nquad0]  = -gmat[3][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
+                            normals[2*nqtot+j+k*nquad0]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
+                        } 
+                    }
+                    points0 = geomFactors->GetPointsKey(1);
+                    points1 = geomFactors->GetPointsKey(2);
+                    nq=points0.GetNumPoints()*points1.GetNumPoints();
+
+                    // interpolate Jacobian and invert
+                    LibUtilities::Interp2D(points0,points1,jac,m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),work);
+                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
+
+                    // interpolate
+                    for(i = 0; i < GetCoordim(); ++i)
+                    {
+                    LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
+                    Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"face is out of range (face < 3)");
+                }
+
+                //normalise normal vectors
+                Vmath::Zero(nqe,work,1);
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    Vmath::Vvtvp(nqe,normal[i],1, normal[i],1,work,1,work,1);
+                }
+
+                Vmath::Vsqrt(nqe,work,1,work,1);
+                Vmath::Sdiv(nqe,1.0,work,1,work,1);
+
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
+                }
+            }
+
+        }
+
+
+        NekDouble TetExp::v_Linf(const Array<OneD, const NekDouble> &sol)
+        {
+            return Linf(sol);
+        }
+
+
+        NekDouble TetExp::v_Linf()
+        {
+            return Linf();
+        }
+
+
+        NekDouble TetExp::v_L2(const Array<OneD, const NekDouble> &sol)
+        {
+            return StdExpansion::L2(sol);
+        }
+
+
+        NekDouble TetExp::v_L2()
+        {
+            return StdExpansion::L2();
+        }
+
+
+        //-----------------------------
+        // Operator creation functions
+        //-----------------------------
         void TetExp::v_HelmholtzMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
+                  const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,NekDouble> &outarray,
+                  const StdRegions::StdMatrixKey &mkey)
         {
             TetExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
@@ -674,14 +1008,14 @@ namespace Nektar
          * -# Combine to produce the complete operator.
          */
         void TetExp::v_HelmholtzMatrixOp_MatFree(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
+                  const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,NekDouble> &outarray,
+                  const StdRegions::StdMatrixKey &mkey)
         {
             if(m_metricinfo->IsUsingLaplMetrics())
             {
                 ASSERTL0(false,"Finish implementing TetExp Helmholtz for Lapl Metrics");
-/*                int       nquad0  = m_base[0]->GetNumPoints();
+/*              int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1;
                 int       nmodes0 = m_base[0]->GetNumModes();
@@ -969,26 +1303,28 @@ namespace Nektar
 
 
         void TetExp::v_LaplacianMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
+                  const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+                  const StdRegions::StdMatrixKey &mkey)
         {
             TetExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
-        void TetExp::v_LaplacianMatrixOp(const int k1, const int k2,
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
+        void TetExp::v_LaplacianMatrixOp(
+                  const int k1, 
+                  const int k2,
+                  const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,NekDouble> &outarray,
+                  const StdRegions::StdMatrixKey &mkey)
         {
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
         }
 
         void TetExp::v_LaplacianMatrixOp_MatFree(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
+                  const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,NekDouble> &outarray,
+                  const StdRegions::StdMatrixKey &mkey)
         {
             if(mkey.GetNVarCoeff() == 0)
             {
@@ -1126,7 +1462,11 @@ namespace Nektar
         }
 
 
-        DNekMatSharedPtr TetExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        //-----------------------------
+        // Matrix creation functions
+        //-----------------------------
+        DNekMatSharedPtr TetExp::v_GenMatrix(
+                 const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
 
@@ -1306,7 +1646,8 @@ namespace Nektar
         }
 
 
-        DNekScalBlkMatSharedPtr TetExp::CreateStaticCondMatrix(const MatrixKey &mkey)
+        DNekScalBlkMatSharedPtr TetExp::CreateStaticCondMatrix(
+                 const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
 
@@ -1421,49 +1762,9 @@ namespace Nektar
             return returnval;
         }
 
-        /// Return Shape of region, using  ShapeType enum list.
-        StdRegions::ExpansionType TetExp::v_DetExpansionType() const
-        {
-            return StdRegions::eTetrahedron;
-        }
 
-        const SpatialDomains::GeomFactorsSharedPtr& TetExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        int TetExp::v_GetCoordim()
-        {
-            return m_geom->GetCoordim();
-        }
-
-        StdRegions::FaceOrientation TetExp::v_GetFaceorient(int face)
-        {
-            return m_geom->GetFaceorient(face);
-        }
-
-
-        NekDouble TetExp::v_Linf(const Array<OneD, const NekDouble> &sol)
-        {
-            return Linf(sol);
-        }
-
-        NekDouble TetExp::v_Linf()
-        {
-            return Linf();
-        }
-
-        NekDouble TetExp::v_L2(const Array<OneD, const NekDouble> &sol)
-        {
-            return StdExpansion::L2(sol);
-        }
-
-        NekDouble TetExp::v_L2()
-        {
-            return StdExpansion::L2();
-        }
-
-        DNekMatSharedPtr TetExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekMatSharedPtr TetExp::v_CreateStdMatrix(
+                 const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
             LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
@@ -1483,364 +1784,114 @@ namespace Nektar
             return m_staticCondMatrixManager[mkey];
         }
 
-        void TetExp::v_GetFacePhysVals(
-                           const int face,
-                           const StdRegions::StdExpansion2DSharedPtr &FaceExp,
-                           const Array<OneD,const NekDouble> &inarray,
-                           Array<OneD,NekDouble> &outarray)
+
+        void TetExp::GeneralMatrixOp_MatOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
         {
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
+            DNekScalMatSharedPtr   mat = GetLocMatrix(mkey);
 
-            Array<OneD,const NekDouble> e_tmp;
-            Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
-
-            StdRegions::FaceOrientation facedir = GetFaceorient(face);
-
-            switch(face)
+            if(inarray.get() == outarray.get())
             {
-            case 0:
-	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-	        {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,inarray,1,o_tmp,1);
-                }
-                else
-                {
-                    //Direction A negative and B positive
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+j*nquad0,-1,o_tmp=outarray+(j*nquad0),1);
-                    }
-                    o_tmp=outarray;
-                }
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
 
-                //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp,
-                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-	        break;
-	    case 1:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Direction A and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*k),1,o_tmp=outarray+(k*nquad0),1);
-                    }
-                    o_tmp=outarray;
-                }
-                else
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(nquad0*nquad1*k),-1,o_tmp=outarray+(k*nquad0),1);
-                    }
-                    o_tmp=outarray;
-                 }
-
-                //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
-                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-                break;
-            case 2:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad1*nquad2,e_tmp=inarray+(nquad0-1),nquad0,o_tmp,1);
-                }
-                else
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad1,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad1),1);
-                    }
-                    o_tmp=outarray;
-                }
-
-                //interpolate
-                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
-                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-                break;
-            case 3:
-	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-                {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad1*nquad2,inarray,nquad0,o_tmp,1);
-	        }
-	        else
-		{
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-		        Vmath::Vcopy(nquad1,e_tmp=inarray+nquad0*(nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad1),1);
-                    }
-                    o_tmp=outarray;
-		}
-
-                //interpolate
-                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
-                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-
-                break;
-            default:
-                ASSERTL0(false,"face value (> 3) is out of range");
-                break;
-                }
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
+            }
+            else
+            {
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+            }
         }
 
-        void TetExp::v_ComputeFaceNormal(const int face)
+
+        /// @todo add functionality for IsUsingQuadMetrics
+        void TetExp::MultiplyByQuadratureMetric(
+                  const Array<OneD, const NekDouble>& inarray,
+                        Array<OneD, NekDouble> &outarray)
         {
-            int i;
-            const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
-            SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
-            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
-            int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-            int vCoordDim = GetCoordim();
+            int i, j;
 
-            m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
-            Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
-            for (i = 0; i < vCoordDim; ++i)
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+            int  nqtot  = nquad0*nquad1*nquad2;
+
+            const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+            const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
+
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                normal[i] = Array<OneD, NekDouble>(nqe);
+                Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
             }
 
-            // Regular geometry case
-            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            // multiply by integration constants
+            for(i = 0; i < nquad1*nquad2; ++i)
             {
-                NekDouble fac;
-                // Set up normals
-                switch(face)
-                {
-                case 0:
-                    for(i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Fill(nqe,-gmat[3*i+2][0],normal[i],1);
-                    }
-                    break;
-                case 1:
-                    for(i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Fill(nqe,-gmat[3*i+1][0],normal[i],1);
-                    }
-                    break;
-                case 2:
-                    for(i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Fill(nqe,gmat[3*i][0]+gmat[3*i+1][0]+gmat[3*i+2][0],normal[i],1);
-                    }
-                    break;
-                case 3:
-                    for(i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Fill(nqe,-gmat[3*i][0],normal[i],1);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"face is out of range (edge < 3)");
-                }
-
-                // normalise
-                fac = 0.0;
-                for(i =0 ; i < vCoordDim; ++i)
-                {
-                    fac += normal[i][0]*normal[i][0];
-                }
-                fac = 1.0/sqrt(fac);
-                for (i = 0; i < vCoordDim; ++i)
-                {
-                    Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
-                }
-
-	    }
-            else   // Set up deformed normals
-            {
-                int j, k;
-
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
-                int nquad2 = geomFactors->GetPointsKey(2).GetNumPoints();
-                int nqtot = nquad0*nquad1;
-
-                LibUtilities::PointsKey points0;
-                LibUtilities::PointsKey points1;
-
-                int nq;
-                Array<OneD,NekDouble> work(nqe,0.0);
-                Array<OneD,NekDouble> normals(vCoordDim*nquad0*nquad1,0.0);
-
-                // Extract Jacobian along face and recover local
-                // derivates (dx/dr) for polynomial interpolation by
-                // multiplying m_gmat by jacobian
-                switch(face)
-	        {
-                case 0:
-                    for(j = 0; j < nquad0*nquad1; ++j)
-                    {
-                        normals[j] = -gmat[2][j]*jac[j];
-                        normals[nqtot+j] = -gmat[5][j]*jac[j];
-                        normals[2*nqtot+j] = -gmat[8][j]*jac[j];
-                    }
-                    points0 = geomFactors->GetPointsKey(0);
-                    points1 = geomFactors->GetPointsKey(1);
-                    nq=points0.GetNumPoints()*points1.GetNumPoints();
-
-                    // interpolate Jacobian and invert
-                    LibUtilities::Interp2D(points0,points1,jac,m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),work);
-                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
-
-                    // interpolate
-                    for(i = 0; i < GetCoordim(); ++i)
-                    {
-                        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&normal[i][0]); 
-                        Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
-                    }
-                    break;
-                case 1:
-		    for (j=0; j< nquad0; ++j)
-                    {
-                        for(k=0; k<nquad2; ++k)
-                        {
-                            normals[j+k*nquad0]  = -gmat[1][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                            normals[nqtot+j+k*nquad0]  = -gmat[4][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                            normals[2*nqtot+j+k*nquad0]  = -gmat[7][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                        } 
-                    }
-                    points0 = geomFactors->GetPointsKey(0);
-                    points1 = geomFactors->GetPointsKey(2);
-                    nq=points0.GetNumPoints()*points1.GetNumPoints();
-
-                    // interpolate Jacobian and invert
-                    LibUtilities::Interp2D(points0,points1,jac,m_base[0]->GetPointsKey(),m_base[2]->GetPointsKey(),work);
-                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
-
-                    // interpolate
-                    for(i = 0; i < GetCoordim(); ++i)
-                    {
-                        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[0]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
-                        Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
-                    }
-                    break;
-                case 2:
-                    for (j=0; j< nquad1; ++j)
-                    {
-                        for(k=0; k<nquad2; ++k)
-                        {
-                            normals[j+k*nquad0]  = (gmat[0][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[1][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                               +gmat[2][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                            normals[nqtot+j+k*nquad0]  = (gmat[3][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[4][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                               +gmat[5][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                            normals[2*nqtot+j+k*nquad0]  = (gmat[6][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[7][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                               +gmat[8][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                        } 
-                    }
-                    points0 = geomFactors->GetPointsKey(1);
-                    points1 = geomFactors->GetPointsKey(2);
-                    nq=points0.GetNumPoints()*points1.GetNumPoints();
-
-                    // interpolate Jacobian and invert
-                    LibUtilities::Interp2D(points0,points1,jac,m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),work);
-                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
-
-                    // interpolate
-                    for(i = 0; i < GetCoordim(); ++i)
-                    {
-                        LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
-                        Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
-                    }
-                    break;                
-                case 3:
-                    for (j=0; j< nquad0; ++j)
-                    {
-                        for(k=0; k<nquad2; ++k)
-                        {
-                            normals[j+k*nquad0]  = -gmat[0][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            normals[nqtot+j+k*nquad0]  = -gmat[3][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            normals[2*nqtot+j+k*nquad0]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                        } 
-                    }
-                    points0 = geomFactors->GetPointsKey(1);
-                    points1 = geomFactors->GetPointsKey(2);
-                    nq=points0.GetNumPoints()*points1.GetNumPoints();
-
-                    // interpolate Jacobian and invert
-                    LibUtilities::Interp2D(points0,points1,jac,m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),work);
-                    Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
-
-                    // interpolate
-                    for(i = 0; i < GetCoordim(); ++i)
-                    {
-                    LibUtilities::Interp2D(points0,points1,&normals[i*nq],m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&normal[i][0]); 
-                    Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"face is out of range (face < 3)");
-                }
-
-                //normalise normal vectors
-                Vmath::Zero(nqe,work,1);
-                for(i = 0; i < GetCoordim(); ++i)
-                {
-                    Vmath::Vvtvp(nqe,normal[i],1, normal[i],1,work,1,work,1);
-                }
-
-                Vmath::Vsqrt(nqe,work,1,work,1);
-                Vmath::Sdiv(nqe,1.0,work,1,work,1);
-
-                for(i = 0; i < GetCoordim(); ++i)
-                {
-                    Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
-                }
+                Vmath::Vmul(nquad0, outarray.get()+i*nquad0,1,
+                            w0.get(),1, outarray.get()+i*nquad0,1);
             }
 
-            /*
-            switch(face)
+            switch(m_base[1]->GetPointsType())
             {
-            case 0:
-                if (GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+            // Legendre inner product.
+            case LibUtilities::eGaussLobattoLegendre:
+
+                for(j = 0; j < nquad2; ++j)
                 {
-                    for (i = 0; i < vCoordDim; ++i)
+                    for(i = 0; i < nquad1; ++i)
                     {
-                        Vmath::Neg(nqe,normal[i],1);                 
+                        Blas::Dscal(nquad0,
+                                    0.5*(1-z1[i])*w1[i],
+                                    &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                    1 );
                     }
                 }
                 break;
-            case 1:
-                if (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+
+            // (1,0) Jacobi Inner product.
+            case LibUtilities::eGaussRadauMAlpha1Beta0:
+                for(i = 0; i < nquad1*nquad2; ++i)
                 {
-                    for (i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Neg(nqe,normal[i],1);                 
-                    }
+                    Vmath::Smul(nquad0, 0.5*w1[i%nquad2], outarray.get()+i*nquad0, 1,
+                                outarray.get()+i*nquad0, 1);
                 }
                 break;
-            case 2:
-                if (GetFaceorient(face) == StdRegions::eDir1BwdDir1_Dir2FwdDir2) 
-                {
-                    for (i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Neg(nqe,normal[i],1);                 
-                    }
-                }
-                break;
-            case 3:
-                if (GetFaceorient(face) == StdRegions::eDir1FwdDir1_Dir2FwdDir2) 
-                {
-                    for (i = 0; i < vCoordDim; ++i)
-                    {
-                        Vmath::Neg(nqe,normal[i],1);                 
-                    }
-                }
-                break;
-            default:
-                ASSERTL0(false,"face value (> 3) is out of range");
-                break;               
             }
-            */
-         }
+
+            switch(m_base[2]->GetPointsType())
+            {
+            // Legendre inner product.
+            case LibUtilities::eGaussLobattoLegendre:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                &outarray[0]+i*nquad0*nquad1,1);
+                }
+                break;
+            // (2,0) Jacobi inner product.
+            case LibUtilities::eGaussRadauMAlpha2Beta0:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Vmath::Smul(nquad0*nquad1, 0.25*w2[i], outarray.get()+i*nquad0*nquad1, 1,
+                                outarray.get()+i*nquad0*nquad1, 1);
+                }
+                break;
+            }
+        }
+
+
     }//end of namespace
 }//end of namespace

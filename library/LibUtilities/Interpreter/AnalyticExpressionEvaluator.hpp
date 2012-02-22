@@ -443,7 +443,7 @@ namespace Nektar
                     E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2,
                     E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,
                     E_FLOOR,  E_LOG,   E_LOG10, E_POW,   E_SIN,
-                    E_SINH,   E_SQRT,  E_TAN,   E_TANH
+                    E_SINH,   E_SQRT,  E_TAN,   E_TANH,  E_SIGN
             };
 
 
@@ -564,6 +564,12 @@ namespace Nektar
                 EvalAbs(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::abs( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::abs( state[argIdx1] ); }
+            };
+            struct EvalSign: public EvaluationStep
+            {
+                EvalSign(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ((state[argIdx1*n+i] > 0.0) - (state[argIdx1*n+i] < 0.0)); }
+                virtual void run_once() { state[storeIdx] = ((state[argIdx1] > 0.0) - (state[argIdx1] < 0.0)); }
             };
             struct EvalAsin: public EvaluationStep
             {

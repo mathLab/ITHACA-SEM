@@ -112,7 +112,11 @@ namespace Nektar
             size_t size;
         };
 
-
+        // signum function
+        double sign(double arg)
+        {
+            return (arg > 0.0) - (arg < 0.0);
+        }
 
         /** This struct creates a parser that matches the function
         definitions from math.h. All of the functions accept one
@@ -140,6 +144,8 @@ namespace Nektar
                     ("sqrt",	sqrt)
                     ("tan",		tan)
                     ("tanh",	tanh)
+                // and one more
+                    ("sign",	sign)
                     ;
             }
         } functions_p;
@@ -253,6 +259,7 @@ namespace Nektar
             m_functionMapNameToInstanceType["sqrt"]  =  E_SQRT;
             m_functionMapNameToInstanceType["tan"]   =  E_TAN;
             m_functionMapNameToInstanceType["tanh"]  =  E_TANH;
+            m_functionMapNameToInstanceType["sign"]  =  E_SIGN;
 
             m_function[ E_ABS  ] = std::abs;
             m_function[ E_ASIN ] = asin;
@@ -271,6 +278,7 @@ namespace Nektar
             m_function[ E_SQRT ] = sqrt;
             m_function[ E_TAN  ] = tan;
             m_function[ E_TANH ] = tanh;
+            m_function[ E_SIGN ] = sign;
         }
 
         AnalyticExpressionEvaluator::~AnalyticExpressionEvaluator(void)
@@ -507,10 +515,14 @@ namespace Nektar
             // initialise internal vector of variable values
             m_state.resize(m_state_sizes[expression_id]);
 
+            if (m_variable.size() < 4)
+            {
+                m_variable.resize(4);
+            }
+
             // no flexibility, no change of variable ordering in m_variable
             // container depending on their names ordering in the input vlist
             // argument of DefineFunction. Ordering convention (x,y,z,t) is assumed.
-            m_variable.resize(4,0.0);
             m_variable[0] = x;
             m_variable[1] = y;
             m_variable[2] = z;
@@ -591,7 +603,7 @@ namespace Nektar
             /// with up to ~0.5Gb data allocated for m_state only.
             /// Lets split the work into cache-sized chunks.
             /// Ahtung, magic constant!
-            const int chunk_size = 1024;
+            const int max_chunk_size = 1024;
             const int num_points = x.num_elements();
 
             if (result.num_elements() != num_points)
@@ -603,8 +615,15 @@ namespace Nektar
             }
 
             /// please don't remove brackets around std::min
-            m_state.resize( m_state_sizes[expression_id] * (std::min)(chunk_size, num_points) );
-            m_variable.resize( 4 * (std::min)(chunk_size, num_points), 0.0);
+            const int chunk_size = (std::min)(max_chunk_size, num_points);
+            if (m_state.size() < chunk_size * m_state_sizes[expression_id] )
+            {
+                m_state.resize( m_state_sizes[expression_id] * chunk_size, 0.0 );
+            }
+            if (m_variable.size() < 4 * chunk_size )
+            {
+                m_variable.resize( 4 * chunk_size, 0.0);
+            }
 
             int offset = 0;
             int work_left = num_points;
@@ -745,7 +764,6 @@ namespace Nektar
                     throw std::runtime_error("Illegal parameter specified: " + valueStr);
                     return std::make_pair(false,0);
                 }
-
                 // Parameters may change in between of evalutions.
                 stack.push_back ( makeStep<StorePrm>( stateIndex, it->second ) );
                 return std::make_pair(false, 0);
@@ -827,6 +845,9 @@ namespace Nektar
                         return std::make_pair(false,0);
                     case E_TANH:
                         stack.push_back ( makeStep<EvalTanh>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_SIGN:
+                        stack.push_back ( makeStep<EvalSign>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     default:
                         throw std::runtime_error("Evaluation of " + valueStr + " is not implemented yet");

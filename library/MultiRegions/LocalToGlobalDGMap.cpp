@@ -915,7 +915,7 @@ namespace Nektar
                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetElementsFromFace(FaceGeom);
 
 						StdRegions::FaceOrientation cur_face_orientation
-							= (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceorient((*con_elmt)[0]->m_FaceIndx);	
+							= (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceOrient((*con_elmt)[0]->m_FaceIndx);	
 
 						switch(cur_face_orientation)
 						{
@@ -977,7 +977,7 @@ namespace Nektar
                         SpatialDomains::ElementFaceVectorSharedPtr con_elmt
                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetElementsFromFace(FaceGeom);
 						StdRegions::FaceOrientation cur_face_orientation
-							= (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceorient((*con_elmt)[0]->m_FaceIndx);	
+							= (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceOrient((*con_elmt)[0]->m_FaceIndx);	
 
 						switch(cur_face_orientation)
 						{

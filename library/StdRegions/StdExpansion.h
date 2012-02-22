@@ -845,9 +845,9 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
-            StdRegions::FaceOrientation GetFaceorient(int face)
+            StdRegions::FaceOrientation GetFaceOrient(int face)
             {
-                return v_GetFaceorient(face);
+                return v_GetFaceOrient(face);
             }
 
             StdRegions::EdgeOrientation GetEorient(int edge)
@@ -1259,7 +1259,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
-            STD_REGIONS_EXPORT virtual StdRegions::FaceOrientation v_GetFaceorient(int face);
+            STD_REGIONS_EXPORT virtual StdRegions::FaceOrientation v_GetFaceOrient(int face);
 
             STD_REGIONS_EXPORT virtual StdRegions::EdgeOrientation v_GetEorient(int edge);
             

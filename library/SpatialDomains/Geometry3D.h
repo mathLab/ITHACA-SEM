@@ -72,7 +72,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::FaceOrientation 
-                GetFaceorient(const int i) const;
+                GetFaceOrient(const int i) const;
             SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
             SPATIAL_DOMAINS_EXPORT Array<OneD,NekDouble> 
                 &UpdatePhys(const int i);
@@ -118,7 +118,7 @@ namespace Nektar
             virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const;
             virtual int                         v_GetEid(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
-            virtual StdRegions::FaceOrientation v_GetFaceorient(const int i) const;
+            virtual StdRegions::FaceOrientation v_GetFaceOrient(const int i) const;
             virtual int                         v_GetFid(int i) const;
             virtual int                         v_GetEid() const;
             virtual Array<OneD,NekDouble>      &v_UpdatePhys(const int i);

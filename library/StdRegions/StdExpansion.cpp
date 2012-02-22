@@ -1053,7 +1053,7 @@ namespace Nektar
             }
 
 
-            StdRegions::FaceOrientation StdExpansion::v_GetFaceorient(int face)
+            StdRegions::FaceOrientation StdExpansion::v_GetFaceOrient(int face)
 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");

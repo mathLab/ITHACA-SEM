@@ -143,9 +143,9 @@ namespace Nektar
                 return v_GetFace(i);
             }
 
-            inline StdRegions::FaceOrientation GetFaceorient(const int i) const
+            inline StdRegions::FaceOrientation GetFaceOrient(const int i) const
             {
-                return v_GetFaceorient(i);
+                return v_GetFaceOrient(i);
             }
                 
             inline const Geometry1DSharedPtr GetEdge(int i) const
@@ -320,7 +320,7 @@ namespace Nektar
                 return returnval;                
             }
 
-            virtual StdRegions::FaceOrientation v_GetFaceorient(const int i) const
+            virtual StdRegions::FaceOrientation v_GetFaceOrient(const int i) const
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
@@ -368,49 +368,3 @@ namespace Nektar
 }; //end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_GEOMETRY2D_H
-
-//
-// $Log: Geometry2D.h,v $
-// Revision 1.9  2008/11/17 09:00:11  ehan
-// Added GetNumVerts and GetNumEdges
-//
-// Revision 1.8  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.7  2008/07/29 22:23:36  sherwin
-// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
-//
-// Revision 1.6  2008/06/16 22:37:32  ehan
-// Added inline function GetFace(..) and GetFaceorient(..).
-//
-// Revision 1.5  2008/05/10 18:27:33  sherwin
-// Modifications necessary for QuadExp Unified DG Solver
-//
-// Revision 1.4  2008/04/06 06:00:37  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.3  2008/04/02 22:19:03  pvos
-// Update for 2D local to global mapping
-//
-// Revision 1.2  2007/06/06 15:15:21  pvos
-// Some minor updates for 2D routines
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.16  2006/04/09 02:08:34  jfrazier
-// Added precompiled header.
-//
-// Revision 1.15  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.14  2006/03/04 20:26:04  bnelson
-// Added comments after #endif.
-//
-// Revision 1.13  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//
-
-

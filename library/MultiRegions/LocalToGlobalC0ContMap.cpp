@@ -789,7 +789,7 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceorient(j);
+                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = locExpansion->GetFaceIntNcoeffs(j);
@@ -2076,7 +2076,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
                     nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
-                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceorient(j);
+                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
                     meshFaceId          = (locExpansion->GetGeom3D())->GetFid(j);
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);

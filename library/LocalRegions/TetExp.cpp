@@ -570,9 +570,9 @@ namespace Nektar
         }
 
 
-        StdRegions::FaceOrientation TetExp::v_GetFaceorient(int face)
+        StdRegions::FaceOrientation TetExp::v_GetFaceOrient(int face)
         {
-            return m_geom->GetFaceorient(face);
+            return m_geom->GetFaceOrient(face);
         }
 
       
@@ -592,7 +592,7 @@ namespace Nektar
             Array<OneD,const NekDouble> e_tmp;
             Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
 
-            StdRegions::FaceOrientation facedir = GetFaceorient(face);
+            StdRegions::FaceOrientation facedir = GetFaceOrient(face);
 
             switch(face)
             {

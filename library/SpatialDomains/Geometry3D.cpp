@@ -111,9 +111,9 @@ namespace Nektar
       /**
        * @brief Return the orientation of face i in this element.
        */
-      StdRegions::FaceOrientation Geometry3D::GetFaceorient(const int i) const
+      StdRegions::FaceOrientation Geometry3D::GetFaceOrient(const int i) const
       {
-          return v_GetFaceorient(i);
+          return v_GetFaceOrient(i);
       }
 
       /**
@@ -339,7 +339,7 @@ namespace Nektar
       /**
        * @brief Return the orientation of face i in this element.
        */
-      StdRegions::FaceOrientation Geometry3D::v_GetFaceorient(const int i) const
+      StdRegions::FaceOrientation Geometry3D::v_GetFaceOrient(const int i) const
       {
           ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
                    "Face ID must be between 0 and "+

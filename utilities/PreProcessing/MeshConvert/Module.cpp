@@ -225,6 +225,9 @@ namespace Nektar
                     else
                     {
                         elmt[i]->SetFace(j,*testIns.first);
+                        // Update face to element map.
+                        (*(testIns.first))->elLink.push_back(
+                            pair<ElementSharedPtr,int>(elmt[i],j));
                     }
                 }
             }
@@ -246,6 +249,14 @@ namespace Nektar
                     abort();
                 }
                 m->element[2][i]->SetFaceLink(*it);
+                
+                // Update 3D element boundary map.
+                ASSERTL0((*it)->elLink.size() == 0, 
+                         "Empty boundary map!");
+                ASSERTL0((*it)->elLink.size() > 1, 
+                         "Too many elements in boundary map!");
+                pair<ElementSharedPtr, int> eMap = (*it)->elLink.at(0);
+                eMap.first->SetBoundaryLink(eMap.second, i);
             }
         }
 

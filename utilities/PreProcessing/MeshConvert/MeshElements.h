@@ -74,6 +74,10 @@ namespace Nektar
             eHexahedron,
             SIZE_ElementType
         };
+
+        class Element;
+        /// Shared pointer to an element.
+        typedef boost::shared_ptr<Element> ElementSharedPtr;
         
         /**
          * @brief Represents a point in the domain.
@@ -410,6 +414,8 @@ namespace Nektar
             std::vector<NodeSharedPtr> faceNodes;
             /// Distribution of points in this face.
             LibUtilities::PointsType   curveType;
+            /// Element(s) which are linked to this face.
+            vector<pair<ElementSharedPtr, int> > elLink; 
             
             SpatialDomains::Geometry2DSharedPtr m_geom;
         };
@@ -579,6 +585,15 @@ namespace Nektar
             void SetFaceLink(FaceSharedPtr pLink) {
                 m_faceLink = pLink;
             }
+            /// Set a correspondence between edge or face i and its
+            /// representative boundary element m->element[expDim-1][j].
+            void SetBoundaryLink(int i, int j) {
+                m_boundaryLinks[i] = j;
+            }
+            /// Get the location of the boundary face/edge i for this element.
+            int GetBoundaryLink(int i) {
+                return m_boundaryLinks[i];
+            }
             /// Set the list of tags associated with this element.
             void SetTagList(const std::vector<int> &tags) {
                 m_taglist = tags;
@@ -634,11 +649,12 @@ namespace Nektar
             EdgeSharedPtr m_edgeLink;
             /// Pointer to the corresponding face if element is a 3D boundary.
             FaceSharedPtr m_faceLink;
+            /// Array mapping faces/edges to the location of the appropriate
+            /// boundary elements in m->element.
+            std::map<int,int> m_boundaryLinks;
             /// Nektar++ geometry object for this element.
             SpatialDomains::GeometrySharedPtr m_geom;
         };
-        /// Shared pointer to an element.
-        typedef boost::shared_ptr<Element> ElementSharedPtr;
         /// Container for elements; key is expansion dimension, value is
         /// vector of elements of that dimension.
         typedef std::map<unsigned int, std::vector<ElementSharedPtr> > ElementMap;
@@ -897,8 +913,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList, 
                 std::vector<int>           pTagList)
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Tetrahedron(pConf, pNodeList, pTagList));
+                vector<FaceSharedPtr> faces = e->GetFaceList();
+                for (int i = 0; i < faces.size(); ++i)
+                {
+                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;
@@ -935,8 +957,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList,
                 std::vector<int>           pTagList)
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Prism(pConf, pNodeList, pTagList));
+                vector<FaceSharedPtr> faces = e->GetFaceList();
+                for (int i = 0; i < faces.size(); ++i)
+                {
+                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;
@@ -973,8 +1001,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList,
                 std::vector<int>           pTagList)
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Hexahedron(pConf, pNodeList, pTagList));
+                vector<FaceSharedPtr> faces = e->GetFaceList();
+                for (int i = 0; i < faces.size(); ++i)
+                {
+                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;

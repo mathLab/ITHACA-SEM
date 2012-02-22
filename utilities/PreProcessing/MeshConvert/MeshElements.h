@@ -593,7 +593,15 @@ namespace Nektar
             }
             /// Get the location of the boundary face/edge i for this element.
             int GetBoundaryLink(int i) {
-                return m_boundaryLinks[i];
+                std::map<int,int>::iterator it = m_boundaryLinks.find(i);
+                if (it == m_boundaryLinks.end())
+                {
+                    return -1;
+                }
+                else
+                {
+                    return it->second;
+                }
             }
             /// Set the list of tags associated with this element.
             void SetTagList(const std::vector<int> &tags) {

@@ -251,9 +251,9 @@ namespace Nektar
                 m->element[2][i]->SetFaceLink(*it);
                 
                 // Update 3D element boundary map.
-                ASSERTL0((*it)->elLink.size() == 0, 
+                ASSERTL0((*it)->elLink.size() != 0, 
                          "Empty boundary map!");
-                ASSERTL0((*it)->elLink.size() > 1, 
+                ASSERTL0((*it)->elLink.size() == 1, 
                          "Too many elements in boundary map!");
                 pair<ElementSharedPtr, int> eMap = (*it)->elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);

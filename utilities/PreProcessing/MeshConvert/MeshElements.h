@@ -75,6 +75,7 @@ namespace Nektar
             SIZE_ElementType
         };
 
+        // Forwards declaration for Element class.
         class Element;
         /// Shared pointer to an element.
         typedef boost::shared_ptr<Element> ElementSharedPtr;
@@ -365,8 +366,8 @@ namespace Nektar
                 return s.str();
             }
 
-            /// Generate either %SpatialDomains::TriGeom or
-            /// %SpatialDomains::QuadGeom for this element.
+            /// Generate either SpatialDomains::TriGeom or
+            /// SpatialDomains::QuadGeom for this element.
             SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
             {
                 if (m_geom)

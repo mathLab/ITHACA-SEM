@@ -60,23 +60,3 @@ namespace Nektar
 
 #endif //NEKTAR_SPATIALDOMAINS_INTERFACECOMPONENT_H
 
-//
-// $Log: InterfaceComponent.h,v $
-// Revision 1.1  2006/05/04 18:59:01  kirby
-// *** empty log message ***
-//
-// Revision 1.7  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.6  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.5  2006/03/04 20:26:04  bnelson
-// Added comments after #endif.
-//
-// Revision 1.4  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

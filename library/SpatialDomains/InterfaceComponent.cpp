@@ -46,23 +46,3 @@ namespace Nektar
     }; //end of namespace
 }; //end of namespace
 
-//
-// $Log: InterfaceComponent.cpp,v $
-// Revision 1.2  2007/03/20 09:17:40  kirby
-//
-// GeomFactors now added; metricinfo used instead of minfo; styles updated
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.5  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.4  2006/03/13 18:20:03  sherwin
-//
-// Fixed error in ResetGmat:
-//
-// Revision 1.3  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

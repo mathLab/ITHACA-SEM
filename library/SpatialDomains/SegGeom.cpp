@@ -56,7 +56,10 @@ namespace Nektar
             m_xmap(coordim)
         {
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(3,
+                                              LibUtilities::eGaussLobattoLegendre
+                                           )
+                                          );
             m_geomShapeType = eSegment;
             m_eid = id;
 
@@ -66,8 +69,10 @@ namespace Nektar
             }
         }
 
-        SegGeom::SegGeom(int id, const int coordim,
-                         const VertexComponentSharedPtr vertex[]):
+        SegGeom::SegGeom(
+                int id,
+                const int coordim,
+                const VertexComponentSharedPtr vertex[]):
             Geometry1D(coordim)
         {
             m_geomShapeType = eSegment;
@@ -77,7 +82,10 @@ namespace Nektar
             if (coordim > 0)
             {
                 const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                                               LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                               LibUtilities::PointsKey(3,
+                                                  LibUtilities::eGaussLobattoLegendre
+                                               )
+                                              );
 
                 m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
@@ -91,9 +99,11 @@ namespace Nektar
             m_verts[1] = vertex[1];
         }
 
-        SegGeom::SegGeom(int id, const int coordim,
-                         const VertexComponentSharedPtr vertex[],
-                         const CurveSharedPtr &curve):
+        SegGeom::SegGeom(
+                int id,
+                const int coordim,
+                const VertexComponentSharedPtr vertex[],
+                const CurveSharedPtr& curve):
             Geometry1D(coordim)
         {
             m_geomShapeType = eSegment;
@@ -159,8 +169,10 @@ namespace Nektar
         }
 
 
-        SegGeom::SegGeom(const int id, const VertexComponentSharedPtr vert1,
-                         const VertexComponentSharedPtr  vert2):
+        SegGeom::SegGeom(
+                const int id,
+                const VertexComponentSharedPtr& vert1,
+                const VertexComponentSharedPtr& vert2):
             Geometry1D(vert1->GetCoordim()), m_xmap(vert1->GetCoordim())
         {
             m_geomShapeType = eSegment;
@@ -171,7 +183,10 @@ namespace Nektar
             m_state = eNotFilled;
 
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(3,
+                                              LibUtilities::eGaussLobattoLegendre
+                                           )
+                                          );
             m_eid = id;
 
             for(int i = 0; i < m_coordim; ++i)
@@ -206,11 +221,14 @@ namespace Nektar
         {
         }
 
-        /** given local collapsed coordinate Lcoord return the value of
-        physical coordinate in direction i **/
 
-        NekDouble SegGeom::GetCoord(const int i,
-									const Array<OneD, const NekDouble> &Lcoord)
+
+
+        /** given local collapsed coordinate Lcoord return the value of
+            physical coordinate in direction i **/
+        NekDouble SegGeom::v_GetCoord(
+                const int i,
+                const Array<OneD, const NekDouble>& Lcoord)
         {
 
             ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
@@ -218,20 +236,18 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
-        void SegGeom::AddElmtConnected(int gvo_id, int locid)
+        void SegGeom::v_AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
             m_elmtMap.push_back(ee);
         }
 
-
-        int SegGeom::NumElmtConnected() const
+        int SegGeom::v_NumElmtConnected() const
         {
             return int(m_elmtMap.size());
         }
 
-
-        bool SegGeom::IsElmtConnected(int gvo_id, int locid) const
+        bool SegGeom::v_IsElmtConnected(int gvo_id, int locid) const
         {
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
@@ -247,20 +263,26 @@ namespace Nektar
             return(false);
         }
 
-        /// \brief Get the orientation of edge1.
-        ///
-        /// If edge1 is connected to edge2 in the same direction as
-        /// the points comprising edge1 then it is forward, otherwise
-        /// it is backward.
-        ///
-        /// For example, assume edge1 is comprised of points 1 and 2,
-        /// and edge2 is comprised of points 2 and 3, then edge1 is
-        /// forward.
-        ///
-        /// If edge1 is comprised of points 2 and 1 and edge2 is
-        /// comprised of points 3 and 2, then edge1 is backward.
 
-        StdRegions::EdgeOrientation SegGeom::GetEdgeOrientation(const SegGeom &edge1,  const SegGeom &edge2)
+
+        ///  \brief Get the orientation of edge1.
+        ///
+        ///  If edge1 is connected to edge2 in the same direction as
+        ///  the points comprising edge1 then it is forward, otherwise
+        ///  it is backward.
+        ///
+        ///  For example, assume edge1 is comprised of points 1 and 2,
+        ///  and edge2 is comprised of points 2 and 3, then edge1 is
+        ///  forward.
+        ///
+        ///  If edge1 is comprised of points 2 and 1 and edge2 is
+        ///  comprised of points 3 and 2, then edge1 is backward.
+        ///
+        ///  Since both edges are passed, it does
+        ///  not need any information from the EdgeComponent instance.
+        StdRegions::EdgeOrientation SegGeom::GetEdgeOrientation(
+                const SegGeom& edge1,
+                const SegGeom& edge2)
         {
             StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
 
@@ -283,27 +305,28 @@ namespace Nektar
             return returnval;
         }
 
-        // Set up GeoFac for this geometry using Coord quadrature distribution
-        void SegGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        ///  Set up GeoFac for this geometry using Coord quadrature distribution
+        void SegGeom::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
         {
             SpatialDomains::GeomType gType = eRegular;
             const SpatialDomains::GeomType kDeformedType = eDeformed;
 
-            FillGeom();
+            SegGeom::v_FillGeom();
 
             if(m_xmap[0]->GetBasisNumModes(0)!=2)
             {
                 gType = eDeformed;
             }
 
-            m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType, m_coordim, m_xmap, tbasis);
+            m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType,
+                                                         m_coordim, m_xmap, tbasis);
         }
 
 
-        /** \brief put all quadrature information into edge structure and
-            backward transform */
-
-        void SegGeom::FillGeom()
+        ///  \brief put all quadrature information into edge structure and
+        ///    backward transform
+        void SegGeom::v_FillGeom()
         {
             if(m_state != ePtsFilled)
             {
@@ -318,11 +341,13 @@ namespace Nektar
             }
         }
 
-        void SegGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        void SegGeom::v_GetLocCoords(
+                const Array<OneD, const NekDouble>& coords,
+                      Array<OneD,NekDouble>& Lcoords)
         {
             int i;
 
-            FillGeom();
+            SegGeom::v_FillGeom();
 
             // calculate local coordinate for coord
             if(GetGtype() == eRegular)
@@ -354,14 +379,14 @@ namespace Nektar
             }
         }
 
-        void SegGeom::WriteToFile(std::ofstream &outfile, const int dumpVar)
+        void SegGeom::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
         {
 
             int i,j;
             int  nquad = m_xmap[0]->GetNumPoints(0);
             double *coords[3];
 
-            FillGeom();
+            SegGeom::v_FillGeom();
 
             for(i = 0; i < m_coordim; ++i)
             {
@@ -393,7 +418,9 @@ namespace Nektar
             }
         }
 
-        bool SegGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        bool SegGeom::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                NekDouble tol)
         {
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
@@ -403,126 +430,97 @@ namespace Nektar
             }
             return false;
         }
+
+        int SegGeom::v_GetVid(int i) const
+        {
+            ASSERTL2((i >=0) && (i <= 1),"Verted id must be between 0 and 1");
+            return m_verts[i]->GetVid();
+        }
+
+        VertexComponentSharedPtr SegGeom::v_GetVertex(const int i) const
+        {
+            VertexComponentSharedPtr returnval;
+
+            if (i >= 0 && i < kNverts)
+            {
+                returnval = m_verts[i];
+            }
+
+            return returnval;
+        }
+
+        int SegGeom::v_GetEid() const
+        {
+            return m_eid;
+        }
+
+        const LibUtilities::BasisSharedPtr SegGeom::v_GetBasis(
+                const int i,
+                const int j)
+        {
+            return m_xmap[i]->GetBasis(j);
+        }
+
+        StdRegions::StdExpansion1DSharedPtr SegGeom::operator[](const int i) const
+        {
+            if((i>=0)&& (i<m_coordim))
+            {
+                return m_xmap[i];
+            }
+
+            NEKERROR(ErrorUtil::efatal, "Invalid Index used in [] operator");
+            return m_xmap[0]; //should never be reached
+        }
+
+        const StdRegions::StdExpansion1DSharedPtr& SegGeom::v_GetXmap(const int i)
+        {
+            return m_xmap[i];
+        }
+
+        void SegGeom::v_SetOwnData()
+        {
+            m_ownData = true;
+        }
+
+        Nektar::Array<OneD, NekDouble>& SegGeom::v_UpdatePhys(const int i)
+        {
+            return m_xmap[i]->UpdatePhys();
+        }
+
+        StdRegions::PointOrientation SegGeom::v_GetPorient(const int i) const
+        {
+            //cout << "StdRegions::PointOrientation GetPorient"<<endl;
+            ASSERTL2((i >=0) && (i <= 1),"Point id must be between 0 and 1");
+
+            if (i%2==0)
+            {
+                return StdRegions::eBwd;
+            }
+            else 
+            {
+                return StdRegions::eFwd;
+            }
+
+            //return m_porient[i];
+        }
+
+
+        StdRegions::ExpansionType SegGeom::v_DetExpansionType() const
+        {
+            return StdRegions::eSegment;
+        }
+
+        int SegGeom::v_GetNumVerts() const
+        {
+            return kNverts;
+        }
+
+        int SegGeom::v_GetNumEdges() const
+        {
+            return kNedges;
+        }
+
+
     }; //end of namespace
 }; //end of namespace
 
-//
-// $Log: SegGeom.cpp,v $
-// Revision 1.27  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.26  2009/07/02 13:32:24  sehunchun
-// *** empty log message ***
-//
-// Revision 1.25  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.24  2008/12/18 14:08:59  pvos
-// NekConstants update
-//
-// Revision 1.23  2008/09/09 14:22:39  sherwin
-// Added curved segment constructor methods
-//
-// Revision 1.22  2008/06/11 21:34:42  delisi
-// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
-//
-// Revision 1.21  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.20  2008/04/06 06:00:38  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.19  2008/01/21 19:58:14  sherwin
-// Updated so that QuadGeom and TriGeom have SegGeoms instead of EdgeComponents
-//
-// Revision 1.18  2007/07/27 21:08:30  jfrazier
-// Removed use of temporary in call to memory manager allocate.
-//
-// Revision 1.17  2007/07/20 02:15:09  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.16  2007/06/06 15:15:21  pvos
-// Some minor updates for 2D routines
-//
-// Revision 1.15  2007/06/06 11:29:31  pvos
-// Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
-//
-// Revision 1.14  2007/05/28 21:48:42  sherwin
-// Update for 2D functionality
-//
-// Revision 1.13  2007/05/17 18:45:25  jfrazier
-// Minor changes to accommodate Array class.
-//
-// Revision 1.12  2007/04/04 21:49:24  sherwin
-// Update for SharedArray
-//
-// Revision 1.11  2007/03/29 19:26:36  bnelson
-// *** empty log message ***
-//
-// Revision 1.10  2007/03/25 15:48:22  sherwin
-// UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
-//
-// Revision 1.9  2007/03/20 09:17:40  kirby
-//
-// GeomFactors now added; metricinfo used instead of minfo; styles updated
-//
-// Revision 1.8  2007/03/14 21:24:08  sherwin
-// Update for working version of MultiRegions up to ExpList1D
-//
-// Revision 1.7  2007/02/19 08:06:25  sherwin
-// Modified files to be consistent with new StdRegions prototypes and turned off 2D & 3D Calls.
-//
-// Revision 1.6  2006/06/01 14:15:30  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.5  2006/05/30 14:00:04  sherwin
-// Updates to make MultiRegions and its Demos work
-//
-// Revision 1.4  2006/05/16 20:12:59  jfrazier
-// Minor fixes to correct bugs.
-//
-// Revision 1.3  2006/05/09 13:37:01  jfrazier
-// Removed duplicate definition of shared vertex pointer.
-//
-// Revision 1.2  2006/05/06 20:36:16  sherwin
-// Modifications to get LocalRegions/Project1D working
-//
-// Revision 1.1  2006/05/04 18:59:04  kirby
-// *** empty log message ***
-//
-// Revision 1.26  2006/05/02 21:21:11  sherwin
-// Corrected libraries to compile new version of spatialdomains and demo Graph1D
-//
-// Revision 1.25  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.24  2006/04/04 23:12:38  jfrazier
-// More updates to readers.  Still work to do on MeshGraph2D to store tris and quads.
-//
-// Revision 1.23  2006/03/13 19:47:54  sherwin
-//
-// Fixed bug related to constructor of GeoFac and also makde arguments to GeoFac all consts
-//
-// Revision 1.22  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.21  2006/03/12 11:06:40  sherwin
-//
-// First complete copy of code standard code but still not compile tested
-//
-// Revision 1.20  2006/02/26 21:19:43  bnelson
-// Fixed a variety of compiler errors caused by updates to the coding standard.
-//
-// Revision 1.19  2006/02/19 01:37:34  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

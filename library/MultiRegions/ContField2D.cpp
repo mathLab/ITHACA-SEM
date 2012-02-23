@@ -752,16 +752,17 @@ namespace Nektar
             // be consistent with matrix definition
             Vmath::Neg(m_contNcoeffs, wsp, 1);
 
-            // Forcing function with weak boundary conditions
+            // Fill weak boundary conditions
             int i,j;
             int bndcnt=0;
+            Array<OneD, NekDouble> gamma(m_contNcoeffs, 0.0);
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                     {
-                        wsp[m_locToGloMap
+                        gamma[m_locToGloMap
                             ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
                             += (m_bndCondExpansions[i]->GetCoeffs())[j];
                     }
@@ -771,6 +772,10 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
+            m_locToGloMap->UniversalAssemble(gamma);
+
+            // Add weak boundary conditions to forcing
+            Vmath::Vadd(m_contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,varcoeff);
 

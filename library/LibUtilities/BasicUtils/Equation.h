@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  Wrapper to ExpressionEvaluator class.
+//  Description:  Wrapper to AnalyticExpressionEvaluator class.
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,23 +42,31 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <loki/Singleton.h>
+
 namespace Nektar
 {
     namespace LibUtilities
     {
         class Equation
         {
+        typedef Loki::SingletonHolder<LibUtilities::AnalyticExpressionEvaluator, Loki::CreateStatic, Loki::DefaultLifetime> SingleExpressionEvaluator;
+
+
         public: 
             Equation(const Equation &src):
-              m_expr   (src.m_expr),
-              m_expr_id(src.m_expr_id)
+              m_expr     (src.m_expr),
+              m_expr_id  (src.m_expr_id),
+              m_evaluator(src.m_evaluator)
             {
             }
 
             Equation(const std::string& expr = ""):
               m_expr(expr),
-              m_expr_id(-1)
+              m_expr_id(-1),
+              m_evaluator(SingleExpressionEvaluator::Instance())
             {
+
                 try
                 {
                     if (!expr.empty())
@@ -149,14 +157,14 @@ namespace Nektar
                 return 0;
             }
 
-            void Evaluate(
-                    const Array<OneD, const NekDouble>& x,
-                    const Array<OneD, const NekDouble>& y,
-                    Array<OneD, NekDouble>& result)
-            {
-                Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
-                Evaluate(x,y,zero,zero, result);
-            }
+//            void Evaluate(
+//                    const Array<OneD, const NekDouble>& x,
+//                    const Array<OneD, const NekDouble>& y,
+//                    Array<OneD, NekDouble>& result)
+//            {
+//                Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
+//                Evaluate(x,y,zero,zero, result);
+//            }
 
             void Evaluate(
                     const Array<OneD, const NekDouble>& x,
@@ -208,12 +216,17 @@ namespace Nektar
                 }
             }
 
-            static void SetConstParameters(const std::map<std::string, NekDouble> &constants)
+            void SetParameter(const std::string& name, double value)
+            {
+                m_evaluator.SetParameter(name, value);
+            }
+
+            void SetConstants(const std::map<std::string, NekDouble> &constants)
             {
                 m_evaluator.AddConstants(constants);
             }
 
-            std::string GetEquation(void) const
+            std::string GetExpression(void) const
             {
               return m_expr;
             }
@@ -226,7 +239,7 @@ namespace Nektar
         private:
             std::string  m_expr;
             int          m_expr_id;
-            LIB_UTILITIES_EXPORT static LibUtilities::AnalyticExpressionEvaluator m_evaluator;
+            LIB_UTILITIES_EXPORT LibUtilities::AnalyticExpressionEvaluator& m_evaluator;
         };
 
         typedef boost::shared_ptr<Equation> EquationSharedPtr;

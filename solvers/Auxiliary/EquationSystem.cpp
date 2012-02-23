@@ -952,7 +952,7 @@ namespace Nektar
                     if (m_session->GetComm()->GetRank() == 0)
                     {
                         cout << "\tField "<< m_session->GetVariable(i)
-                             <<": " << ifunc->GetEquation() << endl;
+                             <<": " << ifunc->GetExpression() << endl;
                     }
                 }
             }

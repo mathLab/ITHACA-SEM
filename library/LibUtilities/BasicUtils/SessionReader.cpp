@@ -1011,8 +1011,7 @@ namespace Nektar
             if (parametersElement)
             {
                 TiXmlElement *parameter = parametersElement->FirstChildElement("P");
-                LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-                //LibUtilities::ExpressionEvaluator expEvaluator;
+
                 ParameterMap caseSensitiveParameters;
 
                 // Multiple nodes will only occur if there is a comment in between
@@ -1065,13 +1064,14 @@ namespace Nektar
                             NekDouble value=0.0;
                             try
                             {
-                                int expr_id = expEvaluator.DefineFunction("", rhs);
-                                value = expEvaluator.Evaluate(expr_id);
+                                LibUtilities::Equation expEvaluator(rhs);
+                                value = expEvaluator.Evaluate();
                             }
                             catch (const std::runtime_error &)
                             {
                                 ASSERTL0(false, "Error evaluating parameter expression '" + rhs + "'." );
                             }
+                            LibUtilities::Equation expEvaluator;
                             expEvaluator.SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
@@ -1085,7 +1085,9 @@ namespace Nektar
                 try
                 {
                     // Set ourselves up for evaluation later.
-                    Equation::SetConstParameters(caseSensitiveParameters);
+
+                    LibUtilities::Equation expEvaluator;
+                    expEvaluator.SetConstants(caseSensitiveParameters);
                 }
                 catch (const std::runtime_error&)
                 {

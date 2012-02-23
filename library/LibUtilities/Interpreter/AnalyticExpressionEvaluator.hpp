@@ -39,6 +39,7 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <loki/Singleton.h>
 
 #include <boost/version.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -99,6 +100,8 @@ namespace Nektar
         private:
 
             struct EvaluationStep;
+
+            template <typename T> friend class Loki::CreateStatic;
 
         public:
 

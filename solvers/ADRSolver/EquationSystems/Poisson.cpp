@@ -64,7 +64,7 @@ namespace Nektar
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
             out << "\tForcing func [" << i << "]: "
-                << m_session->GetFunction("Forcing", i)->GetEquation() << endl;
+                << m_session->GetFunction("Forcing", i)->GetExpression() << endl;
         }
     }
 

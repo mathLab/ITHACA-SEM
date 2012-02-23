@@ -677,15 +677,15 @@ namespace Nektar
         cout << endl;
 		cout << "Expansion                   : " << LibUtilities::BasisTypeMap[bkey0.GetBasisType()]<< endl;
 		cout << "No. modes                   : " << bkey0.GetNumModes()                             << endl;
-		cout << "Advection                   : " << AdveFunc->GetEquation()                         << endl;
+		cout << "Advection                   : " << AdveFunc->GetExpression()                         << endl;
 	
         cout << endl;
 		cout << "Time Step                   : " << TimeStep               << endl;
 		cout << "Number of Steps             : " << NumSteps               << endl;
-		cout << "Initial Condition           : " << InitCond->GetEquation()<< endl;
+		cout << "Initial Condition           : " << InitCond->GetExpression()<< endl;
 
 		cout << endl;
-		cout << "Exact Solution              : " << ExSol->GetEquation()    << endl;
+		cout << "Exact Solution              : " << ExSol->GetExpression()    << endl;
 		cout << "Linf error                  : " << setprecision(16) << L2  << endl;
 		cout << "L2   error                  : " << setprecision(16) << Linf<< endl;
 	}

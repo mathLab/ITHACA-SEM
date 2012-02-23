@@ -267,8 +267,8 @@ namespace Nektar
             m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                     m_fields[i]->UpdateCoeffs());
             cout << "\tField " << m_session->GetVariable(i)
-                 << ": " << ifunc1->GetEquation()
-                 << ": " << ifunc2->GetEquation() << endl;
+                 << ": " << ifunc1->GetExpression()
+                 << ": " << ifunc2->GetExpression() << endl;
         }
 
         if(dumpInitialConditions)

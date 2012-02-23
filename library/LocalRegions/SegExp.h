@@ -42,7 +42,6 @@
 #include <SpatialDomains/SegGeom.h>
 
 #include <SpatialDomains/GeomFactors1D.h>
-
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion1D.h>
@@ -59,12 +58,86 @@ namespace Nektar
         {
 
         public:
-            LOCAL_REGIONS_EXPORT SegExp(const LibUtilities::BasisKey &Ba,
-                   const SpatialDomains::Geometry1DSharedPtr &geom);
+            LOCAL_REGIONS_EXPORT SegExp(
+                    const LibUtilities::BasisKey &Ba,
+                    const SpatialDomains::Geometry1DSharedPtr &geom);
 
             LOCAL_REGIONS_EXPORT SegExp(const SegExp &S);
 
             LOCAL_REGIONS_EXPORT ~SegExp();
+
+        protected:
+            //----------------------------
+            // Integration Methods
+            //----------------------------
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
+                    const Array<OneD, const NekDouble>& inarray);
+
+            //-----------------------------
+            // Differentiation Methods
+            //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD,NekDouble> &out_d0,
+                          Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
+                          Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv_s(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &out_ds);
+
+            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv_n(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble>& out_dn);
+
+            //-----------------------------
+            // Transforms
+            //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual void v_FwdTrans(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD,NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
+            //-----------------------------
+            // Inner product functions
+            //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& base,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          int coll_check);
+
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
+                    const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> & outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const NekDouble> &Fx,
+                    const Array<OneD, const NekDouble> &Fy,
+                          Array< OneD, NekDouble> &outarray,
+                          bool NegateNormal = false);
+
+            //-----------------------------
+            // Evaluation functions
+            //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+                    const Array<OneD, const NekDouble>& coord);
+
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+                    const Array<OneD, const NekDouble>& coord,
+                    const Array<OneD, const NekDouble> & physvals);
 
             LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
                     Array<OneD,NekDouble> &coords_1,
@@ -73,7 +146,16 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                     const Array<OneD, const NekDouble>& Lcoords,
-                    Array<OneD,NekDouble> &coords);
+                          Array<OneD,NekDouble> &coords);
+
+            //-----------------------------
+            // Helper functions
+            //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual void v_WriteToFile(
+                          std::ofstream &outfile,
+                          OutputFormat format,
+                    const bool dumpVar = true,
+                          std::string var = "v");
 
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
@@ -86,200 +168,118 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual const
                     SpatialDomains::Geometry1DSharedPtr& v_GetGeom1D() const;
 
-            LOCAL_REGIONS_EXPORT virtual void v_WriteToFile(
-                    std::ofstream &outfile,
-                    OutputFormat format,
-                    const bool dumpVar = true,
-                    std::string var = "v");
-
-
-            //----------------------------
-            // Integration Methods
-            //----------------------------
-
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
-                    const Array<OneD, const NekDouble>& inarray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
-                    const int dir,
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> & outarray);
-
-            //-----------------------------
-            // Differentiation Methods
-            //-----------------------------
-
-
-            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD,NekDouble> &out_d0,
-                    Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
-                    Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir,
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv_s(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &out_ds);
-
-            LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv_n(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble>& out_dn);
-
-
-            //----------------------------
-            // Evaluations Methods
-            //---------------------------
-
-            LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
-                    StdRegions::EdgeOrientation dir);
+            LOCAL_REGIONS_EXPORT virtual void 
+                    v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
 
             LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
                     StdRegions::EdgeOrientation dir,
                     Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
-            /** \brief Forward transform from physical quadrature space
-                stored in \a inarray and evaluate the expansion coefficients and
-                store in \a (this)->_coeffs  */
-            LOCAL_REGIONS_EXPORT virtual void v_FwdTrans(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(const int dir) const;
 
-            LOCAL_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual int v_GetNcoeffs(void) const;
 
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& coord);
+            LOCAL_REGIONS_EXPORT virtual const
+                    LibUtilities::BasisSharedPtr&  v_GetBasis(int dir) const;
 
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& coord,
-                    const Array<OneD, const NekDouble> & physvals);
+            LOCAL_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
 
-            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
 
-            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray,
-                    const double lambda);
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
 
-        protected:
+            LOCAL_REGIONS_EXPORT virtual StdRegions::PointOrientation v_GetPorient(int point);
 
-            SpatialDomains::Geometry1DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess>
-                    m_matrixManager;
-            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess>
-                    m_staticCondMatrixManager;
-
-
-            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
-                    const StdRegions::StdMatrixKey &mkey);
-
-            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& base,
-                    const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD, NekDouble> &outarray,
-                    int coll_check);
-
-            LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionSharedPtr &exp2D,
-                    const int edge);
-
-            LOCAL_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>&
-                    v_GetPhysNormals(void);
-
-            LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType
-                    v_MetricInfoType();
-
-            LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
-                    const Array<OneD, const NekDouble>   &Fx,
-                    const Array<OneD, const NekDouble> &Fy,
-                    Array< OneD, NekDouble> &outarray,
-                    bool NegateNormal = false);
-
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_Linf(
-                    const Array<OneD, const NekDouble>& sol);
-
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_Linf();
-
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_L2(
-                    const Array<OneD, const NekDouble>& sol);
-
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_L2();
-
-            LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr& v_GetLocMatrix(
-                    const MatrixKey &mkey);
-
-            LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr&
-                    v_GetLocStaticCondMatrix(const MatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                     const std::vector<NekDouble> &data,
                     const int offset,
                     const std::vector<unsigned int > &nummodes,
                     const int nmode_offset,
-                    Array<OneD, NekDouble> &coeffs);
+                          Array<OneD, NekDouble> &coeffs);
 
-            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(
-                    const StdRegions::StdMatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
+                    const StdRegions::StdExpansionSharedPtr &exp2D,
+                    const int edge);
+
+            LOCAL_REGIONS_EXPORT virtual const
+                    Array<OneD, const NekDouble>&  v_GetPhysNormals(void);
+
+            LOCAL_REGIONS_EXPORT virtual NekDouble
+                    v_Linf(const Array<OneD, const NekDouble>& sol);
+
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_Linf();
+
+            LOCAL_REGIONS_EXPORT virtual NekDouble
+                    v_L2(const Array<OneD, const NekDouble>& sol);
+
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_L2();
+
+            //-----------------------------
+            // Operator creation functions
+            //-----------------------------
+            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray,
+                    const double lambda);
+
+            //-----------------------------
+            // Matrix creation functions
+            //-----------------------------
+
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr
+                    v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr CreateMatrix(const MatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr
+                    v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(
+                    const MatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr&
+                    v_GetLocMatrix(const MatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr&
+                    v_GetLocStaticCondMatrix(const MatrixKey &mkey);
 
 
         private:
+            SpatialDomains::Geometry1DSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess>
+                    m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess>
+                    m_staticCondMatrixManager;
+
             SegExp();
 
             LOCAL_REGIONS_EXPORT void ReverseCoeffsAndSign(
                     const Array<OneD,NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray);
+                          Array<OneD,NekDouble> &outarray);
 
-            /** \brief Inverse Matrix Product */
             LOCAL_REGIONS_EXPORT void MultiplyByElmtInvMass(
                     const Array<OneD, const NekDouble>& inarray,
-                    Array<OneD,NekDouble> &outarray);
-
-            DNekScalMatSharedPtr     CreateMatrix(const MatrixKey &mkey);
-
-            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(
-                    const MatrixKey &mkey);
-
-
-            LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(const int dir) const;
-
-            LOCAL_REGIONS_EXPORT virtual int v_GetNcoeffs(void) const;
-
-            LOCAL_REGIONS_EXPORT virtual const LibUtilities::BasisSharedPtr&
-                    v_GetBasis(int dir) const;
-
-            LOCAL_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
-
-            LOCAL_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
-			
-			void v_ComputeVertexNormal(const int vertex);
-			
-			virtual StdRegions::PointOrientation v_GetPorient(int point)
-            {
-                return m_geom->GetPorient(point);
-            }
+                          Array<OneD,NekDouble> &outarray);
 
         };
-		
-		// type defines for use of SegExp in a boost vector
+
+        // type defines for use of SegExp in a boost vector
         typedef boost::shared_ptr<SegExp>      SegExpSharedPtr;
         typedef std::vector< SegExpSharedPtr > SegExpVector;
         typedef std::vector< SegExpSharedPtr >::iterator SegExpVectorIter;
-		
+
 
     } //end of namespace
 } //end of namespace
 
 #endif // SEGEXP_H
-

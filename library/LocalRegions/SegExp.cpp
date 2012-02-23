@@ -41,6 +41,12 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
+
+        /**
+         * @class SegExp
+         * Defines a Segment local expansion.
+         */
+
         /// Constructor using BasisKey class for quadrature points and
         /// order definition.
         /**
@@ -103,9 +109,9 @@ namespace Nektar
             = u(\xi_{1i}) \f$
         */
 
-        NekDouble SegExp::v_Integral(const Array<OneD, const NekDouble>&  inarray)
+        NekDouble SegExp::v_Integral(
+                const Array<OneD, const NekDouble>&  inarray)
         {
-
             int    nquad0 = m_base[0]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble  ival;
@@ -128,299 +134,7 @@ namespace Nektar
         }
 
 
-        /** \brief  Inner product of \a inarray over region with respect to
-            the expansion basis (this)->_Base[0] and return in \a outarray
-
-            Wrapper call to SegExp::IProduct_WRT_B
-
-            Input:\n
-
-            - \a inarray: array of function evaluated at the physical
-            collocation points
-
-            Output:\n
-
-            - \a outarray: array of inner product with respect to each
-            basis over region
-        */
-        void SegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                             Array<OneD, NekDouble> &outarray)
-        {
-            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
-        }
-
-
-        /**
-           \brief  Inner product of \a inarray over region with respect to
-           expansion basis \a base and return in \a outarray
-
-           Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
-           = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
-           \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
-           \phi_p(\xi_{1i}) \f$.
-
-           Inputs: \n
-
-           - \a base: an array definiing the local basis for the inner
-           product usually passed from Basis->get_bdata() or
-           Basis->get_Dbdata()
-           - \a inarray: physical point array of function to be integrated
-           \f$ u(\xi_1) \f$
-           - \a coll_check: Flag to identify when a Basis->collocation()
-           call should be performed to see if this is a GLL_Lagrange basis
-           with a collocation property. (should be set to 0 if taking the
-           inner product with respect to the derivative of basis)
-
-           Output: \n
-
-           - \a outarray: array of coefficients representing the inner
-           product of function with ever  mode in the exapnsion
-
-        **/
-        void SegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base,
-                                     const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &outarray, 
-                                     int coll_check)
-        {
-            int   nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0);
-
-
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0, jac, 1, inarray, 1, tmp, 1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0, jac[0], inarray, 1, tmp, 1);
-            }
-            StdSegExp::v_IProductWRTBase(base,tmp,outarray,coll_check);
-        }
-
-
-        void SegExp::v_IProductWRTDerivBase(const int dir, 
-                                          const Array<OneD, const NekDouble>& inarray, 
-                                          Array<OneD, NekDouble> & outarray)
-        {
-            int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-
-            Array<OneD, NekDouble> tmp1(nquad);
-
-            switch(dir)
-            {
-            case 0:
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nquad,gmat[0],1,inarray,1,tmp1,1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nquad, gmat[0][0], inarray, 1, tmp1, 1);
-                    }
-                }
-                break;
-            case 1:
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nquad,gmat[1],1,inarray,1,tmp1,1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nquad, gmat[1][0], inarray, 1, tmp1, 1);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nquad,gmat[2],1,inarray,1,tmp1,1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nquad, gmat[2][0], inarray, 1, tmp1, 1);
-                    }
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(false,"input dir is out of range");
-                }
-                break;
-            }
-            v_IProductWRTBase(m_base[0]->GetDbdata(),tmp1,outarray,1);
-        }
-
-        void SegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,NekDouble> &outarray)
-        {
-            int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-
-            Array<OneD,NekDouble> physValues(nquad);
-            Array<OneD,NekDouble> dPhysValuesdx(nquad);
-
-            BwdTrans(inarray,physValues);
-
-            // Laplacian matrix operation
-            switch(m_geom->GetCoordim())
-            {
-            case 1:
-                {
-                    PhysDeriv(physValues,dPhysValuesdx);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                    }
-                    else
-                    {
-                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
-
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                    }
-                    else
-                    {
-                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
-                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
-                    }
-                }
-                break;
-            case 3:
-                {
-                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
-                    Array<OneD,NekDouble> dPhysValuesdz(nquad);
-
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz); 
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                        Vmath::Vvtvp(nquad,&gmat[2][0],1,dPhysValuesdz.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                    }
-                    else
-                    {
-                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
-                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
-                        Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
-                    }  
-                }
-                break;
-            default:
-                ASSERTL0(false,"Wrong number of dimensions");
-                break;
-            }
-
-            v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
-        }
-
-
-        void SegExp::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,NekDouble> &outarray,
-                                       const double lambda)
-        {
-            int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-
-            Array<OneD,NekDouble> physValues(nquad);
-            Array<OneD,NekDouble> dPhysValuesdx(nquad);
-            Array<OneD,NekDouble> wsp(m_ncoeffs);
-
-            BwdTrans(inarray,physValues);
-
-            // mass matrix operation
-            v_IProductWRTBase((m_base[0]->GetBdata()),physValues,wsp,1);
-
-            // Laplacian matrix operation
-            switch(m_geom->GetCoordim())
-            {
-            case 1:
-                {
-                    PhysDeriv(physValues,dPhysValuesdx);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                    }
-                    else
-                    {
-                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
-
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                    }
-                    else
-                    {
-                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
-                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
-                    }
-                }
-                break;
-            case 3:
-                {
-                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
-                    Array<OneD,NekDouble> dPhysValuesdz(nquad);
-
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz); 
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                        Vmath::Vvtvp(nquad,&gmat[2][0],1,dPhysValuesdz.get(),1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
-                    }
-                    else
-                    {
-                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
-                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
-                        Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
-                    }  
-                }
-                break;
-            default:
-                ASSERTL0(false,"Wrong number of dimensions");
-                break;
-            }
-
-            v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
-        }
-
-        //----------------------------
+        //-----------------------------
         // Differentiation Methods
         //-----------------------------
 
@@ -444,10 +158,11 @@ namespace Nektar
             du/d_{\xi_1}|_{\xi_{1i}} d\xi_1/dz, 
             \f$ depending on value of \a dim
         */
-        void SegExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                               Array<OneD,NekDouble> &out_d0,
-                               Array<OneD,NekDouble> &out_d1,
-                               Array<OneD,NekDouble> &out_d2)
+        void SegExp::v_PhysDeriv(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,NekDouble> &out_d0,
+                      Array<OneD,NekDouble> &out_d1,
+                      Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
@@ -498,24 +213,26 @@ namespace Nektar
         }
 
         /**
-        *\brief Evaluate the derivative along a line: \f$ d/ds=\frac{spacedim}{||tangent||}d/d{\xi}  \f$.
+        *\brief Evaluate the derivative along a line:
+        * \f$ d/ds=\frac{spacedim}{||tangent||}d/d{\xi}  \f$.
         * The derivative is calculated performing
         *the product \f$ du/d{s}=\nabla u \cdot tangent \f$.
         *\param inarray function to derive
         *\param out_ds result of the derivative operation 
         **/
-        void SegExp::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
-                               Array<OneD,NekDouble> &out_ds)
+        void SegExp::v_PhysDeriv_s(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,NekDouble> &out_ds)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int     coordim  = m_geom->GetCoordim();
             Array<OneD, NekDouble> diff (nquad0);
             //this operation is needed if you put out_ds==inarray
-            Vmath::Zero(nquad0,out_ds,1);              
+            Vmath::Zero(nquad0,out_ds,1);
             switch(coordim)
             {
             case 2:
-                  
+
                     Array<OneD, Array<OneD, NekDouble> > tangents;
                     tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
                     for(int k=0; k<coordim; ++k)
@@ -525,36 +242,38 @@ namespace Nektar
                     tangents = GetMetricInfo()->GetEdgeTangent();
                     ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
                             "tangent vectors do not exist: check if a boundary region is defined as I ");
-		    //diff= dU/de
-            	    Array<OneD,NekDouble> diff(nquad0);
+                    //diff= dU/de
+                    Array<OneD,NekDouble> diff(nquad0);
 
-            	    PhysTensorDeriv(inarray,diff);
+                    PhysTensorDeriv(inarray,diff);
 
                     //get dS/de= (Jac)^-1
-                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac();                    
+                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac();
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {                                           	   
+                    {
                          //calculate the derivative as (dU/de)*(Jac)^-1
-                         Vmath::Vdiv(nquad0,diff,1,Jac ,1,out_ds,1);			 
+                         Vmath::Vdiv(nquad0,diff,1,Jac ,1,out_ds,1);
                     }
                     else
                     {
                           NekDouble invJac = 1/Jac[0];
-                          Vmath::Smul(nquad0, invJac,diff,1,out_ds,1);                         
+                          Vmath::Smul(nquad0, invJac,diff,1,out_ds,1);
                     }
 
             }
         }
 
         /**
-           *\brief Evaluate the derivative normal to a line: \f$ d/dn=\frac{spacedim}{||normal||}d/d{\xi}  \f$.
+           *\brief Evaluate the derivative normal to a line: 
+           * \f$ d/dn=\frac{spacedim}{||normal||}d/d{\xi}  \f$.
            * The derivative is calculated performing
            *the product \f$ du/d{s}=\nabla u \cdot normal \f$.
            *\param inarray function to derive
            *\param out_dn result of the derivative operation 
         **/
-        void SegExp::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble>& out_dn)
+        void SegExp::v_PhysDeriv_n(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble>& out_dn)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
@@ -629,94 +348,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         }
 
 
-        //----------------------------
-        // Evaluation Methods
-        //----------------------------
-
-
-        void SegExp::v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
-        {
-            v_SetCoeffsToOrientation(dir,m_coeffs,m_coeffs);
-        }
-
-        void SegExp::v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
-                                            Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray)
-        {
-
-            if(dir == StdRegions::eBackwards)
-            {
-                if(&inarray[0] != &outarray[0])
-                {
-                    Array<OneD,NekDouble> intmp (inarray);
-                    ReverseCoeffsAndSign(intmp,outarray);
-                }
-                else
-                {
-                    ReverseCoeffsAndSign(inarray,outarray);
-                }
-            }
-        }
-
-        // Reverse the coefficients in a boundary interior expansion
-        // this routine is of use when we need the segment
-        // coefficients corresponding to a expansion in the reverse
-        // coordinate direction
-        void SegExp::ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray)
-        {
-
-            int m;
-            NekDouble sgn = 1;
-
-            ASSERTL1(&inarray[0] != &outarray[0],"inarray and outarray can not be the same");
-            switch(GetBasisType(0))
-            {
-            case LibUtilities::eModified_A:
-
-                //Swap vertices
-                outarray[0] = inarray[1]; 
-                outarray[1] = inarray[0];
-
-                // negate odd modes
-                for(m = 2; m < m_ncoeffs; ++m)
-                {
-                    outarray[m] = sgn*inarray[m];
-                    sgn = -sgn;
-                }
-                break;
-            case LibUtilities::eGLL_Lagrange:
-
-                for(m = 0; m < m_ncoeffs; ++m)
-                {
-                    outarray[m_ncoeffs-1-m] = inarray[m];
-                }
-                break;
-            default:
-                ASSERTL0(false,"This basis is not allowed in this method");
-                break;
-            }
-        }
-
-        /** \brief Mass inversion product from \a inarray to \a outarray
-
-          Multiply by the inverse of the mass matrix
-          \f$ {\bf \hat{u}} = {\bf M}^{-1} {\bf I} \f$
-
-        */ 
-
-        void SegExp::MultiplyByElmtInvMass(const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD,NekDouble> &outarray)
-        {
-            // get Mass matrix inverse
-            MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
-            DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
-
-            NekVector<NekDouble> in(m_ncoeffs,inarray,eCopy);
-            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
-
-            out = (*matsys)*in;
-        }
+        //-----------------------------
+        // Transforms
+        //-----------------------------
 
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
@@ -738,11 +372,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             - \a outarray: updated array of expansion coefficients. 
 
         */ 
-
-
         // need to sort out family of matrices 
-        void SegExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                              Array<OneD,NekDouble> &outarray)
+        void SegExp::v_FwdTrans(
+                const Array<OneD, const NekDouble>& inarray, 
+                      Array<OneD,NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
             {
@@ -764,8 +397,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
-        void SegExp::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> &outarray)
+        void SegExp::v_FwdTrans_BndConstrained(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation())
             {
@@ -800,7 +434,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 if(m_ncoeffs>2)
                 {
-                    //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
+                    //  ideally, we would like to have tmp0 to be replaced by
+                    //  outarray (currently MassMatrixOp does not allow aliasing)
                     Array<OneD, NekDouble> tmp0(m_ncoeffs); 
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
@@ -814,10 +449,402 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     MatrixKey             masskey(StdRegions::eMass, DetExpansionType(),*this);
                     DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
 
-                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
-                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);       
+                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), 
+                                &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);
                 }
             }
+        }
+
+
+        //-----------------------------
+        // Inner product functions
+        //-----------------------------
+
+        /** \brief  Inner product of \a inarray over region with respect to
+            the expansion basis (this)->_Base[0] and return in \a outarray
+
+            Wrapper call to SegExp::IProduct_WRT_B
+
+            Input:\n
+
+            - \a inarray: array of function evaluated at the physical
+            collocation points
+
+            Output:\n
+
+            - \a outarray: array of inner product with respect to each
+            basis over region
+        */
+        void SegExp::v_IProductWRTBase(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray)
+        {
+            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+        }
+
+
+        /**
+           \brief  Inner product of \a inarray over region with respect to
+           expansion basis \a base and return in \a outarray
+
+           Calculate \f$ I[p] = \int^{1}_{-1} \phi_p(\xi_1) u(\xi_1) d\xi_1
+           = \sum_{i=0}^{nq-1} \phi_p(\xi_{1i}) u(\xi_{1i}) w_i \f$ where
+           \f$ outarray[p] = I[p], inarray[i] = u(\xi_{1i}), base[p*nq+i] =
+           \phi_p(\xi_{1i}) \f$.
+
+           Inputs: \n
+
+           - \a base: an array definiing the local basis for the inner
+           product usually passed from Basis->get_bdata() or
+           Basis->get_Dbdata()
+           - \a inarray: physical point array of function to be integrated
+           \f$ u(\xi_1) \f$
+           - \a coll_check: Flag to identify when a Basis->collocation()
+           call should be performed to see if this is a GLL_Lagrange basis
+           with a collocation property. (should be set to 0 if taking the
+           inner product with respect to the derivative of basis)
+
+           Output: \n
+
+           - \a outarray: array of coefficients representing the inner
+           product of function with ever  mode in the exapnsion
+
+        **/
+        void SegExp::v_IProductWRTBase(
+                const Array<OneD, const NekDouble>& base,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray,
+                      int coll_check)
+        {
+            int   nquad0 = m_base[0]->GetNumPoints();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD,NekDouble> tmp(nquad0);
+
+
+            // multiply inarray with Jacobian
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nquad0, jac, 1, inarray, 1, tmp, 1);
+            }
+            else
+            {
+                Vmath::Smul(nquad0, jac[0], inarray, 1, tmp, 1);
+            }
+            StdSegExp::v_IProductWRTBase(base,tmp,outarray,coll_check);
+        }
+
+
+        void SegExp::v_IProductWRTDerivBase(
+                const int dir, 
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> & outarray)
+        {
+            int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD, NekDouble> tmp1(nquad);
+
+            switch(dir)
+            {
+            case 0:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,gmat[0],1,inarray,1,tmp1,1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad, gmat[0][0], inarray, 1, tmp1, 1);
+                    }
+                }
+                break;
+            case 1:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,gmat[1],1,inarray,1,tmp1,1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad, gmat[1][0], inarray, 1, tmp1, 1);
+                    }
+                }
+                break;
+            case 2:
+                {
+                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,gmat[2],1,inarray,1,tmp1,1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nquad, gmat[2][0], inarray, 1, tmp1, 1);
+                    }
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }
+            v_IProductWRTBase(m_base[0]->GetDbdata(),tmp1,outarray,1);
+        }
+
+        void SegExp::v_NormVectorIProductWRTBase(
+                const Array<OneD, const NekDouble> &Fx, 
+                const Array<OneD, const NekDouble> &Fy, 
+                      Array< OneD, NekDouble> &outarray, 
+                      bool NegateNormal)
+        {
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+//            cout << "I am segment " << GetGeom()->GetGlobalID() << endl;
+//            cout << "I want edge " << GetLeftAdjacentElementEdge() << endl;
+// @TODO: This routine no longer makes sense as a normal is not unique to an edge
+            const Array<OneD, const Array<OneD, NekDouble> >
+                 &normals = GetLeftAdjacentElementExp()->GetEdgeNormal(GetLeftAdjacentElementEdge());
+            Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
+            //            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
+
+            if(NegateNormal == true)
+            {
+                Vmath::Neg(nq,Fn,1);
+            }
+
+            v_IProductWRTBase(Fn,outarray);
+        }
+
+        //-----------------------------
+        // Evaluation functions
+        //-----------------------------
+
+        NekDouble SegExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
+        {
+            return PhysEvaluate(coord,m_phys);
+        }
+
+        NekDouble SegExp::v_PhysEvaluate(
+                const Array<OneD, const NekDouble>& coord,
+                const Array<OneD, const NekDouble> &physvals)
+        {
+            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
+
+            ASSERTL0(m_geom,"m_geom not defined");
+            m_geom->GetLocCoords(coord,Lcoord);
+
+            return StdSegExp::v_PhysEvaluate(Lcoord, physvals);
+        }
+
+
+        /// Returns the locations of the quadrature points in up to
+        /// three-dimensions.
+        void SegExp::v_GetCoords(
+                    Array<OneD, NekDouble> &coords_0,
+                    Array<OneD, NekDouble> &coords_1,
+                    Array<OneD, NekDouble> &coords_2)
+        {
+            Array<OneD,NekDouble>  x;
+
+            LibUtilities::BasisSharedPtr CBasis; 
+            ASSERTL0(m_geom, "m_geom not defined");
+
+            // get physical points defined in Geom
+            m_geom->FillGeom();
+
+            switch(m_geom->GetCoordim())
+            {
+            case 3:
+                ASSERTL0(coords_2.num_elements() != 0, "output coords_2 is not defined");
+                CBasis = m_geom->GetBasis(2,0);
+
+                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
+                {
+                    x = m_geom->UpdatePhys(2);
+                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_2, 1);
+                }
+                else // Interpolate to Expansion point distribution
+                {
+                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(2))[0],
+                             m_base[0]->GetBasisKey(),&coords_2[0]);
+                }
+            case 2:
+                ASSERTL0(coords_1.num_elements() != 0, 
+                         "output coords_1 is not defined");
+                CBasis = m_geom->GetBasis(1,0);
+
+                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
+                {
+                    x = m_geom->UpdatePhys(1);
+                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_1, 1);
+                }
+                else // LibUtilities::Interpolate to Expansion point distribution
+                {
+                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(1))[0],
+                             m_base[0]->GetBasisKey(),&coords_1[0]);
+                }
+            case 1:
+                ASSERTL0(coords_0.num_elements() != 0, 
+                         "output coords_2 is not defined");
+                CBasis = m_geom->GetBasis(0,0);
+
+                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
+                {
+                    x = m_geom->UpdatePhys(0);
+                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_0, 1);
+                }
+                else // Interpolate to Expansion point distribution
+                {
+                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(0))[0],
+                             m_base[0]->GetBasisKey(),&coords_0[0]);
+                }
+                break;
+            default:
+                ASSERTL0(false,"Number of dimensions are greater than 2");
+                break;
+            }
+        }
+
+
+        void SegExp::v_GetCoord(
+                const Array<OneD, const NekDouble>& Lcoords, 
+                      Array<OneD,NekDouble> &coords)
+        {
+            int  i;
+
+            ASSERTL1(Lcoords[0] >= -1.0&& Lcoords[0] <= 1.0,
+                     "Local coordinates are not in region [-1,1]");
+
+            m_geom->FillGeom();
+            for(i = 0; i < m_geom->GetCoordim(); ++i)
+            {
+                coords[i] = m_geom->GetCoord(i,Lcoords);
+            }
+        }
+
+        //-----------------------------
+        // Helper functions
+        //-----------------------------
+
+        /// Writes out the physical space data to file.
+        void SegExp::v_WriteToFile(
+                    std::ofstream &outfile,
+                    OutputFormat format,
+                    const bool dumpVar,
+                    std::string var)
+        {
+            if(format==eTecplot)
+            {
+                int i,j;
+                int     nquad = m_base[0]->GetNumPoints();
+
+                Array<OneD,NekDouble> coords[3];
+
+                ASSERTL0(m_geom,"m_geom not defined");
+
+                int     coordim  = m_geom->GetCoordim();
+
+                coords[0] = Array<OneD,NekDouble>(nquad);
+                coords[1] = Array<OneD,NekDouble>(nquad);
+                coords[2] = Array<OneD,NekDouble>(nquad);
+
+                GetCoords(coords[0],coords[1],coords[2]);
+
+                if(dumpVar)
+                {
+                    outfile << "Variables = x";
+
+                    if(coordim == 2)
+                    {
+                        outfile << ", y";
+                    }
+                    else if (coordim == 3)
+                    {
+                        outfile << ", y, z";
+                    }
+                    outfile << ", "<< var << std::endl << std::endl;
+                }
+
+                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
+
+                for(i = 0; i < nquad; ++i)
+                {
+                    for(j = 0; j < coordim; ++j)
+                    {
+                        outfile << coords[j][i] << " ";
+                    }
+                    outfile << m_phys[i] << std::endl;
+                }
+            }
+            else if(format==eGmsh)
+            {  
+                int i;
+                int     nquad = m_base[0]->GetNumPoints();
+
+                Array<OneD,NekDouble> coords[3];
+
+                ASSERTL0(m_geom,"m_geom not defined");
+                coords[0] = Array<OneD,NekDouble>(nquad,0.0);
+                coords[1] = Array<OneD,NekDouble>(nquad,0.0);
+                coords[2] = Array<OneD,NekDouble>(nquad,0.0);
+
+                GetCoords(coords[0],coords[1],coords[2]);
+
+                if(dumpVar)
+                {
+                    outfile<<"View.Type = 2;"<<endl;
+                    outfile<<"View \" \" {"<<endl;
+                }
+ 
+                for(i = 0; i < nquad; ++i)
+                {
+                    outfile << "SP(" << coords[0][i] << ", ";
+                    outfile << coords[1][i] << ", " << coords[2][i] << ")";
+                    outfile << "{" << m_phys[i] << "};" << endl;
+                }
+
+                if(dumpVar)
+                { 
+                    outfile << "};" << endl;
+                }
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
+            }
+        }
+
+        void SegExp::v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+        {
+            v_SetCoeffsToOrientation(dir,m_coeffs,m_coeffs);
+        }
+
+        void SegExp::v_SetCoeffsToOrientation(
+                StdRegions::EdgeOrientation dir,
+                Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray)
+        {
+
+            if(dir == StdRegions::eBackwards)
+            {
+                if(&inarray[0] != &outarray[0])
+                {
+                    Array<OneD,NekDouble> intmp (inarray);
+                    ReverseCoeffsAndSign(intmp,outarray);
+                }
+                else
+                {
+                    ReverseCoeffsAndSign(inarray,outarray);
+                }
+            }
+        }
+
+        StdRegions::PointOrientation SegExp::v_GetPorient(int point)
+        {
+            return m_geom->GetPorient(point);
         }
 
 
@@ -943,16 +970,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return StdExpansion::L2();
         }
 
-        DNekScalMatSharedPtr& SegExp::v_GetLocMatrix(const MatrixKey &mkey)
-        {
-            return m_matrixManager[mkey];
-        }
 
-        DNekScalBlkMatSharedPtr& SegExp::v_GetLocStaticCondMatrix(
-                const MatrixKey &mkey)
-        {
-            return m_staticCondMatrixManager[mkey];
-        }
 
         int SegExp::v_GetNumPoints(const int dir) const
         {
@@ -983,201 +1001,302 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         }
 
 
-        /// Returns the locations of the quadrature points in up to
-        /// three-dimensions.
-        void SegExp::v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                               Array<OneD, NekDouble> &coords_1,
-                               Array<OneD, NekDouble> &coords_2)
+        void SegExp::v_SetUpPhysTangents(
+                const StdRegions::StdExpansionSharedPtr &exp2D,
+                const int edge)
         {
-            Array<OneD,NekDouble>  x;
+             GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(),
+                                edge, GetBasis(0)->GetPointsKey());
+        }
 
-            LibUtilities::BasisSharedPtr CBasis; 
-            ASSERTL0(m_geom, "m_geom not defined");
 
-            // get physical points defined in Geom
-            m_geom->FillGeom();
+        /// Unpack data from input file assuming it comes from the same expansion type
+        void SegExp::v_ExtractDataToCoeffs(
+                const std::vector<NekDouble> &data, 
+                const int offset,
+                const std::vector<unsigned int > &nummodes, 
+                const int nmode_offset,
+                      Array<OneD, NekDouble> &coeffs)
+        {
+            switch(m_base[0]->GetBasisType())
+            { 
+            case LibUtilities::eModified_A:
+                {
+                    int fillorder = min((int) nummodes[nmode_offset],m_ncoeffs);
 
-            switch(m_geom->GetCoordim())
-            {
-            case 3:
-                ASSERTL0(coords_2.num_elements() != 0, "output coords_2 is not defined");
-                CBasis = m_geom->GetBasis(2,0);
-
-                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
-                {
-                    x = m_geom->UpdatePhys(2);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_2, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(2))[0],
-                             m_base[0]->GetBasisKey(),&coords_2[0]);
-                }
-            case 2:
-                ASSERTL0(coords_1.num_elements() != 0, 
-                         "output coords_1 is not defined");
-                CBasis = m_geom->GetBasis(1,0);
-
-                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
-                {
-                    x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_1, 1);
-                }
-                else // LibUtilities::Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetBasisKey(),&coords_1[0]);
-                }
-            case 1:
-                ASSERTL0(coords_0.num_elements() != 0, 
-                         "output coords_2 is not defined");
-                CBasis = m_geom->GetBasis(0,0);
-
-                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
-                {
-                    x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_0, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetBasisKey(),&coords_0[0]);
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    Vmath::Vcopy(fillorder,&data[offset],1,&coeffs[0],1);
                 }
                 break;
             default:
-                ASSERTL0(false,"Number of dimensions are greater than 2");
+                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
+        }
+
+        void SegExp::v_ComputeVertexNormal(const int vertex)
+        {
+            int i;
+            const SpatialDomains::GeomFactorsSharedPtr &geomFactors = GetGeom()->GetMetricInfo();
+            SpatialDomains::GeomType type = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
+            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
+            int nqe = m_base[0]->GetNumPoints();
+            int vCoordDim = GetCoordim();
+
+            m_vertexNormals[vertex] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            Array<OneD, Array<OneD, NekDouble> > &normal = m_vertexNormals[vertex];
+            for (i = 0; i < vCoordDim; ++i)
+            {
+                normal[i] = Array<OneD, NekDouble>(nqe);
+            }
+
+            // Regular geometry case
+            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            {
+                NekDouble vert;
+                // Set up normals
+                switch(vertex)
+                {
+                    case 0:
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nqe,-gmat[i][0],normal[i],1);
+                        }
+                        break;
+                    case 1:
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nqe,gmat[i][0],normal[i],1);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"point is out of range (point < 2)");
+                }
+
+                // normalise
+                vert = 0.0;
+                for(i =0 ; i < vCoordDim; ++i)
+                {
+                    vert += normal[i][0]*normal[i][0];
+                }
+                vert = 1.0/sqrt(vert);
+                for (i = 0; i < vCoordDim; ++i)
+                {
+                    Vmath::Smul(nqe,vert,normal[i],1,normal[i],1);
+                }
+            }
+        }
+
+        //-----------------------------
+        // Operator creation functions
+        //-----------------------------
+
+
+        void SegExp::v_LaplacianMatrixOp(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray)
+        {
+            int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD,NekDouble> physValues(nquad);
+            Array<OneD,NekDouble> dPhysValuesdx(nquad);
+
+            BwdTrans(inarray,physValues);
+
+            // Laplacian matrix operation
+            switch(m_geom->GetCoordim())
+            {
+            case 1:
+                {
+                    PhysDeriv(physValues,dPhysValuesdx);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                    }
+                }
+                break;
+            case 2:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,
+                                     dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                    }
+                }
+                break;
+            case 3:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+                    Array<OneD,NekDouble> dPhysValuesdz(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz); 
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,
+                                     dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[2][0],1,dPhysValuesdz.get(),1,dPhysValuesdx.get(),1,
+                                     dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
+                    }  
+                }
+                break;
+            default:
+                ASSERTL0(false,"Wrong number of dimensions");
                 break;
             }
+
+            v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
         }
 
 
-        void SegExp::v_GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
-                              Array<OneD,NekDouble> &coords)
+        void SegExp::v_HelmholtzMatrixOp(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray,
+                    const double lambda)
         {
-            int  i;
+            int    nquad = m_base[0]->GetNumPoints();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
-            ASSERTL1(Lcoords[0] >= -1.0&& Lcoords[0] <= 1.0,
-                     "Local coordinates are not in region [-1,1]");
+            Array<OneD,NekDouble> physValues(nquad);
+            Array<OneD,NekDouble> dPhysValuesdx(nquad);
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
 
-            m_geom->FillGeom();
-            for(i = 0; i < m_geom->GetCoordim(); ++i)
+            BwdTrans(inarray,physValues);
+
+            // mass matrix operation
+            v_IProductWRTBase((m_base[0]->GetBdata()),physValues,wsp,1);
+
+            // Laplacian matrix operation
+            switch(m_geom->GetCoordim())
             {
-                coords[i] = m_geom->GetCoord(i,Lcoords);
+            case 1:
+                {
+                    PhysDeriv(physValues,dPhysValuesdx);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                    }
+                }
+                break;
+            case 2:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,
+                                     dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                    }
+                }
+                break;
+            case 3:
+                {
+                    Array<OneD,NekDouble> dPhysValuesdy(nquad);
+                    Array<OneD,NekDouble> dPhysValuesdz(nquad);
+
+                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz); 
+
+                    // multiply with the proper geometric factors
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul (nquad,&gmat[0][0],1,dPhysValuesdx.get(),1,dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[1][0],1,dPhysValuesdy.get(),1,dPhysValuesdx.get(),1,
+                                     dPhysValuesdx.get(),1);
+                        Vmath::Vvtvp(nquad,&gmat[2][0],1,dPhysValuesdz.get(),1,dPhysValuesdx.get(),1,
+                                     dPhysValuesdx.get(),1);
+                    }
+                    else
+                    {
+                        Blas::Dscal(nquad, gmat[0][0], dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[1][0], dPhysValuesdy.get(), 1, dPhysValuesdx.get(), 1);
+                        Blas::Daxpy(nquad, gmat[2][0], dPhysValuesdz.get(), 1, dPhysValuesdx.get(), 1);
+                    }  
+                }
+                break;
+            default:
+                ASSERTL0(false,"Wrong number of dimensions");
+                break;
             }
+
+            v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
+            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
         }
 
-        /// Writes out the physical space data to file.
-        void SegExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+        //-----------------------------
+        // Matrix creation functions
+        //-----------------------------
+
+
+        DNekScalBlkMatSharedPtr& SegExp::v_GetLocStaticCondMatrix(
+                const MatrixKey &mkey)
         {
-            if(format==eTecplot)
-            {
-                int i,j;
-                int     nquad = m_base[0]->GetNumPoints();
-
-                Array<OneD,NekDouble> coords[3];
-
-                ASSERTL0(m_geom,"m_geom not defined");
-
-                int     coordim  = m_geom->GetCoordim();
-
-                coords[0] = Array<OneD,NekDouble>(nquad);
-                coords[1] = Array<OneD,NekDouble>(nquad);
-                coords[2] = Array<OneD,NekDouble>(nquad);
-
-                GetCoords(coords[0],coords[1],coords[2]);
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = x";
-
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
-                for(i = 0; i < nquad; ++i)
-                {
-                    for(j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << m_phys[i] << std::endl;
-                }
-            }
-            else if(format==eGmsh)
-            {  
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-
-                Array<OneD,NekDouble> coords[3];
-
-                ASSERTL0(m_geom,"m_geom not defined");
-                coords[0] = Array<OneD,NekDouble>(nquad,0.0);
-                coords[1] = Array<OneD,NekDouble>(nquad,0.0);
-                coords[2] = Array<OneD,NekDouble>(nquad,0.0);
-
-                GetCoords(coords[0],coords[1],coords[2]);
-
-                if(dumpVar)
-                {
-                    outfile<<"View.Type = 2;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
- 
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << "SP(" << coords[0][i] << ", " << coords[1][i] << ", " << coords[2][i] << ")";
-                    outfile << "{" << m_phys[i] << "};" << endl;
-                }
-
-                if(dumpVar)
-                { 
-                    outfile << "};" << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
+            return m_staticCondMatrixManager[mkey];
         }
+
+        DNekScalMatSharedPtr& SegExp::v_GetLocMatrix(const MatrixKey &mkey)
+        {
+            return m_matrixManager[mkey];
+        }
+
 
         DNekMatSharedPtr SegExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey = m_base[0]->GetBasisKey();
-            StdRegions::StdSegExpSharedPtr tmp = MemoryManager<StdSegExp>::AllocateSharedPtr(bkey);
+            StdRegions::StdSegExpSharedPtr tmp = 
+                        MemoryManager<StdSegExp>::AllocateSharedPtr(bkey);
 
             return tmp->GetStdMatrix(mkey); 
         }
 
-        NekDouble SegExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
-        {
-            return PhysEvaluate(coord,m_phys);
-        }
-
-        NekDouble SegExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord, const Array<OneD, const NekDouble> &physvals)
-        {
-            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(1);
-
-            ASSERTL0(m_geom,"m_geom not defined");
-            m_geom->GetLocCoords(coord,Lcoord);
-
-            return StdSegExp::v_PhysEvaluate(Lcoord, physvals);
-        }
 
         DNekScalMatSharedPtr SegExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
             NekDouble fac;
 
-            ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
+            ASSERTL2(m_metricinfo->GetGtype() != 
+                     SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             switch(mkey.GetMatrixType())
             {
@@ -1232,11 +1351,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                             dir = 0;
                             break;
                         case StdRegions::eWeakDeriv1:
-                            ASSERTL1(m_geom->GetCoordim() >= 2,"Cannot call eWeakDeriv2 in a coordinate system which is not at least two-dimensional");
+                            ASSERTL1(m_geom->GetCoordim() >= 2,
+                                "Cannot call eWeakDeriv2 in a coordinate system which is not at least two-dimensional");
                             dir = 1;
                             break;
                         case StdRegions::eWeakDeriv2:
-                            ASSERTL1(m_geom->GetCoordim() == 3,"Cannot call eWeakDeriv2 in a coordinate system which is not three-dimensional");
+                            ASSERTL1(m_geom->GetCoordim() == 3,
+                                "Cannot call eWeakDeriv2 in a coordinate system which is not three-dimensional");
                             dir = 2;
                             break;
                         }
@@ -1313,7 +1434,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 //                                                  DetExpansionType(),*this,
 //                                                  mkey.GetConstant(0),
 //                                                  mkey.GetConstant(1));
-                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(),
+                                   *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();
@@ -1376,7 +1498,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             Array<OneD, unsigned int> exp_size(2);
             exp_size[0] = nbdry;
             exp_size[1] = nint;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size); //Really need a constructor which takes Arrays
+
+            /// \todo Really need a constructor which takes Arrays
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size);
             NekDouble factor = 1.0;
 
             switch(mkey.GetMatrixType())
@@ -1409,10 +1533,14 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 
-                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(0,0)));
-                    returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Asubmat = mat->GetBlock(0,1)));
-                    returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(1,0)));
-                    returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,Asubmat = mat->GetBlock(1,1)));
+                    returnval->SetBlock(0,0,Atmp = 
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(0,0)));
+                    returnval->SetBlock(0,1,Atmp =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Asubmat = mat->GetBlock(0,1)));
+                    returnval->SetBlock(1,0,Atmp =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,Asubmat = mat->GetBlock(1,0)));
+                    returnval->SetBlock(1,1,Atmp =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,Asubmat = mat->GetBlock(1,1)));
                 }
                 break;
             UseLocRegionsMatrix:
@@ -1479,114 +1607,72 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return returnval;
         }
 
-        void SegExp::v_NormVectorIProductWRTBase(
-                const Array<OneD, const NekDouble> &Fx, 
-                const Array<OneD, const NekDouble> &Fy, 
-                Array< OneD, NekDouble> &outarray, 
-                bool NegateNormal)
-        {
-            int nq = m_base[0]->GetNumPoints();
-            Array<OneD, NekDouble > Fn(nq);
-//            cout << "I am segment " << GetGeom()->GetGlobalID() << endl;
-//            cout << "I want edge " << GetLeftAdjacentElementEdge() << endl;
-// @TODO: This routine no longer makes sense as a normal is not unique to an edge
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetEdgeNormal(GetLeftAdjacentElementEdge());
-            Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
-            //            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
-            Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
 
-            if(NegateNormal == true)
+        //-----------------------------
+        // Private methods
+        //-----------------------------
+
+
+        ///  Reverse the coefficients in a boundary interior expansion
+        ///  this routine is of use when we need the segment
+        ///  coefficients corresponding to a expansion in the reverse
+        ///  coordinate direction
+        void SegExp::ReverseCoeffsAndSign(
+                const Array<OneD,NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray)
+        {
+
+            int m;
+            NekDouble sgn = 1;
+
+            ASSERTL1(&inarray[0] != &outarray[0],"inarray and outarray can not be the same");
+            switch(GetBasisType(0))
             {
-                Vmath::Neg(nq,Fn,1);
-            }
-
-            v_IProductWRTBase(Fn,outarray);
-        }
-
-        void SegExp::v_SetUpPhysTangents(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
-        {
-             GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());
-        }
-
-
-        // Unpack data from input file assuming it comes from the same expansion type
-        void SegExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                           const int offset, 
-                                           const std::vector<unsigned int > &nummodes, 
-                                           const int nmode_offset,
-                                           Array<OneD, NekDouble> &coeffs)
-        {
-            switch(m_base[0]->GetBasisType())
-            { 
             case LibUtilities::eModified_A:
-                {
-                    int fillorder = min((int) nummodes[nmode_offset],m_ncoeffs);
 
-                    Vmath::Zero(m_ncoeffs,coeffs,1);
-                    Vmath::Vcopy(fillorder,&data[offset],1,&coeffs[0],1);
+                //Swap vertices
+                outarray[0] = inarray[1]; 
+                outarray[1] = inarray[0];
+
+                // negate odd modes
+                for(m = 2; m < m_ncoeffs; ++m)
+                {
+                    outarray[m] = sgn*inarray[m];
+                    sgn = -sgn;
+                }
+                break;
+            case LibUtilities::eGLL_Lagrange:
+
+                for(m = 0; m < m_ncoeffs; ++m)
+                {
+                    outarray[m_ncoeffs-1-m] = inarray[m];
                 }
                 break;
             default:
-                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+                ASSERTL0(false,"This basis is not allowed in this method");
+                break;
             }
         }
-		
-		
-		
-		void SegExp::v_ComputeVertexNormal(const int vertex)
+
+        /* \brief Mass inversion product from \a inarray to \a outarray
+         *
+         *     Multiply by the inverse of the mass matrix
+         *     \f$ {\bf \hat{u}} = {\bf M}^{-1} {\bf I} \f$
+         *
+        **/
+        void SegExp::MultiplyByElmtInvMass(
+                const Array<OneD, const NekDouble>& inarray, 
+                      Array<OneD,NekDouble> &outarray)
         {
-            int i;
-            const SpatialDomains::GeomFactorsSharedPtr &geomFactors = GetGeom()->GetMetricInfo();
-            SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
-            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
-            int nqe = m_base[0]->GetNumPoints();
-            int vCoordDim = GetCoordim();
-			
-            m_vertexNormals[vertex] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
-            Array<OneD, Array<OneD, NekDouble> > &normal = m_vertexNormals[vertex];
-            for (i = 0; i < vCoordDim; ++i)
-            {
-                normal[i] = Array<OneD, NekDouble>(nqe);
-            }
-			
-            // Regular geometry case
-            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
-            {
-                NekDouble vert;
-                // Set up normals
-                switch(vertex)
-                {
-					case 0:
-						for(i = 0; i < vCoordDim; ++i)
-						{
-							Vmath::Fill(nqe,-gmat[i][0],normal[i],1);
-						}
-						break;
-					case 1:
-						for(i = 0; i < vCoordDim; ++i)
-						{
-							Vmath::Fill(nqe,gmat[i][0],normal[i],1);
-						}
-						break;
-					default:
-						ASSERTL0(false,"point is out of range (point < 2)");
-                }
-				
-                // normalise
-                vert = 0.0;
-                for(i =0 ; i < vCoordDim; ++i)
-                {
-                    vert += normal[i][0]*normal[i][0];
-                }
-                vert = 1.0/sqrt(vert);
-                for (i = 0; i < vCoordDim; ++i)
-                {
-                    Vmath::Smul(nqe,vert,normal[i],1,normal[i],1);
-                }
-			}
-		}
-		
+            // get Mass matrix inverse
+            MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
+            DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
+
+            NekVector<NekDouble> in(m_ncoeffs,inarray,eCopy);
+            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
+
+            out = (*matsys)*in;
+        }
 
 
     } // end of namespace

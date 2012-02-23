@@ -225,14 +225,16 @@ namespace Nektar
             TetExp();
 
             LOCAL_REGIONS_EXPORT void GeneralMatrixOp_MatOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey);
-
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const StdRegions::StdMatrixKey      &mkey);
             LOCAL_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> &outarray);
-
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp);
         };
 
         // type defines for use of TetExp in a boost vector

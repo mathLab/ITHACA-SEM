@@ -71,8 +71,7 @@ int main(int argc, char *argv[])
             //= LibUtilities::SessionReader::CreateInstance(2, argv);
     // Read in mesh from input file0
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile0);
-    //----------------------------------------------      
-    
+    //----------------------------------------------          
     // Import fieldfile0.
 
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
@@ -82,48 +81,36 @@ int main(int argc, char *argv[])
 
     //read info from fldfile
     Array<OneD, std::string> variables ;
-cout<<fieldfile0<<endl;
+    cout<<fieldfile0<<endl;
     bool homo=false;
     Readflddef(fieldfile0, variables, homo);
 
-
-
     // Define Expansion    
     int nfields; 
-    //nfields = vSession->GetVariables().size();       
     nfields = variables.num_elements();
-    nfields=1;
     Array<OneD, MultiRegions::ExpListSharedPtr> fields; 
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);  
     SetFields(graphShPt,fielddef, vSession,fields,nfields,homo);
     int nq = fields[0]->GetTotPoints();
     //-----------------------------------------------
-cout<<"nfields="<<nfields<<endl;   
+    cout<<"nfields="<<nfields<<endl;   
     // Copy data from file:fill fields with the fielddata
     for(int j = 0; j < nfields; ++j)
     {  	    
         for(int i = 0; i < fielddata.size(); ++i)
         {
 cout<<"fielddef[i]->m_fields[j]="<<fielddef[i]->m_fields[j]<<endl;
-            fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
         }             
         fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
     }
     //----------------------------------------------    
-
+    
     // store mesh0 quadrature points    
     Array<OneD, NekDouble> x0(nq);
     Array<OneD, NekDouble> y0(nq);  
     fields[0]->GetCoords(x0,y0);    
   
-/* test   
-    for(int u=0; u<nq; u++)
-    {
-cout<<"x0="<<x0[u]<<"      y0="<<y0[u]<<endl;    	    
-    }
-    cout<<"finished"<<meshfile1<<endl; 
-*/    
-
     //----------------------------------------------    
   
     //Read in the mesh1

@@ -1264,7 +1264,7 @@ namespace Nektar
                     	string filebcs  =  (boost::static_pointer_cast<
                     	    SpatialDomains::DirichletBoundaryCondition
                     	    >(m_bndConditions[i])->m_dirichletCondition
-                    	     ).GetEquation();
+                    	     ).GetExpression();
                     	string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
 
 //                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
@@ -1303,7 +1303,7 @@ namespace Nektar
             		string filebcs  =  (boost::static_pointer_cast<
             			SpatialDomains::NeumannBoundaryCondition
             			>(m_bndConditions[i])->m_neumannCondition
-            			).GetEquation();
+            			).GetExpression();
             	 	string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
 //                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
 			if(iffile=="FILE")
@@ -1341,7 +1341,7 @@ namespace Nektar
             		string filebcs  =  (boost::static_pointer_cast<
             			SpatialDomains::RobinBoundaryCondition
             			>(m_bndConditions[i])->m_robinFunction
-            			).GetEquation();
+            			).GetExpression();
             		string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
 //Never tested!!!
 //                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)

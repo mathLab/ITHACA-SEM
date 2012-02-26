@@ -295,7 +295,9 @@ namespace Nektar
                 {
                     edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
                     
-                    if(ReorderedGraphVertId[1][edgeId] >= firstNonDirGraphVertId)
+                    // note second condition stops us using mixed boundary condition 
+                    if((ReorderedGraphVertId[1][edgeId] >= firstNonDirGraphVertId)
+                       && (IsDirEdgeDof.count(edgeId) == 0))
                     {
                         HomGraphEdgeIdToEdgeId[ReorderedGraphVertId[1][edgeId]-firstNonDirGraphVertId] = edgeId;
                         if(EdgeIdToElmts[edgeId][0] == -1)
@@ -565,6 +567,7 @@ namespace Nektar
         for(i = 0; i < nel; ++i)
         {
             graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1] += nz_loc;
+            //graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc] += nz_loc;
         }
         
         // Negate the vertices and edges with only a partial
@@ -613,7 +616,7 @@ namespace Nektar
                                 DirVertChk[id*nvel+j] = 1;
                                 for(n = 0; n < nz_loc; ++n)
                                 {
-                                    graphVertOffset[ReorderedGraphVertId[0][id]*nvel*nz_loc+j*nz_loc+n] *= -1; 
+                                    graphVertOffset[ReorderedGraphVertId[0][id]*nvel*nz_loc+j*nz_loc+n] *= -1;
                                 }
                             }
                             
@@ -839,7 +842,7 @@ namespace Nektar
         }
         
         globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
-        m_numGlobalBndCoeffs = globalId;
+        m_numGlobalBndCoeffs = globalId; 
         
         /**
          * STEP 5: The boundary condition mapping is generated from the
@@ -892,7 +895,7 @@ namespace Nektar
                 //bottomUpGraph->Dump();
 
                 m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
-                  AllocateSharedPtr(this,bottomUpGraph);
+                    AllocateSharedPtr(this,bottomUpGraph);
             }
         }
     }

@@ -559,7 +559,8 @@ cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
 		
                 for(int j=0; j< fieldcoeffs.num_elements(); ++j)
 		{  
-		     outfield[j]->FwdTrans(outfield[j]->GetPhys(),outfield[j]->UpdateCoeffs()); 		     
+		     outfield[j]->FwdTrans_IterPerExp(outfield[j]->GetPhys(),outfield[j]->UpdateCoeffs());
+		     //outfield[j]->FwdTrans(outfield[j]->GetPhys(),outfield[j]->UpdateCoeffs()); 		     
 		     fieldcoeffs[j] = outfield[j]->UpdateCoeffs();			
 		     for(int i=0; i< FieldDef.size(); i++)
 		     {		     	     

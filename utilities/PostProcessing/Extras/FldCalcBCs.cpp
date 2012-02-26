@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
         SpatialDomains::BoundaryConditionsSharedPtr& boundaryConditions,
 		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
+    Array<OneD, int> GetReflectionIndex(Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,
+    int Ireg);
     void Extractlayerdata(Array<OneD, int> Iregions, int coordim, 
             SpatialDomains::MeshGraphSharedPtr &mesh,   
             LibUtilities::SessionReaderSharedPtr &session,
@@ -36,7 +38,8 @@ int main(int argc, char *argv[])
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
        	    MultiRegions::ContField1DSharedPtr &outfieldy,
-       	    MultiRegions::ExpListSharedPtr &streak);
+       	    MultiRegions::ExpListSharedPtr &streak,
+            Array<OneD, int>  Refindices);
     void Manipulate(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &infields,  
@@ -240,8 +243,10 @@ cout<<"OOOK"<<endl;
     //manipulate data
    
     //for 2 variables(u,v) only:
-    int coordim = graphShPt->GetMeshDimension();              	   
-    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, fields, outfieldx,outfieldy,streak);       	       
+    int coordim = graphShPt->GetMeshDimension(); 
+    //remark Ilayers[2] is the critical layer             	   
+    static Array<OneD, int> Refindices = GetReflectionIndex(fields, Ilayers[2]);
+    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, fields, outfieldx,outfieldy,streak,Refindices);       	       
 
     //--------------------------------------------------------------------------------------
 
@@ -273,8 +278,8 @@ cout<<"OOOK"<<endl;
 		int npointsY;              ///< number of points in Y direction (if homogeneous)
                 int npointsZ;              ///< number of points in Z direction (if homogeneous)	
 		int HomoDirec       = 0;
-		bool useFFT = false;	    
-		bool deal = false;
+		bool useFFT = false;	
+		bool deal = false;        
 		///Parameter for homogeneous expansions		
 		enum HomogeneousType
 		{
@@ -373,7 +378,7 @@ cout<<"OOOK"<<endl;
                         for(i = 0 ; i < nvariables; i++)
                         {                        	
                             Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));                                
+                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,session->GetVariable(i));                                    
                         }
                     }
                     else
@@ -419,7 +424,63 @@ cout<<"OOOK"<<endl;
                 ASSERTL0(false,"Expansion dimension not recognised");
                 break;
             }   
-        }   	    
+        }   	   
+
+
+        Array<OneD, int> GetReflectionIndex(Array<OneD,MultiRegions::ExpListSharedPtr> &Exp, int Ireg)
+        {
+           int i,j;
+
+           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp =Exp[0]->GetBndCondExpansions();
+           MultiRegions::ExpListSharedPtr Ilayer = Iexp[Ireg];
+           int npts = Ilayer->GetPlane(0)->GetNpoints();
+           Array<OneD, int> index(npts);
+
+           Array<OneD, NekDouble> coord(2);
+           Array<OneD, NekDouble> coord_x(npts);
+           Array<OneD, NekDouble> coord_y(npts);
+        
+           //-> Dermine the point which is on coordinate (x -> -x + Lx/2, y-> -y)
+           Ilayer->GetPlane(0)->GetCoords(coord_x,coord_y);
+           NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
+           NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
+           NekDouble xnew,ynew;
+
+           int start  = npts-1; 
+cout<<"xmax="<<xmax<<endl;
+           for(i = 0; i < npts; ++i)
+           {
+cout<<"Ref index for x="<<coord_x[i]<<endl;
+               xnew = - coord_x[i]  + xmax;
+               ynew = - coord_y[i];
+  
+               for(j = start; j >=0 ; --j)
+               {
+                   if((coord_x[j]-xnew)*(coord_x[j]-xnew)  < tol)
+                   {
+                       index[i] = j;
+                       start = j;
+                       break;
+                   }
+               }
+            
+               if(j == -1)
+               {
+                
+                   for(j = npts-1; j > start; --j)
+                   {
+                     
+                       if((coord_x[j]-xnew)*(coord_x[j]-xnew) < tol)
+                       {
+                           index[i] = j;
+                           break;
+                       }
+                   }
+                   ASSERTL0(j != start,"Failsed to find matching point");
+               }
+           }
+           return index;
+       } 
 
        void  Extractlayerdata(Array<OneD, int> Iregions, int coordim, 
             SpatialDomains::MeshGraphSharedPtr &mesh,   
@@ -428,7 +489,8 @@ cout<<"OOOK"<<endl;
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
        	    MultiRegions::ContField1DSharedPtr &outfieldy,
-       	    MultiRegions::ExpListSharedPtr &streak)
+       	    MultiRegions::ExpListSharedPtr &streak,
+            Array<OneD, int>  Refindices)
         {
             //1 I regions is expected: (the layer is the last region)
             ASSERTL0(Iregions.num_elements()==3, "something wrong with the number of I layers");
@@ -887,10 +949,11 @@ cout<<"layer region="<<Ireg<<endl;
            norm = tmp*tmp;
            tmp = pressure->GetPlane(1)->L2();
            norm += tmp*tmp;
-           Array<OneD, NekDouble> I (2*np, 1.0);             
+           Array<OneD, NekDouble> I (2*np); 
+           Vmath::Fill(2*np,1.0,I,1);            
            NekDouble Area = pressure->GetPlane(0)->PhysIntegral(I);           
            norm = sqrt(Area/norm);
-
+cout<<"norm="<<norm<<endl;
 
            //norm*pressure
 	   Vmath::Smul(nq1D,norm,Rephysreg,1,Rephysreg,1);                       
@@ -1099,11 +1162,12 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
            //rho = 0.08;
            rho = session->GetParameter("RHO");
            NekDouble alpha;
-	   alpha = 1;
-           NekDouble alpha53=1;
+	   alpha = session->GetParameter("ALPHA");
+cout<<"alpha="<<alpha<<endl;
+           NekDouble alpha53;
+           //alpha53=1;
            alpha53 = std::pow ((alpha*alpha),pow);
            alpha53 = 1/(alpha*alpha53);
-           alpha53=1;
 	   for(int c=0; c<nq1D; c++)
 	   {
 	       pjump[c] = -n0*alpha53*curv[c]*prod[c] ;  	   
@@ -1120,7 +1184,16 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
 	   outfieldx->FwdTrans(ty, tycoeffs);
 	   outfieldy->BwdTrans(txcoeffs, tx);              
 	   outfieldy->BwdTrans(tycoeffs, ty);
-	     
+cout<<"RHO=="<<rho<<endl;	
+
+
+
+
+
+
+
+
+     
 	     
 //end
 //PAY ATTENTION to the sign (vjump -/+ pjump)*t!!!!!!!!!!
@@ -1131,7 +1204,8 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             	(outfieldx->UpdatePhys())[j] = 
             	  rho*rho*(vjump[j]*tx[j]-pjump[j]);
             	(outfieldy->UpdatePhys())[j] =
-            	   rho*rho*(vjump[j]*ty[j]-pjump[j]);		   
+            	   rho*rho*(vjump[j]*ty[j]-pjump[j]);	
+//cout<<x0d[j]<<"       "<<curv[j]*prod[j]<<"        "<<(outfieldx->GetPhys())[j]<<"         "<<(outfieldy->GetPhys())[j]<<endl;	   
 //end
 
 //decomment
@@ -1142,6 +1216,11 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             	   20*2*cos(2*x0d[j])/3.14;
 */
             }
+
+
+
+
+
             //FINAL REFINEMENT:::
 //start
       
@@ -1152,8 +1231,17 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
             outfieldy->FwdTrans(outfieldy->GetPhys(), finalcoeffs);
             outfieldy->BwdTrans(finalcoeffs, outfieldy->UpdatePhys());  
 
-
-
+            //symmetrize the jumps conditions
+            Array<OneD, NekDouble> tmpx(nq1D);
+            Array<OneD, NekDouble> tmpy(nq1D);
+cout<<"symmetrise the jump conditions"<<endl;                                    
+            for(int i = 0; i < nq1D; ++i)
+            {
+            	tmpx[i] =0.5*(outfieldx->GetPhys()[i] - outfieldx->GetPhys()[Refindices[i]]);
+            	tmpy[i] =0.5*(outfieldy->GetPhys()[i] - outfieldy->GetPhys()[Refindices[i]]);
+            }
+            Vmath::Vcopy(nq1D, tmpx,1, outfieldx->UpdatePhys(),1);
+            Vmath::Vcopy(nq1D, tmpy,1, outfieldy->UpdatePhys(),1);
 /*
 
 	    //calculate J,K

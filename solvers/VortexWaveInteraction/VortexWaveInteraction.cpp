@@ -253,6 +253,19 @@ namespace Nektar
             cout<<"eqtype="<<vEquation<<endl;
             EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
             //the forcing terms are inserted as N bcs
+              //the forcing terms are inserted as N bcs
+             // Execute Roll 
+             cout << "Executing Roll solver" << endl;
+             solverRoll->DoInitialise();
+             solverRoll->DoSolve();
+             solverRoll->Output();
+             for(int g=0; g< solverRoll->GetNvariables(); ++g)
+             {
+                  NekDouble vL2Error = solverRoll->L2Error(g,false);
+                  NekDouble vLinfError = solverRoll->LinfError(g);
+                  cout << "L 2 error (variable " << solverRoll->GetVariable(g) << ") : " << vL2Error << endl;
+                  cout << "L inf error (variable " << solverRoll->GetVariable(g) << ") : " << vLinfError << endl;
+             }  
             
         }
         else
@@ -753,8 +766,8 @@ namespace Nektar
              {
                   ASSERTL0(false,syscall.c_str());
              }
-	     //interpolate the streak field into the new mesh
-             string movedmesh = m_sessionName + "_advPost_moved.xml";
+
+
 
              //save oldstreak
              string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
@@ -764,16 +777,29 @@ namespace Nektar
              {
                   ASSERTL0(false,syscall.c_str());
              } 
-             //overwriting the streak file!!
-             string interpfield = filestreak;
+
+	     //interpolate the streak field into the new mesh
+             string movedmesh = m_sessionName + "_advPost_moved.xml";
+             //create the interp streak
+             string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
              syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
                       + filePost + "  " + filestreak + "  " + movedmesh + "  " 
-	              + interpfield;
+	              + interpstreak;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
                   ASSERTL0(false,syscall.c_str());
              }
+
+             
+             //overwriting the streak file!!          
+	     syscall = "cp -f " + interpstreak + "  " + filestreak;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             } 
+
              //save the old mesh     
              string meshfile = m_sessionName + ".xml";                  
              string meshold = m_sessionName +"_"+ c +".xml";
@@ -795,6 +821,17 @@ namespace Nektar
 
              //calculate the wave
              ExecuteWave();
+/*
+             string meshLin = m_sessionName + "_Lin.xml";
+	     syscall = "../IncNavierStokesSolver/IncNavierStokesSolver-g " + meshLin;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                ASSERTL0(false,syscall.c_str());
+             }
+*/
+cout << "Growth =" <<m_leading_real_evl[0]<<endl; 
+cout << "Phase =" <<m_leading_imag_evl[0]<<endl; 
              //save the wave field:
              string oldwave = m_sessionName +"_wave_"+c +".fld";    
 	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
@@ -826,7 +863,7 @@ namespace Nektar
              //calculate the jump conditions
              string wavefile  = m_sessionName +".fld"; 
              syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
-                     + movedmesh + "  " + wavefile + "  " + interpfield + ">  data"+c1;
+                     + movedmesh + "  " + wavefile + "  " + interpstreak + ">  data"+c1;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
@@ -838,8 +875,7 @@ namespace Nektar
              if(system(syscall.c_str()))
              {
                   ASSERTL0(false,syscall.c_str());
-             }     
-
+             }             
 	}
 	else
 	{

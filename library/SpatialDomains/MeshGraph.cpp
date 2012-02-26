@@ -2081,6 +2081,54 @@ namespace Nektar
             TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
             TiXmlElement* field = NULL;
 
+
+
+            // check to see if any scaling parameters are in
+            // attributes and determine these values
+            TiXmlElement* element = mesh->FirstChildElement("VERTEX");
+            ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
+
+            NekDouble xscale,yscale,zscale;
+            
+            LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+            const char *xscal =  element->Attribute("XSCALE");
+            if(!xscal)
+            {
+                xscale = 1.0;
+            }
+            else
+            {
+                std::string xscalstr = xscal;
+                int expr_id = expEvaluator.DefineFunction("",xscalstr);
+                xscale = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *yscal =  element->Attribute("YSCALE");
+            if(!yscal)
+            {
+                yscale = 1.0;
+            }
+            else
+            {
+                std::string yscalstr = yscal;
+                int expr_id = expEvaluator.DefineFunction("",yscalstr);
+                yscale = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *zscal = element->Attribute("ZSCALE");
+            if(!zscal)
+            {
+                zscale = 1.0;
+            }
+            else
+            {
+                std::string zscalstr = zscal;
+                int expr_id = expEvaluator.DefineFunction("",zscalstr);
+                zscale = expEvaluator.Evaluate(expr_id);
+            }   
+
+
+
             int err;
 
             /// Look for elements in CURVE block.
@@ -2163,6 +2211,9 @@ namespace Nektar
                         {
                             elementDataStrm >> xval >> yval >> zval;
 
+                            xval *= xscale;
+                            yval *= yscale;
+                            zval *= zscale;
                             // Need to check it here because we may not be
                             // good after the read indicating that there
                             // was nothing to read.

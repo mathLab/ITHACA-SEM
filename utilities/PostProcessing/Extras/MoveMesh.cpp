@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
     	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc); 
     void GenerateAddPointsNewtonIt( NekDouble &xi, NekDouble &yi,NekDouble &x0, NekDouble &y0,
     	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction);
+    void GenerateCurveSp(Array<OneD, NekDouble> &x_c, Array<OneD, NekDouble> &y_c,
+                Array<OneD, NekDouble> &x_lay, Array<OneD, NekDouble> &y_lay);
     void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
     	    Array<OneD, NekDouble> &y_c, Array<OneD, NekDouble> &curve);
     void GenerateAddPoints(int region, SpatialDomains::MeshGraphSharedPtr &mesh,int np, int npused,    	      
@@ -69,16 +71,17 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(2, argv);
     //----------------------------------------------
-   
+ 
     // Read in mesh from input file
     string meshfile(argv[argc-3]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //---------------------------------------------- 
-
+   
     // Also read and store the boundary conditions
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                                         ::AllocateSharedPtr(vSession,graphShPt);
+    SpatialDomains::BoundaryConditions bcs(vSession, graphShPt); 
     //----------------------------------------------
 
     // Define Expansion   
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
     //the mesh file should have 2 component: set output fields
     //fields has to be of the SAME dimension of the mesh (that's why there is
     //the changefile as an input)
-    nfields=3;          
+    nfields=3;        
     SetFields(graphShPt,boundaryConditions,vSession,fields,nfields);
     //---------------------------------------------------------------
 
@@ -114,7 +117,8 @@ int main(int argc, char *argv[])
          streak[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
     }
     streak[0]->BwdTrans(streak[0]->GetCoeffs(), streak[0]->UpdatePhys());       
-*/    
+*/ 
+ 
     MultiRegions::ExpListSharedPtr streak; 
     streak = MemoryManager<MultiRegions::ContField2D>
           ::AllocateSharedPtr(vSession, graphShPt, "w",true);    
@@ -125,9 +129,22 @@ int main(int argc, char *argv[])
     }
     streak->BwdTrans(streak->GetCoeffs(), streak->UpdatePhys());
     
-    //------------------------------------------------    
-           
-
+    //------------------------------------------------  
+/*  
+static int cnt=0;
+int nquad = streak->GetTotPoints();
+Array<OneD, NekDouble> xs(nquad);
+Array<OneD, NekDouble> ys(nquad);
+streak->GetCoords(xs,ys);
+if(  
+//abs(streak->GetPhys()[j])< 0.01
+x[j]==1.6
+)
+{
+cnt++;
+cout<<"cnt="<<cnt<<"   x="<<xs[j]<<"  y="<<ys[j]<<"  U="<<streak->GetPhys()[j]<<endl;
+}           
+*/
     //----------------------------------------------   
 /*     
     // Copy data from file:fill fields with the fielddata
@@ -258,7 +275,7 @@ cout<<"nIregions="<<nIregions<<endl;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion], 
          	Vids_c, v1, v2 , x_connect, lastedge, xold_c, yold_c );          
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_c[v1]);  
-   cout<<"Vids cl="<<Vids_low[v1]<<endl;  
+//cout<<"Vids cl="<<Vids_low[v1]<<endl;  
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
@@ -280,8 +297,36 @@ cout<<"nIregions="<<nIregions<<endl;
      }           
      //------------------------------------------------------------------------
          
-    //-----------------------------------------------------------------------------------    
-     
+    //-----------------------------------------------------------------------------------   
+
+ 
+    //fieds to force continuity:
+/*
+    MultiRegions::ContField1DSharedPtr  Lay_x;    		
+    MultiRegions::ContField1DSharedPtr  Lay_y;
+    //initialie fields
+    const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+    MultiRegions::ExpList1DSharedPtr xtmp;    		
+    MultiRegions::ExpList1DSharedPtr ytmp;
+    xtmp = MemoryManager<MultiRegions::ExpList1D>
+                ::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);    
+    ytmp = MemoryManager<MultiRegions::ExpList1D>
+    		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+
+    Lay_x = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(vSession, *xtmp);
+
+    Lay_y = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(vSession, *ytmp);  
+*/
+    //--------------------------------------
+    /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/ 
+    //generate additional points using the Newton iteration                
+    //determine the xposition for every edge (in the middle even if it 
+    // is not necessary
+    //PARAMETER which determines the number of points @todo put as an input      
+    int npedge=5;
+    /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/ 
     //find the points where u=0 and determine the sign of the shift and the delta
     int nq= fields[0]->GetTotPoints(); 
     Array<OneD, NekDouble> x(nq);
@@ -298,7 +343,8 @@ cout<<"nIregions="<<nIregions<<endl;
     streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), dU);
     Computestreakpositions(nvertl, streak, x,y,xold_up, yold_up,
     	                   xold_low, yold_low, xold_c, yold_c, x_c, y_c);    
-    // if the curve is low the old layer point, it has to shift down    
+    // if the curve is low the old layer point, it has to shift down  
+    NekDouble shift;  
     for(int q=0; q<nvertl; q++)
     {
          if(y_c[q] < yold_c[q])
@@ -307,6 +353,29 @@ cout<<"nIregions="<<nIregions<<endl;
          }
          //calculate delta
          Delta_c[q] = abs(yold_c[q]-y_c[q]);
+         //fill layer arrays:
+/*
+         if(q==0  || q == nvertl-1)
+         {
+             Lay_x->UpdatePhys()[q]=x_c[q];
+             Lay_y->UpdatePhys()[q]=y_c[q];
+         }
+         else if(q<nvertl && q!=nvertl-1)
+         {
+             Lay_x->UpdatePhys()[ q*(npedge-1) ]=x_c[q];
+             Lay_y->UpdatePhys()[ q*(npedge-1) ]=y_c[q];
+             Lay_x->UpdatePhys()[ q*(npedge-1) +1 ]=x_c[q];
+             Lay_y->UpdatePhys()[ q*(npedge-1) +1 ]=y_c[q];
+         }
+*/
+         //check the shifting of the layer:
+         shift+= Delta_c[q];         
+cout<<x_c[q]<<"    "<<y_c[q]<<endl;
+    }
+//cout<<"shift="<<shift<<endl;
+    if(shift<0.001)
+    {
+         cout<<"Warning: the critical layer is stationary"<<endl;
     }
     //------------------------------------------------------------------
     
@@ -446,7 +515,7 @@ cout<<"nIregions="<<nIregions<<endl;
     //determine the xposition for every edge (in the middle even if it 
     // is not necessary
     //PARAMETER which determines the number of points @todo put as an input
-    int npedge=5;
+    //int npedge=5;
     //additional points arrays
 /*
     //NB Double array LEAK!!!!
@@ -462,10 +531,12 @@ cout<<"nIregions="<<nIregions<<endl;
     }
     
 */    
-    Array<OneD, NekDouble> Addpointsx (nedges*(npedge-2), 0.0);
-    Array<OneD, NekDouble> Addpointsy (nedges*(npedge-2), 0.0);    
+   
     //Array<OneD, NekDouble> Ycoords (nedges*npedge-2, 0.0);
 
+
+    Array<OneD, NekDouble> Addpointsx (nedges*(npedge-2), 0.0);
+    Array<OneD, NekDouble> Addpointsy (nedges*(npedge-2), 0.0); 
 
     Array<OneD, NekDouble> derstreak (streak->GetTotPoints());
     streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), derstreak);
@@ -490,11 +561,12 @@ cout<<"nIregions="<<nIregions<<endl;
 	 vertex2->GetCoords(x2,y2,z2);	
 //cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<endl;
 //cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
+cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	 if(x2>x1)
 	 {
 	     Cpointsx[r] = x1 +(x2-x1)/2;             
 //cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<"   Cx="<<Cpointsx[r]<<endl;
-//cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
+//cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	     if( Cpointsx[r]>x2 || Cpointsx[r]< x1)
 	     {
 	     	  Cpointsx[r] = -Cpointsx[r];		  
@@ -509,12 +581,20 @@ cout<<"nIregions="<<nIregions<<endl;
 	         Addpointsy[r*(npedge-2) +w] = y1 + ((y2-y1)/(x2-x1))*(Addpointsx[r*(npedge-2) +w]-x1);	         
 	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w],
 	              	      Addpointsx[r*(npedge-2) +w],  Addpointsy[r*(npedge-2) +w], streak, derstreak); 
+
+               // Lay_x->UpdatePhys()[r*npedge +1 +w]= Addpointsx[r*(npedge-2) +w];
+               // Lay_y->UpdatePhys()[r*npedge +1 +w]= Addpointsy[r*(npedge-2) +w];                
              }
+             //Lay_x->UpdatePhys()[r*npedge +0] =x1;
+             //Lay_y->UpdatePhys()[r*npedge +0] =y1;
+             //Lay_x->UpdatePhys()[r*npedge +npedge-1] =x2;
+             //Lay_y->UpdatePhys()[r*npedge +npedge-1] =y2;
 
 	 }
 	 else if(x1>x2)
 	 {	         	 
 	     Cpointsx[r] = x2+ (x1-x2)/2;
+//cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
 	     if( Cpointsx[r] > x1 || Cpointsx[r] < x2)
 	     {
 	          Cpointsx[r] = -Cpointsx[r];
@@ -529,7 +609,13 @@ cout<<"nIregions="<<nIregions<<endl;
 	         Addpointsy[r*(npedge-2) +w] = y2 + ((y1-y2)/(x1-x2))*(Addpointsx[r*(npedge-2) +w]-x2);	         	         
 	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], 
 	               Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], streak, derstreak); 
-             }	      
+               // Lay_x->UpdatePhys()[r*npedge +1]= Addpointsx[r*(npedge-2) +w];
+               // Lay_y->UpdatePhys()[r*npedge +1]= Addpointsy[r*(npedge-2) +w];   
+             }
+             //Lay_x->UpdatePhys()[r*npedge +0] =x2;
+             //Lay_y->UpdatePhys()[r*npedge +0] =y2;
+             //Lay_x->UpdatePhys()[r*npedge +npedge-1] =x1;
+             //Lay_y->UpdatePhys()[r*npedge +npedge-1] =y1;	      
 	 }
 	 else
 	 {
@@ -544,8 +630,44 @@ cout<<"nIregions="<<nIregions<<endl;
 	 Eids[r] = Eid;
 
     }      
+    //-------------------------------------------------------------
 
-    
+    //force the continuity of the layer
+
+/*
+cout<<"force"<<endl;
+    int Nregcoeffs = Lay_x->GetNcoeffs();
+    Array<OneD, NekDouble> coeffs (Nregcoeffs);
+    //Lay_x->FwdTrans(Lay_x->GetPhys(), coeffs);
+    //Lay_x->BwdTrans(coeffs, Lay_x->UpdatePhys());      
+    //Array<OneD, NekDouble> dery(npedge*nedges);
+    //Lay_y->PhysDeriv(MultiRegions::eX, Lay_y->GetPhys(), dery);
+
+
+    Vmath::Zero(Nregcoeffs,coeffs,1);            
+
+    //Lay_y->FwdTrans(Lay_y->GetPhys(), coeffs);
+    //Lay_y->BwdTrans(coeffs, Lay_y->UpdatePhys());  
+    for(int r=0; r<nedges; r++)
+    {
+      
+          for(int w=0; w< npedge-2; w++)
+          {         
+             //   Addpointsx[r*(npedge-2) +w] = Lay_x->GetPhys()[r*npedge +1 +w];
+             //   Addpointsy[r*(npedge-2) +w] = Lay_y->GetPhys()[r*npedge +1 +w];
+          }
+    }    
+*/
+    Array<OneD, NekDouble> curve(nvertl);
+cout<<"gen curve"<<endl;
+    //GenerateCurve(nvertl,0, x_c, y_c, curve);
+
+
+    //-------------------------------------------------
+
+
+
+/*  
     //generate the closest curve to the critical layer positions taking 
     // npedge-2 points per edge
     Array<OneD, NekDouble> Crlay_pointsx(nedges*(npedge-2)+nedges+1);
@@ -554,7 +676,7 @@ cout<<"nIregions="<<nIregions<<endl;
     int cnt1=0;
     int cnt2=0;
     //HYPOTHESIS: Cpoints ALREADY generated
-cout<<"Cr x--y"<<endl;    
+//cout<<"Cr x--y"<<endl;    
     for(int u=0; u<Crlay_pointsx.num_elements(); u++)
     {
     	  if( u== cnt)// u pari  
@@ -572,8 +694,10 @@ cout<<"Cr x--y"<<endl;
     	       Crlay_pointsy[u] = Addpointsy[cnt2];    	       
     	       cnt2++;
           }
+
 //cout<<u<<"      "<<Crlay_pointsx[u]<<"       "<<Crlay_pointsy[u]<<endl;          
     }
+*/
 //cout<<"num px="<<Crlay_pointsx.num_elements()<<endl;   
 /* 
     for(int r=0; r< Crlay_pointsx.num_elements(); r++)
@@ -718,9 +842,9 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
              	ASSERTL0(false, "shifting out of range");
              }
          }         
-//cout<<"x="<<x<<"  y="<<y<<"  ynew="<<ynew[i]<<endl;          
+cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;          
     }
-  
+
     //------------------------------------------------------------------
     
     //replace the vertices with the new ones
@@ -747,8 +871,7 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
 		int npointsY;              ///< number of points in Y direction (if homogeneous)
 		int npointsZ;              ///< number of points in Z direction (if homogeneous)		
 		int HomoDirec       = 0;
-		bool useFFT = false;
-		bool dealiasing = false;
+		bool useFFT = false;	        
 		///Parameter for homogeneous expansions		
 		enum HomogeneousType
 		{
@@ -855,7 +978,8 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
                     }
                     else
                     {
-*/                    
+*/                   
+
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield;
                         firstfield = MemoryManager<MultiRegions::ContField2D>
@@ -914,7 +1038,7 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
    	        LocalRegions::SegExpSharedPtr  bndSegExplow = 
    	             boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(j)) ;   	
    	        edge = (bndSegExplow->GetGeom1D())->GetEid();
-cout<<" edge="<<edge<<endl;   	   
+//cout<<" edge="<<edge<<endl;   	   
    	        for(int k=0; k<2; k++)
    	        {
    	            Vids_temp[j+k]=(bndSegExplow->GetGeom1D())->GetVid(k);   
@@ -994,7 +1118,7 @@ cout<<" edge="<<edge<<endl;
     	        Array<OneD, NekDouble> &xold_c, Array<OneD, NekDouble> &yold_c,    	        
     	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc)   	        
 	{
-    
+cout<<"Computestreakpositions"<<endl;    
 	     int nq = streak->GetTotPoints();	
              Array<OneD, NekDouble> coord(2);
              //Array<OneD, NekDouble> stvalues(nvertl,-10);
@@ -1005,12 +1129,12 @@ cout<<" edge="<<edge<<endl;
              NekDouble F=1000;
              for(int q=0; q<nvertl; q++)
              {
-
                   NekDouble streaktmp =200;
                   NekDouble streaktmppos=200;
                   NekDouble streaktmpneg=-200;
                   int ipos,ineg, it =0;                  
                   NekDouble weightpos, weightneg;
+
 /*         
            //algorithm to determine the closest streak positions using Newton iteration
            for(int j=0; j<nq; j++)
@@ -1041,7 +1165,10 @@ cout<<" edge="<<edge<<endl;
            y_c[q]  = y[it] - (streaktmp)/dU[it];
            ASSERTL0( y_c[q]> y[ineg] && y_c[q]<y[ipos], " wrong position");
 cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" y_pos="<<y[ipos]<<"   y_neg="<<y[ineg]<<endl;           
-*/         
+*/     
+cout<<"nq="<<nq<<" xdown="<<xold_low[q]<<endl;    
+
+                    ASSERTL0(xold_low[q]==xold_up[q], "layer region non valid");
 cout<<q<<"   xup="<<xold_up[q]<<"   yup="<<yold_up[q]<<"    ydown="<<yold_low[q]<<endl;                 
                     //algorithm to determine the closest points to the streak positions
                     //using the weighted mean         
@@ -1054,8 +1181,20 @@ cout<<q<<"   xup="<<xold_up[q]<<"   yup="<<yold_up[q]<<"    ydown="<<yold_low[q]
                                  streaktmppos = streak->GetPhys()[j];
                                  ipos =j;
                              }
-                             if(streak->GetPhys()[j]>streaktmpneg && streak->GetPhys()[j]<0)
+static int cnt=0;
+if(  
+//abs(streak->GetPhys()[j])< 0.01
+//x[j]==(xold_up[2])
+ x[j]<=(xold_up[8]+0.01)
+ && x[j]>=(xold_up[8]-0.01)  
+)
+{
+cnt++;
+cout<<"cnt="<<cnt<<"   x="<<x[j]<<"  y="<<y[j]<<"  U="<<streak->GetPhys()[j]<<endl;
+}
+                             if( abs(streak->GetPhys()[j]) < -streaktmpneg && streak->GetPhys()[j]<0)
                              {
+//cout<<"test streakneg="<<streak->GetPhys()[j]<<endl;
               	                 streaktmpneg = streak->GetPhys()[j];
               	                 ineg =j;
               	             }
@@ -1066,10 +1205,28 @@ cout<<q<<"   xup="<<xold_up[q]<<"   yup="<<yold_up[q]<<"    ydown="<<yold_low[q]
 cout<<"ipos="<<ipos<<"  ineg="<<ineg<<endl;
 //cout<<"closer streak points ypos="<<y[ipos]<<"   yneg="<<y[ineg]<<endl;
 	          //determine the streak y position as the result of the weighted mean
-	            xc[q]= x[ipos];
-	            weightpos = 1/(streaktmppos*streaktmppos);
-	            weightneg = 1/(streaktmpneg*streaktmpneg);	            
-	            yc[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
+                    if(streaktmppos< 200 && streaktmpneg>-200)
+                    {
+   	                 xc[q]= x[ipos];
+	                 weightpos = 1/(streaktmppos*streaktmppos);
+	                 weightneg = 1/(streaktmpneg*streaktmpneg);	            
+	                 yc[q]= ( (y[ipos]*weightpos) + (y[ineg]*weightneg) )/(weightpos+weightneg);
+                    }
+                    else if(streaktmppos< 200)
+                    {
+   	                 xc[q]= x[ipos];
+   	                 yc[q]= y[ipos];
+                    }
+                    else if(streaktmpneg> -200)
+                    {
+   	                 xc[q]= x[ineg];
+   	                 yc[q]= y[ineg];
+                    }
+                    else
+                    {
+                         ASSERTL0(false, "streak not found");
+                    }
+
 cout<<" streak x="<<xc[q]<<"   y="<<yc[q]<<endl;
      
 
@@ -1163,7 +1320,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 //cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
 		elmtid = function->GetExpIndex(coords, 0.00001);
                 //@to do if GetType(elmtid)==triangular WRONG!!!
-//cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
+cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
 		offset = function->GetPhys_Offset(elmtid);
 		F =1000;
 		while( abs(F)> 0.00000001)
@@ -1261,6 +1418,34 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
     	    
 	    
         }
+
+
+        void GenerateCurveSp(Array<OneD, NekDouble> &x_c, Array<OneD, NekDouble> &y_c,
+                Array<OneD, NekDouble> &x_lay, Array<OneD, NekDouble> &y_lay)
+        {
+               Array<OneD, NekDouble> k(x_c.num_elements());
+               Array<OneD, NekDouble> b(x_c.num_elements());
+               NekDouble dx,dx1,dy,dy1;
+               //determine the values of k
+               //remark fix the derivative=0 at the border of the domain: k_0=k_n=0
+               for(int s=0; s< k.num_elements(); s++)
+               {
+                   dx = x_c[s] - x_c[s-1];
+                   dy = y_c[s] - y_c[s-1];
+                   dx1 = x_c[s+1] - x_c[s];
+                   dy1 = y_c[s+1] - y_c[s];
+                   if(s==0 || s==k.num_elements()-1)
+                   {
+                        k[s]=0;
+                        
+                   }
+                   else
+                   {
+                       b[s] = 3*(   dy/(dx*dx) +dy1/(dx1*dx1)  );
+                   }
+               }
+        }
+
         
         NekDouble yMove(NekDouble y, NekDouble yold_up, NekDouble Deltaold)
         {
@@ -1407,7 +1592,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
             newfile = filename.substr(0, filename.find_last_of("."))+"_moved.xml";
  
             doc.SaveFile( newfile );   
-            
+        
             //write the new vertices
 	    TiXmlDocument docnew(newfile);  
 	    bool loadOkaynew = docnew.LoadFile();
@@ -1444,7 +1629,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 	    int indx;
 	    int err, numPts;
 	    int nextVertexNumber = -1;	
-	    
+ 	    
 	    while (vertexnew)
 	    {
 	    	   nextVertexNumber++;
@@ -1484,7 +1669,7 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 	    	   vertexnew = vertexnew->NextSiblingElement("V");  
        	   }	
        	    //meshnew->LinkEndChild(elementnew);
-       	    
+          	    
        	    //read the curved tag
             TiXmlElement* curvednew = meshnew->FirstChildElement("CURVED");
 	    ASSERTL0(curvednew, "Unable to find mesh CURVED tag in file.");            
@@ -1565,16 +1750,17 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 		   stringstream st;
 		   st << std::scientific << std::setprecision(8) << x_lay[v1] << "   "
 	    	   << y_lay[v1] << "   " << 0.000<<"   ";
-
+cout<<x_lay[v1]<<"       "<<y_lay[v1]<<endl;
 		   for(int a=0; a< Npoints-2; a++)
 		   {		       	   
 		      st << std::scientific << std::setprecision(8) <<
 		      "    "<<Pcurvx[indexeid*(Npoints-2) +a]<<"    "<<Pcurvy[indexeid*(Npoints-2) +a]
 		      <<"    "<<0.000<<"   "; 
-	      
+cout<<Pcurvx[indexeid*(Npoints-2) +a]<<"        "<<Pcurvy[indexeid*(Npoints-2)+a]<<endl;	      
 		   }
 		   st << std::scientific << std::setprecision(8) <<
 		   "    "<<x_lay[v2]<<"   "<< y_lay[v2] <<"   "<< 0.000;
+cout<<x_lay[v2]<<"       "<<y_lay[v2]<<endl;
 	    	   edgenew->LinkEndChild(new TiXmlText(st.str()));    		   
 
 //cout<<st.str()<<endl;		

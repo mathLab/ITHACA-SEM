@@ -317,10 +317,7 @@ namespace Nektar
             }
             else
             {
-                if (m_constant[it->second] != value)
-                {
-                    throw std::runtime_error("Attempt to add numerically different constants under the same name: " + name);
-                }
+                ASSERTL1(m_constant[it->second] == value, "Attempt to add numerically different constants under the same name: " + name);
             }
             return it->second;
         }
@@ -328,11 +325,8 @@ namespace Nektar
         double AnalyticExpressionEvaluator::GetConstant(std::string const& name)
         {
             double* value = find(m_constantsParser, name.c_str());
-            if (value == NULL)
-            {
-                throw std::runtime_error("Constant variable not found: " + name);
-                return -1;
-            }
+
+            ASSERTL1(value != NULL, "Constant variable not found: " + name);
 
             return *value;
         }
@@ -364,11 +358,8 @@ namespace Nektar
         double AnalyticExpressionEvaluator::GetParameter(std::string const& name)
         {
             ParameterMap::const_iterator it = m_parameterMapNameToId.find(name);
-            if (it == m_parameterMapNameToId.end())
-            {
-                throw "Parameter not found: " + name;
-                return -1;
-            }
+
+            ASSERTL1(it != m_parameterMapNameToId.end(), "Parameter not found: " + name);
 
             return m_parameter[ it->second ];
         }
@@ -384,10 +375,10 @@ namespace Nektar
         //  Public evaluate methods
         // ======================================================
 
-        int AnalyticExpressionEvaluator::DefineFunction(const std::string& vlist, const std::string& function)
+        int AnalyticExpressionEvaluator::DefineFunction(const std::string& vlist, const std::string& expr)
         {
             // Find the previous parsing.
-            ExpressionMap::const_iterator it = m_parsedMapExprToExecStackId.find(function);
+            ExpressionMap::const_iterator it = m_parsedMapExprToExecStackId.find(expr);
             if (it != m_parsedMapExprToExecStackId.end())
             {
                 // if this function is already defined, don't do anything but
@@ -423,13 +414,17 @@ namespace Nektar
                                                 AnalyticExpression,
                                                 space_parser
                                              >
-                                             (function.begin(), function.end(), myGrammar, space_p);
-            if (parseInfo.full == false)
-            {
-                throw std::runtime_error("Unable to fully parse function. Stopped just before: "
-                                         + std::string(parseInfo.stop, parseInfo.stop + 15));
-            }
+                                             (expr.begin(), expr.end(), myGrammar, space_p);
 
+
+            /// \todo temporary fix to supress assert error messages for boundary conditions
+            /// specified via VALUE="FILE:..."
+            if ((parseInfo.full == false) && (expr.find("FILE:") != std::string::npos))
+            {
+                return;
+            }
+            ASSERTL1(parseInfo.full != false, "Unable to fully parse function. Stopped just before: "
+                                         + std::string(parseInfo.stop, parseInfo.stop + 15));
 
             // ----------------------------------------------
             // Data parsed, start setting up internal data structures.
@@ -455,16 +450,13 @@ namespace Nektar
             // constant expression, fully evaluated
             if (true == v.first)
             {
-                if (stack.size() != 0)
-                {
-                    throw std::runtime_error("Constant expression yeilds non-empty execution stack. Bug in PrepareExecutionAsYouParse()");
-                    return -1;
-                }
+                ASSERTL1(stack.size() == 0, "Constant expression yeilds non-empty execution stack. Bug in PrepareExecutionAsYouParse()");
+
                 int const_index = AddConstant(std::string("EXPRESSION_") + boost::lexical_cast<std::string>(stackId), v.second);
                 stack.push_back ( makeStep<StoreConst>( 0, const_index ) );
             }
 
-            m_parsedMapExprToExecStackId[function] = stackId;
+            m_parsedMapExprToExecStackId[expr] = stackId;
 
             // the execution stack and its corresponding variable index map are
             // two parallel std::vectors that share their ids. This split helps
@@ -480,11 +472,8 @@ namespace Nektar
         {
             m_timer.Start();
 
-            if (m_executionStack.size() <= expression_id)
-            {
-                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return -1;
-            }
+            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
+
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
@@ -504,11 +493,8 @@ namespace Nektar
         {
             m_timer.Start();
 
-            if (m_executionStack.size() <= expression_id)
-            {
-                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return -1;
-            }
+            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
+
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
@@ -544,20 +530,12 @@ namespace Nektar
         {
             m_timer.Start();
 
-            if (m_executionStack.size() <= expression_id)
-            {
-                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return -1;
-            }
+            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
+
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
-            if (point.size() != variableMap.size())
-            {
-                std::cerr << "Evaluate(int, point): variableMap.size() = " << variableMap.size() << ", point.size() = " << point.size() << std::endl;
-                throw std::runtime_error("The number of variables used to define this expression should match the point dimensionality.");
-                return -1;
-            }
+            ASSERTL1(point.size() == variableMap.size(), "The number of variables used to define this expression should match the point dimensionality.");
 
             // initialise internal vector of variable values
             m_state.resize(m_state_sizes[expression_id]);
@@ -590,11 +568,9 @@ namespace Nektar
         {
             m_timer.Start();
 
-            if (m_executionStack.size() <= expression_id)
-            {
-                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return;
-            }
+            const int num_points = x.num_elements();
+            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
+            ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
 
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
@@ -604,17 +580,8 @@ namespace Nektar
             /// Lets split the work into cache-sized chunks.
             /// Ahtung, magic constant!
             const int max_chunk_size = 1024;
-            const int num_points = x.num_elements();
 
-            if (result.num_elements() != num_points)
-            {
-                /// \note please don't use this vectorized method if the
-                /// resulting array has different length than input onces.
-                std::cout << "Evaluate4Array: resulting array resize -- possible sourse of weird bugs" << std::endl;
-                result = Array<OneD, NekDouble>(num_points, 0.0);
-            }
-
-            /// please don't remove brackets around std::min
+            /// please don't remove brackets around std::min, it screws up windows compilation
             const int chunk_size = (std::min)(max_chunk_size, num_points);
             if (m_state.size() < chunk_size * m_state_sizes[expression_id] )
             {
@@ -623,6 +590,10 @@ namespace Nektar
             if (m_variable.size() < 4 * chunk_size )
             {
                 m_variable.resize( 4 * chunk_size, 0.0);
+            }
+            if (result.num_elements() < num_points)
+            {
+                result = Array<OneD, NekDouble>(num_points, 0.0);
             }
 
             int offset = 0;
@@ -655,11 +626,8 @@ namespace Nektar
         {
             m_timer.Start();
 
-            if (m_executionStack.size() <= expression_id)
-            {
-                throw std::runtime_error("Unable to evaluate because a function must first be defined with DefineFunction(...).");
-                return;
-            }
+            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
+
             ExecutionStack&  stack    = m_executionStack[expression_id];
             VariableMap&  variableMap = m_stackVariableMap[expression_id];
 
@@ -702,43 +670,24 @@ namespace Nektar
 
             if (parserID == AnalyticExpression::constantID)
             {
-                if (num_children != 0)
-                {
-                    throw std::runtime_error("Illegal children under constant node: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(num_children == 0, "Illegal children under constant node: " + valueStr);
 
                 ConstantMap::const_iterator it = m_constantMapNameToId.find(valueStr);
-                if (it == m_constantMapNameToId.end())
-                {
-                    throw std::runtime_error("Cannot find the value for the specified constant: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(it != m_constantMapNameToId.end(), "Cannot find the value for the specified constant: " + valueStr);
+
                 return std::make_pair(true, m_constant[it->second]);
             }
             else if (parserID == AnalyticExpression::numberID)
             {
-                if (num_children != 0)
-                {
-                    throw std::runtime_error("Illegal children under number node: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(num_children == 0, "Illegal children under number node: " + valueStr);
                 return std::make_pair(true, boost::lexical_cast<double>(valueStr.c_str()) );
             }
             else if (parserID == AnalyticExpression::variableID)
             {
-                if (num_children != 0)
-                {
-                    throw std::runtime_error("Illegal children under variable node: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(num_children == 0, "Illegal children under variable node: " + valueStr);
 
                 VariableMap::const_iterator it = variableMap.find(valueStr);
-                if (it == variableMap.end())
-                {
-                    throw std::runtime_error("Unknown variable parsed: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(it != variableMap.end(), "Unknown variable parsed: " + valueStr);
 
                 // Variables are not defined at the time of this parse.
                 stack.push_back ( makeStep<StoreVar>( stateIndex, it->second ) );
@@ -746,24 +695,11 @@ namespace Nektar
             }
             else if (parserID == AnalyticExpression::parameterID)
             {
-                if (num_children != 0)
-                {
-                    throw std::runtime_error("Illegal children under parameter node: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(num_children == 0, "Illegal children under parameter node: " + valueStr);
 
                 ParameterMap::const_iterator it = m_parameterMapNameToId.find(valueStr);
-                if (it == m_parameterMapNameToId.end())
-                {
-                    std::cout << "valueStr = " << valueStr << ", m_parameterMapNameToId.size = " << m_parameterMapNameToId.size() << std::endl;
-                    for (it = m_parameterMapNameToId.begin(); it != m_parameterMapNameToId.end(); ++it)
-                    {
-                        std::cout << "param[" << it->first << "] = " << it->second << std::endl;
-                    }
+                ASSERTL1(it != m_parameterMapNameToId.end(), "Unknown parameter parsed: " + valueStr);
 
-                    throw std::runtime_error("Illegal parameter specified: " + valueStr);
-                    return std::make_pair(false,0);
-                }
                 // Parameters may change in between of evalutions.
                 stack.push_back ( makeStep<StorePrm>( stateIndex, it->second ) );
                 return std::make_pair(false, 0);
@@ -771,17 +707,8 @@ namespace Nektar
             else if (parserID == AnalyticExpression::functionID)
             {
                 FunctionNameMap::const_iterator it = m_functionMapNameToInstanceType.find(valueStr);
-                if (it == m_functionMapNameToInstanceType.end())
-                {
-                    throw std::runtime_error("Invalid function specified: " + valueStr);
-                    return std::make_pair(false,0);
-                }
-
-                if (location->children.size() != 1)
-                {
-                    throw std::runtime_error("Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(it != m_functionMapNameToInstanceType.end(), "Invalid function specified: " + valueStr);
+                ASSERTL1(num_children == 1, "Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
 
                 PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
 
@@ -850,23 +777,14 @@ namespace Nektar
                         stack.push_back ( makeStep<EvalSign>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     default:
-                        throw std::runtime_error("Evaluation of " + valueStr + " is not implemented yet");
-                        return std::make_pair(false,0);
+                        ASSERTL0(false, "Evaluation of " + valueStr + " is not implemented yet");
                 }
                 return std::make_pair(false,0);
             }
             else if (parserID == AnalyticExpression::factorID)
             {
-                if (*valueStr.begin() != '-')
-                {
-                    throw std::runtime_error("Illegal factor - it can only be '-' and it was: " + valueStr);
-                    return std::make_pair(false,0);
-                }
-                if (num_children != 1)
-                {
-                    throw std::runtime_error("Illegal number of children under factor node: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(*valueStr.begin() == '-', "Illegal factor - it can only be '-' and it was: " + valueStr);
+                ASSERTL1(num_children == 1, "Illegal number of children under factor node: " + valueStr);
 
                 PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
 
@@ -880,11 +798,7 @@ namespace Nektar
             }
             else if (parserID == AnalyticExpression::operatorID)
             {
-                if (num_children != 2)
-                {
-                    throw std::runtime_error("Too few or too many arguments for mathematical operator: " + valueStr);
-                    return std::make_pair(false,0);
-                }
+                ASSERTL1(num_children == 2, "Too few or too many arguments for mathematical operator: " + valueStr);
                 PrecomputedValue left  = PrepareExecutionAsYouParse(location->children.begin()+0, stack, variableMap, stateIndex);
                 PrecomputedValue right = PrepareExecutionAsYouParse(location->children.begin()+1, stack, variableMap, stateIndex+1);
                 m_state_size++;
@@ -927,8 +841,7 @@ namespace Nektar
                         }
                         return std::make_pair(false,0);
                     default:
-                        throw "Invalid operator encountered: " + valueStr;
-                        return std::make_pair(false,0);
+                        ASSERTL0(false, "Invalid operator encountered: " + valueStr);
                     }
                     return std::make_pair(false,0);
                 }
@@ -990,12 +903,11 @@ namespace Nektar
                     return std::make_pair(false,0);
 
                 default:
-                    throw "Invalid operator encountered: " + valueStr;
-                    return std::make_pair(false,0);
+                    ASSERTL0(false, "Invalid operator encountered: " + valueStr);
                 }
                 return std::make_pair(false,0);
             }
-            throw "Illegal expression encountered: " + valueStr;
+            ASSERTL0(false, "Illegal expression encountered: " + valueStr);
             return std::make_pair(false,0);
         }
 

@@ -35,7 +35,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_EQUATION_CPP
 #define NEKTAR_SPATIALDOMAINS_EQUATION_CPP
 
-//#include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 
 namespace Nektar
 {
@@ -72,6 +72,7 @@ namespace Nektar
         *    further attempts to evaluate an expression.
         *
         */
+        LibUtilities::AnalyticExpressionEvaluator Equation::m_evaluator; 
     }
 }
 

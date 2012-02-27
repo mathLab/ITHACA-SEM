@@ -42,7 +42,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <loki/Singleton.h>
+//#include <loki/Singleton.h>
 
 namespace Nektar
 {
@@ -50,21 +50,21 @@ namespace Nektar
     {
         class Equation
         {
-        typedef Loki::SingletonHolder<LibUtilities::AnalyticExpressionEvaluator, Loki::CreateStatic, Loki::DefaultLifetime> SingleExpressionEvaluator;
+  //      typedef Loki::SingletonHolder<LibUtilities::AnalyticExpressionEvaluator, Loki::CreateStatic, Loki::DefaultLifetime> SingleExpressionEvaluator;
 
 
         public: 
             Equation(const Equation &src):
               m_expr     (src.m_expr),
-              m_expr_id  (src.m_expr_id),
-              m_evaluator(src.m_evaluator)
+              m_expr_id  (src.m_expr_id)//,
+    //          m_evaluator(src.m_evaluator)
             {
             }
 
             Equation(const std::string& expr = ""):
               m_expr(expr),
-              m_expr_id(-1),
-              m_evaluator(SingleExpressionEvaluator::Instance())
+              m_expr_id(-1)//,
+//              m_evaluator(SingleExpressionEvaluator::Instance())
             {
 
                 try
@@ -239,7 +239,7 @@ namespace Nektar
         private:
             std::string  m_expr;
             int          m_expr_id;
-            LIB_UTILITIES_EXPORT LibUtilities::AnalyticExpressionEvaluator& m_evaluator;
+            LIB_UTILITIES_EXPORT static LibUtilities::AnalyticExpressionEvaluator m_evaluator;
         };
 
         typedef boost::shared_ptr<Equation> EquationSharedPtr;

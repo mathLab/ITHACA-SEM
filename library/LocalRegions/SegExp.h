@@ -267,6 +267,9 @@ namespace Nektar
                     const Array<OneD,NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray);
 
+
+            /// \todo Same method exists in ExpList and everyone references
+            ///       ExpList::MultiplyByElmtInvMass. Remove this one?
             LOCAL_REGIONS_EXPORT void MultiplyByElmtInvMass(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD,NekDouble> &outarray);

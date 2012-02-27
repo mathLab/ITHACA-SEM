@@ -433,10 +433,10 @@ namespace Nektar
                     for(i = 0; i < m_spacedim; ++i)
                     {
                         m_traceNormals[i] = Array<OneD, NekDouble>(
-                            m_fields[0]->GetTrace()->GetNpoints());
+                            m_fields[0]->GetTrace3D()->GetNpoints());
                     }
                     
-                    m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+                    m_fields[0]->GetTrace3D()->GetNormals(m_traceNormals);
                     break;
                 }
                 default:
@@ -1436,7 +1436,7 @@ namespace Nektar
         int nPointsTot      = GetNpoints();
         int ncoeffs         = GetNcoeffs();
         int nTracePointsTot = GetTraceNpoints();
-
+        
         if (!nvariables)
         {
             nvariables      = m_fields.num_elements();

@@ -68,7 +68,7 @@ namespace Nektar
 
         if (m_explicitAdvection)
         {
-            m_ode.DefineOdeRhs        (&UnsteadyAdvection::DoOdeRhs,        this);
+            m_ode.DefineOdeRhs     (&UnsteadyAdvection::DoOdeRhs,        this);
             m_ode.DefineProjection (&UnsteadyAdvection::DoOdeProjection, this);
         }
         else
@@ -93,7 +93,7 @@ namespace Nektar
 
         switch (m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+            case MultiRegions::eDiscontinuousGalerkin:
             {
                 int ncoeffs    = inarray[0].num_elements();
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
@@ -103,7 +103,7 @@ namespace Nektar
                 {
                     WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
                 }
-
+                
                 WeakDGAdvection(inarray, WeakAdv,true,true);
 
                 for(i = 0; i < nvariables; ++i)
@@ -198,12 +198,12 @@ namespace Nektar
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
         Array<OneD, NekDouble > Bwd(nTraceNumPoints);
         Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);		
-		
+        
         //Get Edge Velocity - Could be stored if time independent
         for(i = 0; i < nvel; ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-            Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);			
+            Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
         }
 	
         for(i = 0; i < numflux.num_elements(); ++i)
@@ -218,6 +218,10 @@ namespace Nektar
             else if (m_expdim == 2)
             {
                 m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            }
+            else if (m_expdim == 3)
+            {
+                m_fields[i]->GetTrace3D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
             }
             // calculate m_fields[i]*Vn
             Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);

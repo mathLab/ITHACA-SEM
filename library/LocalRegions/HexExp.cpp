@@ -417,13 +417,12 @@ namespace Nektar
             int    nquad2  = m_base[2]->GetNumPoints();
             int    nqtot   = nquad0*nquad1*nquad2;
             int    nmodes0 = m_base[0]->GetNumModes();
-            int    nmodes1 = m_base[0]->GetNumModes();
+            int    nmodes1 = m_base[1]->GetNumModes();
  
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
             Array<OneD, NekDouble> alloc(3*nqtot + 2*GetNcoeffs()
-                                        + nquad0*nquad1*(nquad2+nmodes0) 
-                                        + nmodes0*nmodes1*nquad2);
+                                         + nmodes0*nquad2*(nquad1+nmodes1));
             Array<OneD, NekDouble> tmp1(alloc);           // Dir1 metric
             Array<OneD, NekDouble> tmp2(alloc +   nqtot); // Dir2 metric
             Array<OneD, NekDouble> tmp3(alloc + 2*nqtot); // Dir3 metric

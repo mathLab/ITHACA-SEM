@@ -689,17 +689,22 @@ namespace Nektar
         switch(m_expdim)
         {
             case 1:
-			{
+            {
                 // can't have two &GetTrace in ExpList.h hmm...
-				return m_fields[0]->GetTrace1D()->GetExpSize();
-				
-				//return m_graph->GetNvertices();
-				break;
-			}
+                return m_fields[0]->GetTrace1D()->GetExpSize();
+		
+                //return m_graph->GetNvertices();
+                break;
+            }
             case 2:
-            case 3:
                 return m_fields[0]->GetTrace()->GetNpoints();
                 break;
+            case 3:
+            {
+                // can't have two &GetTrace in ExpList.h hmm...
+                return m_fields[0]->GetTrace3D()->GetNpoints();
+                break;
+            }
             default:
                 ASSERTL0(false,"illegal expansion dimension");
                 return 0;

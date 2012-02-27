@@ -111,6 +111,18 @@ namespace Nektar
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::CompositeMap &domain,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D);
+            
+            /// Upwind the \a Fwd and \a Bwd states based on the one-
+            /// dimensional normal velocity field given by \a Vn.
+            MULTI_REGIONS_EXPORT void Upwind(
+                const Array<OneD, const NekDouble> &Vn,
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                      Array<OneD,       NekDouble> &Upwind,
+                int direction=1);
+            
+            MULTI_REGIONS_EXPORT void GetNormals(
+                Array<OneD, Array<OneD, NekDouble> > &normals);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();

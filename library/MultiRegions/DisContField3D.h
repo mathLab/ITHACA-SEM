@@ -168,6 +168,43 @@ namespace Nektar
 													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
 													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx,
+                                          const Array<OneD, const NekDouble> &Fy,
+                                          const Array<OneD, const NekDouble> &Fz,
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                AddTraceIntegral(Fx,Fy,Fz,outarray);
+            }
+
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                AddTraceIntegral(Fn,outarray);
+            }
+
+            virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                GetFwdBwdTracePhys(Fwd,Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+                                              Array<OneD,NekDouble> &Fwd,
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                GetFwdBwdTracePhys(field, Fwd,Bwd);
+            }
+
+            virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+            {
+                ExtractTracePhys(outarray);
+            }
+
+            virtual void v_ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                ExtractTracePhys(inarray,outarray);
+            }
+
             virtual const Array<OneD,const MultiRegions::ExpListSharedPtr> & v_GetBndCondExpansions();
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();

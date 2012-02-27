@@ -44,7 +44,7 @@ namespace Nektar
         DNekMatSharedPtr Expansion3D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
-            ASSERTL0(false,"This matrix type cannot is not set up");
+            ASSERTL0(false,"This matrix type is not set up");
             
             return returnval;
         }
@@ -96,7 +96,6 @@ namespace Nektar
             int order_e = map.num_elements(); // Order of the element
             int n_coeffs = (FaceExp->GetCoeffs()).num_elements(); // Order of the trace
             
-            
             if(n_coeffs!=order_e) // Going to orthogonal space
             {
                 ASSERTL0(false, "Variable order not supported in 3D.");
@@ -104,7 +103,7 @@ namespace Nektar
             else
             {
                 FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
-
+                
                 /*
                 if(edgedir == StdRegions::eBackwards)
                 {

@@ -421,7 +421,7 @@ namespace Nektar
             /// specified via VALUE="FILE:..."
             if ((parseInfo.full == false) && (expr.find("FILE:") != std::string::npos))
             {
-                return;
+                return -1;
             }
             ASSERTL1(parseInfo.full != false, "Unable to fully parse function. Stopped just before: "
                                          + std::string(parseInfo.stop, parseInfo.stop + 15));

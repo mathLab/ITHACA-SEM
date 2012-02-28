@@ -211,7 +211,7 @@ namespace Nektar
 
                             if (attr)
                             {
-                                std::string equation, userDefined;
+                                std::string equation, userDefined, filename;
 
                                 while(attr) 
                                 {
@@ -241,10 +241,21 @@ namespace Nektar
 
                                         equation = attrData;
                                       }
+                                     else if(attrName=="FILE")
+                                     {
+                                        ASSERTL0(attrName == "FILE", (std::string("Unknown attribute: ") + attrName).c_str());
+
+                                        attrData = attr->Value();
+                                        ASSERTL0(!attrData.empty(), "FILE attribute must be specified.");
+
+                                        m_session->SubstituteExpressions(attrData);
+
+                                        filename = attrData;
+                                      }
                                       attr = attr->Next();
-                                 }
-                                    BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(equation, userDefined));
-                                    (*boundaryConditions)[*iter]  = neumannCondition;
+                                }
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(equation, userDefined, filename));
+                                (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
                             {
@@ -273,7 +284,7 @@ namespace Nektar
 
                             if (attr)
                             {
-                                std::string equation, userDefined;
+                                std::string equation, userDefined, filename;
 
                                 while(attr) {
 
@@ -300,10 +311,21 @@ namespace Nektar
 
                                         equation = attrData;
                                     }
+                                    else if(attrName=="FILE")
+                                    {
+                                       ASSERTL0(attrName == "FILE", (std::string("Unknown attribute: ") + attrName).c_str());
+
+                                       attrData = attr->Value();
+                                       ASSERTL0(!attrData.empty(), "FILE attribute must be specified.");
+
+                                       m_session->SubstituteExpressions(attrData);
+
+                                       filename = attrData;
+                                     }
                                    attr = attr->Next();
                                 }
 
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(equation, userDefined));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(equation, userDefined, filename));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
@@ -335,9 +357,10 @@ namespace Nektar
                             
                             if (attr)
                             {
-                                std::string attrName1, attrName2;
-                                std::string attrData1, attrData2;
+                                std::string attrName1;
+                                std::string attrData1;
                                 std::string equation1, equation2, userDefined;
+                                std::string filename;
 
                                 while(attr){
 
@@ -353,7 +376,8 @@ namespace Nektar
 
                                     userDefined = attrData1;
 
-                                 } else if(attrName1 == "VALUE"){
+                                 }
+                                 else if(attrName1 == "VALUE"){
 
                                     ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
 
@@ -378,11 +402,22 @@ namespace Nektar
                                     equation2 = attrData1;
 
                                  }
+                                 else if(attrName1=="FILE")
+                                 {
+                                    ASSERTL0(attrName1 == "FILE", (std::string("Unknown attribute: ") + attrName1).c_str());
+
+                                    attrData1 = attr->Value();
+                                    ASSERTL0(!attrData1.empty(), "FILE attribute must be specified.");
+
+                                    m_session->SubstituteExpressions(attrData1);
+
+                                    filename = attrData1;
+                                 }
                                  attr = attr->Next();
 
                                 }
 
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(equation1, equation2, userDefined));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(equation1, equation2, userDefined, filename));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                             else

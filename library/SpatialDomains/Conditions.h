@@ -80,13 +80,15 @@ namespace Nektar
             eTimeDependent,
             eIsentropicVortex,
             eCalcBC,
-			eQinflow,
+            eQinflow,
             eNoUserDefined
         };
 
         struct BoundaryConditionBase
         {
-            BoundaryConditionBase(BoundaryConditionType type, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(
+                    BoundaryConditionType type,
+                    const std::string &userDefined = std::string("NoUserDefined")):
                 m_boundaryConditionType(type)
             {
                 std::map<const std::string, BndUserDefinedType>  known_type;
@@ -94,7 +96,7 @@ namespace Nektar
                 known_type["I"] = eI;
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
-				known_type["Q-inflow"] = eQinflow;
+                known_type["Q-inflow"] = eQinflow;
                 known_type["WALL"] = eWALL;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;
@@ -132,12 +134,12 @@ namespace Nektar
             {
                 return m_userDefined;
             }
-			
-			int m_parent;
+
+            int m_parent;
             int m_daughter1;
-			int m_daughter2;
-			
-			void SetJunction(int P, int D1)
+            int m_daughter2;
+
+            void SetJunction(int P, int D1)
             {
                 m_parent = P;
 				m_daughter1 = D1;
@@ -175,44 +177,61 @@ namespace Nektar
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
-            BndUserDefinedType   m_userDefined;
+            BndUserDefinedType    m_userDefined;
         };
 
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
 
-             DirichletBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eDirichlet, userDefined),
-                m_dirichletCondition(eqn)
+             DirichletBoundaryCondition(
+                    const std::string& eqn,
+                    const std::string& userDefined = std::string("NoUserDefined"),
+                    const std::string& filename=std::string("")):
+                BoundaryConditionBase(eDirichlet, userDefined),
+                m_dirichletCondition(eqn),
+                m_filename(filename)
                 {
                 }
 
-             LibUtilities::Equation m_dirichletCondition;
+            LibUtilities::Equation m_dirichletCondition;
+            std::string m_filename;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
-            NeumannBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("NoUserDefined")):
+            NeumannBoundaryCondition(
+                    const std::string& eqn,
+                    const std::string& userDefined = std::string("NoUserDefined"),
+                    const std::string& filename=std::string("")):
                 BoundaryConditionBase(eNeumann, userDefined),
-                m_neumannCondition(eqn)
+                m_neumannCondition(eqn),
+                m_filename(filename)
             {
             }
 
             LibUtilities::Equation m_neumannCondition;
+            std::string m_filename;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
-            RobinBoundaryCondition( const std::string &a, const std::string &b, const std::string &userDefined = std::string("NoUserDefined")):
+            RobinBoundaryCondition(
+                    const std::string &a,
+                    const std::string &b,
+                    const std::string &userDefined = std::string("NoUserDefined"),
+                    const std::string& filename=std::string("")):
                 BoundaryConditionBase(eRobin, userDefined),
-                m_robinFunction(a), m_robinPrimitiveCoeff(b)
+                m_robinFunction(a),
+                m_robinPrimitiveCoeff(b),
+                m_filename(filename)
             {
             }
                 // \frac{\partial {u}}{\partial{n}} +
                 // m_robinPrimativeCoeff(x,y,z)*u = m_robinFunction(x,y,z)
             LibUtilities::Equation m_robinFunction;
             LibUtilities::Equation m_robinPrimitiveCoeff;
+            std::string m_filename;
         };
 
 
@@ -226,46 +245,46 @@ namespace Nektar
 
             unsigned int m_connectedBoundaryRegion;
         };
-		
-		struct JunctionBoundaryCondition : public BoundaryConditionBase
+
+        struct JunctionBoundaryCondition : public BoundaryConditionBase
         {
             JunctionBoundaryCondition( const int &P, const int &D1, const std::string &userDefined = std::string("NoUserDefined")):
-			BoundaryConditionBase(eJunction, userDefined),
-			m_parent(P), m_daughter1(D1)
+            BoundaryConditionBase(eJunction, userDefined),
+            m_parent(P), m_daughter1(D1)
             {
-				SetJunction(P, D1);
+                SetJunction(P, D1);
             }
             int m_parent;
             int m_daughter1;
-        };
-		
-		struct BifurcationBoundaryCondition : public BoundaryConditionBase
-        {
-            BifurcationBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
-			BoundaryConditionBase(eBifurcation, userDefined),
-			m_parent(P), m_daughter1(D1), m_daughter2(D2)
-            {
-				SetBifurcation(P, D1, D2);
-            }
-            int m_parent;
-            int m_daughter1;
-			int m_daughter2;
         };
 
-		struct MergingBoundaryCondition : public BoundaryConditionBase
+        struct BifurcationBoundaryCondition : public BoundaryConditionBase
         {
-            MergingBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
-			BoundaryConditionBase(eMerging, userDefined),
-			m_parent(P), m_daughter1(D1), m_daughter2(D2)
+            BifurcationBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(eBifurcation, userDefined),
+            m_parent(P), m_daughter1(D1), m_daughter2(D2)
             {
-				SetMerging(P, D1, D2);
+                SetBifurcation(P, D1, D2);
             }
             int m_parent;
             int m_daughter1;
-			int m_daughter2;
+            int m_daughter2;
         };
-		
-		
+
+        struct MergingBoundaryCondition : public BoundaryConditionBase
+        {
+            MergingBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(eMerging, userDefined),
+            m_parent(P), m_daughter1(D1), m_daughter2(D2)
+            {
+                SetMerging(P, D1, D2);
+            }
+            int m_parent;
+            int m_daughter1;
+            int m_daughter2;
+        };
+
+
         typedef std::map<int, Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
@@ -276,8 +295,8 @@ namespace Nektar
         typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
         typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
         typedef boost::shared_ptr<JunctionBoundaryCondition>  JunctionBCShPtr;
-		typedef boost::shared_ptr<BifurcationBoundaryCondition>  BifurcationBCShPtr;
-		typedef boost::shared_ptr<MergingBoundaryCondition>   MergingBCShPtr;
+        typedef boost::shared_ptr<BifurcationBoundaryCondition>  BifurcationBCShPtr;
+        typedef boost::shared_ptr<MergingBoundaryCondition>   MergingBCShPtr;
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
         typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;

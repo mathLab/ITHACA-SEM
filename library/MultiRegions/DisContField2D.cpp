@@ -1261,30 +1261,28 @@ namespace Nektar
                     if(m_bndConditions[i]->GetBoundaryConditionType()
                        == SpatialDomains::eDirichlet)
                     {
-                    	string filebcs  =  (boost::static_pointer_cast<
-                    	    SpatialDomains::DirichletBoundaryCondition
-                    	    >(m_bndConditions[i])->m_dirichletCondition
-                    	     ).GetExpression();
-                    	string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
 
-//                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
-                    	if(iffile=="FILE")
+                        string filebcs  =  boost::static_pointer_cast<
+                                                SpatialDomains::DirichletBoundaryCondition
+                                            >(m_bndConditions[i])->m_filename;
+                        if(filebcs != "")
                         {
-                             int lenfile = filebcs.length(); 	
-                             filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);          
                              string var = filebcs.substr(0, filebcs.find_last_of("."));
                              int len=var.length();
-                             var = var.substr(len-1,len);                                                                    
+                             var = var.substr(len-1,len);
+
+                             cout<<"boundary condition from file:"<<filebcs<<endl;
+
                              std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             cout<<"boundary condition from file:"<<filebcs<<endl;
                              m_graph->Import(filebcs,FieldDef, FieldData);
-                             // copy FieldData into locExpList                                            
-                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
+
+                             // copy FieldData into locExpList
+                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],
                                                  FieldDef[0]->m_fields[0]);   
                              locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
                              locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
-                                        locExpList->UpdateCoeffs());                                     
+                                        locExpList->UpdateCoeffs());
                         }
                         else
                         {
@@ -1300,25 +1298,23 @@ namespace Nektar
                     else if(m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eNeumann)
                     {
-            		string filebcs  =  (boost::static_pointer_cast<
-            			SpatialDomains::NeumannBoundaryCondition
-            			>(m_bndConditions[i])->m_neumannCondition
-            			).GetExpression();
-            	 	string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
-//                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
-			if(iffile=="FILE")
+                        string filebcs  =  boost::static_pointer_cast<
+                                                SpatialDomains::NeumannBoundaryCondition
+                                           >(m_bndConditions[i])->m_filename;
+                        if(filebcs != "")
                         {
-                             int lenfile = filebcs.length(); 	
-                             filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);                              
                              string var = filebcs.substr(0, filebcs.find_last_of("."));
                              int len=var.length();
-                             var = var.substr(len-1,len);     
+                             var = var.substr(len-1,len);
+
+                             cout<<"boundary condition from file:"<<filebcs<<endl;
+
                              std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             cout<<"boundary condition from file:"<<filebcs<<endl;
                              m_graph->Import(filebcs,FieldDef, FieldData);
-                             // copy FieldData into locExpList                                           
-                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
+
+                             // copy FieldData into locExpList
+                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],
                                              FieldDef[0]->m_fields[0]);
                              locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
                              locExpList->IProductWRTBase(locExpList->GetPhys(),
@@ -1338,28 +1334,24 @@ namespace Nektar
                     else if(m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eRobin)
                     {
-            		string filebcs  =  (boost::static_pointer_cast<
-            			SpatialDomains::RobinBoundaryCondition
-            			>(m_bndConditions[i])->m_robinFunction
-            			).GetExpression();
-            		string iffile = filebcs.substr(0,filebcs.find_first_of(":"));                                          
-//Never tested!!!
-//                      if(filebcs.find_first_not_of("01234567890-+/*")!= string::npos)
-			if(iffile=="FILE")
+                        string filebcs  =  boost::static_pointer_cast<
+                                                SpatialDomains::NeumannBoundaryCondition
+                                           >(m_bndConditions[i])->m_filename;
+                        if(filebcs != "")
                         {
-                             int lenfile = filebcs.length(); 	
-                             filebcs = filebcs.substr(filebcs.find_first_of(":")+1,lenfile);        
+//Never tested!!!
                              string var = filebcs.substr(0, filebcs.find_last_of("."));
                              int len=var.length();
-                             var = var.substr(len-1,len);                               
+                             var = var.substr(len-1,len);
+
                              std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
 
                              m_graph->Import(filebcs,FieldDef, FieldData);
 
-                             // copy FieldData into locExpList                                       
-                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],	                             	     	     		
-                                                 FieldDef[0]->m_fields[0]);                                                
+                             // copy FieldData into locExpList
+                             locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],
+                                                 FieldDef[0]->m_fields[0]);
                              locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
                              locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());

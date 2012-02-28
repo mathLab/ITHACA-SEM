@@ -1415,9 +1415,10 @@ namespace Nektar
         }
     }
 
-    /*
-     * Calculate weak DG advection in the form
-     * \f$ \langle\phi, \hat{F}\cdot n\rangle - (\nabla \phi \cdot F) \f$
+    /**
+     * @brief Calculate weak DG advection in the form \f$ \langle\phi,
+     * \hat{F}\cdot n\rangle - (\nabla \phi \cdot F) \f$
+     * 
      * @param   InField         Fields.
      * @param   OutField        Storage for result.
      * @param   NumericalFluxIncludesNormal     Default: true.

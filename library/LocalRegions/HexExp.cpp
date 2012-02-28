@@ -405,6 +405,26 @@ namespace Nektar
         }
 
 
+        /**
+         * @brief Calculates the inner product \f$ I_{pqr} = (u,
+         * \partial_{x_i} \phi_{pqr}) \f$.
+         * 
+         * The derivative of the basis functions is performed using the chain
+         * rule in order to incorporate the geometric factors. Assuming that
+         * the basis functions are a tensor product
+         * \f$\phi_{pqr}(\xi_1,\xi_2,\xi_3) =
+         * \phi_p(\xi_1)\phi_q(\xi_2)\phi_r(\xi_3)\f$, in the hexahedral
+         * element, this is straightforward and yields the result
+         * 
+         * \f[
+         * I_{pqr} = \sum_{k=1}^3 \left(u, \frac{\partial u}{\partial \xi_k}
+         * \frac{\partial \xi_k}{\partial x_i}\right)
+         * \f]
+         * 
+         * @param dir       Direction in which to take the derivative.
+         * @param inarray   The function \f$ u \f$.
+         * @param outarray  Value of the inner product.
+         */
         void HexExp::IProductWRTDerivBase_SumFac(
                 const int dir, 
                 const Array<OneD, const NekDouble>& inarray, 
@@ -421,15 +441,15 @@ namespace Nektar
  
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
-            Array<OneD, NekDouble> alloc(3*nqtot + 2*GetNcoeffs()
-                                         + nmodes0*nquad2*(nquad1+nmodes1));
-            Array<OneD, NekDouble> tmp1(alloc);           // Dir1 metric
-            Array<OneD, NekDouble> tmp2(alloc +   nqtot); // Dir2 metric
-            Array<OneD, NekDouble> tmp3(alloc + 2*nqtot); // Dir3 metric
-            Array<OneD, NekDouble> tmp4(alloc + 3*nqtot); // Dir1 iprod
-            Array<OneD, NekDouble> tmp5(alloc + 4*GetNcoeffs()); // Dir2 iprod
-            Array<OneD, NekDouble> wsp (alloc + 5*GetNcoeffs()); // Wsp
-
+            Array<OneD, NekDouble> alloc(3*nqtot + 2*m_ncoeffs +
+                                         nmodes0*nquad2*(nquad1+nmodes1));
+            Array<OneD, NekDouble> tmp1(alloc);               // Dir1 metric
+            Array<OneD, NekDouble> tmp2(alloc +   nqtot);     // Dir2 metric
+            Array<OneD, NekDouble> tmp3(alloc + 2*nqtot);     // Dir3 metric
+            Array<OneD, NekDouble> tmp4(alloc + 3*nqtot);     // Dir1 iprod
+            Array<OneD, NekDouble> tmp5(tmp4  +   m_ncoeffs); // Dir2 iprod
+            Array<OneD, NekDouble> wsp (tmp4  + 2*m_ncoeffs); // Wsp
+            
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,inarray.get(),1,tmp1.get(),1);
@@ -446,7 +466,7 @@ namespace Nektar
             MultiplyByQuadratureMetric(tmp1,tmp1);
             MultiplyByQuadratureMetric(tmp2,tmp2);
             MultiplyByQuadratureMetric(tmp3,tmp3);
-
+            
             IProductWRTBase_SumFacKernel(   m_base[0]->GetDbdata(),
                                             m_base[1]->GetBdata(),
                                             m_base[2]->GetBdata(),
@@ -2071,7 +2091,7 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
-                            mkey.GetNVarCoeff())
+                       mkey.GetNVarCoeff())
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);

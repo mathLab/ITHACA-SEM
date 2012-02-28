@@ -258,7 +258,6 @@ namespace Nektar
                 }
                 break;
             case eIMEXOrder1:
-            case eFEBE:
                 {
                     m_numsteps  = 2;
                     m_numstages = 1;
@@ -287,7 +286,6 @@ namespace Nektar
                 }
                 break;
             case eIMEXOrder2:
-            case eARW2:
                 {
                     NekDouble third = 1.0/3.0;
                     m_numsteps  = 4;
@@ -326,7 +324,6 @@ namespace Nektar
                 }
                 break;
             case eIMEXOrder3:
-            case eARW3:
                 {
                     NekDouble eleventh = 1.0/11.0;
                     m_numsteps  = 6;
@@ -597,7 +594,6 @@ namespace Nektar
                 }
                 break;
             case eIMEXdirk_2_3_2:
-            case eARS_2_3_2:
                 {
                     m_numsteps  = 1;
                     m_numstages = 3;
@@ -637,7 +633,6 @@ namespace Nektar
                 }
                 break;
             case eIMEXdirk_3_4_3:
-			case eARS_3_4_3:
                 {
                     m_numsteps  = 1;
                     m_numstages = 4;
@@ -800,7 +795,6 @@ namespace Nektar
                 }
                 break;
             case eIMEXdirk_2_2_2:		
-            case eARS_2_2_2:
                 {
                     m_numsteps  = 1;
                     m_numstages = 3;
@@ -840,7 +834,6 @@ namespace Nektar
                 }
                 break;
 			case eIMEXdirk_2_3_3:		
-			case eARS_2_3_3:
                 {
                     m_numsteps  = 1;
                     m_numstages = 3;
@@ -879,7 +872,6 @@ namespace Nektar
                 }
                 break;
 			case eIMEXdirk_1_1_1:		
-			case eARS_1_1_1:
                 {
                     m_numsteps  = 1;
                     m_numstages = 2;
@@ -910,7 +902,6 @@ namespace Nektar
                 }
                 break;
 			case eIMEXdirk_1_2_1:		
-			case eARS_1_2_1:
                 {
                     m_numsteps  = 1;
                     m_numstages = 2;
@@ -942,7 +933,6 @@ namespace Nektar
                 }
                 break;
 			case eIMEXdirk_1_2_2:		
-			case eARS_1_2_2:
                 {
                     m_numsteps  = 1;
                     m_numstages = 2;
@@ -973,7 +963,6 @@ namespace Nektar
                 }
                 break;	
 			case eIMEXdirk_4_4_3:		
-			case eARS_4_4_3:
                 {
                     m_numsteps  = 1;
                     m_numstages = 5;

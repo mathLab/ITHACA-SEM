@@ -41,7 +41,7 @@
                 <D VAR="v" VALUE="0" />
             </REGION>
             <REGION REF="1">
-                <N VAR="u" VALUE="FILE:Test_2DFlow_lineforcing_bcfromfile_u_1.bc" />
+                <N VAR="u" FILE="Test_2DFlow_lineforcing_bcfromfile_u_1.bc" />
                       <!-- VALUE=3   -->
                 <D VAR="v" VALUE="0" />
             </REGION>

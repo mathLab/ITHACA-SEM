@@ -1335,7 +1335,7 @@ namespace Nektar
                             == SpatialDomains::eRobin)
                     {
                         string filebcs  =  boost::static_pointer_cast<
-                                                SpatialDomains::NeumannBoundaryCondition
+                                                SpatialDomains::RobinBoundaryCondition
                                            >(m_bndConditions[i])->m_filename;
                         if(filebcs != "")
                         {

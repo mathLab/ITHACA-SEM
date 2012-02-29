@@ -116,7 +116,7 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT virtual int v_GetFid() const;
 
-            SPATIAL_DOMAINS_EXPORT virtual int v_GetCoordDim() const;
+            SPATIAL_DOMAINS_EXPORT virtual int v_GetCoordim() const;
 
 	    SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr 
                     v_GetBasis(const int i, const int j);

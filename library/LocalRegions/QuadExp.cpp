@@ -625,7 +625,7 @@ namespace Nektar
                      "Local coordinates are not in region [-1,1]");
 
             m_geom->FillGeom();
-            for(i = 0; i < m_geom->GetCoordDim(); ++i)
+            for(i = 0; i < m_geom->GetCoordim(); ++i)
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
@@ -1402,7 +1402,7 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
                         // Additional terms if Quad embedded in 3D coordinate system
-                        if (m_geom->GetCoordDim() == 3)
+                        if (m_geom->GetCoordim() == 3)
                         {
                             (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0]+gmat[4][0]*gmat[4][0])*lap00 +
                                 (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0] + gmat[4][0]*gmat[5][0])*(lap01 + Transpose(lap01)) +

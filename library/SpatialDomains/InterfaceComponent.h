@@ -1,6 +1,6 @@
 // //////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/InterfaceComponent.h,v $
+//  File:  InterfaceComponent.h
 //
 //  For more information, please see: http://www.nektar.info/
 //

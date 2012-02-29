@@ -21,6 +21,7 @@
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/lexical_cast.hpp>
+#include <tinyxml/tinyxml.h>
 
 using namespace Nektar;
 

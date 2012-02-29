@@ -37,8 +37,6 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/GeomFactors.h>
 
@@ -89,6 +87,19 @@ namespace Nektar
         typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
+
+
+        /// \brief Less than operator to sort Geometry objects by global id when sorting 
+        /// STL containers.
+        SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
+            const boost::shared_ptr<Geometry>& rhs);
+
+        SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
+            const boost::shared_ptr<Geometry>& rhs);
+
+
+
+        /// Base class for shape geometry information
         class Geometry
         {
             public:
@@ -97,175 +108,129 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual ~Geometry();
 
+                //---------------------------------------
+                // Element connection functions
+                //---------------------------------------
+                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(
+                            int gvo_id,
+                            int locid) const;
+                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(
+                            int gvo_id,
+                            int locid);
+                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
 
-                inline GeomType GetGtype()
-                {
-                    return m_geomFactors->GetGtype();
-                }
+                //---------------------------------------
+                // Helper functions
+                //---------------------------------------
 
-                inline const Array<OneD, const NekDouble> &GetJac()
-                {
-                    return m_geomFactors->GetJac();
-                }
+                SPATIAL_DOMAINS_EXPORT void FillGeom();
+                SPATIAL_DOMAINS_EXPORT void GetLocCoords(
+                        const Array<OneD, const NekDouble> &coords,
+                              Array<OneD,       NekDouble> &Lcoords);
+                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(
+                        const int i, const Array<OneD, const NekDouble> &Lcoord);
 
-                inline const Array<TwoD, const NekDouble>& GetGmat()
-                {
-                    return m_geomFactors->GetGmat();
-                }
+                SPATIAL_DOMAINS_EXPORT void SetOwnData();
+                SPATIAL_DOMAINS_EXPORT Array<OneD,NekDouble>&
+                            UpdatePhys(const int i);
+                SPATIAL_DOMAINS_EXPORT const LibUtilities::BasisSharedPtr 
+                            GetBasis(const int i, const int j);
 
-                inline const int GetCoordim() const
-                {
-                    return m_coordim;
-                }
+                SPATIAL_DOMAINS_EXPORT GeomType GetGtype();
+                SPATIAL_DOMAINS_EXPORT const Array<OneD, const NekDouble>& GetJac();
+                SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble>& GetGmat();
+                SPATIAL_DOMAINS_EXPORT const int GetCoordim() const;
+                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetMetricInfo();
+                SPATIAL_DOMAINS_EXPORT GeomShapeType GetGeomShapeType(void);
+                SPATIAL_DOMAINS_EXPORT int GetGlobalID(void);
+                SPATIAL_DOMAINS_EXPORT void SetGlobalID(int globalid);
+                SPATIAL_DOMAINS_EXPORT int GetVid(int i) const;
+                SPATIAL_DOMAINS_EXPORT int GetEid(int i = 0) const;
+                SPATIAL_DOMAINS_EXPORT int GetNumVerts() const;
+                SPATIAL_DOMAINS_EXPORT StdRegions::EdgeOrientation
+                            GetEorient(const int i) const;
+                SPATIAL_DOMAINS_EXPORT StdRegions::PointOrientation
+                            GetPorient(const int i) const;
+                SPATIAL_DOMAINS_EXPORT int GetNumEdges() const;
+                SPATIAL_DOMAINS_EXPORT int GetShapeDim() const;
+                SPATIAL_DOMAINS_EXPORT bool ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                              NekDouble tol = 0.0);
 
-                inline GeomFactorsSharedPtr GetGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-                {
-                    GenGeomFactors(tbasis);
-                    return ValidateRegGeomFactor(m_geomFactors);
-                }
-
-                inline GeomFactorsSharedPtr GetMetricInfo()
-                {
-                    return m_geomFactors;
-                }
-
-                inline GeomShapeType GetGeomShapeType(void)
-                {
-                    return m_geomShapeType;
-                }
-
-                inline int GetGlobalID(void)
-                {
-                    return m_globalID;
-                }
-
-                void SetGlobalID(int globalid)
-                {
-                    m_globalID = globalid;
-                }
-
-                // Wrappers around virtual Functions
-                inline int GetVid(int i) const
-                {
-                    return v_GetVid(i);
-                }
-
-                inline int GetNumVerts() const
-                {
-                    return v_GetNumVerts();
-                }
-
-                inline StdRegions::EdgeOrientation GetEorient(const int i) const
-                {
-                    return v_GetEorient(i);
-                }
-			
-				inline StdRegions::PointOrientation GetPorient(const int i) const
-				{
-					return v_GetPorient(i);
-				}
-
-                inline int GetNumEdges() const
-                {
-                    return v_GetNumEdges();
-                }
-
-                inline int GetShapeDim() const
-                {
-                    return v_GetShapeDim();
-                }
-
-                inline bool ContainsPoint(
-                                          const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0)
-                {
-                    return v_ContainsPoint(gloCoord,tol);
-                }
 
             protected:
 
-                SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
+                SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr
+                            ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
 
-                int                  m_coordim;     // coordinate dimension
+                /// coordinate dimension
+                int                  m_coordim;
+
                 GeomFactorsSharedPtr m_geomFactors;
-                GeomState            m_state;       // enum identifier to determine if quad points are filled
+
+                /// enum identifier to determine if quad points are filled
+                GeomState            m_state;
+
                 static GeomFactorsVector m_regGeomFactorsManager;
 
                 GeomShapeType m_geomShapeType;
                 int           m_globalID;
 
-                void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-                {
-                    return v_GenGeomFactors(tbasis);
-                }
+                void GenGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
 
         private:
                 GeomType m_geomType;
 
-                virtual int v_GetEid(int i) const
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                             "This function is only valid for shape type geometries");
-                    return 0;
-                }
 
-                virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        "This function is only valid for shape type geometries");
-                }
-
-                virtual int v_GetVid(int i) const
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                             "This function is only valid for expansion type geometries");
-                    return 0;
-                }
+                //---------------------------------------
+                // Element connection functions
+                //---------------------------------------
+                virtual bool v_IsElmtConnected(
+                            int gvo_id,
+                            int locid) const;
+                virtual void v_AddElmtConnected(
+                            int gvo_id,
+                            int locid);
+                virtual int  v_NumElmtConnected() const;
 
 
-                virtual int v_GetNumVerts() const
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        "This function is only valid for shape type geometries");
-                    return 0;
-                }
+                //---------------------------------------
+                // Helper functions
+                //---------------------------------------
 
-                virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        "This function is not valid for this geometry.");
-                    return StdRegions::eForwards;
-                }
-			
-				virtual StdRegions::PointOrientation v_GetPorient(const int i) const
-				{
-					NEKERROR(ErrorUtil::efatal,
-							 "This function is not valid for this geometry.");
-					return StdRegions::eFwd;
-				}
-
-                virtual int v_GetNumEdges() const
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        "This function is only valid for shape type geometries");
-                    return 0;
-                }
-
-
-                virtual int v_GetShapeDim() const
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                             "This function is only valid for shape type geometries");
-                    return 0;
-                }
-
+                virtual int  v_GetEid(int i) const;
+                virtual void v_GenGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                virtual int  v_GetVid(int i) const;
+                virtual int  v_GetNumVerts() const;
+                virtual StdRegions::EdgeOrientation
+                             v_GetEorient(const int i) const;
+                virtual StdRegions::PointOrientation
+                             v_GetPorient(const int i) const;
+                virtual int  v_GetNumEdges() const;
+                virtual int  v_GetShapeDim() const;
+                virtual int  v_GetCoordim() const;
                 virtual bool v_ContainsPoint(
-                                             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0)
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                             "This function has not been defined for this geometry");
-                    return false;
-                }
-        };
+                        const Array<OneD, const NekDouble>& gloCoord,
+                              NekDouble tol = 0.0);
+                virtual void v_FillGeom();
+                virtual NekDouble v_GetCoord(
+                            const int i,
+                            const Array<OneD,const NekDouble>& Lcoord);
+                virtual void v_GetLocCoords(
+                            const Array<OneD,const NekDouble>& coords,
+                                  Array<OneD,NekDouble>& Lcoords);
+
+                virtual void v_SetOwnData();
+                virtual Array<OneD,NekDouble>& v_UpdatePhys(const int i);
+                virtual const LibUtilities::BasisSharedPtr
+                             v_GetBasis(const int i, const int j);
+
+        }; // class Geometry
+
 
         struct GeometryHash : std::unary_function<GeometrySharedPtr, std::size_t>
         {
@@ -287,14 +252,6 @@ namespace Nektar
                 return seed;
             }
         };
-
-        /// \brief Less than operator to sort Geometry objects by global id when sorting 
-        /// STL containers.
-       SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
-            const boost::shared_ptr<Geometry>& rhs);
-
-       SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
-            const boost::shared_ptr<Geometry>& rhs);
 
     }; //end of namespace
 }; // end of namespace

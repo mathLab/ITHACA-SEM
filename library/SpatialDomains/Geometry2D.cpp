@@ -29,65 +29,196 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:  2D geometry information
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/Geometry2D.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdQuadExp.h>
 
 namespace Nektar
 {
-  namespace SpatialDomains
-  {
-      Geometry2D::Geometry2D()
-      {
-      }
-      
-      Geometry2D::Geometry2D(const int coordim):
-          Geometry(coordim)
-      {
-          ASSERTL0(m_coordim > 1,
-                   "Coordinate dimension should be at least 2 for a 2D geometry");
-      }
+    namespace SpatialDomains
+    {
+        Geometry2D::Geometry2D()
+        {
+        }
 
-      Geometry2D::~Geometry2D()
-      {
-      }
+        Geometry2D::Geometry2D(const int coordim):
+            Geometry(coordim)
+        {
+            ASSERTL0(m_coordim > 1,
+                     "Coordinate dimension should be at least 2 for a 2D geometry");
+        }
+
+        Geometry2D::~Geometry2D()
+        {
+        }
+
+
+        StdRegions::StdExpansion2DSharedPtr Geometry2D::GetXmap(const int i)
+        {
+            return m_xmap[i];
+        }
+
+        int Geometry2D::GetFid() const
+        {
+            return v_GetFid();
+        }
+
+
+
+        const LibUtilities::BasisSharedPtr Geometry2D::GetEdgeBasis(const int i, const int j)
+        {
+            return v_GetEdgeBasis(i,j);
+        }
+
+
+        const Geometry2DSharedPtr Geometry2D::GetFace(int i) const
+        {
+            return v_GetFace(i);
+        }
+
+        StdRegions::FaceOrientation Geometry2D::GetFaceOrient(const int i) const
+        {
+            return v_GetFaceOrient(i);
+        }
+
+        const Geometry1DSharedPtr Geometry2D::GetEdge(int i) const
+        {
+            return v_GetEdge(i);
+        }
+
+        const VertexComponentSharedPtr Geometry2D::GetVertex(int i) const
+        {
+            return v_GetVertex(i);
+        }
+
+        StdRegions::EdgeOrientation Geometry2D::GetCartesianEorient(const int i) const
+        {
+            return v_GetCartesianEorient(i);
+        }
+
+        int Geometry2D::WhichEdge(SegGeomSharedPtr edge)
+        {
+            return v_WhichEdge(edge);
+        }
+
+        int Geometry2D::WhichFace(Geometry2DSharedPtr face)
+        {
+            return v_WhichFace(face);
+        }
+
+        StdRegions::StdExpansion2DSharedPtr Geometry2D::operator[](const int i) const
+        {
+            if((i>=0)&& (i<m_coordim))
+            {
+                return m_xmap[i];
+            }
+
+            NEKERROR(ErrorUtil::efatal,
+                     "Invalid Index used in [] operator");
+            return m_xmap[0]; //should never be reached
+        }
+
+        int Geometry2D::v_GetFid() const 
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        const LibUtilities::BasisSharedPtr Geometry2D::v_GetEdgeBasis(const int i, const int j)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            LibUtilities::BasisSharedPtr returnval;
+            return returnval;
+        }
+
+
+        int Geometry2D::v_GetEid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        const Geometry1DSharedPtr Geometry2D::v_GetEdge(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            SegGeomSharedPtr returnval;
+            return returnval;
+        }
+
+        const VertexComponentSharedPtr Geometry2D::v_GetVertex(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            VertexComponentSharedPtr returnval;
+            return returnval;
+        }
+
+        StdRegions::EdgeOrientation Geometry2D::v_GetEorient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return StdRegions::eForwards;
+        }
+
+        const Geometry2DSharedPtr Geometry2D::v_GetFace(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            Geometry2DSharedPtr returnval;
+            return returnval;
+        }
+
+        StdRegions::FaceOrientation Geometry2D::v_GetFaceOrient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+        }
+
+        StdRegions::EdgeOrientation Geometry2D::v_GetCartesianEorient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return StdRegions::eForwards;
+        }
+
+        int Geometry2D::v_WhichEdge(SegGeomSharedPtr edge)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        int Geometry2D::v_WhichFace(Geometry2DSharedPtr face)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        int Geometry2D::v_GetShapeDim() const
+        {
+            return 2;
+        }
+
+        bool Geometry2D::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                      NekDouble tol)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
 
   }; //end of namespace
 }; //end of namespace
 
-//
-// $Log: Geometry2D.cpp,v $
-// Revision 1.3  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.2  2007/06/06 15:15:21  pvos
-// Some minor updates for 2D routines
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.14  2006/04/09 02:08:34  jfrazier
-// Added precompiled header.
-//
-// Revision 1.13  2006/03/13 18:04:07  sherwin
-//
-// Corrected silly error in calling new
-//
-// Revision 1.12  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.11  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.10  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

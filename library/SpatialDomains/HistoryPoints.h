@@ -42,6 +42,8 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <tinyxml/tinyxml.h>
+
 class TiXmlElement;
 class TiXmlDocument;
 

@@ -395,7 +395,7 @@ namespace Nektar
         /**
          *
          */
-        int QuadGeom::v_GetCoordDim() const
+        int QuadGeom::v_GetCoordim() const
         {
             return m_coordim;
         }

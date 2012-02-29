@@ -29,12 +29,10 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:  1D geometry information
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/Geometry1D.h>
 #include <StdRegions/StdSegExp.h>
 
@@ -48,7 +46,7 @@ namespace Nektar
         }
 
         Geometry1D::Geometry1D(const int coordim):
-        Geometry(coordim)
+            Geometry(coordim)
         {
         }
 
@@ -56,29 +54,81 @@ namespace Nektar
         {
         }
 
+
+        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::GetXmap(const int i)
+        {
+            return v_GetXmap(i);
+        }
+
+        VertexComponentSharedPtr Geometry1D::GetVertex(const int i) const
+        {
+            return v_GetVertex(i);
+        }
+
+        StdRegions::ExpansionType Geometry1D::DetExpansionType() const
+        {
+            return v_DetExpansionType();
+        }
+
+        void Geometry1D::WriteToFile(std::ofstream &outfile, const int dumpVar)
+        {
+            v_WriteToFile(outfile,dumpVar);
+        }
+
+
+
+
+        int Geometry1D::v_GetShapeDim() const
+        {
+            return 1;
+        }
+
+
+        int Geometry1D::v_GetEid() const 
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            return 0;
+        }
+
+
+        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::v_GetXmap(const int i)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            static StdRegions::StdExpansion1DSharedPtr returnval;
+            return returnval; 
+        }
+
+        VertexComponentSharedPtr Geometry1D::v_GetVertex(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            VertexComponentSharedPtr returnval;
+            return returnval;
+        }
+
+        int Geometry1D::v_GetVid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            return 0;
+        }
+
+        StdRegions::ExpansionType Geometry1D::v_DetExpansionType() const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            return StdRegions::eNoExpansionType;
+        }
+
+        void Geometry1D::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+        }
+
+
+
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: Geometry1D.cpp,v $
-// Revision 1.1  2006/05/04 18:58:59  kirby
-// *** empty log message ***
-//
-// Revision 1.16  2006/04/09 02:08:34  jfrazier
-// Added precompiled header.
-//
-// Revision 1.15  2006/03/25 00:58:28  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.14  2006/03/12 14:20:42  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.13  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.12  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

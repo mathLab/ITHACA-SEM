@@ -20,6 +20,8 @@
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <LocalRegions/MatrixKey.h>
 
+#include <tinyxml/tinyxml.h>
+
 #include <boost/math/special_functions/fpclassify.hpp>
 
 using namespace Nektar;

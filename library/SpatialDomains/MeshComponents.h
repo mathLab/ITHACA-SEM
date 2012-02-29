@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshComponents.h,v $
+//  File:  MeshComponents.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -179,73 +179,4 @@ namespace Nektar
 }; //end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
-
-//
-// $Log: MeshComponents.h,v $
-// Revision 1.13  2008/09/09 14:19:28  sherwin
-// Added dist methods
-//
-// Revision 1.12  2008/03/03 02:30:00  bnelson
-// Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
-//
-// Revision 1.11  2007/08/11 23:38:48  sherwin
-// Update for full working version of Helmholtz1D
-//
-// Revision 1.10  2007/08/02 18:56:06  jfrazier
-// Added methods missing from declaration.
-//
-// Revision 1.9  2007/07/22 23:04:23  bnelson
-// Backed out Nektar::ptr.
-//
-// Revision 1.8  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.7  2006/10/15 06:18:58  sherwin
-// Moved NekPoint out of namespace LibUtilities
-//
-// Revision 1.6  2006/08/17 22:55:00  jfrazier
-// Continued adding code to process composites in the mesh2d.
-//
-// Revision 1.5  2006/06/05 00:07:43  bnelson
-// Fixed a gcc 4.1.0 compilation problem.  VertexComponent::VertexComponent is not allowed in the class declaration.
-//
-// Revision 1.4  2006/06/01 13:42:26  kirby
-// *** empty log message ***
-//
-// Revision 1.3  2006/05/07 11:26:38  sherwin
-// Modifications to get the demo LocalRegions::Project2D to compile
-//
-// Revision 1.2  2006/05/06 20:36:16  sherwin
-// Modifications to get LocalRegions/Project1D working
-//
-// Revision 1.1  2006/05/04 18:59:01  kirby
-// *** empty log message ***
-//
-// Revision 1.31  2006/05/02 21:21:11  sherwin
-// Corrected libraries to compile new version of spatialdomains and demo Graph1D
-//
-// Revision 1.30  2006/04/11 23:18:11  jfrazier
-// Completed MeshGraph2D for tri's and quads.  Not thoroughly tested.
-//
-// Revision 1.29  2006/03/25 00:58:29  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.28  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.27  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.26  2006/03/04 20:26:04  bnelson
-// Added comments after #endif.
-//
-// Revision 1.25  2006/02/26 21:19:43  bnelson
-// Fixed a variety of compiler errors caused by updates to the coding standard.
-//
-// Revision 1.24  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//
 

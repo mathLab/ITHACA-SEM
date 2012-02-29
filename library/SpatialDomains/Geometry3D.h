@@ -48,22 +48,13 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        /// 3D geometry information
         class Geometry3D : public Geometry
         {
         public:
             SPATIAL_DOMAINS_EXPORT Geometry3D();
             SPATIAL_DOMAINS_EXPORT Geometry3D(const int coordim);
             SPATIAL_DOMAINS_EXPORT virtual ~Geometry3D();
-            
-            //---------------------------------------
-            // 3D Geometry Methods
-            //---------------------------------------
-            SPATIAL_DOMAINS_EXPORT void FillGeom();
-            SPATIAL_DOMAINS_EXPORT void GetLocCoords(
-                const Array<OneD, const NekDouble> &coords,
-                      Array<OneD,       NekDouble> &Lcoords);
-            SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(
-                const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             //---------------------------------------
             // Helper functions
@@ -74,16 +65,10 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT StdRegions::FaceOrientation 
                 GetFaceOrient(const int i) const;
             SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
-            SPATIAL_DOMAINS_EXPORT Array<OneD,NekDouble> 
-                &UpdatePhys(const int i);
-            SPATIAL_DOMAINS_EXPORT const LibUtilities::BasisSharedPtr 
-                GetBasis(const int i, const int j);
 
-            //---------------------------------------
-            // Element connection functions
-            //---------------------------------------
-            SPATIAL_DOMAINS_EXPORT void SetOwnData();
-            
+            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion3DSharedPtr
+                GetXmap(const int i);
+
         protected:
             VertexComponentVector                            m_verts;
             SegGeomVector                                    m_edges;
@@ -99,19 +84,18 @@ namespace Nektar
             //---------------------------------------
             // 3D Geometry Methods
             //---------------------------------------
+
             virtual void      v_FillGeom();
-            virtual void      v_GetLocCoords(
-                const Array<OneD, const NekDouble> &coords,
-                      Array<OneD,       NekDouble> &Lcoords);
-            virtual void      v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             virtual NekDouble v_GetCoord(
                 const int i, const Array<OneD, const NekDouble> &Lcoord);
+            virtual void      v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            StdRegions::StdExpansion3DSharedPtr v_GetXmap(const int i);
+            virtual StdRegions::StdExpansion3DSharedPtr
+                                                v_GetXmap(const int i);
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetVid(int i) const;
             virtual const SegGeomSharedPtr      v_GetEdge(int i) const;
@@ -124,7 +108,8 @@ namespace Nektar
             virtual Array<OneD,NekDouble>      &v_UpdatePhys(const int i);
             virtual int                         v_WhichEdge(SegGeomSharedPtr edge);
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
-            const LibUtilities::BasisSharedPtr  v_GetBasis(const int i, 
+            virtual const LibUtilities::BasisSharedPtr
+                                                v_GetBasis(const int i, 
                                                            const int j);
 
             //---------------------------------------

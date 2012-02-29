@@ -34,14 +34,16 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/Geometry.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+
+        // static class property
+        GeomFactorsVector Geometry::m_regGeomFactorsManager;
+
         Geometry::Geometry():
             m_coordim(0),
             m_state(eNotFilled),
@@ -62,10 +64,12 @@ namespace Nektar
         {
         }
 
-        GeomFactorsVector Geometry::m_regGeomFactorsManager;
-        GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor)
+        GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(
+                GeomFactorsSharedPtr geomFactor)
         {
             GeomFactorsSharedPtr returnval = geomFactor;
+
+/// \todo should this '#if 0' statement be removed?
 #if 0
             bool found = false;
             if (geomFactor->GetGtype() == eRegular)
@@ -103,60 +107,311 @@ namespace Nektar
         {
             return lhs->GetGlobalID() == rhs->GetGlobalID();
         }
+
+
+        void Geometry::AddElmtConnected(int gvo_id, int locid)
+        {
+            return v_AddElmtConnected(gvo_id, locid);
+        }
+
+        int  Geometry::NumElmtConnected() const
+        {
+            return v_NumElmtConnected();
+        }
+
+        bool Geometry::IsElmtConnected(int gvo_id, int locid) const
+        {
+            return v_IsElmtConnected(gvo_id,locid);
+        }
+
+
+        GeomType Geometry::GetGtype()
+        {
+            return m_geomFactors->GetGtype();
+        }
+
+        const Array<OneD, const NekDouble>& Geometry::GetJac()
+        {
+            return m_geomFactors->GetJac();
+        }
+
+        const Array<TwoD, const NekDouble>& Geometry::GetGmat()
+        {
+            return m_geomFactors->GetGmat();
+        }
+
+        const int Geometry::GetCoordim() const
+        {
+            return v_GetCoordim();
+        }
+
+        GeomFactorsSharedPtr Geometry::GetGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            GenGeomFactors(tbasis);
+            return ValidateRegGeomFactor(m_geomFactors);
+        }
+
+        GeomFactorsSharedPtr Geometry::GetMetricInfo()
+        {
+            return m_geomFactors;
+        }
+
+        GeomShapeType Geometry::GetGeomShapeType(void)
+        {
+            return m_geomShapeType;
+        }
+
+        int Geometry::GetGlobalID(void)
+        {
+            return m_globalID;
+        }
+
+        void Geometry::SetGlobalID(int globalid)
+        {
+            m_globalID = globalid;
+        }
+
+        int Geometry::GetVid(int i) const
+        {
+            return v_GetVid(i);
+        }
+
+        int Geometry::GetEid(int i) const
+        {
+            return v_GetEid(i);
+        }
+
+
+        int Geometry::GetNumVerts() const
+        {
+            return v_GetNumVerts();
+        }
+
+        StdRegions::EdgeOrientation Geometry::GetEorient(const int i) const
+        {
+            return v_GetEorient(i);
+        }
+
+        StdRegions::PointOrientation Geometry::GetPorient(const int i) const
+        {
+            return v_GetPorient(i);
+        }
+
+        int Geometry::GetNumEdges() const
+        {
+            return v_GetNumEdges();
+        }
+
+        int Geometry::GetShapeDim() const
+        {
+            return v_GetShapeDim();
+        }
+
+        bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                      NekDouble tol)
+        {
+            return v_ContainsPoint(gloCoord,tol);
+        }
+
+        void Geometry::GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            return v_GenGeomFactors(tbasis);
+        }
+
+
+       /** 
+        * @brief Put all quadrature information into face/edge structure and
+        * backward transform.
+        * 
+        * @see v_FillGeom()
+        */
+        void Geometry::FillGeom()
+        {
+            v_FillGeom();
+        }
+
+        void Geometry::GetLocCoords(
+            const Array<OneD, const NekDouble> &coords,
+                  Array<OneD,       NekDouble> &Lcoords)
+        {
+            v_GetLocCoords(coords, Lcoords);
+        }
+
+        /** 
+         * @brief Given local collapsed coordinate Lcoord return the value of
+         * physical coordinate in direction i.
+         */
+        NekDouble Geometry::GetCoord(
+            const int i, const Array<OneD, const NekDouble> &Lcoord)
+        {
+            return v_GetCoord(i, Lcoord);
+        }
+
+        void Geometry::SetOwnData()
+        {
+            v_SetOwnData();
+        }
+
+        /**
+        * @brief Return a reference to the physical space of co-ordinate
+        * dimension i.
+        */
+        Array<OneD,NekDouble>& Geometry::UpdatePhys(const int i)
+        {
+            return v_UpdatePhys(i);
+        }
+
+        /**
+         * @brief Return the j-th basis of the i-th co-ordinate dimension.
+         */
+        const LibUtilities::BasisSharedPtr Geometry::GetBasis(
+            const int i, const int j)
+        {
+            return v_GetBasis(i, j);
+        }
+
+
+        void Geometry::v_AddElmtConnected(int gvo_id, int locid)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+        }
+
+        int Geometry::v_NumElmtConnected() const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        bool Geometry::v_IsElmtConnected(int gvo_id, int locid) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return false;
+        }
+
+        int Geometry::v_GetEid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        void Geometry::v_GenGeomFactors(
+                    const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is only valid for shape type geometries");
+        }
+
+        int Geometry::v_GetVid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            return 0;
+        }
+
+
+        int Geometry::v_GetNumVerts() const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        StdRegions::EdgeOrientation Geometry::v_GetEorient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is not valid for this geometry.");
+            return StdRegions::eForwards;
+        }
+
+        StdRegions::PointOrientation Geometry::v_GetPorient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is not valid for this geometry.");
+                    return StdRegions::eFwd;
+        }
+
+        int Geometry::v_GetNumEdges() const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+
+        int Geometry::v_GetShapeDim() const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        bool Geometry::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                      NekDouble tol)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
+        NekDouble Geometry::v_GetCoord(
+                    const int i,
+                    const Array<OneD,const NekDouble>& Lcoord)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            return 0.0;
+        }
+
+        void Geometry::v_GetLocCoords(
+                const Array<OneD,const NekDouble> &coords,
+                      Array<OneD,NekDouble> &Lcoords)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+        }
+
+        void Geometry::v_FillGeom()
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+        }
+
+        void Geometry::v_SetOwnData()
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+        }
+
+        Array<OneD,NekDouble>& Geometry::v_UpdatePhys(const int i)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            return NullNekDouble1DArray;
+        }
+
+        const LibUtilities::BasisSharedPtr Geometry::v_GetBasis(
+                    const int i,
+                    const int j)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            LibUtilities::BasisSharedPtr returnval;
+            return returnval;
+        }
+
+        int Geometry::v_GetCoordim() const
+        {
+            return m_coordim;
+        }
+
     }; //end of namespace
 }; //end of namespace
 
-//
-// $Log: Geometry.cpp,v $
-// Revision 1.11  2008/05/29 19:00:55  delisi
-// Constructors initialize m_globalID to -1.
-//
-// Revision 1.10  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.9  2007/07/26 19:38:47  jfrazier
-// Added general equation evaluation.
-//
-// Revision 1.8  2007/07/26 18:02:42  jfrazier
-// Manage the storage of geofactors.
-//
-// Revision 1.7  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.6  2007/07/10 22:21:00  jfrazier
-// Revision of geo fac manager to test for equality.
-//
-// Revision 1.5  2007/07/10 17:06:31  jfrazier
-// Added method and underlying structure to manage geomfactors.
-//
-// Revision 1.4  2007/03/14 21:24:08  sherwin
-// Update for working version of MultiRegions up to ExpList1D
-//
-// Revision 1.3  2006/08/24 18:50:00  jfrazier
-// Completed error checking on permissable composite item combinations.
-//
-// Revision 1.2  2006/06/01 14:15:30  sherwin
-// Added typdef of boost wrappers and made GeoFac a boost shared pointer.
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.14  2006/04/09 02:08:34  jfrazier
-// Added precompiled header.
-//
-// Revision 1.13  2006/03/13 11:17:03  sherwin
-//
-// First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly
-//
-// Revision 1.12  2006/03/12 14:20:42  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.11  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.10  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

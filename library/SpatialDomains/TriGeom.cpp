@@ -450,7 +450,7 @@ namespace Nektar
         /**
          *
          */
-        int  TriGeom::v_GetCoordDim() const
+        int  TriGeom::v_GetCoordim() const
         {
             return m_coordim;
         }

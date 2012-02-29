@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshComponents.cpp,v $
+//  File:  MeshComponents.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -214,40 +214,3 @@ namespace Nektar
     }; //end of namespace
 }; //end of namespace
 
-//
-// $Log: MeshComponents.cpp,v $
-// Revision 1.6  2008/03/06 05:12:20  ehan
-// Changed NekVector<NekDouble, 3> to NekVector<NekDouble, ThreeD> to match the changes of enum to struct typename dim.
-//
-// Revision 1.5  2007/08/02 12:03:27  sherwin
-// Fixed order of coordinate assignment in VertexComponent::GetCoords
-//
-// Revision 1.4  2006/10/15 06:18:57  sherwin
-// Moved NekPoint out of namespace LibUtilities
-//
-// Revision 1.3  2006/05/09 13:37:01  jfrazier
-// Removed duplicate definition of shared vertex pointer.
-//
-// Revision 1.2  2006/05/07 11:26:38  sherwin
-// Modifications to get the demo LocalRegions::Project2D to compile
-//
-// Revision 1.1  2006/05/04 18:59:01  kirby
-// *** empty log message ***
-//
-// Revision 1.19  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.18  2006/03/25 00:58:28  jfrazier
-// Many changes dealing with fundamental structure and reading/writing.
-//
-// Revision 1.17  2006/03/12 14:20:43  sherwin
-//
-// First compiling version of SpatialDomains and associated modifications
-//
-// Revision 1.16  2006/02/26 21:19:42  bnelson
-// Fixed a variety of compiler errors caused by updates to the coding standard.
-//
-// Revision 1.15  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

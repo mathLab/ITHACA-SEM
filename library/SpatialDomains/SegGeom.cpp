@@ -449,7 +449,7 @@ namespace Nektar
             return returnval;
         }
 
-        int SegGeom::v_GetEid() const
+        int SegGeom::v_GetEid(int unused) const
         {
             return m_eid;
         }

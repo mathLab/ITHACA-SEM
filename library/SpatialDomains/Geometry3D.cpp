@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "pchSpatialDomains.h"
 #include <SpatialDomains/Geometry3D.h>
 
 namespace Nektar
@@ -43,50 +42,18 @@ namespace Nektar
       Geometry3D::Geometry3D()
       {
       }
-      
+
       Geometry3D::Geometry3D(const int coordim):
           Geometry(coordim)
       {
           ASSERTL0(m_coordim > 2,
                    "Coordinate dimension should be at least 3 for a 3D geometry.");
       }
-      
+
       Geometry3D::~Geometry3D()
       {
       }
-      
-      //---------------------------------------
-      // 3D Geometry Methods
-      //---------------------------------------
 
-      /** 
-       * @brief Put all quadrature information into face/edge structure and
-       * backward transform.
-       * 
-       * @see v_FillGeom()
-       */
-      void Geometry3D::FillGeom()
-      {
-          Geometry3D::v_FillGeom();
-      }
-      
-      void Geometry3D::GetLocCoords(
-          const Array<OneD, const NekDouble> &coords,
-                Array<OneD,       NekDouble> &Lcoords)
-      {
-          v_GetLocCoords(coords, Lcoords);
-      }
-
-      /** 
-       * @brief Given local collapsed coordinate Lcoord return the value of
-       * physical coordinate in direction i.
-       */
-      NekDouble Geometry3D::GetCoord(
-          const int i, const Array<OneD, const NekDouble> &Lcoord)
-      {
-          return v_GetCoord(i, Lcoord);
-      }
-      
 
       //---------------------------------------
       // Helper functions
@@ -123,35 +90,8 @@ namespace Nektar
       {
           return v_GetFid(i);
       }
-      
-      /**
-       * @brief Return a reference to the physical space of co-ordinate
-       * dimension i.
-       */
-      Array<OneD, NekDouble> &Geometry3D::UpdatePhys(const int i)
-      {
-          return v_UpdatePhys(i);
-      }
 
-      /**
-       * @brief Return the j-th basis of the i-th co-ordinate dimension.
-       */
-      const LibUtilities::BasisSharedPtr Geometry3D::GetBasis(
-          const int i, const int j)
-      {
-          return v_GetBasis(i, j);
-      }
-      
-      //---------------------------------------
-      // Element connection functions
-      //---------------------------------------
 
-      void Geometry3D::SetOwnData()
-      {
-          v_SetOwnData();
-      }
-      
-      
       //---------------------------------------
       // 3D Geometry Methods
       //---------------------------------------
@@ -168,17 +108,17 @@ namespace Nektar
       {
           if (m_state == ePtsFilled)
               return;
-          
+
           int i,j,k;
-          
+
           for(i = 0; i < m_forient.size(); i++)
           {
               m_faces[i]->FillGeom();
-              
+
               int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
               Array<OneD, unsigned int> mapArray (nFaceCoeffs);
               Array<OneD,          int> signArray(nFaceCoeffs);
-              
+
               if (m_forient[i] < 4)
               {
                   m_xmap[0]->GetFaceToElementMap(
@@ -193,12 +133,12 @@ namespace Nektar
                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1),
                       m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0));
               }
-              
+
               for(j = 0; j < m_coordim; j++)
               {
                   const Array<OneD, const NekDouble> &coeffs = 
                       (*m_faces[i])[j]->GetCoeffs();
-                  
+
                   for(k = 0; k < nFaceCoeffs; k++)
                   {
                       double v = signArray[k] * coeffs[k];
@@ -206,22 +146,14 @@ namespace Nektar
                   }
               }
           }
-          
+
           for(i = 0; i < m_coordim; ++i)
           {
               m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs (),
                                   m_xmap[i]->UpdatePhys());
           }
-          
-          m_state = ePtsFilled;
-      }
 
-      void Geometry3D::v_GetLocCoords(
-          const Array<OneD, const NekDouble> &coords,
-                Array<OneD,       NekDouble> &Lcoords)
-      {
-          ASSERTL0(false, 
-                   "This function must be implemented at a shape level.");
+          m_state = ePtsFilled;
       }
 
       /**
@@ -232,7 +164,7 @@ namespace Nektar
       {
             GeomType      Gtype  = eRegular;
             GeomShapeType GSType = eQuadrilateral;
-            
+
             v_FillGeom();
 
             // check to see if expansions are linear
@@ -245,11 +177,11 @@ namespace Nektar
                     Gtype = eDeformed;
                 }
             }
-            
+
             m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
                 Gtype, m_coordim, m_xmap, tbasis);
       }
-      
+
       /** 
        * @brief Given local collapsed coordinate Lcoord return the value of
        * physical coordinate in direction i.
@@ -265,10 +197,14 @@ namespace Nektar
       //---------------------------------------
       // Helper functions
       //---------------------------------------
-      
+
       /**
        * @brief Return the co-ordinate mapping for dimension i.
        */
+      StdRegions::StdExpansion3DSharedPtr Geometry3D::GetXmap(const int i)
+      {
+          return v_GetXmap(i);
+      }
       StdRegions::StdExpansion3DSharedPtr Geometry3D::v_GetXmap(const int i)
       {
           return m_xmap[i];
@@ -303,7 +239,7 @@ namespace Nektar
                    boost::lexical_cast<string>(m_edges.num_elements()-1));
           return m_edges[i];
       }
-      
+
       /**
        * @brief Return the orientation of edge i in this element.
        */
@@ -326,7 +262,7 @@ namespace Nektar
                    boost::lexical_cast<string>(m_edges.num_elements()-1));
           return m_edges[i]->GetEid();
       }
-      
+
       /**
        * @brief Return face i in this element.
        */
@@ -357,7 +293,7 @@ namespace Nektar
                    boost::lexical_cast<string>(m_faces.num_elements()-1));
           return m_faces[i]->GetFid();
       }
-      
+
       /**
        * @brief Return the ID of this element.
        */
@@ -365,7 +301,7 @@ namespace Nektar
       {
           return m_eid;
       }
-      
+
       /**
        * @brief Return the j-th basis of the i-th co-ordinate dimension.
        */
@@ -393,10 +329,10 @@ namespace Nektar
       int Geometry3D::v_WhichEdge(SegGeomSharedPtr edge)
       {
           int returnval = -1;
-          
+
           SegGeomVector::iterator edgeIter;
           int i;
-          
+
           for (i=0,edgeIter = m_edges.begin(); edgeIter != m_edges.end(); ++edgeIter,++i)
           {
               if (*edgeIter == edge)
@@ -405,10 +341,10 @@ namespace Nektar
                   break;
               }
           }
-          
+
           return returnval;
       }
-      
+
       /**
        * @brief Return the local ID of a given face.
        * 
@@ -418,7 +354,7 @@ namespace Nektar
       int Geometry3D::v_WhichFace(Geometry2DSharedPtr face)
       {
           int i = 0;
-          
+
           Geometry2DVector::iterator f;
           for (i = 0, f = m_faces.begin(); f != m_faces.end(); ++f,++i)
           {
@@ -429,17 +365,17 @@ namespace Nektar
           }
           return i;
       }
-      
+
       //---------------------------------------
       // Element connection functions
       //---------------------------------------
-      
+
       void Geometry3D::v_AddElmtConnected(int gvo_id, int locid)
       { 
           CompToElmt ee(gvo_id,locid);
           m_elmtmap.push_back(ee);
       }
-      
+
       int Geometry3D::v_NumElmtConnected() const
       {
           return int(m_elmtmap.size());
@@ -449,16 +385,17 @@ namespace Nektar
       {
           std::list<CompToElmt>::const_iterator def;
           CompToElmt ee(gvo_id,locid);
-          
+
           def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
-          
+
           // Found the element connectivity object in the list
           return (def != m_elmtmap.end());
       }
-      
+
       void Geometry3D::v_SetOwnData()
       {
           m_owndata = true; 
       }
+
   }; //end of namespace
 }; //end of namespace

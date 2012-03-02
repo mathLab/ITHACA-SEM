@@ -136,6 +136,8 @@ namespace Nektar
 
         Array<OneD, int> GetReflectionIndex(void);
 
+        void FileRelaxation( int reg);
+
     protected:
 
     private:
@@ -171,8 +173,12 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr              m_wavePressure;
         
         Array<OneD, Array<OneD, NekDouble > >  m_vwiForcing; 
+
+        Array<OneD, Array<OneD, NekDouble > >  m_bcsForcing;
         
         Array<OneD, MultiRegions::ExpListSharedPtr> m_streakField; 
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_rollField; 
         
         string m_sessionName;
         LibUtilities::SessionReaderSharedPtr m_sessionVWI; 

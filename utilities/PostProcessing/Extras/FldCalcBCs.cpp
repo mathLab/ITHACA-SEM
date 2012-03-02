@@ -901,11 +901,11 @@ cout<<"layer region="<<Ireg<<endl;
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, tx, dtx);
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, ty, dty);
 	     //attempt to smooth the tangent derivative:
-	     outfieldx->FwdTrans(dtx, tcoeffs);
-	     outfieldx->BwdTrans(tcoeffs, dtx);  
+	     outfieldx->FwdTrans_IterPerExp(dtx, tcoeffs);
+	     outfieldx->BwdTrans_IterPerExp(tcoeffs, dtx);  
              Vmath::Zero(Nregcoeffs, tcoeffs,1);
-	     outfieldx->FwdTrans(dty, tcoeffs);
-	     outfieldx->BwdTrans(tcoeffs, dty);                           
+	     outfieldx->FwdTrans_IterPerExp(dty, tcoeffs);
+	     outfieldx->BwdTrans_IterPerExp(tcoeffs, dty);                           
              Array<OneD, NekDouble> f_z(nq1D,0.0);
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, x1d, f_z);
              Array<OneD, NekDouble> fcoeffs(Nregcoeffs,0.0);
@@ -1164,6 +1164,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
            NekDouble alpha;
 	   alpha = session->GetParameter("ALPHA");
 cout<<"alpha="<<alpha<<endl;
+
            NekDouble alpha53;
            //alpha53=1;
            alpha53 = std::pow ((alpha*alpha),pow);
@@ -1355,7 +1356,7 @@ cout<<setw(14)<<x0d[g]<<"      "<<setw(13)<<x1d[g]<<
 //(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<"      "<<1/Jac[g]
 //<<"       "<<dermu53[g]
 //<<"        "<<derfun1D[g]
-//tx[g]<<"     "<<ty[g]
+tx[g]<<"     "<<ty[g]<<
 //f1[g]<<"        "<<f2[g]
 //prod_b[g]<<"      "<<dersprod_b[g]
 //fun1D[g]<<"      "<<derfun1D[g]<<"       "<<
@@ -1423,7 +1424,7 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
     		string   endfile(".bc");    		
     		outfile += endfile;
     		Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
-                outregionfield->FwdTrans(outregionfield->GetPhys(),outregionfield->UpdateCoeffs()); 
+                outregionfield->FwdTrans_IterPerExp(outregionfield->GetPhys(),outregionfield->UpdateCoeffs()); 
                 fieldcoeffs[0] = outregionfield->UpdateCoeffs();		
 		std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                 = outregionfield->GetFieldDefinitions();               

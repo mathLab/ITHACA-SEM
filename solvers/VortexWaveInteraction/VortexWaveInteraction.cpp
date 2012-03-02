@@ -737,7 +737,7 @@ namespace Nektar
 	//roll session file to use the interface loop
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
 	{
-             static int cnt=0;
+             static int cnt=0;       
              string syscall;
              //rewrite the Rollsessionfile (we start from the waleffe forcing)
              //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
@@ -759,8 +759,9 @@ namespace Nektar
 	     //move the mesh around the critical layer
              string filePost   = m_sessionName + "_advPost.xml";
              string filestreak   = m_sessionName + "_streak.fld";
+             string fileinterp = m_sessionName + "_interp.xml";
              syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
-                             + filePost +"  "+ filestreak +"  "+ filePost; 
+                             + filePost +"  "+ filestreak +"  "+ fileinterp; 
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
@@ -780,8 +781,19 @@ namespace Nektar
 
 	     //interpolate the streak field into the new mesh
              string movedmesh = m_sessionName + "_advPost_moved.xml";
-             //create the interp streak
+             string movedinterpmesh = m_sessionName + "_interp_moved.xml";
+             //create the interp streak             
              string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
+             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                      + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
+	              + interpstreak;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+
+             //move the advPost mesh
              syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
                       + filePost + "  " + filestreak + "  " + movedmesh + "  " 
 	              + interpstreak;
@@ -857,6 +869,11 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
              {
                   ASSERTL0(false,syscall.c_str());
              }    
+
+
+
+
+
              cnt++;
              char c1[16]="";
     	     sprintf(c1,"%d",cnt);   
@@ -869,13 +886,31 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
              {
                   ASSERTL0(false,syscall.c_str());
              }
+
+             //use relaxation
+             int reg =3;
+             FileRelaxation(reg);
+
+             //interpolate the .rst into the new mesh
+             string rstfile = m_sessionName + ".rst";
+             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                      + filePost + "  " + rstfile + "  " + movedmesh + "  " 
+	              + rstfile;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }                 
+
              //move the new name_advPost_moved.xml into name_advPost.xml
 	     syscall = "cp -f " + movedmesh + "  " + filePost;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
                   ASSERTL0(false,syscall.c_str());
-             }             
+             }   
+
+
 	}
 	else
 	{
@@ -1235,5 +1270,112 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
         return index;
     }
     
+    void VortexWaveInteraction::FileRelaxation(int reg)
+    {
+          cout<<"relaxation..."<<endl;
+          static int cnt=0;
+          Array<OneD, MultiRegions::ExpListSharedPtr> Iexp 
+                                           =m_rollField[0]->GetBndCondExpansions();
+          //cast to 1D explist (otherwise appenddata doesn't work)
+          MultiRegions::ExpList1DSharedPtr Ilayer;  
+          Ilayer = MemoryManager<MultiRegions::ExpList1D>::
+                          AllocateSharedPtr(  
+                          *boost::static_pointer_cast<MultiRegions::ExpList1D>(Iexp[reg]));
+          int nq = Ilayer->GetTotPoints();
+          if( cnt==0)
+          {
+                m_bcsForcing = Array<OneD, Array<OneD, NekDouble> > (4);
+                m_bcsForcing[0] = Array<OneD, NekDouble> (4*nq);
+                for(int i = 1; i < 4; ++i)
+                {
+                      m_bcsForcing[i] = m_bcsForcing[i-1] + nq;
+                }           
+          }
+
+          // Read in mesh from input file
+          SpatialDomains::MeshGraphSharedPtr graphShPt = 
+                                     SpatialDomains::MeshGraph::Read(m_sessionName+".xml");
+          std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_u;
+          std::vector<std::vector<NekDouble> > FieldData_u;
+          string file = m_sessionName;
+
+
+          file += "_u_5.bc"; 
+          graphShPt->Import(file,FieldDef_u, FieldData_u);
+          Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0]);
+          Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
+          
+          if(cnt==0)
+          {
+               Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[2],1);
+          }
+          Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[0],1);
+
+
+
+          if(cnt!=0)
+          {
+cout<<"ucnt="<<cnt<<endl;
+              Vmath::Smul(nq,1.0-m_vwiRelaxation,
+                        m_bcsForcing[0],1,m_bcsForcing[0],1);
+              Vmath::Svtvp(nq,m_vwiRelaxation,m_bcsForcing[2],1,
+                         m_bcsForcing[0],1,Ilayer->UpdatePhys(),1);
+              //generate again the bcs files:
+
+    	      Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
+              Ilayer->FwdTrans_IterPerExp(Ilayer->GetPhys(),Ilayer->UpdateCoeffs()); 
+              fieldcoeffs[0] = Ilayer->UpdateCoeffs();		
+	      std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef1  = Ilayer->GetFieldDefinitions();               
+              std::vector<std::vector<NekDouble> > FieldData_1(FieldDef1.size());;
+              FieldDef1[0]->m_fields.push_back("u");            	    
+              Ilayer->AppendFieldData(FieldDef1[0], FieldData_1[0]);            	    
+              graphShPt->Write(file,FieldDef1,FieldData_1); 
+              //save the bcs for the next iteration
+              Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
+                        m_bcsForcing[0],1,m_bcsForcing[0],1);              
+              Vmath::Vcopy(nq,m_bcsForcing[0],1,m_bcsForcing[2],1);
+          }
+                   
+
+
+          file = m_sessionName+ "_v_5.bc"; 
+
+          std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_v;
+          std::vector<std::vector<NekDouble> > FieldData_v;
+          graphShPt->Import(file,FieldDef_v, FieldData_v);
+          Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0]);
+          Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
+          if(cnt==0)
+          {
+               Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[3],1);
+          }
+          Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[1],1);
+          if(cnt!=0)
+          {
+              Vmath::Smul(nq,1.0-m_vwiRelaxation,
+                        m_bcsForcing[1],1,m_bcsForcing[1],1);
+              Vmath::Svtvp(nq,m_vwiRelaxation,m_bcsForcing[3],1,
+                         m_bcsForcing[1],1,Ilayer->UpdatePhys(),1);
+              //generate again the bcs files:
+    	      Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
+              Ilayer->FwdTrans_IterPerExp(Ilayer->GetPhys(),Ilayer->UpdateCoeffs()); 
+              fieldcoeffs[0] = Ilayer->UpdateCoeffs();		
+	      std::vector<SpatialDomains::FieldDefinitionsSharedPtr>  FieldDef2  = Ilayer->GetFieldDefinitions();         
+              std::vector<std::vector<NekDouble> > FieldData_2(FieldDef2.size());;      
+              FieldDef2[0]->m_fields.push_back("v");            	    
+              Ilayer->AppendFieldData(FieldDef2[0], FieldData_2[0]);            	             	
+              graphShPt->Write(file,FieldDef2,FieldData_2); 
+              //save the bcs for the next iteration
+              Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
+                        m_bcsForcing[1],1,m_bcsForcing[1],1);              
+              Vmath::Vcopy(nq,m_bcsForcing[1],1,m_bcsForcing[3],1);
+
+
+          }
+
+
+           cnt++;
+
+    }
 }
     

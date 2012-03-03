@@ -734,6 +734,11 @@ namespace Nektar
                 return m_comm;
             }
 
+            SpatialDomains::MeshGraphSharedPtr GetGraph()
+            {
+                return m_graph;
+            }
+
             // Wrapper functions for Homogeneous Expansions
             inline LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {

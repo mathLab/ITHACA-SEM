@@ -101,6 +101,14 @@ namespace Nektar
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
         m_session->LoadParameter("IO_HistorySteps", m_historysteps, 0);
 		m_session->LoadParameter("CFL", m_cfl, 0.0);
+
+		// Set up filters
+		LibUtilities::FilterMap::const_iterator x;
+		LibUtilities::FilterMap f = m_session->GetFilters();
+		for (x = f.begin(); x != f.end(); ++x)
+		{
+		    m_filters.push_back(GetFilterFactory().CreateInstance(x->first, x->second));
+		}
     }
 
 
@@ -257,6 +265,12 @@ namespace Nektar
             hisFile.open(outname.c_str());
         }
 		
+        std::vector<FilterSharedPtr>::iterator x;
+        for (x = m_filters.begin(); x != m_filters.end(); ++x)
+        {
+            (*x)->Initialise(m_fields, m_time);
+        }
+
 		const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
 		
 		NekDouble TimeStability;
@@ -411,8 +425,6 @@ namespace Nektar
 		
 		else
 		{
-		    m_actTime = Array<OneD, NekDouble> (m_fields[0]->GetNpoints(), 0.0);
-		    m_actThreshold = 0.0;
 			for(n = 0; n < m_steps; ++n)
 			{
                 Timer timer;
@@ -455,15 +467,10 @@ namespace Nektar
                     }
                 }
 
-				if (m_session->DefinesSolverInfo("ComputeActivationTime"))
+				std::vector<FilterSharedPtr>::iterator x;
+				for (x = m_filters.begin(); x != m_filters.end(); ++x)
 				{
-                    for (i = 0; i < m_fields[0]->GetNpoints(); ++i)
-                    {
-                        if (m_actTime[i] < m_timestep && m_fields[0]->GetPhys()[i] > m_actThreshold)
-                        {
-                            m_actTime[i] = m_time;
-                        }
-                    }
+				    (*x)->Update(m_fields, m_time);
 				}
 
 	            // Write out history data to file
@@ -493,32 +500,11 @@ namespace Nektar
 				m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
 			}
 
-			if (m_session->DefinesSolverInfo("ComputeActivationTime"))
-			{
-                NekDouble tmp;
-                // swap in
-                for (i = 0; i < m_fields[0]->GetNpoints(); ++i)
-                {
-                    tmp = m_fields[0]->GetPhys()[i];
-                    m_fields[0]->UpdatePhys()[i] = m_actTime[i];
-                    m_actTime[i] = tmp;
-                    m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
-                    m_fields[0]->SetPhysState(false);
-                }
-
-                // write out
-                Checkpoint_Output(nchk);
-
-                // swap out
-                for (i = 0; i < m_fields[0]->GetNpoints(); ++i)
-                {
-                    tmp = m_fields[0]->GetPhys()[i];
-                    m_fields[0]->UpdatePhys()[i] = m_actTime[i];
-                    m_actTime[i] = tmp;
-                    m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
-                    m_fields[0]->SetPhysState(false);
-                }
-			}
+            std::vector<FilterSharedPtr>::iterator x;
+            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            {
+                (*x)->Finalise(m_fields, m_time);
+            }
 		}
     }
 

@@ -62,6 +62,7 @@ namespace Nektar
         typedef std::vector<std::string>            VariableList;
         typedef std::map<std::string, EquationSharedPtr>  EquationMap;
         typedef std::map<std::string, std::string>  TagMap;
+        typedef std::multimap<std::string, std::map<std::string, std::string> > FilterMap;
 
         typedef std::map<std::string, int>          EnumMap;
         typedef std::map<std::string, EnumMap>      EnumMapList;
@@ -234,6 +235,9 @@ namespace Nektar
             /// Returns the value of a specified tag.
             LIB_UTILITIES_EXPORT const std::string &GetTag(const std::string& pName) const;
 
+            /* ------ FILTERS ------ */
+            LIB_UTILITIES_EXPORT const FilterMap& GetFilters() const;
+
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
@@ -263,6 +267,8 @@ namespace Nektar
             VariableList                m_variables;
             /// Custom tags.
             TagMap                      m_tags;
+            /// Filters map.
+            FilterMap                   m_filters;
             /// Be verbose
             bool                        m_verbose;
 
@@ -303,6 +309,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void ReadVariables(TiXmlElement *conditions);
             /// Reads the FUNCTIONS section of the XML document.
             LIB_UTILITIES_EXPORT void ReadFunctions(TiXmlElement *conditions);
+            /// Reads the FILTERS section of the XML document.
+            LIB_UTILITIES_EXPORT void ReadFilters(TiXmlElement *filters);
 
             /// Perform a case-insensitive string comparison.
             LIB_UTILITIES_EXPORT int NoCaseStringCompare(const std::string &s1, const std::string &s2) const;

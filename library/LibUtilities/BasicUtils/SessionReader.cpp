@@ -837,6 +837,15 @@ namespace Nektar
         /**
          *
          */
+        const FilterMap &SessionReader::GetFilters() const
+        {
+            return m_filters;
+        }
+
+
+        /**
+         *
+         */
         void SessionReader::SubstituteExpressions(std::string& pExpr)
         {
             ExpressionMap::iterator exprIter;
@@ -925,6 +934,10 @@ namespace Nektar
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
 
             ReadGeometricInfo(e);
+
+            e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("FILTERS").Element();
+
+            ReadFilters(e);
         }
 
 
@@ -1487,6 +1500,53 @@ namespace Nektar
                 // Add function definition to map
                 m_functions[functionStr] = functionDef;
                 function = function->NextSiblingElement("FUNCTION");
+            }
+        }
+
+
+        /**
+         *
+         */
+        void SessionReader::ReadFilters(TiXmlElement *filters)
+        {
+            if (!filters)
+            {
+                return;
+            }
+
+            m_filters.clear();
+
+            TiXmlElement *filter = filters->FirstChildElement("FILTER");
+            while (filter)
+            {
+                std::map<std::string, std::string> vParams;
+
+                TiXmlElement *type = filter->FirstChildElement("TYPE");
+                ASSERTL0(type, "No type specified for filter.");
+                ASSERTL0(type->GetText(), "Empty type string specified.");
+                std::string typeStr = type->GetText();
+
+                TiXmlElement *param = filter->FirstChildElement("PARAM");
+                while (param)
+                {
+                    TiXmlElement *name = param->FirstChildElement("NAME");
+                    ASSERTL0(name, "No name specified for parameter.");
+                    ASSERTL0(name->GetText(), "Empty name string for param.");
+                    std::string nameStr = name->GetText();
+
+                    TiXmlElement *value = param->FirstChildElement("VALUE");
+                    ASSERTL0(value, "No value specified for parameter.");
+                    ASSERTL0(value->GetText(), "Empty value string for param.");
+                    std::string valueStr = value->GetText();
+
+                    vParams[nameStr] = valueStr;
+
+                    param = param->NextSiblingElement("PARAM");
+                }
+
+                m_filters.insert(std::pair<std::string, std::map<std::string, std::string> >(typeStr, vParams));
+
+                filter = filter->NextSiblingElement("FILTER");
             }
         }
 

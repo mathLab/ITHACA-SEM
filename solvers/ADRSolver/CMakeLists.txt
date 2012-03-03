@@ -15,6 +15,8 @@ SET(ADRSolverSource
        ../Auxiliary/DriverStandard.cpp
        ../Auxiliary/DriverArnoldi.cpp
        ../Auxiliary/DriverModifiedArnoldi.cpp
+       ../Auxiliary/Filters/Filter.cpp
+       ../Auxiliary/Filters/FilterThresholdMax.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp)
 

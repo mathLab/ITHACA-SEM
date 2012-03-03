@@ -15,7 +15,10 @@ SET(CardiacEPSolverSource
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp
        ../Auxiliary/Driver.cpp
-       ../Auxiliary/DriverStandard.cpp)
+       ../Auxiliary/DriverStandard.cpp
+       ../Auxiliary/Filters/Filter.cpp
+       ../Auxiliary/Filters/FilterThresholdMax.cpp
+)
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 
 			${CardiacEPSolverSource})

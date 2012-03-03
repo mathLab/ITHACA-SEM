@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYSYSTEM_H
 
 #include <Auxiliary/EquationSystem.h>
+#include <Auxiliary/Filters/Filter.h>
 #include <time.h>
 
 namespace Nektar
@@ -89,10 +90,9 @@ namespace Nektar
         /// Indicates if explicit or implicit treatment of reaction is used.
         bool                                            m_explicitReaction;
 
-        Array<OneD, NekDouble>                          m_actTime;
-        NekDouble                                       m_actThreshold;
-
         std::vector<int>                                m_intVariables;
+
+        std::vector<FilterSharedPtr>                    m_filters;
 
         /// Initialises UnsteadySystem class members.
         UnsteadySystem(const LibUtilities::SessionReaderSharedPtr& pSession);

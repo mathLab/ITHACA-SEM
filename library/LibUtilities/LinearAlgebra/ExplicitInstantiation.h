@@ -48,8 +48,13 @@
 #include <boost/preprocessor/comparison/greater.hpp>
 #include <boost/preprocessor/array/pop_front.hpp>
 #include <boost/preprocessor/array/push_back.hpp>
+#include <boost/version.hpp>
 
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+
+#if BOOST_VERSION > 104800
+#define BOOST_PP_TUPLE_REM_0()
+#endif
 
 // Macros to make creating explicit instantiations of all possible matrix types for methods easier.
 #define NEKTAR_ALL_MATRIX_TYPES (6, (const DNekMat&, const DNekScalMat&, const DNekBlkMat&, const BlkMatDNekBlkMat&, const DNekScalBlkMat&, const BlkMatDNekScalBlkMat&))

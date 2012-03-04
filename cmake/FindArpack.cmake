@@ -1,5 +1,7 @@
 
-SET(ARPACK_SEARCH_PATHS ${CMAKE_SOURCE_DIR} /opt/local/lib/  ThirdParty/ARPACK)
+SET(ARPACK_SEARCH_PATHS ${CMAKE_SOURCE_DIR} /opt/local/lib/  ThirdParty/ARPACK
+    ${CMAKE_SOURCE_DIR}/ThirdParty/build/dist/lib
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/build/dist/lib )
 
 FIND_LIBRARY(ARPACK_LIB NAMES arpack.1 arpack PATHS ${ARPACK_SEARCH_PATHS})
 

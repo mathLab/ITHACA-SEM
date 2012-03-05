@@ -126,8 +126,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(
                     const Array<OneD, const NekDouble> &Fx,
                     const Array<OneD, const NekDouble> &Fy,
-                          Array< OneD, NekDouble> &outarray,
-                          bool NegateNormal = false);
+                          Array<OneD, NekDouble> &outarray);
 
             //-----------------------------
             // Evaluation functions

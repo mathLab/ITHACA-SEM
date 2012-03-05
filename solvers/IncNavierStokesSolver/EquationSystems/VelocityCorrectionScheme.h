@@ -113,8 +113,6 @@ namespace Nektar
 		
 		Array<OneD, NekDouble> m_beta;
 		
-		Array<OneD, bool> m_negateNormals;
-
         /**  \brief This function evaluates the normal Neumann pressure
          *  boundary condition for the velocity correction scheme at the
          *  current time level which requires as input the non-linear

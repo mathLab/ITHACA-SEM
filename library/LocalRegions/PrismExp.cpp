@@ -391,6 +391,8 @@ namespace Nektar
                             &tmp6[0]+i*nquad0,1);
             }
             
+            // TODO: This should be factored into the first IP call to avoid
+            // unnecessary overheads.
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
                                          m_base[2]->GetBdata (),

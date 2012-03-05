@@ -109,38 +109,29 @@ namespace Nektar
                                     Array<OneD,NekDouble> &Bwd);
 
             /**
-             * \brief This method extracts the "forward" and
-             * "backward" trace data from the array \a field and puts
-             * the data into output vectors \a Fwd and \a Bwd.
+             * \brief This method extracts the "forward" and "backward" trace
+             * data from the array \a field and puts the data into output
+             * vectors \a Fwd and \a Bwd.
+             * 
+             * We first define the convention which defines "forwards" and
+             * "backwards". First an association is made between the edge of
+             * each element and its corresponding edge in the trace space
+             * using the mapping #m_traceMap. The element can either be
+             * left-adjacent or right-adjacent to this trace edge (see
+             * Expansion1D::GetLeftAdjacentElementExp). Boundary edges are
+             * always left-adjacent since left-adjacency is populated first.
+             * 
+             * If the element is left-adjacent we extract the edge trace data
+             * from \a field into the forward trace space \a Fwd; otherwise,
+             * we place it in the backwards trace space \a Bwd. In this way,
+             * we form a unique set of trace normals since these are always
+             * extracted from left-adjacent elements.
              *
-             * An element unique edge is defined to be #eForwards if
-             * the edge is oriented in a counter clockwise sense
-             * within the element. Conversley it is defined to be
-             * #eBackwards if the elemet edge is orientated in a
-             * clockwise sense. Therefore along two intersecting edges
-             * one edge is always forwards and the adjacent edge is
-             * backwards. We define a unique normal between two
-             * adjacent edges as running from the #eFowards edge to the
-             * #eBackward edge.
+             * \param field is a NekDouble array which contains the 2D data
+             * from which we wish to extract the backward and forward
+             * orientated trace/edge arrays.
              *
-             * This method collects/interpolates the edge data from
-             * the 2D array \a field which contains information over a
-             * collection of 2D shapes and puts this edge data into
-             * the arrays of trace data \a Bwd or \a Fwd depending on
-             * the orientation of the local edge within an element.
-             *
-             * If an edge is aligned along a boundary we use the
-             * method GetBndExpAdjacentOrient() method to determine if
-             * an adjacent boundary edge is orientated in a forwards
-             * or backwards sense. This method returns an enum
-             * #AdjacentTraceOrientation which in 2D has entires of
-             * #eAdjacentEdgeIsForwards and #eAdjacentEdgeIsBackwards.
-             *
-             * \param field is a NekDouble array which contains the 2D
-             * data from which we wish to extract the backward and
-             * forward orientated trace/edge arrays.
-             *
-             * \return Updates  a NekDouble array \a Fwd and \a Bwd
+             * \return Updates a NekDouble array \a Fwd and \a Bwd
              */
             MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
                                     Array<OneD,NekDouble> &Fwd,

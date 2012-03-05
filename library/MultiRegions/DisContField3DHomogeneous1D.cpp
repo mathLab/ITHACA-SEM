@@ -381,10 +381,7 @@ namespace Nektar
                             elmt = GetExp(elmtID);
                             temp_BC_exp =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (m_bndCondExpansions[n]->GetExp(i+k*exp_size_per_plane));
                             
-                            // Decide if normals facing outwards
-                            NegateNormals = (elmt->GetEorient(boundaryID) == StdRegions::eForwards)? false:true;
-                            
-                            temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + Phys_offset,tmp_V2 = V2 + Phys_offset,tmp_outarray = outarray + Coef_offset,NegateNormals);
+                            temp_BC_exp->NormVectorIProductWRTBase(tmp_V1 = V1 + Phys_offset,tmp_V2 = V2 + Phys_offset,tmp_outarray = outarray + Coef_offset);
                         }
                         cnt++;
                     }

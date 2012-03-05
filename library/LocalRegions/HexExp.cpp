@@ -449,7 +449,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp4(alloc + 3*nqtot);     // Dir1 iprod
             Array<OneD, NekDouble> tmp5(tmp4  +   m_ncoeffs); // Dir2 iprod
             Array<OneD, NekDouble> wsp (tmp4  + 2*m_ncoeffs); // Wsp
-            
+
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,inarray.get(),1,tmp1.get(),1);
@@ -1553,7 +1553,6 @@ namespace Nektar
                     Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
 		}
             }
-
         }
 
         NekDouble HexExp::v_Linf()

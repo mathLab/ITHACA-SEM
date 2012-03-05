@@ -82,7 +82,31 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~DisContField3D();
 
-            // 3D DG functions.
+            /**
+             * \brief This method extracts the "forward" and "backward" trace
+             * data from the array \a field and puts the data into output
+             * vectors \a Fwd and \a Bwd.
+             * 
+             * We first define the convention which defines "forwards" and
+             * "backwards". First an association is made between the face of
+             * each element and its corresponding face in the trace space
+             * using the mapping #m_traceMap. The element can either be
+             * left-adjacent or right-adjacent to this trace face (see
+             * Expansion2D::GetLeftAdjacentElementExp). Boundary faces are
+             * always left-adjacent since left-adjacency is populated first.
+             * 
+             * If the element is left-adjacent we extract the face trace data
+             * from \a field into the forward trace space \a Fwd; otherwise,
+             * we place it in the backwards trace space \a Bwd. In this way,
+             * we form a unique set of trace normals since these are always
+             * extracted from left-adjacent elements.
+             *
+             * \param field is a NekDouble array which contains the 3D data
+             * from which we wish to extract the backward and forward
+             * orientated trace/face arrays.
+             *
+             * \return Updates a NekDouble array \a Fwd and \a Bwd
+             */
             MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(
                 Array<OneD,NekDouble> &Fwd,
                 Array<OneD,NekDouble> &Bwd);

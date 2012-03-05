@@ -594,10 +594,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         }
 
         void SegExp::v_NormVectorIProductWRTBase(
-                const Array<OneD, const NekDouble> &Fx, 
-                const Array<OneD, const NekDouble> &Fy, 
-                      Array< OneD, NekDouble> &outarray, 
-                      bool NegateNormal)
+            const Array<OneD, const NekDouble> &Fx,
+            const Array<OneD, const NekDouble> &Fy,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
@@ -607,13 +606,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const Array<OneD, const Array<OneD, NekDouble> >
                  &normals = GetLeftAdjacentElementExp()->GetEdgeNormal(GetLeftAdjacentElementEdge());
             Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
-            //            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
             Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
-
-            if(NegateNormal == true)
-            {
-                Vmath::Neg(nq,Fn,1);
-            }
 
             v_IProductWRTBase(Fn,outarray);
         }

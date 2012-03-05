@@ -959,16 +959,20 @@ namespace Nektar
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
-                LocalRegions::Expansion1DSharedPtr loc_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((*m_exp)[i]);
-                LocalRegions::Expansion2DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
+                LocalRegions::Expansion1DSharedPtr loc_exp = 
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion1D>((*m_exp)[i]);
+                LocalRegions::Expansion2DSharedPtr loc_elmt = 
+                    loc_exp->GetLeftAdjacentElementExp();
 
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                locnormals = loc_elmt->GetEdgeNormal(loc_exp->GetLeftAdjacentElementEdge());
+                locnormals = loc_elmt->GetEdgeNormal(
+                    loc_exp->GetLeftAdjacentElementEdge());
 
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
-
+                
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {

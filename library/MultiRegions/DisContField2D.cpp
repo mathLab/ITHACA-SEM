@@ -538,12 +538,12 @@ namespace Nektar
 
                                 orient1 = (boost::dynamic_pointer_cast<
                                            SpatialDomains::Geometry2D>(
-                                                                       (*element1)[0]->m_Element)
+                                               (*element1)[0]->m_Element)
                                            )->GetEorient((*element1)[0]
                                                          ->m_EdgeIndx);
                                 orient2 = (boost::dynamic_pointer_cast<
                                            SpatialDomains::Geometry2D>(
-                                                                       (*element2)[0]->m_Element)
+                                               (*element2)[0]->m_Element)
                                            )->GetEorient((*element2)[0]
                                                          ->m_EdgeIndx);
 
@@ -630,93 +630,86 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(),Fwd,1);
             Vmath::Zero(Bwd.num_elements(),Bwd,1);
 
-            for(n  = 0; n < nexp; ++n)
+            for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
 
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
+                    LocalRegions::Expansion1DSharedPtr traceEl = 
+                        boost::dynamic_pointer_cast<
+                            LocalRegions::Expansion1D>(elmtToTrace[n][e]);
+                    
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
-                    edgedir = (*m_exp)[n]->GetEorient(e);
-                    if(edgedir == StdRegions::eForwards)
+                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    
+                    bool fwd = true;
+                    if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
+                        traceEl->GetRightAdjacentElementEdge() == -1)
                     {
-                        offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                        // Boundary face (1 connected element) - do nothing.
+                    }
+                    else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
+                             traceEl->GetRightAdjacentElementEdge() != -1)
+                    {
+                        // Non-boundary face (2 connected elements).
+                        fwd = traceEl->GetLeftAdjacentElementExp() == 
+                            (*m_exp)[n];
+                    }
+                    else
+                    {
+                        ASSERTL2(false, "Unconnected trace element!");
+                    }
+                    
+                    if (fwd)
+                    {
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Fwd + offset);
                     }
-                }
-            }
-
-            for(n  = 0; n < nexp; ++n)
-            {
-                phys_offset = GetPhys_Offset(n);
-
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
-                {
-                    nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
-                    edgedir = (*m_exp)[n]->GetEorient(e);
-                    if(edgedir == StdRegions::eBackwards)
+                    else
                     {
-                        offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
                     }
                 }
             }
-			
+            
             // fill boundary conditions into missing elements
             int id1,id2 = 0;
             cnt = 0;
 			
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {				
-                if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                        SpatialDomains::eDirichlet)
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-						
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
-
-                        if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
-                        {
-                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                            id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
-                        }
-                        else
-                        {
-                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                            id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
-                        }
+                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
+                        id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
                     }
-
+                    
                     cnt +=e;
                 }
-                else if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)||(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eRobin))
+                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eNeumann || 
+                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                             SpatialDomains::eRobin)
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
-
-                        if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
-                        {
-                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                            ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,"method not set up for non-zero Neumann boundary condition");
-                            id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                            Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
-                        }
-                        else
-                        {
-                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                            ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,"method not set up for non-zero Neumann boundary condition");
-                            id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                            Vmath::Vcopy(npts,&Bwd[id2],1,&Fwd[id2],1);
-                        }
+                        id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                        ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,
+                                 "method not set up for non-zero Neumann boundary condition");
+                        id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
-
+                    
                     cnt +=e;
                 }
                 else
@@ -729,7 +722,6 @@ namespace Nektar
 
         void DisContField2D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {
-
             ASSERTL1(m_physState == true,
                      "local physical space is not true ");
 
@@ -751,13 +743,13 @@ namespace Nektar
             // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
-				phys_offset = GetPhys_Offset(n);
+                phys_offset = GetPhys_Offset(n);
 				
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-					(*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
+                    (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
                                                  inarray + phys_offset,
                                                  e_tmp = outarray + offset);
                 }
@@ -792,7 +784,6 @@ namespace Nektar
         /// Note this routine changes m_trace->m_coeffs space;
         void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, Array<OneD, NekDouble> &outarray)
         {
-			
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
@@ -899,7 +890,6 @@ namespace Nektar
         NekDouble DisContField2D::L2_DGDeriv(const int dir,
                                              const Array<OneD, const NekDouble> &soln)
         {
-
             int    i,e,ncoeff_edge;
             Array<OneD, const NekDouble> tmp_coeffs;
             Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
@@ -1147,7 +1137,6 @@ namespace Nektar
 
         void  DisContField2D::EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray)
         {
-
             int    i,cnt,e,ncoeff_edge;
             Array<OneD, NekDouble> force, out_tmp,qrhs;
             Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > elmtToTrace = m_traceMap->GetElmtToTrace();

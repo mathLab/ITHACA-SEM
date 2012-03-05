@@ -52,6 +52,12 @@ namespace Nektar
         class Expansion1D: virtual public Expansion, virtual public StdRegions::StdExpansion1D
         {
             public:
+                LOCAL_REGIONS_EXPORT Expansion1D() : Expansion(), StdExpansion1D()
+                {
+                    m_elementEdgeLeft = -1;
+                    m_elementEdgeRight = -1;
+                }
+
                 LOCAL_REGIONS_EXPORT virtual ~Expansion1D() {}
 
                 LOCAL_REGIONS_EXPORT void AddNormTraceInt(

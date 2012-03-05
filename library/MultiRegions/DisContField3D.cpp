@@ -182,8 +182,9 @@ namespace Nektar
                    }
                    SetUpPhysNormals();
                    
-                   m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(m_session, 
-                                                                                     graph3D,m_trace,*this, m_bndCondExpansions,m_bndConditions, periodicFaces);
+                   m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(
+                       m_session,graph3D,m_trace,*this, m_bndCondExpansions,
+                       m_bndConditions, periodicFaces);
                }
                else
                {
@@ -831,9 +832,34 @@ namespace Nektar
 
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
+                    LocalRegions::Expansion2DSharedPtr traceEl = 
+                        boost::dynamic_pointer_cast<
+                            LocalRegions::Expansion2D>(elmtToTrace[n][e]);
+                    
                     nquad_e = (*m_exp)[n]->GetFaceNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    if ((*m_exp)[n]->GetFaceDGForwards(e))
+                    
+                    bool fwd = true;
+                    
+                    if (traceEl->GetLeftAdjacentElementFace () == -1 ||
+                        traceEl->GetRightAdjacentElementFace() == -1)
+                    {
+                        // Boundary face (1 connected element) - always put in
+                        // forwards space.
+                    }
+                    else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
+                             traceEl->GetRightAdjacentElementFace() != -1)
+                    {
+                        // Non-boundary face (2 connected elements).
+                        fwd = traceEl->GetLeftAdjacentElementExp() == 
+                            (*m_exp)[n];
+                    }
+                    else
+                    {
+                        ASSERTL2(false, "Unconnected trace element!");
+                    }
+                    
+                    if (fwd)
                     {
                         (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
@@ -862,19 +888,8 @@ namespace Nektar
                                m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(1);
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        AdjacentFaceOrientation afo = m_traceMap->GetBndExpAdjacentFaceOrient(cnt+e);
-
-                        if (afo == eAdjacentFaceDir1FwdDir1_Dir2FwdDir2 ||
-                            afo == eAdjacentFaceDir1BwdDir1_Dir2BwdDir2 ||
-                            afo == eAdjacentFaceDir1FwdDir2_Dir2BwdDir1 ||
-                            afo == eAdjacentFaceDir1BwdDir2_Dir2FwdDir1)
-                        {
-                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
-                        }
-                        else
-                        {
-                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
-                        }
+                        
+                        Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
                     }
 
                     cnt += e;
@@ -888,22 +903,11 @@ namespace Nektar
                                m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(1);
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        AdjacentFaceOrientation afo = m_traceMap->GetBndExpAdjacentFaceOrient(cnt+e);
 
                         ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,
                                  "method not set up for non-zero Neumann boundary condition");
-
-                        if (afo == eAdjacentFaceDir1FwdDir1_Dir2FwdDir2 ||
-                            afo == eAdjacentFaceDir1BwdDir1_Dir2BwdDir2 ||
-                            afo == eAdjacentFaceDir1FwdDir2_Dir2BwdDir1 ||
-                            afo == eAdjacentFaceDir1BwdDir2_Dir2FwdDir1)
-                        {
-                            Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
-                        }
-                        else
-                        {
-                            Vmath::Vcopy(npts,&Bwd[id2],1,&Fwd[id2],1);
-                        }
+                        
+                        Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
                     }
 
                     cnt += e;

@@ -512,8 +512,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fx,
                 const Array<OneD, const NekDouble> &Fy,
                 const Array<OneD, const NekDouble> &Fz,
-                Array< OneD, NekDouble> &outarray,
-                bool NegateNormal)
+                Array< OneD, NekDouble> &outarray)
         {
             int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
@@ -523,11 +522,6 @@ namespace Nektar
             Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
             Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
             Vmath::Vvtvp(nq,&Fz[0],1,&normals[2][0],1,&Fn[0],1,&Fn[0],1);
-
-            if(NegateNormal == true)
-            {
-                Vmath::Neg(nq,Fn,1);
-            }
 
             IProductWRTBase(Fn,outarray);
         }
@@ -930,6 +924,7 @@ namespace Nektar
                     }
                 }
             }
+            /*
             if(GetGeom()->GetEorient(edge) == StdRegions::eBackwards)
             {
                 for(i = 0; i < vCoordDim; ++i)
@@ -941,6 +936,7 @@ namespace Nektar
                     Vmath::Neg(nqe,normal[i],1);
                 }
             }
+            */
         }
 
 

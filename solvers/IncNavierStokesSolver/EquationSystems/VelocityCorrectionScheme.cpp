@@ -442,8 +442,6 @@ namespace Nektar
         int maxpts = 0,cnt;
         int elmtid,nq,offset, boundary;
 	
-        bool NegateNormals;
-	
         // find the maximum values of points 
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
@@ -508,10 +506,7 @@ namespace Nektar
                     
                     // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
                     Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
-                    // Decide if normals facing outwards
-                    NegateNormals = (elmt->GetEorient(boundary) == StdRegions::eForwards)? false:true;
-                    
-                    Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals,NegateNormals); 
+                    Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals); 
                 }
             }
             // setting if just standard BC no High order
@@ -535,7 +530,6 @@ namespace Nektar
 		PBndExp   = m_pressure->GetBndCondExpansions();
 		
 		int elmtid,nq,offset, boundary,cnt,n;
-		bool NegateNormals;
 		int maxpts = 0;
 		int phystot = m_fields[0]->GetTotPoints();
 		
@@ -655,7 +649,7 @@ namespace Nektar
 				// calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
 				Pvals = PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]);
 				
-				Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals,m_negateNormals[j]);
+				Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals);
 			}
 		}
 		else if(m_HomogeneousType == eHomogeneous2D)
@@ -794,9 +788,7 @@ namespace Nektar
 
                                 // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
                                 Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
-
-                                // Determine whether normal is facing inwards
-                                Pbc->NormVectorIProductWRTBase(Uy,Vx,Wx,Pvals,false); 
+                                Pbc->NormVectorIProductWRTBase(Uy,Vx,Wx,Pvals); 
                             }
                         }
                         // setting if just standard BC no High order
@@ -893,7 +885,6 @@ namespace Nektar
 			
 			m_wavenumber = Array<OneD, NekDouble>(m_HBCnumber);
 			m_beta       = Array<OneD, NekDouble>(m_HBCnumber);
-			m_negateNormals = Array<OneD, bool>(m_HBCnumber);
 			
 			int exp_size, exp_size_per_plane;
 			int j=0;
@@ -921,7 +912,6 @@ namespace Nektar
 							
 							m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
 							m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-							m_negateNormals[j] = (m_elmt->GetEorient(m_HBC[4][j]) == StdRegions::eForwards)? false:true;
 							
 							sign = -1.0*sign;
 							

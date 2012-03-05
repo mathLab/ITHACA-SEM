@@ -164,6 +164,7 @@ namespace Nektar
                         if (e2->edgeNodes.size() == 0 && 
                             ed->edgeNodes.size() > 0)
                         {
+                            e2->curveType = ed->curveType;
                             e2->edgeNodes = ed->edgeNodes;
                         }
                     }

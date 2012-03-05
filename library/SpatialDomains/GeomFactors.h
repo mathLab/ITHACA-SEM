@@ -31,7 +31,6 @@
 //
 //  Description: Geometric Factors base class
 //
-//
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
@@ -45,6 +44,7 @@
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdExpansion3D.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
@@ -92,13 +92,13 @@ namespace Nektar
         class GeomFactors
         {
         public:
+            SPATIAL_DOMAINS_EXPORT friend bool operator==( 
+                const GeomFactors &lhs,
+                const GeomFactors &rhs);
+            SPATIAL_DOMAINS_EXPORT friend bool operator<(
+                const GeomFactors &lhs,
+                const GeomFactors &rhs);
 
-            SPATIAL_DOMAINS_EXPORT friend bool operator==( const GeomFactors &lhs,
-                                    const GeomFactors &rhs);
-            SPATIAL_DOMAINS_EXPORT friend bool operator<(  const GeomFactors &lhs,
-                                    const GeomFactors &rhs);
-
-            /// Destructor.
             SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
 
             /// Return the type of geometry.
@@ -163,11 +163,11 @@ namespace Nektar
             /// Set tangent circular orientation centre.
             inline void SetTangentCircularCentre(
                             Array<OneD,NekDouble> &centre);
-
-	    	/// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
-	    	/// The tangent vectors are set using the function ComputeEdgeTangents.
-	    	inline const Array<OneD, const Array<OneD, NekDouble> >
-	    						    &GetEdgeTangent() const;
+            
+            /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
+            /// The tangent vectors are set using the function ComputeEdgeTangents.
+            inline const Array<OneD, const Array<OneD, NekDouble> >
+                &GetEdgeTangent() const;
 
             /// Returns a single tangent vector.
             inline const Array<OneD, const Array<OneD, NekDouble> >
@@ -426,14 +426,14 @@ namespace Nektar
         }
 
 
-		/// Computes the edge tangents from a 1D element
-		inline void GeomFactors::ComputeEdgeTangents(
-			const GeometrySharedPtr &geom2D,
-			const int edge,
-			const LibUtilities::PointsKey &to_key)
-		{
-	   		v_ComputeEdgeTangents(geom2D, edge, to_key);
-		}
+        /// Computes the edge tangents from a 1D element
+        inline void GeomFactors::ComputeEdgeTangents(
+            const GeometrySharedPtr &geom2D,
+            const int edge,
+            const LibUtilities::PointsKey &to_key)
+        {
+            v_ComputeEdgeTangents(geom2D, edge, to_key);
+        }
 
         /// Set tangent orientation
         inline void GeomFactors::SetTangentOrientation(std::string conn)

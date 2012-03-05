@@ -139,8 +139,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Fx,
                     const Array<OneD, const NekDouble> &Fy, 
                     const Array<OneD, const NekDouble> &Fz, 
-                    Array< OneD, NekDouble> &outarray, 
-                    bool NegateNorm = false);
+                    Array< OneD, NekDouble> &outarray);
 
             //---------------------------------------
             // Evaluation functions

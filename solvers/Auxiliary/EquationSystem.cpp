@@ -418,8 +418,8 @@ namespace Nektar
                     
                     for(i = 0; i < m_spacedim; ++i)
                     {
-                        m_traceNormals[i] = Array<OneD, NekDouble> (m_fields[0]
-                                                                    ->GetTrace()->GetNpoints());
+                        m_traceNormals[i] = Array<OneD, NekDouble> (
+                            m_fields[0]->GetTrace()->GetNpoints());
                     }
                     
                     m_fields[0]->GetTrace()->GetNormals(m_traceNormals);

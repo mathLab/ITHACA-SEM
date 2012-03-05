@@ -137,17 +137,18 @@ namespace Nektar
                                            const StdRegions::VarCoeffMap &dirForcing,
                                            Array<OneD,NekDouble> &outarray);
 
-            virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                        StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                        const Array<OneD, const NekDouble> &Fx,
-                                        const Array<OneD, const NekDouble> &Fy,
-                                        Array<OneD, NekDouble> &outarray);
+            virtual void v_AddEdgeNormBoundaryInt(
+                const int                            edge,
+                StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                const Array<OneD, const NekDouble>  &Fx,
+                const Array<OneD, const NekDouble>  &Fy,
+                      Array<OneD,       NekDouble>  &outarray);
 
-
-            virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                   const Array<OneD, const NekDouble> &Fn,
-                                        Array<OneD, NekDouble> &outarray);
+            virtual void v_AddEdgeNormBoundaryInt(
+                const int                            edge,
+                StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                const Array<OneD, const NekDouble>  &Fn,
+                      Array<OneD,       NekDouble>  &outarray);
 //
 //            virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
 //                                          StdRegions::StdExpansion1DSharedPtr &EdgeExp,

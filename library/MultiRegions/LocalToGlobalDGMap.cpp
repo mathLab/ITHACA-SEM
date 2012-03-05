@@ -162,24 +162,24 @@ namespace Nektar
             CalculateBndSystemBandWidth();
 			
 			
-			// Check to see which way boundary point is
-			// orientated with respect to convention (croth)
-			m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (nbnd);
-			
-			for (int i=0; i<nbnd; i++)
-			{
-				vid = ((bndCondExp[i])->GetVertex())->GetVid();
-				//cout << "VID = "<<vid<<endl;
-								
-				if(vid == 0)
-				{
-					m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsBackwards;
-				}
-				else
-				{
-					m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsForwards;
-				}
-			}
+            // Check to see which way boundary point is
+            // orientated with respect to convention (croth)
+            m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (nbnd);
+            
+            for (int i=0; i<nbnd; i++)
+            {
+                vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                //cout << "VID = "<<vid<<endl;
+		
+                if(vid == 0)
+                {
+                    m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsBackwards;
+                }
+                else
+                {
+                    m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsForwards;
+                }
+            }
         }
 
 
@@ -683,10 +683,10 @@ namespace Nektar
             int nbnd = bndCondExp.num_elements();
             LocalRegions::QuadExpSharedPtr locQuadExp, locQuadExp1;
             LocalRegions::TriExpSharedPtr  locTriExp, locTriExp1;
-			LocalRegions::HexExpSharedPtr locHexExp;
-			LocalRegions::PrismExpSharedPtr locPrismExp;
-			LocalRegions::PyrExpSharedPtr locPyrExp;
-			LocalRegions::TetExpSharedPtr locTetExp;
+            LocalRegions::HexExpSharedPtr locHexExp;
+            LocalRegions::PrismExpSharedPtr locPrismExp;
+            LocalRegions::PyrExpSharedPtr locPyrExp;
+            LocalRegions::TetExpSharedPtr locTetExp;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
 
             const boost::shared_ptr<StdRegions::StdExpansionVector> exp3D = locExp.GetExp();
@@ -1211,62 +1211,46 @@ namespace Nektar
 
                     id  = FaceGeom->GetFid();
                     gid = FaceElmtGid[MeshFaceId.find(id)->second];
-
                     order_e = (*exp3D)[eid]->GetFaceNcoeffs(j);
-
-                    //
-                    // IMPORTANT: This part is currently wrong, just left in
-                    // for testing.
-                    //
+                    
+                    Array<OneD, unsigned int> elmMap1 (order_e);
+                    Array<OneD,          int> elmSign1(order_e);
+                    Array<OneD, unsigned int> elmMap2 (order_e);
+                    Array<OneD,          int> elmSign2(order_e);
+                    StdRegions::FaceOrientation fo = (*exp3D)[eid]->GetFaceOrient(j);
+                    
+                    // Construct mapping which will permute global IDs
+                    // according to face orientations. 
+                    (*exp3D)[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign2);
+                    (*exp3D)[eid]->GetFaceToElementMap(j,(StdRegions::FaceOrientation)0,elmMap2,elmSign2);
+                    
+                    std::map<int,int> orientMap;
+                    
+                    for (k = 0; k < elmMap1.num_elements(); ++k)
+                    {
+                        // Find the elemental co-efficient in the original
+                        // mapping.
+                        int idx = -1;
+                        for (int l = 0; l < elmMap2.num_elements(); ++l)
+                        {
+                            if (elmMap1[k] == elmMap2[l])
+                            {
+                                idx = l;
+                                break;
+                            }
+                        }
+                        
+                        ASSERTL2(idx != -1, "Problem with face to element map!");
+                        orientMap[k] = idx;
+                    }
+                    
                     for(k = 0; k < order_e; ++k)
                     {
-                        m_localToGlobalBndMap[k+cnt] = gid + k;
-                        m_localToGlobalBndSign[k+cnt] = 1;
+                        m_localToGlobalBndMap [k+cnt] = gid + orientMap[k];
+                        m_localToGlobalBndSign[k+cnt] = elmSign1[orientMap[k]];
                     }
+
                     cnt += order_e;
-//<---------------------- This part is left commented out untill we finalize the face orientation notation
-//
-//                    if((*exp2D)[eid]->GetEorient(j) == StdRegions::eForwards)
-//                    {
-//                        for(k = 0; k < order_e; ++k)
-//                        {
-//                            m_localToGlobalBndMap[k+cnt] = gid + k;
-//                        }
-//                    }
-//                    else // backwards orientated
-//                    {
-//                        switch(locSegExp->GetBasisType(0))
-//                        {
-//                        case LibUtilities::eModified_A:
-//                            // reverse vertex order
-//                            m_localToGlobalBndMap[cnt] = gid + 1;
-//                            m_localToGlobalBndMap[cnt+1] = gid;
-//                            for(k = 2; k < order_e; ++k)
-//                            {
-//                                m_localToGlobalBndMap[k+cnt] = gid + k;
-//                            }
-//
-//                            // negate odd modes
-//                            for(k = 3; k < order_e; k+=2)
-//                            {
-//                                m_localToGlobalBndSign[cnt+k] = -1.0;
-//                            }
-//
-//
-//                            break;
-//                        case LibUtilities::eGLL_Lagrange:
-//                            // reverse  order
-//                            for(k = 0; k < order_e; ++k)
-//                            {
-//                                m_localToGlobalBndMap[cnt+order_e-k-1] = gid + k;
-//                            }
-//                            break;
-//                        default:
-//                            ASSERTL0(false,"Boundary type not permitted");
-//
-//                        }
-//                    }
-//                    cnt += order_e;
                 }
             }
 
@@ -1285,49 +1269,49 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-					//if face is quad
+                    //if face is quad
                     if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j)))
                     {
                         nbndexp++;
-						FaceGeom = locQuadExp->GetGeom2D();
+                        FaceGeom = locQuadExp->GetGeom2D();
                         id      = FaceGeom->GetFid();
                         gid     = FaceElmtGid[MeshFaceId.find(id)->second];
                         
-						order_e = locQuadExp->GetNcoeffs();
+                        order_e = locQuadExp->GetNcoeffs();
                         
-						// Since boundary information is defined to be
+                        // Since boundary information is defined to be
                         // aligned with the geometry just use forward/forward
                         // (both coordinate directions) defintiion for gid's
                         for(k = 0; k < order_e; ++k)
                         {
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
                         }
-					}
-					//else if face is triangle
-					else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
+                    }
+                    //else if face is triangle
+                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
                     {
                         nbndexp++;
-						FaceGeom = locTriExp->GetGeom2D();
+                        FaceGeom = locTriExp->GetGeom2D();
                         id      = FaceGeom->GetFid();
                         gid     = FaceElmtGid[MeshFaceId.find(id)->second];
                         
-						order_e = locTriExp->GetNcoeffs();
+                        order_e = locTriExp->GetNcoeffs();
                         
-						// Since boundary information is defined to be
+                        // Since boundary information is defined to be
                         // aligned with the geometry just use forward/forward
                         // (both coordinate directions) defintiion for gid's
                         for(k = 0; k < order_e; ++k)
                         {
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
                         }
-					}
+                    }
                     else
                     {
                         ASSERTL0(false,"dynamic cast to a local face expansion failed");
                     }
                 }
             }
-
+            
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
             m_numGlobalCoeffs = m_numGlobalBndCoeffs;
 
@@ -1358,27 +1342,27 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-					//if face is quad
+                    //if face is quad
                     if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j)))
                     {
-						FaceGeom = locQuadExp->GetGeom2D();
+                        FaceGeom = locQuadExp->GetGeom2D();
                         id      = FaceGeom->GetFid();
                         m_bndCondTraceToGlobalTraceMap[cnt++] = MeshFaceId.find(id)->second;
-					}
-					//else if face is triangle
-					else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
+                    }
+                    //else if face is triangle
+                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
                     {
-						FaceGeom = locTriExp->GetGeom2D();
+                        FaceGeom = locTriExp->GetGeom2D();
                         id      = FaceGeom->GetFid();
                         m_bndCondTraceToGlobalTraceMap[cnt++] = MeshFaceId.find(id)->second;
-					}
+                    }
                     else
                     {
                         ASSERTL0(false,"dynamic cast to a local face expansion failed");
                     }
                 }
             }
-
+            
             // Now set up mapping from global coefficients to universal.
             SetUpUniversalDGMap3D(locExp);
 
@@ -1394,7 +1378,6 @@ namespace Nektar
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
-
         }
 
         /**

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion3D.h>
+#include <SpatialDomains/Geometry3D.h>
 
 namespace Nektar
 {
@@ -60,6 +61,11 @@ namespace Nektar
             m_faceExp[face] = f;
         }
         
+        Expansion2DSharedPtr Expansion3D::GetFaceExp(const int face)
+        {
+            return m_faceExp[face].lock();
+        }
+        
         void Expansion3D::v_AddFaceNormBoundaryInt(
             const int                            face,
             StdRegions::StdExpansion2DSharedPtr &FaceExp,
@@ -70,13 +76,26 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> > normals
                                     = GetFaceNormal(face);
-
             int nquad_f = normals[0].num_elements();
 
             Vmath::Zero (nquad_f,FaceExp->UpdatePhys(),1);
             Vmath::Vmul (nquad_f,normals[0],1,Fx,1,FaceExp->UpdatePhys(),1);
             Vmath::Vvtvp(nquad_f,normals[1],1,Fy,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
             Vmath::Vvtvp(nquad_f,normals[2],1,Fz,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
+
+            LocalRegions::Expansion2DSharedPtr locExp = 
+                boost::dynamic_pointer_cast<
+                    LocalRegions::Expansion2D>(FaceExp);
+            
+            if (locExp->GetRightAdjacentElementFace() != -1)
+            {
+                if (GetGeom3D()->GetFid(locExp->GetRightAdjacentElementFace()) ==
+                    locExp->GetRightAdjacentElementExp()->GetGeom3D()->
+                    GetFid(locExp->GetRightAdjacentElementFace()))
+                {
+                    Vmath::Neg(nquad_f,FaceExp->UpdatePhys(),1);
+                }
+            }
             
             AddFaceNormBoundaryInt(face, FaceExp, FaceExp->GetPhys(), outarray);
         }
@@ -95,7 +114,7 @@ namespace Nektar
             GetFaceToElementMap(face,facedir,map,sign);
             int order_e = map.num_elements(); // Order of the element
             int n_coeffs = (FaceExp->GetCoeffs()).num_elements(); // Order of the trace
-            
+
             if(n_coeffs!=order_e) // Going to orthogonal space
             {
                 ASSERTL0(false, "Variable order not supported in 3D.");
@@ -104,14 +123,30 @@ namespace Nektar
             {
                 FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
                 
+                LocalRegions::Expansion2DSharedPtr locExp = 
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion2D>(FaceExp);
+                
                 /*
-                if(edgedir == StdRegions::eBackwards)
+                 * Coming into this routine, the velocity V will have been
+                 * multiplied by the trace normals to give the input vector
+                 * Vn. By convention, these normals are inwards facing for
+                 * elements which have FaceExp as their right-adjacent face.
+                 * This conditional statement therefore determines whether the
+                 * normals must be negated, since the integral being performed
+                 * here requires an outwards facing normal.
+                 */ 
+                if (locExp->GetRightAdjacentElementFace() != -1)
                 {
-                    Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
+                    if (GetGeom3D()->GetFid(locExp->GetRightAdjacentElementFace()) ==
+                        locExp->GetRightAdjacentElementExp()->GetGeom3D()->
+                        GetFid(locExp->GetRightAdjacentElementFace()))
+                    {
+                        Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
+                    }
                 }
-                */
             }
-			
+            
             for(i = 0; i < order_e; ++i)
             {
                 outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);

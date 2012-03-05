@@ -762,6 +762,19 @@ namespace Nektar
              string fileinterp = m_sessionName + "_interp.xml";
              syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
                              + filePost +"  "+ filestreak +"  "+ fileinterp; 
+/*
+             syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+                             + filePost +"  "+ filestreak +"  "+ filePost; 
+*/
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+
+             //move the advPost mesh
+             syscall  =  "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+                      + filePost + "  " + filestreak + "  " + filePost;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
@@ -782,26 +795,24 @@ namespace Nektar
 	     //interpolate the streak field into the new mesh
              string movedmesh = m_sessionName + "_advPost_moved.xml";
              string movedinterpmesh = m_sessionName + "_interp_moved.xml";
+
              //create the interp streak             
              string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
              syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
                       + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
 	              + interpstreak;
+/*
+             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                      + filePost + "  " + filestreak + "  " + movedmesh + "  " 
+	              + interpstreak;
+*/
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
                   ASSERTL0(false,syscall.c_str());
              }
 
-             //move the advPost mesh
-             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
-                      + filePost + "  " + filestreak + "  " + movedmesh + "  " 
-	              + interpstreak;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+
 
              
              //overwriting the streak file!!          
@@ -830,6 +841,13 @@ namespace Nektar
                   ASSERTL0(false,syscall.c_str());
              }
 
+             //overwriting the interp_moved file
+	     syscall = "cp -f " + movedinterpmesh + "  " + fileinterp;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
 
              //calculate the wave
              ExecuteWave();
@@ -1222,57 +1240,7 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
 
     Array<OneD, int> VortexWaveInteraction::GetReflectionIndex(void)
     {
-        int i,j;
-        int npts = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
-        Array<OneD, int> index(npts);
-
-        Array<OneD, NekDouble> coord(2);
-        Array<OneD, NekDouble> coord_x(npts);
-        Array<OneD, NekDouble> coord_y(npts);
-        
-        //-> Dermine the point which is on coordinate (x -> -x + Lx/2, y-> -y)
-        m_waveVelocities[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
-        NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
-        NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
-        NekDouble xnew,ynew;
-
-        int start  = npts-1; 
-        for(i = 0; i < npts; ++i)
-        {
-            xnew = - coord_x[i]  + xmax;
-            ynew = - coord_y[i];
-
-            for(j = start; j >=0 ; --j)
-            {
-                if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
-                {
-                    index[i] = j;
-                    start = j;
-                    break;
-                }
-            }
-            
-            if(j == -1)
-            {
-                
-                for(j = npts-1; j > start; --j)
-                {
-                    
-                    if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
-                    {
-                        index[i] = j;
-                        break;
-                    }
-                }
-                ASSERTL0(j != start,"Failsed to find matching point");
-            }
-        }
-        return index;
-    }
-    
-    void VortexWaveInteraction::FileRelaxation(int reg)
-    {
-          cout<<"relaxation..."<<endl;
+cout<<"relaxation..."<<endl;
           static int cnt=0;
           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp 
                                            =m_rollField[0]->GetBndCondExpansions();

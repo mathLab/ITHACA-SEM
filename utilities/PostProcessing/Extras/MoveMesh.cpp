@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     {
     	    streak->ExtractDataToCoeffs(fielddef[i], fielddata[i], fielddef[i]->m_fields[0]);
     }
-    streak->BwdTrans(streak->GetCoeffs(), streak->UpdatePhys());
+    streak->BwdTrans_IterPerExp(streak->GetCoeffs(), streak->UpdatePhys());
     
     //------------------------------------------------  
 /*  

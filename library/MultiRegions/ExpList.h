@@ -181,6 +181,11 @@ namespace Nektar
 			/// true or false
             inline void SetWaveSpace(const bool wavespace);
 			
+			
+			///Set Modified Basis for the stability analysis
+			inline void SetModifiedBasis(const bool modbasis);
+
+			
             /// This function returns the third direction expansion condition,
 			/// which can be in wave space (coefficient) or not
             /// It is stored in the variable m_WaveSpace.
@@ -865,6 +870,8 @@ namespace Nektar
 			// it's a bool which determine if the expansion is in the wave space (coefficient space)
 			// or not
             bool m_WaveSpace;
+			
+			bool m_SingleModeBasis;
 
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
@@ -1264,6 +1271,15 @@ namespace Nektar
         {
             return m_transState;
         }
+		
+		/**
+         *
+         */
+        inline void ExpList::SetModifiedBasis(const bool modbasis)
+        {
+            m_SingleModeBasis = modbasis;
+        }
+		
 		
 		/**
          *

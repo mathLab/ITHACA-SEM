@@ -135,26 +135,49 @@ namespace Nektar
                (HomoStr == "1D")||(HomoStr == "Homo1D"))
             {
                 m_HomogeneousType = eHomogeneous1D;
-                m_session->LoadParameter("HomModesZ",m_npointsZ);
+				//m_session->LoadParameter("HomModesZ",m_npointsZ);
                 m_session->LoadParameter("LZ",m_LhomZ);
                 m_HomoDirec       = 1;
 				
-				//Single mode
-				if(m_session->DefinesSolverInfo("SingleMode") && 
-				   (m_session->GetSolverInfo("SingleMode")=="True" || m_session->GetSolverInfo("SingleMode")=="TRUE"))
+				
+				if(m_session->DefinesSolverInfo("SingleMode"))
 				{
-					m_SingleMode=true;
-					if(m_session->DefinesParameter("NumMode"))
+					if(m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
 					{
-						//read mode from session file
-						m_NumMode=m_session->GetParameter("NumMode");
+						m_SingleMode=true;
+						if(m_session->DefinesParameter("NumMode"))
+						{
+							//read mode from session file
+							m_NumMode=m_session->GetParameter("NumMode");
+						}
+						else 
+						{
+							//first mode by default
+							m_NumMode=1;
+						}
+						
+						//number of plane to create in case of single modes analysis.
+						m_npointsZ=2+2*m_NumMode;
+						
+					}
+					else if(m_session->GetSolverInfo("SingleMode")=="ModifiedBasis") 
+					{
+						m_npointsZ=2;
+						
 					}
 					else 
 					{
-						//first mode by default
-						m_NumMode=1;
-					}					
+						ASSERTL0(false, "SolverInfo Single Mode not valid");	
+					}
+					
+					
 				}
+				else 
+				{
+					m_npointsZ        = m_session->GetParameter("HomModesZ");
+					
+				}
+
             }
 
             if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -268,14 +291,35 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+						
+						//Modified basis for stability analysis
+						if(m_session->DefinesSolverInfo("SingleMode")&&m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+						{
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);
+							
+							for(i = 0 ; i < m_fields.num_elements(); i++)
+							{
+								m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
 
-                        for(i = 0 ; i < m_fields.num_elements(); i++)
-                        {
-                            m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
-                        }
+								//necessary to perform to HomoBwdTrans the fields that are complex
+								m_fields[i]->SetWaveSpace(false);
+
+							}
+						}
+						//normal homogeneous 1D
+						else
+						{	
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+							
+							for(i = 0 ; i < m_fields.num_elements(); i++)
+							{
+								m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+									::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
+							}
+						}
                     }
                     else
                     {

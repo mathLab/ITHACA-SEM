@@ -326,8 +326,10 @@ namespace Nektar
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 
         inline void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+				  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
                   Array<OneD, Array<OneD, NekDouble> >  &qflux);
+		
+		inline void SetModifiedBasis(const bool modbasis);
         
         /// Perform a case-insensitive string comparison.
         int NoCaseStringCompare(const string & s1, const string& s2) ;
@@ -369,6 +371,7 @@ namespace Nektar
         int m_checksteps;            ///< Number of steps between checkpoints
         int m_spacedim;              ///< Spatial dimension (> expansion dim)
         int m_expdim;                ///< Dimension of the expansion
+		bool m_SingleModeBasis;       ///< Flag for the SingleMode Basis 
 
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
@@ -683,6 +686,7 @@ namespace Nektar
     {
         return GetTraceNpoints();
     }
+	
 
     inline int EquationSystem::GetTraceNpoints(void)
     {
@@ -793,6 +797,11 @@ namespace Nektar
     {
         v_NumFluxforVector(ufield,qfield, qflux);
     }
+	
+	inline void EquationSystem::SetModifiedBasis(const bool modbasis)
+	{
+		m_SingleModeBasis=modbasis;
+	}
 }
 
 #endif

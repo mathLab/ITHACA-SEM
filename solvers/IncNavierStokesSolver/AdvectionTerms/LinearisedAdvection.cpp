@@ -78,31 +78,49 @@ namespace Nektar
                (HomoStr == "1D")||(HomoStr == "Homo1D"))
             {
                 m_HomogeneousType = eHomogeneous1D;
-                m_npointsZ        = m_session->GetParameter("HomModesZ");
+               // m_npointsZ        = m_session->GetParameter("HomModesZ");
                 m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 1;
 				m_SingleMode	   =false;
 
-				//Single mode
-				 if(m_session->DefinesSolverInfo("SingleMode") && 
-				   (m_session->GetSolverInfo("SingleMode")=="True" || m_session->GetSolverInfo("SingleMode")=="TRUE"))
-				 {
-					m_SingleMode=true;
-					if(m_session->DefinesParameter("NumMode"))
+				if(m_session->DefinesSolverInfo("SingleMode"))
+				{
+					if(m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
 					{
-						//read mode from session file
-						m_NumMode=m_session->GetParameter("NumMode");
+						m_SingleMode=true;
+						if(m_session->DefinesParameter("NumMode"))
+						{
+							//read mode from session file
+							m_NumMode=m_session->GetParameter("NumMode");
+						}
+						else 
+						{
+							//first mode by default
+							m_NumMode=1;
+						}
+						
+						//number of plane to create in case of single modes analysis.
+						m_npointsZ=2+2*m_NumMode;
+						
+					}
+					else if(m_session->GetSolverInfo("SingleMode")=="ModifiedBasis") 
+					{
+						m_npointsZ=2;
+
 					}
 					else 
 					{
-						//first mode by default
-						m_NumMode=1;
+						ASSERTL0(false, "SolverInfo Single Mode not valid");	
 					}
-					 
-					 //number of plane to create in case of single modes analysis.
-					 m_npointsZ=2+2*m_NumMode;
-				 }
-				
+					
+					
+				}
+				else 
+				{
+					m_npointsZ        = m_session->GetParameter("HomModesZ");
+
+				}
+
             }
 			
             if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -350,15 +368,32 @@ namespace Nektar
 				{
 					if(m_HomogeneousType == eHomogeneous1D)
 					{
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						
-						for(i = 0 ; i < m_base.num_elements(); i++)
+
+						if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 						{
-							m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
-						} 
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);
+							
+							for(i = 0 ; i < m_base.num_elements(); i++)
+							{								
+								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								
+							} 
+						}
+						else 
+						{
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+							
+							
+							for(i = 0 ; i < m_base.num_elements(); i++)
+							{
+								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+							} 
+							
+						}
 					}
 					else
 					{
@@ -530,7 +565,12 @@ namespace Nektar
 						
 						//Put zero on higher modes
 						int ncplane=(m_base[0]->GetNcoeffs())/m_npointsZ;
-						Vmath::Zero(ncplane*(m_npointsZ-2),&m_base[j]->UpdateCoeffs()[2*ncplane],1);
+						if(m_npointsZ>2)
+						{
+							Vmath::Zero(ncplane*(m_npointsZ-2),&m_base[j]->UpdateCoeffs()[2*ncplane],1);
+						}
+						
+							
 						
 					}
 				}
@@ -547,9 +587,32 @@ namespace Nektar
                                                    FieldDef[i]->m_fields[j]);
 				}
             }
-            m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
-                                m_base[j]->UpdatePhys());
+			
+			//In case ModifiedBasis it is used 
+			if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+			{
+
+				m_base[j]->SetWaveSpace(true);
+			
+				m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
+									m_base[j]->UpdatePhys());
+
+							
+				//copy the bwd into the second plane for single Mode Analysis
+			    int ncplane=(m_base[0]->GetNpoints())/m_npointsZ;
+				Vmath::Vcopy(ncplane,&m_base[j]->GetPhys()[0],1,&m_base[j]->UpdatePhys()[ncplane],1);
+			}
+			else
+			{
+				m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
+									m_base[j]->UpdatePhys());
+				
+			}
+			
         }
+		
+		std::string outname ="UsedBase.bse";
+		WriteFldBase(outname);
 		
 		if(m_session->DefinesParameter("N_slices"))
 		{

@@ -98,6 +98,8 @@ namespace Nektar
 		Array<OneD,NekDouble>							m_tmpIN;
 		Array<OneD,NekDouble>							m_tmpOUT;
 		bool											m_useFFTW;
+		bool m_SingleModeBasis;							///< Flag for the SingleMode Basis 
+
 
 
 		

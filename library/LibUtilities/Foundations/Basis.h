@@ -116,6 +116,7 @@ namespace Nektar
                 case eDG_SD_Right:
                 case eDG_HU_Left:
                 case eDG_HU_Right:
+				case eFourierSingleMode:
                         value = m_nummodes;
                         break;
                         

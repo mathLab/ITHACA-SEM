@@ -179,7 +179,8 @@ namespace Nektar
         void WeakAdvectionNonConservativeForm(
                 const Array<OneD, Array<OneD, NekDouble> > &V,
                 const Array<OneD, const NekDouble> &u,
-                Array<OneD, NekDouble> &outarray);
+                Array<OneD, NekDouble> &outarray,
+				bool UseContCoeffs = false);
 
         /// Compute the non-conservative advection \f$ (V \cdot \nabla u) \f$.
         void AdvectionNonConservativeForm(
@@ -269,6 +270,8 @@ namespace Nektar
         inline NekDouble GetFinalTime();
 
         inline int GetNcoeffs();
+		
+		inline int GetContNcoeffs();
 
         inline int GetNcoeffs(const int eid);
 
@@ -656,6 +659,11 @@ namespace Nektar
         return m_fields[0]->GetNcoeffs();
     }
 
+	inline int EquationSystem::GetContNcoeffs(void)
+    {
+        return m_fields[0]->GetContNcoeffs();
+    }
+	
     inline int EquationSystem::GetNcoeffs(const int eid)
     {
         return m_fields[0]->GetNcoeffs(eid);

@@ -1386,7 +1386,8 @@ namespace Nektar
     void EquationSystem::WeakAdvectionNonConservativeForm(
                 const Array<OneD, Array<OneD, NekDouble> > &V,
                 const Array<OneD, const NekDouble> &u,
-                Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray,
+				bool UseContCoeffs)
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = V.num_elements();
@@ -1396,8 +1397,15 @@ namespace Nektar
         Array<OneD, NekDouble> wk(ndim * nPointsTot, 0.0);
 
         AdvectionNonConservativeForm(V, u, tmp, wk);
-
-        m_fields[0]->IProductWRTBase_IterPerExp(tmp, outarray);
+		
+		if(UseContCoeffs)
+		{
+			m_fields[0]->IProductWRTBase(tmp, outarray,UseContCoeffs);
+		}
+		else
+		{
+			m_fields[0]->IProductWRTBase_IterPerExp(tmp, outarray);
+		}
     }
 
 

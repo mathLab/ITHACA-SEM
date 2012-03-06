@@ -79,26 +79,48 @@ namespace Nektar
 
     void EigenValuesAdvection::v_DoSolve()
     {
-        int i;
-		int npoints = GetNpoints();
-		int ncoeffs = GetNcoeffs();
-		int nvariables = 1;
-		
-		/// Working in physical space
-		/// definition of the input/ouput arrays for the weak advection operator
+        int nvariables = 1;
+		int i,dofs;
+		bool UseContCoeffs = false;
 		
 		Array<OneD, Array<OneD, NekDouble> > inarray(nvariables);
-		Array<OneD, Array<OneD, NekDouble> > outarray(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > tmp(nvariables);
+		Array<OneD, Array<OneD, NekDouble> > outarray(nvariables);
+		Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
+		
+		int npoints = GetNpoints();
+		int ncoeffs = GetNcoeffs();
+		
+		switch (m_projectionType)
+		{
+			case MultiRegions::eDiscontinuousGalerkin:
+            {
+                dofs = ncoeffs;
+				break;
+            }
+			case MultiRegions::eGalerkin:
+            {
+                dofs = GetContNcoeffs();
+				UseContCoeffs = true;
+				break;
+            }
+		}
+		
+		cout << endl;
+		cout << "Num Phys Points = " << npoints << endl; // phisical points
+		cout << "Num Coeffs      = " << ncoeffs << endl; //
+		cout << "Num Cont Coeffs = " << dofs << endl;
 		
 		inarray[0]  = Array<OneD, NekDouble>(npoints,0.0);
 		outarray[0] = Array<OneD, NekDouble>(npoints,0.0);
-		tmp[0]      = Array<OneD, NekDouble>(npoints,0.0);
+		tmp[0] = Array<OneD, NekDouble>(npoints,0.0);
 		
+		WeakAdv[0]  = Array<OneD, NekDouble>(npoints,0.0);
 		Array<OneD, NekDouble> MATRIX(npoints*npoints,0.0);
 		
 		for (int j = 0; j < npoints; j++)
 		{
+		
 		inarray[0][j] = 1.0;
        
 	    /// Feeding the weak Advection oprator with  a vector (inarray)
@@ -111,18 +133,18 @@ namespace Nektar
         {
         case MultiRegions::eDiscontinuousGalerkin:
             {
-                
-                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
 
-                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs);
-                
                 WeakDGAdvection(inarray, WeakAdv,true,true,1);
 
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
-                                                       WeakAdv[i]);
-                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
+					//Projection not required for DG
+					
+					//Advection operator
+                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],WeakAdv[i]);
+					
+					m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
+                    
                     Vmath::Neg(npoints,outarray[i],1);
                 }
 
@@ -130,13 +152,25 @@ namespace Nektar
             }
 		case MultiRegions::eGalerkin:
             {
-                // Calculate -V\cdot Grad(u);
+				// Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
                 {
-                    AdvectionNonConservativeForm(m_velocity,
-                                                 inarray[i],
-												 outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+					
+                    //Projection
+					m_fields[i]->FwdTrans(inarray[i],WeakAdv[i]);
+
+					m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],tmp[i]);
+					
+					//Advection operator
+					AdvectionNonConservativeForm(m_velocity,tmp[i],outarray[i]);
+					
+					Vmath::Neg(npoints,outarray[i],1);
+					
+					//m_fields[i]->MultiplyByInvMassMatrix(WeakAdv[i],WeakAdv[i]);
+					//Projection
+					m_fields[i]->FwdTrans(outarray[i],WeakAdv[i]);
+					
+					m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],outarray[i]);
                 }
 			break;
             }
@@ -165,6 +199,21 @@ namespace Nektar
 		Array<OneD, NekDouble> work(lwork);
 		
 		Lapack::Dgeev(jobvl,jobvr,npoints,MATRIX.get(),npoints,EIG_R.get(),EIG_I.get(),&dum,1,&dum,1,&work[0],lwork,info);
+		
+		////////////////////////////////////////////////////////
+		//Print Matrix
+		FILE *mFile;
+		
+		mFile = fopen ("WeakAdvMatrix.txt","w");
+		for(int j = 0; j<npoints; j++)
+		{
+			for(int k = 0; k<npoints; k++)
+			{
+				fprintf(mFile,"%e ",MATRIX[j*npoints+k]);
+			}
+			fprintf(mFile,"\n");
+		}
+		fclose (mFile);
 		
 		////////////////////////////////////////////////////////
 		//Output of the EigenValues

@@ -156,7 +156,7 @@
     </GEOMETRY>
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="w" TYPE="MODIFIED" />
     </EXPANSIONS>
 
     <CONDITIONS>
@@ -171,7 +171,7 @@
         </SOLVERINFO>
 
         <VARIABLES>
-            <V ID="0"> u </V>
+            <V ID="0"> w </V>
         </VARIABLES>
 
         <BOUNDARYREGIONS>
@@ -180,16 +180,16 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+                <D VAR="w" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
             </REGION>
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="Forcing">
-            <E VAR="u" VALUE="-(Lambda + 3*PI*PI)*sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+            <E VAR="w" VALUE="-(Lambda + 3*PI*PI)*sin(PI*x)*sin(PI*y)*sin(PI*z)" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
-            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+            <E VAR="w" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
         </FUNCTION>
 
     </CONDITIONS>

@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
        	    MultiRegions::ContField1DSharedPtr &outfieldy,
        	    MultiRegions::ExpListSharedPtr &streak,
-            Array<OneD, int>  Refindices);
+            Array<OneD, int>  Refindices, NekDouble alpha);
     void Manipulate(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &infields,  
@@ -61,17 +61,20 @@ decomment the lines which follow '//decomment'
 
     
     int i,j;
-    if(argc != 4)
+    if(argc >= 6  || argc <4)
     {
-        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  streakfile\n");
+        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  streakfile  (alpha)\n");
         exit(1);
     }
- 
+cout<<"argc="<<argc<<endl; 
+    //we consider by default the case when alpha is provided: argc=5
+    if(argc==4){ argc=5;}
     //----------------------------------------------
-    string meshfile(argv[argc-3]);
+    string meshfile(argv[argc-4]);
   
+    //setting argc=2 will take consider only the first two words argv[0],argv[1]
     LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+            = LibUtilities::SessionReader::CreateInstance(2, argv);
 
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
@@ -84,9 +87,20 @@ decomment the lines which follow '//decomment'
                                         ::AllocateSharedPtr(vSession, graphShPt);
     SpatialDomains::BoundaryConditions bcs(vSession, graphShPt);                                        
     //----------------------------------------------
+
+    //load alpha is provided
+    NekDouble alpha=0; 
+    string alp_s;
+
+    if(argv[argc-1])
+    {
+        alp_s = argv[argc-1];
+        alpha = boost::lexical_cast<double>(alp_s);        
+    }
+    //----------------------------------------------
       
     // Import field file.
-    string fieldfile(argv[argc-2]);
+    string fieldfile(argv[argc-3]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile,fielddef,fielddata);
@@ -96,7 +110,7 @@ decomment the lines which follow '//decomment'
     int nfields; 
     nfields = fielddef[0]->m_fields.size(); 
     Array<OneD, MultiRegions::ExpListSharedPtr> fields; 
-    fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
+    fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields); 
    
 
     std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
@@ -175,7 +189,7 @@ decomment the lines which follow '//decomment'
     //streak = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr
     //          (vSession, graphShPt, true, "w");
     
-    string streakfile(argv[argc-1]);
+    string streakfile(argv[argc-2]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> streakdef;
     vector<vector<NekDouble> > streakdata;
     graphShPt->Import(streakfile,streakdef,streakdata); 
@@ -246,7 +260,7 @@ cout<<"OOOK"<<endl;
     int coordim = graphShPt->GetMeshDimension(); 
     //remark Ilayers[2] is the critical layer             	   
     static Array<OneD, int> Refindices = GetReflectionIndex(fields, Ilayers[2]);
-    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, fields, outfieldx,outfieldy,streak,Refindices);       	       
+    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, fields, outfieldx,outfieldy,streak,Refindices, alpha);       	       
 
     //--------------------------------------------------------------------------------------
 
@@ -447,10 +461,10 @@ cout<<"OOOK"<<endl;
            NekDouble xnew,ynew;
 
            int start  = npts-1; 
-cout<<"xmax="<<xmax<<endl;
+//cout<<"xmax="<<xmax<<endl;
            for(i = 0; i < npts; ++i)
            {
-cout<<"Ref index for x="<<coord_x[i]<<endl;
+//cout<<"Ref index for x="<<coord_x[i]<<endl;
                xnew = - coord_x[i]  + xmax;
                ynew = - coord_y[i];
   
@@ -490,7 +504,7 @@ cout<<"Ref index for x="<<coord_x[i]<<endl;
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
        	    MultiRegions::ContField1DSharedPtr &outfieldy,
        	    MultiRegions::ExpListSharedPtr &streak,
-            Array<OneD, int>  Refindices)
+            Array<OneD, int>  Refindices, NekDouble alpha)
         {
             //1 I regions is expected: (the layer is the last region)
             ASSERTL0(Iregions.num_elements()==3, "something wrong with the number of I layers");
@@ -1161,8 +1175,11 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
            NekDouble rho ;
            //rho = 0.08;
            rho = session->GetParameter("RHO");
-           NekDouble alpha;
-	   alpha = session->GetParameter("ALPHA");
+           //load alpha only if not manually specified
+           if(alpha==0)
+           {
+ 	       alpha = session->GetParameter("ALPHA");
+           }
 cout<<"alpha="<<alpha<<endl;
 
            NekDouble alpha53;
@@ -1316,7 +1333,7 @@ cout<<"symmetrise the jump conditions"<<endl;
 
 
             NekDouble jactest;
-
+            NekDouble laytest=0;
 	    for(int g=0; g<nq1D; g++)
 	    {
                 //pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;       
@@ -1346,7 +1363,7 @@ outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]
 <<endl;
 */
-
+                laytest += stphysreg[g];
 
 cout<<setw(14)<<x0d[g]<<"      "<<setw(13)<<x1d[g]<<
 "      "<<Rephysreg[g]<<"   "<<dP_re[g]<<"     "
@@ -1356,7 +1373,7 @@ cout<<setw(14)<<x0d[g]<<"      "<<setw(13)<<x1d[g]<<
 //(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<"      "<<1/Jac[g]
 //<<"       "<<dermu53[g]
 //<<"        "<<derfun1D[g]
-tx[g]<<"     "<<ty[g]<<
+tx[g]<<"     "<<ty[g]<<"      "<<
 //f1[g]<<"        "<<f2[g]
 //prod_b[g]<<"      "<<dersprod_b[g]
 //fun1D[g]<<"      "<<derfun1D[g]<<"       "<<
@@ -1366,10 +1383,11 @@ pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
 <<outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]<<endl;
 //cout<<"jactest="<<jactest<<endl;
-                ASSERTL0(abs(jactest)<0.5, "jac 1D problem..");
+                ASSERTL0(abs(jactest)<0.5, "jac 1D problem..");                
 
 
 	    }
+            ASSERTL0(abs(laytest)<0.001, "critical layer wrong");
          
 // gamma(1/3)= 2.6789385347077476337            
             // need the tangents related to the expList1D outfieldx[region]

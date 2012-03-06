@@ -388,244 +388,275 @@ namespace Nektar
 
     void VortexWaveInteraction::CalcNonLinearWaveForce(void)
     {
-        int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
-        int ncoeffs = m_waveVelocities[0]->GetPlane(0)->GetNcoeffs();
-        Array<OneD, NekDouble> val(npts), der1(2*npts);
-        Array<OneD, NekDouble> der2 = der1 + npts; 
-        Array<OneD, NekDouble> streak;
-        static int projectfield = -1;
-
-        if(m_deltaFcnApprox)
+        if(m_sessionRoll->DefinesSolverInfo("INTERFACE") )
         {
-            streak = Array<OneD, NekDouble> (npts);
-            m_streakField[0]->BwdTrans(m_streakField[0]->GetCoeffs(), streak);
+             static int cnt=0;
+             string wavefile  = m_sessionName +".fld"; 
+             string movedmesh = m_sessionName + "_advPost_moved.xml";
+             string filestreak   = m_sessionName + "_streak.fld";
+             
+             char c_alpha[16]="";
+    	     sprintf(c_alpha,"%f",m_alpha[0]);               
+             string syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                     + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +">  data";
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+             char c[16]="";
+    	     sprintf(c,"%d",cnt);  
+             //save the wave
+             string wave_subalp = m_sessionName + "_wave_subalp_"+c+".fld";
+	     syscall = "cp -f " + wavefile + "  " + wave_subalp;
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
+             }
+     
         }
-
-        // Set project field to be first field that has a Neumann
-        // boundary since this not impose any condition on the vertical boundaries
-        // Othersise set to zero. 
-        if(projectfield == -1)
+        else
         {
-            Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
-                
-            for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
+            int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
+            int ncoeffs = m_waveVelocities[0]->GetPlane(0)->GetNcoeffs();
+            Array<OneD, NekDouble> val(npts), der1(2*npts);
+            Array<OneD, NekDouble> der2 = der1 + npts; 
+            Array<OneD, NekDouble> streak;
+            static int projectfield = -1;
+
+            if(m_deltaFcnApprox)
             {
-                BndConds = m_waveVelocities[i]->GetBndConditions();
-                for(int j = 0; j < BndConds.num_elements(); ++j)
-                {
-                    if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                    {
-                        projectfield = i;
-                        break;
-                    }
-                }
-                if(projectfield != -1)
-                {
-                    break;
-                }
+                streak = Array<OneD, NekDouble> (npts);
+                m_streakField[0]->BwdTrans(m_streakField[0]->GetCoeffs(), streak);
             }
+ 
+            // Set project field to be first field that has a Neumann
+            // boundary since this not impose any condition on the vertical boundaries
+            // Othersise set to zero. 
             if(projectfield == -1)
             {
-                cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
-                projectfield = 0;
+                 Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+                
+                 for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
+                 {
+                      BndConds = m_waveVelocities[i]->GetBndConditions();
+                      for(int j = 0; j < BndConds.num_elements(); ++j)
+                      {
+                           if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                           {
+                                projectfield = i;
+                                break;
+                           }
+                      }
+                      if(projectfield != -1)
+                      {
+                           break;
+                      }
+                 }
+                 if(projectfield == -1)
+                 {
+                       cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
+                       projectfield = 0;
+                 }
             }
-        }
 
-        // Shift m_vwiForcing in case of relaxation 
-        Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
-        Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
+            // Shift m_vwiForcing in case of relaxation 
+            Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
+            Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
         
-        // determine inverse of area normalised field. 
-        m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),
+            // determine inverse of area normalised field. 
+            m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),
                                               m_wavePressure->GetPlane(0)->UpdatePhys());
-        m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
+            m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
                                               m_wavePressure->GetPlane(1)->UpdatePhys());
 
-        // Determine normalisation of pressure so that |P|/A = 1
-        NekDouble norm = 0, l2;
-        l2    = m_wavePressure->GetPlane(0)->L2();
-        norm  = l2*l2;
-        l2    = m_wavePressure->GetPlane(1)->L2();
-        norm += l2*l2;
-        Vmath::Fill(2*npts,1.0,der1,1);
-        NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
-        norm = sqrt(area/norm);
+            // Determine normalisation of pressure so that |P|/A = 1
+            NekDouble norm = 0, l2;
+            l2    = m_wavePressure->GetPlane(0)->L2();
+            norm  = l2*l2;
+            l2    = m_wavePressure->GetPlane(1)->L2();
+            norm += l2*l2;
+            Vmath::Fill(2*npts,1.0,der1,1);
+            NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+            norm = sqrt(area/norm);
         
-        // Get hold of arrays. 
-        m_waveVelocities[0]->GetPlane(0)->BwdTrans(m_waveVelocities[0]->GetPlane(0)->GetCoeffs(),m_waveVelocities[0]->GetPlane(0)->UpdatePhys());
-        Array<OneD, NekDouble> u_real = m_waveVelocities[0]->GetPlane(0)->UpdatePhys();
-        Vmath::Smul(npts,norm,u_real,1,u_real,1);
-        m_waveVelocities[0]->GetPlane(1)->BwdTrans(m_waveVelocities[0]->GetPlane(1)->GetCoeffs(),m_waveVelocities[0]->GetPlane(1)->UpdatePhys());
-        Array<OneD, NekDouble> u_imag = m_waveVelocities[0]->GetPlane(1)->UpdatePhys();
-        Vmath::Smul(npts,norm,u_imag,1,u_imag,1);
-        m_waveVelocities[1]->GetPlane(0)->BwdTrans(m_waveVelocities[1]->GetPlane(0)->GetCoeffs(),m_waveVelocities[1]->GetPlane(0)->UpdatePhys());
-        Array<OneD, NekDouble> v_real = m_waveVelocities[1]->GetPlane(0)->UpdatePhys(); 
-        Vmath::Smul(npts,norm,v_real,1,v_real,1);
-        m_waveVelocities[1]->GetPlane(1)->BwdTrans(m_waveVelocities[1]->GetPlane(1)->GetCoeffs(),m_waveVelocities[1]->GetPlane(1)->UpdatePhys());
-        Array<OneD, NekDouble> v_imag = m_waveVelocities[1]->GetPlane(1)->UpdatePhys();
-        Vmath::Smul(npts,norm,v_imag,1,v_imag,1);
+            // Get hold of arrays. 
+            m_waveVelocities[0]->GetPlane(0)->BwdTrans(m_waveVelocities[0]->GetPlane(0)->GetCoeffs(),m_waveVelocities[0]->GetPlane(0)->UpdatePhys());
+            Array<OneD, NekDouble> u_real = m_waveVelocities[0]->GetPlane(0)->UpdatePhys();
+            Vmath::Smul(npts,norm,u_real,1,u_real,1);
+            m_waveVelocities[0]->GetPlane(1)->BwdTrans(m_waveVelocities[0]->GetPlane(1)->GetCoeffs(),m_waveVelocities[0]->GetPlane(1)->UpdatePhys());
+            Array<OneD, NekDouble> u_imag = m_waveVelocities[0]->GetPlane(1)->UpdatePhys();
+            Vmath::Smul(npts,norm,u_imag,1,u_imag,1);
+            m_waveVelocities[1]->GetPlane(0)->BwdTrans(m_waveVelocities[1]->GetPlane(0)->GetCoeffs(),m_waveVelocities[1]->GetPlane(0)->UpdatePhys());
+            Array<OneD, NekDouble> v_real = m_waveVelocities[1]->GetPlane(0)->UpdatePhys(); 
+            Vmath::Smul(npts,norm,v_real,1,v_real,1);
+            m_waveVelocities[1]->GetPlane(1)->BwdTrans(m_waveVelocities[1]->GetPlane(1)->GetCoeffs(),m_waveVelocities[1]->GetPlane(1)->UpdatePhys());
+            Array<OneD, NekDouble> v_imag = m_waveVelocities[1]->GetPlane(1)->UpdatePhys();
+            Vmath::Smul(npts,norm,v_imag,1,v_imag,1);
         
-        // Calculate non-linear terms for x and y directions
-        // d/dx(u u* + u* u)
-        Vmath::Vmul (npts,u_real,1,u_real,1,val,1);
-        Vmath::Vvtvp(npts,u_imag,1,u_imag,1,val,1,val,1);
-        Vmath::Smul (npts,2.0,val,1,val,1);
-        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
+            // Calculate non-linear terms for x and y directions
+            // d/dx(u u* + u* u)
+            Vmath::Vmul (npts,u_real,1,u_real,1,val,1);
+            Vmath::Vvtvp(npts,u_imag,1,u_imag,1,val,1,val,1);
+            Vmath::Smul (npts,2.0,val,1,val,1);
+            m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
         
         
-        // d/dy(v u* + v* u)
-        Vmath::Vmul (npts,u_real,1,v_real,1,val,1);
-        Vmath::Vvtvp(npts,u_imag,1,v_imag,1,val,1,val,1);
-        Vmath::Smul (npts,2.0,val,1,val,1);
-        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
+            // d/dy(v u* + v* u)
+            Vmath::Vmul (npts,u_real,1,v_real,1,val,1);
+            Vmath::Vvtvp(npts,u_imag,1,v_imag,1,val,1,val,1);
+            Vmath::Smul (npts,2.0,val,1,val,1);
+            m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
         
-        Vmath::Vadd(npts,der1,1,der2,1,der1,1);
+            Vmath::Vadd(npts,der1,1,der2,1,der1,1);
         
 #if 1
-        m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[0]);
+            m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[0]);
 #else
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[0]);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[0]);
 #endif
-        Vmath::Smul(ncoeffs,-m_waveForceMag[0],m_vwiForcing[0],1,m_vwiForcing[0],1);
+            Vmath::Smul(ncoeffs,-m_waveForceMag[0],m_vwiForcing[0],1,m_vwiForcing[0],1);
 
-        // d/dx(u v* + u* v)
-        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
+            // d/dx(u v* + u* v)
+            m_waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
         
-        // d/dy(v v* + v* v)
-        Vmath::Vmul(npts,v_real,1,v_real,1,val,1);
-        Vmath::Vvtvp(npts,v_imag,1,v_imag,1,val,1,val,1);
-        Vmath::Smul (npts,2.0,val,1,val,1);
-        m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
+            // d/dy(v v* + v* v)
+            Vmath::Vmul(npts,v_real,1,v_real,1,val,1);
+            Vmath::Vvtvp(npts,v_imag,1,v_imag,1,val,1,val,1);
+            Vmath::Smul (npts,2.0,val,1,val,1);
+            m_waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
         
-        Vmath::Vadd(npts,der1,1,der2,1,der1,1);
+            Vmath::Vadd(npts,der1,1,der2,1,der1,1);
 
 #if 1
-        m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[1]);
+            m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[1]);
 #else
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,m_vwiForcing[1]);
 #endif
 
-        Vmath::Smul(ncoeffs,-m_waveForceMag[0],m_vwiForcing[1],1,m_vwiForcing[1],1);
+            Vmath::Smul(ncoeffs,-m_waveForceMag[0],m_vwiForcing[1],1,m_vwiForcing[1],1);
         
 #if 0 
-        // Symmetrise forcing
-        //-> Get coordinates 
-        Array<OneD, NekDouble> coord(2);
-        Array<OneD, NekDouble> coord_x(npts);
-        Array<OneD, NekDouble> coord_y(npts);
+            // Symmetrise forcing
+            //-> Get coordinates 
+            Array<OneD, NekDouble> coord(2);
+            Array<OneD, NekDouble> coord_x(npts);
+            Array<OneD, NekDouble> coord_y(npts);
         
-        //-> Impose symmetry (x -> -x + Lx/2, y-> -y) on coordinates
-        m_waveVelocities[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
-        NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
-        Vmath::Neg(npts,coord_x,1);
-        Vmath::Sadd(npts,xmax,coord_x,1,coord_x,1);
-        Vmath::Neg(npts,coord_y,1);
+            //-> Impose symmetry (x -> -x + Lx/2, y-> -y) on coordinates
+            m_waveVelocities[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
+            NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
+            Vmath::Neg(npts,coord_x,1);
+            Vmath::Sadd(npts,xmax,coord_x,1,coord_x,1);
+            Vmath::Neg(npts,coord_y,1);
         
-        int i, physoffset;
+            int i, physoffset;
         
-        //-> Obtain list of expansion element ids for each point. 
-        Array<OneD, int> Eid(npts);
-        // This search may not be necessary every iteration
-        for(i = 0; i < npts; ++i)
-        {
-            coord[0] = coord_x[i];
-            coord[1] = coord_y[i];
+            //-> Obtain list of expansion element ids for each point. 
+            Array<OneD, int> Eid(npts);
+            // This search may not be necessary every iteration
+            for(i = 0; i < npts; ++i)
+            {
+                 coord[0] = coord_x[i];
+                 coord[1] = coord_y[i];
             
-            // Note this will not quite be symmetric. 
-            Eid[i] = m_waveVelocities[0]->GetPlane(0)->GetExpIndex(coord,1e-6);
-        }
+                 // Note this will not quite be symmetric. 
+                 Eid[i] = m_waveVelocities[0]->GetPlane(0)->GetExpIndex(coord,1e-6);
+            }
         
-        // Interpolate field 0 
-        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
-        for(i = 0; i < npts; ++i)
-        {
-            physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
-            coord[0] = coord_x[i];
-            coord[1] = coord_y[i];
-            der2 [i] = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
+            // Interpolate field 0 
+            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
+            for(i = 0; i < npts; ++i)
+            {
+                 physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
+                 coord[0] = coord_x[i];
+                 coord[1] = coord_y[i];
+                 der2 [i] = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,
                                                                             der1 + physoffset);
-        }
-        //-> Average field 0 
-        Vmath::Vsub(npts,der1,1,der2,1,der2,1);
-        Vmath::Smul(npts,0.5,der2,1,der2,1);
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[0]);
+            }
+            //-> Average field 0 
+            Vmath::Vsub(npts,der1,1,der2,1,der2,1);
+            Vmath::Smul(npts,0.5,der2,1,der2,1);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[0]);
         
-        //-> Interpoloate field 1
-        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
-        for(i = 0; i < npts; ++i)
-        {
-            physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
-            coord[0] = coord_x[i];
-            coord[1] = coord_y[i];
-            der2[i]  = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,                                                                         der1 + physoffset);
-        }
+            //-> Interpoloate field 1
+            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
+            for(i = 0; i < npts; ++i)
+            {
+                 physoffset = m_waveVelocities[0]->GetPlane(0)->GetPhys_Offset(Eid[i]);
+                 coord[0] = coord_x[i];
+                 coord[1] = coord_y[i];
+                 der2[i]  = m_waveVelocities[0]->GetPlane(0)->GetExp(Eid[i])->PhysEvaluate(coord,                                                                         der1 + physoffset);
+            }
         
-        //-> Average field 1
-        Vmath::Vsub(npts,der1,1,der2,1,der2,1);
-        Vmath::Smul(npts,0.5,der2,1,der2,1);
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[1]);
+            //-> Average field 1
+            Vmath::Vsub(npts,der1,1,der2,1,der2,1);
+            Vmath::Smul(npts,0.5,der2,1,der2,1);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[1]);
 #else
-        int i;
-        static Array<OneD, int> index = GetReflectionIndex();
+            int i;
+            static Array<OneD, int> index = GetReflectionIndex();
+ 
+            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
+            for(i = 0; i < npts; ++i)
+            {
+                 val[i] = 0.5*(der1[i] - der1[index[i]]);
+            }
 
-        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
-        for(i = 0; i < npts; ++i)
-        {
-            val[i] = 0.5*(der1[i] - der1[index[i]]);
-        }
-
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
 
 
-        m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
-        for(i = 0; i < npts; ++i)
-        {
-            val[i] = 0.5*(der1[i] - der1[index[i]]);
-        }        
+            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
+            for(i = 0; i < npts; ++i)
+            {
+                 val[i] = 0.5*(der1[i] - der1[index[i]]);
+            }        
             
-        m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
 #endif
 
 
-        if(m_vwiRelaxation)
-        {
-            Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
+            if(m_vwiRelaxation)
+            {
+                 Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
                         m_vwiForcing[0],1,m_vwiForcing[0],1);
-            Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[2],1,
+                 Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[2],1,
                          m_vwiForcing[0],1,m_vwiForcing[0],1);
             
-            Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
+                 Vmath::Smul(ncoeffs,1.0-m_vwiRelaxation,
                         m_vwiForcing[1],1,m_vwiForcing[1],1);
-            Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[3],1,
+                 Vmath::Svtvp(ncoeffs,m_vwiRelaxation,m_vwiForcing[3],1,
                          m_vwiForcing[1],1,m_vwiForcing[1],1);
-        }
-
-        if(m_deltaFcnApprox)
-        {
-            for(int j = 0; j < 2; ++j)
-            {
-                
-                m_waveVelocities[projectfield]->GetPlane(0)->BwdTrans(m_vwiForcing[j],der1);
-                for(int i = 0; i < npts; ++i)
-                {
-                    der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
-                }
-                m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[j]);
             }
-        }
+
+            if(m_deltaFcnApprox)
+            {
+                 for(int j = 0; j < 2; ++j)
+                 {
+                
+                      m_waveVelocities[projectfield]->GetPlane(0)->BwdTrans(m_vwiForcing[j],der1);
+                      for(int i = 0; i < npts; ++i)
+                      {
+                           der1[i] *= exp(-streak[i]*streak[i]/m_deltaFcnDecay);
+                      }
+                      m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[j]);
+                 }
+            }
 
 
       
-        // dump output
-        Array<OneD, std::string> variables(2);
-        Array<OneD, Array<OneD, NekDouble> > outfield(2);
-        variables[0] = "u";   variables[1] = "v";
-        outfield[0]  = m_vwiForcing[0];
-        outfield[1]  = m_vwiForcing[1];
+             // dump output
+             Array<OneD, std::string> variables(2);
+             Array<OneD, Array<OneD, NekDouble> > outfield(2);
+             variables[0] = "u";   variables[1] = "v";
+             outfield[0]  = m_vwiForcing[0];
+             outfield[1]  = m_vwiForcing[1];
         
-        std::string outname = m_sessionName  + ".vwi";
+             std::string outname = m_sessionName  + ".vwi";
         
-        m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
+              m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
+         }
     }
     
     void VortexWaveInteraction::SaveFile(string file, string dir, int n)
@@ -760,8 +791,11 @@ namespace Nektar
              string filePost   = m_sessionName + "_advPost.xml";
              string filestreak   = m_sessionName + "_streak.fld";
              string fileinterp = m_sessionName + "_interp.xml";
+             char alpchar[16]="";
+cout<<"alpha="<<m_alpha[0]<<endl;
+             sprintf(alpchar, "%f", m_alpha[0]);
              syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
-                             + filePost +"  "+ filestreak +"  "+ fileinterp; 
+                             + filePost +"  "+ filestreak +"  "+ fileinterp + "   "+ alpchar; 
 /*
              syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
                              + filePost +"  "+ filestreak +"  "+ filePost; 
@@ -772,9 +806,9 @@ namespace Nektar
                   ASSERTL0(false,syscall.c_str());
              }
 
-             //move the advPost mesh
+             //move the advPost mesh (remark update alpha!!!)
              syscall  =  "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
-                      + filePost + "  " + filestreak + "  " + filePost;
+                      + filePost + "  " + filestreak + "  " + filePost + "    "+ alpchar;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
@@ -860,8 +894,8 @@ namespace Nektar
                 ASSERTL0(false,syscall.c_str());
              }
 */
-cout << "Growth =" <<m_leading_real_evl[0]<<endl; 
-cout << "Phase =" <<m_leading_imag_evl[0]<<endl; 
+//cout << "Growth =" <<m_leading_real_evl[0]<<endl; 
+//cout << "Phase =" <<m_leading_imag_evl[0]<<endl; 
              //save the wave field:
              string oldwave = m_sessionName +"_wave_"+c +".fld";    
 	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
@@ -907,7 +941,7 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
 
              //use relaxation
              int reg =3;
-             FileRelaxation(reg);
+             //FileRelaxation(reg);
 
              //interpolate the .rst into the new mesh
              string rstfile = m_sessionName + ".rst";
@@ -928,6 +962,9 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
                   ASSERTL0(false,syscall.c_str());
              }   
 
+
+
+         
 
 	}
 	else

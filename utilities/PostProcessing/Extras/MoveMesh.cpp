@@ -58,14 +58,14 @@ int main(int argc, char *argv[])
     	               Array<OneD, NekDouble> x_lay, Array<OneD, NekDouble> y_lay,
     	               Array<OneD, NekDouble> & Pcurvx, 
     	               Array<OneD, NekDouble> & Pcurvy,
-    	               Array<OneD, int>&Eids, int Npoints);
+    	               Array<OneD, int>&Eids, int Npoints, string s_alp);
     
     
     
     int i,j;
-    if(argc != 4)
+    if(argc != 5)
     {
-        fprintf(stderr,"Usage: ./MoveMesh  meshfile fieldfile  changefile\n");
+        fprintf(stderr,"Usage: ./MoveMesh  meshfile fieldfile  changefile  alpha\n");
         exit(1);
     }
 //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
  
     // Read in mesh from input file
-    string meshfile(argv[argc-3]);
+    string meshfile(argv[argc-4]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //---------------------------------------------- 
    
@@ -98,15 +98,23 @@ int main(int argc, char *argv[])
 
     
     // store name of the file to change
-    string changefile(argv[argc-1]);
+    string changefile(argv[argc-2]);
     //----------------------------------------------
-    
+
+    //store the value of alpha
+    string charalp (argv[argc-1]);
+    //NekDouble alpha = boost::lexical_cast<double>(charalp);
+cout<<"read alpha="<<charalp<<endl;
+    //----------------------------------------
+
+
     // Import field file.
-    string fieldfile(argv[argc-2]);
+    string fieldfile(argv[argc-3]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------      
+  
    
 //cout<<"dim st="<<fielddef[0]->m_fields.size()<<endl;
     //fill a vector with the streak sol
@@ -850,7 +858,7 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
     
     //replace the vertices with the new ones
     //Replacevertices(changefile, xnew , ynew, x_c, y_c, Cpointsx, Cpointsy, Eids, npedge);
-    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge);
+    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge,charalp);
           	       
 }
 				
@@ -1568,7 +1576,7 @@ cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;
     	               Array<OneD, NekDouble> x_lay, Array<OneD, NekDouble> y_lay,
     	               Array<OneD, NekDouble> & Pcurvx, 
     	               Array<OneD, NekDouble> & Pcurvy,
-    	               Array<OneD, int>&Eids, int Npoints)	
+    	               Array<OneD, int>&Eids, int Npoints, string s_alp)	
 	{     
 	    //load existing file
             string newfile;
@@ -1605,11 +1613,61 @@ cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;
 	    TiXmlHandle docHandlenew(&docnew);    
 	    TiXmlNode* nodenew = NULL;
 	    TiXmlElement* meshnew = NULL;
-	    TiXmlElement* masternew = NULL;    // Master tag within which all data is contained.
+	    TiXmlElement* masternew = NULL;    
+	    TiXmlElement* condnew = NULL; 
+	    TiXmlElement* Parsnew = NULL; 
+	    TiXmlElement* parnew = NULL; 
+
+            // Master tag within which all data is contained.
 
       
 	    masternew = docnew.FirstChildElement("NEKTAR");
 	    ASSERTL0(masternew, "Unable to find NEKTAR tag in file.");
+
+            //set the alpha value
+            string alphastring;
+
+            condnew = masternew->FirstChildElement("CONDITIONS");
+            Parsnew = condnew->FirstChildElement("PARAMETERS");
+cout<<"alpha="<<s_alp<<endl;
+            parnew = Parsnew->FirstChildElement("P");
+            while(parnew)
+            {
+                  TiXmlNode *node = parnew->FirstChild();
+                  if (node)
+                  {
+                      // Format is "paramName = value"
+                      std::string line = node->ToText()->Value();
+                      std::string lhs;
+                      std::string rhs;  
+                      /// Pull out lhs and rhs and eliminate any spaces.
+                      int beg = line.find_first_not_of(" ");
+                      int end = line.find_first_of("=");
+                      // Check for no parameter name
+                      if (beg == end) throw 1;
+                      // Check for no parameter value
+                      if (end != line.find_last_of("=")) throw 1;
+                      // Check for no equals sign
+                      if (end == std::string::npos) throw 1;
+
+                      lhs = line.substr(line.find_first_not_of(" "), end-beg);
+                      lhs = lhs.substr(0, lhs.find_last_not_of(" ")+1);
+
+                      //rhs = line.substr(line.find_last_of("=")+1);
+                      //rhs = rhs.substr(rhs.find_first_not_of(" "));
+                      //rhs = rhs.substr(0, rhs.find_last_not_of(" ")+1);  
+
+                      boost::to_upper(lhs); 
+                      if(lhs == "ALPHA")
+                      {
+                          alphastring = "Alpha   =  "+s_alp;
+                          parnew->RemoveChild(node);
+                          parnew->LinkEndChild(new TiXmlText(alphastring));
+                      }     
+                  }
+                  
+	    	  parnew = parnew->NextSiblingElement("P");  
+            }
 
 	    // Find the Mesh tag and same the dim and space attributes
 	    meshnew = masternew->FirstChildElement("GEOMETRY");

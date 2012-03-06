@@ -1240,6 +1240,57 @@ cout << "Phase =" <<m_leading_imag_evl[0]<<endl;
 
     Array<OneD, int> VortexWaveInteraction::GetReflectionIndex(void)
     {
+        int i,j;
+        int npts = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
+        Array<OneD, int> index(npts);
+
+        Array<OneD, NekDouble> coord(2);
+        Array<OneD, NekDouble> coord_x(npts);
+        Array<OneD, NekDouble> coord_y(npts);
+        
+        //-> Dermine the point which is on coordinate (x -> -x + Lx/2, y-> -y)
+        m_waveVelocities[0]->GetPlane(0)->GetCoords(coord_x,coord_y);
+        NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
+        NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
+        NekDouble xnew,ynew;
+
+        int start  = npts-1; 
+        for(i = 0; i < npts; ++i)
+        {
+            xnew = - coord_x[i]  + xmax;
+            ynew = - coord_y[i];
+
+            for(j = start; j >=0 ; --j)
+            {
+                if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
+                {
+                    index[i] = j;
+                    start = j;
+                    break;
+                }
+            }
+            
+            if(j == -1)
+            {
+                
+                for(j = npts-1; j > start; --j)
+                {
+                    
+                    if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
+                    {
+                        index[i] = j;
+                        break;
+                    }
+                }
+                ASSERTL0(j != start,"Failsed to find matching point");
+            }
+        }
+        return index;
+    }
+
+
+    void VortexWaveInteraction::FileRelaxation(int reg)
+    {
 cout<<"relaxation..."<<endl;
           static int cnt=0;
           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp 
@@ -1345,5 +1396,6 @@ cout<<"ucnt="<<cnt<<endl;
            cnt++;
 
     }
+    
 }
     

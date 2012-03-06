@@ -204,6 +204,7 @@ namespace Nektar
             desc.add_options()
                     ("verbose,v", "be verbose")
                     ("help,h", "print this help message")
+                    ("nummodes,n", po::value<int>(), "override number of internal modes (polynomial order - 1)")
             ;
 
             // List hidden options (e.g. session file arguments are not actually
@@ -237,6 +238,19 @@ namespace Nektar
             {
                 cout << desc << endl;
                 exit(0);
+            }
+
+            if (m_cmdLineOptions.count("nummodes"))
+            {
+                ///  Overriding nummodes specified in XML file by nummodes from command line.
+                ///  This should work for Demo solvers which explicitly instantiate
+                ///  MeshGraph(SessionReader&) instead of staticly call its method
+                ///  MeshGraph::Read(filename).
+                m_nummodes = m_cmdLineOptions["nummodes"].as< int >();
+            }
+            else
+            {
+                m_nummodes = 0;
             }
 
             // Enable verbose mode
@@ -506,6 +520,25 @@ namespace Nektar
             std::string vName = boost::to_upper_copy(pName);
             m_parameters[vName] = pVar;
         }
+
+
+
+        /**
+         *
+         */
+        const int SessionReader::GetNumModes() const
+        {
+            return m_nummodes;
+        }
+
+        /**
+         *
+         */
+        void SessionReader::SetNumModes(const int numModes)
+        {
+            m_nummodes = numModes;
+        }
+
 
 
 

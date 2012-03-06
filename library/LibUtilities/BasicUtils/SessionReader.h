@@ -173,6 +173,13 @@ namespace Nektar
             /// Set a double precision parameter
             LIB_UTILITIES_EXPORT void SetParameter(const std::string &name, NekDouble &var);
 
+
+
+            /// Get number of internal modes
+            LIB_UTILITIES_EXPORT const int GetNumModes() const;
+            /// Set number of internal modes
+            LIB_UTILITIES_EXPORT void SetNumModes(const int numModes);
+
             /* ------ SOLVER INFO ------ */
             /// Checks if a solver info property is specified.
             LIB_UTILITIES_EXPORT bool DefinesSolverInfo(const std::string &name) const;
@@ -271,6 +278,8 @@ namespace Nektar
             FilterMap                   m_filters;
             /// Be verbose
             bool                        m_verbose;
+            /// Number of modes (polynomial order - 1)
+            int                         m_nummodes;
 
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList          m_enums;

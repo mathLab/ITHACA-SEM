@@ -953,7 +953,7 @@ namespace Nektar
 		NekDouble CFLCG[2]  = {1.0,1.0};
 		NekDouble CFL;
 		
-		if (m_projectionType = MultiRegions::eDiscontinuousGalerkin)
+		if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
 		{
 			CFL = CFLDG[n];
 		}

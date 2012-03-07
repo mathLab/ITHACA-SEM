@@ -151,6 +151,8 @@ int main(int argc, char *argv[])
     graph2D->Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
+    vSession->Finalise();
+
     return 0;
 }
 

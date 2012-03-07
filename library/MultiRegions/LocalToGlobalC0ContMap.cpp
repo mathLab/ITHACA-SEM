@@ -710,6 +710,7 @@ namespace Nektar
             Array<OneD, int>                    faceInteriorSign;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
 
             m_globalToUniversalMap = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
             m_globalToUniversalMapUnique = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
@@ -737,11 +738,11 @@ namespace Nektar
             }
 
             // Tell other processes about how many dof we have
-            m_comm->AllReduce(nVert, LibUtilities::ReduceSum);
-            m_comm->AllReduce(nEdge, LibUtilities::ReduceSum);
-            m_comm->AllReduce(nFace, LibUtilities::ReduceSum);
-            m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
-            m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
+            vCommRow->AllReduce(nVert, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(nEdge, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(nFace, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
+            vCommRow->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
@@ -823,9 +824,9 @@ namespace Nektar
             {
                 tmp[i] = m_globalToUniversalMap[i];
             }
-            m_gsh = Gs::Init(tmp, m_comm);
-            m_bndGsh = Gs::Init(tmp2, m_comm);
-            Gs::Unique(tmp, m_comm);
+            m_gsh = Gs::Init(tmp, vCommRow);
+            m_bndGsh = Gs::Init(tmp2, vCommRow);
+            Gs::Unique(tmp, vCommRow);
             for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
             {
                 m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);

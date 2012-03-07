@@ -186,6 +186,9 @@ namespace Nektar
          */
         void SessionReader::InitSession()
         {
+            // Split up the communicator
+            PartitionComm();
+
             // Partition mesh
             PartitionMesh();
 
@@ -1018,13 +1021,19 @@ namespace Nektar
         void SessionReader::PartitionMesh()
         {
             ASSERTL0(m_comm.get(), "Communication not initialised.");
-            if (m_comm->GetSize() > 1)
+
+            // Get row of comm, or the whole comm if not split
+            CommSharedPtr vCommMesh = m_comm->GetRowComm();
+
+            // Partition mesh into length of row comms
+            if (vCommMesh->GetSize() > 1)
             {
+                // Only do partitioning on the rank-0 proc in MPI_COMM_WORLD
                 if (m_comm->GetRank() == 0)
                 {
                     SessionReaderSharedPtr vSession = GetSharedThisPtr();
                     MeshPartitionSharedPtr vPartitioner = MemoryManager<MeshPartition>::AllocateSharedPtr(vSession);
-                    vPartitioner->PartitionMesh(m_comm->GetSize());
+                    vPartitioner->PartitionMesh(vCommMesh->GetSize());
                     vPartitioner->WritePartitions(vSession);
                 }
 
@@ -1040,6 +1049,35 @@ namespace Nektar
                 ASSERTL0(loadOkay, std::string("Unable to load file: ") +
                         m_filename + ". Check XML standards compliance. Error on line: "
                         + boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+            }
+        }
+
+
+        /**
+         * Splits the processes into a cartesian grid and creates communicators
+         * for each row and column of the grid. The grid is defined by the
+         * PROC_X parameter which, if specified, gives the number of processes
+         * spanned by the Fourier direction. PROC_X must exactly divide the
+         * total number of processes or an error is thrown.
+         */
+        void SessionReader::PartitionComm()
+        {
+            // Session not yet loaded, so load parameters section
+            TiXmlHandle docHandle(m_xmlDoc);
+            TiXmlElement* e;
+            e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
+            ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
+            ReadParameters(e);
+
+            // If PROC_X defined, we partition the homogeneous direction.
+            if (DefinesParameter("PROC_X"))
+            {
+                int nProcX;
+                LoadParameter("PROC_X", nProcX, 1);
+                ASSERTL0(m_comm->GetSize() % nProcX == 0,
+                        "Cannot exactly partition using PROC_X value.");
+                int nProcSem = m_comm->GetSize() / nProcX;
+                m_comm->SplitComm(nProcX, nProcSem);
             }
         }
 

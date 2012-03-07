@@ -35,6 +35,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMM_H
 #define NEKTAR_LIB_UTILITIES_COMM_H
 
+#include <boost/enable_shared_from_this.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -64,7 +65,7 @@ namespace Nektar
         };
 
         /// Base communications class
-        class Comm
+        class Comm: public boost::enable_shared_from_this<Comm>
         {
             public:
                 LIB_UTILITIES_EXPORT Comm(int narg, char* arg[]);
@@ -272,7 +273,8 @@ namespace Nektar
 
         /**
          * @brief Splits this communicator into a grid of size pRows*pColumns
-         * and creates row and column communicators.
+         * and creates row and column communicators. By default the communicator
+         * is a single row.
          */
         inline void Comm::SplitComm(int pRows, int pColumns)
         {
@@ -285,9 +287,14 @@ namespace Nektar
          */
         inline CommSharedPtr Comm::GetRowComm()
         {
-            ASSERTL1(m_commRow.get(),
-                     "Row not available.");
-            return m_commRow;
+            if (!m_commRow.get())
+            {
+                return shared_from_this();
+            }
+            else
+            {
+                return m_commRow;
+            }
         }
 
 
@@ -297,9 +304,15 @@ namespace Nektar
          */
         inline CommSharedPtr Comm::GetColumnComm()
         {
-            ASSERTL1(m_commColumn.get(),
-                     "Column not available.");
-            return m_commColumn;
+            if (!m_commColumn.get())
+            {
+                ASSERTL1(m_commColumn.get(),
+                         "Column not available.");
+            }
+            else
+            {
+                return m_commColumn;
+            }
         }
 
     }

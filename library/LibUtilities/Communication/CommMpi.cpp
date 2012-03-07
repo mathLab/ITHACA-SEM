@@ -344,7 +344,7 @@ namespace Nektar
         /**
          *
          */
-        void CommMpi::v_AllReduce(Array<OneD, int      >& pData, enum ReduceOperator pOp)
+        void CommMpi::v_AllReduce(Array<OneD, int>& pData, enum ReduceOperator pOp)
         {
             MPI_Op vOp;
             switch (pOp)

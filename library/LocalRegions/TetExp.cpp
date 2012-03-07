@@ -310,6 +310,141 @@ namespace Nektar
             StdTetExp::v_IProductWRTBase(tmp,outarray);
         }
 
+        void TetExp::v_IProductWRTDerivBase(
+            const int                           dir, 
+            const Array<OneD, const NekDouble> &inarray, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+            int order0 = m_base[0]->GetNumModes ();
+            int order1 = m_base[1]->GetNumModes ();
+            int nqtot  = nquad0*nquad1*nquad2;
+            int i;
+            
+            const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
+            
+            Array<OneD, NekDouble> gfac0(nquad0   );
+            Array<OneD, NekDouble> gfac1(nquad1   );
+            Array<OneD, NekDouble> gfac2(nquad2   );
+            Array<OneD, NekDouble> tmp1 (nqtot    );
+            Array<OneD, NekDouble> tmp2 (nqtot    );
+            Array<OneD, NekDouble> tmp3 (nqtot    );
+            Array<OneD, NekDouble> tmp4 (nqtot    );
+            Array<OneD, NekDouble> tmp5 (nqtot    );
+            Array<OneD, NekDouble> tmp6 (m_ncoeffs);
+            Array<OneD, NekDouble> tmp7 (m_ncoeffs);
+            Array<OneD, NekDouble> wsp  (nquad1*nquad2*order0 +
+                                         nquad2*order0*(order1+1)/2);
+
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,inarray.get(),1,tmp1.get(),1);
+                Vmath::Vmul(nqtot,&gmat[3*dir+1][0],1,inarray.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nqtot,&gmat[3*dir+2][0],1,inarray.get(),1,tmp3.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot, gmat[3*dir][0],  inarray.get(),1,tmp1.get(), 1);
+                Vmath::Smul(nqtot, gmat[3*dir+1][0],inarray.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nqtot, gmat[3*dir+2][0],inarray.get(),1,tmp3.get(), 1);
+            }
+            
+            MultiplyByQuadratureMetric(tmp1,tmp1);
+            MultiplyByQuadratureMetric(tmp2,tmp2);
+            MultiplyByQuadratureMetric(tmp3,tmp3);
+            
+            // set up geometric factor: (1+z0)/2
+            for(i = 0; i < nquad0; ++i)
+            {
+                gfac0[i] = 0.5*(1+z0[i]);
+            }
+
+            // set up geometric factor: 2/(1-z1)
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac1[i] = 2.0/(1-z1[i]);
+            }
+
+            // Set up geometric factor: 2/(1-z2)
+            for(i = 0; i < nquad2; ++i)
+            {
+            	gfac2[i] = 2.0/(1-z2[i]);
+            }
+
+            // Multiply appropriate terms by gfac2
+            for (i = 0; i < nquad2; ++i)
+            {
+                Vmath::Smul(nquad0*nquad1,gfac2[i],
+                            &tmp1[0]+i*nquad0*nquad1,1,
+                            &tmp1[0]+i*nquad0*nquad1,1);
+                Vmath::Smul(nquad0*nquad1,gfac2[i],
+                            &tmp2[0]+i*nquad0*nquad1,1,
+                            &tmp2[0]+i*nquad0*nquad1,1);
+                Vmath::Smul(nquad0*nquad1,gfac2[i],
+                            &tmp3[0]+i*nquad0*nquad1,1,
+                            &tmp4[0]+i*nquad0*nquad1,1);
+            }
+            
+            // Multiply appropriate terms by gfac1
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Smul(nquad0, gfac1[i%nquad2], 
+                            &tmp1[0]+i*nquad0, 1,
+                            &tmp1[0]+i*nquad0, 1);
+                Vmath::Smul(nquad0, gfac1[i%nquad2], 
+                            &tmp2[0]+i*nquad0, 1,
+                            &tmp5[0]+i*nquad0, 1);
+                Vmath::Smul(nquad0, gfac1[i%nquad2], 
+                            &tmp4[0]+i*nquad0, 1,
+                            &tmp4[0]+i*nquad0, 1);
+            }
+            
+            // Assemble terms which depend on d/d eta_2
+            Vmath::Vadd(nqtot, &tmp4[0], 1, &tmp2[0], 1, &tmp2[0], 1);
+            
+            // Multiply appropriate terms by gfac0
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Vmul(nquad0,&gfac0[0],1,
+                            &tmp4[0]+i*nquad0,1,
+                            &tmp4[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0,&gfac0[0],1,
+                            &tmp5[0]+i*nquad0,1,
+                            &tmp5[0]+i*nquad0,1);
+            }
+            
+            // Assemble terms which depend on d/d eta_1
+            Vmath::Vadd(nqtot, &tmp1[0], 1, &tmp4[0], 1, &tmp1[0], 1);
+            Vmath::Vadd(nqtot, &tmp1[0], 1, &tmp5[0], 1, &tmp1[0], 1);
+            
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata (),
+                                         m_base[2]->GetBdata (),
+                                         tmp1,tmp6,wsp,
+                                         true,true,true);
+            
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
+                                         m_base[1]->GetDbdata(),
+                                         m_base[2]->GetBdata (),
+                                         tmp2,tmp7,wsp,
+                                         true,true,true);
+            
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
+                                         m_base[1]->GetBdata (),
+                                         m_base[2]->GetDbdata(),
+                                         tmp3,outarray,wsp,
+                                         true,true,true);
+
+            Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
+            Vmath::Vadd(m_ncoeffs, tmp7, 1, outarray, 1, outarray, 1);
+        }
+
 
         //-----------------------------
         // Evaluation functions

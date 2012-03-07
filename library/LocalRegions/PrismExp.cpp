@@ -293,6 +293,36 @@ namespace Nektar
             StdPrismExp::v_IProductWRTBase(tmp,outarray);
         }
 
+        /**
+         * @brief Calculates the inner product \f$ I_{pqr} = (u,
+         * \partial_{x_i} \phi_{pqr}) \f$.
+         * 
+         * The derivative of the basis functions is performed using the chain
+         * rule in order to incorporate the geometric factors. Assuming that
+         * the basis functions are a tensor product
+         * \f$\phi_{pqr}(\eta_1,\eta_2,\eta_3) =
+         * \phi_p(\eta_1)\phi_q(\eta_2)\phi_r(\eta_3)\f$, this yields the
+         * result
+         * 
+         * \f[
+         * I_{pqr} = \sum_{j=1}^3 \left(u, \frac{\partial u}{\partial \eta_j}
+         * \frac{\partial \eta_j}{\partial x_i}\right)
+         * \f]
+         * 
+         * In the prismatic element, we must also incorporate a second set of
+         * geometric factors which incorporate the collapsed co-ordinate
+         * system, so that
+         * 
+         * \f[ \frac{\partial\eta_j}{\partial x_i} = \sum_{k=1}^3
+         * \frac{\partial\eta_j}{\partial\xi_k}\frac{\partial\xi_k}{\partial
+         * x_i} \f]
+         * 
+         * These derivatives can be found on p152 of Sherwin & Karniadakis.
+         * 
+         * @param dir       Direction in which to take the derivative.
+         * @param inarray   The function \f$ u \f$.
+         * @param outarray  Value of the inner product.
+         */
         void PrismExp::v_IProductWRTDerivBase(
             const int                           dir, 
             const Array<OneD, const NekDouble> &inarray, 
@@ -316,16 +346,15 @@ namespace Nektar
             
             const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
-
+            
             Array<OneD, NekDouble> gfac0(nquad0   );
             Array<OneD, NekDouble> gfac2(nquad2   );
             Array<OneD, NekDouble> tmp1 (nqtot    );
             Array<OneD, NekDouble> tmp2 (nqtot    );
             Array<OneD, NekDouble> tmp3 (nqtot    );
-            Array<OneD, NekDouble> tmp4 (m_ncoeffs);
+            Array<OneD, NekDouble> tmp4 (nqtot    );
             Array<OneD, NekDouble> tmp5 (m_ncoeffs);
-            Array<OneD, NekDouble> tmp6 (nqtot    );
-            Array<OneD, NekDouble> tmp7 (m_ncoeffs);
+            Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (order0*nquad2*(nquad1+order1));
 
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
@@ -364,50 +393,39 @@ namespace Nektar
                 Vmath::Smul(nquad0*nquad1,gfac2[i],
                             &tmp1[0]+i*nquad0*nquad1,1,
                             &tmp1[0]+i*nquad0*nquad1,1);
+                Vmath::Smul(nquad0*nquad1,gfac2[i],
+                            &tmp3[0]+i*nquad0*nquad1,1,
+                            &tmp4[0]+i*nquad0*nquad1,1);
             }
+            
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Vmul(nquad0,&gfac0[0],1,&tmp4[0]+i*nquad0,1,
+                            &tmp4[0]+i*nquad0,1);
+            }
+            
+            Vmath::Vadd(nqtot, &tmp1[0], 1, &tmp4[0], 1, &tmp1[0], 1);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
                                          m_base[2]->GetBdata (),
-                                         tmp1,tmp4,wsp,
+                                         tmp1,tmp5,wsp,
                                          true,true,true);
             
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
                                          m_base[1]->GetDbdata(),
                                          m_base[2]->GetBdata (),
-                                         tmp2,tmp5,wsp,
+                                         tmp2,tmp6,wsp,
                                          true,true,true);
             
-            for (i = 0; i < nquad2; ++i)
-            {
-                Vmath::Smul(nquad0*nquad1,gfac2[i],
-                            &tmp3[0]+i*nquad0*nquad1,1,
-                            &tmp6[0]+i*nquad0*nquad1,1);
-            }
-            
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vmul(nquad0,&gfac0[0],1,&tmp6[0]+i*nquad0,1,
-                            &tmp6[0]+i*nquad0,1);
-            }
-            
-            // TODO: This should be factored into the first IP call to avoid
-            // unnecessary overheads.
-            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                         m_base[1]->GetBdata (),
-                                         m_base[2]->GetBdata (),
-                                         tmp6,tmp7,wsp,
-                                         true,true,true);
-
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
                                          m_base[1]->GetBdata (),
                                          m_base[2]->GetDbdata(),
                                          tmp3,outarray,wsp,
                                          true,true,true);
 
-            Vmath::Vadd(m_ncoeffs, tmp4, 1, outarray, 1, outarray, 1);
             Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
-            Vmath::Vadd(m_ncoeffs, tmp7, 1, outarray, 1, outarray, 1);
+            Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
         }
         
         //---------------------------------------

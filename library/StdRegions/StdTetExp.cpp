@@ -1221,6 +1221,27 @@ namespace Nektar
             return tot + 1;
         }
 
+        int StdTetExp::v_NumDGBndryCoeffs() const
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+            
+            return  (Q+1) + P*(1 + 2*Q - P)/2  // base face
+                +   (R+1) * P*(1 + 2*R - P)/2  // front face
+                + 2*(R+1) * Q*(1 + 2*R - Q);   // back two faces
+        }
+
         int StdTetExp::v_GetEdgeNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");

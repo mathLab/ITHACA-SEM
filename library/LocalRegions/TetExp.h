@@ -94,7 +94,11 @@ namespace Nektar
             //-----------------------------
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> & outarray);
+                      Array<OneD,       NekDouble>& outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
+                const int                           dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
 
 
             //-----------------------------

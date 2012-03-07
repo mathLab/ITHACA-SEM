@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterThresholdMax.cpp
+// File FilterCheckpoint.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,65 +29,65 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs time when solution first exceeds a threshold value.
+// Description: Outputs solution fields during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Auxiliary/Filters/FilterThresholdMax.h>
+#include <Auxiliary/Filters/FilterCheckpoint.h>
 
 namespace Nektar
 {
-    std::string FilterThresholdMax::className = GetFilterFactory().RegisterCreatorFunction("ThresholdMax", FilterThresholdMax::create);
+    std::string FilterCheckpoint::className = GetFilterFactory().RegisterCreatorFunction("Checkpoint", FilterCheckpoint::create);
 
-    FilterThresholdMax::FilterThresholdMax(
+    FilterCheckpoint::FilterCheckpoint(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams) :
         Filter(pSession)
     {
-        ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
-                 "Missing parameter 'ThresholdValue'.");
-        m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
-        ASSERTL0(pParams.find("InitialValue") != pParams.end(),
-                 "Missing parameter 'InitialValue'.");
-        m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
-        ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                 "Missing parameter 'OutputFile'.");
-        m_outputFile = pParams.find("OutputFile")->second;
-    }
-
-    FilterThresholdMax::~FilterThresholdMax()
-    {
-
-    }
-
-    void FilterThresholdMax::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-    {
-        m_threshold = Array<OneD, NekDouble> (pFields[0]->GetNpoints(), m_initialValue);
-    }
-
-    void FilterThresholdMax::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-    {
-        int i;
-        NekDouble timestep = pFields[0]->GetSession()->GetParameter("TimeStep");
-
-        for (i = 0; i < pFields[0]->GetNpoints(); ++i)
+        if (pParams.find("OutputFile") == pParams.end())
         {
-            if (m_threshold[i] < timestep && pFields[0]->GetPhys()[i] > m_thresholdValue)
-            {
-                m_threshold[i] = time;
-            }
+            m_outputFile = m_session->GetSessionName();
         }
+        else
+        {
+            ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                    "Missing parameter 'OutputFile'.");
+            m_outputFile = pParams.find("OutputFile")->second;
+        }
+        ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
+                "Missing parameter 'OutputFrequency'.");
+        m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
+        m_outputIndex = 0;
+        m_index = 0;
     }
 
-    void FilterThresholdMax::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    FilterCheckpoint::~FilterCheckpoint()
     {
+
+    }
+
+    void FilterCheckpoint::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    {
+        m_index = 0;
+        m_outputIndex = 0;
+    }
+
+    void FilterCheckpoint::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    {
+        m_index++;
+        if (m_index % m_outputFrequency > 0)
+        {
+            return;
+        }
+
         std::stringstream vOutputFilename;
-        vOutputFilename << m_outputFile;
+        vOutputFilename << m_outputFile << "_" << m_outputIndex;
+
         if (m_session->GetComm()->GetSize() > 1)
         {
             vOutputFilename << "_P" << m_session->GetComm()->GetRank();
         }
-        vOutputFilename << ".fld";
+        vOutputFilename << ".chk";
 
         SpatialDomains::MeshGraphSharedPtr vGraph = pFields[0]->GetGraph();
 
@@ -95,22 +95,26 @@ namespace Nektar
             = pFields[0]->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
-        pFields[0]->FwdTrans_IterPerExp(m_threshold, vCoeffs);
-
         // copy Data into FieldData and set variable
-        for(int i = 0; i < FieldDef.size(); ++i)
+        for(int j = 0; j < pFields.num_elements(); ++j)
         {
-            // Could do a search here to find correct variable
-            FieldDef[i]->m_fields.push_back("m");
-            pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
+            for(int i = 0; i < FieldDef.size(); ++i)
+            {
+                // Could do a search here to find correct variable
+                FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
+                pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], pFields[j]->UpdateCoeffs());
+            }
         }
-
         vGraph->Write(vOutputFilename.str(),FieldDef,FieldData);
+        m_outputIndex++;
+    }
+
+    void FilterCheckpoint::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+    {
 
     }
 
-    bool FilterThresholdMax::v_IsTimeDependent()
+    bool FilterCheckpoint::v_IsTimeDependent()
     {
         return true;
     }

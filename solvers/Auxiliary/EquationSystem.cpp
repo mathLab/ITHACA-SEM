@@ -493,7 +493,7 @@ namespace Nektar
         m_session->LoadParameter("Time", m_time, 0.0);
         m_session->LoadParameter("TimeStep", m_timestep, 0.01);
         m_session->LoadParameter("NumSteps", m_steps, 0);
-        m_session->LoadParameter("IO_CheckSteps", m_checksteps, m_steps);
+        m_session->LoadParameter("IO_CheckSteps", m_checksteps, 0);
         m_session->LoadParameter("FinTime", m_fintime, 0);
         m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
 
@@ -1018,7 +1018,7 @@ namespace Nektar
             }
         }
 
-        if(dumpInitialConditions)
+        if(dumpInitialConditions && m_checksteps)
         {
             Checkpoint_Output(0);
         }

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Filter.cpp
+// File FilterCheckpoint.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Base class for filters.
+// Description: Outputs solution fields during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifndef FILTERCHECKPOINT_H_
+#define FILTERCHECKPOINT_H_
 
 #include <Auxiliary/Filters/Filter.h>
 
 namespace Nektar
 {
-    FilterFactory& GetFilterFactory()
-    {
-        typedef Loki::SingletonHolder<FilterFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy > Type;
-        return Type::Instance();
-    }
 
-
-    Filter::Filter(const LibUtilities::SessionReaderSharedPtr& pSession) :
-            m_session(pSession)
+    class FilterCheckpoint : public Filter
     {
-    }
+    public:
+        friend class MemoryManager<FilterCheckpoint>;
 
-    Filter::~Filter()
-    {
-    }
+        /// Creates an instance of this class
+        static FilterSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::map<std::string, std::string> &pParams) {
+            FilterSharedPtr p = MemoryManager<FilterCheckpoint>::AllocateSharedPtr(pSession, pParams);
+            //p->InitObject();
+            return p;
+        }
+
+        ///Name of the class
+        static std::string className;
+
+        FilterCheckpoint(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::map<std::string, std::string> &pParams);
+        ~FilterCheckpoint();
+
+    protected:
+        virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        virtual bool v_IsTimeDependent();
+
+    private:
+        unsigned int m_index;
+        unsigned int m_outputIndex;
+        unsigned int m_outputFrequency;
+        std::string m_outputFile;
+    };
 
 }
+
+#endif /* FILTERCHECKPOINT_H_ */

@@ -735,6 +735,10 @@ namespace Nektar
                 }
                 pNektar->LinkEndChild(vConditions);
             }
+            if (pSession->DefinesElement("Nektar/Filters"))
+            {
+                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/Filters")));
+            }
             // @todo: Extract subset of history points within this partition.
             if (pSession->DefinesElement("Nektar/History"))
             {

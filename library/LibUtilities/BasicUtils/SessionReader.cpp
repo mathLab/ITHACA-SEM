@@ -1590,25 +1590,22 @@ namespace Nektar
             TiXmlElement *filter = filters->FirstChildElement("FILTER");
             while (filter)
             {
-                std::map<std::string, std::string> vParams;
+                ASSERTL0(filter->Attribute("TYPE"),
+                        "Missing attribute 'TYPE' for filter.");
+                std::string typeStr = filter->Attribute("TYPE");
 
-                TiXmlElement *type = filter->FirstChildElement("TYPE");
-                ASSERTL0(type, "No type specified for filter.");
-                ASSERTL0(type->GetText(), "Empty type string specified.");
-                std::string typeStr = type->GetText();
+                std::map<std::string, std::string> vParams;
 
                 TiXmlElement *param = filter->FirstChildElement("PARAM");
                 while (param)
                 {
-                    TiXmlElement *name = param->FirstChildElement("NAME");
-                    ASSERTL0(name, "No name specified for parameter.");
-                    ASSERTL0(name->GetText(), "Empty name string for param.");
-                    std::string nameStr = name->GetText();
+                    ASSERTL0(param->Attribute("NAME"),
+                            "Missing attribute 'NAME' for parameter in filter "
+                            + typeStr + "'.");
+                    std::string nameStr = param->Attribute("NAME");
 
-                    TiXmlElement *value = param->FirstChildElement("VALUE");
-                    ASSERTL0(value, "No value specified for parameter.");
-                    ASSERTL0(value->GetText(), "Empty value string for param.");
-                    std::string valueStr = value->GetText();
+                    ASSERTL0(param->GetText(), "Empty value string for param.");
+                    std::string valueStr = param->GetText();
 
                     vParams[nameStr] = valueStr;
 

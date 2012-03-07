@@ -8,6 +8,7 @@ SET(PulseWaveSolverSource
        ../Auxiliary/DriverModifiedArnoldi.cpp
        ../Auxiliary/Filters/Filter.cpp
        ../Auxiliary/Filters/FilterThresholdMax.cpp
+       ../Auxiliary/Filters/FilterCheckpoint.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp)
 

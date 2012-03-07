@@ -107,7 +107,7 @@ namespace Nektar
 		LibUtilities::FilterMap f = m_session->GetFilters();
 		for (x = f.begin(); x != f.end(); ++x)
 		{
-		    m_filters.push_back(GetFilterFactory().CreateInstance(x->first, x->second));
+		    m_filters.push_back(GetFilterFactory().CreateInstance(x->first, m_session, x->second));
 		}
     }
 
@@ -457,7 +457,7 @@ namespace Nektar
 
 				// Transform data if needed
 				if((m_historysteps && m_historyList.size() > 0 && !((n+1)%m_historysteps))
-				        || (n&&(!((n+1)%m_checksteps))))
+				        || (m_checksteps&&n&&(!((n+1)%m_checksteps))))
                 {
                     for (i = 0; i < m_intVariables.size(); ++i)
                     {
@@ -480,7 +480,7 @@ namespace Nektar
 	            }
 
 				// Write out checkpoint files.
-				if(n&&(!((n+1)%m_checksteps)))
+				if(m_checksteps&&n&&(!((n+1)%m_checksteps)))
 				{
 					Checkpoint_Output(nchk++);
 				}

@@ -18,6 +18,7 @@ SET(CardiacEPSolverSource
        ../Auxiliary/DriverStandard.cpp
        ../Auxiliary/Filters/Filter.cpp
        ../Auxiliary/Filters/FilterThresholdMax.cpp
+       ../Auxiliary/Filters/FilterCheckpoint.cpp
 )
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 

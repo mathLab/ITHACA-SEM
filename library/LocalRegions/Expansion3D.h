@@ -54,22 +54,25 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
             
         protected:
-            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
-            
-            LOCAL_REGIONS_EXPORT void v_AddFaceNormBoundaryInt(
+            virtual DNekMatSharedPtr v_GenMatrix(
+                const StdRegions::StdMatrixKey &mkey);
+            virtual void v_AddFaceNormBoundaryInt(
                 const int                            face,
                 StdRegions::StdExpansion2DSharedPtr &FaceExp,
                 const Array<OneD, const NekDouble>  &Fx,
                 const Array<OneD, const NekDouble>  &Fy,
                 const Array<OneD, const NekDouble>  &Fz,
                       Array<OneD,       NekDouble>  &outarray);
-            
-            LOCAL_REGIONS_EXPORT void v_AddFaceNormBoundaryInt(
+            virtual void v_AddFaceNormBoundaryInt(
                 const int                            face,
                 StdRegions::StdExpansion2DSharedPtr &FaceExp,
                 const Array<OneD, const NekDouble>  &Fn,
                       Array<OneD,       NekDouble>  &outarray);
-            
+            virtual void v_AddRobinMassMatrix(
+                const int                           face, 
+                const Array<OneD, const NekDouble> &primCoeffs, 
+                DNekMatSharedPtr                   &inoutmat);
+                
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions

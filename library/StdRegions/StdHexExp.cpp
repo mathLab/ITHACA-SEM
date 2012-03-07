@@ -311,6 +311,13 @@ namespace Nektar
             outfile << "]" ;
         }
 
+        bool StdHexExp::v_IsBoundaryInteriorExpansion()
+        {
+            return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
+                   (m_base[1]->GetBasisType() == LibUtilities::eModified_A) &&
+                   (m_base[2]->GetBasisType() == LibUtilities::eModified_A);
+        }
+
 
         ///////////////////////////////
         /// Differentiation Methods

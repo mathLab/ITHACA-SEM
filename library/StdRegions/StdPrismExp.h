@@ -232,6 +232,7 @@ namespace Nektar
                 OutputFormat format,
                 const bool dumpVar = true,
                 std::string var = "v");
+            STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
 
             //---------------------------------------
             // Mappings

@@ -12,6 +12,7 @@ solvers/FitzHughNagumoSolver
 solvers/CardiacEPSolver
 solvers/FluxReconstruction
 solvers/VortexWaveInteraction
+solvers/ImageWarpingSolver
 docs/*.doc
 docs/arch
 docs/emacs

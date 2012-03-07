@@ -153,34 +153,66 @@ namespace Nektar
             }
         }
 
-
-#if 0 //needs m_faceMap to be defined and setupin Expansion3D similar to 2D case
-        void Expansion3D::AddRobinMassMatrix(const int face, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        void Expansion3D::v_AddRobinMassMatrix(
+            const int face, 
+            const Array<OneD, const NekDouble > &primCoeffs, 
+            DNekMatSharedPtr &inoutmat)
         {
+            ASSERTL1(IsBoundaryInteriorExpansion(),
+                     "Not set up for non boundary-interior expansions");
+            ASSERTL1(inoutmat->GetRows() == inoutmat->GetColumns(),
+                     "Assuming that input matrix was square");
+            
             int i,j;
             int id1,id2;
-            int order_e = m_faceExp[face]->GetNcoeffs();                    
-            // Checks to see if this is a boundary interior
-            // decomposed expansion - Routine not appropriate otherwise
-            int nbndry = v_NumBndryCoeffs(); 
-
-            Array<OneD,unsigned int> map;
-            Array<OneD,int> sign;
+            Expansion2DSharedPtr faceExp = m_faceExp[face].lock();
+            int order_f = faceExp->GetNcoeffs();
+         
+            Array<OneD, unsigned int> map;
+            Array<OneD,          int> sign;
             
-            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *m_edgeExp[edge], primCoeffs);
-            DNekScalMat &edgemat = *m_edgeExp[edge]->GetLocMatrix(mkey);
+            StdRegions::VarCoeffMap varcoeffs;
+            varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
 
-            v_GetEdgeToElementMap(edge,v_GetEorient(edge),map,sign);
+            StdRegions::ExpansionType expType = 
+                faceExp->DetExpansionType();
+
+            LocalRegions::MatrixKey mkey(
+                StdRegions::eMass,
+                expType, 
+                *faceExp, 
+                StdRegions::NullConstFactorMap, 
+                varcoeffs);
             
-            // Need to reset mapping to boundary rather than 
-            // elemental mapping
-            if(IsBoundaryMatrix == true) 
+            DNekScalMat &facemat = *faceExp->GetLocMatrix(mkey);
+
+            // Now need to identify a map which takes the local face
+            // mass matrix to the matrix stored in inoutmat;
+            // This can currently be deduced from the size of the matrix
+            
+            // - if inoutmat.m_rows() == v_NCoeffs() it is a full
+            //   matrix system
+            
+            // - if inoutmat.m_rows() == v_NumBndCoeffs() it is a
+            //  boundary CG system
+
+            // - if inoutmat.m_rows() == v_NumDGBndCoeffs() it is a
+            //  trace DG system; still needs implementing.
+            int rows = inoutmat->GetRows();
+
+            if (rows == GetNcoeffs())
             {
-
+                GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+            }
+            else if(rows == NumBndryCoeffs())
+            {
+                int nbndry = NumBndryCoeffs();
                 Array<OneD,unsigned int> bmap(nbndry);
-                v_GetBoundaryMap(bmap);
+
+                GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+                GetBoundaryMap(bmap);
                 
-                for(i = 0; i < order_e; ++i)
+                for(i = 0; i < order_f; ++i)
                 {
                     for(j = 0; j < nbndry; ++j)
                     {
@@ -193,34 +225,61 @@ namespace Nektar
                     ASSERTL1(j != nbndry,"Did not find number in map");
                 }
             }
+            // TODO: Implement this for 3D DG.
+            /*
+            else if (rows == NumDGBndryCoeffs())
+            {
+                // possibly this should be a separate method
+                int cnt = 0; 
+                map  = Array<OneD, unsigned int> (order_e);
+                sign = Array<OneD,          int> (order_e,1);
+                
+                for(i = 0; i < edge; ++i)
+                {
+                    cnt += GetEdgeNcoeffs(i);
+                }
+                
+                for(i = 0; i < order_e; ++i)
+                {
+                    map[i] = cnt++;
+                }
+                // check for mapping reversal 
+                if(GetEorient(edge) == StdRegions::eBackwards)
+                {
+                    switch(edgeExp->GetBasis(0)->GetBasisType())
+                    {
+                    case LibUtilities::eGLL_Lagrange:
+                        reverse( map.get() , map.get()+order_e);
+                        break;
+                    case LibUtilities::eModified_A:
+                        {
+                            swap(map[0],map[1]);
+                            for(i = 3; i < order_e; i+=2)
+                            {
+                                sign[i] = -1;
+                            }  
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"Edge boundary type not valid for this method");
+                    }
+                }
+            }
+            */
+            else
+            {
+                ASSERTL0(false,"Could not identify matrix type from dimension");
+            }
 
-            for(i = 0; i < order_e; ++i)
+            for(i = 0; i < order_f; ++i)
             {
                 id1 = map[i];
-                for(j = 0; j < order_e; ++j)
+                for(j = 0; j < order_f; ++j)
                 {
                     id2 = map[j];
-                    (*inoutmat)(id1,id2) +=  edgemat(i,j)*sign[i]*sign[j];
+                    (*inoutmat)(id1,id2) += facemat(i,j)*sign[i]*sign[j];
                 }
             }
         }
-
-        void Expansion3D::v_AddRobinMassMatrix(const int faceid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
-        {
-            AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
-        }
-#endif
-
     } //end of namespace
 } //end of namespace
-
-/** 
- *    $Log: Expansion3D.cpp,v $
- *    Revision 1.2  2008/08/20 09:16:39  sherwin
- *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
- *
- *    Revision 1.1  2008/08/14 22:12:56  sherwin
- *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
- *
- *
- **/

@@ -227,6 +227,7 @@ namespace Nektar
                     std::string var = "v");
             STD_REGIONS_EXPORT virtual void v_WriteCoeffsToFile(
                     std::ofstream &outfile);
+            STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                     Array<OneD, NekDouble> &coords_x,
                     Array<OneD, NekDouble> &coords_y,

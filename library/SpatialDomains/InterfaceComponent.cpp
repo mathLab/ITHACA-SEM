@@ -34,8 +34,6 @@
 //
 // //////////////////////////////////////////////////////////////////////////////
 
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/InterfaceComponent.h>
 
 namespace Nektar

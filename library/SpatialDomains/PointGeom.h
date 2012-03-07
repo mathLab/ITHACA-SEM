@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
+//  Description: Point geometry information
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +55,13 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class PointGeom;
+
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef std::vector< PointGeomSharedPtr > PointGeomVector;
+        typedef std::vector< PointGeomSharedPtr >::iterator PointGeomVectorIter;
+        typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
 
         class PointGeom: public Geometry1D //???Geometry0D???
         {
@@ -63,79 +70,29 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT ~PointGeom();
 
-                inline VertexComponentSharedPtr GetVertex(const int i) const
-                {
-                    VertexComponentSharedPtr returnval;
-
-                    if (i >= 0 && i < kNverts)
-                    {
-                        returnval = m_verts[i];
-                    }
-
-                    return returnval;
-                }
-
-                /// \brief Get the orientation of point1; used later for 
-				/// normal convention
-                ///
-                /// Since both edges are passed, it does
-                /// not need any information from the EdgeComponent instance.
-                SPATIAL_DOMAINS_EXPORT static StdRegions::PointOrientation GetPointOrientation(const SegGeom &edge1,
-																							   const SegGeom &edge2);
-
-                inline int GetVid(int i) const
-                {
-                    ASSERTL2((i ==0),"Verted id must be 0");
-                    return m_verts[i]->GetVid();
-                }
+                SPATIAL_DOMAINS_EXPORT static StdRegions::PointOrientation
+                            GetPointOrientation(const SegGeom& edge1,
+                                                const SegGeom& edge2);
 
             protected:
-				static const int                kNverts = 1;
+                static const int                kNverts = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
             private:
-                
-                virtual VertexComponentSharedPtr v_GetVertex(const int i) const
-                {
-                    return GetVertex(i);
-                }
 
-                virtual int v_GetVid(int i) const
-                {
-                    return GetVid(i);
-                }
-
-                virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
-                {
-                    return GetCoord(i,Lcoord);
-                }
-
-                virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-                {
-                    GetLocCoords(coords,Lcoords);
-                }
-
-                virtual int v_GetNumVerts() const
-                {
-                    return kNverts;
-                }
-
+                virtual VertexComponentSharedPtr v_GetVertex(const int i) const;
+                virtual int v_GetVid(int i) const;
+                virtual NekDouble v_GetCoord(
+                            const int i,
+                            const Array<OneD,const NekDouble>& Lcoord);
+                virtual void v_GetLocCoords(
+                            const Array<OneD,const NekDouble>& coords,
+                                  Array<OneD,NekDouble>& Lcoords);
+                virtual int v_GetNumVerts() const;
         };
 
-        // shorthand for boost pointer
-        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
-        typedef std::vector< PointGeomSharedPtr > PointGeomVector;
-        typedef std::vector< PointGeomSharedPtr >::iterator PointGeomVectorIter;
-        typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
 
     }; //end of namespace
 }; //end of namespace
 
 #endif //NEKTAR_SPATIALDOMAINS_POINTGEOM_H
-
-//
-// $Log: PointGeom.h,v $
-// Revision 1.1  2011/11/16 18:09:02  croth
-// created class
-// 
-//

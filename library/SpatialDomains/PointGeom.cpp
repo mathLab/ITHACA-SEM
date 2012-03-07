@@ -29,11 +29,11 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
+//  Description: Point geometry information
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
+//#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
@@ -55,14 +55,14 @@ namespace Nektar
             m_geomShapeType = ePoint;
         }
 
-        
+
         PointGeom::~PointGeom()
         {
         }
 
-        
+
         /// \brief Get the orientation of point1; to be used later 
-		/// for normal convention
+        /// for normal convention
         ///
         /// If edge1 is connected to edge2 in the same direction as
         /// the points comprising edge1 then it is forward, otherwise
@@ -74,6 +74,9 @@ namespace Nektar
         ///
         /// If edge1 is comprised of points 2 and 1 and edge2 is
         /// comprised of points 3 and 2, then edge1 is backward.
+        ///
+        /// Since both edges are passed, it does
+        /// not need any information from the EdgeComponent instance.
 
         StdRegions::PointOrientation PointGeom::GetPointOrientation(const SegGeom &edge1,  const SegGeom &edge2)
         {
@@ -85,7 +88,7 @@ namespace Nektar
             {
                 returnval = StdRegions::eBwd;
             }
-			
+
             // Not forward either, then we have a problem.
             else if ((*edge1.GetVertex(1) != *edge2.GetVertex(0)) &&
                 (*edge1.GetVertex(1) != *edge2.GetVertex(1)))
@@ -99,16 +102,42 @@ namespace Nektar
             return returnval;
         }
 
-       
+        VertexComponentSharedPtr PointGeom::v_GetVertex(const int i) const
+        {
+            VertexComponentSharedPtr returnval;
 
-	}; //end of namespace
+            if (i >= 0 && i < kNverts)
+            {
+                returnval = m_verts[i];
+            }
+
+            return returnval;
+        }
+
+
+        int PointGeom::v_GetVid(int i) const
+        {
+            ASSERTL2((i ==0),"Verted id must be 0");
+            return m_verts[i]->GetVid();
+        }
+
+
+        NekDouble PointGeom::v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
+        {
+            return GetCoord(i,Lcoord);
+        }
+
+        void PointGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        {
+            GetLocCoords(coords,Lcoords);
+        }
+
+        int PointGeom::v_GetNumVerts() const
+        {
+            return kNverts;
+        }
+
+
+
+    }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: SegGeom.cpp,v $
-// Revision 1.1  2011/11/16 18:09:02  croth
-//
-// created class
-//
-//
-

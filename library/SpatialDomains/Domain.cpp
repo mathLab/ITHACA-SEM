@@ -35,8 +35,6 @@
 #include <string>
 #include <sstream>
 
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/Domain.h>
 
 // Use the stl version, primarily for string.

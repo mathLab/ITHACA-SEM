@@ -36,7 +36,6 @@
 #ifndef NEKTAR_SPATIALDOMAINS_INTERFACECOMPONENT_H
 #define NEKTAR_SPATIALDOMAINS_INTERFACECOMPONENT_H
 
-#include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar

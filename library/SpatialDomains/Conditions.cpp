@@ -34,14 +34,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <SpatialDomains/pchSpatialDomains.h>
-
-#include <LibUtilities/BasicUtils/Equation.h>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <SpatialDomains/Conditions.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <cctype>
 #include <algorithm>
 #include <string>
+#include <tinyxml/tinyxml.h>
 
 namespace Nektar
 {
@@ -669,5 +667,146 @@ namespace Nektar
                 regionElement = regionElement->NextSiblingElement("REGION");
             }
        }
+
+
+        const BoundaryRegionCollection& BoundaryConditions::GetBoundaryRegions(void) const
+        {
+            return m_boundaryRegions;
+        }
+
+        const BoundaryConditionCollection& BoundaryConditions::GetBoundaryConditions(void) const
+        {
+            return m_boundaryConditions;
+        }
+
+        const std::string BoundaryConditions::GetVariable(unsigned int indx)
+        {
+            return m_session->GetVariable(indx);
+        }
+
+        BoundaryConditionBase::BoundaryConditionBase(
+                    BoundaryConditionType type,
+                    const std::string& userDefined):
+                m_boundaryConditionType(type)
+        {
+            std::map<const std::string, BndUserDefinedType>  known_type;
+            known_type["H"] = eHigh;
+            known_type["I"] = eI;
+            known_type["MG"] = eMG;
+            known_type["Wall"] = eWall;
+            known_type["Q-inflow"] = eQinflow;
+            known_type["WALL"] = eWALL;
+            known_type["CalcBC"] = eCalcBC;
+            known_type["RinglebFlow"] = eRinglebFlow;
+            known_type["Symmetry"] = eSymmetry;
+            known_type["TimeDependent"] = eTimeDependent;
+            known_type["IsentropicVortex"] = eIsentropicVortex;
+            known_type["NoUserDefined"] = eNoUserDefined;
+
+            std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
+            if (it != known_type.end())
+            {
+                m_userDefined = it->second;
+            }
+            else
+            {
+                //ASSERTL0(false, std::string("Unknown boundary condition user defined type [") + userDefined + std::string("]"));
+                m_userDefined = eNoUserDefined;
+            }
+        }
+
+        BoundaryConditionBase::~BoundaryConditionBase()
+        {
+        }
+
+        BoundaryConditionType BoundaryConditionBase::GetBoundaryConditionType() const
+        {
+            return m_boundaryConditionType;
+        }
+
+        void BoundaryConditionBase::SetUserDefined(BndUserDefinedType type)
+        {
+            m_userDefined = type;
+        }
+
+        BndUserDefinedType BoundaryConditionBase::BoundaryConditionBase::GetUserDefined() const
+        {
+            return m_userDefined;
+        }
+
+        int JunctionBoundaryCondition::GetParent() const
+        {
+            return m_parent;
+        }
+
+        int JunctionBoundaryCondition::GetDaughter1() const
+        {
+            return m_daughter1;
+        }
+
+        int BifurcationBoundaryCondition::GetParent() const
+        {
+            return m_parent;
+        }
+
+        int BifurcationBoundaryCondition::GetDaughter1() const
+        {
+            return m_daughter1;
+        }
+
+        int BifurcationBoundaryCondition::GetDaughter2() const
+        {
+            return m_daughter2;
+        }
+
+        int MergingBoundaryCondition::GetParent() const
+        {
+            return m_parent;
+        }
+
+        int MergingBoundaryCondition::GetDaughter1() const
+        {
+            return m_daughter1;
+        }
+
+        int MergingBoundaryCondition::GetDaughter2() const
+        {
+            return m_daughter2;
+        }
+
+        JunctionBoundaryCondition::JunctionBoundaryCondition(
+                const int& P,
+                const int& D1,
+                const std::string& userDefined):
+            BoundaryConditionBase(eJunction, userDefined),
+            m_parent(P),
+            m_daughter1(D1)
+        {
+        }
+
+        BifurcationBoundaryCondition::BifurcationBoundaryCondition(
+                const int& P,
+                const int& D1,
+                const int& D2,
+                const std::string& userDefined):
+            BoundaryConditionBase(eBifurcation, userDefined),
+            m_parent(P),
+            m_daughter1(D1),
+            m_daughter2(D2)
+        {
+        }
+
+        MergingBoundaryCondition::MergingBoundaryCondition(
+                const int& P,
+                const int& D1,
+                const int& D2,
+                const std::string& userDefined):
+            BoundaryConditionBase(eMerging, userDefined),
+            m_parent(P),
+            m_daughter1(D1),
+            m_daughter2(D2)
+        {
+        }
+
     }
 }

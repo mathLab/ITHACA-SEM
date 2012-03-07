@@ -729,7 +729,7 @@ namespace Nektar
             m_userDefined = type;
         }
 
-        BndUserDefinedType BoundaryConditionBase::BoundaryConditionBase::GetUserDefined() const
+        BndUserDefinedType BoundaryConditionBase::GetUserDefined() const
         {
             return m_userDefined;
         }

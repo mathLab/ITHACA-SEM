@@ -44,13 +44,14 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
-#include <LibUtilities/BasicUtils/Equation.h>
-#include <SpatialDomains/SpatialDomainsDeclspec.h>
+//#include <LibUtilities/BasicUtils/Equation.h>
+//#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 class TiXmlElement;
 class TiXmlDocument;
 
 class SpatialDomainsDeclspec;
+class Equation;
 
 namespace Nektar
 {
@@ -62,9 +63,9 @@ namespace Nektar
             eNeumann,
             eRobin,
             ePeriodic,
-            eJunction,
-            eBifurcation,
-            eMerging
+			eJunction,
+			eBifurcation,
+			eMerging
         };
 
         enum BndUserDefinedType
@@ -87,13 +88,92 @@ namespace Nektar
         {
             BoundaryConditionBase(
                     BoundaryConditionType type,
-                    const std::string &userDefined = std::string("NoUserDefined"));
+                    const std::string &userDefined = std::string("NoUserDefined")):
+                m_boundaryConditionType(type)
+            {
+                std::map<const std::string, BndUserDefinedType>  known_type;
+                known_type["H"] = eHigh;
+                known_type["I"] = eI;
+                known_type["MG"] = eMG;
+                known_type["Wall"] = eWall;
+                known_type["Q-inflow"] = eQinflow;
+                known_type["WALL"] = eWALL;
+                known_type["CalcBC"] = eCalcBC;
+                known_type["RinglebFlow"] = eRinglebFlow;
+                known_type["Symmetry"] = eSymmetry;
+                known_type["TimeDependent"] = eTimeDependent;
+                known_type["IsentropicVortex"] = eIsentropicVortex;
+                known_type["NoUserDefined"] = eNoUserDefined;
 
-            virtual ~BoundaryConditionBase();
+                std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
+                if (it != known_type.end())
+                {
+                    m_userDefined = it->second;
+                }
+                else
+                {
+                    //ASSERTL0(false, std::string("Unknown boundary condition user defined type [") + userDefined + std::string("]"));
+                    m_userDefined = eNoUserDefined;
+                }
+            }
 
-            SPATIAL_DOMAINS_EXPORT BoundaryConditionType GetBoundaryConditionType() const;
-            SPATIAL_DOMAINS_EXPORT void SetUserDefined(BndUserDefinedType type);
-            SPATIAL_DOMAINS_EXPORT BndUserDefinedType GetUserDefined() const;
+            virtual ~BoundaryConditionBase()
+            {};
+
+            BoundaryConditionType GetBoundaryConditionType() const
+            {
+                return m_boundaryConditionType;
+            }
+
+            void SetUserDefined(BndUserDefinedType type)
+            {
+                m_userDefined = type;
+            }
+
+            BndUserDefinedType GetUserDefined() const
+            {
+                return m_userDefined;
+            }
+
+            int m_parent;
+            int m_daughter1;
+            int m_daughter2;
+
+            void SetJunction(int P, int D1)
+            {
+                m_parent = P;
+				m_daughter1 = D1;
+            }
+			
+			void SetBifurcation(int P, int D1, int D2)
+            {
+                m_parent = P;
+				m_daughter1 = D1;
+				m_daughter2 = D2;
+            }
+			
+			void SetMerging(int P, int D1, int D2)
+            {
+                m_parent = P;
+				m_daughter1 = D1;
+				m_daughter2 = D2;
+            }
+			
+			int GetParent() const
+            {
+                return m_parent;
+            }
+			
+			int GetDaughter1() const
+            {
+                return m_daughter1;
+            }
+			
+			int GetDaughter2() const
+            {
+                return m_daughter2;
+            }
+
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
@@ -168,30 +248,24 @@ namespace Nektar
 
         struct JunctionBoundaryCondition : public BoundaryConditionBase
         {
-            JunctionBoundaryCondition(
-                    const int& P,
-                    const int& D1,
-                    const std::string& userDefined = std::string("NoUserDefined"));
-
-            SPATIAL_DOMAINS_EXPORT int GetParent() const;
-            SPATIAL_DOMAINS_EXPORT int GetDaughter1() const;
-
+            JunctionBoundaryCondition( const int &P, const int &D1, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(eJunction, userDefined),
+            m_parent(P), m_daughter1(D1)
+            {
+                SetJunction(P, D1);
+            }
             int m_parent;
             int m_daughter1;
         };
 
         struct BifurcationBoundaryCondition : public BoundaryConditionBase
         {
-            BifurcationBoundaryCondition(
-                    const int& P,
-                    const int& D1,
-                    const int& D2,
-                    const std::string& userDefined = std::string("NoUserDefined"));
-
-            SPATIAL_DOMAINS_EXPORT int GetParent() const;
-            SPATIAL_DOMAINS_EXPORT int GetDaughter1() const;
-            SPATIAL_DOMAINS_EXPORT int GetDaughter2() const;
-
+            BifurcationBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(eBifurcation, userDefined),
+            m_parent(P), m_daughter1(D1), m_daughter2(D2)
+            {
+                SetBifurcation(P, D1, D2);
+            }
             int m_parent;
             int m_daughter1;
             int m_daughter2;
@@ -199,16 +273,12 @@ namespace Nektar
 
         struct MergingBoundaryCondition : public BoundaryConditionBase
         {
-            MergingBoundaryCondition(
-                    const int& P,
-                    const int& D1,
-                    const int& D2,
-                    const std::string& userDefined = std::string("NoUserDefined"));
-
-            SPATIAL_DOMAINS_EXPORT int GetParent() const;
-            SPATIAL_DOMAINS_EXPORT int GetDaughter1() const;
-            SPATIAL_DOMAINS_EXPORT int GetDaughter2() const;
-
+            MergingBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(eMerging, userDefined),
+            m_parent(P), m_daughter1(D1), m_daughter2(D2)
+            {
+                SetMerging(P, D1, D2);
+            }
             int m_parent;
             int m_daughter1;
             int m_daughter2;
@@ -236,14 +306,23 @@ namespace Nektar
         class BoundaryConditions
         {
         public:
-            SPATIAL_DOMAINS_EXPORT BoundaryConditions(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const MeshGraphSharedPtr&  meshGraph);
+            SPATIAL_DOMAINS_EXPORT BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph);
             SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
 
-            const BoundaryRegionCollection &GetBoundaryRegions(void) const;
-            const BoundaryConditionCollection &GetBoundaryConditions(void) const;
-            const std::string GetVariable(unsigned int indx);
+            const BoundaryRegionCollection &GetBoundaryRegions(void) const
+            {
+                return m_boundaryRegions;
+            }
+
+            const BoundaryConditionCollection &GetBoundaryConditions(void) const
+            {
+                return m_boundaryConditions;
+            }
+
+            const std::string GetVariable(unsigned int indx)
+            {
+                return m_session->GetVariable(indx);
+            }
 
         protected:
             /// The mesh graph to use for referencing geometry info.

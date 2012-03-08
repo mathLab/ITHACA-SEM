@@ -446,9 +446,6 @@ namespace Nektar
 			{
 				for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
 				{
-
-
-				
 					if ((m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
 						|| (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction))
 					{
@@ -783,18 +780,12 @@ namespace Nektar
 		{
 			if (m_fields[0]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction)
 			{
-                SpatialDomains::JunctionBoundaryCondition condition1 =
-                        boost::static_pointer_cast<SpatialDomains::JunctionBoundaryCondition>(m_fields[0]->GetBndConditions()[l]);
-
-                SpatialDomains::JunctionBoundaryCondition condition2 =
-                        boost::static_pointer_cast<SpatialDomains::JunctionBoundaryCondition>(m_fields[1]->GetBndConditions()[l]);
-
-				p = condition1->GetParent();
-				d1 = condition1->GetDaughter1(); 
+				p = m_fields[0]->GetBndConditions()[l]->GetParent();
+				d1 = m_fields[0]->GetBndConditions()[l]->GetDaughter1(); 
 				cout << "    Junction found:\t VAR=A  parent domain = "<<p<<"\t daughter domain = "<<d1<<""<<endl;
 				
-				p = condition2->GetParent();
-				d1 = condition2->GetDaughter1(); 
+				p = m_fields[1]->GetBndConditions()[l]->GetParent();
+				d1 = m_fields[1]->GetBndConditions()[l]->GetDaughter1(); 
 				cout << "    Junction found:\t VAR=u  parent domain = "<<p<<"\t daughter domain = "<<d1<<""<<endl;
 			}
 		}*/
@@ -803,20 +794,14 @@ namespace Nektar
 		{
 			if (m_fields[0]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
 			{
-                SpatialDomains::BifurcationBoundaryCondition condition1 =
-                        boost::static_pointer_cast<SpatialDomains::BifurcationBoundaryCondition>(m_fields[0]->GetBndConditions()[l]);
-
-                SpatialDomains::BifurcationBoundaryCondition condition2 =
-                        boost::static_pointer_cast<SpatialDomains::BifurcationBoundaryCondition>(m_fields[1]->GetBndConditions()[l]);
-
-				p =  condition1->GetParent();
-				d1 = condition1->GetDaughter1();
-				d2 = condition1->GetDaughter2();
+				p = m_fields[0]->GetBndConditions()[l]->GetParent();
+				d1 = m_fields[0]->GetBndConditions()[l]->GetDaughter1(); 
+				d2 = m_fields[0]->GetBndConditions()[l]->GetDaughter2();
 				cout << "    Bifurcation found:\t VAR=A  parent domain = "<<p<<"\t daughter domain 1 = "<<d1<<"\t daughter domain 2 = "<<d2<<endl;
 				
-				p =  condition2->GetParent();
-				d1 = condition2->GetDaughter1();
-				d2 = condition2->GetDaughter2();
+				p = m_fields[1]->GetBndConditions()[l]->GetParent();
+				d1 = m_fields[1]->GetBndConditions()[l]->GetDaughter1();
+				d2 = m_fields[1]->GetBndConditions()[l]->GetDaughter2();
 				cout << "    Bifurcation found:\t VAR=u  parent domain = "<<p<<"\t daughter domain 1 = "<<d1<<"\t daughter domain 2 = "<<d2<<endl;
 			}
 		}
@@ -858,19 +843,15 @@ namespace Nektar
 				beta[0] = m_betaglobal[omega][nel_p];
 				A_0[0] = m_A_0global[omega][nel_p];
 				
-
-                SpatialDomains::BifurcationBCShPtr condition =
-                        boost::static_pointer_cast<SpatialDomains::BifurcationBoundaryCondition>(m_vessels[2*omega]->GetBndConditions()[2*omega+1]);
-
 				// Daughter vessel 1
-				d1 = condition->GetDaughter1();
+				d1 = m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetDaughter1();
 				Au[1] = fields[d1][0][0];
 				uu[1] = fields[d1][1][0];
 				beta[1] = m_betaglobal[d1][0];
 				A_0[1] = m_A_0global[d1][0];
 				
 				// Daughter vessel 2
-				d2 = condition->GetDaughter2();
+				d2 = m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetDaughter2();
 				Au[2] = fields[d2][0][0];
 				uu[2] = fields[d2][1][0];
 				beta[2] = m_betaglobal[d2][0];
@@ -921,12 +902,9 @@ namespace Nektar
 				uu[0] = fields[omega][1][nel_p];
 				beta[0] = m_betaglobal[omega][nel_p];
 				A_0[0] = m_A_0global[omega][nel_p];
-
-                SpatialDomains::JunctionBCShPtr condition =
-                        boost::static_pointer_cast<SpatialDomains::JunctionBoundaryCondition>(m_vessels[2*omega]->GetBndConditions()[2*omega+1]);
-
+				
 				//Daughter vessel 1
-				d1 = condition->GetDaughter1();
+				d1 = m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetDaughter1();
 				Au[1] = fields[d1][0][0];
 				uu[1] = fields[d1][1][0];
 				beta[1] = m_betaglobal[d1][0];

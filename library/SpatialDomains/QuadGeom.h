@@ -147,11 +147,11 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
-	    SPATIAL_DOMAINS_EXPORT virtual const VertexComponentSharedPtr 
-                    v_GetVertex(const int i) const;
+            SPATIAL_DOMAINS_EXPORT virtual const VertexComponentSharedPtr
+                    v_GetVertex(int i) const;
 
-	    SPATIAL_DOMAINS_EXPORT virtual const Geometry1DSharedPtr 
-                    v_GetEdge(const int i) const;
+            SPATIAL_DOMAINS_EXPORT virtual const Geometry1DSharedPtr 
+                    v_GetEdge(int i) const;
 
             SPATIAL_DOMAINS_EXPORT virtual StdRegions::EdgeOrientation 
                     v_GetEorient(const int i) const;

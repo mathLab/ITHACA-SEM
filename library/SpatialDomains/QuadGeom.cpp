@@ -686,7 +686,7 @@ namespace Nektar
         /**
          *
          */
-        const VertexComponentSharedPtr QuadGeom::v_GetVertex(const int i) const
+        const VertexComponentSharedPtr QuadGeom::v_GetVertex(int i) const
         {
             ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
             return m_verts[i];
@@ -696,7 +696,7 @@ namespace Nektar
         /**
          *
          */
-        const Geometry1DSharedPtr QuadGeom::v_GetEdge(const int i) const
+        const Geometry1DSharedPtr QuadGeom::v_GetEdge(int i) const
         {
             ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
             return m_edges[i];

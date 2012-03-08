@@ -689,7 +689,7 @@ namespace Nektar
                     const std::string& userDefined):
                 m_boundaryConditionType(type)
         {
-            std::map<const std::string, BndUserDefinedType>  known_type;
+            std::map<const std::string, SpatialDomains::BndUserDefinedType>  known_type;
             known_type["H"] = eHigh;
             known_type["I"] = eI;
             known_type["MG"] = eMG;
@@ -703,7 +703,7 @@ namespace Nektar
             known_type["IsentropicVortex"] = eIsentropicVortex;
             known_type["NoUserDefined"] = eNoUserDefined;
 
-            std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
+            std::map<const std::string, SpatialDomains::BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
             if (it != known_type.end())
             {
                 m_userDefined = it->second;
@@ -719,17 +719,17 @@ namespace Nektar
         {
         }
 
-        BoundaryConditionType BoundaryConditionBase::GetBoundaryConditionType() const
+        SpatialDomains::BoundaryConditionType BoundaryConditionBase::GetBoundaryConditionType() const
         {
             return m_boundaryConditionType;
         }
 
-        void BoundaryConditionBase::SetUserDefined(BndUserDefinedType type)
+        void BoundaryConditionBase::SetUserDefined(SpatialDomains::BndUserDefinedType type)
         {
             m_userDefined = type;
         }
 
-        BndUserDefinedType BoundaryConditionBase::GetUserDefined() const
+        SpatialDomains::BndUserDefinedType BoundaryConditionBase::GetUserDefined() const
         {
             return m_userDefined;
         }

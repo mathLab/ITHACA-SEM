@@ -91,9 +91,9 @@ namespace Nektar
 
             virtual ~BoundaryConditionBase();
 
-            BoundaryConditionType GetBoundaryConditionType() const;
-            void SetUserDefined(BndUserDefinedType type);
-            BndUserDefinedType GetUserDefined() const;
+            SPATIAL_DOMAINS_EXPORT BoundaryConditionType GetBoundaryConditionType() const;
+            SPATIAL_DOMAINS_EXPORT void SetUserDefined(BndUserDefinedType type);
+            SPATIAL_DOMAINS_EXPORT BndUserDefinedType GetUserDefined() const;
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
@@ -173,8 +173,8 @@ namespace Nektar
                     const int& D1,
                     const std::string& userDefined = std::string("NoUserDefined"));
 
-            int GetParent() const;
-            int GetDaughter1() const;
+            SPATIAL_DOMAINS_EXPORT int GetParent() const;
+            SPATIAL_DOMAINS_EXPORT int GetDaughter1() const;
 
             int m_parent;
             int m_daughter1;
@@ -188,9 +188,9 @@ namespace Nektar
                     const int& D2,
                     const std::string& userDefined = std::string("NoUserDefined"));
 
-            int GetParent() const;
-            int GetDaughter1() const;
-            int GetDaughter2() const;
+            SPATIAL_DOMAINS_EXPORT int GetParent() const;
+            SPATIAL_DOMAINS_EXPORT int GetDaughter1() const;
+            SPATIAL_DOMAINS_EXPORT int GetDaughter2() const;
 
             int m_parent;
             int m_daughter1;
@@ -205,9 +205,9 @@ namespace Nektar
                     const int& D2,
                     const std::string& userDefined = std::string("NoUserDefined"));
 
-            int GetParent() const;
-            int GetDaughter1() const;
-            int GetDaughter2() const;
+            SPATIAL_DOMAINS_EXPORT int GetParent() const;
+            SPATIAL_DOMAINS_EXPORT int GetDaughter1() const;
+            SPATIAL_DOMAINS_EXPORT int GetDaughter2() const;
 
             int m_parent;
             int m_daughter1;

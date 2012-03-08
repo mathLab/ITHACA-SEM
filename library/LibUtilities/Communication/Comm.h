@@ -306,8 +306,7 @@ namespace Nektar
         {
             if (!m_commColumn.get())
             {
-                ASSERTL1(m_commColumn.get(),
-                         "Column not available.");
+				return shared_from_this();
             }
             else
             {

@@ -195,8 +195,8 @@ namespace Nektar
 						cout << "-- m_vessels are set up --\n"<<endl;
 							
 							
-						cout << "-- checking m_vessels --"<<endl;
-						cout << "Number of m_vessels:  "<<m_vessels.num_elements()<<endl;
+						//cout << "-- checking m_vessels --"<<endl;
+					/*/	cout << "Number of m_vessels:  "<<m_vessels.num_elements()<<endl;
 						for(i = 0 ; i < m_vessels.num_elements(); i++)
 						{
 							cout << "Elements in m_vessels["<<i<<"]:  "<<m_vessels[i]->GetExpSize()<<endl;
@@ -210,7 +210,7 @@ namespace Nektar
 						{
 							cout << "Elements in m_traces["<<i<<"]:  "<<m_vessels[i*nvariables]->GetTrace1D(i)->GetExpSize()<<endl;
 						}
-						cout << "-- m_vessels are checked --\n"<<endl;
+						cout << "-- m_vessels are checked --\n"<<endl;*/
 							
 						
 						// Only needed for output: whole field
@@ -440,14 +440,15 @@ namespace Nektar
 				m_vessels[1+2*omega] = m_fields[1];
 			}	
 			
-			/* Also Initialise the bifurcation and junction conditions at t = 0.0
-			 * with the Initial Conditions*/
+			/* Also Initialise the bifurcation, junction and merging flow conditions
+			 * at t = 0.0 with the Initial Conditions*/
 			for (int omega=0; omega<m_domainsize; omega++)
 			{
 				for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
 				{
 					if ((m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
-						|| (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction))
+						|| (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction)
+						|| (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eMerging))
 					{
 						m_vessels[2*omega]->UpdateBndCondExpansion(l)->SetCoeff(m_vessels[2*omega]
 																				->GetPhys()[m_vessels[2*omega]->GetPhys().num_elements()-1]);
@@ -455,6 +456,17 @@ namespace Nektar
 																				->GetPhys()[m_vessels[2*omega+1]->GetPhys().num_elements()-1]);
 					}
 				}
+			}
+			
+			/* Check all boundary condition values for all subdomains*/
+			for (int omega=0; omega<m_domainsize; omega++)
+			{
+				for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
+				{
+					cout << "BC [domain: "<<omega<<"][point: "<<l<<"][A] = "<< m_vessels[2*omega]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
+					cout << "BC [domain: "<<omega<<"][point: "<<l<<"][u] = "<< m_vessels[2*omega+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
+				}
+				cout << endl;
 			}
 		}
 		
@@ -626,8 +638,8 @@ namespace Nektar
 			// Time loop
 			for(n = 0; n < m_steps; ++n)
 			{
-				cout << "\nNew TimeStep begins: timestep = "<<n<<"\t";
-				cout << " m_time = "<<m_time<<endl;
+				//cout << "New TimeStep begins: timestep = "<<n<<"\t";
+				//cout << " m_time = "<<m_time<<endl;
 				
 				Timer timer;
 				timer.Start();
@@ -660,9 +672,9 @@ namespace Nektar
 					}
 					else
 					{
-						cout << "\n Timeintegrating subdomain "<<omega<<"..."<<endl;
+						//cout << "\n Timeintegrating subdomain "<<omega<<"..."<<endl;
 						fields[omega] = IntScheme[omega][numMultiSteps-1]->TimeIntegrate(m_timestep,u[omega],m_ode);
-						cout << " Subdomain "<<omega<<" done"<<endl;
+						//cout << " Subdomain "<<omega<<" done"<<endl;
 					}
 					
 					m_vessels[0+2*omega] = m_fields[0];
@@ -756,10 +768,16 @@ namespace Nektar
 	
 	
 	/**
-	 * Link the subdomains
+	 * \brief
+	 * Links the subdomains for special network boundary conditions such as "Bifurcation", "Junction"
+	 * and "Merging Flow" conditions. Calculates the upwinded Au & uu at boundaries connected to other 
+	 * subdomains by solving the appropriate Riemann problem. The solution satisfies conservation of 
+	 * mass and continuity of the total pressure.
 	 */
 	void PulseWaveSystem::LinkSubdomains(Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields)
     {
+		//cout << "Start Linking the subdomains"<<endl;
+		
 		Array<OneD, NekDouble> Au(3);
 		Array<OneD, NekDouble> uu(3);
 		Array<OneD, NekDouble> beta(3);
@@ -768,12 +786,21 @@ namespace Nektar
 		NekDouble Q, A_r, u_r;
 		
 		int nel_p = 0;
+		int nel_d1 = 0;
+		int nel_d2 = 0;
 		int p = 0;
 		int d1 = 0;
 		int d2 = 0;
 		int p_BCExp = 0;
 		int d1_BCExp = 0;
 		int d2_BCExp = 0;
+		
+		// Set the values of all boundary conditions
+		for (int k = 0; k<m_vessels.num_elements(); k++)
+		{
+			m_vessels[k]->EvaluateBoundaryConditions(m_time);
+		}
+		
 		
 		/*cout << "Checking for Junctions..."<<endl;
 		for (int l=0; l<m_fields[0]->GetBndConditions().num_elements(); l++)
@@ -804,21 +831,13 @@ namespace Nektar
 				d2 = m_fields[1]->GetBndConditions()[l]->GetDaughter2();
 				cout << "    Bifurcation found:\t VAR=u  parent domain = "<<p<<"\t daughter domain 1 = "<<d1<<"\t daughter domain 2 = "<<d2<<endl;
 			}
-		}
-		cout << endl;*/
+		}*/
+		/*cout << endl;
 		
-		
-		
-		// Set the values of all boundary conditions
-		for (int k = 0; k<m_vessels.num_elements(); k++)
-		{
-			m_vessels[k]->EvaluateBoundaryConditions(m_time);
-		}
-		
-		/*for (int k=0; k<m_domainsize; k++)
+		for (int k=0; k<m_domainsize; k++)
 		{
 			cout << "m_bndCondExpansions before linking "<<k<<endl;
-			for (int l=0; l<m_fields[0]->GetBndConditions().num_elements(); l++)
+			for (int l=0; l<m_vessels[2*k]->GetBndConditions().num_elements(); l++)
 			{
 				cout <<" A bndCondExp("<<l<<") = "<<m_vessels[2*k]->UpdateBndCondExpansion(l)->GetCoeff(0)<<"\t";
 				cout <<" u bndCondExp("<<l<<") = "<<m_vessels[2*k+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
@@ -826,76 +845,66 @@ namespace Nektar
 		}*/
 		
 		
+		
 		// Detect special network boundary conditions
 		for (int omega = 0; omega < m_domainsize; omega++)
 		{
-			
-			// Check if the endpoint of the domain is a "Bifurcation"
-			if (m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
+			// "Bifurcation": Check if the endpoint of the domain is a "Bifurcation" condition
+			if (m_vessels[2*omega]->GetBndConditions()[1]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
 			{
-				cout << " Found the Bifurcation at m_bndcondexp["<<2*omega+1<<"]"<<" at the end of domain "<<omega<<"";
-				cout << "\tQuadrature point = "<< fields[omega][0].num_elements()-1 << endl;
-				
 				// Parent vessel
 				nel_p = fields[omega][0].num_elements()-1;
 				Au[0] = fields[omega][0][nel_p];
 				uu[0] = fields[omega][1][nel_p];
 				beta[0] = m_betaglobal[omega][nel_p];
 				A_0[0] = m_A_0global[omega][nel_p];
+				p_BCExp = 1;
 				
 				// Daughter vessel 1
-				d1 = m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetDaughter1();
+//<<<<<<< .mine
+				d1 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter1();
+/*=======
+				d1 = condition->GetDaughter1();
+>>>>>>> .r3676*/
 				Au[1] = fields[d1][0][0];
 				uu[1] = fields[d1][1][0];
 				beta[1] = m_betaglobal[d1][0];
 				A_0[1] = m_A_0global[d1][0];
-				
+				d1_BCExp = 0;
+
 				// Daughter vessel 2
-				d2 = m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetDaughter2();
+//<<<<<<< .mine
+				d2 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter2();
+/*=======
+				d2 = condition->GetDaughter2();
+>>>>>>> .r3676*/
 				Au[2] = fields[d2][0][0];
 				uu[2] = fields[d2][1][0];
 				beta[2] = m_betaglobal[d2][0];
 				A_0[2] = m_A_0global[d2][0];
-				
-				cout << "Before the Riemann solve"<<endl;
-				cout << " parent:    Au = "<<Au[0]<<"\tuu = "<<uu[0]<<endl;
-				cout << " daughter1: Au = "<<Au[1]<<"\tuu = "<<uu[1]<<endl;
-				cout << " daughter2: Au = "<<Au[2]<<"\tuu = "<<uu[2]<<endl;
+				d2_BCExp = 0;
 				
 				// Solve the Riemann problem for a bifurcation
 				BifurcationRiemann1_to_2(Au, uu, beta, A_0);
 				
-				cout << "After the Riemann solve"<<endl;
-				cout << " parent:    Au = "<<Au[0]<<"\tuu = "<<uu[0]<<endl;
-				cout << " daughter1: Au = "<<Au[1]<<"\tuu = "<<uu[1]<<endl;
-				cout << " daughter2: Au = "<<Au[2]<<"\tuu = "<<uu[2]<<endl;
-				
 				// Store the values into the right positions:
 				// Parent vessel
-				p_BCExp = 2*(omega+1)-1;
-				fields[omega][0][nel_p] = Au[0];
-				fields[omega][1][nel_p] = uu[0];
-				//m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
-				//m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
+				m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
+				m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
 				
 				// Daughter vessel 1
-				d1_BCExp = 2*d1;
 				m_vessels[2*d1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = Au[1];
 				m_vessels[2*d1+1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = uu[1];
 				
 				// Daughter vessel 2
-				d2_BCExp = 2*d2;
 				m_vessels[2*d2]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = Au[2];
 				m_vessels[2*d2+1]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = uu[2];
 				
 			}
 			
-			// Check if the endpoint of the domain is a "Junction"
-			if (m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetBoundaryConditionType() == SpatialDomains::eJunction)
+			// "Junction": Check if the endpoint of the domain is a "Junction" condition
+			if (m_vessels[2*omega]->GetBndConditions()[1]->GetBoundaryConditionType() == SpatialDomains::eJunction)
 			{
-				cout << " Found the junction at m_bndcondexp["<<2*omega+1<<"]"<<" at the end of domain "<<omega<<"";
-				cout << "\tQuadrature point = "<< fields[omega][0].num_elements()-1 << endl;
-				
 				//Parent vessel
 				nel_p = fields[omega][0].num_elements()-1;
 				Au[0] = fields[omega][0][nel_p];
@@ -904,47 +913,122 @@ namespace Nektar
 				A_0[0] = m_A_0global[omega][nel_p];
 				
 				//Daughter vessel 1
-				d1 = m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetDaughter1();
+//<<<<<<< .mine
+				d1 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter1();
+/*=======
+				d1 = condition->GetDaughter1();
+>>>>>>> .r3676*/
 				Au[1] = fields[d1][0][0];
 				uu[1] = fields[d1][1][0];
 				beta[1] = m_betaglobal[d1][0];
 				A_0[1] = m_A_0global[d1][0];
 				
-				cout << "Before the Riemann solve"<<endl;
-				cout << " parent: domain = "<<omega<<"   Au = "<<Au[0]<<"\tuu = "<<uu[0]<<endl;
-				cout << " daughter1: domain = "<<d1<<"   Au = "<<Au[1]<<"\tuu = "<<uu[1]<<endl;
-				
 				// Solve the Riemann problem for a junction
 				JunctionRiemann(Au, uu, beta, A_0);
 				
-				cout << "After the Riemann solve"<<endl;
-				cout << " parent:    Au = "<<Au[0]<<"\tuu = "<<uu[0]<<endl;
-				cout << " daughter1: Au = "<<Au[1]<<"\tuu = "<<uu[1]<<endl;
-				
 				// Store the values into the right positions:
 				// Parent vessel
-				p_BCExp = 2*(omega+1)-1;
-				fields[omega][0][nel_p] = Au[0];
-				fields[omega][1][nel_p] = uu[0];
-				//m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
-				//m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
+				p_BCExp = 1;
+				m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
+				m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
 				
 				// Daughter vessel 1
-				d1_BCExp = 2*d1;
+				d1_BCExp = 0;
 				m_vessels[2*d1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = Au[1];
 				m_vessels[2*d1+1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = uu[1];
 				
 			}
 			
-			// Check if the endpoint of the domain is a "Merging" flow conditon
-			if (m_vessels[2*omega]->GetBndConditions()[2*omega+1]->GetBoundaryConditionType() == SpatialDomains::eMerging)
+			// "Merging Flow": Check if the startpoint of the domain is a "Merging Flow" conditon
+			if (m_vessels[2*omega]->GetBndConditions()[0]->GetBoundaryConditionType() == SpatialDomains::eMerging)
 			{
-				cout << " Found the Merging at m_bndcondexp["<<2*omega+1<<"]"<<" at the end of domain "<<omega<<"";
+				//cout << "\nFound the Merging Flow at m_bndcondexp["<<2*omega<<"]"<<" at the beginning of domain "<<omega<<endl;
+				
+				// Parent vessel (merging vessel)
+				Au[0] = fields[omega][0][0];
+				uu[0] = fields[omega][1][0];
+				beta[0] = m_betaglobal[omega][0];
+				A_0[0] = m_A_0global[omega][0];
+				p_BCExp = 0;
+				
+				/*cout << "\nParent vessel: "<<endl;
+				cout << "P = "<<omega<<endl;
+				cout << "Au = "<<Au[0]<<endl;
+				cout << "uu = "<<uu[0]<<endl;
+				cout << "beta = "<<beta[0]<<endl;
+				cout << "A_0 = "<<A_0[0]<<endl;
+				cout << "BC_Exp = "<<p_BCExp<<endl;*/
+				
+				
+				// Daughter vessel 1
+				d1 = m_vessels[2*omega]->GetBndConditions()[0]->GetDaughter1();
+				nel_d1 = fields[d1][0].num_elements()-1; 
+				Au[1] = fields[d1][0][nel_d1];
+				uu[1] = fields[d1][1][nel_d1];
+				beta[1] = m_betaglobal[d1][0];
+				A_0[1] = m_A_0global[d1][0];
+				d1_BCExp = 1;
+				
+				/*cout << "\nDaughter vessel 1: "<<endl;
+				cout << "D1 = "<<d1<<endl;
+				cout << "nel_d1 = "<<nel_d1<<endl;
+				cout << "Au = "<<Au[1]<<endl;
+				cout << "uu = "<<uu[1]<<endl;
+				cout << "beta = "<<beta[1]<<endl;
+				cout << "A_0 = "<<A_0[1]<<endl;
+				cout << "BC_Exp = "<<d1_BCExp<<endl;*/
+
+				
+				// Daughter vessel 2
+				d2 = m_vessels[2*omega]->GetBndConditions()[0]->GetDaughter2();
+				nel_d2 = fields[d2][0].num_elements()-1; 
+				Au[2] = fields[d2][0][nel_d2];
+				uu[2] = fields[d2][1][nel_d2];
+				beta[2] = m_betaglobal[d2][0];
+				A_0[2] = m_A_0global[d2][0];
+				d2_BCExp = 1;
+				
+				/*cout << "\nDaughter vessel 2: "<<endl;
+				cout << "D2 = "<<d2<<endl;
+				cout << "nel_d2 = "<<nel_d2<<endl;
+				cout << "Au = "<<Au[2]<<endl;
+				cout << "uu = "<<uu[2]<<endl;
+				cout << "beta = "<<beta[2]<<endl;
+				cout << "A_0 = "<<A_0[2]<<endl;
+				cout << "BC_Exp = "<<d2_BCExp<<endl;*/
+				
+				
+				/*cout << "Before the Riemann solve"<<endl;
+				cout << " parent:  domain = "<<omega<<"\tAu = "<<Au[0]<<"\tuu = "<<uu[0]<<"\tBC: "<<p_BCExp<<endl;
+				cout << " daughter1: d1 = "<<d1<<"\tAu = "<<Au[1]<<"\tuu = "<<uu[1]<<"\tBC: "<<d1_BCExp<<endl;
+				cout << " daughter2: d2 = "<<d2<<"\tAu = "<<Au[2]<<"\tuu = "<<uu[2]<<"\tBC: "<<d2_BCExp<<endl;*/
+				
+				// Solve the Riemann problem for a bifurcation
+				MergingRiemann2_to_1(Au, uu, beta, A_0);
+				
+				/*cout << "After the Riemann solve"<<endl;
+				cout << " parent:    Au = "<<Au[0]<<"\tuu = "<<uu[0]<<endl;
+				cout << " daughter1: Au = "<<Au[1]<<"\tuu = "<<uu[1]<<endl;
+				cout << " daughter2: Au = "<<Au[2]<<"\tuu = "<<uu[2]<<endl;*/
+				
+				// Store the values into the right positions:
+				// Parent vessel
+				m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
+				m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
+				
+				// Daughter vessel 1
+				m_vessels[2*d1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = Au[1];
+				m_vessels[2*d1+1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = uu[1];
+				
+				// Daughter vessel 2
+				m_vessels[2*d2]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = Au[2];
+				m_vessels[2*d2+1]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = uu[2];
 			}
 			
 		}
 		
-		for (int k=0; k<m_domainsize; k++)
+		
+		/*for (int k=0; k<m_domainsize; k++)
 		{
 			cout << "m_bndCondExpansions after linking in domain "<<k<<endl;
 			for (int l=0; l<m_fields[0]->GetBndConditions().num_elements(); l++)
@@ -952,7 +1036,7 @@ namespace Nektar
 				cout <<" A bndCondExp("<<l<<") = "<<m_vessels[2*k]->UpdateBndCondExpansion(l)->GetCoeff(0)<<"\t";
 				cout <<" u bndCondExp("<<l<<") = "<<m_vessels[2*k+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
 			}
-		}
+		}*/
 		
 		/*for (int k=0; k<m_domainsize; k++)
 		{
@@ -971,7 +1055,10 @@ namespace Nektar
 	
 	
 	/**
-	 * Bifurcation Riemann problem called to link three subdomains by a Bifurcation
+	 * \brief
+	 * Solves the Riemann problem at a bifurcation by assuming subsonic flow at both
+	 * sides of the boundary and by applying conservation of mass and continuity of
+	 * the total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$
 	 */
 	void PulseWaveSystem::BifurcationRiemann1_to_2(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu, 
 												   Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
@@ -997,24 +1084,23 @@ namespace Nektar
 		int iter = 0;
 		int MAX_ITER = 7;
 		
-		//calculated from input
+		// Calculated from input
 		W[0] = uu[0] + 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
 		W[1] = uu[1] - 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
 		W[2] = uu[2] - 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
 		
-		//Tolerances for the algorithm
+		// Tolerances for the algorithm
 		NekDouble Tol = 1.0e-10;
 		NekDouble Small = 1.0e-200;
 		
-		
-		//Newton Iteration
+		// Newton Iteration
 		while ((proceed) && (iter < MAX_ITER))
 		{
 			iter = iter+1;
 			
-			//Calculate the constraint vector, six equations:
-			//3 characteristic variables, mass conservation, 
-			//total pressure
+			// Calculate the constraint vector, six equations:
+			// 3 characteristic variables, mass conservation, 
+			// total pressure
 			W_Au[0] = 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
 			W_Au[1] = 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
 			W_Au[2] = 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
@@ -1030,13 +1116,11 @@ namespace Nektar
 			f[4] = uu[0]*uu[0] + 2.0/rho*P_Au[0] - uu[1]*uu[1] - 2.0/rho*P_Au[1];
 			f[5] = uu[0]*uu[0] + 2.0/rho*P_Au[0] - uu[2]*uu[2] - 2.0/rho*P_Au[2];
 			
-			
 			// Calculate the wave speed at each vessel
 			NekDouble c1 = sqrt(beta[0]/(2*rho))*sqrt(sqrt(Au[0]));
 			NekDouble c2 = sqrt(beta[1]/(2*rho))*sqrt(sqrt(Au[1]));
 			NekDouble c3 = sqrt(beta[2]/(2*rho))*sqrt(sqrt(Au[2]));
-			
-			
+		
 			// Inverse Jacobian matrix J(x[n])^(-1), is already inverted here analytically
 			k = c1*Au[1]*c3+Au[0]*c3*c2+Au[2]*c1*c2;
 			k1 = (c1-uu[0])*k;
@@ -1102,7 +1186,6 @@ namespace Nektar
 				}
 			}
 			
-			
 			// Update the solution: x_new = x_old - dx
 			uu[0] = uu[0] - g[0];
 			uu[1] = uu[1] - g[1];
@@ -1120,36 +1203,9 @@ namespace Nektar
 			// Check if solver converges
 			if (iter >= MAX_ITER)
 			{
-				ASSERTL0(false,"Riemann solver did not converge");
+				ASSERTL0(false,"Riemann solver for Bifurcation did not converge");
 			}
-			
 		}
-		
-		cout << "-------------------------------------------------------------------------"<<endl;
-		cout << "| Bifurcation Riemann solver converged, iterations: "<<iter<<"\t\t\t\t|"<< scientific<<endl;
-		cout << "| uu[parent] = "<<uu[0]<<"   uu[daughter1] = "<<uu[1]<<"   uu[daughter2] = "<<uu[2]<<"\t|"<<endl;
-		cout << "| Au[parent] = "<<Au[0]<<"   Au[daughter1] = "<<Au[1]<<"   Au[daughter2] = "<<Au[2]<<"\t|"<<endl;
-		
-		
-		// Checks
-		// whether the flow rate over the bifurcation matches
-		Array<OneD, NekDouble> Q(4);
-		Q[0] = Au[0]*uu[0];
-		Q[1] = Au[1]*uu[1];
-		Q[2] = Au[2]*uu[2];
-		Q[3] = Q[0]-Q[1]-Q[2];
-		cout << "| mass difference = "<<Q[3]<<"\t\t\t\t\t\t\t|"<<endl;
-		
-		// whether the total pressure is conserved
-		Array<OneD, NekDouble> P(5);
-		P[0] = uu[0]*uu[0] + 2.0/rho*(beta[0]*(sqrt(Au[0]) - sqrt(A_0[0])));
-		P[1] = uu[1]*uu[1] + 2.0/rho*(beta[1]*(sqrt(Au[1]) - sqrt(A_0[1])));
-		P[2] = uu[2]*uu[2] + 2.0/rho*(beta[2]*(sqrt(Au[2]) - sqrt(A_0[2])));
-		P[3] = P[0]-P[1];
-		P[4] = P[0]-P[2]; 
-		cout << "| pressure difference 1-2 = "<<P[3]<<"\tpressure difference 1-3 = "<<P[4]<<"\t|"<<endl;
-		cout << "-------------------------------------------------------------------------"<<endl;
-		cout.setf(ios::floatfield);
 	}
 	
 	
@@ -1263,37 +1319,172 @@ namespace Nektar
 		
 		if(iter >= MAX_ITER)
 		{
-			ASSERTL0(false,"Riemann solver did not converge");
+			ASSERTL0(false,"Riemann solver for Junction did not converge");
 		}
-		
-		cout << "----------------------------------------------------------------"<<endl;
-		cout << "| Junction Riemann solver converged, iterations: "<<iter<<"\t\t|"<< scientific<<endl;
-		cout << "| uu[parent] = "<<uu[0]<<"   uu[daughter1] = "<<uu[1]<<"\t|"<<endl;
-		cout << "| Au[parent] = "<<Au[0]<<"   Au[daughter1] = "<<Au[1]<<"\t|"<<endl;
-		
-		
-		// Checks
-		// whether the flow rate over the bifurcation matches
-		Array<OneD, NekDouble> Q(4);
-		Q[0] = Au[0]*uu[0];
-		Q[1] = Au[1]*uu[1];
-		Q[3] = Q[0]-Q[1];
-		cout << "| mass difference = "<<Q[3]<<"\t\t\t\t|"<<endl;
-		
-		// whether the total pressure is conserved
-		Array<OneD, NekDouble> P(5);
-		P[0] = uu[0]*uu[0] + 2.0/rho*(beta[0]*(sqrt(Au[0]) - sqrt(A_0[0])));
-		P[1] = uu[1]*uu[1] + 2.0/rho*(beta[1]*(sqrt(Au[1]) - sqrt(A_0[1])));
-		P[3] = P[0]-P[1];
-		cout << "| pressure difference 1-2 = "<<P[3]<<"\t\t\t|"<<endl;
-		cout << "----------------------------------------------------------------"<<endl;
-		cout.setf(ios::floatfield);
-		
 	}
 	
 	
-	
 	/**
+	 * \brief
+	 * Solves the Riemann problem at an merging flow condition by assuming subsonic flow at
+	 * both sides of the boundary and by applying conservation of mass and continuity of the
+	 * total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$
+	 */
+	void PulseWaveSystem::MergingRiemann2_to_1(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu, 
+											   Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
+	{
+		NekDouble rho = m_rho;
+		Array<OneD, NekDouble> W(3);
+		Array<OneD, NekDouble> W_Au(3);
+		Array<OneD, NekDouble> P_Au(3);
+		Array<OneD, NekDouble> f(6);
+		Array<OneD, NekDouble> g(6);
+		Array<OneD, NekDouble> tmp(6);
+		Array<OneD, Array<OneD, NekDouble> > inv_J(6);
+		for (int i=0; i<6; i++)
+		{
+			inv_J[i] = Array<OneD, NekDouble> (6);
+		}
+		NekDouble k = 0.0;
+		NekDouble k1 = 0.0;
+		NekDouble k2 = 0.0;
+		NekDouble k3 = 0.0;
+		
+		int proceed = 1;
+		int iter = 0;
+		int MAX_ITER = 7;
+		
+		//Au[0] = Au[1];
+		//uu[0] = uu[1];
+		
+		// Calculated from input
+		W[0] = uu[0] - 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
+		W[1] = uu[1] + 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
+		W[2] = uu[2] + 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
+		
+		// Tolerances for the algorithm
+		NekDouble Tol = 1.0e-10;
+		NekDouble Small = 1.0e-200;
+		
+		// Newton Iteration
+		while ((proceed) && (iter < MAX_ITER))
+		{
+			iter = iter+1;
+			
+			// Calculate the constraint vector, six equations:
+			// 3 characteristic variables, mass conservation, 
+			// total pressure
+			W_Au[0] = 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
+			W_Au[1] = 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
+			W_Au[2] = 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
+			
+			P_Au[0] = beta[0]*(sqrt(Au[0]) - sqrt(A_0[0]));
+			P_Au[1] = beta[1]*(sqrt(Au[1]) - sqrt(A_0[1]));
+			P_Au[2] = beta[2]*(sqrt(Au[2]) - sqrt(A_0[2]));
+			
+			f[0] = uu[0] - W_Au[0] - W[0];
+			f[1] = uu[1] + W_Au[1] - W[1];
+			f[2] = uu[2] + W_Au[2] - W[2];
+			f[3] = Au[0]*uu[0] - Au[1]*uu[1] - Au[2]*uu[2];
+			f[4] = uu[0]*uu[0] + 2.0/rho*P_Au[0] - uu[1]*uu[1] - 2.0/rho*P_Au[1];
+			f[5] = uu[0]*uu[0] + 2.0/rho*P_Au[0] - uu[2]*uu[2] - 2.0/rho*P_Au[2];
+		 
+			// Calculate the wave speed at each vessel
+			NekDouble c1 = sqrt(beta[0]/(2*rho))*sqrt(sqrt(Au[0]));
+			NekDouble c2 = sqrt(beta[1]/(2*rho))*sqrt(sqrt(Au[1]));
+			NekDouble c3 = sqrt(beta[2]/(2*rho))*sqrt(sqrt(Au[2]));
+			
+			// Inverse Jacobian matrix J(x[n])^(-1), is already inverted here analytically
+			k = c1*Au[1]*c3+Au[0]*c3*c2+Au[2]*c1*c2;
+			k1 = (c1+uu[0])*k;
+			inv_J[0][0] = (c2*uu[0]*c3*Au[0]+Au[2]*c2*c1*c1+Au[1]*c1*c1*c3)/k1;
+			inv_J[0][1] = Au[1]*(c2+uu[1])*c1*c3/k1;
+			inv_J[0][2] = Au[2]*(c3+uu[2])*c1*c2/k1;
+			inv_J[0][3] = c1*c2*c3/k1;
+			inv_J[0][4] = 0.5*Au[1]*c1*c3/k1;
+			inv_J[0][5] = 0.5*Au[2]*c1*c2/k1;
+			
+			k2 = (c2-uu[1])*k;
+			inv_J[1][0] = Au[0]*(c1-uu[0])*c2*c3/k2;
+			inv_J[1][1] = (-c1*uu[1]*c3*Au[1]+Au[2]*c1*c2*c2+c3*c2*c2*Au[0])/k2;
+			inv_J[1][2] = -Au[2]*(c3+uu[2])*c1*c2/k2;
+			inv_J[1][3] = -c1*c2*c3/k2;
+			inv_J[1][4] = 0.5*(c1*Au[2]+Au[0]*c3)*c2/k2;
+			inv_J[1][5] = -0.5*Au[2]*c1*c2/k2;
+			
+			k3 = (c3-uu[2])*k;
+			inv_J[2][0] = Au[0]*(c1-uu[0])*c2*c3/k3;
+			inv_J[2][1] = -Au[1]*(c2+uu[1])*c1*c3/k3;
+			inv_J[2][2] = -(c1*uu[2]*c2*Au[2]-Au[1]*c1*c3*c3-c2*c3*c3*Au[0])/k3;
+			inv_J[2][3] = -c1*c2*c3/k3;
+			inv_J[2][4] = -0.5*Au[1]*c1*c3/k3;
+			inv_J[2][5] = 0.5*(Au[1]*c1+Au[0]*c2)*c3/k3;
+			
+			inv_J[3][0] = -Au[0]*(Au[0]*c3*c2+uu[0]*c3*Au[1]+uu[0]*c2*Au[2])/k1;
+			inv_J[3][1] = Au[0]*Au[1]*(c2+uu[1])*c3/k1;
+			inv_J[3][2] = Au[0]*Au[2]*(c3+uu[2])*c2/k1;
+			inv_J[3][3] = Au[0]*c3*c2/k1;
+			inv_J[3][4] = 0.5*Au[0]*Au[1]*c3/k1;
+			inv_J[3][5] = 0.5*Au[0]*c2*Au[2]/k1;
+			
+			inv_J[4][0] = -Au[0]*Au[1]*(c1-uu[0])*c3/k2;
+			inv_J[4][1] = Au[1]*(Au[1]*c1*c3-c1*uu[1]*Au[2]-c3*uu[1]*Au[0])/k2;
+			inv_J[4][2] = Au[2]*Au[1]*(c3+uu[2])*c1/k2;
+			inv_J[4][3] = Au[1]*c1*c3/k2;
+			inv_J[4][4] = -0.5*Au[1]*(c1*Au[2]+Au[0]*c3)/k2;
+			inv_J[4][5] = 0.5*Au[2]*Au[1]*c1/k2;
+			
+			inv_J[5][0] = -Au[0]*Au[2]*(c1-uu[0])*c2/k3;
+			inv_J[5][1] = Au[2]*Au[1]*(c2+uu[1])*c1/k3;
+			inv_J[5][2] = Au[2]*(Au[2]*c1*c2-c1*uu[2]*Au[1]-c2*uu[2]*Au[0])/k3;
+			inv_J[5][3] = Au[2]*c1*c2/k3;
+			inv_J[5][4] = 0.5*Au[2]*Au[1]*c1/k3;
+			inv_J[5][5] = -0.5*Au[2]*(Au[1]*c1+Au[0]*c2)/k3;
+			
+			// Solve the system by multiplying the Jacobian with the vector f:
+			// g = (inv_J)*f
+			for (int j=0; j<6; j++)
+			{
+				tmp[j] =0.0;
+				g[j] = 0.0;
+			}
+			
+			for (int j=0; j<6; j++)
+			{
+				for (int i=0; i<6; i++)
+				{
+					tmp[j] = inv_J[j][i]*f[i];
+					g[j] += tmp[j];
+				}
+			}
+			
+			// Update the solution: x_new = x_old - dx
+			uu[0] = uu[0] - g[0];
+			uu[1] = uu[1] - g[1];
+			uu[2] = uu[2] - g[2];
+			Au[0] = Au[0] - g[3];
+			Au[1] = Au[1] - g[4];
+			Au[2] = Au[2] - g[5];
+			
+			// Check if the error of the solution is smaller than Tol
+			if ((g[0]*g[0] + g[1]*g[1] + g[2]*g[2] + g[3]*g[3]+ g[4]*g[4] + g[5]*g[5]) < Tol)
+			{
+				proceed = 0;
+			}
+			
+			// Check if solver converges
+			if (iter >= MAX_ITER)
+			{
+				ASSERTL0(false,"Riemann solver for Merging Flow did not converge");
+			}
+			
+		}
+	}
+	
+	
+
+	/**
+	 * \brief
 	 * Gets the Area at static equilibrium specified in the inputfile
 	 * in case of multiple domains different areas can be specified by
 	 * using A[domain] in the inputfile
@@ -1308,7 +1499,10 @@ namespace Nektar
 			if (m_domainsize == 1)
 				nq = m_fields[2*omega]->GetNpoints();
 			else 
+			{ 
 				nq = m_vessels[2*omega]->GetNpoints();
+				m_fields[0] = m_vessels[2*omega];
+			}
 			
 			m_A_0global[omega] = Array<OneD, NekDouble>(nq); 
 			
@@ -1329,6 +1523,7 @@ namespace Nektar
 	
 	
 	/**
+	 * \brief
 	 * Gets the Material Properties of the artery specified in the inputfile.
 	 * in case of multiple domains different areas can be specified by using
 	 * E0[domain] in the inputfile 
@@ -1340,14 +1535,17 @@ namespace Nektar
 		
 		for (int omega = 0; omega < m_domainsize; omega++)
 		{
+			
 			if (m_domainsize == 1)
 				nq = m_fields[2*omega]->GetNpoints();
 			else 
+			{ 
 				nq = m_vessels[2*omega]->GetNpoints();
+				m_fields[0] = m_vessels[2*omega];
+			}
 			
-			m_betaglobal[omega] = Array<OneD, NekDouble>(nq); 			
+			m_betaglobal[omega] = Array<OneD, NekDouble>(nq);
 			std::string velStr[1];
-			
 			// Two cases: one can either specify E0 or beta in the inputfile
 			// Case 1: Read E0
 			/*for (int j = 0; j<m_betaglobal[omega].num_elements(); j++)
@@ -1375,9 +1573,10 @@ namespace Nektar
 	
 	
 	/**
-     * Prepare the multifield output; put the multiple 
-	 * subdomains together to one domain to use the 
-	 * standard routines for writing the output
+	 * \brief
+     * Prepares the multidomain output to write all m_vessels. Puts the multiple 
+	 * subdomains together to one complete domain m_outfields to use the standard 
+	 * routines for writing the outfiles
      */
     void PulseWaveSystem::PrepareMultidomainOutput(void)
     {		
@@ -1412,7 +1611,9 @@ namespace Nektar
 	
 	
 	/**
-	 * Write the .fld file at the end of the simulation
+	 * \brief
+	 * Writes the .fld file at the end of the simulation. Similar to the normal
+	 * v_Output however the Multidomain output has to be prepared
 	 */
 	void PulseWaveSystem::v_Output(void)
     {
@@ -1426,6 +1627,7 @@ namespace Nektar
 	
 	
 	/**
+	 * \brief
 	 * Compute the error in the L2-norm
 	 * @param   field           The field to compare.
 	 * @param   exactsoln       The exact solution to compare with.
@@ -1485,6 +1687,7 @@ namespace Nektar
 	
 	
 	/**
+	 * \brief
 	 * Compute the error in the L_inf-norm
 	 * @param   field           The field to compare.
 	 * @param   exactsoln       The exact solution to compare with.

@@ -114,6 +114,10 @@ namespace Nektar
 		void JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
 							 Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
 		
+		/// Riemann Problem for Merging Flow
+		void MergingRiemann2_to_1(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+								  Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+		
 		/// Get the cross sectional area from the inputfile 
 		void StaticArea(void);
 		

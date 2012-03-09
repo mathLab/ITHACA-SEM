@@ -158,7 +158,7 @@ namespace Nektar
 		// Loop over Boundary Regions to find the Q-inflow type
 		for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
 		{					
-			if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eQinflow)
+			if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eQinflow && m_omega == 0)
 			{
 				// Note: The Q value is contained in A in the inputfile, the value in u has to be 1.0 
 				ASSERTL0((m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] == 1.0,
@@ -168,6 +168,9 @@ namespace Nektar
 				Q = (m_fields[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
 				A_r = m_fields[0]->GetCoeffs()[0];
 				u_r = m_fields[1]->GetCoeffs()[0];
+				
+				//cout << "A_r = "<<A_r<<endl;
+				//cout << "u_r = "<<u_r<<endl;
 				
 				// Call the Q-inflow Riemann solver
 				Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[0],m_beta[0],Au,uu);
@@ -473,10 +476,10 @@ namespace Nektar
 		uu = W2 + 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0))); 
 		Au = A_calc;
 		
-		cout << "-----------------------------------------------------"<<endl;
-		cout << "| Q_inflow Riemann solver; number of iterations: "<<iter<<"  |"<<endl;
-		cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
-		cout << "----------------------------------------------------"<< endl;
+		//cout << "-----------------------------------------------------"<<endl;
+		//cout << "| Q_inflow Riemann solver; number of iterations: "<<iter<<"  |"<<endl;
+		//cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
+		//cout << "----------------------------------------------------"<< endl;
 		
 	 }
 	

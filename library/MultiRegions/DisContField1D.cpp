@@ -137,7 +137,9 @@ namespace Nektar
 		
 		
 		/**
-		 * New Constructor
+		 * New Constructor for multidomain computations in network structures
+		 * @param	domain	Subdomain specified in the inputfile from which
+		 *					the DisContField1D is set up
          */
         DisContField1D::DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
 									   const SpatialDomains::CompositeMap &domain,
@@ -149,19 +151,17 @@ namespace Nektar
 		m_bndConditions()
         {
 			cout << "---- DisContField1D ----"<<endl;
-			cout << " m_exp has elemnts: "<<m_exp->size()<<endl;
+			//cout << " m_exp has elemnts: "<<m_exp->size()<<endl;
 			
 			//1. a) Read in all boundary conditions specified in inputfile
 			SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
-			cout <<" number of boundary conditions: "<<bcs.GetBoundaryRegions().size()<<endl;
+			cout <<" Number of boundary conditions in bcs: "<<bcs.GetBoundaryRegions().size()<<endl;
 			
 			//1. b) Generate Boundary Condition Expansions from the read in ones only if the 
 			//      BC is in the currently processed subdomain
-			GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-			/*cout << " m_bndCondExpansions[0]->GetVertex()->GetVid() = "<<m_bndCondExpansions[0]->GetVertex()->GetVid()<<endl;
-			cout << " m_bndCondExpansions[1]->GetVertex()->GetVid() = "<<m_bndCondExpansions[1]->GetVertex()->GetVid()<<endl;
-			cout << " m_bndCondExpansions[2]->GetVertex()->GetVid() = "<<m_bndCondExpansions[2]->GetVertex()->GetVid()<<endl;
-			cout << " m_bndCondExpansions[3]->GetVertex()->GetVid() = "<<m_bndCondExpansions[3]->GetVertex()->GetVid()<<endl;*/
+			GenerateMultiDomainBoundaryConditionExpansion(graph1D,bcs,variable,i);
+			//cout << " m_bndCondExpansions[0]->GetVertex()->GetVid() = "<<m_bndCondExpansions[0]->GetVertex()->GetVid()<<endl;
+			//cout << " m_bndCondExpansions[1]->GetVertex()->GetVid() = "<<m_bndCondExpansions[1]->GetVertex()->GetVid()<<endl;
 
 			//1. c) Evaluate the boundary conditions; timedependent/im Raum???
 			EvaluateBoundaryConditions();
@@ -171,6 +171,7 @@ namespace Nektar
 			cout << " m_bndCondExpansions[2]->GetCoeff(0) = "<<m_bndCondExpansions[2]->GetCoeff(0)<<endl;
 			cout << " m_bndCondExpansions[3]->GetCoeff(0) = "<<m_bndCondExpansions[3]->GetCoeff(0)<<endl;*/
 			
+			cout << " Actual number of created m_bndCondExpansions: "<<m_bndCondExpansions.num_elements()<<endl;
 			for (int k=0; k<m_bndCondExpansions.num_elements(); k++)
 			{
 				cout << " Boundary vertex: "<<m_bndCondExpansions[k]->GetVertex()->GetVid()<<"\t Value: "<<m_bndCondExpansions[k]->GetCoeff(0)<<endl;
@@ -190,7 +191,7 @@ namespace Nektar
 			 
 			m_traces = Array<OneD,MultiRegions::ExpList0DSharedPtr> (domain.size());			
 			m_traces[i] = MemoryManager<ExpList0D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph1D,periodicVertices);
-			cout << " m_traces["<<i<<"].num_elements = "<<m_traces[i]->GetExpSize()<<endl;
+			//cout << " m_traces["<<i<<"].num_elements = "<<m_traces[i]->GetExpSize()<<endl;
 		
 			tmpBndSol = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
 			 
@@ -302,18 +303,8 @@ namespace Nektar
                     {
                         cnt += bregionIt->second->size();
                     }
-/*
-                    if( boundaryCondition->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
-                    {
-                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
-                        {
-                            cnt2 += bregionIt->second->size();
-                        }
-                    }
-*/
                 }
-            }
-
+            }			
 
             m_bndCondExpansions
                     = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
@@ -324,6 +315,56 @@ namespace Nektar
             SetBoundaryConditionExpansion(graph1D,bcs,variable,
                                            m_bndCondExpansions,
                                            m_bndConditions);
+        }
+		
+		
+		/**
+         * Generate the boundary condition expansion list in case of mutidomain solver
+         * @param   graph1D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   bcs         Information about the enforced boundary
+         *                      conditions.
+         * @param   variable    The session variable associated with the
+         *                      boundary conditions to enforce.
+         */
+        void DisContField1D::GenerateMultiDomainBoundaryConditionExpansion(
+																const SpatialDomains::MeshGraphSharedPtr &graph1D,
+																SpatialDomains::BoundaryConditions &bcs,
+																const std::string variable,
+																int subdomain)
+        {
+            int i;
+            int cnt  = 0;
+            int cnt2 = 0;
+			
+            const SpatialDomains::BoundaryRegionCollection &bregions
+			= bcs.GetBoundaryRegions();
+            const SpatialDomains::BoundaryConditionCollection &bconditions
+			= bcs.GetBoundaryConditions();
+			
+            int nbnd = bregions.size();
+            // count the number of non-periodic boundary points
+            for(i = 0; i < nbnd; ++i)
+            {
+                const SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
+                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                {
+                    SpatialDomains::BoundaryRegion::iterator bregionIt;
+                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    {
+                        cnt += bregionIt->second->size();
+                    }
+                }
+            }			
+			
+            m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(2);
+			
+            m_bndConditions = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(2);
+			
+            SetMultiDomainBoundaryConditionExpansion(graph1D,bcs,variable,
+													 m_bndCondExpansions,
+													 m_bndConditions,
+													 subdomain);
         }
 
 
@@ -468,7 +509,8 @@ namespace Nektar
                 locBCond = GetBoundaryCondition(bconditions, i, variable);
                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
 				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation)
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eMerging)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
                     for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
@@ -529,8 +571,9 @@ namespace Nektar
                         }
                     }
                 case SpatialDomains::eDirichlet: // do nothing for these types
-				case SpatialDomains::eJunction: // do nothing for these types
+				case SpatialDomains::eJunction: 
 				case SpatialDomains::eBifurcation:
+				case SpatialDomains::eMerging:
 				case SpatialDomains::ePeriodic:
                     break;
                 default:
@@ -540,6 +583,117 @@ namespace Nektar
             }
         }
 
+		
+		/**
+		 * MultiDomain case
+         * @param   graph1D     A mesh containing information about the domain
+         *                      and the Spectral/hp element expansion.
+         * @param   bcs         Information about the boundary conditions.
+         * @param   variable    Specifies the field.
+         * @param   bndCondExpansions   Array of ExpList1D objects each
+         *                      containing a 1D spectral/hp element expansion
+         *                      on a single boundary region.
+         * @param   bncConditions   Array of BoundaryCondition objects which
+         *                      contain information about the boundary
+         *                      conditions on the different boundary regions.
+         */
+        void DisContField1D::SetMultiDomainBoundaryConditionExpansion(
+														   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+														   const SpatialDomains::BoundaryConditions &bcs,
+														   const std::string variable,Array<OneD, MultiRegions::ExpListSharedPtr>
+																	  &bndCondExpansions,
+														   Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions,
+														   int subdomain)
+        {
+			//cout << " Start SetBoundaryConditionExpansion for subdomain "<<subdomain<<endl;
+            int i,k;
+            int cnt  = 0;
+			
+            const SpatialDomains::BoundaryRegionCollection &bregions
+				= bcs.GetBoundaryRegions();
+            const SpatialDomains::BoundaryConditionCollection &bconditions
+				= bcs.GetBoundaryConditions();
+			
+            MultiRegions::ExpList0DSharedPtr         locPointExp;
+            SpatialDomains::BoundaryConditionShPtr   locBCond;
+            SpatialDomains::VertexComponentSharedPtr vert;
+			
+			// Find the first boundary condition in the current domain
+			int firstcondition = subdomain*2;
+			int secondcondition = subdomain*2+1;
+			cnt = 0;
+			
+            // list Dirichlet boundaries first
+            for(i = firstcondition; i < secondcondition+1; ++i)
+            {
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
+                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation
+				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eMerging)
+                {
+                    SpatialDomains::BoundaryRegion::iterator bregionIt;
+                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    {
+                        for(k = 0; k < bregionIt->second->size(); k++)
+                        {
+                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*bregionIt->second)[k]))
+                            {
+                                locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
+                                bndCondExpansions[cnt]  = locPointExp;
+                                bndConditions[cnt++]    = locBCond;
+                            }
+                            else
+                            {
+                                ASSERTL0(false,"dynamic cast to a vertex failed");
+                            }
+                        }
+                    }
+                }
+            } // end if Dirichlet
+			
+            // then, list the other (non-periodic) boundaries
+            for(i = firstcondition; i < secondcondition+1; ++i)
+            {
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
+				
+                switch(locBCond->GetBoundaryConditionType())
+                {
+					case SpatialDomains::eNeumann:
+					case SpatialDomains::eRobin:
+                    {
+                        SpatialDomains::BoundaryRegion::iterator bregionIt;
+                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                        {
+                            for(k = 0; k < bregionIt->second->size(); k++)
+                            {
+                                if(vert = boost::dynamic_pointer_cast
+                                   <SpatialDomains::VertexComponent>((*bregionIt->second)[k]))
+                                {
+                                    locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
+                                    bndCondExpansions[cnt]  = locPointExp;
+                                    bndConditions[cnt++]    = locBCond;
+                                }
+                                else
+                                {
+                                    ASSERTL0(false,"dynamic cast to a vertex failed");
+                                }
+                            }
+                        }
+                    }
+					case SpatialDomains::eDirichlet: // do nothing for these types
+					case SpatialDomains::eJunction: 
+					case SpatialDomains::eBifurcation:
+					case SpatialDomains::eMerging:
+					case SpatialDomains::ePeriodic:
+						break;
+					default:
+						ASSERTL0(false,"This type of BC not implemented yet");
+						break;
+                }
+            }
+        }
+		
 
         /**
          *
@@ -664,10 +818,11 @@ namespace Nektar
 				 //check if the current boundary condition belongs to the current subdomain
 				 if((m_bndCondExpansions[n]->GetVertex()->GetVid() >= firstVertex) && (m_bndCondExpansions[n]->GetVertex()->GetVid() <= lastVertex) && (processed[n] != m_bndCondExpansions[n]->GetVertex()->GetVid()))
 				 {
-					 //cout << "currently processed vertices: "<<firstVertex<<"\t"<<lastVertex<<endl;
+					// cout << "currently processed vertices: "<<firstVertex<<"\t"<<lastVertex<<endl;
 					 if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
 						|| (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eJunction)
-						|| (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eBifurcation))
+						|| (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
+						|| (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eMerging))
 					 {
 						 //cout << "current boundary vertex: " <<m_bndCondExpansions[n]->GetVertex()->GetVid()<<endl;
 						 //cout << "subdomain_offset = "<<subdomain_offset<< endl;
@@ -936,7 +1091,7 @@ namespace Nektar
             NekDouble x0;
             NekDouble x1;
             NekDouble x2;
-
+			
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
@@ -955,29 +1110,13 @@ namespace Nektar
                              ::DirichletBoundaryCondition>(m_bndConditions[i])
                              ->m_dirichletCondition).Evaluate(x0,x1,x2,time));
                 }
-				else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eJunction))
+				else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eJunction)||
+						(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)||
+						(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eMerging))
                 {
-                    if (time == 0.0)
-					{
-						//m_bndCondExpansions[i]->SetCoeff(1.0);
-														/* (boost::static_pointer_cast<SpatialDomains
-															::DirichletBoundaryCondition>(m_bndConditions[i])
-															->m_parent).Evaluate(x0,x1,x2,time));*/
-						
-					}
+                   //Do not update this conditions as they will be by the domain-linking Riemann solvers
                 }	
-				else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eBifurcation))
-                {
-					if (time == 0.0)
-					{
-						//m_bndCondExpansions[i]->SetCoeff(1.0);
-														/* (boost::static_pointer_cast<SpatialDomains
-															::DirichletBoundaryCondition>(m_bndConditions[i])
-															->m_parent).Evaluate(x0,x1,x2,time));*/
-						
-					}
-				}	
-                else if(m_bndConditions[i]->GetBoundaryConditionType()
+				else if(m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eNeumann)
                 {
                     m_bndCondExpansions[i]->SetCoeff(

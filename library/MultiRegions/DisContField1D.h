@@ -231,6 +231,13 @@ namespace Nektar
                     const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable);
+			
+			// Discretises the boundary conditions in case of multidomain solver.
+            void GenerateMultiDomainBoundaryConditionExpansion(
+													const SpatialDomains::MeshGraphSharedPtr &graph1D,
+													SpatialDomains::BoundaryConditions &bcs,
+													const std::string variable,
+													int subdomain);
 
             /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
@@ -323,6 +330,18 @@ namespace Nektar
                                                             &bndCondExpansions,
                                 Array<OneD, SpatialDomains
                                     ::BoundaryConditionShPtr> &bndConditions);
+			
+			/// Populates the list of boundary condition expansions in multidomain case.
+            void SetMultiDomainBoundaryConditionExpansion(
+											   const SpatialDomains::MeshGraphSharedPtr &graph1D,
+											   const SpatialDomains::BoundaryConditions &bcs,
+											   const std::string variable,
+											   Array<OneD, MultiRegions::ExpListSharedPtr>
+											   &bndCondExpansions,
+											   Array<OneD, SpatialDomains
+											   ::BoundaryConditionShPtr> &bndConditions,
+											   int subdomain);
+			
 
             void GenerateFieldBnd1D(
                     SpatialDomains::BoundaryConditions &bcs,

@@ -99,6 +99,10 @@ namespace Nektar
                                      enum ReduceOperator pOp);
             virtual void v_AllReduce(Array<OneD, int      >& pData,
                                      enum ReduceOperator pOp);
+			virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
+									Array<OneD, NekDouble>& pRecvData);
+            virtual void v_AlltoAll(Array<OneD, int>& pSendData,
+									Array<OneD, int>& pRecvData);
             virtual void v_SplitComm(int pRows, int pColumns);
 
         private:

@@ -91,7 +91,12 @@ namespace Nektar
                                      enum ReduceOperator pOp);
             LIB_UTILITIES_EXPORT virtual void v_AllReduce(Array<OneD, int      >& pData,
                                      enum ReduceOperator pOp);
+			LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
+														 Array<OneD, NekDouble>& pRecvData);
+            LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, int>& pSendData,
+														 Array<OneD, int>& pRecvData);
             LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
+			
         };
 
     }

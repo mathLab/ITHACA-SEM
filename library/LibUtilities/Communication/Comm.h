@@ -98,6 +98,10 @@ namespace Nektar
                                          enum ReduceOperator pOp);
                 LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, int      >& pData,
                                          enum ReduceOperator pOp);
+			    LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, NekDouble>& pSendData,
+														 Array<OneD, NekDouble>& pRecvData);
+                LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, int>& pSendData,
+														 Array<OneD, int>& pRecvData);
 
                 LIB_UTILITIES_EXPORT inline void SplitComm(int pRows, int pColumns);
                 LIB_UTILITIES_EXPORT inline CommSharedPtr GetRowComm();
@@ -134,6 +138,10 @@ namespace Nektar
                                          enum ReduceOperator pOp) = 0;
                 virtual void v_AllReduce(Array<OneD, int      >& pData,
                                          enum ReduceOperator pOp) = 0;
+			    virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
+										Array<OneD, NekDouble>& pRecvData) = 0;
+                virtual void v_AlltoAll(Array<OneD, int>& pSendData,
+										Array<OneD, int>& pRecvData) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
         };
 
@@ -269,6 +277,24 @@ namespace Nektar
         {
             v_AllReduce(pData, pOp);
         }
+		
+		
+		/**
+         *
+         */
+		inline void Comm::AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)
+		{
+			v_AlltoAll(pSendData,pRecvData);
+		}
+		
+		
+		/**
+         *
+         */
+		inline void Comm::AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
+		{
+			v_AlltoAll(pSendData,pRecvData);
+		}
 
 
         /**

@@ -363,6 +363,42 @@ namespace Nektar
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
         }
+		
+		
+		/**
+         *
+         */
+		void CommMpi::v_AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)
+		{
+			int retval = MPI_Alltoall(pSendData.get(),
+									  (int) pSendData.num_elements(),
+									  MPI_DOUBLE,
+									  pRecvData.get(),
+									  (int) pRecvData.num_elements(),
+									  MPI_DOUBLE,
+									  MPI_COMM_WORLD);
+									  
+			ASSERTL0(retval == MPI_SUCCESS,
+                     "MPI error performing All-to-All.");
+		}
+		
+		
+		/**
+         *
+         */
+		void CommMpi::v_AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
+		{
+			int retval = MPI_Alltoall(pSendData.get(),
+									  (int) pSendData.num_elements(),
+									  MPI_INT,
+									  pRecvData.get(),
+									  (int) pRecvData.num_elements(),
+									  MPI_INT,
+									  MPI_COMM_WORLD);
+			
+			ASSERTL0(retval == MPI_SUCCESS,
+                     "MPI error performing All-to-All.");
+		}
 
 
         /**

@@ -1068,17 +1068,13 @@ namespace Nektar
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
             ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
             ReadParameters(e);
-
-            // If PROC_X defined, we partition the homogeneous direction.
-            if (DefinesParameter("PROC_X"))
-            {
-                int nProcX;
-                LoadParameter("PROC_X", nProcX, 1);
-                ASSERTL0(m_comm->GetSize() % nProcX == 0,
+			
+			int nProcX;
+			LoadParameter("PROC_X", nProcX, 1);
+			ASSERTL0(m_comm->GetSize() % nProcX == 0,
                         "Cannot exactly partition using PROC_X value.");
-                int nProcSem = m_comm->GetSize() / nProcX;
-                m_comm->SplitComm(nProcX, nProcSem);
-            }
+			int nProcSem = m_comm->GetSize() / nProcX;
+			m_comm->SplitComm(nProcX, nProcSem);
         }
 
 

@@ -60,17 +60,18 @@ namespace Nektar
                      "Homogeneous Basis is a null basis");
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 			
-            int nzplanes = m_homogeneousBasis->GetNumPoints();
+            int num_planes_per_proc = m_homogeneousBasis->GetNumPoints()/m_comm->GetColumnComm()->GetSize();
 			
-			m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
+			m_planes = Array<OneD,ExpListSharedPtr>(num_planes_per_proc);
             
             if(m_useFFT)
             {
-                m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nzplanes);
+                m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_homogeneousBasis->GetNumPoints());
             }
 			
 			if(m_dealiasing)
 			{
+				ASSERTL0(m_comm->GetColumnComm()->GetSize()==1,"Remove dealiasing if you want to run in parallel");
 				SetPaddingBase();
 			}
         }
@@ -342,35 +343,36 @@ namespace Nektar
         void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
         {
             if(m_useFFT)
-            {
-				
-                int n = m_planes.num_elements();  //number of Fourier points in the Fourier direction
-                int s = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane
-                int p = s/n;                      //number of points per plane = n of Fourier transform required
+            {				
+				int num_dofs             = inarray.num_elements();
+				int num_planes_per_proc  = m_planes.num_elements();
+				int num_points_per_plane = num_dofs/num_planes_per_proc;
+				int num_total_planes     = m_homogeneousBasis->GetNumPoints();
+				int num_processes        = num_total_planes/num_planes_per_proc;
+				int num_dfts_per_proc    = ceil(num_points_per_plane/num_processes);
 		
-                Array<OneD, NekDouble> fft_in(s);
-                Array<OneD, NekDouble> fft_out(s);
+                Array<OneD, NekDouble> fft_in(num_dfts_per_proc*num_total_planes);
+                Array<OneD, NekDouble> fft_out(num_dfts_per_proc*num_total_planes);
 		
                 ShuffleIntoHomogeneous1DClosePacked(inarray,fft_in,false);
 		
                 if(IsForwards)
                 {
-                    for(int i=0;i<p;i++)
+                    for(int i = 0 ; i < num_dfts_per_proc ; i++)
                     {
-                        m_FFT->FFTFwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
+                        m_FFT->FFTFwdTrans(m_tmpIN = fft_in + i*num_total_planes, m_tmpOUT = fft_out + i*num_total_planes);
                     }
                     
                 }
                 else 
                 {
-                    for(int i=0;i<p;i++)
+                    for(int i = 0 ; i < num_dfts_per_proc ; i++)
                     {
-                        m_FFT->FFTBwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
+                        m_FFT->FFTBwdTrans(m_tmpIN = fft_in + i*num_total_planes, m_tmpOUT = fft_out + i*num_total_planes);
                     }
                 }
 		
                 UnshuffleFromHomogeneous1DClosePacked(fft_out,outarray,false);
-		
             }
             else 
             {
@@ -425,26 +427,56 @@ namespace Nektar
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes)
         {
-            int i, pts_per_plane;
-            int n = inarray.num_elements();
-            int packed_len;
-
-            pts_per_plane = n/m_planes.num_elements();
-
+			int i,j;
+            int num_dofs             = inarray.num_elements();
+			int num_planes_per_proc  = m_planes.num_elements();
+			int num_points_per_plane = num_dofs/num_planes_per_proc;
+			int num_total_planes     = m_homogeneousBasis->GetNumPoints();
+			int num_processes        = num_total_planes/num_planes_per_proc;
+			int num_trans_per_proc   = ceil(num_points_per_plane/num_processes);
+			int rank_id              = m_comm->GetColumnComm()->GetRank();
+			int copy_len             = num_trans_per_proc;
+			
+			Array<OneD, Array< OneD, NekDouble> > tmp_inarray(num_processes);
+						
+			for(i = 0; i < num_processes;i++)
+			{
+				tmp_inarray[i] = Array<OneD, NekDouble> (num_trans_per_proc*num_planes_per_proc,0.0);
+				
+				if(i == num_processes-1)
+				{
+					copy_len = num_trans_per_proc - ((num_trans_per_proc*num_processes)-num_points_per_plane);
+				}
+				
+				for(j = 0; j < num_planes_per_proc;j++)
+				{
+					Vmath::Vcopy(copy_len,
+								 &(inarray[i*num_trans_per_proc+j*num_points_per_plane]),1,
+								 &(tmp_inarray[i][j*num_trans_per_proc]),1);
+				}
+				if(i != rank_id)
+				{
+					m_comm->GetColumnComm()->SendRecv(i,tmp_inarray[i],rank_id,tmp_inarray[i]);
+				}
+			}
+		    			
+			// reshuffle
+			int packed_len;
+			
             if(UseNumModes)
             {
                 packed_len = m_homogeneousBasis->GetNumModes();
             }
             else
             {
-                packed_len = m_planes.num_elements();
+                packed_len = m_homogeneousBasis->GetNumPoints();
             }
 
             ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
 
             for(i = 0; i < packed_len; ++i)
             {
-                Vmath::Vcopy(pts_per_plane,&(inarray[i*pts_per_plane]),1,
+                Vmath::Vcopy(num_trans_per_proc,&(tmp_inarray[0][i*num_trans_per_proc]),1,
                              &(outarray[i]),packed_len);
             }
         }
@@ -454,31 +486,61 @@ namespace Nektar
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes)
         {
-            int i,pts_per_plane;
-            int n = inarray.num_elements();
-            int packed_len;
-
-            // use length of inarray to determine data storage type
-            // (i.e.modal or physical).
-            pts_per_plane = n/m_planes.num_elements();
-
+			int i,j;
+            int num_dofs             = inarray.num_elements();
+			int num_planes_per_proc  = m_planes.num_elements();
+			int num_points_per_plane = num_dofs/num_planes_per_proc;
+			int num_total_planes     = m_homogeneousBasis->GetNumPoints();
+			int num_processes        = num_total_planes/num_planes_per_proc;
+			int num_trans_per_proc   = ceil(num_points_per_plane/num_processes);
+			int rank_id              = m_comm->GetColumnComm()->GetRank();
+			int copy_len;
+			
+			int packed_len;
+			
             if(UseNumModes)
             {
                 packed_len = m_homogeneousBasis->GetNumModes();
             }
             else
             {
-                packed_len = m_planes.num_elements();
+                packed_len = m_homogeneousBasis->GetNumPoints();
             }
-
+			
             ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
-
-
+			
+			Array<OneD, Array< OneD, NekDouble> > tmp_inarray(num_processes);
+			
+			for(i = 0; i < num_processes;i++)
+			{
+				tmp_inarray[i] = Array<OneD, NekDouble> (num_trans_per_proc*num_planes_per_proc,0.0);
+			}
+			
             for(i = 0; i < packed_len; ++i)
             {
-                Vmath::Vcopy(pts_per_plane,&(inarray[i]),packed_len,
-                             &(outarray[i*pts_per_plane]),1);
+                Vmath::Vcopy(num_trans_per_proc,&(inarray[i]),packed_len,
+                             &(tmp_inarray[0][i*num_trans_per_proc]),1);
             }
+			
+			for(i = 0; i < num_processes;i++)
+			{
+				if(i != rank_id)
+				{
+					m_comm->GetColumnComm()->SendRecv(i,tmp_inarray[i],rank_id,tmp_inarray[i]);
+				}
+				
+				if(i == num_processes-1)
+				{
+					copy_len = num_trans_per_proc - ((num_trans_per_proc*num_processes)-num_points_per_plane);
+				}
+				
+				for(j = 0; j < num_planes_per_proc;j++)
+				{
+					Vmath::Vcopy(copy_len,
+								 &(tmp_inarray[i][j*num_trans_per_proc]),1,
+								 &(outarray[i*num_trans_per_proc+j*num_points_per_plane]),1);
+				}
+			}
         }
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs) const
@@ -499,10 +561,11 @@ namespace Nektar
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs) const
         {
-            int i;
-            int n_exp = 0;
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
+			int n_exp = 0;
+			int num_dft = 0;
+			int num_processes = m_comm->GetColumnComm()->GetSize();
 
             if((mattype == eForwardsCoeffSpace1D)
                ||(mattype == eBackwardsCoeffSpace1D)) // will operate on m_coeffs
@@ -510,6 +573,7 @@ namespace Nektar
                 if(UseContCoeffs)
                 {
                     n_exp = m_planes[0]->GetContNcoeffs();
+					
                 }
                 else
                 {
@@ -520,19 +584,21 @@ namespace Nektar
             {
                 n_exp = m_planes[0]->GetTotPoints(); // will operatore on m_phys
             }
+			
+			num_dft = ceil(n_exp/num_processes);
 
-            Array<OneD,unsigned int> nrows(n_exp);
-            Array<OneD,unsigned int> ncols(n_exp);
+            Array<OneD,unsigned int> nrows(num_dft);
+            Array<OneD,unsigned int> ncols(num_dft);
 
             if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
             {
-                nrows = Array<OneD, unsigned int>(n_exp,m_homogeneousBasis->GetNumModes());
-                ncols = Array<OneD, unsigned int>(n_exp,m_planes.num_elements());
+                nrows = Array<OneD, unsigned int>(num_dft,m_homogeneousBasis->GetNumModes());
+                ncols = Array<OneD, unsigned int>(num_dft,m_homogeneousBasis->GetNumPoints());
             }
             else
             {
-                nrows = Array<OneD, unsigned int>(n_exp,m_planes.num_elements());
-                ncols = Array<OneD, unsigned int>(n_exp,m_homogeneousBasis->GetNumModes());
+                nrows = Array<OneD, unsigned int>(num_dft,m_homogeneousBasis->GetNumPoints());
+                ncols = Array<OneD, unsigned int>(num_dft,m_homogeneousBasis->GetNumModes());
             }
 
             MatrixStorage blkmatStorage = eDIAGONAL;
@@ -559,7 +625,7 @@ namespace Nektar
             }
 
             // set up array of block matrices.
-            for(i = 0; i < n_exp; ++i)
+            for(int i = 0; i < num_dft; ++i)
             {
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }

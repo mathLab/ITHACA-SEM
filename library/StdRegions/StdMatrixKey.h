@@ -73,6 +73,7 @@ namespace Nektar
 
             /// Used for finding value given the key in NekManager.
             STD_REGIONS_EXPORT friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+            STD_REGIONS_EXPORT friend bool operator==(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
             STD_REGIONS_EXPORT friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
 
             MatrixType GetMatrixType() const

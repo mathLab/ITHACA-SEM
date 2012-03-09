@@ -194,7 +194,88 @@ namespace Nektar
             
             return false;
         }
-        
+
+        bool operator==(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
+        {
+            if(lhs.m_matrixType != rhs.m_matrixType)
+            {
+                return false;
+            }
+
+            if(lhs.m_ncoeffs != rhs.m_ncoeffs)
+            {
+                return false;
+            }
+
+            for(unsigned int i = 0; i < ExpansionTypeDimMap[lhs.m_expansionType]; ++i)
+            {
+                if(lhs.m_base[i].get() != rhs.m_base[i].get())
+                {
+                    return false;
+                }
+            }
+
+            if(lhs.m_factors.size() != rhs.m_factors.size())
+            {
+                return false;
+            }
+            else
+            {
+                ConstFactorMap::const_iterator x, y;
+                for(x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
+                        x != lhs.m_factors.end(); ++x, ++y)
+                {
+                    if (x->second != y->second)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            if(lhs.m_nodalPointsType != rhs.m_nodalPointsType)
+            {
+                return false;
+            }
+
+            if(lhs.m_varcoeffs.size() != rhs.m_varcoeffs.size())
+            {
+                return false;
+            }
+
+            for (unsigned int i = 0; i < lhs.m_varcoeff_hashes.size(); ++i)
+            {
+                if(lhs.m_varcoeff_hashes[i] != rhs.m_varcoeff_hashes[i])
+                {
+                    return false;
+                }
+            }
+
+            VarCoeffMap::const_iterator x;
+            for (x = lhs.m_varcoeffs.begin(); x != lhs.m_varcoeffs.end(); ++x)
+            {
+                VarCoeffMap::const_iterator y;
+                // Check var coeff is found
+                if ((y = rhs.m_varcoeffs.find(x->first)) == rhs.m_varcoeffs.end())
+                {
+                    return false;
+                }
+
+                if (x->second != y->second)
+                {
+                    return false;
+                }
+            }
+            for (unsigned int i = 0; i < lhs.m_varcoeffs.size(); ++i)
+            {
+                if(lhs.m_varcoeff_hashes[i] != rhs.m_varcoeff_hashes[i])
+                {
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)
         {
             os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 

@@ -349,7 +349,7 @@ namespace Nektar
 				int num_points_per_plane = num_dofs/num_planes_per_proc;
 				int num_total_planes     = m_homogeneousBasis->GetNumPoints();
 				int num_processes        = num_total_planes/num_planes_per_proc;
-				int num_dfts_per_proc    = ceil(num_points_per_plane/num_processes);
+				int num_dfts_per_proc    = num_points_per_plane/num_processes + (num_points_per_plane%num_processes > 0);
 		
                 Array<OneD, NekDouble> fft_in(num_dfts_per_proc*num_total_planes);
                 Array<OneD, NekDouble> fft_out(num_dfts_per_proc*num_total_planes);

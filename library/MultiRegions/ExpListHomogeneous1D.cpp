@@ -433,7 +433,7 @@ namespace Nektar
 			int num_points_per_plane = num_dofs/num_planes_per_proc;
 			int num_total_planes     = m_homogeneousBasis->GetNumPoints();
 			int num_processes        = num_total_planes/num_planes_per_proc;
-			int num_trans_per_proc   = ceil(num_points_per_plane/num_processes);
+			int num_trans_per_proc   = num_points_per_plane/num_processes + (num_points_per_plane%num_processes > 0);
 			int rank_id              = m_comm->GetColumnComm()->GetRank();
 			int copy_len             = num_trans_per_proc;
 			
@@ -492,7 +492,7 @@ namespace Nektar
 			int num_points_per_plane = num_dofs/num_planes_per_proc;
 			int num_total_planes     = m_homogeneousBasis->GetNumPoints();
 			int num_processes        = num_total_planes/num_planes_per_proc;
-			int num_trans_per_proc   = ceil(num_points_per_plane/num_processes);
+			int num_trans_per_proc   = num_points_per_plane/num_processes + (num_points_per_plane%num_processes > 0);
 			int rank_id              = m_comm->GetColumnComm()->GetRank();
 			int copy_len;
 			
@@ -585,7 +585,7 @@ namespace Nektar
                 n_exp = m_planes[0]->GetTotPoints(); // will operatore on m_phys
             }
 			
-			num_dft = ceil(n_exp/num_processes);
+			num_dft = n_exp/num_processes + (n_exp%num_processes > 0);
 
             Array<OneD,unsigned int> nrows(num_dft);
             Array<OneD,unsigned int> ncols(num_dft);

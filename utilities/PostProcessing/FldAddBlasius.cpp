@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
         }
     }
     
-    //! Piecewise linear interpolation of the blasius profile along y lagrangian points
+    //! Piecewise linear interpolation of the blasius profile along y lagrangian points ------------
     k = 0;
     Array<OneD,NekDouble> uk;
     Array<OneD,NekDouble> vk;
@@ -345,7 +345,8 @@ int main(int argc, char *argv[])
             if (k == nQuadraturePts_y + 1) break;
         }
     }
-        
+    
+    
     FILE *original_data; 
     original_data = fopen("original_data.txt","w+"); 
     for(j=0; j<=numLines-1;j++)
@@ -361,24 +362,35 @@ int main(int argc, char *argv[])
         fprintf(interpolation_data,"%f %f\n", y_QuadraturePts_y[j], uk[j]);
     }
     fclose(interpolation_data);
+    //! --------------------------------------------------------------------------------------------
+
     
-    //! HERE WE NEED TO DEFINE A STANDARD SEGMENT FOR THE ONE-INTERPOLATION OF THE BL DATA
-    string blasius = "blasius.fld";
     
+    //! Definition of the 2D expansion using the mesh data specified on the session file ----------  
     MultiRegions::ExpList2DSharedPtr Exp2D;
     Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
-    
-    Array<OneD,NekDouble> PhysVec;
-    PhysVec = Array<OneD,NekDouble>(nQuadraturePts);
+    //! --------------------------------------------------------------------------------------------
 
-    PhysVec = Exp2D->GetPhys();
+    
+    
+    //! Filling the 2D expansion using a recursive algorithm based on the mesh ordering ------------
+    /*  NOTE:   1) The mesh must have a specific ordering.
+     *          2) The mesh must have a BL refinement block defined using a specific criterion. 
+     *          3) At the moment parallel BL only.
+     *          4) No recursive algorithm on the farfield block (implicit assumption that the 
+     *             entire BL (and possibly part of the farfield) will be in the BL refinement 
+     *             block. 
+     *          5) Only field u at the moment --> v and p are coming.
+     */
+    
     Array<OneD,NekDouble> ukGlobal;
     ukGlobal = Array<OneD,NekDouble>(nQuadraturePts);
-    
     m = 0;
     int numModes = 3;
     int nElement_x = nQuadraturePts_x/(numModes+1);
-    std::cout<< "nELEMENT_x = " << nElement_x << std::endl;
+    std::cout<< "nElement_x = " << nElement_x << std::endl;
+    
+    //! Loops on the BL refinement block
     for(xElement=0; xElement<=nElement_x-1; xElement++)
     {
         for(yLevel=0; yLevel<=55; yLevel++)
@@ -391,6 +403,7 @@ int main(int argc, char *argv[])
         }
     }
     
+    //! Loops on the farfield block
     for(i=m; i<=nQuadraturePts-1; i++)
     {
         ukGlobal[i] = uk[nQuadraturePts_y-1];
@@ -442,14 +455,24 @@ int main(int argc, char *argv[])
     std::cout << "ukGlobal = " << ukGlobal[136*88] << std::endl;
     }
     
+    //! Copying the ukGlobal vector (with the same pattern of m_phys) in m_phys 
     Vmath::Vcopy(nQuadraturePts, ukGlobal, 1, Exp2D->UpdatePhys(), 1);
-    Array<OneD, MultiRegions::ExpListSharedPtr> ukCoeff(nQuadraturePts);
-    Exp2D->FwdTrans(Exp2D->GetPhys(), Exp2D->UpdateCoeffs());
     
+    //! Expansion coefficient extraction (necessary to write the .fld file)
+    Exp2D->FwdTrans(Exp2D->GetPhys(), Exp2D->UpdateCoeffs());
+    //! --------------------------------------------------------------------------------------------
+
+
+    
+    //! Generation .FLD file with one field only (at the moment) -----------------------------------
+    string blasius = "blasius.fld";
     int nFields = 1;
+    
+    //! Only 1 field at the moment ===> Getting the field definition
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp2D->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    
+
+    //! Writing the .fld file
     for(j = 0; j <= nFields - 1; j++)
     {
 		for(i = 0; i < FieldDef.size(); i++)
@@ -459,6 +482,9 @@ int main(int argc, char *argv[])
 		}
     }
     graphShPt->Write(blasius, FieldDef, FieldData);
+    //! --------------------------------------------------------------------------------------------
+
+    
     
     //! WORK IN PROGRESS. Gianmarco +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     

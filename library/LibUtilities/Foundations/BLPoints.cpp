@@ -51,7 +51,7 @@ namespace Nektar
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
             unsigned int npts = m_pointsKey.GetNumPoints();
-	    double rr = pow(10,log10(6000)/(npts-2));
+	    double rr = pow(10.0,log10(6000.0)/(npts-2.0));
 	    //cerr << "power coefficiant :  " << rr << endl;
 	    for(unsigned int i=0;i<npts;++i)
             {

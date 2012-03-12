@@ -104,7 +104,8 @@ namespace Nektar
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
                 m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
-            }
+		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));            }
 
         private:
             /// These should not be called.  All creation is done

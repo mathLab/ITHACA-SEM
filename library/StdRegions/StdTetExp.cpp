@@ -1233,13 +1233,14 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            int P = m_base[0]->GetNumModes();
-            int Q = m_base[1]->GetNumModes();
-            int R = m_base[2]->GetNumModes();
+            int P = m_base[0]->GetNumModes()-1;
+            int Q = m_base[1]->GetNumModes()-1;
+            int R = m_base[2]->GetNumModes()-1;
+            
             
             return  (Q+1) + P*(1 + 2*Q - P)/2  // base face
-                +   (R+1) * P*(1 + 2*R - P)/2  // front face
-                + 2*(R+1) * Q*(1 + 2*R - Q);   // back two faces
+                +   (R+1) + P*(1 + 2*R - P)/2  // front face
+                + 2*(R+1) + Q*(1 + 2*R - Q);   // back two faces
         }
 
         int StdTetExp::v_GetEdgeNcoeffs(const int i) const
@@ -1307,6 +1308,47 @@ namespace Nektar
             else
             {
                 return Qi * (2*Ri - Qi - 1) / 2;
+            }
+        }
+
+        int StdTetExp::v_GetFaceNumPoints(const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 3, "face id is out of range");
+            
+            if (i == 0)
+            {
+                return m_base[0]->GetNumPoints()*
+                       m_base[1]->GetNumPoints();
+            }
+            else if (i == 1)
+            {
+                return m_base[0]->GetNumPoints()*
+                       m_base[2]->GetNumPoints();
+            }
+            else
+            {
+                return m_base[1]->GetNumPoints()*
+                       m_base[2]->GetNumPoints();
+            }
+        }
+        
+        LibUtilities::PointsKey StdTetExp::v_GetFacePointsKey(
+            const int i, const int j) const
+        {
+            ASSERTL2(i >= 0 && i <= 3, "face id is out of range");
+            ASSERTL2(j == 0 || j == 1, "face direction is out of range");
+            
+            if (i == 0)
+            {
+                return m_base[j]->GetPointsKey();
+            }
+            else if (i == 1)
+            {
+                return m_base[2*j]->GetPointsKey();
+            }
+            else
+            {
+                return m_base[j+1]->GetPointsKey();
             }
         }
 
@@ -1482,7 +1524,7 @@ namespace Nektar
                      "Modified_C BasisType(z direction)");
 
             int nFaceCoeffs = 0;
-
+            
             if (nummodesA == -1)
             {
                 switch(fid)
@@ -1597,6 +1639,7 @@ namespace Nektar
             if ((int)faceOrient == 2)
             {
                 swap(maparray[0], maparray[Q]);
+                
                 for (i = 1; i < Q-1; ++i)
                 {
                     swap(maparray[i+1], maparray[Q+i]);
@@ -1904,7 +1947,7 @@ namespace Nektar
             int P = m_base[0]->GetNumModes();
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
-
+            
             int i,j,k;
             int idx = 0;
 
@@ -1975,7 +2018,8 @@ namespace Nektar
          * 1 6 10 13   15 19 22     25 28
          * 0 5 9  12   14 18 21 23  24 27 29
          * 
-         * Note that in this element, we must have that P <= Q <= R.
+         * Note that in this element, we must have that \f$ P \leq Q \leq
+         * R\f$.
          */
         int StdTetExp::GetMode(const int I, const int J, const int K)
         {

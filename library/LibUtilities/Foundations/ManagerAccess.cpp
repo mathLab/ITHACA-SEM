@@ -37,6 +37,7 @@
 #include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/FourierPoints.h>
+#include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
 #include <LibUtilities/Foundations/NodalTriElec.h>
 #include <LibUtilities/Foundations/NodalTetElec.h>
@@ -74,6 +75,7 @@ namespace Nektar
             const bool gaussInited16 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre), GaussPoints::Create);
         
             const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
+            const bool BLInited0 = PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPoints), BLPoints::Create);
             const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
             const bool NodalTriInited0 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec), NodalTriElec::Create);
             const bool NodalTriInited1 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);

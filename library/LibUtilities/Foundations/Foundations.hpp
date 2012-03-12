@@ -56,8 +56,8 @@ namespace Nektar
             eLegendre,			//!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
             eChebyshev,			//!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
             eMonomial,			//!< Monomial polynomials \f$ L_p(z_i) = z_i^{p}\f$
-			eFourierSingleMode, //!< Fourier ModifiedExpansion with just the first mode   \f$ \exp(i \pi  z_i)\f$
-			eLagrange,			//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
+            eFourierSingleMode,         //!< Fourier ModifiedExpansion with just the first mode   \f$ \exp(i \pi  z_i)\f$
+            eLagrange,			//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
             eDG_DG_Left,		//!< Derivative of the left correction function for DG FR  \f$ dGL_{p}(z_i) \f$
             eDG_DG_Right,		//!< Derivative of the Right correction function for DG FR \f$ dGR_{p}(z_i) \f$
             eDG_SD_Left,		//!< Derivative of the left correction function for SD FR  \f$ dGL_{p}(z_i) \f$
@@ -81,8 +81,8 @@ namespace Nektar
             "Legendre",
             "Chebyshev",
             "Monomial",
-			"FourierSingleMode",
-			"Lagrange",
+            "FourierSingleMode",
+            "Lagrange",
             "DG_DG_Left",
             "DG_DG_Right",
             "DG_SD_Left",
@@ -112,6 +112,7 @@ namespace Nektar
             eGaussLobattoKronrodLegendre,   //!<  1D Lobatto Kronrod quadrature points
             ePolyEvenlySpaced,              //!<  1D Evenly-spaced points using Lagrange polynomial
             eFourierEvenlySpaced,           //!<  1D Evenly-spaced points using Fourier Fit
+            eBoundaryLayerPoints,           //!<  1D power law distribution for boundary layer points
             eNodalTriElec,                  //!<  2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
@@ -141,6 +142,7 @@ namespace Nektar
             "GaussLobattoKronrodLegendre",
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
+            "BoundaryLayerPoints",
             "NodalTriElec",
             "NodalTriFekete",
             "NodalTriEvenlySpaced",

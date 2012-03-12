@@ -854,7 +854,6 @@ namespace Nektar
                     }
                 }
             }
-            /*
             if(GetGeom()->GetEorient(edge) == StdRegions::eBackwards)
             {
                 for(i = 0; i < GetCoordim(); ++i)
@@ -863,10 +862,8 @@ namespace Nektar
                     {
                         Vmath::Reverse(nqe, normal[i], 1, normal[i],1);
                     }
-                    Vmath::Neg(nqe,normal[i],1);
                 }
             }
-            */
         }
 
 

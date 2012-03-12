@@ -816,7 +816,7 @@ namespace Nektar
         {
             // Loop over elements and collect forward and backward expansions.
             int nexp = GetExpSize();
-            int nquad_e,cnt,n,e,npts,offset, phys_offset;
+            int cnt,n,e,npts,offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
             Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
@@ -825,20 +825,17 @@ namespace Nektar
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(),Fwd,1);
             Vmath::Zero(Bwd.num_elements(),Bwd,1);
-
+            
             for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
-
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
                     LocalRegions::Expansion2DSharedPtr traceEl = 
                         boost::dynamic_pointer_cast<
                             LocalRegions::Expansion2D>(elmtToTrace[n][e]);
                     
-                    nquad_e = (*m_exp)[n]->GetFaceNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    
                     bool fwd = true;
                     
                     if (traceEl->GetLeftAdjacentElementFace () == -1 ||
@@ -888,7 +885,6 @@ namespace Nektar
                                m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(1);
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                        
                         Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
                     }
 
@@ -938,7 +934,7 @@ namespace Nektar
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
-            int nquad_e,n,e,offset,phys_offset;
+            int n,e,offset,phys_offset;
             Array<OneD,NekDouble> e_tmp;
             Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToFace();
@@ -950,10 +946,9 @@ namespace Nektar
             for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
-		
+                
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
-                    nquad_e = (*m_exp)[n]->GetFaceNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
                                                  inarray + phys_offset,

@@ -498,9 +498,9 @@ namespace Nektar
                 return v_GetFaceIntNcoeffs(i);
             }
 
-            bool GetFaceDGForwards(const int i) const
+            LibUtilities::PointsKey GetFacePointsKey(const int i, const int j) const
             {
-                return v_GetFaceDGForwards(i);
+                return v_GetFacePointsKey(i, j);
             }
 
             int NumBndryCoeffs(void)  const
@@ -1569,8 +1569,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
 
-            STD_REGIONS_EXPORT virtual bool v_GetFaceDGForwards(const int i) const;
-
+            STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(const int i, const int j) const;
+            
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 
             STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;

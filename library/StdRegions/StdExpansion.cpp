@@ -1213,11 +1213,11 @@ namespace Nektar
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
             }
- 
-            bool StdExpansion::v_GetFaceDGForwards(const int i) const
+        
+            LibUtilities::PointsKey StdExpansion::v_GetFacePointsKey(const int i, const int j) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
+                return LibUtilities::NullPointsKey;
             }
 
             LibUtilities::BasisType StdExpansion::v_GetEdgeBasisType(const int i) const

@@ -1024,6 +1024,26 @@ namespace Nektar
             }
         }
 
+        LibUtilities::PointsKey StdHexExp::v_GetFacePointsKey(
+            const int i, const int j) const
+        {
+            ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
+            ASSERTL2(j == 0 || j == 1, "face direction is out of range");
+            
+            if (i == 0 || i == 5)
+            {
+                return m_base[j]->GetPointsKey();
+            }
+            else if (i == 1 || i == 3)
+            {
+                return m_base[2*j]->GetPointsKey();
+            }
+            else
+            {
+                return m_base[j+1]->GetPointsKey();
+            }
+        }
+
         int StdHexExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
         {
             int nmodes = nummodes[modes_offset]*nummodes[modes_offset+1]*nummodes[modes_offset+2];

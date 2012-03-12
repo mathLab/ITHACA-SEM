@@ -588,17 +588,6 @@ namespace Nektar
                                      "num of points is not set with max order)");
                         }
                     }
-
-//                    if (NormalSet.count(id) == 0)
-//                    {
-//                        Seg = boost::dynamic_pointer_cast
-//                                    <LocalRegions::SegExp>(
-//                                        (*m_exp)[EdgeDone.find(id)->second]);
-//
-//                        // Set up normals at all Segment Quadrature points
-//                        Seg->SetUpPhysNormals(locexp[i],j);
-//                        NormalSet[id] = 1;
-//                    }
                 }
             }
 
@@ -757,7 +746,7 @@ namespace Nektar
                 // Get the number of points and the data offset.
                 f_npoints = (*m_exp)[i]->GetNumPoints(0)*
                             (*m_exp)[i]->GetNumPoints(1);
-                offset = m_phys_offset[i];
+                offset    = m_phys_offset[i];
                 
                 // Process each point in the expansion.
                 for(j = 0; j < f_npoints; ++j)
@@ -786,9 +775,9 @@ namespace Nektar
         void ExpList2D::GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            int i,j,k,f_npoints,offset;
+            int i,j,k,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
-            
+            Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
             int coordim = (*m_exp)[0]->GetGeom2D()->GetCoordim();
             
@@ -804,25 +793,23 @@ namespace Nektar
                         LocalRegions::Expansion2D>((*m_exp)[i]);
                 LocalRegions::Expansion3DSharedPtr loc_elmt = 
                     loc_exp->GetLeftAdjacentElementExp();
+                int faceNumber = loc_exp->GetLeftAdjacentElementFace();
                 
                 // Get the number of points and normals for this expansion.
-                f_npoints  = (*m_exp)[i]->GetNumPoints(0)*
-                             (*m_exp)[i]->GetNumPoints(1);
-                locnormals = loc_elmt->GetFaceNormal(loc_exp->GetLeftAdjacentElementFace());
+                locnormals = loc_elmt->GetFaceNormal(faceNumber);
                 
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
                 
-                // Process each point in the expansion.
-                for(j = 0; j < f_npoints; ++j)
+                for (k = 0; k < coordim; ++k)
                 {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
-                    {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
-                    }
+                    LibUtilities::Interp2D(
+                        loc_elmt->GetFacePointsKey(faceNumber, 0),
+                        loc_elmt->GetFacePointsKey(faceNumber, 1),
+                        locnormals[k],
+                        (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                        (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                        tmp = normals[k]+offset);
                 }
             }
         }

@@ -106,10 +106,10 @@ namespace Nektar
                 void CalculatePoints();
                 void CalculateWeights();
                 void CalculateDerivMatrix();
-
-                void CalculateInterpMatrix(unsigned int npts, const Array<OneD, const NekDouble>& xpoints, 
-                                           Array<OneD, NekDouble>& interp);
-                               double PeriodicSincFunction(const NekDouble x, const NekDouble h);
+                void CalculateInterpMatrix(
+                    unsigned int                        npts, 
+                    const Array<OneD, const NekDouble>& xpoints, 
+                          Array<OneD,       NekDouble>& interp);
         }; // class BLPoints
     } // end of namespace
 } // end of namespace 

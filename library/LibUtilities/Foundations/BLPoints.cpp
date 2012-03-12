@@ -132,12 +132,6 @@ namespace Nektar
         {
 
         }
-
-        double BLPoints::PeriodicSincFunction(const NekDouble x, const NekDouble h)
-        {
-
-        }
-            
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 

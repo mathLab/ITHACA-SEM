@@ -37,8 +37,6 @@
 #define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/HistoryPoints.h>
-#include <SpatialDomains/SpatialData.h>
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>

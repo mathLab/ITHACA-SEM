@@ -217,9 +217,6 @@ namespace Nektar
             }
         }
 
-        std::string outname = m_session->GetFilename() + ".his";
-        std::ofstream hisFile (outname.c_str());
-
         // Perform integration in time.
         for(n = 0; n < m_steps; ++n)
         {
@@ -262,7 +259,6 @@ namespace Nektar
 		  m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
 		}
 	      Checkpoint_Output(nchk++);
-	      WriteHistoryData(hisFile);
 
 	    v_PrimitiveToConservative();
 	    }

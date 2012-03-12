@@ -99,7 +99,6 @@ namespace Nektar
 
         // Load generic input parameters
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-        m_session->LoadParameter("IO_HistorySteps", m_historysteps, 0);
 		m_session->LoadParameter("CFL", m_cfl, 0.0);
 
 		// Set up filters
@@ -258,13 +257,6 @@ namespace Nektar
             }
         }
 
-        std::ofstream hisFile;
-        if (m_comm->GetRank() == 0)
-        {
-            std::string outname = m_session->GetSessionName() + ".his";
-            hisFile.open(outname.c_str());
-        }
-		
         std::vector<FilterSharedPtr>::iterator x;
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
         {
@@ -394,7 +386,6 @@ namespace Nektar
 						m_fields[i]->SetPhysState(false);
 					}
 					Checkpoint_Output(nchk++);
-					WriteHistoryData(hisFile);
 				}
 				
 				
@@ -455,16 +446,12 @@ namespace Nektar
 					     << "\t Time-step: " << m_timestep << "\t" << endl;
 				}
 
-				// Transform data if needed
-				if((m_historysteps && m_historyList.size() > 0 && !((n+1)%m_historysteps))
-				        || (m_checksteps&&n&&(!((n+1)%m_checksteps))))
+				// Transform data into coefficient space
+                for (i = 0; i < m_intVariables.size(); ++i)
                 {
-                    for (i = 0; i < m_intVariables.size(); ++i)
-                    {
-                        m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(fields[i],
-                                    m_fields[m_intVariables[i]]->UpdateCoeffs());
-                        m_fields[m_intVariables[i]]->SetPhysState(false);
-                    }
+                    m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(fields[i],
+                                m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
 
 				std::vector<FilterSharedPtr>::iterator x;
@@ -472,12 +459,6 @@ namespace Nektar
 				{
 				    (*x)->Update(m_fields, m_time);
 				}
-
-	            // Write out history data to file
-	            if(m_historysteps && !((n+1)%m_historysteps))
-	            {
-	                WriteHistoryData(hisFile);
-	            }
 
 				// Write out checkpoint files.
 				if(m_checksteps&&n&&(!((n+1)%m_checksteps)))

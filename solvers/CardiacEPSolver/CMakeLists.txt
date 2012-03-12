@@ -19,6 +19,7 @@ SET(CardiacEPSolverSource
        ../Auxiliary/Filters/Filter.cpp
        ../Auxiliary/Filters/FilterThresholdMax.cpp
        ../Auxiliary/Filters/FilterCheckpoint.cpp
+       ../Auxiliary/Filters/FilterHistoryPoints.cpp
 )
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 

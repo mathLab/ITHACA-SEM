@@ -92,18 +92,6 @@ namespace Nektar
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
 		::AllocateSharedPtr(m_session, m_graph);
 		
-        // Read and store history point data
-        m_historyPoints = MemoryManager<SpatialDomains::History>
-		::AllocateSharedPtr(m_graph);
-		
-        m_historyPoints->Read(m_filename);
-        if (m_historyPoints->GetNumHistoryPoints() > 0
-			&& !m_session->DefinesParameter("IO_HistorySteps"))
-        {
-            cout << "Warning: Must set IO_HistorySteps parameter to enable "
-					"output of history points." << endl;
-        }
-		
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
         
@@ -307,7 +295,6 @@ namespace Nektar
         Array<OneD, NekDouble> x(nq), y(nq), z(nq);
         m_fields[0]->GetCoords(x,y,z);
         m_spatialParameters->EvaluateParameters(x,y,z);
-        ScanForHistoryPoints();
 		
         // Zero all physical fields initially.
         ZeroPhysFields();
@@ -630,11 +617,6 @@ namespace Nektar
 			}//end of subdomain loop
 			
 			
-			//Write the history file
-			std::string outname = m_session->GetSessionName() + ".his";
-			std::ofstream hisFile (outname.c_str());
-			
-        
 			// Time loop
 			for(n = 0; n < m_steps; ++n)
 			{
@@ -696,7 +678,7 @@ namespace Nektar
 				}
 				
 				// Transform data if needed
-				if((m_historysteps && !((n+1)%m_historysteps)) || (n&&(!((n+1)%m_checksteps))))
+				if(n&&(!((n+1)%m_checksteps)))
 				{
 					for (int omega = 0; omega < m_domainsize; omega++)
 					{

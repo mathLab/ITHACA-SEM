@@ -75,8 +75,6 @@ namespace Nektar
     protected:
         /// Number of time steps between outputting status information.
         int                                             m_infosteps;
-        /// Number of time steps between outputting history points.
-        int                                             m_historysteps;
         /// The time integration method to use.
         LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
         /// The time integration scheme operators to use.

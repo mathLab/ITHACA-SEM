@@ -103,18 +103,6 @@ namespace Nektar
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
             ::AllocateSharedPtr(m_session, m_graph);
 
-        // Read and store history point data
-        m_historyPoints = MemoryManager<SpatialDomains::History>
-            ::AllocateSharedPtr(m_graph);
-
-        m_historyPoints->Read(m_filename);
-        if (m_historyPoints->GetNumHistoryPoints() > 0
-                && !m_session->DefinesParameter("IO_HistorySteps"))
-        {
-            cout << "Warning: Must set IO_HistorySteps parameter to enable "
-                    "output of history points." << endl;
-        }
-
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
         
@@ -506,7 +494,6 @@ namespace Nektar
         Array<OneD, NekDouble> x(nq), y(nq), z(nq);
         m_fields[0]->GetCoords(x,y,z);
         m_spatialParameters->EvaluateParameters(x,y,z);
-        ScanForHistoryPoints();
 
         if (m_session->DefinesFunction("BodyForce"))
         {
@@ -2006,156 +1993,6 @@ namespace Nektar
             {
                 m_fields[j]->WriteTecplotField(outfile,i);
             }
-        }
-    }
-
-    /**
-     *
-     */
-    void EquationSystem::ScanForHistoryPoints()
-    {
-        int i = 0;
-        int npoints = m_historyPoints->GetNumHistoryPoints();
-        Array<OneD, NekDouble>  gloCoord(3,0.0);
-        Array<OneD, int>        idList(npoints);
-        SpatialDomains::VertexComponentSharedPtr vtx;
-
-        m_historyList.clear();
-
-        // Determine the element in which each history point resides.
-        // If point is not in mesh (on this process), id is -1.
-        for (i = 0; i < npoints; ++i)
-        {
-            vtx = m_historyPoints->GetHistoryPoint(i);
-            vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-
-            idList[i] = m_fields[0]->GetExpIndex(gloCoord);
-
-            if (idList[i] != -1)
-            {
-                m_historyLocalPointMap[m_historyList.size()] = i;
-                m_historyList.push_back(
-                    std::pair<SpatialDomains::VertexComponentSharedPtr, int>(
-                                                            vtx, idList[i]));
-            }
-        }
-
-        // Collate the element ID list across processes
-        m_comm->AllReduce(idList, LibUtilities::ReduceMax);
-
-        // Check each history point has been located on one process
-        if (m_comm->GetRank() == 0)
-        {
-            for (i = 0; i < npoints; ++i)
-            {
-                vtx = m_historyPoints->GetHistoryPoint(i);
-                vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                ASSERTL0(idList[i] != -1, "History point " +
-                        boost::lexical_cast<std::string>(gloCoord[0]) + ", " +
-                        boost::lexical_cast<std::string>(gloCoord[1]) + ", " +
-                        boost::lexical_cast<std::string>(gloCoord[2]) +
-                        " cannot be found in the mesh.");
-            }
-        }
-    }
-
-    /**
-     * @todo Efficiency improvement required. PutPhysInToElmtExp needs to be
-     * called only once per field.
-     */
-    void EquationSystem::WriteHistoryData (std::ostream &out)
-    {
-        int k         = 0;
-        int numPoints = m_historyPoints->GetNumHistoryPoints();
-        int numFields = m_fields.num_elements();
-        Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
-        Array<OneD, NekDouble> gloCoord(3, 0.0);
-        std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
-
-        // Only the root process writes out history data
-        if (m_comm->GetRank() == 0)
-        {
-            static int  init = 1;
-
-            if(init)
-            {
-                out << "# History data for variables (:";
-
-                for (int j = 0; j < m_fields.num_elements(); ++j)
-                {
-                    out << m_boundaryConditions->GetVariable(j) <<",";
-                }
-
-                out << ") at points:" << endl;
-
-                for (k = 0; k < numPoints; ++k)
-                {
-                    m_historyPoints->GetHistoryPoint(k)->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-
-                    out << "# \t" << k;
-                    out.width(8);
-                    out << gloCoord[0];
-                    out.width(8);
-                    out << gloCoord[1];
-                    out.width(8);
-                    out << gloCoord[2];
-                    out << endl;
-                }
-                init = 0;
-            }
-
-            // Pull out data values field by field
-            for (int j = 0; j < m_fields.num_elements(); ++j)
-            {
-                if(m_fields[j]->GetPhysState() == false)
-                {
-                    m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
-                }
-                m_fields[j]->PutPhysInToElmtExp();
-                for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
-                {
-                    (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                    data[m_historyLocalPointMap[k]*numFields+j] = m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
-                }
-            }
-
-            // Exchange history data
-            // This could be improved to reduce communication but works for now
-            m_comm->AllReduce(data, LibUtilities::ReduceSum);
-
-            // Write data values point by point
-            for (k = 0; k < m_historyPoints->GetNumHistoryPoints(); ++k)
-            {
-                out.width(8);
-                out << m_time;
-                for (int j = 0; j < numFields; ++j)
-                {
-                    out.width(14);
-                    out << data[k*numFields+j];
-                }
-                out << endl;
-            }
-        }
-        else
-        {
-            // Pull out data values field by field
-            for (int j = 0; j < m_fields.num_elements(); ++j)
-            {
-                if(m_fields[j]->GetPhysState() == false)
-                {
-                    m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
-                }
-                m_fields[j]->PutPhysInToElmtExp();
-                for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
-                {
-                    (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                    data[m_historyLocalPointMap[k]*numFields+j] = m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
-                }
-            }
-
-            // Exchange history data
-            // This could be improved to reduce communication but works for now
-            m_comm->AllReduce(data, LibUtilities::ReduceSum);
         }
     }
 

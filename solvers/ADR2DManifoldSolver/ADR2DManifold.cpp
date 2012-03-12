@@ -1119,7 +1119,6 @@ namespace Nektar
             if(!((n+1)%m_infosteps))
             {
                 cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
-                WriteHistoryData(hisFile);
             }
 
             if(n&&(!((n+1)%m_checksteps)))

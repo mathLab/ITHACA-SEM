@@ -18,6 +18,7 @@ SET(ADRSolverSource
        ../Auxiliary/Filters/Filter.cpp
        ../Auxiliary/Filters/FilterThresholdMax.cpp
        ../Auxiliary/Filters/FilterCheckpoint.cpp
+       ../Auxiliary/Filters/FilterHistoryPoints.cpp
        ../Auxiliary/UnsteadySystem.cpp
        ../Auxiliary/EquationSystem.cpp)
 

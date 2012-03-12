@@ -41,7 +41,6 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <SpatialDomains/HistoryPoints.h>
 #include <SpatialDomains/SpatialData.h>
 
 #include <MultiRegions/ExpList.h>
@@ -352,15 +351,8 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
         /// Pointer to boundary conditions object.
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
-        /// Pointer to history data object.
-        SpatialDomains::HistorySharedPtr            m_historyPoints;
         /// Pointer to graph defining mesh.
         SpatialDomains::MeshGraphSharedPtr          m_graph;
-
-        std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
-                                                    m_historyList;
-        /// Maps index of local history points to the universal vector
-        std::map<int, int>                          m_historyLocalPointMap;
 
         SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
 

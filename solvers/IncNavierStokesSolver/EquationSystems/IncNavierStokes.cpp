@@ -110,7 +110,6 @@ namespace Nektar
         case eUnsteadyStokes:
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
             m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
-            m_session->LoadParameter("IO_HistorySteps", m_historysteps, 0);
             m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
             m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
             
@@ -222,16 +221,8 @@ namespace Nektar
         LibUtilities::TimeIntegrationSolutionSharedPtr 
             IntegrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
         
-        std::string   hisname = m_session->GetSessionName() + ".his";
-        std::ofstream hisFile;
-        
         std::string   mdlname = m_session->GetSessionName() + ".mdl";
         std::ofstream mdlFile;
-
-        if (m_historysteps)
-        {
-            hisFile.open(hisname.c_str());
-        }
 
         if (m_energysteps)
         {
@@ -250,19 +241,6 @@ namespace Nektar
             if(m_infosteps && !((n+1)%m_infosteps))
             {
                 cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-            }
-
-            // Write out history data to file
-            if(m_historysteps && !((n+1)%m_historysteps))
-            {
-				if(integrate_in_wave_space)
-				{
-					ASSERTL1(false,"History data output not implemented for wave space integration")
-				}
-				else 
-				{
-					WriteHistoryData(hisFile);
-				}
             }
 
             // Write out energy data to file
@@ -369,11 +347,6 @@ namespace Nektar
 		}
 		
         
-        if (m_historysteps)
-        {
-            hisFile.close();
-        }
-
         if (m_energysteps)
         {
             mdlFile.close();
@@ -458,18 +431,6 @@ namespace Nektar
 
         return returnval;
     }
-    
 
-    // case insensitive string comparison from web
 } //end of namespace
 
-/**
-* $Log: IncNavierStokes.cpp,v $
-* Revision 1.3  2010/01/28 15:16:03  abolis
-* Time-Dependent boundary conditions
-*
-* Revision 1.2  2009/09/06 22:31:15  sherwin
-* First working version of Navier-Stokes solver and input files
-*
-*
-**/

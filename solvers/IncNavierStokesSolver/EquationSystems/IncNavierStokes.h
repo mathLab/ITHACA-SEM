@@ -125,7 +125,6 @@ namespace Nektar
         NekDouble   m_kinvis;        ///< Kinematic viscosity
         int         m_infosteps;     ///< dump info to stdout at steps time
         int         m_energysteps;   ///< dump energy to file at steps time
-        int         m_historysteps;  ///< dump history to file at steps time
         int         m_steadyStateSteps; ///< Check for steady state at step interval
         NekDouble   m_steadyStateTol; ///< Tolerance to which steady state should be evaluated at
 

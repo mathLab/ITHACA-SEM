@@ -140,7 +140,15 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
             LOCAL_REGIONS_EXPORT virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
+            LOCAL_REGIONS_EXPORT virtual 
+                StdRegions::FaceOrientation v_GetFaceOrient(int face);
+            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
+                const int face,
+                const StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                const Array<OneD,const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray);
 
+            LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
             
             //---------------------------------------
             // Operator creation functions

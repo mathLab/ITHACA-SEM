@@ -693,10 +693,21 @@ namespace Nektar
         {
             int i,n;
             int offset = 0;
-            int nzmodes = m_homogeneousBasis->GetNumModes();
+            int nzmodes; 
             int datalen = fielddata.size()/fielddef->m_fields.size();
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
+            
 
+            for(i = 0; i < fielddef->m_basis.size(); ++i)
+            {
+                if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
+                {
+                    nzmodes = fielddef->m_numModes[i];
+                    break;
+                }
+            }
+            ASSERTL1(i != fielddef->m_basis.size()," Failed to determine number of modes");
+            
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)
             {
@@ -706,9 +717,9 @@ namespace Nektar
                 }
                 offset += datalen;
             }
-
+            
             ASSERTL0(i!= fielddef->m_fields.size(),"Field not found in data file");
-
+            
             // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
@@ -717,13 +728,28 @@ namespace Nektar
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 
+            int modes_offset = 0;
+            Array<OneD, NekDouble> coeff_tmp;             
             for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
                 int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
-                int datalen = (*m_exp)[eid]->GetNcoeffs();
+                int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_numModes,modes_offset);
+                if(fielddef->m_uniOrder == true) // reset modes_offset to zero
+                {
+                    modes_offset = 0;
+                }
+
                 for(n = 0; n < nzmodes; ++n)
                 {
-                    Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid] + n*ncoeffs_per_plane],1);
+                    if(datalen == (*m_exp)[eid]->GetNcoeffs())
+                    {
+                        Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid]+ n*ncoeffs_per_plane],1);
+                    }
+                    else // unpack data to new order
+                    {
+                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid] + n*ncoeffs_per_plane);
+                    }
+                    
                     offset += datalen;
                 }
             }
@@ -731,7 +757,7 @@ namespace Nektar
 		
 		
 		
-		//Extract the data in fielddata into the m_coeff list (for 2D files into 3D cases)
+        //Extract the data in fielddata into the m_coeff list (for 2D files into 3D cases)
         void ExpListHomogeneous1D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
         {
             int i,n;
@@ -761,8 +787,9 @@ namespace Nektar
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 			
-			  Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[0],1);
-			
+
+            Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[0],1);
+                          
         }
 		
 

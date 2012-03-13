@@ -63,6 +63,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    std::cout<<"=======================================================\n";
+    std::cout<<"PROGRAM TO COMPUTE THE BLASIUS AND THE FALKNER-SKAN BLs\n";
+    std::cout<<"=======================================================\n";
+    std::cout<<"WARNING: The mesh must have a block in which is contained\n";
+    std::cout<<"the boundary layer and part of the farfield.\n";
+    std::cout<<"-------------------------------------------------------\n";
+
     //! Reading the session file
     LibUtilities::SessionReaderSharedPtr vSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
     //! Reading the mesh from session file
@@ -76,12 +83,13 @@ int main(int argc, char *argv[])
     NekDouble x;
     NekDouble nu;
     NekDouble C;
-    
-    vSession->LoadParameter("Re",       Re,     1.0);
-    vSession->LoadParameter("L",        L,      1.0);
-    vSession->LoadParameter("U_inf",    U_inf,  1.0);
-    vSession->LoadParameter("x",        x,      1.0);
+    int nElement_yBL;
 
+    vSession->LoadParameter("Re",               Re,             1.0);
+    vSession->LoadParameter("L",                L,              1.0);
+    vSession->LoadParameter("U_inf",            U_inf,          1.0);
+    vSession->LoadParameter("x",                x,              1.0);
+    vSession->LoadParameter("BL_mesh_layers",   nElement_yBL,   1.0);
     
     /*  Read in mesh from input file and create an object of class 
      *  MeshGraph1D to encaplusate the mesh
@@ -98,7 +106,7 @@ int main(int argc, char *argv[])
     //! Get the total number of elements
     int nElements;
     nElements = Domain->GetExpSize();
-    std::cout << "Number of elements          = " << nElements << std::endl;
+    std::cout << "Number of elements           = " << nElements << std::endl;
     
     /*  Get the total number of quadrature points (depends on n. modes)
      *  For nodal expansion the number of physical points is equal 
@@ -106,9 +114,8 @@ int main(int argc, char *argv[])
      */
     int nQuadraturePts;
     nQuadraturePts = Domain->GetTotPoints();
-    std::cout << "Number of quadrature points = " << nQuadraturePts << std::endl;
+    std::cout << "Number of quadrature points  = " << nQuadraturePts << std::endl;
 
-    
     /*  Create 3 arrays "x_QuadraturePts", "y_QuadraturePts", "z_QuadraturePts" 
      *  to hold the coordinates values and fill it up with the the function GetCoords 
      */
@@ -120,6 +127,7 @@ int main(int argc, char *argv[])
     z_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts);
     Domain->GetCoords(x_QuadraturePts,y_QuadraturePts,z_QuadraturePts);
     
+    //! Checking how the quadrature points are ordered
     FILE *qdpoints_data; 
     qdpoints_data = fopen("qdpoints_data.txt","w+"); 
     for(j=0; j<=nQuadraturePts-1;j++)
@@ -127,26 +135,6 @@ int main(int argc, char *argv[])
         fprintf(qdpoints_data,"%f %f %f\n", x_QuadraturePts[j], y_QuadraturePts[j], z_QuadraturePts[j]);
     }
     fclose(qdpoints_data);
-    
-    //! Temporary check of the coordinates 
-    if(inspection == 0)
-    {
-        std::cout << "xqPts0 = " << x_QuadraturePts[0] << std::endl;
-        std::cout << "yqPts0 = " << y_QuadraturePts[0] << std::endl;
-        std::cout << "zqPts0 = " << z_QuadraturePts[0] << std::endl;
-    
-        std::cout << "xqPts1 = " << x_QuadraturePts[1] << std::endl;
-        std::cout << "yqPts1 = " << y_QuadraturePts[1] << std::endl;
-        std::cout << "zqPts1 = " << z_QuadraturePts[1] << std::endl;
-    
-        std::cout << "xqPts2 = " << x_QuadraturePts[2] << std::endl;
-        std::cout << "yqPts2 = " << y_QuadraturePts[2] << std::endl;
-        std::cout << "zqPts2 = " << z_QuadraturePts[2] << std::endl;
-    
-        std::cout << "xqPts4 = " << x_QuadraturePts[4] << std::endl;
-        std::cout << "yqPts4 = " << y_QuadraturePts[4] << std::endl;
-        std::cout << "zqPts4 = " << z_QuadraturePts[4] << std::endl;
-    }
     
     //! Interface points
     int nInterfacePts;
@@ -164,6 +152,8 @@ int main(int argc, char *argv[])
     {
         graphShPt->GetVertex(i)->GetCoords(x_InterfacePts[i],y_InterfacePts[i],z_InterfacePts[i]);
     }
+    
+    
     
     /* ----------------------------------------------------------------------------------------
      * Getting the number of quadrature points and the coordinates along x and y directions
@@ -249,18 +239,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    //! Temporary check of the data extraction
-    if(inspection == 0)
-    {
-        for (j = 0; j <= 2; j++)
-        {
-            for (i=0; i<=numLines-1; i++) 
-            {
-                std::cout<<"GlobalArray:   " << setprecision (16) << GlobalArray[i][j]<< std::endl;            
-            }
-        }
-    }
-    
     //! Definition of the arrays for BL computations
     Array<OneD,NekDouble> eta;
     Array<OneD,NekDouble> f;
@@ -294,17 +272,6 @@ int main(int argc, char *argv[])
         u[i]   = U_inf*df[i];
         v[i]   = nu*sqrt(U_inf/(2*nu*x))*(y[i]*sqrt(U_inf/(2*nu*x))*df[i] - f[i]);
     }
-    
-    //! Temporary check of the physical variables
-    if(inspection == 0)
-    {
-        for (i=0; i<=numLines-1; i++) 
-        {
-            std::cout<<"y:   " << setprecision (16) << y[i] << std::endl;  
-            std::cout<<"u:   " << setprecision (16) << u[i] << std::endl;            
-            std::cout<<"v:   " << setprecision (16) << v[i] << std::endl;            
-        }
-    }
 
     //! Reordering y grid points
     for(j=0; j<=nQuadraturePts_y-1; j++)
@@ -320,15 +287,6 @@ int main(int argc, char *argv[])
         }
     }
     
-    //! Temporary check of the physical variables
-    if(inspection == 0)
-    {
-        for(j=0; j<=nQuadraturePts_y-1; j++)
-        {
-            std::cout << "y_QuadPts = " << y_QuadraturePts_y[j] << std::endl;
-        }
-    }
-    
     //! Piecewise linear interpolation of the blasius profile along y lagrangian points ------------
     k = 0;
     Array<OneD,NekDouble> uk;
@@ -341,17 +299,18 @@ int main(int argc, char *argv[])
         while((y_QuadraturePts_y[k] >= y[i]) & (y_QuadraturePts_y[k] <= y[i+1])) 
         {
             uk[k] = (y_QuadraturePts_y[k] - y[i])*(u[i+1] - u[i])/(y[i+1] - y[i]) + u[i];
+            vk[k] = (y_QuadraturePts_y[k] - y[i])*(v[i+1] - v[i])/(y[i+1] - y[i]) + v[i];
             k = k+1;
             if (k == nQuadraturePts_y + 1) break;
         }
     }
     
-    
+    //! Checking the interpolation
     FILE *original_data; 
     original_data = fopen("original_data.txt","w+"); 
     for(j=0; j<=numLines-1;j++)
     {
-        fprintf(original_data,"%f %f\n", y[j], u[j]);
+        fprintf(original_data,"%f %f %f\n", y[j], u[j], v[j]);
     }
     fclose(original_data);
     
@@ -359,16 +318,22 @@ int main(int argc, char *argv[])
     interpolation_data = fopen("interpolation_data.txt","w+"); 
     for(j=0; j<=nQuadraturePts_y-1;j++)
     {
-        fprintf(interpolation_data,"%f %f\n", y_QuadraturePts_y[j], uk[j]);
+        fprintf(interpolation_data,"%f %f %f\n", y_QuadraturePts_y[j], uk[j], vk[j]);
     }
     fclose(interpolation_data);
     //! --------------------------------------------------------------------------------------------
 
     
     
-    //! Definition of the 2D expansion using the mesh data specified on the session file ----------  
-    MultiRegions::ExpList2DSharedPtr Exp2D;
-    Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
+    //! Definition of the 2D expansion using the mesh data specified on the session file ----------
+    MultiRegions::ExpList2DSharedPtr Exp2D_uk;
+    Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
+    
+    MultiRegions::ExpList2DSharedPtr Exp2D_vk;
+    Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
+    
+    MultiRegions::ExpList2DSharedPtr Exp2D_pk;
+    Exp2D_pk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
     //! --------------------------------------------------------------------------------------------
 
     
@@ -383,21 +348,32 @@ int main(int argc, char *argv[])
      *          5) Only field u at the moment --> v and p are coming.
      */
     
+    m = 0;
+    int numModes = 9;
+    int nElement_x = nQuadraturePts_x/(numModes+1);
+    int nElement_y = nQuadraturePts_y/(numModes+1);
+
     Array<OneD,NekDouble> ukGlobal;
     ukGlobal = Array<OneD,NekDouble>(nQuadraturePts);
-    m = 0;
-    int numModes = 3;
-    int nElement_x = nQuadraturePts_x/(numModes+1);
-    std::cout<< "nElement_x = " << nElement_x << std::endl;
+    Array<OneD,NekDouble> vkGlobal;
+    vkGlobal = Array<OneD,NekDouble>(nQuadraturePts);
+    Array<OneD,NekDouble> pkGlobal;
+    pkGlobal = Array<OneD,NekDouble>(nQuadraturePts);
+
+    std::cout<< "Elements along x             = " << nElement_x << std::endl;
+    std::cout<< "Elements along y             = " << nElement_y << std::endl;
+    std::cout<< "Elements along within the BL = " << nElement_yBL << std::endl;
     
     //! Loops on the BL refinement block
     for(xElement=0; xElement<=nElement_x-1; xElement++)
     {
-        for(yLevel=0; yLevel<=55; yLevel++)
+        for(yLevel=0; yLevel<=(numModes+1)*nElement_yBL - 1; yLevel++)
         {
-            for(j=0; j<=3; j++)
+            for(j=0; j<=numModes; j++)
             {
                 ukGlobal[m] = uk[yLevel];
+                vkGlobal[m] = vk[yLevel];
+                pkGlobal[m] = 0.0;
                 m = m+1;
             }
         }
@@ -407,167 +383,61 @@ int main(int argc, char *argv[])
     for(i=m; i<=nQuadraturePts-1; i++)
     {
         ukGlobal[i] = uk[nQuadraturePts_y-1];
+        vkGlobal[i] = vk[nQuadraturePts_y-1];
+        pkGlobal[i] = 0.0;
     }
   
-    //! Temporary check of the physical variables
-    if(inspection == 0)
-    {
-    std::cout << "i = " << i << std::endl;
-    std::cout << "m = " << m << std::endl;
-    std::cout << "yLevel = " << yLevel << std::endl;
-
-    std::cout << "ukGlobal = " << ukGlobal[0] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[1] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[2] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[3] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[4] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[5] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[6] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[7] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[8] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[9] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[10] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[11] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[56*4-4] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4-3] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4-2] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4-1] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[56*4] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+1] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+2] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+3] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[56*4+4] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+5] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+6] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+7] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[56*4+8] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+9] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+10] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[56*4+11] << std::endl;
-    
-    std::cout << "ukGlobal = " << ukGlobal[136*88-1] << std::endl;
-    std::cout << "ukGlobal = " << ukGlobal[136*88] << std::endl;
-    }
-    
     //! Copying the ukGlobal vector (with the same pattern of m_phys) in m_phys 
-    Vmath::Vcopy(nQuadraturePts, ukGlobal, 1, Exp2D->UpdatePhys(), 1);
-    
-    //! Expansion coefficient extraction (necessary to write the .fld file)
-    Exp2D->FwdTrans(Exp2D->GetPhys(), Exp2D->UpdateCoeffs());
+    Vmath::Vcopy(nQuadraturePts, ukGlobal, 1, Exp2D_uk->UpdatePhys(), 1);
+    Vmath::Vcopy(nQuadraturePts, vkGlobal, 1, Exp2D_vk->UpdatePhys(), 1);
+    Vmath::Vcopy(nQuadraturePts, pkGlobal, 1, Exp2D_pk->UpdatePhys(), 1);
+
+    //! Initialisation of the ExpList Exp
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(3);
+    Exp[0] = Exp2D_uk;
+    Exp[1] = Exp2D_vk;
+    Exp[2] = Exp2D_pk;
+
+    //! Expansion coefficient extraction (necessary to write the .fld file)    
+    Exp[0]->FwdTrans(Exp2D_uk->GetPhys(),Exp[0]->UpdateCoeffs());
+    Exp[1]->FwdTrans(Exp2D_vk->GetPhys(),Exp[1]->UpdateCoeffs());
+    Exp[2]->FwdTrans(Exp2D_pk->GetPhys(),Exp[2]->UpdateCoeffs());
     //! --------------------------------------------------------------------------------------------
 
 
     
     //! Generation .FLD file with one field only (at the moment) -----------------------------------
+    //! Definition of the name of the .fld file
     string blasius = "blasius.fld";
-    int nFields = 1;
     
-    //! Only 1 field at the moment ===> Getting the field definition
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp2D->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    //! Writing the .fld file
-    for(j = 0; j <= nFields - 1; j++)
-    {
-		for(i = 0; i < FieldDef.size(); i++)
-		{
-            FieldDef[i]->m_fields.push_back("w");
-			Exp2D->AppendFieldData(FieldDef[i], FieldData[i]);
-		}
-    }
-    graphShPt->Write(blasius, FieldDef, FieldData);
-    //! --------------------------------------------------------------------------------------------
-
+    //! Definition of the number of the fields
+    int nFields = 3;    
     
-    
-    //! WORK IN PROGRESS. Gianmarco +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
-    //----------------------------------------------
-    // Define Expansion
-    /*
-    int expdim  = graphShPt->GetMeshDimension();
-    int nfields = fielddef[0]->m_fields.size();
-    int addfields = 1;
-    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + addfields);
-	
-    MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
-
-    // Define Homogeneous expansion
-    int nplanes = fielddef[0]->m_numModes[1];
-
-    // Choose points to be at evenly spaced points
-    const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
-    const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
-    NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
-
-    Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,ly,useFFT,graphShPt);
-    Exp[0] = Exp2DH1;
-
-    for(i = 1; i < nfields; ++i)
-    {
-        Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
-    }
-    //----------------------------------------------
-
-    
-    //----------------------------------------------
-    // Compute gradients of fields and compute reentricity
-    ASSERTL0(nfields >= 2, "Need two fields (u,v) to add reentricity");
-    int nq = Exp[0]->GetNpoints();
-    Array<OneD, NekDouble> grad_u[2], grad_v[2];
-    Array<OneD, NekDouble> mag_cross(nq);
-    for (i = 0; i < 2; ++i)
-    {
-    	grad_u[i] = Array<OneD,NekDouble>(nq);
-    	grad_v[i] = Array<OneD,NekDouble>(nq);
-    }
-    Exp[0]->PhysDeriv(Exp[0]->GetPhys(), grad_u[0], grad_u[1]);
-    Exp[1]->PhysDeriv(Exp[1]->GetPhys(), grad_v[0], grad_v[1]);
-
-    // Compute cross product magnitude
-    for (i = 0; i < nq; ++i)
-    {
-    	mag_cross[i] = grad_u[0][i] * grad_v[1][i] - grad_u[1][i] * grad_v[0][i];
-    }
-    Exp[nfields]->FwdTrans(mag_cross, Exp[nfields]->UpdateCoeffs());
-    //----------------------------------------------
-
-    
-
-    //-----------------------------------------------
-    // Write solution to file with additional computed fields
-    string  fldfilename(argv[2]);
-    string  out = fldfilename.substr(0, fldfilename.find_last_of("."));
-    string  endfile("_add.fld");
-    out +=  endfile;
-     
+    //! Definition of the Field
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for(j = 0; j < nfields + addfields; ++j)
+        
+    for(j = 0; j < nFields; ++j)
     {
 		for(i = 0; i < FieldDef.size(); ++i)
 		{
-			if (j >= nfields)
-			{
-				FieldDef[i]->m_fields.push_back("w");
-			}
-			else
-			{
-				FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
-			}
-			Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-		}
-    }
-    graphShPt->Write(out, FieldDef, FieldData);
-     */
-    //-----------------------------------------------
+            if(j == 0)
+            {
+                FieldDef[i]->m_fields.push_back("u");
+            }
+            else if(j == 1)
+            {
+                FieldDef[i]->m_fields.push_back("v");
+            }
+            else if(j == 2)
+            {
+                FieldDef[i]->m_fields.push_back("p");
+            }
+            Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+        }
+    }    
+    graphShPt->Write(blasius, FieldDef, FieldData);
+    std::cout<<"-------------------------------------------------------\n";
 
     return 0;
 }

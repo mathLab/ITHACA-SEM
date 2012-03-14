@@ -63,18 +63,21 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    std::cout<<"=======================================================\n";
-    std::cout<<"PROGRAM TO COMPUTE THE BLASIUS AND THE FALKNER-SKAN BLs\n";
-    std::cout<<"=======================================================\n";
-    std::cout<<"WARNING: The mesh must have a block in which is contained\n";
-    std::cout<<"the boundary layer and part of the farfield.\n";
-    std::cout<<"-------------------------------------------------------\n";
+    std::cout<<"============================================================\n";
+    std::cout<<"PROGRAM TO COMPUTE THE BLASIUS AND THE FALKNER-SKAN BLs     \n";
+    std::cout<<"============================================================\n";
+    std::cout<<"LIMITATIONS:\n"; 
+    std::cout<<"1) The mesh must have a block in which is contained\n";
+    std::cout<<"the entire boundary layer and part of the farfield.\n";
+    std::cout<<"2) The data file must be well resolved within the BL.\n";
+    std::cout<<"3) At the moment I am not reading the nummodes from \n";
+    std::cout<<"the session file\n";
+    std::cout<<"4) You need to manually specify the number of elements\n";
+    std::cout<<"within the block of the BL.\n";
+    std::cout<<"------------------------------------------------------------\n";
 
     //! Reading the session file
     LibUtilities::SessionReaderSharedPtr vSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
-    //! Reading the mesh from session file
-    //string meshfile(argv[argc-2]);
-    //SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     
     //! Loading the parameters to define the BL
     NekDouble Re;
@@ -83,14 +86,28 @@ int main(int argc, char *argv[])
     NekDouble x;
     NekDouble nu;
     NekDouble C;
-    int nElement_yBL;
+    int nElements_yBL;
 
     vSession->LoadParameter("Re",               Re,             1.0);
     vSession->LoadParameter("L",                L,              1.0);
     vSession->LoadParameter("U_inf",            U_inf,          1.0);
     vSession->LoadParameter("x",                x,              1.0);
-    vSession->LoadParameter("BL_mesh_layers",   nElement_yBL,   1.0);
+    vSession->LoadParameter("BL_mesh_layers",   nElements_yBL,   1.0);
     
+    std::cout<<"************************************************************\n";
+    std::cout<<"PHYSICAL DATA FROM THE SESSION FILE:\n";
+    std::cout << "Reynolds number                               = " << Re            << std::endl;
+    std::cout << "Characteristic length [m]                     = " << L             << std::endl;
+    std::cout << "U_infinity [m/s]                              = " << U_inf         << std::endl;
+    std::cout << "Position x (parallel case only) [m]           = " << x             << std::endl;
+    std::cout << "Number of mesh layers within the BL block [m] = " << nElements_yBL << std::endl;
+    std::cout<<"************************************************************\n";
+    std::cout<<"------------------------------------------------------------\n";
+    std::cout<<"MESH and EXPANSION DATA:\n";
+
+
+
+
     /*  Read in mesh from input file and create an object of class 
      *  MeshGraph1D to encaplusate the mesh
      */
@@ -360,14 +377,16 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble> pkGlobal;
     pkGlobal = Array<OneD,NekDouble>(nQuadraturePts);
 
-    std::cout<< "Elements along x             = " << nElement_x << std::endl;
-    std::cout<< "Elements along y             = " << nElement_y << std::endl;
-    std::cout<< "Elements along within the BL = " << nElement_yBL << std::endl;
+    std::cout<< "Elements along x             = " << nElement_x     << std::endl;
+    std::cout<< "Elements along y             = " << nElement_y     << std::endl;
+    std::cout<< "Elements along within the BL = " << nElements_yBL   << std::endl;
+    std::cout<< "Number of modes              = " << numModes       << std::endl;
+
     
     //! Loops on the BL refinement block
     for(xElement=0; xElement<=nElement_x-1; xElement++)
     {
-        for(yLevel=0; yLevel<=(numModes+1)*nElement_yBL - 1; yLevel++)
+        for(yLevel=0; yLevel<=(numModes+1)*nElements_yBL - 1; yLevel++)
         {
             for(j=0; j<=numModes; j++)
             {
@@ -437,7 +456,7 @@ int main(int argc, char *argv[])
         }
     }    
     graphShPt->Write(blasius, FieldDef, FieldData);
-    std::cout<<"-------------------------------------------------------\n";
+    std::cout<<"------------------------------------------------------------\n";
 
     return 0;
 }

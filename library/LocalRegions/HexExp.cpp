@@ -413,7 +413,7 @@ namespace Nektar
          * rule in order to incorporate the geometric factors. Assuming that
          * the basis functions are a tensor product
          * \f$\phi_{pqr}(\xi_1,\xi_2,\xi_3) =
-         * \phi_p(\xi_1)\phi_q(\xi_2)\phi_r(\xi_3)\f$, in the hexahedral
+         * \phi_1(\xi_1)\phi_2(\xi_2)\phi_3(\xi_3)\f$, in the hexahedral
          * element, this is straightforward and yields the result
          * 
          * \f[

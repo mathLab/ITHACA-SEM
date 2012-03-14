@@ -1047,9 +1047,9 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            int P = m_base[0]->GetNumModes();
-            int Q = m_base[1]->GetNumModes();
-            int R = m_base[2]->GetNumModes();
+            int P = m_base[0]->GetNumModes()-1;
+            int Q = m_base[1]->GetNumModes()-1;
+            int R = m_base[2]->GetNumModes()-1;
             
             return (P+1)*(Q+1)               // 1 rect. face on base
                 + 2*(Q+1)*(R+1)              // other 2 rect. faces
@@ -1111,6 +1111,47 @@ namespace Nektar
             else
             {
                 return Qi * Ri;
+            }
+        }
+        
+        int StdPrismExp::v_GetFaceNumPoints(const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
+            
+            if (i == 0)
+            {
+                return m_base[0]->GetNumPoints()*
+                       m_base[1]->GetNumPoints();
+            }
+            else if (i == 1 || i == 3)
+            {
+                return m_base[0]->GetNumPoints()*
+                       m_base[2]->GetNumPoints();
+            }
+            else
+            {
+                return m_base[1]->GetNumPoints()*
+                       m_base[2]->GetNumPoints();
+            }
+        }
+
+        LibUtilities::PointsKey StdPrismExp::v_GetFacePointsKey(
+            const int i, const int j) const
+        {
+            ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
+            ASSERTL2(j == 0 || j == 1, "face direction is out of range");
+            
+            if (i == 0)
+            {
+                return m_base[j]->GetPointsKey();
+            }
+            else if (i == 1 || i == 3)
+            {
+                return m_base[2*j]->GetPointsKey();
+            }
+            else
+            {
+                return m_base[j+1]->GetPointsKey();
             }
         }
 

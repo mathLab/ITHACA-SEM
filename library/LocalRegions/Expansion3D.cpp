@@ -138,9 +138,8 @@ namespace Nektar
                  */ 
                 if (locExp->GetRightAdjacentElementFace() != -1)
                 {
-                    if (GetGeom3D()->GetFid(locExp->GetRightAdjacentElementFace()) ==
-                        locExp->GetRightAdjacentElementExp()->GetGeom3D()->
-                        GetFid(locExp->GetRightAdjacentElementFace()))
+                    if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
+                        == GetGeom3D()->GetGlobalID())
                     {
                         Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
                     }

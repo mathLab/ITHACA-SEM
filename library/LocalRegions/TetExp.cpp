@@ -197,21 +197,21 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul  (nquad0*nquad1*nquad2,gmat[0][0],&Diff0[0],1, &out_d0[0], 1);
+                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[0][0],&Diff0[0],1, &out_d0[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[1][0],&Diff1[0],1, &out_d0[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[2][0],&Diff2[0],1, &out_d0[0], 1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul  (nquad0*nquad1*nquad2,gmat[3][0],&Diff0[0],1, &out_d1[0], 1);
+                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[3][0],&Diff0[0],1, &out_d1[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[4][0],&Diff1[0],1, &out_d1[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[5][0],&Diff2[0],1, &out_d1[0], 1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul  (nquad0*nquad1*nquad2,gmat[6][0],&Diff0[0],1, &out_d2[0], 1);
+                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[6][0],&Diff0[0],1, &out_d2[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[7][0],&Diff1[0],1, &out_d2[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[8][0],&Diff2[0],1, &out_d2[0], 1);
                 }
@@ -310,6 +310,36 @@ namespace Nektar
             StdTetExp::v_IProductWRTBase(tmp,outarray);
         }
 
+        /**
+         * @brief Calculates the inner product \f$ I_{pqr} = (u,
+         * \partial_{x_i} \phi_{pqr}) \f$.
+         * 
+         * The derivative of the basis functions is performed using the chain
+         * rule in order to incorporate the geometric factors. Assuming that
+         * the basis functions are a tensor product
+         * \f$\phi_{pqr}(\eta_1,\eta_2,\eta_3) =
+         * \phi_1(\eta_1)\phi_2(\eta_2)\phi_3(\eta_3)\f$, this yields the
+         * result
+         * 
+         * \f[
+         * I_{pqr} = \sum_{j=1}^3 \left(u, \frac{\partial u}{\partial \eta_j}
+         * \frac{\partial \eta_j}{\partial x_i}\right)
+         * \f]
+         * 
+         * In the prismatic element, we must also incorporate a second set of
+         * geometric factors which incorporate the collapsed co-ordinate
+         * system, so that
+         * 
+         * \f[ \frac{\partial\eta_j}{\partial x_i} = \sum_{k=1}^3
+         * \frac{\partial\eta_j}{\partial\xi_k}\frac{\partial\xi_k}{\partial
+         * x_i} \f]
+         * 
+         * These derivatives can be found on p152 of Sherwin & Karniadakis.
+         * 
+         * @param dir       Direction in which to take the derivative.
+         * @param inarray   The function \f$ u \f$.
+         * @param outarray  Value of the inner product.
+         */
         void TetExp::v_IProductWRTDerivBase(
             const int                           dir, 
             const Array<OneD, const NekDouble> &inarray, 
@@ -321,28 +351,25 @@ namespace Nektar
             int order0 = m_base[0]->GetNumModes ();
             int order1 = m_base[1]->GetNumModes ();
             int nqtot  = nquad0*nquad1*nquad2;
-            int i, j;
+            int i, j, k, n;
 
             const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
             const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
             
-            Array<OneD, NekDouble> gfac0(nquad0   );
-            Array<OneD, NekDouble> gfac1(nquad1   );
-            Array<OneD, NekDouble> gfac2(nquad2   );
-            Array<OneD, NekDouble> h0   (nqtot    );
-            Array<OneD, NekDouble> h1   (nqtot    );
-            Array<OneD, NekDouble> h2   (nqtot    );
-            Array<OneD, NekDouble> h3   (nqtot    );
-            Array<OneD, NekDouble> tmp1 (nqtot    );
-            Array<OneD, NekDouble> tmp2 (nqtot    );
-            Array<OneD, NekDouble> tmp3 (nqtot    );
-            Array<OneD, NekDouble> tmp4 (nqtot    );
+            Array<OneD, NekDouble> h0   (nqtot);
+            Array<OneD, NekDouble> h1   (nqtot);
+            Array<OneD, NekDouble> h2   (nqtot);
+            Array<OneD, NekDouble> h3   (nqtot);
+            Array<OneD, NekDouble> tmp1 (nqtot);
+            Array<OneD, NekDouble> tmp2 (nqtot);
+            Array<OneD, NekDouble> tmp3 (nqtot);
+            Array<OneD, NekDouble> tmp4 (nqtot);
             Array<OneD, NekDouble> tmp5 (m_ncoeffs);
             Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (nquad1*nquad2*order0 +
                                          nquad2*order0*(order1+1)/2);
-
+            
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -353,15 +380,11 @@ namespace Nektar
             }
             else
             {
-                Vmath::Smul(nqtot, gmat[3*dir][0],  inarray.get(),1,tmp1.get(), 1);
+                Vmath::Smul(nqtot, gmat[3*dir  ][0],inarray.get(),1,tmp1.get(), 1);
                 Vmath::Smul(nqtot, gmat[3*dir+1][0],inarray.get(),1,tmp2.get(), 1);
                 Vmath::Smul(nqtot, gmat[3*dir+2][0],inarray.get(),1,tmp3.get(), 1);
             }
             
-            MultiplyByQuadratureMetric(tmp1,tmp1);
-            MultiplyByQuadratureMetric(tmp2,tmp2);
-            MultiplyByQuadratureMetric(tmp3,tmp3);
-
             for(j = 0; j < nquad2; ++j)
             {
                 for(i = 0; i < nquad1; ++i)
@@ -376,12 +399,13 @@ namespace Nektar
             {
                 Blas::Dscal(nquad1*nquad2, 1+z0[i], &h1[0]+i, nquad0);
             }
-
+            
             // Assemble terms for first IP.
             Vmath::Zero   (nqtot, tmp4, 1);
             Vmath::Vvtvvtp(nqtot, &tmp1[0], 1, &h0[0], 1, &tmp2[0], 1, &h1[0], 1, &tmp4[0], 1);
             Vmath::Vvtvp  (nqtot, &tmp3[0], 1, &h1[0], 1, &tmp4[0], 1, &tmp4[0], 1);
-            
+
+            MultiplyByQuadratureMetric(tmp4,tmp4);
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
                                          m_base[2]->GetBdata (),
@@ -392,6 +416,7 @@ namespace Nektar
             Vmath::Zero   (nqtot, tmp4, 1);
             Vmath::Vvtvvtp(nqtot, &tmp2[0], 1, &h2[0], 1, &tmp3[0], 1, &h3[0], 1, &tmp4[0], 1);
             
+            MultiplyByQuadratureMetric(tmp4,tmp4);
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
                                          m_base[1]->GetDbdata(),
                                          m_base[2]->GetBdata (),
@@ -399,12 +424,14 @@ namespace Nektar
                                          true,true,true);
 
             // Do third IP.
+            MultiplyByQuadratureMetric(tmp3,tmp3);
             IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
                                          m_base[1]->GetBdata (),
                                          m_base[2]->GetDbdata(),
                                          tmp3,outarray,wsp,
                                          true,true,true);
-            
+
+            // Sum contributions.
             Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
             Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
         }
@@ -689,97 +716,70 @@ namespace Nektar
             int nquad2 = m_base[2]->GetNumPoints();
 
             Array<OneD,const NekDouble> e_tmp;
-            Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
-
+            Array<OneD,NekDouble>       o_tmp (GetFaceNumPoints(face));
+            Array<OneD,NekDouble>       o_tmp2(FaceExp->GetTotPoints());
+            Array<OneD,NekDouble>       o_tmp3;
             StdRegions::FaceOrientation facedir = GetFaceOrient(face);
 
             switch(face)
             {
-            case 0:
-	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
-	        {
-                    //Directions A and B positive
-                    Vmath::Vcopy(nquad0*nquad1,inarray,1,o_tmp,1);
-                }
-                else
+                case 0:
                 {
-                    //Direction A negative and B positive
-                    for (int j=0; j<nquad1; j++)
-                    {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+j*nquad0,-1,o_tmp=outarray+(j*nquad0),1);
-                    }
-                    o_tmp=outarray;
+                    //Directions A and B positive
+                    Vmath::Vcopy(nquad0*nquad1,inarray.get(),1,o_tmp.get(),1);
+                    //interpolate
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    break;
                 }
-                //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp,
-                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-	        break;
-	    case 1:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                case 1:
                 {
                     //Direction A and B positive
                     for (int k=0; k<nquad2; k++)
                     {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*k),1,o_tmp=outarray+(k*nquad0),1);
+                        Vmath::Vcopy(nquad0,inarray.get()+(nquad0*nquad1*k),1,o_tmp.get()+(k*nquad0),1);
                     }
-                    //Vmath::Vcopy(nquad0*nquad2,&outarray[0],1,&o_tmp[0],1);
-                    o_tmp=outarray;
+                    //interpolate
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    break;
                 }
-                else
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0-1)+(nquad0*nquad1*k),-1,o_tmp=outarray+(k*nquad0),1);
-                    }
-                    o_tmp=outarray;
-                }
-
-                //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
-                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-                break;
-            case 2:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                case 2:
                 {
                     //Directions A and B positive
-                    Vmath::Vcopy(nquad1*nquad2,e_tmp=inarray+(nquad0-1),nquad0,o_tmp,1);
+                    Vmath::Vcopy(nquad1*nquad2,inarray.get()+(nquad0-1),nquad0,o_tmp.get(),1);
+                    //interpolate
+                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    break;
                 }
-                else
-                {
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        Vmath::Vcopy(nquad1,e_tmp=inarray+(nquad0*nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad1),1);
-                    }
-                    o_tmp=outarray;
-                }
-                //interpolate
-                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
-                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
-                break;
-            case 3:
-	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                case 3:
                 {
                     //Directions A and B positive
-                    Vmath::Vcopy(nquad1*nquad2,inarray,nquad0,o_tmp,1);
-	        }
-	        else
-		{
-                    //Direction A negative and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-		        Vmath::Vcopy(nquad1,e_tmp=inarray+nquad0*(nquad1-1)+(k*nquad0*nquad1),-nquad0,o_tmp=outarray+(k*nquad1),1);
-                    }
-                    o_tmp=outarray;
-		}
-                //interpolate
-                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
-                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
+                    Vmath::Vcopy(nquad1*nquad2,inarray.get(),nquad0,o_tmp.get(),1);
+                    //interpolate
+                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                }
                 break;
             default:
                 ASSERTL0(false,"face value (> 3) is out of range");
                 break;
+            }
+
+            int nq1 = FaceExp->GetNumPoints(0);
+            int nq2 = FaceExp->GetNumPoints(1);
+            
+            if ((int)facedir == 2)
+            {
+                for (int j = 0; j < nq2; ++j)
+                {
+                    Vmath::Vcopy(nq1, o_tmp2.get()+((j+1)*nq1-1), -1, outarray.get()+j*nq1, 1);
+                }
+            }
+            else
+            {
+                Vmath::Vcopy(nq1*nq2, o_tmp2.get(), 1, outarray.get(), 1);
             }
         }
 
@@ -797,7 +797,7 @@ namespace Nektar
             int nqe;
             //int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             int vCoordDim = GetCoordim();
-
+            
             switch(face)
             {
                 case 0:
@@ -865,7 +865,6 @@ namespace Nektar
                 {
                     Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
                 }
-
 	    }
             else   // Set up deformed normals
             {

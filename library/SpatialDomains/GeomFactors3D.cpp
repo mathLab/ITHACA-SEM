@@ -205,13 +205,13 @@ namespace Nektar
 
                 // Spen's book page 160
                 m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_1
-                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];  // d xi_1/d x_2
-                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0])/m_jac[0];  // d xi_1/d x_3
-                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d3[0][0]*d2[2][0])/m_jac[0];  // d xi_2/d x_1
+                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_1
+                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0])/m_jac[0];  // d xi_3/d x_1
+                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d3[0][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_2
                 m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d3[0][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_2
-                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d2[0][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_3
-                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];  // d xi_3/d x_1
-                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];  // d xi_3/d x_2
+                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d2[0][0]*d1[2][0])/m_jac[0];  // d xi_3/d x_2
+                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];  // d xi_1/d x_3
+                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];  // d xi_2/d x_3
                 m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0])/m_jac[0];  // d xi_3/d x_3
             }
             else // Deformed case
@@ -225,25 +225,25 @@ namespace Nektar
                 // g[0] = d xi_1/d x_1
                 Vmath::Vmul (nqtot,&d3[1][0],1,&d2[2][0],1,&m_gmat[0][0],1);
                 Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
-                // g[1] = d xi_1/d x_2
+                // g[1] = d xi_2/d x_1
                 Vmath::Vmul (nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
                 Vmath::Vvtvm(nqtot,&d3[1][0],1,&d1[2][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
-                // g[2] = d xi_1/d x_3
+                // g[2] = d xi_3/d x_1
                 Vmath::Vmul (nqtot,&d2[1][0],1,&d1[2][0],1,&m_gmat[2][0],1);
                 Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
-                // g[3] = d xi_2/d x_1
+                // g[3] = d xi_1/d x_2
                 Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&m_gmat[3][0],1);
                 Vmath::Vvtvm(nqtot,&d3[0][0],1,&d2[2][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
                 // g[4] = d xi_2/d x_2
                 Vmath::Vmul (nqtot,&d3[0][0],1,&d1[2][0],1,&m_gmat[4][0],1);
                 Vmath::Vvtvm(nqtot,&d1[0][0],1,&d3[2][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
-                // g[5] = d xi_2/d x_3
+                // g[5] = d xi_3/d x_2
                 Vmath::Vmul (nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[5][0],1);
                 Vmath::Vvtvm(nqtot,&d2[0][0],1,&d1[2][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
-                // g[6] = d xi_3/d x_1
+                // g[6] = d xi_1/d x_3
                 Vmath::Vmul (nqtot,&d3[0][0],1,&d2[1][0],1,&m_gmat[6][0],1);
                 Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&m_gmat[6][0],1,&m_gmat[6][0],1);
-                // g[7] = d xi_3/d x_2
+                // g[7] = d xi_2/d x_3
                 Vmath::Vmul (nqtot,&d1[0][0],1,&d3[1][0],1,&m_gmat[7][0],1);
                 Vmath::Vvtvm(nqtot,&d3[0][0],1,&d1[1][0],1,&m_gmat[7][0],1,&m_gmat[7][0],1);
                 // g[8] = d xi_3/d x_3

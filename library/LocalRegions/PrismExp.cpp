@@ -301,7 +301,7 @@ namespace Nektar
          * rule in order to incorporate the geometric factors. Assuming that
          * the basis functions are a tensor product
          * \f$\phi_{pqr}(\eta_1,\eta_2,\eta_3) =
-         * \phi_p(\eta_1)\phi_q(\eta_2)\phi_r(\eta_3)\f$, this yields the
+         * \phi_1(\eta_1)\phi_2(\eta_2)\phi_3(\eta_3)\f$, this yields the
          * result
          * 
          * \f[
@@ -309,8 +309,8 @@ namespace Nektar
          * \frac{\partial \eta_j}{\partial x_i}\right)
          * \f]
          * 
-         * In the prismatic element, we must also incorporate a second set of
-         * geometric factors which incorporate the collapsed co-ordinate
+         * In the tetrahedral element, we must also incorporate a second set
+         * of geometric factors which incorporate the collapsed co-ordinate
          * system, so that
          * 
          * \f[ \frac{\partial\eta_j}{\partial x_i} = \sum_{k=1}^3

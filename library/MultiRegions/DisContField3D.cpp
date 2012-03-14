@@ -826,6 +826,7 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(),Fwd,1);
             Vmath::Zero(Bwd.num_elements(),Bwd,1);
             
+            Array<OneD, const NekDouble> a_tmp;
             for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
@@ -881,8 +882,7 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0)*
-                               m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(1);
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetTotPoints();
                         id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                         id2  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                         Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);

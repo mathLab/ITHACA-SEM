@@ -752,7 +752,6 @@ namespace Nektar
                 Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
                                &outarray[0],1);
             }
-
         }
 
 

@@ -80,9 +80,8 @@ namespace Nektar
             
             if (locExp->GetRightAdjacentElementEdge() != -1)
             {
-                if (GetGeom2D()->GetEid(locExp->GetRightAdjacentElementEdge()) ==
-                    locExp->GetRightAdjacentElementExp()->GetGeom2D()->
-                    GetEid(locExp->GetRightAdjacentElementEdge()))
+                if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
+                    == GetGeom2D()->GetGlobalID())
                 {
                     Vmath::Neg(nquad_e,EdgeExp->UpdatePhys(),1);
                 }
@@ -118,9 +117,8 @@ namespace Nektar
                 
                 if (locExp->GetRightAdjacentElementEdge() != -1)
                 {
-                    if (GetGeom2D()->GetEid(locExp->GetRightAdjacentElementEdge()) ==
-                        locExp->GetRightAdjacentElementExp()->GetGeom2D()->
-                        GetEid(locExp->GetRightAdjacentElementEdge()))
+                    if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
+                        == GetGeom2D()->GetGlobalID())
                     {
                         Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
                     }
@@ -151,9 +149,8 @@ namespace Nektar
                 
                 if (locExp->GetRightAdjacentElementEdge() != -1)
                 {
-                    if (GetGeom2D()->GetEid(locExp->GetRightAdjacentElementEdge()) ==
-                        locExp->GetRightAdjacentElementExp()->GetGeom2D()->
-                        GetEid(locExp->GetRightAdjacentElementEdge()))
+                    if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
+                        == GetGeom2D()->GetGlobalID())
                     {
                         Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
                     }

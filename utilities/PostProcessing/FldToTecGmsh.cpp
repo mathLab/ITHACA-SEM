@@ -29,12 +29,16 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    int nExtraPoints;
+    bool Extrude2DWithHomogeneous = false;
+    int nExtraPoints, nExtraPlanes;
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
 
     vSession->LoadParameter("OutputExtraPoints",nExtraPoints,0);
+    vSession->LoadParameter("OutputExtraPlanes",nExtraPlanes,0);
+
+    vSession->MatchSolverInfo("Extrude2DWithHomogeneous","True",Extrude2DWithHomogeneous,false);
 
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
@@ -48,6 +52,16 @@ int main(int argc, char *argv[])
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
+
+    if(Extrude2DWithHomogeneous) // Set up Homogeneous information 
+    {
+        NekDouble length;
+        vSession->LoadParameter("LZ",length,1);
+        fielddef[0]->m_numHomogeneousDir = 1;
+        fielddef[0]->m_numModes.push_back(2); // Have to set this to 2 as default
+        fielddef[0]->m_homogeneousLengths.push_back(length);
+        fielddef[0]->m_basis.push_back(LibUtilities::eFourier);
+    }
 
     //----------------------------------------------
     // Set up Expansion information
@@ -171,7 +185,7 @@ int main(int argc, char *argv[])
 
                 // choose points to be at evenly spaced points at
                 // nplanes + 1 points
-                const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey Pkey(nplanes+nExtraPlanes+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
@@ -180,7 +194,8 @@ int main(int argc, char *argv[])
 
                 for(i = 1; i < nfields; ++i)
                 {
-                    Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*Exp3DH1);
+                    Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+                        ::AllocateSharedPtr(*Exp3DH1);
                 }
             }
             else
@@ -191,7 +206,8 @@ int main(int argc, char *argv[])
 
                 for(i = 1; i < nfields; ++i)
                 {
-                    Exp[i] = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp2D);
+                    Exp[i] = MemoryManager<MultiRegions::ExpList2D>
+                        ::AllocateSharedPtr(*Exp2D);
                 }
             }
         }
@@ -200,13 +216,13 @@ int main(int argc, char *argv[])
         {
             MultiRegions::ExpList3DSharedPtr Exp3D;
             Exp3D = MemoryManager<MultiRegions::ExpList3D>
-                                                    ::AllocateSharedPtr(vSession,graphShPt);
+                ::AllocateSharedPtr(vSession,graphShPt);
             Exp[0] =  Exp3D;
 
             for(i = 1; i < nfields; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ExpList3D>
-                                                    ::AllocateSharedPtr(*Exp3D);
+                    ::AllocateSharedPtr(*Exp3D);
             }
         }
         break;
@@ -215,6 +231,13 @@ int main(int argc, char *argv[])
         break;
     }
     //----------------------------------------------
+
+   if(Extrude2DWithHomogeneous) 
+    {
+        // Need to set this back to 1 to read 2D field
+        // Perhaps could set up Extra parameters? 
+        fielddef[0]->m_numModes[2] = 1; 
+    }
 
     //----------------------------------------------
     // Copy data to file

@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
             LibUtilities::PointsKey tmp2 = tmp1.GetPointsKey();
             it->second->m_basisKeyVector[i] = LibUtilities::BasisKey(
                 tmp1.GetBasisType(), tmp1.GetNumModes(),
-                LibUtilities::PointsKey(tmp2.GetNumPoints(),
-                                        LibUtilities::eGaussLobattoLegendre));
+                LibUtilities::PointsKey(tmp1.GetNumModes(),
+                                        LibUtilities::ePolyEvenlySpaced));
         }
     }
     //----------------------------------------------

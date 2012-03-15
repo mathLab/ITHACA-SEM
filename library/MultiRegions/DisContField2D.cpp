@@ -429,11 +429,11 @@ namespace Nektar
          *                      edges is placed.
          */
         void DisContField2D::GetPeriodicEdges(
-                                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                              const SpatialDomains::BoundaryConditions &bcs,
-                                              const std::string &variable,
-                                              vector<map<int,int> >& periodicVerts,
-                                              map<int,int>& periodicEdges)
+            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+            const SpatialDomains::BoundaryConditions &bcs,
+            const std::string                        &variable,
+                  vector<map<int,int> >              &periodicVerts,
+                  map   <int,int>                    &periodicEdges)
         {
             ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D),
                      "Expected a MeshGraph2D.");
@@ -517,13 +517,6 @@ namespace Nektar
                                              "failed");
                                 }
 
-                                // Extract the periodic edges
-                                periodicEdges[segmentGeom1->GetEid()]
-                                    = segmentGeom2->GetEid();
-                                periodicEdges[segmentGeom2->GetEid()]
-                                    = segmentGeom1->GetEid();
-
-                                // Extract the periodic vertices
                                 element1 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)
                                     ->GetElementsFromEdge(segmentGeom1);
                                 element2 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)
@@ -549,6 +542,13 @@ namespace Nektar
 
                                 if(orient1!=orient2)
                                 {
+                                    // Extract the periodic edges.
+                                    periodicEdges[segmentGeom1->GetEid()]
+                                        = segmentGeom2->GetEid();
+                                    periodicEdges[segmentGeom2->GetEid()]
+                                        = segmentGeom1->GetEid();
+                                    
+                                    // Extract the periodic vertices.
                                     periodicVertices[segmentGeom1->GetVid(0)]
                                         = segmentGeom2->GetVid(0);
                                     periodicVertices[segmentGeom1->GetVid(1)]
@@ -556,6 +556,11 @@ namespace Nektar
                                 }
                                 else
                                 {
+                                    periodicEdges[segmentGeom1->GetEid()]
+                                        = -segmentGeom2->GetEid();
+                                    periodicEdges[segmentGeom2->GetEid()]
+                                        = segmentGeom1->GetEid();
+                                    
                                     periodicVertices[segmentGeom1->GetVid(0)]
                                         = segmentGeom2->GetVid(1);
                                     periodicVertices[segmentGeom1->GetVid(1)]
@@ -640,19 +645,18 @@ namespace Nektar
                         boost::dynamic_pointer_cast<
                             LocalRegions::Expansion1D>(elmtToTrace[n][e]);
                     
-                    nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     
                     bool fwd = true;
                     if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
                         traceEl->GetRightAdjacentElementEdge() == -1)
                     {
-                        // Boundary face (1 connected element) - do nothing.
+                        // Boundary edge (1 connected element) - do nothing.
                     }
                     else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
                              traceEl->GetRightAdjacentElementEdge() != -1)
                     {
-                        // Non-boundary face (2 connected elements).
+                        // Non-boundary edge (2 connected elements).
                         fwd = traceEl->GetLeftAdjacentElementExp() == 
                             (*m_exp)[n];
                     }
@@ -679,7 +683,7 @@ namespace Nektar
             // fill boundary conditions into missing elements
             int id1,id2 = 0;
             cnt = 0;
-			
+            
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {				
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
@@ -717,7 +721,6 @@ namespace Nektar
                     ASSERTL0(false,"method not set up for non-Dirichlet conditions");
                 }
             }
-
         }
 
         void DisContField2D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)

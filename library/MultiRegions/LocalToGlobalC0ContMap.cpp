@@ -556,10 +556,32 @@ namespace Nektar
                 // Loop over all edges (and vertices) of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
+                    map<int,int>::const_iterator it;
+                    
                     nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
                     edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);
                     meshEdgeId          = (locExpansion->GetGeom2D())->GetEid(j);
                     meshVertId          = (locExpansion->GetGeom2D())->GetVid(j);
+
+                    /*
+                     * Where the edge orientations of periodic edges matches,
+                     * we reverse the vertices of each edge in
+                     * DisContField2D::GetPeriodicEdges. We must therefore
+                     * reverse the orientation of precisely one of the two
+                     * edges so that the sign array is correctly populated.
+                     */ 
+                    it = periodicEdgesId.find(meshEdgeId);
+                    if (it != periodicEdgesId.end() && it->second < 0)
+                    {
+                        if (edgeOrient == StdRegions::eForwards)
+                        {
+                            edgeOrient = StdRegions::eBackwards;
+                        }
+                        else
+                        {
+                            edgeOrient = StdRegions::eForwards;
+                        }
+                    }
 
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
                     // Set the global DOF for vertex j of element i
@@ -1136,7 +1158,7 @@ namespace Nektar
             for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
             {
                 meshEdgeId  = mapConstIt->first;
-                meshEdgeId2 = mapConstIt->second;
+                meshEdgeId2 = abs(mapConstIt->second);
 
                 if(meshEdgeId < meshEdgeId2)
                 {

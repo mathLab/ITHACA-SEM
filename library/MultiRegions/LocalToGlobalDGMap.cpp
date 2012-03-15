@@ -223,7 +223,7 @@ namespace Nektar
                     {
                         if(MeshEdgeId.count(id) == 0)
                         {
-                            id1 = periodicEdges.find(id)->second;
+                            id1 = abs(periodicEdges.find(id)->second);
                             MeshEdgeId[id] = i;
                             MeshEdgeId[id1] = i;
                         }

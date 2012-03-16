@@ -273,8 +273,6 @@ namespace Nektar
             FilterMap                   m_filters;
             /// Be verbose
             bool                        m_verbose;
-            /// Number of modes (polynomial order - 1)
-            int                         m_nummodes;
 
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList          m_enums;

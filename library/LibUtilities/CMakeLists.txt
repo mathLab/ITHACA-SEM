@@ -52,6 +52,7 @@ SET(FoundationHeaders
     ./Foundations/Basis.h
     ./Foundations/Foundations.hpp
     ./Foundations/FourierPoints.h
+    ./Foundations/FourierSingleModePoints.h
     ./Foundations/BLPoints.h
     ./Foundations/GaussPoints.h
     ./Foundations/Interp.h
@@ -147,6 +148,7 @@ SET(FoundationSources
 	./Foundations/Basis.cpp
 	./Foundations/Graph.cpp
 	./Foundations/FourierPoints.cpp
+	./Foundations/FourierSingleModePoints.cpp
 	./Foundations/BLPoints.cpp
 	./Foundations/GaussPoints.cpp
 	./Foundations/Interp.cpp

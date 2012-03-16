@@ -151,6 +151,7 @@ namespace Nektar
         {
             v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,m_time,Deriv);
             Vmath::Neg(nqtot,pOutarray[i],1);
+
         }
     }
     

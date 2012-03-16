@@ -261,6 +261,7 @@ namespace Nektar
                                          Array<OneD,       NekDouble> &outarray,
                                    bool  UseContCoeffs)
         {
+			cout << "ContField3D"<< endl;
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_contNcoeffs);
             IProductWRTBase(inarray,wsp,true);

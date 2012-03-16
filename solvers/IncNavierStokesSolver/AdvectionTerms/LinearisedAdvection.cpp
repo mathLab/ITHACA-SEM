@@ -291,6 +291,7 @@ namespace Nektar
 					== LibUtilities::eFunctionTypeFile)
 			    {
 					ImportFldBase(file,m_graph,1);
+					
 				}
 				//analytic base flow
 				else
@@ -371,7 +372,7 @@ namespace Nektar
 
 						if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 						{
-							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
 							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);
 							
 							for(i = 0 ; i < m_base.num_elements(); i++)
@@ -391,6 +392,7 @@ namespace Nektar
 							{
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
 								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								m_base[i]->SetWaveSpace(false);
 							} 
 							
 						}
@@ -591,7 +593,6 @@ namespace Nektar
 			//In case ModifiedBasis it is used 
 			if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 			{
-
 				m_base[j]->SetWaveSpace(true);
 			
 				m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
@@ -609,10 +610,19 @@ namespace Nektar
 				
 			}
 			
+			FILE *pFile3;
+			pFile3= fopen("Base_U.txt", "w");
+			for(int s=0; s< m_base[0]->GetNpoints(); ++s)
+			{
+				fprintf(pFile3, "base[%i]= %10.20lf\t  \n",s,m_base[0]->GetPhys()[s]); 
+			}
+			fclose(pFile3);
+			
         }
 		
-		std::string outname ="UsedBase.bse";
-		WriteFldBase(outname);
+		//@ToDo: Post Processing for ModifiedBase
+		//std::string outname ="BaseFlow.bse";
+		//WriteFldBase(outname);
 		
 		if(m_session->DefinesParameter("N_slices"))
 		{
@@ -736,47 +746,55 @@ namespace Nektar
             
             //3D
         case 3:
+				
 			grad1 = Array<OneD, NekDouble> (nPointsTot);
 			grad2 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
-				
+			
 			grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
-				
-            pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
-            
+
+			pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
+			
             pFields[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
             pFields[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
             pFields[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
-         
+				         
 				
 			switch (pVelocityComponent)
             {
+					
                 //x-equation	
             case 0:
-				if(m_dealiasing || pFields[0]->GetWaveSpace())
+					
+				if(m_session->DefinesSolverInfo("SingleMode")==false|| m_dealiasing)
+
 				{
 					//U du'/dx
 					pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
+
 					//V du'/dy
 					pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_UseContCoeff);
+
                     //W du'/dx
 					pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_UseContCoeff);
+
 					// u' dU/dx
 					pFields[0]->DealiasedProd(pVelocity[0],grad_base_u0,grad_base_u0,m_UseContCoeff);
 					// v' dU/dy
 					pFields[0]->DealiasedProd(pVelocity[1],grad_base_u1,grad_base_u1,m_UseContCoeff);
 					// w' dU/dz
 					pFields[0]->DealiasedProd(pVelocity[2],grad_base_u2,grad_base_u2,m_UseContCoeff);
-					
+
 					Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
 					Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
 					Vmath::Vadd(nPointsTot,grad_base_u0,1,pOutarray,1,pOutarray,1);
 					Vmath::Vadd(nPointsTot,grad_base_u1,1,pOutarray,1,pOutarray,1);
 					Vmath::Vadd(nPointsTot,grad_base_u2,1,pOutarray,1,pOutarray,1);
+
 				}
 				else 
 				{
@@ -796,8 +814,10 @@ namespace Nektar
                 break;
                 //y-equation	
             case 1:
-					if(m_dealiasing || pFields[0]->GetWaveSpace())
+					if(m_session->DefinesSolverInfo("SingleMode")==false|| m_dealiasing)
+
 					{
+
 						//U dv'/dx
 						pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
 						//V dv'/dy
@@ -816,11 +836,9 @@ namespace Nektar
 						Vmath::Vadd(nPointsTot,grad_base_v0,1,pOutarray,1,pOutarray,1);
 						Vmath::Vadd(nPointsTot,grad_base_v1,1,pOutarray,1,pOutarray,1);
 						Vmath::Vadd(nPointsTot,grad_base_v2,1,pOutarray,1,pOutarray,1);
-						
 					}
 					else 
 					{
-
 
 						//Evaluate U dv'/dx
 						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
@@ -834,14 +852,16 @@ namespace Nektar
 						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
 						//Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy + W dv'/dz)+ w' dV/dz
 						Vmath::Vvtvp(nPointsTot,grad_base_v2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
+
 						
 						}
 					break;
                 
                 //z-equation	
             case 2:
-					if(m_dealiasing || pFields[0]->GetWaveSpace())
+					if(m_session->DefinesSolverInfo("SingleMode")==false|| m_dealiasing)
 					{
+
 						//U dw'/dx
 						pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
 						//V dw'/dy
@@ -861,6 +881,7 @@ namespace Nektar
 						Vmath::Vadd(nPointsTot,grad_base_w1,1,pOutarray,1,pOutarray,1);
 						Vmath::Vadd(nPointsTot,grad_base_w2,1,pOutarray,1,pOutarray,1);
 						
+						
 					}
 					else 
 					{
@@ -878,6 +899,8 @@ namespace Nektar
 						Vmath::Vvtvp(nPointsTot,grad_base_w2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
 					}					
                 break;
+					
+					
             }
             break;
             

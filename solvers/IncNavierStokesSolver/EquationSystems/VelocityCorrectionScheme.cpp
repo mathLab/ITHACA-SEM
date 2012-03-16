@@ -202,13 +202,12 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_DoSolve(void)
     {
-
         switch(m_equationType)
         {
         case eUnsteadyStokes: 
         case eUnsteadyNavierStokes:
         case eUnsteadyLinearisedNS:
-            {   
+            {  
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
                 break;
@@ -217,6 +216,7 @@ namespace Nektar
         default:
             ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
         }
+
     }
 
 	
@@ -234,14 +234,17 @@ namespace Nektar
 	
 	void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
 	{
+
 		int nfields = m_fields.num_elements() - 1;
 		for (int k=0 ; k < nfields; ++k)
 		{
 			//Forward Transformation in physical space for time evolution
 			m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
 										     m_fields[k]->UpdateCoeffs());
+
 			
 		}
+
 	}
 	
 	
@@ -267,6 +270,7 @@ namespace Nektar
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
                                  inarray, outarray,m_time);
 
+
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
@@ -281,6 +285,7 @@ namespace Nektar
 		{
 			// Set pressure BCs
 			EvaluatePressureBCs(inarray, outarray);
+
 		}
     }
 
@@ -303,19 +308,21 @@ namespace Nektar
         }
 		
         SetBoundaryConditions(time);
-		
+
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
-        
+		
         // Solver Pressure Poisson Equation 
 #ifdef UseContCoeffs
         FlagList flags;
         flags.set(eUseContCoeff, true);
         m_pressure->HelmSolve(F[0], m_pressure->UpdateContCoeffs(),flags,factors);
 #else
+		
 		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
-#endif
 
+#endif
+		
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
     

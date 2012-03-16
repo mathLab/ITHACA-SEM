@@ -83,10 +83,14 @@ namespace Nektar
 
         }
 
-	for(int i = 0; i < m_nfields; ++i)
+		//if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")!="SpecifiedMode")
+		if(m_session->DefinesSolverInfo("SingleMode")==false)
+		{
+		for(int i = 0; i < m_nfields; ++i)
         {
-	   m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
+			m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
         }
+		}
 
         m_session->LoadParameter("kdim",  m_kdim,  16);
         m_session->LoadParameter("nvec",  m_nvec,  2);

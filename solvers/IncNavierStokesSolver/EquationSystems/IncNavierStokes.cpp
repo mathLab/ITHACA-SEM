@@ -196,8 +196,10 @@ namespace Nektar
 			}
 		}
 
+		
         int n_fields = m_fields.num_elements();
 		
+
 		if(integrate_in_wave_space)
 		{
 			for(i = 0; i < n_fields; ++i)
@@ -214,13 +216,14 @@ namespace Nektar
         {
             fields[i]  = m_fields[i]->UpdatePhys();
         }
+		
         
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem
         LibUtilities::TimeIntegrationSolutionSharedPtr 
             IntegrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
-        
+		
         std::string   mdlname = m_session->GetSessionName() + ".mdl";
         std::ofstream mdlFile;
 

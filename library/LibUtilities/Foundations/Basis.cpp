@@ -112,6 +112,7 @@ namespace Nektar
         }
 
         void Basis::Initialize()
+		
         {
             ASSERTL0(GetNumModes()>0, "Cannot call Basis initialisation with zero or negative order");
             ASSERTL0(GetTotNumPoints()>0, "Cannot call Basis initialisation with zero or negative numbers of points");
@@ -228,7 +229,6 @@ namespace Nektar
             m_points->GetZW(z,w);
 
             D = &(m_points->GetD()->GetPtr())[0];
-
             int numModes = GetNumModes();
             int numPoints = GetNumPoints();
 
@@ -582,13 +582,16 @@ namespace Nektar
 			
 				//Fourier Single Mode (1st mode)
 				case eFourierSingleMode:
+					
 					for(i = 0; i < numPoints; ++i)
 					{
-						m_bdata[i] = cos(M_PI*z[i]+M_PI/6);
-						m_bdata[numPoints+i] = sin(M_PI*z[i]+M_PI/6);
+						m_bdata[i] = cos(M_PI*z[i]);
+						m_bdata[numPoints+i] = sin(M_PI*z[i]);
 						
-						m_dbdata[i] = -M_PI*sin(M_PI*z[i]+M_PI/6);
-						m_dbdata[numPoints+i] = M_PI*cos(M_PI*z[i]+M_PI/6);
+						m_dbdata[i] = -M_PI*sin(M_PI*z[i]);
+						m_dbdata[numPoints+i] = M_PI*cos(M_PI*z[i]);
+					
+
 					}
 					
 					for (p=1; p < numModes/2; ++p)

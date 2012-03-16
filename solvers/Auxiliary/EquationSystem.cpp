@@ -279,19 +279,19 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-						
 						//Modified basis for stability analysis
-						if(m_session->DefinesSolverInfo("SingleMode")&&m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+						if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 						{
-							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
+
 							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);
 							
 							for(i = 0 ; i < m_fields.num_elements(); i++)
 							{
 								m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
 								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
-
-								//necessary to perform to HomoBwdTrans the fields that are complex
+								
+								//necessary to perform to HomoBwdTrans for the fields (are complex differently from the base flow)
 								m_fields[i]->SetWaveSpace(false);
 
 							}
@@ -304,9 +304,18 @@ namespace Nektar
 							
 							for(i = 0 ; i < m_fields.num_elements(); i++)
 							{
+
 								m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
 									::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
+								
+							
+								if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
+								{
+									m_fields[i]->SetWaveSpace(false);
+								}
+
 							}
+							
 						}
                     }
                     else

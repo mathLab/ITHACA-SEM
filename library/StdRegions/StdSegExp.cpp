@@ -619,6 +619,9 @@ namespace Nektar
                     DNekMat &Imass = *GetStdMatrix(imasskey);
 
                     (*Mat) = Imass*Iprod;
+					
+					
+					
                 }
                 break;
             default:

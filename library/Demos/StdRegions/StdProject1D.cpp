@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Legendre   = 9\n"); 
     fprintf(stderr,"\t Chebyshev  = 10\n");
     fprintf(stderr,"\t Monomial   = 11\n");
+	fprintf(stderr,"\t FourierModified   = 12\n");
+
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 
@@ -59,6 +61,7 @@ int main(int argc, char *argv[])
 
   sol = Array<OneD, NekDouble>(nq);
   
+/*
   if(btype != LibUtilities::eFourier)
   {
       Qtype = LibUtilities::eGaussLobattoLegendre; 
@@ -67,7 +70,23 @@ int main(int argc, char *argv[])
   {
       Qtype = LibUtilities::eFourierEvenlySpaced;
   }
-  
+*/	
+ 
+	if(btype== LibUtilities::eFourier)
+	{
+		Qtype = LibUtilities::eFourierEvenlySpaced;
+	}
+	else if(btype== LibUtilities::eFourierSingleMode)
+	{
+		Qtype = LibUtilities::eFourierSingleModeSpaced;
+	}
+	else
+	{
+		Qtype = LibUtilities::eGaussLobattoLegendre; 
+	}
+
+	
+	
   //-----------------------------------------------
   // Define a segment expansion based on basis definition
   const LibUtilities::PointsKey Pkey(nq,Qtype);
@@ -79,29 +98,36 @@ int main(int argc, char *argv[])
   // Define solution to be projected
   Array<OneD,NekDouble> z = Array<OneD,NekDouble>(nq);
   E->GetCoords(z);
-
-  if(btype != LibUtilities::eFourier)
-  {
-      for(i = 0; i < nq; ++i)
-      {
-         sol[i] = 0.0;
-         for(j = 0; j < order; ++j)
-         {
-             sol[i] += pow(z[i],j);
-         }
-      }
-  }
-  else
-  {
-      for(i = 0; i < nq; ++i)
-      {
-      sol[i] = 1.0;
-      for(j = 0; j < order/2-1; ++j)
-      {
-          sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
-      }
-      }
-  }
+	
+	if(btype== LibUtilities::eFourier)
+	{
+		for(i = 0; i < nq; ++i)
+		{
+			sol[i] = 1.0;
+			for(j = 0; j < order/2-1; ++j)
+			{
+				sol[i] += sin(j*M_PI*z[i]) + cos(j*M_PI*z[i]);
+			}
+		}
+	}
+	else if(btype== LibUtilities::eFourierSingleMode)
+	{		
+		for(i = 0; i < nq; ++i)
+		{
+			sol[i] = (0.25*sin(M_PI*z[i]) + 0.25*cos(M_PI*z[i]));
+		}
+		
+	}
+	else {
+		for(i = 0; i < nq; ++i)
+		{
+			sol[i] = 0.0;
+			for(j = 0; j < order; ++j)
+			{
+				sol[i] += pow(z[i],j);
+			}
+		}
+	}
   
   //---------------------------------------------
   // Project onto Expansion 
@@ -112,7 +138,7 @@ int main(int argc, char *argv[])
   // Backward Transform Solution to get projected values
   E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
   //-------------------------------------------  
- 
+
   //--------------------------------------------
   // Calculate L_inf error 
   cout << "L infinity error: " << E->Linf(sol) << endl;
@@ -121,19 +147,22 @@ int main(int argc, char *argv[])
  
   //-------------------------------------------
   // Evaulate solution at mid point and print error
-  if(btype != LibUtilities::eFourier)
-  {
-      sol[0] = 1;
-  } 
-  else
-  {
-      sol[0] =  order/2;
-  }
+	if(btype !=  LibUtilities::eFourierSingleMode)
+	{
+		if(btype != LibUtilities::eFourier)
+		{
+			sol[0] = 1;
+		} 
+		else 
+		{
+			sol[0] =  order/2;
+		}
 
-  Array<OneD,NekDouble> x = Array<OneD, NekDouble>(1);
-  x[0] = 0;
-  NekDouble nsol = E->PhysEvaluate(x);
-  cout << "error at x = 0: " << nsol - sol[0] << endl;
+		Array<OneD,NekDouble> x = Array<OneD, NekDouble>(1);
+		x[0] = 0;
+		NekDouble nsol = E->PhysEvaluate(x);
+		cout << "error at x = 0: " << nsol - sol[0] << endl;
+	}
 
   //-------------------------------------------
 

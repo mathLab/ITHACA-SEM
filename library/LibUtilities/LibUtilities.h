@@ -83,6 +83,7 @@
 
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/FourierPoints.h>
+#include <LibUtilities/Foundations/FourierSingleModePoints.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/Graph.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>

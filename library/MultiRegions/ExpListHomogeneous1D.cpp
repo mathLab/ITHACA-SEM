@@ -121,7 +121,6 @@ namespace Nektar
 												   Array<OneD, NekDouble> &outarray, 
 												   bool UseContCoeffs)
 		{
-			
 			// inarray1 = first term of the product
 			// inarray2 = second term of the product
 			// dealiased product stored in outarray
@@ -129,14 +128,14 @@ namespace Nektar
 			int npoints  = outarray.num_elements(); // number of total physical points
 			int nplanes  = m_planes.num_elements(); // number of planes == number of Fourier modes = number of Fourier coeff
 			int npencils = npoints/nplanes;         // number of pencils = numebr of physical points per plane
-			
+
 			Array<OneD, NekDouble> V1(npoints);
 			Array<OneD, NekDouble> V2(npoints);
 			Array<OneD, NekDouble> V1V2(npoints);
 			Array<OneD, NekDouble> ShufV1(npoints);
 			Array<OneD, NekDouble> ShufV2(npoints);
 			Array<OneD, NekDouble> ShufV1V2(npoints);
-			
+
 			if(m_WaveSpace)
 			{
 				V1 = inarray1;
@@ -151,25 +150,26 @@ namespace Nektar
 			ShuffleIntoHomogeneous1DClosePacked(V1,ShufV1,false);
 			ShuffleIntoHomogeneous1DClosePacked(V2,ShufV2,false);
 			
+
 			/////////////////////////////////////////////////////////////////////////////
 			// Creating padded vectors for each pencil
 			Array<OneD, NekDouble> PadV1_pencil_coeff(m_padsize,0.0);
 			Array<OneD, NekDouble> PadV2_pencil_coeff(m_padsize,0.0);
 			Array<OneD, NekDouble> PadRe_pencil_coeff(m_padsize,0.0);
-			
+
 			Array<OneD, NekDouble> PadV1_pencil_phys(m_padsize,0.0);
 			Array<OneD, NekDouble> PadV2_pencil_phys(m_padsize,0.0);
 			Array<OneD, NekDouble> PadRe_pencil_phys(m_padsize,0.0);
-			
+
 			NekVector<NekDouble> PadIN_V1(m_padsize,PadV1_pencil_coeff,eWrapper);
 			NekVector<NekDouble> PadOUT_V1(m_padsize,PadV1_pencil_phys,eWrapper);
-			
+
 			NekVector<NekDouble> PadIN_V2(m_padsize,PadV2_pencil_coeff,eWrapper);
 			NekVector<NekDouble> PadOUT_V2(m_padsize,PadV2_pencil_phys,eWrapper);
-			
+
 			NekVector<NekDouble> PadIN_Re(m_padsize,PadRe_pencil_phys,eWrapper);
 			NekVector<NekDouble> PadOUT_Re(m_padsize,PadRe_pencil_coeff,eWrapper);
-			
+
 			//Looping on the pencils
 			for(int i = 0 ; i< npencils ; i++)
 			{
@@ -177,25 +177,27 @@ namespace Nektar
 				//We are in Fourier space
 				Vmath::Vcopy(nplanes,&(ShufV1[i*nplanes]),1,&(PadV1_pencil_coeff[0]),1);
 				Vmath::Vcopy(nplanes,&(ShufV2[i*nplanes]),1,&(PadV2_pencil_coeff[0]),1);
-				
 				//Moving to physical space using the padded system
 				PadOUT_V1 = (*MatBwdPAD)*PadIN_V1;
 				PadOUT_V2 = (*MatBwdPAD)*PadIN_V2;
-				
+
 				//Perfroming the vectors multiplication in physical space on the padded system
 				Vmath::Vmul(m_padsize,PadV1_pencil_phys,1,PadV2_pencil_phys,1,PadRe_pencil_phys,1);
-				
+
 				//Moving back the result (V1*V2)_phys in Fourier space, padded system
 				PadOUT_Re = (*MatFwdPAD)*PadIN_Re;
-				
+
 				//Copying the first half of the padded pencil in the full vector (Fourier space)
 				Vmath::Vcopy(nplanes,&(PadRe_pencil_coeff[0]),1,&(ShufV1V2[i*nplanes]),1);
+				
 			}
 			
 			if(m_WaveSpace)
 			{
+
 				//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
 				UnshuffleFromHomogeneous1DClosePacked(ShufV1V2,outarray,false);
+				
 			}
 			else 
 			{
@@ -239,7 +241,8 @@ namespace Nektar
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
             int nplanes = m_planes.num_elements();
-
+			
+			//spectral element FwdTrans plane by plane
             for(int n = 0; n < nplanes; ++n)
             {
                 m_planes[n]->FwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
@@ -247,11 +250,15 @@ namespace Nektar
                 cnt   += m_planes[n]->GetTotPoints();
                 cnt1  += m_planes[n]->GetNcoeffs();
             }
+
             
+			//Homogeneous FwdTrans
 			if(!m_WaveSpace)
 			{
 				HomogeneousFwdTrans(outarray,outarray);
+
 			}
+
         }
 
 
@@ -392,6 +399,7 @@ namespace Nektar
                 }
                 else
                 {
+
                     if(IsForwards)
                     {
                         blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D,UseContCoeffs);
@@ -614,6 +622,7 @@ namespace Nektar
                                                 StdSeg);
 
                 loc_mat = StdSeg.GetStdMatrix(matkey);
+				
             }
             else
             {
@@ -622,6 +631,7 @@ namespace Nektar
                                                 StdSeg);
 
                 loc_mat = StdSeg.GetStdMatrix(matkey);
+				
             }
 
             // set up array of block matrices.
@@ -858,6 +868,9 @@ namespace Nektar
 											   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
 		
 		{
+			
+
+			
 			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
 			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
 			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
@@ -866,8 +879,7 @@ namespace Nektar
 			Array<OneD, NekDouble> outarray(nT_pts);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
-			Array<OneD, NekDouble> tmp3;
-            
+			Array<OneD, NekDouble> tmp3;            
 			for( int i=0 ; i<nF_pts ; i++ )
 			{
 				m_planes[i]->PhysDeriv( tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
@@ -906,10 +918,47 @@ namespace Nektar
 				}
 
 			}
+			
+			//Physical Derivative for stability analysis
+			else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+			{			
+				
+				if(m_WaveSpace)
+				{
+					temparray = inarray;
+				}
+				else 
+				{ 
+					HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+				}
+				
+				NekDouble sign = -1.0;
+				NekDouble beta;
+				
+				for(int i = 0; i < nF_pts; i++)
+				{
+					beta = 2*M_PI/m_lhom;
+					
+					Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+					
+					sign = -1.0*sign;
+				}
+				
+				if(m_WaveSpace)
+				{
+					out_d2 = outarray;
+				}
+				else 
+				{
+					HomogeneousBwdTrans(outarray,out_d2,UseContCoeffs);
+				}
+
+			}
 			else 
 			{
 				if(m_WaveSpace)
 				{
+
 					ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis")
 				}
 				else 
@@ -946,7 +995,7 @@ namespace Nektar
 			Array<OneD, NekDouble> outarray(nT_pts);
 			Array<OneD, NekDouble> tmp1;
 			Array<OneD, NekDouble> tmp2;
-            
+            			
 			if (dir < 2)
 			{
 				for( int i=0 ; i<nF_pts ; i++ )
@@ -986,6 +1035,40 @@ namespace Nektar
 					{
 						HomogeneousBwdTrans(outarray,out_d,UseContCoeffs);
 					}
+				}
+			
+				else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+				{
+
+					if(m_WaveSpace)
+					{
+						temparray = inarray;
+					}
+					else 
+					{ 
+						HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+					}
+					NekDouble sign = -1.0;
+					NekDouble beta;
+					
+					for(int i = 0; i < nF_pts; i++)
+					{
+						beta = 2*M_PI/m_lhom;
+						
+						Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+						
+						sign = -1.0*sign;
+					}
+					
+					if(m_WaveSpace)
+					{
+						out_d = outarray;
+					}
+					else 
+					{
+						HomogeneousBwdTrans(outarray,out_d,UseContCoeffs);
+					}
+			
 				}
 				else 
 				{

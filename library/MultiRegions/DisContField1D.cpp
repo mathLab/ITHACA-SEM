@@ -150,7 +150,6 @@ namespace Nektar
 		m_bndCondExpansions(),
 		m_bndConditions()
         {
-			cout << "---- DisContField1D ----"<<endl;
 			//cout << " m_exp has elemnts: "<<m_exp->size()<<endl;
 			
 			//1. a) Read in all boundary conditions specified in inputfile

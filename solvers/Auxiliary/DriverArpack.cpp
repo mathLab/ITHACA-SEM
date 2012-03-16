@@ -224,7 +224,7 @@ namespace Nektar
             //workd[inptr[0]-1] copied into operator fields
             CopyArnoldiArrayToField(tmpworkd = workd + (ipntr[0]-1));
 
-	    m_equ[0]->TransCoeffToPhys();
+	        m_equ[0]->TransCoeffToPhys();
 
             m_equ[0]->DoSolve();
 

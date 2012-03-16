@@ -416,13 +416,6 @@ namespace Nektar
                                              >
                                              (expr.begin(), expr.end(), myGrammar, space_p);
 
-
-            /// \todo temporary fix to supress assert error messages for boundary conditions
-            /// specified via VALUE="FILE:..."
-            if ((parseInfo.full == false) && (expr.find("FILE:") != std::string::npos))
-            {
-                return -1;
-            }
             ASSERTL1(parseInfo.full != false, "Unable to fully parse function. Stopped just before: "
                                          + std::string(parseInfo.stop, parseInfo.stop + 15));
 
@@ -625,6 +618,8 @@ namespace Nektar
                     Array<OneD, NekDouble>& result)
         {
             m_timer.Start();
+
+            /// \todo test this function properly/update as the method above
 
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
 

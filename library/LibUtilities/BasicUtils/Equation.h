@@ -42,7 +42,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <loki/Singleton.h>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace Nektar
 {
@@ -50,26 +50,23 @@ namespace Nektar
     {
         class Equation
         {
-  //      typedef Loki::SingletonHolder<LibUtilities::AnalyticExpressionEvaluator, Loki::CreateStatic, Loki::DefaultLifetime> SingleExpressionEvaluator;
-
 
         public: 
             Equation(const Equation &src):
               m_expr     (src.m_expr),
-              m_expr_id  (src.m_expr_id)//,
-    //          m_evaluator(src.m_evaluator)
+              m_expr_id  (src.m_expr_id)
             {
             }
 
             Equation(const std::string& expr = ""):
               m_expr(expr),
-              m_expr_id(-1)//,
-//              m_evaluator(SingleExpressionEvaluator::Instance())
+              m_expr_id(-1)
             {
+                boost::algorithm::trim(m_expr);
 
                 try
                 {
-                    if (!expr.empty())
+                    if (!m_expr.empty())
                     {
                         m_expr_id = m_evaluator.DefineFunction("x y z t", m_expr);
                     }
@@ -77,33 +74,15 @@ namespace Nektar
                 catch (const std::runtime_error& e)
                 {
                     m_expr_id = -1;
-                    std::cout << "Equation::Constructor fails on expression [" << m_expr << "]" << std::endl;
-
-                    // this instanse is wrongly used by DisContField2D
-                    // classes as a wrapper to a string container holding the link to the file
-                    // with boundary conditions
-                    //
-                    // AnalyticExpressionEvaluator cannot parse the expression of the form
-                    // e.g. "FILE:whatever.bc" and throws an instance of std::runtime_error.
-                    //
-                    // In order not to destroy the currently existing code we catch
-                    // this exception in order to ignore it. Hope it does not affect
-                    // the performance that much, let the run continue; we'll fix wrong
-                    // initialisers later
-
-                    if (expr.find("FILE:") != std::string::npos)
-                    {
-                        return;
-                    }
-                    ASSERTL0(false, std::string("ERROR: ") + e.what());
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                     return;
                 }
                 catch (const std::string& e)
                 {
                     m_expr_id = -1;
-                    std::cout << "Equation::Constructor fails on expression [" << m_expr << "]" << std::endl;
-
-                    std::cout << "ERROR: " << e << std::endl;
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e);
                     return;
                 }
             }
@@ -124,13 +103,13 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    ASSERTL0(false, std::string("ERROR: ") + e.what());
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                 }
                 catch (const std::string& e)
                 {
-                    std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    std::cout << "ERROR: " << e << std::endl;
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e);
                 }
                 return 0;
             }
@@ -146,25 +125,16 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    ASSERTL0(false, std::string("ERROR: ") + e.what());
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                 }
                 catch (const std::string& e)
                 {
-                    std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    std::cout << "ERROR: " << e << std::endl;
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e);
                 }
                 return 0;
             }
-
-//            void Evaluate(
-//                    const Array<OneD, const NekDouble>& x,
-//                    const Array<OneD, const NekDouble>& y,
-//                    Array<OneD, NekDouble>& result)
-//            {
-//                Array<OneD, NekDouble>  zero(x.num_elements(), 0.0);
-//                Evaluate(x,y,zero,zero, result);
-//            }
 
             void Evaluate(
                     const Array<OneD, const NekDouble>& x,
@@ -204,14 +174,14 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    ASSERTL0(false, std::string("ERROR: ") + e.what());
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                     return;
                 }
                 catch (const std::string& e)
                 {
-                    std::cout << "Equation::Evaluate fails on expression [" << m_expr << "]" << std::endl;
-                    std::cout << "ERROR: " << e << std::endl;
+                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    ASSERTL0(false, msg + std::string("ERROR: ") + e);
                     return;
                 }
             }
@@ -231,6 +201,8 @@ namespace Nektar
               return m_expr;
             }
 
+            /// Returns time spend on expression evaluation at
+            /// points (it does not include parse/pre-processing time).
             double GetTime() const
             {
                 return m_evaluator.GetTime();

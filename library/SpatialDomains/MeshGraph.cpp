@@ -549,38 +549,20 @@ namespace Nektar
                             expansion_type = (ExpansionType)(expStr - begStr);
 
 
-
                             /// \todo solvers break the pattern 'instantiate Session -> instantiate MeshGraph'
                             /// and parse command line arguments by themselves; one needs to unify command
                             /// line arguments handling.
                             /// Solvers tend to call MeshGraph::Read statically -> m_session
-                            /// is not defined -> no info about num_modes_override presented
-
+                            /// is not defined -> no info about command line arguments presented
                             /// ASSERTL0(m_session != 0, "One needs to instantiate SessionReader first");
 
-                            int num_modes_override = 0;
-                            if (m_session != 0)
-                            {
-                                num_modes_override = m_session->GetNumModes();
+                            const char *nStr = expansion->Attribute("NUMMODES");
+                            ASSERTL0(nStr,"NUMMODES was not defined in EXPANSION section of input");
+                            std::string nummodesStr = nStr;
 
-                            }
-                            // num_modes_override can be 0 either due to Session not instantiated
-                            // or command line argument not specified
-                            if (num_modes_override == 0)
-                            {
-                                const char *nStr = expansion->Attribute("NUMMODES");
-                                ASSERTL0(nStr,"NUMMODES was not defined in EXPANSION section of input");
-                                std::string nummodesStr = nStr;
+                            LibUtilities::Equation nummodesEqn(nummodesStr);
 
-                                LibUtilities::Equation nummodesEqn(nummodesStr);
-
-                                num_modes = (int) nummodesEqn.Evaluate();
-                            }
-                            else
-                            {
-                                num_modes = num_modes_override;
-                                m_session->SetNumModes(num_modes);
-                            }
+                            num_modes = (int) nummodesEqn.Evaluate();
 
                             useExpansionType = true;
                         }

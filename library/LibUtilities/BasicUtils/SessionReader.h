@@ -175,11 +175,6 @@ namespace Nektar
 
 
 
-            /// Get number of internal modes
-            LIB_UTILITIES_EXPORT const int GetNumModes() const;
-            /// Set number of internal modes
-            LIB_UTILITIES_EXPORT void SetNumModes(const int numModes);
-
             /* ------ SOLVER INFO ------ */
             /// Checks if a solver info property is specified.
             LIB_UTILITIES_EXPORT bool DefinesSolverInfo(const std::string &name) const;

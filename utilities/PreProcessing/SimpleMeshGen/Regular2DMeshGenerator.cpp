@@ -7,48 +7,69 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #include <boost/lexical_cast.hpp>
 
 #include<LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include<SpatialDomains/Geometry.h>
 
 using namespace std;
 
 void  PrintConditions(ofstream& output);
+
+void print_usage_info(char* binary_name)
+{
+        //                     argv:      1     2   3   4   5   6         7
+        cerr << "Usage "<<binary_name<<"  type  nx  ny  sx  sy  nummodes  output_file.xml\n";
+        cerr << "where type is either 'quads' or 'triangles' with no quotation marks,\n";
+        cerr << "      nx   is the number of points in x direction,\n";
+        cerr << "      ny   is the number of points in y direction,\n";
+        cerr << "      sx   is the coordinate scaling in x direction,\n";
+        cerr << "      sy   is the coordinate scaling in y direction,\n";
+        cerr << "      nummodes is the number of boundary modes.\n";
+        cerr << "It generates regular mesh with triangles or quadrilaterals (but not both)\n";
+        cerr << "All vertex coordinates are evenly distributed within unit square but\n";
+        cerr << "then scaled by means of XSCALE and YSCALE attributes of VERTEX section.\n";
+}
 
 int main(int argc, char *argv[])
 {
     vector<double> xc,yc; 
     int            nx = 0;
     int            ny = 0;
+    double         sx = 1.0;
+    double         sy = 1.0;
     int            nummodes = 7;
-    int            type = 3;
+    string         type_name;
     int            i,j,k;
     string         output_file;
     ofstream       output;
 
-    if(argc != 6)
+    if(argc != 8)
     {
-        //                     argv: 1  2   3    4        5
-        cerr << "Usage "<<argv[0]<<" nx ny type nummodes output_file.xml\n";
-        cerr << "where nx is the number of points in x direction,\n";
-        cerr << "      ny is the number of points in y direction,\n";
-        cerr << "      nummodes is the number of boundary modes.\n";
-        cerr << "It generates regular mesh of triangles (type = 2) or quadrilaterals (type = 3).\n";
-        cerr << "All vertices are evenly distributed within unit square\n";
+        print_usage_info(argv[0]);
         exit(1);
     }
 
     try{
-        nx          = boost::lexical_cast<int>(argv[1]);
-        ny          = boost::lexical_cast<int>(argv[2]);
-        type        = boost::lexical_cast<int>(argv[3]);
-        nummodes    = boost::lexical_cast<int>(argv[4]);
-        output_file = boost::lexical_cast<string>(argv[5]);
+        type_name   = boost::lexical_cast<string>(argv[1]);
+        nx          = boost::lexical_cast<int>(argv[2]);
+        ny          = boost::lexical_cast<int>(argv[3]);
+        sx          = boost::lexical_cast<double>(argv[4]);
+        sy          = boost::lexical_cast<double>(argv[5]);
+        nummodes    = boost::lexical_cast<int>(argv[6]);
+        output_file = boost::lexical_cast<string>(argv[7]);
 
-        if ((type != 2) && (type != 3))
+        map<string, SpatialDomains::GeomShapeType> acceptable_shapes;
+        acceptable_shapes["triangles"] = SpatialDomains::eTriangle;
+        acceptable_shapes["quads"] = SpatialDomains::eQuadrilateral;
+
+        map<std::string, SpatialDomains::GeomShapeType>::iterator type = acceptable_shapes.find(type_name);
+        if (type == acceptable_shapes.end())
         {
-            cerr << "Wrong mesh type";
+            cerr << "Wrong mesh element type " << type_name << endl << endl;
+            print_usage_info(argv[0]);
             throw 1;
         }
 
@@ -75,7 +96,17 @@ int main(int argc, char *argv[])
 
         //Vertices 
         output << "<GEOMETRY DIM=\"2\" SPACE=\"2\">" << endl;
-        output << "  <VERTEX>" << endl;
+
+        output << "  <VERTEX";
+        if (sx != 1.0)
+        {
+            output << " XSCALE=\"" << sx << "\"";
+        }
+        if (sy != 1.0)
+        {
+            output << " YSCALE=\"" << sy << "\"";
+        }
+        output << ">"<< endl;
 
         nx = xc.size();
         ny = yc.size();
@@ -124,7 +155,7 @@ int main(int argc, char *argv[])
         int total_quad_edges = cnt-1;
 
         // Triangular mesh is made by adding diagonal segments
-        if (type == 2)
+        if (type->second == SpatialDomains::eTriangle)
         {
             // generating diagonal edges
 
@@ -142,10 +173,9 @@ int main(int argc, char *argv[])
 
         output << "  <ELEMENT>" << endl;
         cnt = 0;
-        switch(type)
+        switch(type->second)
         {
-        // quadrilaterals
-        case 3:
+        case SpatialDomains::eQuadrilateral:
             for(j = 0; j < ny-1; ++j)
             {
                 for(i = 0; i < nx-1; ++i)
@@ -157,8 +187,7 @@ int main(int argc, char *argv[])
                 }
             }
             break;
-        // triangles
-        case 2:
+        case SpatialDomains::eTriangle:
             for(j = 0; j < ny-1; ++j)
             {
                 for(i = 0; i < nx-1; ++i)
@@ -176,7 +205,7 @@ int main(int argc, char *argv[])
             }
             break;
         default:
-            cerr << "unknown element type " << type << "\n";
+            cerr << "unknown element type\n";
             throw 1;
         }
         output << "  </ELEMENT>\n" << endl;
@@ -184,14 +213,12 @@ int main(int argc, char *argv[])
 
         output << "<COMPOSITE>" << endl;
 
-        switch(type)
+        switch(type->second)
         {
-        // quadrilaterals
-        case 3:
+        case SpatialDomains::eQuadrilateral:
             output << "<C ID=\"0\"> Q[0-" << (nx-1)*(ny-1)-1 << "] </C>" << endl;
             break;
-        // triangles
-        case 2:
+        case SpatialDomains::eTriangle:
             output << "<C ID=\"0\"> T[0-" << 2*(nx-1)*(ny-1)-1 << "] </C>" << endl;
             break;
         default:
@@ -247,7 +274,7 @@ int main(int argc, char *argv[])
 
         output << "</COMPOSITE>\n" << endl;
 
-             
+
         output << "<DOMAIN> C[0] </DOMAIN>\n" << endl;
         output << "</GEOMETRY>\n" << endl;
 
@@ -277,31 +304,31 @@ void  PrintConditions(ofstream& output)
     output << "<P> TimeStep      = 0.002  </P>" << endl;
     output << "<P> Lambda        = 1      </P>" << endl;
     output << "</PARAMETERS>\n" << endl;
-    
+
     output << "<VARIABLES>" << endl;
     output << "  <V ID=\"0\"> u </V>" << endl; 
     output << "</VARIABLES>\n" << endl;
-    
+
     output << "<BOUNDARYREGIONS>" << endl;
     output << "<B ID=\"0\"> C[1] </B>" << endl;
     output << "<B ID=\"1\"> C[2] </B>" << endl;
     output << "<B ID=\"2\"> C[3] </B>" << endl;
     output << "<B ID=\"3\"> C[4] </B>" << endl;
     output << "</BOUNDARYREGIONS>\n" << endl;
-    
+
     output << "<BOUNDARYCONDITIONS>" << endl;
     output << "  <REGION REF=\"0\"> // South border " << endl;
     output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
-            
+
     output << "  <REGION REF=\"1\"> // West border " << endl;
     output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
-    
+
     output << "  <REGION REF=\"2\"> // North border " << endl;
     output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
-    
+
     output << "  <REGION REF=\"3\"> // East border " << endl;
     output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;

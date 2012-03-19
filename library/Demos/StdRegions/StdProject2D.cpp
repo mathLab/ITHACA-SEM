@@ -45,16 +45,19 @@ int main(int argc, char *argv[]){
     fprintf(stderr,"Where type is an integer value which "
         "dictates the basis as:\n");
 
-    fprintf(stderr,"\t Ortho_A    = 1\n");
-    fprintf(stderr,"\t Ortho_B    = 2\n");
-    fprintf(stderr,"\t Modified_A = 4\n");
-    fprintf(stderr,"\t Modified_B = 5\n");
-    fprintf(stderr,"\t Fourier    = 7\n");
-    fprintf(stderr,"\t Lagrange   = 8\n");
-    fprintf(stderr,"\t Legendre   = 9\n");
-    fprintf(stderr,"\t Chebyshev  = 10\n");
-    fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
-    fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+	  
+	  fprintf(stderr,"\t Ortho_A    = 1\n");
+	  fprintf(stderr,"\t Ortho_B    = 2\n");
+	  fprintf(stderr,"\t Modified_A = 4\n");
+	  fprintf(stderr,"\t Modified_B = 5\n");
+	  fprintf(stderr,"\t Fourier    = 7\n");
+	  fprintf(stderr,"\t Lagrange   = 8\n");
+	  fprintf(stderr,"\t Legendre   = 9\n");
+	  fprintf(stderr,"\t Chebyshev  = 10\n");
+	  fprintf(stderr,"\t FourierSingleMode  = 11\n");
+	  fprintf(stderr,"\t Nodal tri (Electro) = 12\n");
+	  fprintf(stderr,"\t Nodal tri (Fekete)  = 13\n");
+
 
     fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
 
@@ -72,17 +75,17 @@ int main(int argc, char *argv[]){
   int btype1_val = atoi(argv[2]);
   int btype2_val = atoi(argv[3]);
 
-  if(( btype1_val <= 10)&&( btype2_val <= 10))
+  if(( btype1_val <= 11)&&( btype2_val <= 11))
   {
       btype1 =   (LibUtilities::BasisType) btype1_val;
       btype2 =   (LibUtilities::BasisType) btype2_val;
   }
-  else if(( btype1_val >=11)&&(btype2_val <= 12))
+  else if(( btype1_val >=12)&&(btype2_val <= 13))
   {
       btype1 =   LibUtilities::eOrtho_A;
       btype2 =   LibUtilities::eOrtho_B;
 
-      if(btype1_val == 11)
+      if(btype1_val == 12)
       {
           NodalType = LibUtilities::eNodalTriElec;
       }
@@ -127,30 +130,40 @@ int main(int argc, char *argv[]){
   nq2    =   atoi(argv[7]);
 
   sol = Array<OneD, NekDouble>(nq1*nq2);
+	
+	if(btype1== LibUtilities::eFourier)
+	{
+		Qtype1 = LibUtilities::eFourierEvenlySpaced;
+	}
+	else if(btype1== LibUtilities::eFourierSingleMode)
+	{
+		Qtype1 = LibUtilities::eFourierSingleModeSpaced;	
+	}
+	else 
+	{
+		Qtype1 = LibUtilities::eGaussLobattoLegendre;
+	}
 
-  if(btype1 != LibUtilities::eFourier)
-  {
-      Qtype1 = LibUtilities::eGaussLobattoLegendre;
-  }
-  else
-  {
-      Qtype1 = LibUtilities::eFourierEvenlySpaced;
-  }
+	if(btype2== LibUtilities::eFourier)
+	{
+		Qtype2 = LibUtilities::eFourierEvenlySpaced;
+		
+	}
+	else if(btype2== LibUtilities::eFourierSingleMode)
+	{
+		Qtype2 = LibUtilities::eFourierSingleModeSpaced;	
 
-  if(btype2 != LibUtilities::eFourier)
-  {
-      if (regionshape == StdRegions::eTriangle) {
-          Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
-      }
-      else
-      {
-          Qtype2 = LibUtilities::eGaussLobattoLegendre;
-      }
-  }
-  else
-  {
-      Qtype2 = LibUtilities::eFourierEvenlySpaced;
-  }
+	}
+	else
+	{
+		if (regionshape == StdRegions::eTriangle) {
+			Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
+		}
+		else
+		{
+			Qtype2 = LibUtilities::eGaussLobattoLegendre;
+		}
+	}
 
 
   //-----------------------------------------------
@@ -229,6 +242,7 @@ int main(int argc, char *argv[]){
   //--------------------------------------------
 
   //-------------------------------------------
+	
   // Evaulate solution at x = y =0  and print error
   Array<OneD, NekDouble> x = Array<OneD, NekDouble>(2);
   x[0] = 0;
@@ -271,56 +285,102 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
 {
     int k,l;
     NekDouble sol = 0.0;
+	if(btype1 == LibUtilities::eFourier)
+	{
+		if(btype2 == LibUtilities::eFourier)
+		{	
+			for(k = 0; k < order1/2; ++k)
+			{
+				for(l = 0; l < order2/2; ++l)
+				{
+					sol += sin(M_PI*k*x)*sin(M_PI*l*y)
+					+ sin(M_PI*k*x)*cos(M_PI*l*y)
+					+ cos(M_PI*k*x)*sin(M_PI*l*y)
+					+ cos(M_PI*k*x)*cos(M_PI*l*y);
+				}
+			}
+		}
+		else if(btype2 == LibUtilities::eFourierSingleMode)
+		{
+			for(k = 0; k < order1/2; ++k)
+			{
+					sol += sin(M_PI*k*x)*sin(M_PI*y)
+					+ sin(M_PI*k*x)*cos(M_PI*y)
+					+ cos(M_PI*k*x)*sin(M_PI*y)
+					+ cos(M_PI*k*x)*cos(M_PI*y);
+			}			
+		}
+		else
+		{
+			for(k = 0; k < order1/2; ++k)
+			{
+				for(l = 0; l < order2; ++l)
+				{
+					sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
+				}
+			}
+		}
+	}
+	else if(btype1 == LibUtilities::eFourierSingleMode)
+	{
+		if(btype2 == LibUtilities::eFourier)
+		{	
+			for(l = 0; l < order2/2; ++l)
+			{
+					sol += sin(M_PI*x)*sin(M_PI*l*y)
+					+ sin(M_PI*x)*cos(M_PI*l*y)
+					+ cos(M_PI*x)*sin(M_PI*l*y)
+					+ cos(M_PI*x)*cos(M_PI*l*y);
+			}
+		}
+		else if(btype2 == LibUtilities::eFourierSingleMode)
+		{
+				sol += sin(M_PI*x)*sin(M_PI*y)
+				+ sin(M_PI*x)*cos(M_PI*y)
+				+ cos(M_PI*x)*sin(M_PI*y)
+				+ cos(M_PI*x)*cos(M_PI*y);
+		}			
+		else
+		{
+				for(l = 0; l < order2; ++l)
+				{
+					sol += sin(M_PI*x)*pow(y,l) + cos(M_PI*x)*pow(y,l);
+				}
+		}
+		
+	}
+	//case for Non Fourier expansion
+    else
+	{		
+		if(btype2 == LibUtilities::eFourier)
+		{	
+			for(k = 0; k < order1; ++k)
+			{	
+				for(l = 0; l < order2/2; ++l)
+				{
+					sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
+				}
+			}
+		}
+		else if(btype2 == LibUtilities::eFourierSingleMode)
+		{
+			for(k = 0; k < order1; ++k)
+			{	
 
-    if(btype1 != LibUtilities::eFourier)
-    {
-    if(btype2 != LibUtilities::eFourier)
-    {
-      for(k = 0; k < order1; ++k)
-      {
-      for(l = 0; l < order2; ++l)
-      {
-          sol += pow(x,k)*pow(y,l);
-      }
-      }
+					sol += pow(x,k)*sin(M_PI*y) + pow(x,k)*cos(M_PI*y);
+			}
+		}
+		else 
+		{
+			for(k = 0; k < order1; ++k)
+			{
+				for(l = 0; l < order2; ++l)
+				{
+					sol += pow(x,k)*pow(y,l);
+				}
+			}
+		}
     }
-    else
-    {
-        for(k = 0; k < order1; ++k)
-        {
-        for(l = 0; l < order2/2; ++l)
-        {
-            sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
-        }
-        }
-    }
-    }
-    else
-    {
-    if(btype2 != LibUtilities::eFourier)
-    {
-        for(k = 0; k < order1/2; ++k)
-        {
-        for(l = 0; l < order2; ++l)
-        {
-            sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
-        }
-        }
-    }
-    else
-    {
-        for(k = 0; k < order1/2; ++k)
-        {
-        for(l = 0; l < order2/2; ++l)
-        {
-            sol += sin(M_PI*k*x)*sin(M_PI*l*y)
-            + sin(M_PI*k*x)*cos(M_PI*l*y)
-            + cos(M_PI*k*x)*sin(M_PI*l*y)
-            + cos(M_PI*k*x)*cos(M_PI*l*y);
-        }
-        }
-    }
-    }
-
+	
     return sol;
 }

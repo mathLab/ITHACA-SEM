@@ -73,6 +73,9 @@ int main(int argc, char* argv[])
     Execute("StdProject1D", "1 6 7","Seg Ortho. Basis, P=6, Q=7");
 
     Execute("StdProject1D", "4 6 7","Seg Mod. Basis, P=6, Q=7");
+	
+	Execute("StdProject1D", "12 2 8","Single Mode Fourier Basis, P=2, Q=8");
+
 
     // 1D Differentiation Projection Tests
     Execute("StdProject_Diff1D", "1 6 7","Seg Ortho. Basis, P=6, Q=7");
@@ -84,7 +87,7 @@ int main(int argc, char* argv[])
 
     Execute("StdProject2D", "2 4 5 6 6 7 7", "Tri Mod. Basis P=6, Q=7");
 
-    Execute("StdProject2D", "2 11 11 6 6 7 7", "Tri Nodal Basis P=6, Q=7");
+    Execute("StdProject2D", "2 12 11 6 6 7 7", "Tri Nodal Basis P=6, Q=7");
 
     Execute("StdProject2D", "3 1 1 6 6 7 7", "Quad Ortho Basis, P=4, Q=5");
 
@@ -93,6 +96,8 @@ int main(int argc, char* argv[])
     Execute("StdProject2D", "3 8 8 6 6 7 7", "Quad Lagrange Basis P=6, Q=7");
 
     Execute("StdProject2D", "3 7 7 6 6 8 8 ", "Quad Fourier Basis P=6, Q=8");
+	
+	Execute("StdProject2D", "3 11 11 2 2 6 6", "Quad Fourier Single mode Basis P=2, Q=6");
 
 
     // 2D Differntiation and Projection Tests

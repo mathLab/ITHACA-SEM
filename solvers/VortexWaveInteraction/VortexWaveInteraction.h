@@ -49,6 +49,7 @@ namespace Nektar
         eFixedWaveForcing,
         eFixedAlphaWaveForcing,
         eFixedWaveForcingWithSubIterationOnAlpha,
+        eVWIInitialAlpha,
         eVWIIterationTypeSize
     };
 
@@ -57,7 +58,8 @@ namespace Nektar
         "FixedAlpha",
         "FixedWaveForcing",
         "FixedAlphaWaveForcing",
-        "FixedWaveForcingWithSubIterationOnAlpha"
+        "FixedWaveForcingWithSubIterationOnAlpha",
+        "VWIInitialAlpha"
     };
 
     class VortexWaveInteraction
@@ -133,6 +135,10 @@ namespace Nektar
             m_waveForceMag[0] = mag; 
         }
 
+        bool IfIterInterface(void)
+        {
+            return m_iterinterface;
+        }
 
         Array<OneD, int> GetReflectionIndex(void);
 
@@ -166,6 +172,8 @@ namespace Nektar
         NekDouble m_neutralPointTol; 
         NekDouble m_eigRelTol; 
         NekDouble m_vwiRelaxation; 
+
+        bool m_iterinterface;
 
         VWIIterationType m_VWIIterationType;
 

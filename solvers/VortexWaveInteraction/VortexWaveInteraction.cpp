@@ -82,6 +82,15 @@ namespace Nektar
             m_deltaFcnDecay = 0.0;
         }
 
+        if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
+        {
+              m_iterinterface = true;
+        }
+        else
+        {
+              m_iterinterface = false;
+        }
+
         m_alpha = Array<OneD, NekDouble> (storesize);
         m_alpha[0]        = m_sessionVWI->GetParameter("Alpha");
         m_waveForceMag      = Array<OneD, NekDouble> (storesize);
@@ -250,7 +259,6 @@ namespace Nektar
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
         {
             string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
-            cout<<"eqtype="<<vEquation<<endl;
             EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
             //the forcing terms are inserted as N bcs
               //the forcing terms are inserted as N bcs
@@ -285,17 +293,22 @@ namespace Nektar
                     Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
                 }
             }
+            // Execute Roll 
+            cout << "Executing Roll solver" << endl;
+            m_solverRoll->DoInitialise();
+            m_solverRoll->DoSolve();
+            m_solverRoll->Output();
         }
 
-        // Execute Roll 
-        cout << "Executing Roll solver" << endl;
-        m_solverRoll->DoInitialise();
-        m_solverRoll->DoSolve();
-        m_solverRoll->Output();
+
         
         // Copy .fld file to .rst and base.fld
-        cout << "Executing cp -f session.fld session.rst" << endl;
-        CopyFile(".fld",".rst");
+        if(GetVWIIterationType()!=eVWIInitialAlpha)
+        {
+             cout << "Executing cp -f session.fld session.rst" << endl;
+             CopyFile(".fld",".rst");
+        }
+
         cout << "Executing cp -f session.fld session-Base.fld" << endl;
         CopyFile(".fld","-Base.fld");
 
@@ -394,18 +407,52 @@ namespace Nektar
              string wavefile  = m_sessionName +".fld"; 
              string movedmesh = m_sessionName + "_advPost_moved.xml";
              string filestreak   = m_sessionName + "_streak.fld";
-             
-             char c_alpha[16]="";
-    	     sprintf(c_alpha,"%f",m_alpha[0]);               
-             string syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
-                     + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +">  data";
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
              char c[16]="";
-    	     sprintf(c,"%d",cnt);  
+    	     sprintf(c,"%d",cnt);               
+             char c_alpha[16]="";
+    	     sprintf(c_alpha,"%f",m_alpha[0]);    
+             string syscall;
+             if( GetVWIIterationType()==eVWIInitialAlpha )
+             {
+                  string filePost = m_sessionName + "_advPost.xml";
+                  syscall = "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                       + filePost +"     "+
+                       "meshhalf_pos_Spen_stability_moved.fld  meshhalf_pos_Spen_advPost_moved.fld "
+                       +c_alpha +"  > data_alpha0";
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+             
+                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_u_5.bc  "+m_sessionName+"_u_5.bc";  
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_v_5.bc  "+m_sessionName+"_v_5.bc";  
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+             }
+             else
+             {
+                  syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                     + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+             }
+
+             
+             
+             //relaxation for different alpha values? does it make sense?
+
              //save the wave
              string wave_subalp = m_sessionName + "_wave_subalp_"+c+".fld";
 	     syscall = "cp -f " + wavefile + "  " + wave_subalp;
@@ -414,6 +461,8 @@ namespace Nektar
              {
                   ASSERTL0(false,syscall.c_str());
              }
+             //FileRelaxation(3);
+             cnt++;
      
         }
         else
@@ -770,6 +819,7 @@ namespace Nektar
 	{
              static int cnt=0;       
              string syscall;
+
              //rewrite the Rollsessionfile (we start from the waleffe forcing)
              //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
              //if(cnt==0)
@@ -792,14 +842,12 @@ namespace Nektar
              string filestreak   = m_sessionName + "_streak.fld";
              string fileinterp = m_sessionName + "_interp.xml";
              char alpchar[16]="";
-cout<<"alpha="<<m_alpha[0]<<endl;
+cout<<"alpha = "<<m_alpha[0]<<endl;
              sprintf(alpchar, "%f", m_alpha[0]);
+
              syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
                              + filePost +"  "+ filestreak +"  "+ fileinterp + "   "+ alpchar; 
-/*
-             syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
-                             + filePost +"  "+ filestreak +"  "+ filePost; 
-*/
+
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
@@ -835,11 +883,7 @@ cout<<"alpha="<<m_alpha[0]<<endl;
              syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
                       + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
 	              + interpstreak;
-/*
-             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
-                      + filePost + "  " + filestreak + "  " + movedmesh + "  " 
-	              + interpstreak;
-*/
+
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
@@ -849,13 +893,7 @@ cout<<"alpha="<<m_alpha[0]<<endl;
 
 
              
-             //overwriting the streak file!!          
-	     syscall = "cp -f " + interpstreak + "  " + filestreak;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
+
 
              //save the old mesh     
              string meshfile = m_sessionName + ".xml";                  
@@ -875,25 +913,17 @@ cout<<"alpha="<<m_alpha[0]<<endl;
                   ASSERTL0(false,syscall.c_str());
              }
 
-             //overwriting the interp_moved file
-	     syscall = "cp -f " + movedinterpmesh + "  " + fileinterp;
+             //overwriting the streak file!!          
+             syscall = "cp -f " + interpstreak + "  " + filestreak;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
                   ASSERTL0(false,syscall.c_str());
-             }
+             } 
 
              //calculate the wave
              ExecuteWave();
-/*
-             string meshLin = m_sessionName + "_Lin.xml";
-	     syscall = "../IncNavierStokesSolver/IncNavierStokesSolver-g " + meshLin;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                ASSERTL0(false,syscall.c_str());
-             }
-*/
+
 //cout << "Growth =" <<m_leading_real_evl[0]<<endl; 
 //cout << "Phase =" <<m_leading_imag_evl[0]<<endl; 
              //save the wave field:
@@ -927,40 +957,72 @@ cout<<"alpha="<<m_alpha[0]<<endl;
 
 
              cnt++;
-             char c1[16]="";
-    	     sprintf(c1,"%d",cnt);   
-             //calculate the jump conditions
-             string wavefile  = m_sessionName +".fld"; 
-             syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
-                     + movedmesh + "  " + wavefile + "  " + interpstreak + ">  data"+c1;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
+
+
+
+
+             if(GetVWIIterationType()==eVWIInitialAlpha)
              {
-                  ASSERTL0(false,syscall.c_str());
+                  syscall = "cp -f " + filePost +"   " + meshfile;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+
+
+                  cout<<"initial alpha="<<m_alpha[0]<<endl;
              }
-
-             //use relaxation
-             int reg =3;
-             //FileRelaxation(reg);
-
-             //interpolate the .rst into the new mesh
-             string rstfile = m_sessionName + ".rst";
-             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
-                      + filePost + "  " + rstfile + "  " + movedmesh + "  " 
-	              + rstfile;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
+             else
              {
-                  ASSERTL0(false,syscall.c_str());
-             }                 
+                  //use relaxation
+                  if(GetVWIIterationType()!=eFixedWaveForcingWithSubIterationOnAlpha 
+                     || GetVWIIterationType()!=eVWIInitialAlpha)
+                  {
+                       // the critical layer should be the bnd region 3
+                       int reg =3;
+                       //FileRelaxation(reg);
+                  }
+                  char c1[16]="";
+                  sprintf(c1,"%d",cnt);   
+                  //calculate the jump conditions
+                  string wavefile  = m_sessionName +".fld"; 
+                  syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                        + movedmesh + "  " + wavefile + "  " + interpstreak + ">  data"+c1;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+/*
+                  //interpolate the .rst into the new mesh
+                  string rstfile = m_sessionName + ".rst";
+                  syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+                          + filePost + "  " + rstfile + "  " + movedmesh + "  " 
+	                  + rstfile;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }                 
+*/
 
-             //move the new name_advPost_moved.xml into name_advPost.xml
-	     syscall = "cp -f " + movedmesh + "  " + filePost;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }   
+                  //move the new name_interp_moved.xml into name_interp.xml
+	          syscall = "cp -f " + movedinterpmesh + "  " + fileinterp;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  } 
+                  //move the new name_advPost_moved.xml into name_advPost.xml
+	          syscall = "cp -f " + movedmesh + "  " + filePost;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }   
+
+             }
 
 
 
@@ -1028,14 +1090,23 @@ cout<<"alpha="<<m_alpha[0]<<endl;
     bool VortexWaveInteraction::CheckIfAtNeutralPoint(void)
     {
         bool returnval = false;
-
-        if((m_leading_real_evl[0]*m_leading_real_evl[0] + 
-            m_leading_imag_evl[0]*m_leading_imag_evl[0]) < 
-           m_neutralPointTol*m_neutralPointTol)
+        if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
         {
-            returnval = true;
+              if( abs(m_leading_real_evl[0]) < 1e-4  &&  abs(m_leading_imag_evl[0]) <2e-6 )
+              {
+                     returnval = true;
+              }
+              
         }
-
+        else
+        {
+               if((m_leading_real_evl[0]*m_leading_real_evl[0] + 
+                  m_leading_imag_evl[0]*m_leading_imag_evl[0]) < 
+                  m_neutralPointTol*m_neutralPointTol)
+               {
+                    returnval = true;
+               }
+        }
         if(fabs(m_leading_imag_evl[0]) > 1e-2)
         {
             cout << "Warning: imaginary eigenvalue is greater than 1e-2" << endl;
@@ -1328,8 +1399,8 @@ cout<<"alpha="<<m_alpha[0]<<endl;
 
     void VortexWaveInteraction::FileRelaxation(int reg)
     {
-cout<<"relaxation..."<<endl;
-          static int cnt=0;
+          cout<<"relaxation..."<<endl;
+static int cnt=0;
           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp 
                                            =m_rollField[0]->GetBndCondExpansions();
           //cast to 1D explist (otherwise appenddata doesn't work)
@@ -1367,17 +1438,23 @@ cout<<"relaxation..."<<endl;
           }
           Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[0],1);
 
-
+          
+          //case relaxation==0 an additional array is needed
+          Array<OneD, NekDouble> tmp_forcing(nq, 0.0);
 
           if(cnt!=0)
           {
 cout<<"ucnt="<<cnt<<endl;
+              if(m_vwiRelaxation==1.0)
+              {
+                 Vmath::Vcopy(nq, m_bcsForcing[0],1, tmp_forcing,1);
+              }
               Vmath::Smul(nq,1.0-m_vwiRelaxation,
                         m_bcsForcing[0],1,m_bcsForcing[0],1);
               Vmath::Svtvp(nq,m_vwiRelaxation,m_bcsForcing[2],1,
                          m_bcsForcing[0],1,Ilayer->UpdatePhys(),1);
               //generate again the bcs files:
-
+              
     	      Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
               Ilayer->FwdTrans_IterPerExp(Ilayer->GetPhys(),Ilayer->UpdateCoeffs()); 
               fieldcoeffs[0] = Ilayer->UpdateCoeffs();		
@@ -1387,9 +1464,16 @@ cout<<"ucnt="<<cnt<<endl;
               Ilayer->AppendFieldData(FieldDef1[0], FieldData_1[0]);            	    
               graphShPt->Write(file,FieldDef1,FieldData_1); 
               //save the bcs for the next iteration
-              Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
+              if(m_vwiRelaxation!=1.0)
+              {
+                   Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
                         m_bcsForcing[0],1,m_bcsForcing[0],1);              
-              Vmath::Vcopy(nq,m_bcsForcing[0],1,m_bcsForcing[2],1);
+                   Vmath::Vcopy(nq,m_bcsForcing[0],1,m_bcsForcing[2],1);
+              }
+              else
+              {
+                   Vmath::Vcopy(nq, tmp_forcing,1, m_bcsForcing[2],1);                   
+              }
           }
                    
 
@@ -1408,6 +1492,10 @@ cout<<"ucnt="<<cnt<<endl;
           Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[1],1);
           if(cnt!=0)
           {
+              if(m_vwiRelaxation==1.0)
+              {
+                 Vmath::Vcopy(nq, m_bcsForcing[1],1, tmp_forcing,1);
+              }
               Vmath::Smul(nq,1.0-m_vwiRelaxation,
                         m_bcsForcing[1],1,m_bcsForcing[1],1);
               Vmath::Svtvp(nq,m_vwiRelaxation,m_bcsForcing[3],1,
@@ -1422,9 +1510,16 @@ cout<<"ucnt="<<cnt<<endl;
               Ilayer->AppendFieldData(FieldDef2[0], FieldData_2[0]);            	             	
               graphShPt->Write(file,FieldDef2,FieldData_2); 
               //save the bcs for the next iteration
-              Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
+              if(m_vwiRelaxation!=1.0)
+              {
+                   Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
                         m_bcsForcing[1],1,m_bcsForcing[1],1);              
-              Vmath::Vcopy(nq,m_bcsForcing[1],1,m_bcsForcing[3],1);
+                   Vmath::Vcopy(nq,m_bcsForcing[1],1,m_bcsForcing[3],1);
+              }
+              else
+              {
+                   Vmath::Vcopy(nq, tmp_forcing,1, m_bcsForcing[3],1);                   
+              }
 
 
           }

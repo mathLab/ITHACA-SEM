@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     int i,j;
     if(argc != 5)
     {
-        fprintf(stderr,"Usage: ./MoveMesh  meshfile fieldfile  changefile  alpha\n");
+        fprintf(stderr,"Usage: ./MoveMesh  meshfile fieldfile  changefile   alpha\n");
         exit(1);
     }
 //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
@@ -100,21 +100,17 @@ int main(int argc, char *argv[])
     // store name of the file to change
     string changefile(argv[argc-2]);
     //----------------------------------------------
-
+    
     //store the value of alpha
     string charalp (argv[argc-1]);
     //NekDouble alpha = boost::lexical_cast<double>(charalp);
 cout<<"read alpha="<<charalp<<endl;
-    //----------------------------------------
-
-
     // Import field file.
     string fieldfile(argv[argc-3]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------      
-  
    
 //cout<<"dim st="<<fielddef[0]->m_fields.size()<<endl;
     //fill a vector with the streak sol
@@ -127,7 +123,6 @@ cout<<"read alpha="<<charalp<<endl;
     }
     streak[0]->BwdTrans(streak[0]->GetCoeffs(), streak[0]->UpdatePhys());       
 */ 
- 
     MultiRegions::ExpListSharedPtr streak; 
     streak = MemoryManager<MultiRegions::ContField2D>
           ::AllocateSharedPtr(vSession, graphShPt, "w",true);    
@@ -185,6 +180,7 @@ cout<<"cnt="<<cnt<<"   x="<<xs[j]<<"  y="<<ys[j]<<"  U="<<streak->GetPhys()[j]<<
     	  	  nIregions++;
     	  }    	  
     } 
+
     ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""CalcBC"" specified");
 cout<<"nIregions="<<nIregions<<endl;   
     //set expansion along a layers
@@ -858,7 +854,7 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
     
     //replace the vertices with the new ones
     //Replacevertices(changefile, xnew , ynew, x_c, y_c, Cpointsx, Cpointsy, Eids, npedge);
-    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge,charalp);
+    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge, charalp);
           	       
 }
 				
@@ -1118,7 +1114,7 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
  	       	}
  	    }        	     	
         	
-	}        	
+	}         	
 
 	void Computestreakpositions(int nvertl, MultiRegions::ExpListSharedPtr &streak,
     	        Array<OneD, NekDouble> &x,  Array<OneD, NekDouble> &y,
@@ -1313,11 +1309,13 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
 	           }
                    yc[e] = coord[1];
 	           //Utilities::Zerofunction(coord[0], coord[1], xtest, ytest, streak, derstreak);
-//cout<<"result x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
+//cout<<"result streakvert x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
               }
            
 		
 	}
+
+
 	void GenerateAddPointsNewtonIt( NekDouble &xi, NekDouble &yi,NekDouble &x0, NekDouble &y0,
     	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction)
 	{
@@ -1342,7 +1340,7 @@ cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;
 	        }
 	        x0 = xi;
 	        y0 = coords[1];
-//cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;	        
+cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;	        
 	}
 
         void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
@@ -1626,7 +1624,6 @@ cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;
 
             //set the alpha value
             string alphastring;
-
             condnew = masternew->FirstChildElement("CONDITIONS");
             Parsnew = condnew->FirstChildElement("PARAMETERS");
 cout<<"alpha="<<s_alp<<endl;
@@ -1660,14 +1657,16 @@ cout<<"alpha="<<s_alp<<endl;
                       boost::to_upper(lhs); 
                       if(lhs == "ALPHA")
                       {
-                          alphastring = "Alpha   =  "+s_alp;
+                          alphastring = "Alpha   =  "+ s_alp;
                           parnew->RemoveChild(node);
-                          parnew->LinkEndChild(new TiXmlText(alphastring));
+                          parnew->LinkEndChild(new TiXmlText(alphastring) );                           
                       }     
                   }
                   
 	    	  parnew = parnew->NextSiblingElement("P");  
             }
+
+
 
 	    // Find the Mesh tag and same the dim and space attributes
 	    meshnew = masternew->FirstChildElement("GEOMETRY");
@@ -1684,6 +1683,7 @@ cout<<"alpha="<<s_alp<<endl;
             }
 	    TiXmlElement *vertexnew = elementnew->FirstChildElement("V");
 
+            
       	    
 	    int indx;
 	    int err, numPts;

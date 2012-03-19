@@ -162,6 +162,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
 
         }
     case eFixedWaveForcing:
+    case eVWIInitialAlpha:
         {
             int i;
             int nouter_iter = vwi.GetNOuterIterations();
@@ -175,15 +176,19 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     vwi.SaveLoopDetails("Save", i);
                     vwi.AppendEvlToFile("conv.his",i);            
                         
-                    if(vwi.CheckEigIsStationary())
+                    if(vwi.CheckEigIsStationary() && vwi.GetVWIIterationType()!=eVWIInitialAlpha)
                     {
                         vwi.SaveLoopDetails("Save_Outer", nouter_iter);
+                        break;
+                    }
+                    else if(vwi.GetVWIIterationType()==eVWIInitialAlpha)
+                    {
                         break;
                     }
                 }
                 
                 // check to see if growth was converged. 
-                if(i == vwi.GetIterEnd())
+                if(i == vwi.GetIterEnd() )
                 {
                     cout << "Failed to converge growth rate in" << 
                         " inner iteration after " << vwi.GetIterEnd() 
@@ -197,7 +202,10 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 {
                     vwi.UpdateAlpha(nouter_iter);
                 }
-                
+                if( vwi.GetVWIIterationType()==eVWIInitialAlpha )
+                {  
+                    vwi.CalcNonLinearWaveForce();  
+                }                
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
@@ -263,7 +271,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 // assume that if only previous inner loop has
                 // only done one iteration then we are at neutral
                 // point
-                if (i == 0)
+                if (i == 0  && vwi.IfIterInterface()==false)
                 {
                     exit_iteration = true;
                 }

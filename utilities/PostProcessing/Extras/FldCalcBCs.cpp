@@ -63,11 +63,11 @@ decomment the lines which follow '//decomment'
     int i,j;
     if(argc >= 6  || argc <4)
     {
-        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  streakfile  (alpha)\n");
+        fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  streakfile (optional)alpha\n");
         exit(1);
     }
 cout<<"argc="<<argc<<endl; 
-    //we consider by default the case when alpha is provided: argc=5
+    //change argc from 4 to 5 allow the loading of alpha to be optional
     if(argc==4){ argc=5;}
     //----------------------------------------------
     string meshfile(argv[argc-4]);
@@ -110,7 +110,7 @@ cout<<"argc="<<argc<<endl;
     int nfields; 
     nfields = fielddef[0]->m_fields.size(); 
     Array<OneD, MultiRegions::ExpListSharedPtr> fields; 
-    fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields); 
+    fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
    
 
     std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
@@ -178,7 +178,6 @@ cout<<"argc="<<argc<<endl;
     ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""CalcBC"" specified");
 
 
-
     // import the streak 
     //import the streak field
     //add y to obtain the streak w=w'+y and write fld file           
@@ -206,7 +205,7 @@ cout<<"argc="<<argc<<endl;
     streak->BwdTrans(streak->GetCoeffs(),streak->UpdatePhys());
     int totpoints = fields[0]->GetPlane(0)->GetTotPoints();
 //end   	
-    //---------------------------------------------------------------   
+    //---------------------------------------------------------------    
 
     //set 1D output fields:
     //initialise fields
@@ -255,12 +254,12 @@ cout<<"OOOK"<<endl;
 */    
     
     //manipulate data
-   
     //for 2 variables(u,v) only:
     int coordim = graphShPt->GetMeshDimension(); 
     //remark Ilayers[2] is the critical layer             	   
     static Array<OneD, int> Refindices = GetReflectionIndex(fields, Ilayers[2]);
-    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, fields, outfieldx,outfieldy,streak,Refindices, alpha);       	       
+    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, 
+                    fields, outfieldx,outfieldy,streak,Refindices, alpha);       	       
 
     //--------------------------------------------------------------------------------------
 
@@ -823,15 +822,22 @@ cout<<"layer region="<<Ireg<<endl;
 		     LocalRegions::SegExpSharedPtr  bndSegExp = 
 		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
 	             tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
-
+                     int  physoffsetregIExp = Ilayer->GetPlane(0)->GetPhys_Offset(k);
                      for(int e=0; e< nqedge; e++)
                      {
 
-                          nx[k*nqedge +e] = normals[0][e];
-                          ny[k*nqedge +e] = normals[1][e];
-                          tx[k*nqedge +e] = tangents[0][e];
-                          ty[k*nqedge +e] = tangents[1][e];
-//cout<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl; 
+                          //nx[k*nqedge +e] = normals[0][e];
+                          //ny[k*nqedge +e] = normals[1][e];
+                          //tx[k*nqedge +e] = tangents[0][e];
+                          //ty[k*nqedge +e] = tangents[1][e];
+//cout<<"offset="<<offsetregIExp<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl;
+                          nx[physoffsetregIExp +e] = normals[0][e];
+                          ny[physoffsetregIExp +e] = normals[1][e];
+                          tx[physoffsetregIExp +e] = tangents[0][e];
+                          ty[physoffsetregIExp +e] = tangents[1][e];
+ 
+//cout<<"offset="<<offsetregIExp<<" nx="<<normals[0][e]<<"    ny="<<normals[1][e]<<"   e="<<e<<endl; 
+//cout<<offsetregIExp +e<<"   "<<x0d[offsetregIExp +e]<<" nx="<<nx[offsetregIExp +e]<<"    ny="<<ny[offsetregIExp +e]<<"   e="<<e<<endl; 
 //cout<<"tannn tx="<<tangents[0][e]<<"   ty="<<tangents[1][e]<<endl;
                      }
 		
@@ -934,6 +940,7 @@ cout<<"layer region="<<Ireg<<endl;
              Array<OneD, NekDouble> delta(nq1D);
              Array<OneD, NekDouble> curv_unsigned(nq1D,0.0);
              Array<OneD, NekDouble> curv(nq1D,0.0);
+
         
 
 //cout<<"x     y      tx      ty      dtx        dty       curv"<<endl;     
@@ -950,30 +957,67 @@ cout<<"layer region="<<Ireg<<endl;
 	
 
 	    
-           //attempt to smooth the curvature
-           Array<OneD, NekDouble> curv_coeffs (Nregcoeffs);
-	   outfieldx->FwdTrans(curv, curv_coeffs);
-	   outfieldx->BwdTrans(curv_coeffs, curv); 
+             //attempt to smooth the curvature
+             Array<OneD, NekDouble> curv_coeffs (Nregcoeffs);
+	     outfieldx->FwdTrans(curv, curv_coeffs);
+	     outfieldx->BwdTrans(curv_coeffs, curv); 
+             //P square before norm
+             Array<OneD, NekDouble> P2reg (nq1D, 0.0);
+             for(int e=0; e< nq1D; e++)
+             {
+                  P2reg[e] = Rephysreg[e]*Rephysreg[e] + Imphysreg[e]*Imphysreg[e];
+             }
+             //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
+             NekDouble norm;
+//////////////////////////////////////////////////2D norm
+/*
+             Array<OneD, NekDouble> P2(np, 0.0);
+             for(int h=0; h< np; h++)
+             {
+                   P2[h] = pressure->GetPlane(0)->GetPhys()[h]*pressure->GetPlane(0)->GetPhys()[h]
+                           + pressure->GetPlane(1)->GetPhys()[h]*pressure->GetPlane(1)->GetPhys()[h];
+             }
+             NekDouble intP2 = pressure->GetPlane(0)->PhysIntegral(P2);
 
 
-           //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
 
-           NekDouble norm;
-           NekDouble tmp = pressure->GetPlane(0)->L2();
-           norm = tmp*tmp;
-           tmp = pressure->GetPlane(1)->L2();
-           norm += tmp*tmp;
-           Array<OneD, NekDouble> I (2*np); 
-           Vmath::Fill(2*np,1.0,I,1);            
-           NekDouble Area = pressure->GetPlane(0)->PhysIntegral(I);           
-           norm = sqrt(Area/norm);
-cout<<"norm="<<norm<<endl;
+             NekDouble tmp = pressure->GetPlane(0)->L2();             
+             norm = tmp*tmp;
+             tmp = pressure->GetPlane(1)->L2();
+             norm += tmp*tmp;
+                          
+             Array<OneD, NekDouble> I (2*np,1.0); 
+             //Vmath::Fill(2*np,1.0,I,1);            
+             NekDouble Area = pressure->GetPlane(0)->PhysIntegral(I);           
+             norm = sqrt(Area/norm);
 
-           //norm*pressure
-	   Vmath::Smul(nq1D,norm,Rephysreg,1,Rephysreg,1);                       
-	   Vmath::Smul(nq1D,norm,Imphysreg,1,Imphysreg,1);      
-                    	    
-	    //print out the fields
+             Array<OneD, NekDouble>  I_int(np,1.0);
+             NekDouble Area1 = pressure->GetPlane(0)->PhysIntegral(I_int);
+             NekDouble normint = sqrt(Area1/intP2);
+cout<<"norm="<<norm<<"    area="<<Area<<"    intP2="<<intP2<<"   normint="<<normint<<endl;
+*/
+///////////////////////////////////////////////////////////1D norm
+             Array<OneD, NekDouble> sqrtlen(nq1D);
+             for(int u=0; u<nq1D; u++)
+             {
+                   sqrtlen[u] = sqrt(1+f_z[u]*f_z[u]);
+             }
+             NekDouble  length = Ilayer->GetPlane(0)->PhysIntegral(sqrtlen);
+             NekDouble  int1D = Ilayer->GetPlane(0)->PhysIntegral(P2reg);
+             norm = sqrt(length/int1D);
+             
+             //norm*pressure
+             Vmath::Smul(nq1D,norm,Rephysreg,1,Rephysreg,1);                       
+             Vmath::Smul(nq1D,norm,Imphysreg,1,Imphysreg,1);      
+                  
+
+             //P square after norm
+             Array<OneD, NekDouble> P2reg_aft (nq1D, 0.0);
+             for(int e=0; e< nq1D; e++)
+             {
+                  P2reg_aft[e] = Rephysreg[e]*Rephysreg[e] + Imphysreg[e]*Imphysreg[e];
+             }  	    
+             //print out the fields
             
 
 //cout<<"derivative of the pressure"<<endl;
@@ -1193,7 +1237,7 @@ cout<<"alpha="<<alpha<<endl;
 	   Vmath::Smul(nq1D, n0,d2v,1, vjump,1);      
 	   Vmath::Smul(nq1D, alpha53,vjump,1, vjump,1);  
 	   
-
+cout<<"alpha^-5/3="<<alpha53<<endl;
 	   
            Array<OneD, NekDouble> txcoeffs (Nregcoeffs);
            Array<OneD, NekDouble> tycoeffs (Nregcoeffs);
@@ -1331,7 +1375,9 @@ cout<<"symmetrise the jump conditions"<<endl;
 
 
 
-
+            bool signjac=true;
+            Array<OneD, int> indexjacwarn(nq1D,-1);
+            NekDouble invjac2D;
             NekDouble jactest;
             NekDouble laytest=0;
 	    for(int g=0; g<nq1D; g++)
@@ -1339,9 +1385,11 @@ cout<<"symmetrise the jump conditions"<<endl;
                 //pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;       
                 //pjump[g] = n0*mu53[g]*dP_square[g] ;
                 //vjump[g] = n0*d2v[g];
-  
+                
 //NBBB dPre is the stdDERIV!!! 
-                //jactest = (gmat0[g]*tx[g] +gmat2[g]*ty[g])-(1/Jac[g]);;
+                invjac2D = (gmat0[g]*tx[g] +gmat2[g]*ty[g]);
+                jactest = (invjac2D + (1/Jac[g]))/2.;
+                jactest = (invjac2D- (1/Jac[g]))/jactest;
 /*
 cout<<x0d[g]<<"       "<<
 //stphysreg[g]<<"      "<<lambda[g]<<"      "<<
@@ -1381,10 +1429,20 @@ tx[g]<<"     "<<ty[g]<<"      "<<
 //fun1D_b[g]<<"       "<<dersfun1D_b[g]
 pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
 <<outfieldx->GetPhys()[g]<<"      "
-<<outfieldy->GetPhys()[g]<<endl;
-//cout<<"jactest="<<jactest<<endl;
-                ASSERTL0(abs(jactest)<0.5, "jac 1D problem..");                
+<<outfieldy->GetPhys()[g]<<"     "<<Imphysreg[g]<<"      "<<dP_im[g]
+<<"       "<<P2reg[g]<<"       "<<P2reg_aft[g]<<endl;
 
+//cout<<"jactest="<<jactest<<endl;
+//cout<<"(gmat0[g]*tx[g] +gmat2[g]*ty[g])="<<(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<
+//"      1/jac1D="<<1./Jac[g]<<endl;
+                ASSERTL0(invjac2D*Jac[g]>0, " sign jac problem..");
+            //30% error is allowed!!!
+                ASSERTL0(abs(jactest)<0.3, "jac 1D problem..");                
+            //save info of point where the error >20%
+                if(jactest>=0.2)
+                {
+                     indexjacwarn[g] =g;
+                }
 
 	    }
             ASSERTL0(abs(laytest)<0.001, "critical layer wrong");
@@ -1393,8 +1451,13 @@ pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
             // need the tangents related to the expList1D outfieldx[region]
 
 
-
-
+            for(int m=0; m<nq1D; m++)
+            {
+                if(indexjacwarn[m]!=-1)
+                {
+                    cout<<"warning: point with jacerr>20% index="<<m<<"   x="<<x0d[m]<<"  y="<<x1d[m]<<endl;
+                }
+            }
 
             for(int a=0; a<Elmtid.num_elements(); a++)
             {

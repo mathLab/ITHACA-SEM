@@ -497,9 +497,9 @@ namespace Nektar
             // for all faces.
             const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
                 { {0,1,2,3} ,
-                  {0,1,4,-1},  // This is triangle requires only three vertices
+                  {0,1,4,0},  // This is triangle requires only three vertices
                   {1,2,5,4} ,
-                  {3,2,5,-1},  // This is triangle requires only three vertices
+                  {3,2,5,0},  // This is triangle requires only three vertices
                   {0,3,5,4} ,};
 
             NekDouble dotproduct1 = 0.0;

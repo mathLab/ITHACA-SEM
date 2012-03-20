@@ -128,7 +128,9 @@ namespace Nektar
                 m_HomoDirec       = 1;
 				
 				
-				if(m_session->DefinesSolverInfo("SingleMode"))
+				if(m_session->DefinesSolverInfo("SingleMode")  &&
+                             m_session->GetSolverInfo("solvertype") != "CoupledLinearisedNS"
+                                  )
 				{
 					if(m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
 					{

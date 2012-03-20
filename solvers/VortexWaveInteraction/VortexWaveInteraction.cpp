@@ -267,6 +267,7 @@ namespace Nektar
              solverRoll->DoInitialise();
              solverRoll->DoSolve();
              solverRoll->Output();
+             m_rollField = solverRoll->UpdateFields();
              for(int g=0; g< solverRoll->GetNvariables(); ++g)
              {
                   NekDouble vL2Error = solverRoll->L2Error(g,false);
@@ -298,6 +299,7 @@ namespace Nektar
             m_solverRoll->DoInitialise();
             m_solverRoll->DoSolve();
             m_solverRoll->Output();
+            m_rollField = m_solverRoll->UpdateFields();
         }
 
 
@@ -415,7 +417,7 @@ namespace Nektar
              if( GetVWIIterationType()==eVWIInitialAlpha )
              {
                   string filePost = m_sessionName + "_advPost.xml";
-                  syscall = "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                  syscall = "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
                        + filePost +"     "+
                        "meshhalf_pos_Spen_stability_moved.fld  meshhalf_pos_Spen_advPost_moved.fld "
                        +c_alpha +"  > data_alpha0";
@@ -440,7 +442,7 @@ namespace Nektar
              }
              else
              {
-                  syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
                      + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
                   cout<<syscall.c_str()<<endl;
                   if(system(syscall.c_str()))
@@ -845,7 +847,7 @@ namespace Nektar
 cout<<"alpha = "<<m_alpha[0]<<endl;
              sprintf(alpchar, "%f", m_alpha[0]);
 
-             syscall  = "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+             syscall  = "../../utilities/PostProcessing/Extras/MoveMesh-g  "
                              + filePost +"  "+ filestreak +"  "+ fileinterp + "   "+ alpchar; 
 
              cout<<syscall.c_str()<<endl;
@@ -855,7 +857,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
              }
 
              //move the advPost mesh (remark update alpha!!!)
-             syscall  =  "../../../utilities/builds/PostProcessing/Extras/MoveMesh-g  "
+             syscall  =  "../../utilities/PostProcessing/Extras/MoveMesh-g  "
                       + filePost + "  " + filestreak + "  " + filePost + "    "+ alpchar;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
@@ -880,7 +882,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
 
              //create the interp streak             
              string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
-             syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
+             syscall  =  "../../utilities/PostProcessing/Extras/FieldToField-g  "
                       + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
 	              + interpstreak;
 
@@ -924,8 +926,6 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
              //calculate the wave
              ExecuteWave();
 
-//cout << "Growth =" <<m_leading_real_evl[0]<<endl; 
-//cout << "Phase =" <<m_leading_imag_evl[0]<<endl; 
              //save the wave field:
              string oldwave = m_sessionName +"_wave_"+c +".fld";    
 	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
@@ -987,7 +987,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                   sprintf(c1,"%d",cnt);   
                   //calculate the jump conditions
                   string wavefile  = m_sessionName +".fld"; 
-                  syscall =  "../../../utilities/builds/PostProcessing/Extras/FldCalcBCs-g  "
+                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
                         + movedmesh + "  " + wavefile + "  " + interpstreak + ">  data"+c1;
                   cout<<syscall.c_str()<<endl;
                   if(system(syscall.c_str()))
@@ -1023,10 +1023,6 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                   }   
 
              }
-
-
-
-         
 
 	}
 	else

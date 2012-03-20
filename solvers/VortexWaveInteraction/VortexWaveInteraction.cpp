@@ -116,7 +116,8 @@ namespace Nektar
         IncNSFilenames.push_back(IncCondFile);
 
         // Create Incompressible NavierStokesSolver session reader.
-        m_sessionRoll = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames, m_sessionVWI->GetComm());
+        m_sessionRoll = LibUtilities::SessionReader::CreateInstance(argc, argv, IncNSFilenames, 
+                                                                    m_sessionVWI->GetComm());
         std::string vEquation = m_sessionRoll->GetSolverInfo("SolverType");
         m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll);
 
@@ -279,20 +280,38 @@ namespace Nektar
         }
         else
         {
-            // Read vwi file
-            std::string forcefile
-                = m_sessionRoll->GetFunctionFilename("BodyForce");
-            
-            if(forcefile != "")
+            static int init = 1;
+
+            if(init)
             {
-                m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+                // Read vwi file
+                std::string forcefile
+                    = m_sessionRoll->GetFunctionFilename("BodyForce");
                 
+                if(forcefile != "")
+                {
+                    m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+                    
+                    // Scale forcing
+                    int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+                    for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
+                    {
+                        Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+                    }
+                }
+                init = 0;
+            }
+            else // use internal definition of forcing in m_vwiForcing
+            {
                 // Scale forcing
                 int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+                Array<OneD, NekDouble> physForce(npoints);
                 for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
                 {
-                    Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+                    m_solverRoll->UpdateForces()[i]->BwdTrans(m_vwiForcing[i],physForce);
+                    Vmath::Smul(npoints,m_rollForceScale,physForce,1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
                 }
+
             }
             // Execute Roll 
             cout << "Executing Roll solver" << endl;

@@ -897,8 +897,8 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
 				HomogeneousType = eHomogeneous1D;
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+				session->LoadParameter("HomModesZ",npointsZ);
+				session->LoadParameter("LZ",       LhomZ   );
 				HomoDirec       = 1;
 			}
 			
@@ -906,10 +906,10 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
 			{
 				HomogeneousType = eHomogeneous2D;
-				npointsY        = session->GetParameter("HomModesY");
-				LhomY           = session->GetParameter("LY");
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+				session->LoadParameter("HomModesY",npointsY);
+				session->LoadParameter("LY",       LhomY   );
+				session->LoadParameter("HomModesZ",npointsZ);
+				session->LoadParameter("LZ",       LhomZ   );
 				HomoDirec       = 2;
 			}
 			
@@ -917,12 +917,12 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
 				HomogeneousType = eHomogeneous3D;
-				npointsX        = session->GetParameter("HomModesX");
-				LhomX           = session->GetParameter("LX");
-				npointsY        = session->GetParameter("HomModesY");
-				LhomY           = session->GetParameter("LY");
-				npointsZ        = session->GetParameter("HomModesZ");
-				LhomZ           = session->GetParameter("LZ");
+				session->LoadParameter("HomModesX",npointsX);
+				session->LoadParameter("LX",       LhomX   );
+				session->LoadParameter("HomModesY",npointsY);
+				session->LoadParameter("LY",       LhomY   );
+				session->LoadParameter("HomModesZ",npointsZ);
+				session->LoadParameter("LZ",       LhomZ   );
 				HomoDirec       = 3;
 			}
 			

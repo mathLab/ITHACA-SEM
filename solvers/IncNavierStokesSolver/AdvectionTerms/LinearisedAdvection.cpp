@@ -117,7 +117,7 @@ namespace Nektar
 				}
 				else 
 				{
-					m_npointsZ        = m_session->GetParameter("HomModesZ");
+					m_session->LoadParameter("HomModesZ",m_npointsZ);
 
 				}
 
@@ -127,10 +127,10 @@ namespace Nektar
                (HomoStr == "2D")||(HomoStr == "Homo2D"))
             {
                 m_HomogeneousType = eHomogeneous2D;
-                m_npointsY        = m_session->GetParameter("HomModesY");
-                m_LhomY           = m_session->GetParameter("LY");
-                m_npointsZ        = m_session->GetParameter("HomModesZ");
-                m_LhomZ           = m_session->GetParameter("LZ");
+                m_session->LoadParameter("HomModesY", m_npointsY);
+                m_session->LoadParameter("LY",        m_LhomY);
+                m_session->LoadParameter("HomModesZ", m_npointsZ);
+                m_session->LoadParameter("LZ",        m_LhomZ);
                 m_HomoDirec       = 2;
             }
 			
@@ -138,12 +138,12 @@ namespace Nektar
                (HomoStr == "3D")||(HomoStr == "Homo3D"))
             {
                 m_HomogeneousType = eHomogeneous3D;
-                m_npointsX        = m_session->GetParameter("HomModesX");
-                m_LhomX           = m_session->GetParameter("LX");
-                m_npointsY        = m_session->GetParameter("HomModesY");
-                m_LhomY           = m_session->GetParameter("LY");
-                m_npointsZ        = m_session->GetParameter("HomModesZ");
-                m_LhomZ           = m_session->GetParameter("LZ");
+                m_session->LoadParameter("HomModesX",m_npointsX);
+                m_session->LoadParameter("LX",       m_LhomX   );
+                m_session->LoadParameter("HomModesY",m_npointsY);
+                m_session->LoadParameter("LY",       m_LhomY   );
+                m_session->LoadParameter("HomModesZ",m_npointsZ);
+                m_session->LoadParameter("LZ",       m_LhomZ   );
                 m_HomoDirec       = 3;
             }
 			
@@ -192,10 +192,10 @@ namespace Nektar
 		//Periodic base flows
 		if(m_session->DefinesParameter("N_slices"))
 		{
-			m_slices=m_session->GetParameter("N_slices");			
-			if(m_slices>1)
-			{
-	
+            m_session->LoadParameter("N_slices",m_slices);
+            if(m_slices>1)
+            {
+
 				int npoints=m_base[0]->GetTotPoints();
 				Array<OneD, NekDouble> fft_in(npoints*m_slices);
 				Array<OneD, NekDouble> fft_out(npoints*m_slices);

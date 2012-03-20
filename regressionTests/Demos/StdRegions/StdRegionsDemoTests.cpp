@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
     Execute("StdProject1D", "4 6 7","Seg Mod. Basis, P=6, Q=7");
 	
-	Execute("StdProject1D", "12 2 8","Single Mode Fourier Basis, P=2, Q=8");
+	Execute("StdProject1D", "12 2 2","Single Mode Fourier Basis, P=2, Q=8");
 
 
     // 1D Differentiation Projection Tests

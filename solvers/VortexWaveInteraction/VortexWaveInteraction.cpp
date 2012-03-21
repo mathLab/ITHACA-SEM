@@ -299,6 +299,9 @@ namespace Nektar
                         Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
                     }
                 }
+
+                m_solverRoll->DoInitialise();
+
                 init = 0;
             }
             else // use internal definition of forcing in m_vwiForcing
@@ -315,7 +318,6 @@ namespace Nektar
             }
             // Execute Roll 
             cout << "Executing Roll solver" << endl;
-            m_solverRoll->DoInitialise();
             m_solverRoll->DoSolve();
             m_solverRoll->Output();
             m_rollField = m_solverRoll->UpdateFields();

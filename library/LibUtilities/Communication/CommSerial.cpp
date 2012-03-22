@@ -133,6 +133,26 @@ namespace Nektar
                                 Array<OneD, int>& pRecvData)
         {
         }
+		
+		
+		/**
+         *
+         */
+        void CommSerial::v_SendRecvReplace(int pSendProc,
+										   int pRecvProc,
+										   Array<OneD, NekDouble>& pSendData)
+		{
+		}
+		
+		
+		/**
+         *
+         */
+        void CommSerial::v_SendRecvReplace(int pSendProc,
+										   int pRecvProc,
+										   Array<OneD, int>& pSendData)
+		{
+		}
 
 
         /**

@@ -92,6 +92,12 @@ namespace Nektar
                                      Array<OneD, int>& pSendData,
                                      int pRecvProc,
                                      Array<OneD, int>& pRecvData);
+			    LIB_UTILITIES_EXPORT inline void SendRecvReplace(int pSendProc,
+																int pRecvProc,
+																Array<OneD, NekDouble>& pSendData);
+			     LIB_UTILITIES_EXPORT inline void SendRecvReplace(int pSendProc,
+													             int pRecvProc,
+													             Array<OneD, int>& pSendData);
                 LIB_UTILITIES_EXPORT inline void AllReduce(NekDouble& pData, enum ReduceOperator pOp);
                 LIB_UTILITIES_EXPORT inline void AllReduce(int& pData, enum ReduceOperator pOp);
                 LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, NekDouble>& pData,
@@ -130,6 +136,12 @@ namespace Nektar
                                         Array<OneD, int>& pSendData,
                                         int pRecvProc,
                                         Array<OneD, int>& pRecvData) = 0;
+				virtual void v_SendRecvReplace(int pSendProc,
+									          int pRecvProc,
+									          Array<OneD, NekDouble>& pSendData) = 0;
+				virtual void v_SendRecvReplace(int pSendProc,
+											  int pRecvProc,
+									          Array<OneD, int>& pSendData) = 0;
                 virtual void v_AllReduce(NekDouble& pData,
                                          enum ReduceOperator pOp) = 0;
                 virtual void v_AllReduce(int& pData,
@@ -240,6 +252,27 @@ namespace Nektar
                              Array<OneD, int>& pRecvData)
         {
             v_SendRecv(pSendProc, pSendData, pRecvProc, pRecvData);
+        }
+		
+		/**
+         *
+         */
+        inline void Comm::SendRecvReplace(int pSendProc,
+										 int pRecvProc,
+								         Array<OneD, NekDouble>& pSendData)
+        {
+            v_SendRecvReplace(pSendProc,pRecvProc,pSendData);
+        }
+		
+		
+        /**
+         *
+         */
+        inline void Comm::SendRecvReplace(int pSendProc,
+										 int pRecvProc,
+								         Array<OneD, int>& pSendData)
+        {
+            v_SendRecvReplace(pSendProc,pRecvProc,pSendData);
         }
 
 

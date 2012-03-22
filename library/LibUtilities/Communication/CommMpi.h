@@ -91,6 +91,12 @@ namespace Nektar
                                     Array<OneD, int>& pSendData,
                                     int pRecvProc,
                                     Array<OneD, int>& pRecvData);
+			virtual void v_SendRecvReplace(int pSendProc,
+										   int pRecvProc,
+										   Array<OneD, NekDouble>& pSendData);
+			virtual void v_SendRecvReplace(int pSendProc,
+										   int pRecvProc,
+										   Array<OneD, int>& pSendData);
             virtual void v_AllReduce(NekDouble& pData,
                                      enum ReduceOperator pOp);
             virtual void v_AllReduce(int& pData,

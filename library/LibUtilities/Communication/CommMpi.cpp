@@ -267,6 +267,52 @@ namespace Nektar
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing send-receive of data.");
         }
+		
+		/**
+         *
+         */
+        void CommMpi::v_SendRecvReplace(int pSendProc,
+								        int pRecvProc,
+										Array<OneD, NekDouble>& pSendData)
+        {
+            MPI_Status status;
+            int retval = MPI_Sendrecv_replace(pSendData.get(),
+									         (int) pSendData.num_elements(),
+									          MPI_DOUBLE,
+									          pRecvProc,
+									          0,
+									          pSendProc,
+									          0,
+									          MPI_COMM_WORLD,
+									          &status);
+			
+            ASSERTL0(retval == MPI_SUCCESS,
+                     "MPI error performing Send-Receive-Replace of data.");
+        }
+		
+		
+        /**
+         *
+         */
+        void CommMpi::v_SendRecvReplace(int pSendProc,
+										int pRecvProc,
+								         Array<OneD, int>& pSendData)
+							
+        {
+            MPI_Status status;
+            int retval = MPI_Sendrecv_replace(pSendData.get(),
+											  (int) pSendData.num_elements(),
+									          MPI_INT,
+									          pRecvProc,
+									          0,
+									          pSendProc,
+									          0,
+									          MPI_COMM_WORLD,
+									          &status);
+			
+            ASSERTL0(retval == MPI_SUCCESS,
+                     "MPI error performing Send-Receive-Replace of data.");
+        }
 
 
         /**

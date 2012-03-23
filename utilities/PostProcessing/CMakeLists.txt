@@ -5,6 +5,7 @@ ADD_UTILITIES_EXECUTABLE(FldToVtk      util FldToVtk.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToVtk      util XmlToVtk.cpp)
 ADD_UTILITIES_EXECUTABLE(ProbeFld      util-extra ProbeFld.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddField   util-extra FldAddField.cpp)
+ADD_UTILITIES_EXECUTABLE(FldAddFalknerSkanBL   util-extra FldAddFalknerSkanBL.cpp)
 ADD_UTILITIES_EXECUTABLE(CombinePartitions   util-extra CombinePartitions.cpp)
 
 # Generate list of available solvers

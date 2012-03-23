@@ -314,9 +314,6 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
 		ExpList(pSession)
         {
-			
-			cout << "\n---- ExpList1D::ExpList1D(domain, graph1D); subdomain = "<<i<<" ----"<<endl;
-			
             int id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -335,7 +332,6 @@ namespace Nektar
 				offset += compIt->second->size();
 				++compIt;
 			}	
-			cout << "composite to be processed: "<<compIt->first<<endl;
 			comp = compIt->second;
 			
 			//Find the correct expansion start point for the current composite
@@ -346,19 +342,13 @@ namespace Nektar
 			}	
 			
 			// Process each expansion in the region.
-			cout << "Number of expansions in composite: "<<compIt->second->size()<<endl;
             for(int j = 0; j < compIt->second->size(); ++j)
             {
 				if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*compIt->second)[j]))
-				{
-					cout << "procesing segment S["<< offset+j <<"]...";
-					
+				{					
 					// Retrieve the basis key from the expansion.
 					LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
-															
-					cout << "\t basiskey nummodes = "<<bkey.GetNumModes();
-					cout << "\t basiskey numpoints = "<<bkey.GetNumPoints()<<endl;
-					
+																				
 					seg = MemoryManager<LocalRegions::SegExp>
 					::AllocateSharedPtr(bkey, SegmentGeom);
 					

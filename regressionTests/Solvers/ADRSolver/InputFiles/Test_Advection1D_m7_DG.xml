@@ -69,7 +69,7 @@
                 <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-advx*t))" />
             </REGION>
             <REGION REF="1">
-                <N VAR="u" VALUE="0" />
+                <D VAR="u" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

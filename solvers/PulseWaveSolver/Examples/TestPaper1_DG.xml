@@ -84,9 +84,9 @@
 
         <PARAMETERS>
 			<P> TimeStep       = 2e-6               </P> 
-            <P> FinTime        = 0.25               </P>
+            <P> FinTime        = 1e-3               </P>
             <P> NumSteps       = FinTime/TimeStep   </P>
-            <P> IO_CheckSteps  = NumSteps/50        </P>
+            <P> IO_CheckSteps  = NumSteps           </P>
             <P> IO_InfoSteps   = 100                </P>
             <P> T              = 0.33               </P>
             <P> h0             = 1.0                </P>
@@ -135,11 +135,11 @@
         </FUNCTION>
         
         <FUNCTION NAME="A_0">
-            <E VAR="A" VALUE="1.0" />
+            <E VAR="A_0[0]" VALUE="1.0" />
         </FUNCTION>
         
         <FUNCTION NAME="MaterialProperties"> 
-            <E VAR="E0" VALUE="Y0*(1.0-kappa/(1+exp(-2*k*(a1-x)))+kappa/(1+exp(-2*k*(a2-x))))" />     	
+            <E VAR="beta[0]" VALUE="451352*(1.0-kappa/(1+exp(-2*k*(a1-x)))+kappa/(1+exp(-2*k*(a2-x))))" />     	
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">

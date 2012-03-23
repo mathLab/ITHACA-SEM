@@ -68,7 +68,7 @@ namespace Nektar
                     const std::string &variable);
 			
 			/// Constructor for a DisContField1D from a List of subdomains
-			/// New Constructor
+			/// New Constructor for arterial network 
             MULTI_REGIONS_EXPORT DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
 												const SpatialDomains::CompositeMap& domain,
 												const SpatialDomains::MeshGraphSharedPtr &graph1D,

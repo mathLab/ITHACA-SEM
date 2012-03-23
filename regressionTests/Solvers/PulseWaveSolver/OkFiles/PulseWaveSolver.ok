@@ -2,9 +2,9 @@ PulseWaveSolver
 ==========================================
 TestPaper1_DG.xml
 L 2 error (variable A) : 5.47723
-L inf error (variable A) : 1
-L 2 error (variable u) : 5.47723
-L inf error (variable u) : 1.00002
+L inf error (variable A) : 1.00008
+L 2 error (variable u) : 5.47899
+L inf error (variable u) : 1.04038
 ----------------------------------------
 TestPaper2_DG.xml
 L 2 error (variable A) : 14.1394
@@ -36,3 +36,18 @@ L inf error (variable A) : 6.00991
 L 2 error (variable u) : 0.063162
 L inf error (variable u) : 0.0691512
 ----------------------------------------
+Test_TwoBifurcations.xml
+L 2 error (variable A) : 43.9048
+L inf error (variable A) : 9.81818
+L 2 error (variable u) : 0.0152826
+L inf error (variable u) : 0.0100346
+----------------------------------------
+TestPaper4_55Network.xml
+L 2 error (variable A) : 12.286
+L inf error (variable A) : 6.1916
+L 2 error (variable u) : 19.2064
+L inf error (variable u) : 11.8315
+----------------------------------------
+
+
+

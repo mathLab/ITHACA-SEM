@@ -83,6 +83,8 @@ int main(int argc, char* argv[])
 	Execute("PulseWaveSolver","Test_Q_inflow.xml","Q-inflow Riemann solver, P=5");
 	Execute("PulseWaveSolver","Test_Junction.xml","Junction Riemann solver, P=5");
 	Execute("PulseWaveSolver","Test_Bifurcation.xml","Bifurcation Riemann solver, P=5");
+	Execute("PulseWaveSolver","Test_TwoBifurcations.xml","Double Bifurcation, P=11");
+	Execute("PulseWaveSolver","TestPaper4_55Network.xml","55 Artery Network, P=5");
 
     
     if (tests_failed && !quiet)

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Pulse Wave Propagation solve routines
+// Description: Pulse Wave Propagation solve routines based on the weak formulation (1): 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,17 @@ namespace Nektar
 {
     string PulseWavePropagation::className = GetEquationSystemFactory().RegisterCreatorFunction("PulseWavePropagation", PulseWavePropagation
 																								::create, "Pulse Wave Propagation equation.");
-
+	/**
+     *  @class PulseWavePropagation 
+     *
+	 *  Set up the routines based on the weak formulation from "Computational Modelling of 1D blood
+	 *  flow with variable mechanical properties" by S. J. Sherwin et al. The weak formulation (1) 
+	 *  reads:
+	 *  \f$ \sum_{e=1}^{N_{el}} \left[ \left( \frac{\partial \mathbf{U}^{\delta} }{\partial t} , 
+	 *    \mathbf{\psi}^{\delta} \right)_{\Omega_e} - \left( \frac{\partial \mathbf{F(\mathbf{U})}^{\delta} }
+	 *    {\partial x}, \mathbf{\psi}^{\delta}  \right)_{\Omega_e} + \left[ \mathbf{\psi}^{\delta} 
+	 *    \cdot \{ \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta}) \} \right]_{x_e^l}^{x_eû} \right] = 0 \f$
+     */ 
     PulseWavePropagation::PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession)
 	: PulseWaveSystem(pSession)
     {
@@ -68,7 +78,11 @@ namespace Nektar
 	
 	
 	/**
-	 * DoOdeRhs
+	 *  Computes the right hand side of (1). The RHS is everything except the term that contains
+	 *  the time derivative \f$\frac{\partial \mathbf{U}}{\partial t}\f$. In case of a Discontinuous
+	 *  Galerkin projection, the routine WeakDGAdvection will be called which then calls 
+	 *  v_GetFluxVector and v_NumericalFlux implemented in the PulseWavePropagation class. The 
+	 *  continuous Galerkin projection calls this two routines directly.
 	 */
     void PulseWavePropagation::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
 										Array<OneD,        Array<OneD, NekDouble> >&outarray,
@@ -124,13 +138,13 @@ namespace Nektar
                     fluxvector[i] = Array<OneD, NekDouble> (nq);
                 }
 				
-				// Calculate second term in weak formulation (17) 
+				// Calculate second term in weak formulation (1) 
                 for(i = 0; i < nvariables; ++i)
                 {
-					// Get the ith component of the flux vector F=(Q;p_t)
+					// Get the ith component of the flux vector \f$\maththbf{F} = [Au,p_t]^T\f$
 					PulseWavePropagation::GetFluxVector(i,physarray,fluxvector);
 					
-					// Calculate Derivative dF/dx
+					// Calculate Derivative \f$ \partial \mathbf{F} / \partial x \f$
 					m_fields[0]->PhysDeriv(0,fluxvector[0],outarray[i]);
                     
 					// Negate as shifted on right hand side
@@ -143,7 +157,8 @@ namespace Nektar
 
 
     /**
-     *	DoOdeProjection
+     *	Does the projection between ... space and the ... space. Also checks for Q-inflow boundary 
+	 *  conditions at the inflow of the current arterial segment and applies the Q-inflow if specified
      */
     void PulseWavePropagation::DoOdeProjection(const Array<OneD,const Array<OneD, NekDouble> >&inarray,
 											   Array<OneD, Array<OneD, NekDouble> >&outarray,
@@ -169,9 +184,6 @@ namespace Nektar
 				A_r = m_fields[0]->GetCoeffs()[0];
 				u_r = m_fields[1]->GetCoeffs()[0];
 				
-				//cout << "A_r = "<<A_r<<endl;
-				//cout << "u_r = "<<u_r<<endl;
-				
 				// Call the Q-inflow Riemann solver
 				Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[0],m_beta[0],Au,uu);
 				
@@ -181,14 +193,13 @@ namespace Nektar
 			}
 		}
 			
-	
+		// Do actual projection
         switch(m_projectionType)
         {
         case MultiRegions::eDiscontinuousGalerkin:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
@@ -214,13 +225,12 @@ namespace Nektar
 
 	
 	/**
-	 * Calculates the second term of the weak form: dF/dx 
-	 * The variables ot the system are (A;u)
-	 * physfield[0] = A
-	 * physfield[1] = u
-	 * flux[0] = F[0] = A*u
-	 * flux[1] = F[1] = u^2/2 + p/rho
-	 * p-A-relationship: p = p_ext + beta*(sqrt(A)-sqrt(A_0))
+	 *  Calculates the second term of the weak form (1):
+	 *  \f$ \left( \frac{\partial \mathbf{F(\mathbf{U})}^{\delta} }{\partial x}, \mathbf{\psi}^{\delta} \right)_{\Omega_e} \f$
+	 *  The variables of the system are $\mathbf{U} = [A,u]^T$
+	 *  physfield[0] = A        physfield[1] = u
+	 *  flux[0] = F[0] = A*u    flux[1] = F[1] = u^2/2 + p/rho
+	 *  p-A-relationship: p = p_ext + beta*(sqrt(A)-sqrt(A_0))
 	 */
     void PulseWavePropagation::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
 											   Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -262,8 +272,9 @@ namespace Nektar
 
 	
 	/**
-	 * Calculates the third term of the weak form: numerical flux at boundary
-	 *
+	 *  Calculates the third term of the weak form (1): numerical flux at boundary
+	 *  \f$ \left[ \mathbf{\psi}^{\delta} \cdot \{ \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta})
+	 *  \} \right]_{x_e^l}^{x_eû} \right] \f$
 	 */
     void PulseWavePropagation::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 											   Array<OneD, Array<OneD, NekDouble> > &numflux)
@@ -285,29 +296,12 @@ namespace Nektar
 			Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
 		}
 		
-		/*/ Print the values in physfield
-		for (int i=0; i<physfield[0].num_elements(); i++)
-		{
-			cout << "physfield[A]["<<i<<"] = "<<physfield[0][i]<<"\t";
-			cout << "physfield[u]["<<i<<"] = "<<physfield[1][i]<<endl;
-		}*/
-		
 		// Get the physical values at the trace
 		for (i = 0; i < nvariables; ++i)
 		{
 			m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
 		}
 				
-		/*/ Print the values in Fwd and Bwd
-		 for (int i=0; i<Fwd[0].num_elements(); i++)
-		 {
-		 cout << "Fwd[A]["<<i<<"] = "<<Fwd[0][i]<<"\t";
-		 cout << "Bwd[A]["<<i<<"] = "<<Bwd[0][i]<<"\t\t";
-		 
-		 cout << "Fwd[u]["<<i<<"] = "<<Fwd[1][i]<<"\t";
-		 cout << "Bwd[u]["<<i<<"] = "<<Bwd[1][i]<<endl;
-		 }*/
-		
 		// Get A_0 at the trace
 		Array<OneD, NekDouble> A_trace(GetTraceTotPoints());
 		m_fields[0]->ExtractTracePhys(m_A_0,A_trace);
@@ -318,7 +312,8 @@ namespace Nektar
 		m_fields[0]->ExtractTracePhys(m_beta,beta_trace);
 		beta_trace[GetTraceTotPoints()-1] = m_beta[GetTotPoints()-1];
 
-        // Solve the upwinding Riemann problem within one arterial segment
+        // Solve the upwinding Riemann problem within one arterial segment by calling the upwinding
+		// Riemann solver implemented in this file
         NekDouble Aflux, uflux;
         for (i = 0; i < nTraceNumPoints; ++i)
 		{
@@ -343,8 +338,10 @@ namespace Nektar
 	
 	
 	/**
-	 * Upwinding Riemann solver for pulse wave propagaiton
-	 * 
+	 *  Riemann solver for upwinding at an interface between two elements. Uses the characteristic variables 
+	 *  for calculating the upwinded state \f$(A_u,u_u)\f$ from the left \f$(A_L,u_L)\f$ and right state \f$(A_R,u_R)\f$. 
+	 *  Returns the upwinded flux $\mathbf{F}^u$ needed for the weak formulation (1). Details can be found in "Pulse 
+	 *  wave propagation in the human vascular system", section 3.3 
 	 */
 	void PulseWavePropagation::RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, 
 												   NekDouble &Aflux, NekDouble &uflux, int i, NekDouble A_0, NekDouble beta)
@@ -369,28 +366,18 @@ namespace Nektar
 		// Compute the wave speeds
 		cL = sqrt(beta*sqrt(AL)/(2*rho));
 		cR = sqrt(beta*sqrt(AR)/(2*rho));
-		c_Roe =(cL+cR)/2;
-		//cout << "cL = "<<cL<<"\tcR = "<<cR<<"\tc_Roe = "<<c_Roe<<endl;
-		
+		c_Roe =(cL+cR)/2;		
 		u_Roe = (uL+uR)/2;
-		//cout << "uL = "<<uL<<"\tuR = "<<uR<<"\tu_Roe = "<<u_Roe<<endl;
-		
 		lambda[0]= u_Roe + c_Roe;
 		lambda[1]= u_Roe - c_Roe;
-		//cout << "lambda[0] = "<<lambda[0]<<"\tlambda[1] = "<<lambda[1]<<endl;
 		
 		// Calculate the caracteristic variables 
-		// Left characteristics
-		characteristic[0] = uL + 4*sqrt(sqrt(AL))*sqrt(beta/(2*rho));
-		characteristic[1] = uL - 4*sqrt(sqrt(AL))*sqrt(beta/(2*rho));
-		// Right characteristics
-		characteristic[2] = uR + 4*sqrt(sqrt(AR))*sqrt(beta/(2*rho));
-		characteristic[3] = uR - 4*sqrt(sqrt(AR))*sqrt(beta/(2*rho));
-		
-		for (int k=0; k<4; k++)
-		{
-			//cout << "characteristic["<<k<<"] = "<<characteristic[k]<<endl;
-		}
+		// Left characteristics \f$W_1^l, W_2^l\f$
+		characteristic[0] = uL + 4*cL; //sqrt(sqrt(AL))*sqrt(beta/(2*rho));
+		characteristic[1] = uL - 4*cL; //sqrt(sqrt(AL))*sqrt(beta/(2*rho));
+		// Right characteristics \f$W_1^r, W_2^r\f$
+		characteristic[2] = uR + 4*cR; //sqrt(sqrt(AR))*sqrt(beta/(2*rho));
+		characteristic[3] = uR - 4*cR; //sqrt(sqrt(AR))*sqrt(beta/(2*rho));
 		
 		// Take left or right value of characteristic variable
 		for (int j=0; j<2; j++)
@@ -404,16 +391,10 @@ namespace Nektar
 				W[j]=characteristic[j+2];
 			}
 		}
-		
-		for (int i=0; i<2; i++)
-		{
-			//cout << "upwinded W["<<i<<"] = "<<W[i]<<endl;
-		}
-		
+
 		// Calculate conservative variables from characteristics
 		upwindedphysfield[0]= ((W[0]-W[1])/4)*((W[0]-W[1])/4)*((W[0]-W[1])/4)*((W[0]-W[1])/4)*(rho/(2*beta))*(rho/(2*beta));
 		upwindedphysfield[1]= (W[0] + W[1])/2;
-		
 		
 		// Compute the fluxes
 		Aflux = upwindedphysfield[0] * upwindedphysfield[1];
@@ -425,10 +406,11 @@ namespace Nektar
 
 	
 	/**
-	 * Q-inflow Riemann solver for pulse wave propagation.
-	 * This Riemann solver is called by SetBoundaryCondition_Pulse()
-	 * in case of the inflow boundary condition is "Q_INFLOW" type.
-	 * Returns the upwinded quantities and stores them in the bc's
+	 *  Q-inflow Riemann solver for pulse wave propagation. This Riemann solver is called
+	 *  by DoOdeProjection in case of a Q-inflow boundary condition. It is based on the 
+	 *  conservation of mass and total pressure and on the characteristic information. For
+	 *  further details see "Pulse wave propagation in the human vascular system", section 3.4.1
+	 *  Returns the upwinded quantities \f$(A_u,u_u)\f$ and stores them into the boundary values
 	 */
 	void PulseWavePropagation::Q_inflowRiemannSolver(NekDouble Q,NekDouble A_r,NekDouble u_r,NekDouble A_0, NekDouble beta,
 													 NekDouble &Au,NekDouble &uu)
@@ -451,7 +433,7 @@ namespace Nektar
 		// Tolerances for the algorithm
 		NekDouble Tol = 1.0e-10;
 	 
-		// Riemann invariant W2(Ar,ur)
+		// Riemann invariant \f$W_2(Ar,ur)\f$
 		W2 = u_r - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_r)) - sqrt(sqrt(A_0)));
 	 
 		// Calculate the wave speed
@@ -485,7 +467,7 @@ namespace Nektar
 	
 	
 	/**
-	 * Print summary routine
+	 *  Print summary routine, calls virtual routine reimplemented in UnsteadySystem
 	 */
     void PulseWavePropagation::v_PrintSummary(std::ostream &out)
     {

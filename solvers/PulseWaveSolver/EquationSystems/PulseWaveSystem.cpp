@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Generic timestepping for PulseWave solvers
+// Description: Generic timestepping for Pulse Wave Solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,16 +46,18 @@ namespace Nektar
 {
 
     /**
-     * @class PulseWaveSystem
+     *  @class PulseWaveSystem
      *
-     * Provides the underlying timestepping framework for pulse wave solvers
-     * including the general timestepping routines. 
+	 *  Initialises the arterial subdomains in m_vessels and sets up all domain-linking
+	 *  conditions (bifurcations, junctions, merging flows). Detects the network structure
+	 *  and assigns boundary conditons. Also provides the underlying timestepping framework
+	 *  for pulse wave solvers including the general timestepping routines. 
      */
 
     /**
-     * Processes SolverInfo parameters from the session file and sets up
-     * timestepping-specific code.
-     * @param   m_Session        Session object to read parameters from.
+     *  Processes SolverInfo parameters from the session file and sets up
+     *  timestepping-specific code.
+     *  @param   m_Session        Session object to read parameters from.
      */
     PulseWaveSystem::PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session)
 									: UnsteadySystem(m_session)
@@ -63,19 +65,21 @@ namespace Nektar
     }
 
 	/**
-     * Destructor
+     *  Destructor
 	 */
 	PulseWaveSystem::~PulseWaveSystem()
     {
     }
 	
 	/** 
-	 * Initialisation routine for multidomain solver
+	 *  Initialisation routine for multidomain solver. Sets up the expansions for every arterial 
+	 *  segment (m_vessels) and for one complete field m_outfield which is needed to write the 
+	 *  postprocessing output. Also determines which upwind strategy is used (currently only upwinding
+	 *  scheme available) and reads blodd flow specific parameters from the inputfile
+	 * 
 	 */
     void PulseWaveSystem::v_InitObject()
     {       
-		cout << "\n==== Start PulseWaveSystem::v_InitObject() ===="<<endl;
-
 		m_filename = m_session->GetFilename();
 		
         // Save the basename of input file name for output details.
@@ -85,12 +89,11 @@ namespace Nektar
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_filename);
 		m_domainsize = m_graph->GetDomain().size();
-		
         m_UseContCoeff = false;
 		
         // Also read and store the boundary conditions
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-		::AllocateSharedPtr(m_session, m_graph);
+								::AllocateSharedPtr(m_session, m_graph);
 		
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
@@ -167,11 +170,10 @@ namespace Nektar
                 case 1:
                 {
 					/* In case of a PulseWavePropagation Problem with multiple subdomains use this specialized constructor 
-					 * to set up m_vessels and m_traces. i is the variable for the currently processed subdomain
-					 */
+					 * to set up m_vessels and m_traces. i is the variable for the currently processed subdomain*/
 					if(m_graph->GetDomain().size() > 1)
 					{
-						cout << "\n-- setting up m_vessels --";
+						//cout << "\n-- setting up m_vessels --";
 						m_vessels = Array<OneD, MultiRegions::ExpListSharedPtr> (nvariables*m_domainsize);
 						const SpatialDomains::CompositeMap domain = (m_graph->GetDomain());
 						
@@ -180,27 +182,8 @@ namespace Nektar
 							m_vessels[i] = MemoryManager<MultiRegions::DisContField1D>
 								::AllocateSharedPtr(m_session,domain,m_graph,m_session->GetVariable(i%nvariables),(i/nvariables));
 						}
-						cout << "-- m_vessels are set up --\n"<<endl;
-							
-							
-						//cout << "-- checking m_vessels --"<<endl;
-					/*/	cout << "Number of m_vessels:  "<<m_vessels.num_elements()<<endl;
-						for(i = 0 ; i < m_vessels.num_elements(); i++)
-						{
-							cout << "Elements in m_vessels["<<i<<"]:  "<<m_vessels[i]->GetExpSize()<<endl;
-							for(int j = 0 ; j < m_vessels[i]->GetExpSize(); j++)
-							{
-								cout << "Number of modes in m_vessel["<<i<<"]["<<j<<"]:  "<<m_vessels[i]->GetExp(j)->GetCoeffs().num_elements()<<endl;
-							}
-							cout << endl;
-						}
-						for (i = 0; i<m_domainsize; i++)
-						{
-							cout << "Elements in m_traces["<<i<<"]:  "<<m_vessels[i*nvariables]->GetTrace1D(i)->GetExpSize()<<endl;
-						}
-						cout << "-- m_vessels are checked --\n"<<endl;*/
-							
-						
+						//cout << "-- m_vessels are set up --\n"<<endl;
+				
 						// Only needed for output: whole field
 						m_outfields = Array<OneD, MultiRegions::ExpListSharedPtr> (nvariables);
 						for(i = 0 ; i < m_outfields.num_elements(); i++)
@@ -347,16 +330,15 @@ namespace Nektar
 		// Load external pressure
 		m_session->LoadParameter("pext", m_pext, 0.0);
 	
-		cout << "==== Finished PulseWaveSystem::v_InitObject() ====\n"<<endl;
 	}
 	
 	
 	
 	/**
-	 * Initialisation routine for multiple subdomain case;
-	 * Sets the initial conditions for all fields
-	 * in case of only subdomain call SetInitialCondition
-	 * form EquationSystem.cpp
+	 *  Initialisation routine for multiple subdomain case. Sets the initial conditions for all arterial
+	 *  subdomains read from the inputfile. Sets the material properties and the A_0 area for all subdomains
+	 *  and fills the domain-linking boundary conditions with the initial values of their domain. In case 
+	 *  of a single-artery problem, this routine just calls SetInitialCondition() form EquationSystem.cpp
 	 */
 	void PulseWaveSystem::v_DoInitialise()
 	{
@@ -445,7 +427,7 @@ namespace Nektar
 				}
 			}
 			
-			/* Check all boundary condition values for all subdomains*/
+			/* Check all boundary condition values for all subdomains
 			for (int omega=0; omega<m_domainsize; omega++)
 			{
 				for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
@@ -454,7 +436,7 @@ namespace Nektar
 					cout << "BC [domain: "<<omega<<"][point: "<<l<<"][u] = "<< m_vessels[2*omega+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
 				}
 				cout << endl;
-			}
+			}*/
 		}
 		
 		// In single domain case
@@ -474,16 +456,19 @@ namespace Nektar
 	
 	
 	/**
-	 * DoSolve routine for PulseWavePropagation with multiple subdomains
-	 * taken from UnsteadySystem
-     * Initialises the time integration scheme (as specified in the session
-     * file), and perform the time integration.
+	 *  DoSolve routine for PulseWavePropagation with multiple subdomains taken from UnsteadySystem and 
+	 *  modified for multidomain case. Initialises the time integration scheme (as specified in the session
+     *  file), and perform the time integration. Within the timestepping loop the following is done:
+	 *  1. Link all arterial segments according to the network structure, solve the Riemann problem between 
+	 *     different arterial segments and assign the values to the boundary conditions (LinkSubdomains)
+	 *  2. Every arterial segment is solved independentl for this timestep. This is done by handing the 
+	 *     solution vector \f$ \mathbf{u} \f$ and the right hand side m_ode, which is the PulseWavePropagation
+	 *     class in this example over to the time integration scheme
      */
     void PulseWaveSystem::v_DoSolve()
     {
 		if (m_graph->GetDomain().size() > 1)
 		{
-			cout << "==== Start PulseWaveSystem::v_DoSolve() ===="<<endl;
 			NekDouble IntegrationTime = 0.0;
 			int i,n,nchk = 1;
 			int ncoeffs = 0;
@@ -619,10 +604,7 @@ namespace Nektar
 			
 			// Time loop
 			for(n = 0; n < m_steps; ++n)
-			{
-				//cout << "New TimeStep begins: timestep = "<<n<<"\t";
-				//cout << " m_time = "<<m_time<<endl;
-				
+			{				
 				Timer timer;
 				timer.Start();
 				
@@ -632,8 +614,7 @@ namespace Nektar
 				LinkSubdomains(fields);				
 				
 				/* Domains should now be linked successfully
-				 * Calculate the domains seperately
-				 * this already works*/
+				 * Calculate the domains seperately*/
 				for (int omega = 0; omega < m_domainsize; omega++)
 				{
 					m_omega = omega;
@@ -654,9 +635,7 @@ namespace Nektar
 					}
 					else
 					{
-						//cout << "\n Timeintegrating subdomain "<<omega<<"..."<<endl;
 						fields[omega] = IntScheme[omega][numMultiSteps-1]->TimeIntegrate(m_timestep,u[omega],m_ode);
-						//cout << " Subdomain "<<omega<<" done"<<endl;
 					}
 					
 					m_vessels[0+2*omega] = m_fields[0];
@@ -699,12 +678,10 @@ namespace Nektar
 				}
 				
 				/*/ Write out history data to file
-				 * Not needed now, do later...
 				 if(m_historysteps && !((n+1)%m_historysteps))
 				 {
 					WriteHistoryData(hisFile);
 				 }*/
-				
 				
 				// Write out checkpoint files; first append all data to m_fields then write m_fields
 				if(n&&(!((n+1)%m_checksteps)))
@@ -744,22 +721,18 @@ namespace Nektar
 		{
 			UnsteadySystem::v_DoSolve();
 		}
-		cout << "==== finished PulseWaveSystem::v_DoSolve() ====\n"<<endl;
     }
 	
 	
 	
 	/**
-	 * \brief
-	 * Links the subdomains for special network boundary conditions such as "Bifurcation", "Junction"
-	 * and "Merging Flow" conditions. Calculates the upwinded Au & uu at boundaries connected to other 
-	 * subdomains by solving the appropriate Riemann problem. The solution satisfies conservation of 
-	 * mass and continuity of the total pressure.
+	 *  Links the subdomains for special network boundary conditions such as "Bifurcation", "Junction"
+	 *  and "Merging Flow" conditions. Calculates the upwinded Au & uu at boundaries connected to other 
+	 *  subdomains by solving the appropriate Riemann problem. The solution satisfies conservation of 
+	 *  mass and continuity of the total pressure.
 	 */
 	void PulseWaveSystem::LinkSubdomains(Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields)
-    {
-		//cout << "Start Linking the subdomains"<<endl;
-		
+    {		
 		Array<OneD, NekDouble> Au(3);
 		Array<OneD, NekDouble> uu(3);
 		Array<OneD, NekDouble> beta(3);
@@ -783,51 +756,6 @@ namespace Nektar
 			m_vessels[k]->EvaluateBoundaryConditions(m_time);
 		}
 		
-		
-		/*cout << "Checking for Junctions..."<<endl;
-		for (int l=0; l<m_fields[0]->GetBndConditions().num_elements(); l++)
-		{
-			if (m_fields[0]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction)
-			{
-				p = m_fields[0]->GetBndConditions()[l]->GetParent();
-				d1 = m_fields[0]->GetBndConditions()[l]->GetDaughter1(); 
-				cout << "    Junction found:\t VAR=A  parent domain = "<<p<<"\t daughter domain = "<<d1<<""<<endl;
-				
-				p = m_fields[1]->GetBndConditions()[l]->GetParent();
-				d1 = m_fields[1]->GetBndConditions()[l]->GetDaughter1(); 
-				cout << "    Junction found:\t VAR=u  parent domain = "<<p<<"\t daughter domain = "<<d1<<""<<endl;
-			}
-		}*/
-		/*cout << "Checking for Bifurcations..."<<endl;
-		for (int l=0; l<m_fields[0]->GetBndConditions().num_elements(); l++)
-		{
-			if (m_fields[0]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
-			{
-				p = m_fields[0]->GetBndConditions()[l]->GetParent();
-				d1 = m_fields[0]->GetBndConditions()[l]->GetDaughter1(); 
-				d2 = m_fields[0]->GetBndConditions()[l]->GetDaughter2();
-				cout << "    Bifurcation found:\t VAR=A  parent domain = "<<p<<"\t daughter domain 1 = "<<d1<<"\t daughter domain 2 = "<<d2<<endl;
-				
-				p = m_fields[1]->GetBndConditions()[l]->GetParent();
-				d1 = m_fields[1]->GetBndConditions()[l]->GetDaughter1();
-				d2 = m_fields[1]->GetBndConditions()[l]->GetDaughter2();
-				cout << "    Bifurcation found:\t VAR=u  parent domain = "<<p<<"\t daughter domain 1 = "<<d1<<"\t daughter domain 2 = "<<d2<<endl;
-			}
-		}*/
-		/*cout << endl;
-		
-		for (int k=0; k<m_domainsize; k++)
-		{
-			cout << "m_bndCondExpansions before linking "<<k<<endl;
-			for (int l=0; l<m_vessels[2*k]->GetBndConditions().num_elements(); l++)
-			{
-				cout <<" A bndCondExp("<<l<<") = "<<m_vessels[2*k]->UpdateBndCondExpansion(l)->GetCoeff(0)<<"\t";
-				cout <<" u bndCondExp("<<l<<") = "<<m_vessels[2*k+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
-			}
-		}*/
-		
-		
-		
 		// Detect special network boundary conditions
 		for (int omega = 0; omega < m_domainsize; omega++)
 		{
@@ -843,11 +771,7 @@ namespace Nektar
 				p_BCExp = 1;
 				
 				// Daughter vessel 1
-//<<<<<<< .mine
 				d1 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter1();
-/*=======
-				d1 = condition->GetDaughter1();
->>>>>>> .r3676*/
 				Au[1] = fields[d1][0][0];
 				uu[1] = fields[d1][1][0];
 				beta[1] = m_betaglobal[d1][0];
@@ -855,11 +779,7 @@ namespace Nektar
 				d1_BCExp = 0;
 
 				// Daughter vessel 2
-//<<<<<<< .mine
 				d2 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter2();
-/*=======
-				d2 = condition->GetDaughter2();
->>>>>>> .r3676*/
 				Au[2] = fields[d2][0][0];
 				uu[2] = fields[d2][1][0];
 				beta[2] = m_betaglobal[d2][0];
@@ -895,11 +815,7 @@ namespace Nektar
 				A_0[0] = m_A_0global[omega][nel_p];
 				
 				//Daughter vessel 1
-//<<<<<<< .mine
 				d1 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter1();
-/*=======
-				d1 = condition->GetDaughter1();
->>>>>>> .r3676*/
 				Au[1] = fields[d1][0][0];
 				uu[1] = fields[d1][1][0];
 				beta[1] = m_betaglobal[d1][0];
@@ -933,15 +849,6 @@ namespace Nektar
 				A_0[0] = m_A_0global[omega][0];
 				p_BCExp = 0;
 				
-				/*cout << "\nParent vessel: "<<endl;
-				cout << "P = "<<omega<<endl;
-				cout << "Au = "<<Au[0]<<endl;
-				cout << "uu = "<<uu[0]<<endl;
-				cout << "beta = "<<beta[0]<<endl;
-				cout << "A_0 = "<<A_0[0]<<endl;
-				cout << "BC_Exp = "<<p_BCExp<<endl;*/
-				
-				
 				// Daughter vessel 1
 				d1 = m_vessels[2*omega]->GetBndConditions()[0]->GetDaughter1();
 				nel_d1 = fields[d1][0].num_elements()-1; 
@@ -950,16 +857,6 @@ namespace Nektar
 				beta[1] = m_betaglobal[d1][0];
 				A_0[1] = m_A_0global[d1][0];
 				d1_BCExp = 1;
-				
-				/*cout << "\nDaughter vessel 1: "<<endl;
-				cout << "D1 = "<<d1<<endl;
-				cout << "nel_d1 = "<<nel_d1<<endl;
-				cout << "Au = "<<Au[1]<<endl;
-				cout << "uu = "<<uu[1]<<endl;
-				cout << "beta = "<<beta[1]<<endl;
-				cout << "A_0 = "<<A_0[1]<<endl;
-				cout << "BC_Exp = "<<d1_BCExp<<endl;*/
-
 				
 				// Daughter vessel 2
 				d2 = m_vessels[2*omega]->GetBndConditions()[0]->GetDaughter2();
@@ -970,28 +867,10 @@ namespace Nektar
 				A_0[2] = m_A_0global[d2][0];
 				d2_BCExp = 1;
 				
-				/*cout << "\nDaughter vessel 2: "<<endl;
-				cout << "D2 = "<<d2<<endl;
-				cout << "nel_d2 = "<<nel_d2<<endl;
-				cout << "Au = "<<Au[2]<<endl;
-				cout << "uu = "<<uu[2]<<endl;
-				cout << "beta = "<<beta[2]<<endl;
-				cout << "A_0 = "<<A_0[2]<<endl;
-				cout << "BC_Exp = "<<d2_BCExp<<endl;*/
-				
-				
-				/*cout << "Before the Riemann solve"<<endl;
-				cout << " parent:  domain = "<<omega<<"\tAu = "<<Au[0]<<"\tuu = "<<uu[0]<<"\tBC: "<<p_BCExp<<endl;
-				cout << " daughter1: d1 = "<<d1<<"\tAu = "<<Au[1]<<"\tuu = "<<uu[1]<<"\tBC: "<<d1_BCExp<<endl;
-				cout << " daughter2: d2 = "<<d2<<"\tAu = "<<Au[2]<<"\tuu = "<<uu[2]<<"\tBC: "<<d2_BCExp<<endl;*/
 				
 				// Solve the Riemann problem for a bifurcation
 				MergingRiemann2_to_1(Au, uu, beta, A_0);
 				
-				/*cout << "After the Riemann solve"<<endl;
-				cout << " parent:    Au = "<<Au[0]<<"\tuu = "<<uu[0]<<endl;
-				cout << " daughter1: Au = "<<Au[1]<<"\tuu = "<<uu[1]<<endl;
-				cout << " daughter2: Au = "<<Au[2]<<"\tuu = "<<uu[2]<<endl;*/
 				
 				// Store the values into the right positions:
 				// Parent vessel
@@ -1009,27 +888,6 @@ namespace Nektar
 			
 		}
 		
-		
-		/*for (int k=0; k<m_domainsize; k++)
-		{
-			cout << "m_bndCondExpansions after linking in domain "<<k<<endl;
-			for (int l=0; l<m_fields[0]->GetBndConditions().num_elements(); l++)
-			{
-				cout <<" A bndCondExp("<<l<<") = "<<m_vessels[2*k]->UpdateBndCondExpansion(l)->GetCoeff(0)<<"\t";
-				cout <<" u bndCondExp("<<l<<") = "<<m_vessels[2*k+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
-			}
-		}*/
-		
-		/*for (int k=0; k<m_domainsize; k++)
-		{
-			cout << "m_bndCondExpansions after linking in domain "<<k<<endl;
-			for (int l=0; l<2; l++)
-			{
-				cout <<" A bndCondExp("<<l<<") = "<<m_vessels[2*k]->UpdateBndCondExpansion(k*2+l)->GetCoeff(0)<<"\t";
-				cout <<" u bndCondExp("<<l<<") = "<<m_vessels[2*k+1]->UpdateBndCondExpansion(k*2+l)->GetCoeff(0)<<endl;
-			}
-		}*/
-		
 	}
 	
 	
@@ -1037,10 +895,11 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
-	 * Solves the Riemann problem at a bifurcation by assuming subsonic flow at both
-	 * sides of the boundary and by applying conservation of mass and continuity of
-	 * the total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$
+	 *  Solves the Riemann problem at a bifurcation by assuming subsonic flow at both
+	 *  sides of the boundary and by applying conservation of mass and continuity of
+	 *  the total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$ The other 3 missing equations
+	 *  come from the characteristic variables. For further information see "Pulse WavePropagation
+	 *  in the human vascular system" Section 3.4.4
 	 */
 	void PulseWaveSystem::BifurcationRiemann1_to_2(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu, 
 												   Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
@@ -1192,10 +1051,11 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
-	 * Solves the Riemann problem at an interdomain junction by assuming subsonic flow at
-	 * both sides of the boundary and by applying conservation of mass and continuity of the
-	 * total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$
+	 *  Solves the Riemann problem at an interdomain junction by assuming subsonic flow at
+	 *  both sides of the boundary and by applying conservation of mass and continuity of the
+	 *  total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$ The other 2 missing equations
+	 *  come from the characteristic variables. For further information see "Pulse WavePropagation
+	 *  in the human vascular system" Section 3.4.
 	 */
 	void PulseWaveSystem::JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
 										  Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
@@ -1307,10 +1167,11 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
-	 * Solves the Riemann problem at an merging flow condition by assuming subsonic flow at
-	 * both sides of the boundary and by applying conservation of mass and continuity of the
-	 * total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$
+	 *  Solves the Riemann problem at an merging flow condition by assuming subsonic flow at
+	 *  both sides of the boundary and by applying conservation of mass and continuity of the
+	 *  total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$ The other 3 missing equations
+	 *  come from the characteristic variables. For further information see "Pulse WavePropagation
+	 *  in the human vascular system" Section 3.4.4
 	 */
 	void PulseWaveSystem::MergingRiemann2_to_1(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu, 
 											   Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
@@ -1335,9 +1196,6 @@ namespace Nektar
 		int proceed = 1;
 		int iter = 0;
 		int MAX_ITER = 7;
-		
-		//Au[0] = Au[1];
-		//uu[0] = uu[1];
 		
 		// Calculated from input
 		W[0] = uu[0] - 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
@@ -1463,13 +1321,11 @@ namespace Nektar
 		}
 	}
 	
-	
 
 	/**
-	 * \brief
-	 * Gets the Area at static equilibrium specified in the inputfile
-	 * in case of multiple domains different areas can be specified by
-	 * using A[domain] in the inputfile
+	 *  Gets the Area at static equilibrium A_0 specified in the inputfile. In case of 
+	 *  multiple domains different areas can be specified by using A_0[domain] in the 
+	 *  inputfile.
 	 */
 	void PulseWaveSystem::StaticArea(void)
     {
@@ -1505,10 +1361,9 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
-	 * Gets the Material Properties of the artery specified in the inputfile.
-	 * in case of multiple domains different areas can be specified by using
-	 * E0[domain] in the inputfile 
+	 *  Gets the Material Properties of each arterial segment specified in the inputfile.
+	 *  in case of multiple domains different areas can be specified by using beta[domain] 
+	 *  in the inputfile. 
 	 */
 	void PulseWaveSystem::MaterialProperties()
     {
@@ -1555,10 +1410,9 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
-     * Prepares the multidomain output to write all m_vessels. Puts the multiple 
-	 * subdomains together to one complete domain m_outfields to use the standard 
-	 * routines for writing the outfiles
+     *  Prepares the multidomain output to write all m_vessels. Puts the multiple 
+	 *  subdomains together to one complete domain m_outfields to use the standard 
+	 *  routines for writing the outfiles.
      */
     void PulseWaveSystem::PrepareMultidomainOutput(void)
     {		
@@ -1593,9 +1447,8 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
-	 * Writes the .fld file at the end of the simulation. Similar to the normal
-	 * v_Output however the Multidomain output has to be prepared
+	 *  Writes the .fld file at the end of the simulation. Similar to the normal
+	 *  v_Output however the Multidomain output has to be prepared.
 	 */
 	void PulseWaveSystem::v_Output(void)
     {
@@ -1609,7 +1462,6 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
 	 * Compute the error in the L2-norm
 	 * @param   field           The field to compare.
 	 * @param   exactsoln       The exact solution to compare with.
@@ -1669,7 +1521,6 @@ namespace Nektar
 	
 	
 	/**
-	 * \brief
 	 * Compute the error in the L_inf-norm
 	 * @param   field           The field to compare.
 	 * @param   exactsoln       The exact solution to compare with.

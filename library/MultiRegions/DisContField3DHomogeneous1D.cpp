@@ -108,7 +108,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(i));
             }
 
-            for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
+            for(n = 1; n < m_num_planes_per_proc; ++n)
             {
                 m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,True,False);
                 for(i = 0; i < nel; ++i)
@@ -192,10 +192,17 @@ namespace Nektar
         {
             int n;
             const Array<OneD, const NekDouble> z = m_homogeneousBasis->GetZ();
+			
+			Array<OneD, NekDouble> local_z(m_num_planes_per_proc);
+			
+			for(n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_z[n] = z[m_planes_IDs[n]];
+			}
 
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->EvaluateBoundaryConditions(time,0.5*m_lhom*(1.0+z[n]));
+                m_planes[n]->EvaluateBoundaryConditions(time,0.5*m_lhom*(1.0+local_z[n]));
             }
             
             // Fourier transform coefficient space boundary values
@@ -216,7 +223,6 @@ namespace Nektar
             int n;
             int cnt = 0;
             int cnt1 = 0;
-            int nhom_modes = m_homogeneousBasis->GetNumModes();
             NekDouble beta;
             StdRegions::ConstFactorMap new_factors;
 
@@ -233,9 +239,9 @@ namespace Nektar
 				HomogeneousFwdTrans(inarray,fce);
 			}
 
-            for(n = 0; n < nhom_modes; ++n)
+            for(n = 0; n < m_num_planes_per_proc; ++n)
             {
-                beta = 2*M_PI*(n/2)/m_lhom;
+                beta = 2*M_PI*m_K[n]/m_lhom;
                 new_factors = factors;
                 new_factors[StdRegions::eFactorLambda] += beta*beta;
                 m_planes[n]->HelmSolve(fce + cnt,

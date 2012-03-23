@@ -191,9 +191,16 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
+			Array<OneD, NekDouble> local_pts(m_num_planes_per_proc);
+			
+			for(n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_pts[n] = pts[m_planes_IDs[n]];
+			}
+			
             Array<OneD, NekDouble> z(nzplanes);
 
-            Vmath::Smul(nzplanes,m_lhom/2.0,pts,1,z,1);
+            Vmath::Smul(nzplanes,m_lhom/2.0,local_pts,1,z,1);
             Vmath::Sadd(nzplanes,m_lhom/2.0,z,1,z,1);
 
             for(n = 0; n < nzplanes; ++n)
@@ -236,9 +243,17 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
+			
+			Array<OneD, NekDouble> local_pts(m_num_planes_per_proc);
+			
+			for(n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_pts[n] = pts[m_planes_IDs[n]];
+			}
+			
             Array<OneD, NekDouble> z(nzplanes);
 
-            Vmath::Smul(nzplanes,m_lhom/2.0,pts,1,z,1);
+            Vmath::Smul(nzplanes,m_lhom/2.0,local_pts,1,z,1);
             Vmath::Sadd(nzplanes,m_lhom/2.0,z,1,z,1);
 
             for(n = 0; n < nzplanes; ++n)
@@ -264,7 +279,7 @@ namespace Nektar
 
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_homogeneousBasis->GetNumPoints();
+            int nquad2 = m_num_planes_per_proc;
 
             Array<OneD,NekDouble> coords[3];
 
@@ -294,7 +309,7 @@ namespace Nektar
             int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_homogeneousBasis->GetNumPoints();
+            int nquad2 = m_num_planes_per_proc;
             int ntot = nquad0*nquad1*nquad2;
             int ntotminus = (nquad0-1)*(nquad1-1)*(nquad2-1);
 
@@ -370,13 +385,21 @@ namespace Nektar
             int cnt = 0;
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
+			Array<OneD, NekDouble> local_w(m_num_planes_per_proc);
+			
+			for(int n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_w[n] = w[m_planes_IDs[n]];
+			}
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
                 errL2 = m_planes[n]->L2(soln + cnt);
                 cnt += m_planes[n]->GetTotPoints();
-                err += errL2*errL2*w[n]*m_lhom*0.5;
+                err += errL2*errL2*local_w[n]*m_lhom*0.5;
             }
+			
+			m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
 
             return sqrt(err);
         }
@@ -385,13 +408,21 @@ namespace Nektar
         {
             NekDouble errL2,err = 0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
+			Array<OneD, NekDouble> local_w(m_num_planes_per_proc);
+			
+			for(int n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_w[n] = w[m_planes_IDs[n]];
+			}
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
                 errL2 = m_planes[n]->L2();
-                err += errL2*errL2*w[n]*m_lhom*0.5;
+                err += errL2*errL2*local_w[n]*m_lhom*0.5;
             }
-
+			
+			m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
+			
             return sqrt(err);
         }
 		
@@ -408,6 +439,8 @@ namespace Nektar
 				{
 					Energy[n] += (m_coeffs[i+n*ncoeffs_per_plane]*m_coeffs[i+n*ncoeffs_per_plane])/ncoeffs_per_plane;
 				}
+				
+				m_comm->GetRowComm()->AllReduce(Energy[n], LibUtilities::ReduceSum);
 			}
 			
             return Energy;

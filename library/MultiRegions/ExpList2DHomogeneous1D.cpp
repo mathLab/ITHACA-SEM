@@ -58,7 +58,7 @@ namespace Nektar
         {
             int n,nel;
 
-            ASSERTL1(m_homogeneousBasis->GetNumPoints() == planes.num_elements(),"Size of basis number of points and number of planes are not the same");
+            ASSERTL1(m_num_planes_per_proc == planes.num_elements(),"Size of basis number of points and number of planes are not the same");
 
             m_exp = exp;
 
@@ -99,7 +99,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(j));
             }
 
-            for(n = 1; n < m_homogeneousBasis->GetNumPoints(); ++n)
+            for(n = 1; n < m_num_planes_per_proc; ++n)
             {
                 m_planes[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*plane_zero,False);
                 for(j = 0; j < nel; ++j)
@@ -211,8 +211,15 @@ namespace Nektar
             // Fill homogeneous-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
             Array<OneD, NekDouble> z(nyplanes);
+			
+			Array<OneD, NekDouble> local_pts(m_num_planes_per_proc);
+			
+			for(n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_pts[n] = pts[m_planes_IDs[n]];
+			}
 
-            Vmath::Smul(nyplanes,m_lhom/2.0,pts,1,z,1);
+            Vmath::Smul(nyplanes,m_lhom/2.0,local_pts,1,z,1);
             Vmath::Sadd(nyplanes,m_lhom/2.0,z,1,z,1);
 
             for(n = 0; n < nyplanes; ++n)
@@ -270,8 +277,14 @@ namespace Nektar
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
             Array<OneD, NekDouble> z(nyplanes);
-
-            Vmath::Smul(nyplanes,m_lhom/2.0,pts,1,z,1);
+			Array<OneD, NekDouble> local_pts(m_num_planes_per_proc);
+			
+			for(n = 0; n < m_num_planes_per_proc; n++)
+			{
+				local_pts[n] = pts[m_planes_IDs[n]];
+			}
+			
+            Vmath::Smul(nyplanes,m_lhom/2.0,local_pts,1,z,1);
             Vmath::Sadd(nyplanes,m_lhom/2.0,z,1,z,1);
 
             for(n = 0; n < nyplanes; ++n)
@@ -299,7 +312,7 @@ namespace Nektar
             int i,j;
 
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = m_homogeneousBasis->GetNumPoints();
+            int nquad1 = m_num_planes_per_proc;
 
             Array<OneD,NekDouble> coords[3];
 
@@ -328,7 +341,7 @@ namespace Nektar
             int i,j;
             int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = m_homogeneousBasis->GetNumPoints();
+            int nquad1 = m_num_planes_per_proc;
             int ntot = nquad0*nquad1;
             int ntotminus = (nquad0-1)*(nquad1-1);
 

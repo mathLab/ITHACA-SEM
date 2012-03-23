@@ -55,12 +55,15 @@ int main(int argc, char *argv[])
     string  GlobalString[10000];
     bool    inspection = 1;
 
+    string txtfile = argv[argc-1];
+    --argc;
+    
     //! Check for the command line
-    if(argc != 3)
-    {
-        fprintf(stderr,"Usage: FldAddFSBL  meshfile txt_file\n");
-        exit(1);
-    }
+    //if(argc != 3)
+    //{
+    //  fprintf(stderr,"Usage: FldAddFSBL  meshfile txt_file\n");
+    //  exit(1);
+    //}
 
     //! Reading the session file
     LibUtilities::SessionReaderSharedPtr vSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
@@ -146,7 +149,7 @@ int main(int argc, char *argv[])
     
     //! Reading the .txt file with eta, f(eta) and f'(eta) -----------------------------------------
     const char *txtfile_char;
-    string txtfile(argv[argc-1]);
+    //string txtfile(argv[argc-1]);
     txtfile_char = txtfile.c_str();
     
     ifstream pFile(txtfile_char);

@@ -634,7 +634,12 @@ namespace Nektar
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
 
-            MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir = 0, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector);
+            MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
+																  int NumHomoDir = 0, 
+																  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, 
+																  std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector,
+																  std::vector<unsigned int> &HomoZIDs = SpatialDomains::NullUnsignedIntVector,
+																  std::vector<unsigned int> &HomoYIDs = SpatialDomains::NullUnsignedIntVector);
 
             const NekOptimize::GlobalOptParamSharedPtr &GetGlobalOptParam(void)
             {
@@ -1098,8 +1103,7 @@ namespace Nektar
 
             virtual void v_ReadGlobalOptimizationParameters();
 
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
-                v_GetFieldDefinitions(void);
+            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
 
             virtual void  v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
 

@@ -158,6 +158,10 @@ namespace Nektar
                              int NumHomoDir = 0,
                              const std::vector<NekDouble> &HomoLengths =
                              NullNekDoubleVector,
+							 const std::vector<unsigned int> &HomoZIDs =
+                             NullUnsignedIntVector,
+							 const std::vector<unsigned int> &HomoYIDs =
+                             NullUnsignedIntVector,
                              const std::vector<LibUtilities::PointsType> &points =
                              NullPointsTypeVector,
                              bool pointsDef = false,
@@ -169,6 +173,8 @@ namespace Nektar
                     m_basis(basis),
                     m_numHomogeneousDir(NumHomoDir),
                     m_homogeneousLengths(HomoLengths),
+			        m_homogeneousZIDs(HomoZIDs),
+			        m_homogeneousYIDs(HomoYIDs),
                     m_points(points),
                     m_pointsDef(pointsDef),
                     m_uniOrder(uniOrder),
@@ -179,11 +185,14 @@ namespace Nektar
                 {
                 }
 
-                SpatialDomains::GeomShapeType         m_shapeType;
-                std::vector<unsigned int>             m_elementIDs;
-                std::vector<LibUtilities::BasisType>  m_basis;
-                int                                   m_numHomogeneousDir;
-                std::vector<NekDouble>                m_homogeneousLengths;
+                SpatialDomains::GeomShapeType			m_shapeType;
+                std::vector<unsigned int>					m_elementIDs;
+                std::vector<LibUtilities::BasisType>	m_basis;
+                int										m_numHomogeneousDir;
+                std::vector<NekDouble>					m_homogeneousLengths;
+			    std::vector<unsigned int>					m_homogeneousZIDs;
+			    std::vector<unsigned int>					m_homogeneousYIDs;
+			
                 /// Define the type of points per direction.
                 std::vector<LibUtilities::PointsType> m_points;
                 bool                                  m_pointsDef;

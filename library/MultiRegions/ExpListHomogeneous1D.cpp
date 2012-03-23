@@ -658,13 +658,13 @@ namespace Nektar
 			std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
 			
-			std::vector<int> PlanesIDs(m_num_planes_per_proc);
+			std::vector<unsigned int> PlanesIDs(m_num_planes_per_proc);
 			for(int i = 0; i < m_num_planes_per_proc; i++)
 			{
 				PlanesIDs.push_back(m_planes_IDs[i]);
 			}
 
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen);
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, PlanesIDs);
             
 			return returnval;
         }
@@ -677,14 +677,14 @@ namespace Nektar
 			std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
 			
-			std::vector<int> PlanesIDs(m_num_planes_per_proc);
+			std::vector<unsigned int> PlanesIDs(m_num_planes_per_proc);
 			for(int i = 0; i < m_num_planes_per_proc; i++)
 			{
 				PlanesIDs.push_back(m_planes_IDs[i]);
 			}
 
              // enforce NumHomoDir == 1 by direct call
-            m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen);
+            m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen,PlanesIDs);
         }
 
 
@@ -732,7 +732,7 @@ namespace Nektar
             {
                 if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
                 {
-                    nzmodes = fielddef->m_numModes[i];
+                    nzmodes = fielddef->m_homogeneousZIDs.size();
                     break;
                 }
             }

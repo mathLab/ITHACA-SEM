@@ -71,7 +71,7 @@ namespace Nektar
 {
 
 #ifndef NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS
-#define NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS 13
+#define NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS 15
 #endif //NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS
 
     /// @brief General purpose memory allocation routines with the ability

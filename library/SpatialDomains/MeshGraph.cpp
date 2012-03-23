@@ -1291,6 +1291,46 @@ namespace Nektar
                     }
                     elemTag->SetAttribute("HOMOGENEOUSLENGTHS", homoLenString);
                 }
+				
+				// Write homogeneuous planes/lines details
+                if(fielddefs[f]->m_numHomogeneousDir)
+                {
+					if(fielddefs[f]->m_homogeneousYIDs.size() > 0)
+					{
+						std::string homoYIDsString;
+						{
+							std::stringstream homoYIDsStringStream;
+							bool first = true;
+							for(int i = 0; i < fielddefs[f]->m_homogeneousYIDs.size(); i++)
+							{
+								if (!first)
+									homoYIDsStringStream << ",";
+								homoYIDsStringStream << fielddefs[f]->m_homogeneousYIDs[i];
+								first = false;
+							}
+							homoYIDsString = homoYIDsStringStream.str();
+						}
+						elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
+					}
+					
+					if(fielddefs[f]->m_homogeneousZIDs.size() > 0)
+					{
+						std::string homoZIDsString;
+						{
+							std::stringstream homoZIDsStringStream;
+							bool first = true;
+							for(int i = 0; i < fielddefs[f]->m_homogeneousZIDs.size(); i++)
+							{
+								if (!first)
+									homoZIDsStringStream << ",";
+								homoZIDsStringStream << fielddefs[f]->m_homogeneousZIDs[i];
+								first = false;
+							}
+							homoZIDsString = homoZIDsStringStream.str();
+						}
+						elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
+					}
+                }
 
                 // Write NUMMODESPERDIR
                 std::string numModesString;
@@ -1450,6 +1490,8 @@ namespace Nektar
                     std::string shapeString;
                     std::string basisString;
                     std::string homoLengthsString;
+					std::string homoZIDsString;
+					std::string homoYIDsString;
                     std::string numModesString;
                     std::string numPointsString;
                     std::string fieldsString;
@@ -1475,6 +1517,14 @@ namespace Nektar
                         else if (attrName == "HOMOGENEOUSLENGTHS")
                         {
                             homoLengthsString.insert(0,attr->Value());
+                        }
+						else if (attrName == "HOMOGENEOUSZIDS")
+                        {
+                            homoZIDsString.insert(0,attr->Value());
+                        }
+						else if (attrName == "HOMOGENEOUSYIDS")
+                        {
+                            homoYIDsString.insert(0,attr->Value());
                         }
                         else if (attrName == "NUMMODESPERDIR")
                         {
@@ -1573,6 +1623,25 @@ namespace Nektar
                         valid = ParseUtils::GenerateUnOrderedVector(homoLengthsString.c_str(), homoLengths);
                         ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
                     }
+					
+					// Get Homogeneous points IDs
+					std::vector<unsigned int> homoZIDs;
+					std::vector<unsigned int> homoYIDs;
+					
+					if(numHomoDir == 1)
+                    {
+                        valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
+                        ASSERTL0(valid, "Unable to correctly parse homogeneous planes IDs.");
+                    }
+					
+					if(numHomoDir == 2)
+					{
+						valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
+                        ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in z-direction.");
+						valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(), homoYIDs);
+                        ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in y-direction.");
+					}
+					
 
                     // Get points type
                     std::vector<LibUtilities::PointsType> points;
@@ -1624,8 +1693,9 @@ namespace Nektar
                     valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
                     ASSERTL0(valid, "Unable to correctly parse the number of fields.");
 
-                    SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, points, pointDef, numPoints, numPointDef);
-                    int datasize = CheckFieldDefinition(fielddef);
+                    SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
+                    
+					int datasize = CheckFieldDefinition(fielddef);
 
                     fielddefs.push_back(fielddef);
 

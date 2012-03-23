@@ -1840,7 +1840,12 @@ namespace Nektar
             return sqrt(err);
         }
 
-        void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, std::vector<NekDouble> &HomoLen)
+        void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
+												  int NumHomoDir, 
+												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+												  std::vector<NekDouble> &HomoLen,
+												  std::vector<unsigned int> &HomoZIDs,
+												  std::vector<unsigned int> &HomoYIDs)
         {
             int startenum, endenum, s;
 
@@ -1923,7 +1928,7 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    SpatialDomains::FieldDefinitionsSharedPtr fdef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen);
+                    SpatialDomains::FieldDefinitionsSharedPtr fdef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
                     fielddef.push_back(fdef);
                 }
             }

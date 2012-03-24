@@ -1,12 +1,8 @@
-/* ===============================================================================
- * Generation of an .fld file for the Blasius boundary layer. 
- * Requirements: 
- *                a) Session file with the mesh in the physical space and some 
- *                   data to define the BL properly
- * 
- *                b) Blasius similarity solution consistent with the dimensions
- *                   of the mesh file
-=============================================================================== */
+/* ==========================================================================
+ * Generation of a .fld file for the Falkner-Skan boundary layer starting 
+ * from a session file with some physical data for the definition of the 
+ * BL and a .txt file with the similarity solution. 
+ * ======================================================================== */
 
 /* =====================================
  * Author: Gianmarco Mengaldo 

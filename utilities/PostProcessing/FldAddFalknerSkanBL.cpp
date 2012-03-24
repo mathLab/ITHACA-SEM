@@ -48,15 +48,19 @@ int main(int argc, char *argv[])
     setprecision (16);
     
     //! Auxiliary counters for the x and y directions
-    int  i, j, k, m;
+    int  i, j, k, m, numModes;
     
     //! Auxiliary variables
     char    LocalString[1000];
     string  GlobalString[10000];
     bool    inspection = 1;
 
-    string txtfile = argv[argc-1];
-    --argc;
+    
+    // Usage check
+	if((argc != 2) && (argc != 3))
+    {
+        fprintf(stderr,"Usage: ./FldAddFalknerSkanBL sessionFile [SysSolnType]\n");exit(1);
+    }
     
     //! Check for the command line
     //if(argc != 3)
@@ -76,10 +80,13 @@ int main(int argc, char *argv[])
     NekDouble x_0;
     NekDouble nu;
     string    BL_type;
+    string    txt_file;
     int       numLines; 
 
     
-    BL_type = vSession->GetSolverInfo("BL_type");
+    BL_type   = vSession->GetSolverInfo("BL_type");
+    txt_file  = vSession->GetSolverInfo("txt_file");
+
 
     vSession->LoadParameter("Re",               Re,             1.0);
     vSession->LoadParameter("L",                L,              1.0);
@@ -88,8 +95,7 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("x_0",              x_0,            1.0);
     vSession->LoadParameter("NumberLines_txt",  numLines,       1.0);
 
-
-    
+    //! Check on the physical parameters
     if(x <= 0)
     {
         fprintf(stderr,"Error: x must be positive ===> CHECK the session file\n");
@@ -101,11 +107,11 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Error: x_0 must be positive or at least equal to 0 ===> CHECK the session file\n");
         exit(1);
     }
-
-    
-    
-    std::cout<<"************************************************************\n";
-    std::cout<<"PHYSICAL DATA FROM THE SESSION FILE:\n";
+    std::cout<<"\n===================================================================\n";
+    std::cout<<"Falkner-Skan Boundary Layer Generation (version of March 23th 2012)\n"; 
+    std::cout<<"===================================================================\n";
+    std::cout<<"*******************************************************************\n";
+    std::cout<<"DATA FROM THE SESSION FILE:\n";
     std::cout << "Reynolds number                               = " << Re            << std::endl;
     std::cout << "Characteristic length [m]                     = " << L             << std::endl;
     std::cout << "U_infinity [m/s]                              = " << U_inf         << std::endl;
@@ -113,8 +119,9 @@ int main(int argc, char *argv[])
     std::cout << "Position x_0 to start the BL [m]              = " << x_0           << std::endl;
     std::cout << "Number of lines of the .txt file              = " << numLines      << std::endl;
     std::cout << "BL type                                       = " << BL_type       << std::endl;
-    std::cout<<"************************************************************\n";
-    std::cout<<"------------------------------------------------------------\n";
+    std::cout << ".txt file read                                = " << txt_file      << std::endl;
+    std::cout<<"*******************************************************************\n";
+    std::cout<<"-------------------------------------------------------------------\n";
     std::cout<<"MESH and EXPANSION DATA:\n";
     
     //! Computation of the kinematic viscosity
@@ -131,12 +138,12 @@ int main(int argc, char *argv[])
     //! Get the total number of elements
     int nElements;
     nElements = Domain->GetExpSize();
-    std::cout << "Number of elements           = " << nElements << std::endl;
+    std::cout << "Number of elements                 = " << nElements << std::endl;
     
     //! Get the total number of quadrature points (depends on n. modes)
     int nQuadraturePts;
     nQuadraturePts = Domain->GetTotPoints();
-    std::cout << "Number of quadrature points  = " << nQuadraturePts << std::endl;
+    std::cout << "Number of quadrature points        = " << nQuadraturePts << std::endl;
 
     //! Coordinates of the quadrature points
     Array<OneD,NekDouble> x_QuadraturePts;
@@ -148,11 +155,11 @@ int main(int argc, char *argv[])
     Domain->GetCoords(x_QuadraturePts,y_QuadraturePts,z_QuadraturePts);
     
     //! Reading the .txt file with eta, f(eta) and f'(eta) -----------------------------------------
-    const char *txtfile_char;
-    //string txtfile(argv[argc-1]);
-    txtfile_char = txtfile.c_str();
-    
-    ifstream pFile(txtfile_char);
+    const char *txt_file_char;
+    //string txt_file(argv[argc-1]);
+    txt_file_char = txt_file.c_str();
+        
+    ifstream pFile(txt_file_char);
     numLines = numLines/3;
     NekDouble d;
     NekDouble GlobalArray[numLines][3];
@@ -214,8 +221,7 @@ int main(int argc, char *argv[])
         for(i=0; i<nQuadraturePts; i++)
         {
             eta_QuadraturePts[i] = y_QuadraturePts[i] * sqrt(U_inf / (2 * x * nu));
-            
-            for(j=0; j<numLines; j++)
+            for(j=0; j<numLines-1; j++)
             {
                 if(eta_QuadraturePts[i] >= eta[j] & eta_QuadraturePts[i] <= eta[j+1])
                 {
@@ -234,8 +240,9 @@ int main(int argc, char *argv[])
                     f_QuadraturePts[i] = f[numLines-1] + df[numLines-1] * (eta_QuadraturePts[i] - eta[numLines-1]);
                     df_QuadraturePts[i] = df[numLines-1];
                 }
+
             }
-            
+
             u_QuadraturePts[i] = U_inf * df_QuadraturePts[i];
             v_QuadraturePts[i] = nu * sqrt(U_inf / (2.0 * nu * x)) * (y_QuadraturePts[i] * sqrt(U_inf / (2.0 * nu * x)) * df_QuadraturePts[i] - f_QuadraturePts[i]);
             p_QuadraturePts[i] = 0.0;
@@ -257,7 +264,7 @@ int main(int argc, char *argv[])
                 eta_QuadraturePts[i] = 1000000;        
             }
         
-            for(j=0; j<numLines; j++)
+            for(j=0; j<numLines-1; j++)
             {
                 if(eta_QuadraturePts[i] >= eta[j] & eta_QuadraturePts[i] <= eta[j+1])
                 {
@@ -340,9 +347,11 @@ int main(int argc, char *argv[])
     
     
     //! Filling the 2D expansion using a recursive algorithm based on the mesh ordering ------------
-    m = 0;
     LibUtilities::BasisSharedPtr Basis;
-    Basis = Domain->GetExp(0)->GetBasis(0);
+    Basis       = Domain->GetExp(0)->GetBasis(0);
+    numModes    = Basis->GetNumModes();
+
+    std::cout<< "Number of modes                    = " << numModes << std::endl;
       
     //! Copying the ukGlobal vector (with the same pattern of m_phys) in m_phys 
     Vmath::Vcopy(nQuadraturePts, u_QuadraturePts , 1, Exp2D_uk->UpdatePhys(), 1);
@@ -365,7 +374,7 @@ int main(int argc, char *argv[])
     
     //! Generation .FLD file with one field only (at the moment) -----------------------------------
     //! Definition of the name of the .fld file
-    string blasius = "blasius.fld";
+    string FalknerSkan = "FalknerSkan.fld";
     
     //! Definition of the number of the fields
     int nFields = 3;    
@@ -393,8 +402,8 @@ int main(int argc, char *argv[])
             Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }    
-    graphShPt->Write(blasius, FieldDef, FieldData);
-    std::cout<<"------------------------------------------------------------\n";
+    graphShPt->Write(FalknerSkan, FieldDef, FieldData);
+    std::cout<<"-------------------------------------------------------------------\n";
     //! --------------------------------------------------------------------------------------------
 
     return 0;

@@ -158,11 +158,13 @@ int main(int argc, char *argv[])
     ifstream pFile(txt_file_char);
     numLines = numLines/3;
     NekDouble d;
-    NekDouble GlobalArray[numLines][3];
+    //NekDouble GlobalArray[numLines][3];
+    std::vector<std::vector<NekDouble> > GlobalArray (numLines);
 
-    for (j=0; j<=2; j++)
+    for (i=0; i<=numLines-1; i++) 
     {
-        for (i=0; i<=numLines-1; i++) 
+        GlobalArray[i].resize(3);
+        for (j=0; j<=2; j++)
         {
             pFile >> d;
             GlobalArray[i][j] = d;

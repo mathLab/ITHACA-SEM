@@ -1737,11 +1737,11 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="BaseFlow">
-            <F FILE="bfs_tg-AR.bse" />
+            <F VAR="u,v,p" FILE="bfs_tg-AR.bse" />
         </FUNCTION>
 
        <FUNCTION NAME="InitialConditions">
-            <F FILE="bfs_tg-AR.rst" />
+            <F VAR="u,v,p" FILE="bfs_tg-AR.rst" />
         </FUNCTION>
 
     </CONDITIONS>

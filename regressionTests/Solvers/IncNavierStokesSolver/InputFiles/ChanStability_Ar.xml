@@ -297,11 +297,11 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="BaseFlow">
-            <F FILE="ChanStability_Ar.bse" />
+            <F VAR="u,v,p" FILE="ChanStability_Ar.bse" />
         </FUNCTION>
 
         <FUNCTION NAME="InitialConditions">
-            <F FILE="ChanStability_Ar.rst" />
+            <F VAR="u,v,p" FILE="ChanStability_Ar.rst" />
         </FUNCTION>
 
         <FUNCTION NAME="Forcing">

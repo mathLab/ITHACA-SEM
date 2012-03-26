@@ -286,7 +286,7 @@ namespace Nektar
             {
                 // Read vwi file
                 std::string forcefile
-                    = m_sessionRoll->GetFunctionFilename("BodyForce");
+                    = m_sessionRoll->GetFunctionFilename("BodyForce", 0);
                 
                 if(forcefile != "")
                 {

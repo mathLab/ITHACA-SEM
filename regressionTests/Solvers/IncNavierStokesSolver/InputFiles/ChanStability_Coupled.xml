@@ -297,7 +297,7 @@
         </FUNCTION>
         
          <FUNCTION NAME="InitialConditions">
-         <F FILE="ChanStability_Coupled.rst" />
+         <F VAR="u,v" FILE="ChanStability_Coupled.rst" />
         </FUNCTION>
         
         <FUNCTION NAME="AdvectionVelocity">

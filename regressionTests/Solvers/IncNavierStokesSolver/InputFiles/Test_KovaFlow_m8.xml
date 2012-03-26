@@ -55,7 +55,7 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <F FILE="Test_KovaFlow_m8.rst" />
+            <F VAR="u,v,p" FILE="Test_KovaFlow_m8.rst" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">

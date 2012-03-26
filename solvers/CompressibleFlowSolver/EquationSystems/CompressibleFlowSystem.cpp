@@ -1257,7 +1257,6 @@ namespace Nektar
       }
     
     NekDouble TimeStep = Vmath::Vmin(n_element,tstep,1);
-
     return TimeStep;
   }
 

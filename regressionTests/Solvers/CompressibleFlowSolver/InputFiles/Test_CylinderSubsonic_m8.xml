@@ -775,7 +775,7 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <F FILE="Test_CylinderSubsonic_m8.rst" />
+            <F VAR="rho,rhou,rhov,E" FILE="Test_CylinderSubsonic_m8.rst" />
         </FUNCTION>
 
     </CONDITIONS>

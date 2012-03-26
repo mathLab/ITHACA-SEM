@@ -49,6 +49,7 @@ using namespace std;
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 namespace po = boost::program_options;
 
@@ -728,12 +729,12 @@ namespace Nektar
         bool SessionReader::DefinesFunction(const std::string &pName, const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
-            EquationMap::const_iterator it2;
+            FunctionVariableMap::const_iterator it2;
             std::string vName = boost::to_upper_copy(pName);
 
             if ((it1 = m_functions.find(vName)) != m_functions.end()
-                    && (it2 = it1->second.m_expressions.find(pVariable))
-                            != it1->second.m_expressions.end())
+                    && (it2 = it1->second.find(pVariable))
+                            != it1->second.end())
             {
                 return true;
             }
@@ -747,17 +748,19 @@ namespace Nektar
         EquationSharedPtr SessionReader::GetFunction(const std::string &pName, const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
-            EquationMap::const_iterator it2;
+            FunctionVariableMap::const_iterator it2;
             std::string vName = boost::to_upper_copy(pName);
 
             ASSERTL0((it1 = m_functions.find(vName)) != m_functions.end(),
                      std::string("No such function '") + pName
                      + std::string("' has been defined in the session file."));
-            ASSERTL0((it2 = it1->second.m_expressions.find(pVariable)) != it1->second.m_expressions.end(),
+            ASSERTL0((it2 = it1->second.find(pVariable)) != it1->second.end(),
                      std::string("No such variable '") + pVariable
                      + std::string("' defined for function '") + pName
                      + std::string("' in session file."));
-            return it2->second;
+            ASSERTL0((it2->second.m_type == eFunctionTypeExpression),
+                     std::string("Function is defined by a file."));
+            return it2->second.m_expression;
         }
 
 
@@ -774,32 +777,62 @@ namespace Nektar
         /**
          *
          */
-        enum FunctionType SessionReader::GetFunctionType(const std::string &pName) const
+        enum FunctionType SessionReader::GetFunctionType(const std::string &pName, const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
+            FunctionVariableMap::const_iterator it2;
             std::string vName = boost::to_upper_copy(pName);
 
             it1 = m_functions.find(vName);
             ASSERTL0 (it1 != m_functions.end(),
                       std::string("Function '") + pName
                       + std::string("' not found."));
-            return it1->second.m_type;
+            ASSERTL0 ((it2 = it1->second.find(pVariable)) != it1->second.end(),
+                    std::string("No such variable '") + pVariable
+                    + std::string("' defined for function '") + pName
+                    + std::string("' in session file."));
+            return it2->second.m_type;
         }
 
 
         /**
          *
          */
-        std::string SessionReader::GetFunctionFilename(const std::string &pName) const
+        enum FunctionType SessionReader::GetFunctionType(const std::string &pName, const unsigned int &pVar) const
+        {
+            ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
+            return GetFunctionType(pName, m_variables[pVar]);
+        }
+
+
+        /**
+         *
+         */
+        std::string SessionReader::GetFunctionFilename(const std::string &pName, const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
+            FunctionVariableMap::const_iterator it2;
             std::string vName = boost::to_upper_copy(pName);
 
             it1 = m_functions.find(vName);
             ASSERTL0 (it1 != m_functions.end(),
                       std::string("Function '") + pName
                       + std::string("' not found."));
-            return it1->second.m_filename;
+            ASSERTL0 ((it2 = it1->second.find(pVariable)) != it1->second.end(),
+                    std::string("No such variable '") + pVariable
+                    + std::string("' defined for function '") + pName
+                    + std::string("' in session file."));
+            return it2->second.m_filename;
+        }
+
+
+        /**
+         *
+         */
+        std::string SessionReader::GetFunctionFilename(const std::string &pName, const unsigned int &pVar) const
+        {
+            ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
+            return GetFunctionFilename(pName, m_variables[pVar]);
         }
 
 
@@ -1451,28 +1484,30 @@ namespace Nektar
                 TiXmlElement *variable  = function->FirstChildElement();
 
                 // Create new function structure with default type of none.
-                FunctionDefinition functionDef;
-                functionDef.m_type = eFunctionTypeNone;
+                FunctionVariableMap functionVarMap;
 
                 // Process all entries in the function block
                 while (variable)
                 {
+                    FunctionVariableDefinition funcDef;
                     std::string conditionType = variable->Value();
+
+                    // All function variables must specify VAR
+                    ASSERTL0(variable->Attribute("VAR"),
+                             "Attribute VAR expected for function '"
+                             + functionStr + "'.");
+                    std::string variableStr = variable->Attribute("VAR");
+
+                    // Parse list of variables
+                    std::vector<std::string> variableList;
+                    ParseUtils::GenerateOrderedStringVector(variableStr.c_str(), variableList);
 
                     // Expressions are denoted by E
                     if (conditionType == "E")
                     {
-                        // Ensure we haven't already found a file to read.
-                        ASSERTL0(functionDef.m_type != eFunctionTypeFile,
-                               "Cannot mix expressions and files in function.");
-                        functionDef.m_type = eFunctionTypeExpression;
+                        funcDef.m_type = eFunctionTypeExpression;
 
-                        // Expression must have a VAR and VALUE.
-                        ASSERTL0(variable->Attribute("VAR"),
-                                 "Attribute VAR expected for function '"
-                                 + functionStr + "'.");
-                        std::string variableStr = variable->Attribute("VAR");
-
+                        // Expression must have a VALUE.
                         ASSERTL0(variable->Attribute("VALUE"),
                                  "Attribute VALUE expected for function '"
                                  + functionStr + "'.");
@@ -1485,29 +1520,16 @@ namespace Nektar
 
                         SubstituteExpressions(fcnStr);
 
-                        // Check it has not already been defined
-                        EquationMap::iterator fcnsIter
-                                = functionDef.m_expressions.find(variableStr);
-
-                        ASSERTL0(fcnsIter == functionDef.m_expressions.end(),
-                                "Error setting expression '" + variableStr
-                                + "' in function '" + functionStr + "'. "
-                                "Expression has already been defined.");
-
-                        // Add variable
-                        functionDef.m_expressions[variableStr]
-                            = MemoryManager<Equation>::AllocateSharedPtr(fcnStr);
+                        // set expression
+                        funcDef.m_expression = MemoryManager<Equation>::AllocateSharedPtr(fcnStr);
                     }
 
                     // Files are denoted by F
                     else if (conditionType == "F")
                     {
-                        // Ensure we haven't already read expressions
-                        ASSERTL0(functionDef.m_type != eFunctionTypeExpression,
-                               "Cannot mix expressions and files in function.");
-                        functionDef.m_type = eFunctionTypeFile;
+                        funcDef.m_type = eFunctionTypeFile;
 
-                        // A file must specify the FILE attribute
+                        // File must have a FILE.
                         ASSERTL0(variable->Attribute("FILE"),
                                  "Attribute FILE expected for function '"
                                  + functionStr + "'.");
@@ -1518,8 +1540,8 @@ namespace Nektar
                                  "attribute of function '" + functionStr
                                  + "'.");
 
-                        // set the filename for the function structure
-                        functionDef.m_filename = filenameStr;
+                        // set the filename
+                        funcDef.m_filename = filenameStr;
                     }
 
                     // Nothing else supported so throw an error
@@ -1532,10 +1554,25 @@ namespace Nektar
                                 "File: '" + m_filename + "', line: "
                                 + boost::lexical_cast<string>(variable->Row()));
                     }
+
+                    // Add variables to function
+                    for (unsigned int i = 0; i < variableList.size(); ++i)
+                    {
+                        // Check it has not already been defined
+                        FunctionVariableMap::iterator fcnsIter
+                                = functionVarMap.find(variableList[i]);
+                        ASSERTL0(fcnsIter == functionVarMap.end(),
+                                "Error setting expression '" + variableList[i]
+                                + "' in function '" + functionStr + "'. "
+                                "Expression has already been defined.");
+
+                        functionVarMap[variableList[i]] = funcDef;
+                    }
+
                     variable = variable->NextSiblingElement();
                 }
                 // Add function definition to map
-                m_functions[functionStr] = functionDef;
+                m_functions[functionStr] = functionVarMap;
                 function = function->NextSiblingElement("FUNCTION");
             }
         }

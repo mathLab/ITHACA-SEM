@@ -669,11 +669,8 @@ namespace Nektar
   	        for(int i = 0; i <= m_spacedim; ++i)
         	{	
         		base[i] = Array<OneD, NekDouble> (nq,0.0);
-				LibUtilities::EquationSharedPtr ifunc
-        		= m_session->GetFunction("Baseflow",velStr[i]);
-				
-               		EvaluateFunction(base[i],ifunc,time);
-              	}
+        		EvaluateFunction(velStr[i], base[i], "Baseflow", time);
+           	}
            
     }
   
@@ -681,15 +678,7 @@ namespace Nektar
 	// Get sourceterm for p' equation from the inputfile
     void APE::GetSource(Array<OneD, NekDouble> &source, const NekDouble time)
     {
-        int nq = m_fields[0]->GetNpoints();
-	source = Array<OneD, NekDouble> (nq,0.0);
-    	std::string sourceStr[1] = {"S"};
-        
-		LibUtilities::EquationSharedPtr ifunc 
-		= m_session->GetFunction("Source",sourceStr[0]);
-    		EvaluateFunction(source,ifunc,time);
-
-
+    	EvaluateFunction("S", source, "Source", time);
     }
 
 	// Add sourceterm for p' equation obtained from GetSource

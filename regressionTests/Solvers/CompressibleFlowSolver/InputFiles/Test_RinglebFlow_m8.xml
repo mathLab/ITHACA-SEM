@@ -392,7 +392,7 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <F FILE="Test_RinglebFlow_m8.rst" />
+            <F VAR="rho,rhou,rhov,E" FILE="Test_RinglebFlow_m8.rst" />
         </FUNCTION>
 
     </CONDITIONS>

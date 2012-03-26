@@ -666,7 +666,7 @@ namespace Nektar
                 std::string restartstr = "RESTART";
                 if(time<timeramp &&
                         !(m_session->DefinesFunction("InitialConditions") &&
-                          m_session->GetFunctionType("InitialConditions") == LibUtilities::eFunctionTypeFile))
+                          m_session->GetFunctionType("InitialConditions", 0) == LibUtilities::eFunctionTypeFile))
                 {
                     Fwd[0][kk]  = pow(c,1.0/gamma_1_2)*exp(-1.0+time/timeramp);
                     Fwd[1][kk] = Fwd[0][kk] * V * cos(theta)*exp(-1+time/timeramp);

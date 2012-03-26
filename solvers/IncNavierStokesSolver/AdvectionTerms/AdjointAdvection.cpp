@@ -62,10 +62,10 @@ namespace Nektar
 		SetUpBaseFields(m_graph);
 		ASSERTL0(m_session->DefinesFunction("BaseFlow"),
 				 "Base flow must be defined for linearised forms.");
-		ASSERTL0(m_session->GetFunctionType("BaseFlow")
+		ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
 				 == LibUtilities::eFunctionTypeFile,
 				 "Base flow must be provided in a file.");
-		string file = m_session->GetFunctionFilename("BaseFlow");
+		string file = m_session->GetFunctionFilename("BaseFlow", 0);
 		
 		//Periodic base flows
 		if(m_session->DefinesParameter("N_slices"))

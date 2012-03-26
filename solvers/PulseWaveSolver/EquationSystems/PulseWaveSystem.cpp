@@ -1354,8 +1354,7 @@ namespace Nektar
 			omega_str = os.str();			
 			velStr[0] = root + omega_str + close;
 			
-			LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("A_0",velStr[0]);
-			EvaluateFunction(m_A_0global[omega],ifunc,0.0);
+			EvaluateFunction(velStr[0], m_A_0global[omega],"A_0",0.0);
 		}
     }
 	
@@ -1402,8 +1401,7 @@ namespace Nektar
 				omega_str = os.str();			
 				velStr[0] = root + omega_str + close;
 				
-				LibUtilities::EquationSharedPtr ifunc = m_session->GetFunction("MaterialProperties",velStr[0]);
-				EvaluateFunction(m_betaglobal[omega],ifunc,0.0);
+				EvaluateFunction(velStr[0], m_betaglobal[omega],"MaterialProperties",0.0);
 			}
 		}
 	}
@@ -1497,7 +1495,7 @@ namespace Nektar
 						
 						LibUtilities::EquationSharedPtr vEqu
 						= m_session->GetFunction("ExactSolution",field);
-						EvaluateFunction(exactsoln,vEqu,m_time);
+						EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",m_time);
 						
 						L2error = m_fields[field]->L2(exactsoln);
 					}
@@ -1552,9 +1550,7 @@ namespace Nektar
 					{
 						Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 					
-						LibUtilities::EquationSharedPtr vEqu
-						= m_session->GetFunction("ExactSolution", field);
-						EvaluateFunction(exactsoln,vEqu,m_time);
+						EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",m_time);
 					
 						Linferror = m_fields[field]->Linf(exactsoln);
 					}

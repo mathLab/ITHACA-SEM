@@ -186,7 +186,7 @@ namespace Nektar
             SetUpBaseFields(m_graph);
             ASSERTL0(m_session->DefinesFunction("BaseFlow"),
                     "Base flow must be defined for linearised forms.");
-            string file = m_session->GetFunctionFilename("BaseFlow");
+            string file = m_session->GetFunctionFilename("BaseFlow", 0);
 		
 		
 		//Periodic base flows
@@ -287,7 +287,7 @@ namespace Nektar
 				m_slices=1;
 
 				//BaseFlow from file
-				if (m_session->GetFunctionType("BaseFlow")
+				if (m_session->GetFunctionType("BaseFlow", m_session->GetVariable(0))
 					== LibUtilities::eFunctionTypeFile)
 			    {
 					ImportFldBase(file,m_graph,1);
@@ -671,7 +671,7 @@ namespace Nektar
 			
 			if(m_slices>1)
 			{				
-				if (m_session->GetFunctionType("BaseFlow")
+				if (m_session->GetFunctionType("BaseFlow", 0)
 					== LibUtilities::eFunctionTypeFile)
 				{
 					for(int i=0; i<m_nConvectiveFields;++i)

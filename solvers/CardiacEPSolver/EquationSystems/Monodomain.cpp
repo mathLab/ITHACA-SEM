@@ -103,14 +103,9 @@ namespace Nektar
             if (m_session->DefinesFunction(varCoeffs[i]))
             {
                 // Load from FLD file.
-                if (m_session->GetFunctionType(varCoeffs[i]) == LibUtilities::eFunctionTypeFile)
+                if (m_session->GetFunctionType(varCoeffs[i],varName) == LibUtilities::eFunctionTypeFile)
                 {
-                    ImportFld(m_session->GetFunctionFilename(varCoeffs[i]),
-                              m_fields[0],
-                              varName);
-
-                    m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(),
-                                          m_fields[0]->UpdatePhys());
+                    EvaluateFunction(varName, m_fields[0]->UpdatePhys(), varCoeffs[i]);
 
                     // Normalise and invert (assuming image intensity data)
                     int nq = m_fields[0]->GetNpoints();
@@ -153,9 +148,7 @@ namespace Nektar
 
                     Array<OneD, NekDouble> tmp(nq);
 
-                    LibUtilities::EquationSharedPtr ifunc
-                            = m_session->GetFunction(varCoeffs[i], varName);
-                    ifunc->Evaluate(x0,x1,x2,0.0,tmp);
+                    EvaluateFunction(varName, tmp, varCoeffs[i]);
                     m_vardiff[varCoeffEnum[i]] = tmp;
                 }
 
@@ -291,21 +284,21 @@ namespace Nektar
     {
         UnsteadySystem::v_PrintSummary(out);
         if (m_session->DefinesFunction("d00") &&
-            m_session->GetFunctionType("d00") == LibUtilities::eFunctionTypeExpression)
+            m_session->GetFunctionType("d00", "intensity") == LibUtilities::eFunctionTypeExpression)
         {
             out << "\tDiffusivity-x   : "
                 << m_session->GetFunction("d00", "intensity")->GetExpression()
                 << endl;
         }
         if (m_session->DefinesFunction("d11") &&
-            m_session->GetFunctionType("d11") == LibUtilities::eFunctionTypeExpression)
+            m_session->GetFunctionType("d11", "intensity") == LibUtilities::eFunctionTypeExpression)
         {
             out << "\tDiffusivity-x   : "
                 << m_session->GetFunction("d11", "intensity")->GetExpression()
                 << endl;
         }
         if (m_session->DefinesFunction("d22") &&
-            m_session->GetFunctionType("d22") == LibUtilities::eFunctionTypeExpression)
+            m_session->GetFunctionType("d22", "intensity") == LibUtilities::eFunctionTypeExpression)
         {
             out << "\tDiffusivity-x   : "
                 << m_session->GetFunction("d22", "intensity")->GetExpression()

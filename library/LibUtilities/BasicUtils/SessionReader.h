@@ -60,7 +60,6 @@ namespace Nektar
         typedef std::map<std::string, std::string>  GeometricInfoMap;
         typedef std::map<std::string, std::string>  ExpressionMap;
         typedef std::vector<std::string>            VariableList;
-        typedef std::map<std::string, EquationSharedPtr>  EquationMap;
         typedef std::map<std::string, std::string>  TagMap;
         typedef std::multimap<std::string, std::map<std::string, std::string> > FilterMap;
 
@@ -69,7 +68,6 @@ namespace Nektar
 
         enum FunctionType
         {
-            eFunctionTypeNone,
             eFunctionTypeExpression,
             eFunctionTypeFile,
             eSIZE_FunctionType
@@ -80,13 +78,14 @@ namespace Nektar
             "Expression",
             "File"
         };
-        struct FunctionDefinition
+        struct FunctionVariableDefinition
         {
             enum FunctionType m_type;
             std::string       m_filename;
-            EquationMap       m_expressions;
+            EquationSharedPtr m_expression;
         };
-        typedef std::map<std::string, FunctionDefinition > FunctionMap;
+        typedef std::map<std::string, FunctionVariableDefinition>  FunctionVariableMap;
+        typedef std::map<std::string, FunctionVariableMap > FunctionMap;
 
         class SessionReader;
         typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
@@ -224,10 +223,14 @@ namespace Nektar
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(const std::string &name, const std::string &variable) const;
             /// Returns an EquationSharedPtr to a given function variable index.
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(const std::string &name, const unsigned int &var) const;
-            /// Returns the type of a given function.
-            LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(const std::string& name) const;
-            /// Returns the filename to be loaded for a given function.
-            LIB_UTILITIES_EXPORT std::string GetFunctionFilename(const std::string& name) const;
+            /// Returns the type of a given function variable.
+            LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(const std::string& name, const std::string &variable) const;
+            /// Returns the type of a given function variable index.
+            LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(const std::string &pName, const unsigned int &pVar) const;
+            /// Returns the filename to be loaded for a given variable.
+            LIB_UTILITIES_EXPORT std::string GetFunctionFilename(const std::string& name, const std::string &variable) const;
+            /// Returns the filename to be loaded for a given variable index.
+            LIB_UTILITIES_EXPORT std::string GetFunctionFilename(const std::string& name, const unsigned int &var) const;
 
             /* ------ TAGS ------ */
             /// Checks if a specified tag is defined.

@@ -2163,9 +2163,7 @@ namespace Nektar
 
         default:
         {
-            LibUtilities::EquationSharedPtr vEqu
-            = m_session->GetFunction("ExactSolution", field);
-            EvaluateFunction(outfield,vEqu,time);
+            EvaluateFunction(m_session->GetVariable(field), outfield, "ExactSolution", time);
         }
         }
     }

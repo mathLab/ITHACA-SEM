@@ -555,23 +555,12 @@ namespace Nektar
             }
                
             // Check for file.
-            if (m_session->GetFunctionType("BodyForce")
-                == LibUtilities::eFunctionTypeFile)
+            std::vector<std::string> fieldStr;
+            for(int i = 0; i < v_GetForceDimension(); ++i)
             {
-                std::string forcefile
-                    = m_session->GetFunctionFilename("BodyForce");
-                ImportFld(forcefile, m_forces);
+                fieldStr.push_back(m_session->GetVariable(i));
             }
-            else
-            {                
-                std::vector<std::string> fieldStr;
-                for(int i = 0; i < v_GetForceDimension(); ++i)
-                {
-                    fieldStr.push_back(m_session->GetVariable(i));
-                }
-                
-                EvaluateFunction(fieldStr, m_forces, "BodyForce");
-            }
+            EvaluateFunction(fieldStr, m_forces, "BodyForce");
         }
 
         // If a tangent vector policy is defined then the local tangent vectors
@@ -601,34 +590,6 @@ namespace Nektar
      * @param   pArray          The array into which to write the values.
      * @param   pEqn            The equation to evaluate.
      */
-    void EquationSystem::EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                                          LibUtilities::EquationSharedPtr pEqn,
-                                          const NekDouble pTime)
-    {
-        int nq = m_fields[0]->GetNpoints();
-
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
-        m_fields[0]->GetCoords(x0,x1,x2);
-
-        if (pArray.num_elements() != nq)
-        {
-            pArray = Array<OneD, NekDouble>(nq);
-        }
-        pEqn->Evaluate(x0,x1,x2,pTime,pArray);
-    }
-
-
-    /**
-     * Evaluates a physical function at each quadrature point in the domain.
-     *
-     * @param   pArray          The array into which to write the values.
-     * @param   pEqn            The equation to evaluate.
-     */
     void EquationSystem::EvaluateFunction(
             Array<OneD, Array<OneD, NekDouble> >& pArray,
             std::string pFunctionName,
@@ -637,28 +598,11 @@ namespace Nektar
         ASSERTL0(m_session->DefinesFunction(pFunctionName),
                     "Function '" + pFunctionName + "' does not exist.");
 
-        int nq = m_fields[0]->GetNpoints();
+        std::vector<std::string> vFieldNames = m_session->GetVariables();
 
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
-        m_fields[0]->GetCoords(x0,x1,x2);
-
-        for(int k = 0; k < m_session->GetVariables().size(); ++k)
+        for(int i = 0 ; i < vFieldNames.size(); i++)
         {
-            ASSERTL0(pArray[k].num_elements() == nq,
-                     "Array size does not match field size.");
-            std::string vVar = m_session->GetVariable(k);
-            ASSERTL0(m_session->DefinesFunction(pFunctionName, vVar),
-                     "Variable '" + vVar + "' is not defined for function '"
-                     + pFunctionName + "'.");
-
-            LibUtilities::EquationSharedPtr vEqn
-                                = m_session->GetFunction(pFunctionName,vVar);
-            vEqn->Evaluate(x0,x1,x2,pTime,pArray[k]);
+            EvaluateFunction(vFieldNames[i], pArray[i], pFunctionName, pTime);
         }
     }
 
@@ -673,53 +617,21 @@ namespace Nektar
                         Array<OneD, Array<OneD, NekDouble> > &pFields,
                         const std::string& pFunctionName)
     {
+        ASSERTL1(pFieldNames.size() == pFields.num_elements(),
+                    "Function '" + pFunctionName
+                    + "' variable list size mismatch with array storage.");
         ASSERTL0(m_session->DefinesFunction(pFunctionName),
                     "Function '" + pFunctionName + "' does not exist.");
-        LibUtilities::FunctionType vType = m_session->GetFunctionType(pFunctionName);
-        if (vType == LibUtilities::eFunctionTypeFile)
-        {
-            int nfields = pFieldNames.size();
 
-            std::string filename = m_session->GetFunctionFilename(pFunctionName);
-            cout << pFunctionName << " from file: " << filename << endl;
-            // declare tmp space for coefficients
-            Array< OneD, Array<OneD, NekDouble> > coeffs(nfields);
-            coeffs[0] = Array<OneD, NekDouble> (nfields*m_fields[0]->GetNcoeffs(),0.0);
-            for(int i = 1; i < nfields; ++i)
-            {
-                coeffs[i] = coeffs[i-1] + m_fields[i]->GetNcoeffs();
-            }
-
-            ImportFld(filename, pFieldNames, coeffs);
-            // transform coefficients to physical space. 
-            for(int i = 0; i < nfields; ++i)
-            {
-                m_fields[0]->BwdTrans(coeffs[i],pFields[i]);
-            }
-        }
-        else if (vType == LibUtilities::eFunctionTypeExpression)
+        for(int i = 0 ; i < pFieldNames.size(); i++)
         {
-            int nq = m_fields[0]->GetNpoints();
-            Array<OneD,NekDouble> x0(nq);
-            Array<OneD,NekDouble> x1(nq);
-            Array<OneD,NekDouble> x2(nq);
-            // get the coordinates (assuming all fields have the same
-            // discretisation)
-            m_fields[0]->GetCoords(x0,x1,x2);
-            ASSERTL0(pFieldNames.size() == pFields.num_elements(),
-                     "FieldNames size mismatch.");
-            for(int i = 0 ; i < pFieldNames.size(); i++)
-            {
-                LibUtilities::EquationSharedPtr ffunc
-                        = m_session->GetFunction(pFunctionName, pFieldNames[i]);
-                ffunc->Evaluate(x0,x1,x2,pFields[i]);
-            }
+            EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName);
         }
     }
 
     /**
-     * Populates a forcing function for each of the dependent variables using
-     * the expression provided by the BoundaryConditions object.
+     * Populates a function for each of the dependent variables using
+     * the expression or filenames provided by the SessionReader object.
      * @param   force           Array of fields to assign forcing.
      */
     void EquationSystem::EvaluateFunction(
@@ -729,31 +641,76 @@ namespace Nektar
     {
         ASSERTL0(m_session->DefinesFunction(pFunctionName),
                     "Function '" + pFunctionName + "' does not exist.");
-        LibUtilities::FunctionType vType = m_session->GetFunctionType(pFunctionName);
-        if (vType == LibUtilities::eFunctionTypeFile)
+        ASSERTL0(pFieldNames.size() == pFields.num_elements(),
+                "Field list / name list size mismatch.");
+
+        for(int i = 0 ; i < pFieldNames.size(); i++)
         {
-            std::string filename = m_session->GetFunctionFilename(pFunctionName);
-            cout << pFunctionName << " from file: " << filename << endl;
-            ImportFld(filename, pFields);
+            EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName);
+            pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(), pFields[i]->UpdateCoeffs());
         }
-        else if (vType == LibUtilities::eFunctionTypeExpression)
+    }
+
+
+    void EquationSystem::EvaluateFunction(
+                    std::string pFieldName,
+                    Array<OneD, NekDouble>& pArray,
+                    const std::string& pFunctionName,
+                    const NekDouble& pTime)
+    {
+        ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                    "Function '" + pFunctionName + "' does not exist.");
+
+        LibUtilities::FunctionType vType;
+        vType = m_session->GetFunctionType(pFunctionName, pFieldName);
+        if (vType == LibUtilities::eFunctionTypeExpression)
         {
-            int nq = pFields[0]->GetNpoints();
+            int nq = m_fields[0]->GetNpoints();
+            if (nq != pArray.num_elements())
+            {
+                pArray = Array<OneD, NekDouble>(nq);
+            }
             Array<OneD,NekDouble> x0(nq);
             Array<OneD,NekDouble> x1(nq);
             Array<OneD,NekDouble> x2(nq);
             // get the coordinates (assuming all fields have the same
             // discretisation)
-            pFields[0]->GetCoords(x0,x1,x2);
-            ASSERTL0(pFieldNames.size() == pFields.num_elements(),
-                     "FieldNames size mismatch.");
-            for(int i = 0 ; i < pFieldNames.size(); i++)
-            {
-                LibUtilities::EquationSharedPtr ffunc
-                        = m_session->GetFunction(pFunctionName, pFieldNames[i]);
+            m_fields[0]->GetCoords(x0,x1,x2);
+            LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction(pFunctionName, pFieldName);
 
-                ffunc->Evaluate(x0,x1,x2,pFields[i]->UpdatePhys());
+            ffunc->Evaluate(x0,x1,x2,pTime,pArray);
+        }
+        else if (vType == LibUtilities::eFunctionTypeFile)
+        {
+            std::string filename
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+            cout << pFunctionName << " from file: " << filename << endl;
+
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<std::vector<NekDouble> > FieldData;
+            Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
+
+            m_graph->Import(filename,FieldDef,FieldData);
+
+            int idx = -1;
+            // Loop over all the expansions
+            for(int i = 0; i < FieldDef.size(); ++i)
+            {
+                // find the index of the required field in the expansion segment.
+                for(int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
+                {
+                    if (FieldDef[i]->m_fields[j] == pFieldName)
+                    {
+                        idx = j;
+                    }
+                }
+                ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
+                m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                 FieldDef[i]->m_fields[idx],
+                                                 vCoeffs);
             }
+            m_fields[0]->BwdTrans(vCoeffs, pArray);
         }
     }
 
@@ -803,9 +760,7 @@ namespace Nektar
              {
                  Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 
-                 LibUtilities::EquationSharedPtr vEqu
-                             = m_session->GetFunction("ExactSolution",field);
-                 EvaluateFunction(exactsoln,vEqu,m_time);
+                 EvaluateFunction(m_session->GetVariable(field), exactsoln, "ExactSolution", m_time);
 
                  L2error = m_fields[field]->L2(exactsoln);
              }
@@ -862,9 +817,7 @@ namespace Nektar
              {
                  Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 
-                 LibUtilities::EquationSharedPtr vEqu
-                         = m_session->GetFunction("ExactSolution", field);
-                 EvaluateFunction(exactsoln,vEqu,m_time);
+                 EvaluateFunction(m_session->GetVariable(field), exactsoln, "ExactSolution", m_time);
 
                  Linferror = m_fields[field]->Linf(exactsoln);
              }
@@ -958,46 +911,7 @@ namespace Nektar
         
         if (m_session->DefinesFunction("InitialConditions"))
         {
-            // Check for restart file.
-            if (m_session->GetFunctionType("InitialConditions")
-                == LibUtilities::eFunctionTypeFile)
-            {
-                std::string restartfile
-                    = m_session->GetFunctionFilename("InitialConditions");
-                cout << "\tRestart file: "<< restartfile << endl;
-                ImportFld(restartfile, m_fields);
-            }
-            else
-            {
-                int nq = m_fields[0]->GetNpoints();
-                
-                Array<OneD,NekDouble> x0(nq);
-                Array<OneD,NekDouble> x1(nq);
-                Array<OneD,NekDouble> x2(nq);
-                
-                // get the coordinates (assuming all fields have the same
-                // discretisation)
-                m_fields[0]->GetCoords(x0,x1,x2);
-		
-                for(unsigned int i = 0 ; i < m_fields.num_elements(); i++)
-                {
-                    LibUtilities::EquationSharedPtr ifunc
-                        = m_session->GetFunction("InitialConditions", i);
-
-                    ifunc->Evaluate(x0,x1,x2, initialtime, m_fields[i]->UpdatePhys());
-
-                    m_fields[i]->SetPhysState(true);
-
-                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                     m_fields[i]->UpdateCoeffs());
-
-                    if (m_session->GetComm()->GetRank() == 0)
-                    {
-                        cout << "\tField "<< m_session->GetVariable(i)
-                             <<": " << ifunc->GetExpression() << endl;
-                    }
-                }
-            }
+            EvaluateFunction(m_session->GetVariables(), m_fields, "InitialConditions");
         }
         else
         {
@@ -1032,9 +946,7 @@ namespace Nektar
         ASSERTL0 (outfield.num_elements() == m_fields[field]->GetNpoints(),
                     "ExactSolution array size mismatch.");
 
-        LibUtilities::EquationSharedPtr vEqu
-                    = m_session->GetFunction("ExactSolution",field);
-        EvaluateFunction(outfield,vEqu,m_time);
+        EvaluateFunction(m_session->GetVariable(field), outfield, "ExactSolution", time);
     }
 
 
@@ -1051,71 +963,15 @@ namespace Nektar
     {
         base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         int nq = m_fields[0]->GetNpoints();
-        std::string velStr[3] = {"Vx","Vy","Vz"}; 
+        std::vector<std::string> vel;
+        vel.push_back("Vx");
+        vel.push_back("Vy");
+        vel.push_back("Vz");
+        vel.resize(m_spacedim);
 
+        SetUpBaseFields(m_graph);
 
-
-        // Check for restart file.
-        if (m_session->GetFunctionType("BaseFlow")
-                   == LibUtilities::eFunctionTypeFile)
-        {
-             string baseflowfile
-                        = m_session->GetFunctionFilename("BaseFlow");
-             cout << "\tBaseFlow file: "<< baseflowfile << endl;
-             SetUpBaseFields(m_graph);
-             ImportFldBase(baseflowfile, m_graph);
-             for(int i=0; i<m_spacedim; ++i)
-             {
-                 base[i] = Array<OneD, NekDouble> (nq,0.0);
-                 Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
-             }
-        }
-        else
-        {    
-   /*
-        if(m_session->DefinesSolverInfo("BaseFlowFile"))
-        {
-            std::string baseyn= m_session->GetSolverInfo("BaseFlowFile");
-            //capitalise the string baseyn
-            std::transform(baseyn.begin(), baseyn.end(), baseyn.begin()
-                    , ::toupper);
-            if(baseyn=="YES")
-            {
-                SetUpBaseFields(m_graph);
-                string basename = m_session->GetFilename();
-                basename= (m_session->GetFilename()).substr(0,
-                                                basename.find_last_of("."));
-                ImportFldBase(basename + "-Base.fld",m_graph);
-                cout<<"Base flow from file:  "<<basename<<"-Base.fld"<<endl;
-                for(int i=0; i<m_spacedim; ++i)
-                {
-                   base[i] = Array<OneD, NekDouble> (nq,0.0);
-                   Vmath::Vcopy(nq,m_base[i]->GetPhys(),1,base[i],1);
-      		}
-
-            }
-            else
-            {
-                for(int i = 0; i < m_spacedim; ++i)
-                {
-                    base[i] = Array<OneD, NekDouble> (nq,0.0);
-                    LibUtilities::EquationSharedPtr ifunc
-                                = m_session->GetFunction("BaseFlow", velStr[i]);
-                    EvaluateFunction(base[i],ifunc);
-                }
-            }
-        }
-        else
-        {
-*/
-            for(int i = 0; i < m_spacedim; ++i)
-            {
-                base[i] = Array<OneD, NekDouble> (nq,0.0);
-                LibUtilities::EquationSharedPtr ifunc
-                                = m_session->GetFunction("BaseFlow",velStr[i]);
-                EvaluateFunction(base[i],ifunc);
-            }
-        }
+        EvaluateFunction(vel, base, "BaseFlow");
     }    	    
     
     void EquationSystem::SetUpBaseFields(
@@ -1303,19 +1159,6 @@ namespace Nektar
         }
     }
 
-//   void EquationSystem::SetInitialForce(NekDouble initialtime)
-//   {
-//   }
-
-
-
-     /**
-      * @todo implement 3D case
-      * @todo
-      */
-//    void EquationSystem::InitialiseForcingFunctions( Array<OneD, MultiRegions::ExpListSharedPtr> &force)
-//    {
-//    }
 
     /**
      * Computes the weak Green form of advection terms (without boundary
@@ -1826,7 +1669,6 @@ namespace Nektar
             {
                 // Could do a search here to find correct variable
                 FieldDef[i]->m_fields.push_back(variables[j]);
-//cout<<"v="<<variables[j]<<endl;                
                 field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
             }            
         }

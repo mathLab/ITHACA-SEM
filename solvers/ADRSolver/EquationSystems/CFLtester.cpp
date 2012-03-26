@@ -54,17 +54,13 @@ namespace Nektar
 
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         int nq = m_fields[0]->GetNpoints();
-        std::string velStr[3] = {"Vx","Vy","Vz"};
+        std::vector<std::string> vel;
+        vel.push_back("Vx");
+        vel.push_back("Vy");
+        vel.push_back("Vz");
+        vel.resize(m_spacedim);
 
-        for(int j = 0; j < m_spacedim; ++j)
-        {
-            m_velocity[j] = Array<OneD, NekDouble> (nq,0.0);
-
-            LibUtilities::EquationSharedPtr ifunc
-                = m_session->GetFunction("AdvectionVelocity", velStr[j]);
-
-            EvaluateFunction(m_velocity[j],ifunc);
-        }
+        EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
 
         if (m_explicitAdvection)
         {

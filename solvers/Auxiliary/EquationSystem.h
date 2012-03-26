@@ -116,11 +116,6 @@ namespace Nektar
         inline void SetLambda(NekDouble lambda);
 
         /// Evaluates a function as specified in the session file.
-        void EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                LibUtilities::EquationSharedPtr pEqn,
-                const NekDouble pTime = 0.0);
-
-        /// Evaluates a function as specified in the session file.
         void EvaluateFunction(
                 Array<OneD, Array<OneD, NekDouble> >& pArray,
                 std::string pFunctionName,
@@ -137,6 +132,13 @@ namespace Nektar
                 std::vector<std::string> pFieldNames,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                 const std::string& pName);
+
+        // Populate an array with a function variable from session.
+        void EvaluateFunction(
+                std::string pFieldName,
+                Array<OneD, NekDouble>& pArray,
+                const std::string& pFunctionName,
+                const NekDouble& pTime = 0.0);
 
         /// Perform initialisation of the base flow.
         void InitialiseBaseFlow(Array<OneD, Array<OneD, NekDouble> > &base);

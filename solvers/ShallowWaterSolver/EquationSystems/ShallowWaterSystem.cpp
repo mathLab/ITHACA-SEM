@@ -360,28 +360,13 @@ namespace Nektar
 
   void ShallowWaterSystem::EvaluateWaterDepth(void)
   {
-    
-    int nq  = m_fields[0]->GetTotPoints();
-    m_depth = Array<OneD, NekDouble >(nq);
-    
-    std::string depthStr[1] = {"d"};
-    
-    LibUtilities::EquationSharedPtr ifunc
-      = m_session->GetFunction("WaterDepth", depthStr[0]);
-
-    EvaluateFunction(m_depth,ifunc);
+    EvaluateFunction("d",m_depth,"WaterDepth");
   }
   
   
   void ShallowWaterSystem::EvaluateCoriolis(void)
   {
-    int nq = m_fields[0]->GetTotPoints();
-    std::string coriolisStr[1] = {"f"};
-        
-    LibUtilities::EquationSharedPtr ifunc
-      = m_session->GetFunction("Coriolis",coriolisStr[0]);
-    
-    EvaluateFunction(m_coriolis,ifunc);
+    EvaluateFunction("f",m_coriolis,"Coriolis");
   }
 
  

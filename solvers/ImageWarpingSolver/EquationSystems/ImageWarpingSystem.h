@@ -59,6 +59,7 @@ namespace Nektar
 
     protected:
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
+        NekDouble m_alpha;
 
         ImageWarpingSystem(
                 const LibUtilities::SessionReaderSharedPtr& pSession);

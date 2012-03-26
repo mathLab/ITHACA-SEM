@@ -311,6 +311,7 @@
       <P> TimeStep       = 0.01     </P>
       <P> IO_CheckSteps  = 10         </P>
       <P> IO_InfoSteps   = 1         </P>
+      <P> Alpha          = 1         </P>
     </PARAMETERS>
     
     <SOLVERINFO>

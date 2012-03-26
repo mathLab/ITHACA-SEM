@@ -105,6 +105,9 @@ namespace Nektar
         int npoints    = GetNpoints();
         int ncoeffs    = inarray[0].num_elements();
         StdRegions::ConstFactorMap factors;
+
+        // Load parameter alpha.
+        m_session->LoadParameter("Alpha", m_alpha);
         
         ASSERTL0(m_projectionType == MultiRegions::eDiscontinuousGalerkin,
                  "CG not implemented yet.");
@@ -122,13 +125,15 @@ namespace Nektar
         
         // Set factors.
         // TODO: Check - should be -1?
-        factors[StdRegions::eFactorLambda] = 1.0;
+        factors[StdRegions::eFactorLambda] = 1.0 / m_alpha / m_alpha;
         
         // Multiply by phi, and perform Helmholtz solve to calculate the
         // advection velocity field.
         for (i = 0; i < 2; ++i)
         {
             Vmath::Vmul(npoints, &alloc[i*npoints], 1, inarray[1].get(), 1, 
+                        m_fields[i+2]->UpdatePhys().get(), 1);
+            Vmath::Smul(npoints, 1/m_alpha/m_alpha, m_fields[i+2]->GetPhys().get(), 1,
                         m_fields[i+2]->UpdatePhys().get(), 1);
             m_fields[i+2]->HelmSolve(m_fields[i+2]->GetPhys(), 
                                      m_fields[i+2]->UpdateCoeffs(),
@@ -160,9 +165,7 @@ namespace Nektar
         
         // Add this to the weak advection for intensity field
         // equation. 
-        //
-        // TODO: Check this is right?? - should probably be Vsub instead.
-        Vmath::Vadd(npoints, WeakAdv[0], 1, tmp2, 1, WeakAdv[0], 1);
+        Vmath::Vsub(npoints, WeakAdv[0], 1, tmp2, 1, WeakAdv[0], 1);
          
         // Multiply by elemental inverse mass matrix, backwards transform and
         // negate (to put on RHS of ODE).

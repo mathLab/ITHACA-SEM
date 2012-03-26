@@ -1093,8 +1093,8 @@ namespace Nektar
 			m_num_planes_per_proc = m_num_fourier_points/m_num_processes;
 			m_rank_id             = m_comm->GetColumnComm()->GetRank();
 			
-			m_planes_IDs = Array<OneD,int>(m_num_planes_per_proc);
-			m_K          = Array<OneD,int>(m_num_planes_per_proc);
+			m_planes_IDs = Array<OneD,unsigned int>(m_num_planes_per_proc);
+			m_K          = Array<OneD,unsigned int>(m_num_planes_per_proc);
 			
 			for(int i = 0 ; i < m_num_planes_per_proc ; i++)
 			{
@@ -1107,6 +1107,11 @@ namespace Nektar
 				m_K[0] = 1;
 				m_K[1] = 1;
 			}
+		}
+		
+		Array<OneD, unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
+		{
+			return m_planes_IDs;
 		}
     } //end of namespace
 } //end of namespace

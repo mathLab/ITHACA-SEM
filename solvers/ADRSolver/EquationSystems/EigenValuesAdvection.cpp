@@ -115,7 +115,7 @@ namespace Nektar
 		outarray[0] = Array<OneD, NekDouble>(npoints,0.0);
 		tmp[0] = Array<OneD, NekDouble>(npoints,0.0);
 		
-		WeakAdv[0]  = Array<OneD, NekDouble>(npoints,0.0);
+		WeakAdv[0]  = Array<OneD, NekDouble>(ncoeffs,0.0);
 		Array<OneD, NekDouble> MATRIX(npoints*npoints,0.0);
 		
 		for (int j = 0; j < npoints; j++)
@@ -133,21 +133,13 @@ namespace Nektar
         {
         case MultiRegions::eDiscontinuousGalerkin:
             {
+				WeakDGAdvection(inarray, WeakAdv,true,true,1);
 
-                WeakDGAdvection(inarray, WeakAdv,true,true,1);
-
-                for(i = 0; i < nvariables; ++i)
-                {
-					//Projection not required for DG
+				m_fields[0]->MultiplyByElmtInvMass(WeakAdv[0],WeakAdv[0]);
 					
-					//Advection operator
-                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],WeakAdv[i]);
-					
-					m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
+				m_fields[0]->BwdTrans(WeakAdv[0],outarray[0]);
                     
-                    Vmath::Neg(npoints,outarray[i],1);
-                }
-
+				Vmath::Neg(npoints,outarray[0],1);
 			break;
             }
 		case MultiRegions::eGalerkin:
@@ -155,7 +147,6 @@ namespace Nektar
 				// Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
                 {
-					
                     //Projection
 					m_fields[i]->FwdTrans(inarray[i],WeakAdv[i]);
 
@@ -235,40 +226,52 @@ namespace Nektar
     }
 
     void EigenValuesAdvection::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
+											Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
-
+		
         for(int j = 0; j < flux.num_elements(); ++j)
         {
             Vmath::Vmul(GetNpoints(),physfield[i],1,
-                m_velocity[j],1,flux[j],1);
+						m_velocity[j],1,flux[j],1);
         }
     }
-
+	
     void EigenValuesAdvection::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
         int i;
-
+		
         int nTraceNumPoints = GetTraceNpoints();
         int nvel = m_spacedim; //m_velocity.num_elements();
-
+		
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
         Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
-
-        // Get Edge Velocity - Could be stored if time independent
+        Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);		
+        
+        //Get Edge Velocity - Could be stored if time independent
         for(i = 0; i < nvel; ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
             Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
         }
-
+        
         for(i = 0; i < numflux.num_elements(); ++i)
         {
             m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
+            
             //evaulate upwinded m_fields[i]
-            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            if (m_expdim == 1)
+            {
+                m_fields[i]->GetTrace1D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            }
+            else if (m_expdim == 2)
+            {
+                m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            }
+            else if (m_expdim == 3)
+            {
+                m_fields[i]->GetTrace3D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            }
             // calculate m_fields[i]*Vn
             Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
         }

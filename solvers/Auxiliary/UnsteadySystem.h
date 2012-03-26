@@ -56,7 +56,7 @@ namespace Nektar
 							  NekDouble timeCFL);
 		
 		/// Calculate the larger time-step mantaining the problem stable, just for CFLTester equation
-		NekDouble GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability);
+		NekDouble GetTimeStep(NekDouble CFL);
 		
 		/// CFL number
 		NekDouble m_cfl;
@@ -139,7 +139,7 @@ namespace Nektar
 										const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
 		
 		/// Virtual function to get the time step
-		virtual NekDouble v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability);
+		virtual NekDouble v_GetTimeStep(NekDouble CFL);
 
     private:
         ///

@@ -137,8 +137,8 @@ namespace Nektar
 			int m_num_fourier_coeffs;         // total number Fourier coefficients = total number of Fourier modes
 			int m_num_processes;              // number of total parallel processes per columns (split of the planes)
 			int m_rank_id;                    // rank of the process
-			Array<OneD, int> m_planes_IDs;    // IDs of the planes on the process
-			Array<OneD, int> m_K;             // Fourier wave numbers associated with the planes on the process
+			Array<OneD, unsigned int> m_planes_IDs;    // IDs of the planes on the process
+			Array<OneD, unsigned int> m_K;             // Fourier wave numbers associated with the planes on the process
 			
         protected:
             
@@ -237,7 +237,9 @@ namespace Nektar
 			virtual void v_PhysDeriv(Direction edir,
 									 const Array<OneD, const NekDouble> &inarray,
 									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
-
+			
+			virtual Array<OneD, unsigned int> v_GetZIDs(void);
+			
             virtual ExpListSharedPtr &v_GetPlane(int n)
             {
                 return GetPlane(n);

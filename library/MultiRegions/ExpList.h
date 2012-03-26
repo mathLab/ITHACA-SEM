@@ -478,6 +478,20 @@ namespace Nektar
             {
                 return v_HomogeneousEnergy();
             }
+			
+			/// This function returns a vector containing the wave numbers in z-direction associated
+			/// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
+			Array<OneD, unsigned int> GetZIDs(void)
+			{
+				return v_GetZIDs();
+			}
+			
+			/// This function returns a vector containing the wave numbers in y-direction associated
+			/// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
+			Array<OneD, unsigned int> GetYIDs(void)
+			{
+				return v_GetYIDs();
+			}
 
             /// Calculates the \f$H^1\f$ error of the global spectral/hp
             /// element approximation.
@@ -1133,7 +1147,11 @@ namespace Nektar
 
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+			
 			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+			virtual Array<OneD, unsigned int> v_GetZIDs(void);
+			virtual Array<OneD, unsigned int> v_GetYIDs(void);
+			
 
             virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 

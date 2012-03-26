@@ -882,7 +882,13 @@ namespace Nektar
 			
 			int num_data = 8;
 			
-			int num_elm_per_plane = (m_fields[0]->GetExpSize())/m_npointsZ;
+			Array<OneD, unsigned int> planes;
+			
+			planes = m_fields[0]->GetZIDs();
+			
+			int num_planes = planes.num_elements();
+			
+			int num_elm_per_plane = (m_fields[0]->GetExpSize())/num_planes;
 			
 			m_HBC = Array<OneD, Array<OneD, int> > (num_data);
 			for(int n = 0; n < num_data; ++n)
@@ -898,13 +904,13 @@ namespace Nektar
 			int K;
 			NekDouble sign = 1.0;
 			int cnt = 0;
-			for(int k = 0; k < m_npointsZ; k++)
+			for(int k = 0; k < num_planes; k++)
 			{
-				K = k/2;
+				K = planes[k]/2;
 				for(int n = 0 ; n < PBndConds.num_elements(); ++n)
 				{
 					exp_size = PBndExp[n]->GetExpSize();
-					exp_size_per_plane = exp_size/m_npointsZ;
+					exp_size_per_plane = exp_size/num_planes;
 					if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
 					{
 						for(int i = 0; i < exp_size_per_plane; ++i,cnt++)

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <complex>
 
 #include <ADRSolver/EquationSystems/CFLtester.h>
 
@@ -51,19 +52,18 @@ namespace Nektar
     {
         UnsteadySystem::v_InitObject();
 
-        // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         int nq = m_fields[0]->GetNpoints();
         std::string velStr[3] = {"Vx","Vy","Vz"};
 
-        for(int i = 0; i < m_spacedim; ++i)
+        for(int j = 0; j < m_spacedim; ++j)
         {
-            m_velocity[i] = Array<OneD, NekDouble> (nq,0.0);
+            m_velocity[j] = Array<OneD, NekDouble> (nq,0.0);
 
             LibUtilities::EquationSharedPtr ifunc
-                = m_session->GetFunction("AdvectionVelocity", velStr[i]);
+                = m_session->GetFunction("AdvectionVelocity", velStr[j]);
 
-            EvaluateFunction(m_velocity[i],ifunc);
+            EvaluateFunction(m_velocity[j],ifunc);
         }
 
         if (m_explicitAdvection)
@@ -75,19 +75,19 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit unsteady Advection not set up.");
         }
+		
+		//m_max_time_step = CalculateMaximumTimeStep();
     }
 
     CFLtester::~CFLtester()
     {
-
     }
 
-    void CFLtester::DoOdeRhs(
-                                     const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                                     Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                                     const NekDouble time)
+    void CFLtester::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+							Array<OneD,        Array<OneD, NekDouble> >&outarray,
+							const NekDouble time)
     {
-        int i;
+        int j;
         int nvariables = inarray.num_elements();
         int npoints = GetNpoints();
 
@@ -99,19 +99,19 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
 
                 WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
-                for(i = 1; i < nvariables; ++i)
+                for(j = 1; j < nvariables; ++j)
                 {
-                    WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
+                    WeakAdv[j] = WeakAdv[j-1] + ncoeffs;
                 }
 
                 WeakDGAdvection(inarray, WeakAdv,true,true);
 
-                for(i = 0; i < nvariables; ++i)
+                for(j = 0; j < nvariables; ++j)
                 {
-                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
-                                                       WeakAdv[i]);
-                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+                    m_fields[j]->MultiplyByElmtInvMass(WeakAdv[j],
+                                                       WeakAdv[j]);
+                    m_fields[j]->BwdTrans(WeakAdv[j],outarray[j]);
+                    Vmath::Neg(npoints,outarray[j],1);
                 }
 
                 break;
@@ -119,29 +119,24 @@ namespace Nektar
             case MultiRegions::eGalerkin:
             {
                 // Calculate -V\cdot Grad(u);
-                for(i = 0; i < nvariables; ++i)
+                for(j = 0; j < nvariables; ++j)
                 {
                     AdvectionNonConservativeForm(m_velocity,
-                                                 inarray[i],
-                                                 outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+                                                 inarray[j],
+                                                 outarray[j]);
+                    Vmath::Neg(npoints,outarray[j],1);
                 }
                 break;
             }
         }
     }
 
-
-
-    /**
-     *
-     */
     void CFLtester::DoOdeProjection(const Array<OneD,
-                                            const Array<OneD, NekDouble> >&inarray,
-                                            Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                                            const NekDouble time)
+									const Array<OneD, NekDouble> >&inarray,
+									Array<OneD,       Array<OneD, NekDouble> >&outarray,
+									const NekDouble time)
     {
-        int i;
+        int j;
         int nvariables = inarray.num_elements();
         SetBoundaryConditions(time);
 
@@ -152,9 +147,9 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(i = 0; i < nvariables; ++i)
+                for(j = 0; j < nvariables; ++j)
                 {
-                    Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+                    Vmath::Vcopy(npoints,inarray[j],1,outarray[j],1);
                 }
             }
             break;
@@ -162,10 +157,10 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
-                for(i = 0; i < nvariables; ++i)
+                for(j = 0; j < nvariables; ++j)
                 {
-                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
-                    m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
+                    m_fields[j]->FwdTrans(inarray[j],coeffs,false);
+                    m_fields[j]->BwdTrans_IterPerExp(coeffs,outarray[j]);
                 }
                 break;
             }
@@ -193,7 +188,7 @@ namespace Nektar
         int i;
 
         int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_spacedim; //m_velocity.num_elements();
+        int nvel = m_spacedim;
 
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
         Array<OneD, NekDouble > Bwd(nTraceNumPoints);
@@ -258,41 +253,245 @@ namespace Nektar
 		return TimeStep;
 	}
 	
-	NekDouble CFLtester::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
+	NekDouble CFLtester::v_GetTimeStep(NekDouble CFL)
 	{
-		// This function has been created just to test specific problems, hence is not general
-		// and it has been implemented in a rude fashion, as the full CFLtester class.
-		// For real CFL calculations refer to the general implementation above. (A.Bolis)
+		return CFL*m_max_time_step;
+	}
+	
+	NekDouble CFLtester::CalculateMaximumTimeStep()
+	{
+		NekDouble max_time_step;
+		int j;
+		Array<OneD, Array<OneD, NekDouble> > inarray(1);
+		Array<OneD, Array<OneD, NekDouble> > tmp(1);
+		Array<OneD, Array<OneD, NekDouble> > outarray(1);
+		Array<OneD, Array<OneD, NekDouble> > WeakAdv(1);
+		int npoints = GetNpoints();
+		int ncoeffs = GetNcoeffs();
+		inarray[0]  = Array<OneD, NekDouble>(npoints,0.0);
+		outarray[0] = Array<OneD, NekDouble>(npoints,0.0);
+		tmp[0] = Array<OneD, NekDouble>(npoints,0.0);		
+		WeakAdv[0]  = Array<OneD, NekDouble>(ncoeffs,0.0);
+		Array<OneD, NekDouble> MATRIX(npoints*npoints,0.0);
 		
-		NekDouble TimeStep;
-		NekDouble SpatialStability;
-		int n_elements = m_fields[0]->GetExpSize();
-		//solve ambiguity in windows
-		NekDouble n_elem = n_elements;
-		NekDouble DH   = sqrt(n_elem);
-		int H = (int)DH;
-		int P = ExpOrder-1;
-		
-		if (TimeStability == 1.0) 
+		for (j = 0; j < npoints; j++)
 		{
-			SpatialStability = EigenvaluesAnaMeshesAB2[H/2][P-1];
-		}
-		else if (TimeStability == 2.0) 
-		{
-			SpatialStability = EigenvaluesAnaMeshesRK2[H/2][P-1];
-		}
-		else if (TimeStability == 2.784) 
-		{
-			SpatialStability = EigenvaluesAnaMeshesRK4[H/2][P-1];
-		}
-		else 
-		{
-			ASSERTL0(false,"error in time-scheme")
-		}
+			inarray[0][j] = 1.0;
+			switch (m_projectionType)
+			{
+				case MultiRegions::eDiscontinuousGalerkin:
+				{
+					WeakDGAdvection(inarray, WeakAdv,true,true,1);
+					m_fields[0]->MultiplyByElmtInvMass(WeakAdv[0],WeakAdv[0]);
+					m_fields[0]->BwdTrans(WeakAdv[0],outarray[0]);
+					Vmath::Neg(npoints,outarray[0],1);
+					break;
+				}
+				case MultiRegions::eGalerkin:
+				{
+					m_fields[0]->FwdTrans(inarray[0],WeakAdv[0]);
+					m_fields[0]->BwdTrans_IterPerExp(WeakAdv[0],tmp[0]);
+					AdvectionNonConservativeForm(m_velocity,tmp[0],outarray[0]);
+					Vmath::Neg(npoints,outarray[0],1);
+					m_fields[0]->FwdTrans(outarray[0],WeakAdv[0]);
+					m_fields[0]->BwdTrans_IterPerExp(WeakAdv[0],outarray[0]);
+				    break;
+				}
+			}
 
-		TimeStep = (TimeStability/SpatialStability)*CFL;
+			Vmath::Vcopy(npoints,&(outarray[0][0]),1,&(MATRIX[j]),npoints);
+			inarray[0][j] = 0.0;
+		}
 		
-		return TimeStep;
+		char jobvl = 'N';
+		char jobvr = 'N';
+		int info = 0, lwork = 3*npoints;
+		NekDouble dum;
+		Array<OneD, NekDouble> EIG_R(npoints);
+		Array<OneD, NekDouble> EIG_I(npoints);
+		Array<OneD, NekDouble> work(lwork);
+		Lapack::Dgeev(jobvl,jobvr,npoints,MATRIX.get(),npoints,EIG_R.get(),EIG_I.get(),&dum,1,&dum,1,&work[0],lwork,info);
+				
+		LibUtilities::TimeIntegrationMethod  timeIntMethod;
+		
+		// Determine TimeIntegrationMethod to use.
+        ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
+				 "No TIMEINTEGRATIONMETHOD defined in session.");
+        for (j = 0; j < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++j)
+        {
+            bool match;
+            m_session->MatchSolverInfo("TIMEINTEGRATIONMETHOD",
+									   LibUtilities::TimeIntegrationMethodMap[j], match, false);
+            if (match)
+            {
+                timeIntMethod = (LibUtilities::TimeIntegrationMethod) j;
+                break;
+            }
+        }
+        ASSERTL0(j != (int) LibUtilities::SIZE_TimeIntegrationMethod,
+				 "Invalid time integration type.");
+		
+		NekDouble phase,module;
+		NekDouble tol = 0.00001;
+		int nteta = 10000;
+		NekDouble dteta = 2*M_PI/(nteta-1);
+		Array<OneD, NekDouble> time_steps(npoints,1.0);
+		Array<OneD, NekDouble> teta(nteta,0.0);
+		
+		for(j = 1; j < nteta; j++)
+		{
+			teta[j] = teta[j-1] + dteta;
+		}
+		
+		Array<OneD, complex<NekDouble> > z (nteta);
+		Array<OneD, complex<NekDouble> > r (nteta);
+		Array<OneD, complex<NekDouble> > s (nteta);
+		Array<OneD, complex<NekDouble> > w (nteta);
+		
+		for(j = 0; j < nteta; j++)
+		{
+			complex<NekDouble> iteta(0.0,teta[j]);
+			z[j] = exp(iteta);
+		}
+		
+		switch(m_timeIntMethod)
+        {
+			case LibUtilities::eAdamsBashforthOrder2:
+			{
+				if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+				{
+					for(j = 0; j < nteta; j++)
+					{
+						r[j] = z[j]-1.0;
+						s[j] = 1.5-0.5/z[j];
+						w[j] = r[j]/s[j];
+					}
+					
+					for(j = 0; j < npoints; j++)
+					{
+						phase  = atan2(EIG_I[j],EIG_R[j]);
+						module = sqrt(EIG_R[j]*EIG_R[j] + EIG_I[j]*EIG_I[j]);
+						
+						for(int k = 0; k < nteta; k++)
+						{
+							if(abs((arg(w[k])-phase))<=tol)
+							{
+								time_steps[j] = abs(w[k])/module;
+								k = nteta+1;
+							}
+							if(k == nteta-1)
+							{
+								tol = 10*tol;
+								k = 0;
+							}
+						}
+					}
+				}
+				else 
+				{
+					ASSERTL0(false,"AB2 is theoretically unstable using a CG projection");
+				}
+				break;
+			}
+			case LibUtilities::eRungeKutta2_ImprovedEuler:
+			{
+				if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+				{
+					for(j = 0; j < nteta; j++)
+					{
+						w[j] = z[j]-1.0;
+						for(int k = 0; k < 3; k++)
+						{
+							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 - z[j]*z[j])/(1.0+w[j]);
+						}
+					}
+					for(j = 0; j < npoints; j++)
+					{
+						phase  = atan2(EIG_I[j],EIG_R[j]);
+						module = sqrt(EIG_R[j]*EIG_R[j] + EIG_I[j]*EIG_I[j]);
+						
+						for(int k = 0; k < nteta; k++)
+						{
+							if(abs((arg(w[k])-phase))<=tol)
+							{
+								time_steps[j] = abs(w[k])/module;
+								k = nteta+1;
+							}
+							if(k == nteta-1)
+							{
+								tol = 10*tol;
+								k = 0;
+							}
+						}
+						
+					}
+				}
+				else 
+				{
+					ASSERTL0(false,"RK2 is theoretically unstable using a CG projection");
+				}
+				break;
+			}
+			case LibUtilities::eClassicalRungeKutta4:
+			{
+				if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+				{
+					for(j = 0; j < nteta; j++)
+					{
+						w[j] = z[j]-1.0;
+						for(int k = 0; k < 3; k++)
+						{
+							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 - z[j]*z[j])/(1.0+w[j]);
+						}
+						for(int k = 0; k < 4; k++)
+						{
+							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 + (w[j]*w[j]*w[j])/6.0 - z[j]*z[j]*z[j])/(1.0 + w[j] + (w[j]*w[j])/2.0);
+						}
+						
+						for(int k = 0; k < 4; k++)
+						{
+							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 + (w[j]*w[j]*w[j])/6.0 + (w[j]*w[j]*w[j]*w[j])/24.0 - z[j]*z[j]*z[j]*z[j])/(1.0 + w[j] + (w[j]*w[j])/2.0 + (w[j]*w[j]*w[j])/6.0);
+						}
+					}
+					for(j = 0; j < npoints; j++)
+					{
+						phase  = atan2(EIG_I[j],EIG_R[j]);
+						module = sqrt(EIG_R[j]*EIG_R[j] + EIG_I[j]*EIG_I[j]);
+						
+						for(int k = 0; k < nteta; k++)
+						{
+							if(abs((arg(w[k])-phase))<=tol)
+							{
+								time_steps[j] = abs(w[k])/module;
+								k = nteta+1;
+							}
+							if(k == nteta-1)
+							{
+								tol = 10*tol;
+								k = 0;
+							}
+						}
+					}
+				}
+				else 
+				{
+					NekDouble max_imag = Vmath::Vmax(npoints,EIG_I,1);
+					
+					time_steps[0] = 2.828/max_imag;
+				}
+				break;
+			}
+			default:
+            {
+                ASSERTL0(false,"Exact CFL limit not implemented for this time-integration scheme");
+            }
+		}
+		
+		max_time_step = Vmath::Vmin(npoints,time_steps,1);
+		
+		cout << "max_time_step = " <<  max_time_step << endl;
+		
+		return max_time_step;
 	}
 	
 	

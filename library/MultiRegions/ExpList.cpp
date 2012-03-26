@@ -1805,6 +1805,24 @@ namespace Nektar
             return NoEnergy;
         }
 		
+		Array<OneD, unsigned int> ExpList::v_GetZIDs(void)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+			Array<OneD, unsigned int> NoModes(1);
+			
+			return NoModes;
+		}
+		
+		Array<OneD, unsigned int> ExpList::v_GetYIDs(void)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+			Array<OneD, unsigned int> NoModes(1);
+			
+			return NoModes;
+		}
+		
 
         /**
          * Given a spectral/hp approximation

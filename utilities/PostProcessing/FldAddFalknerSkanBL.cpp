@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     setprecision (16);
     
     //! Auxiliary counters for the x and y directions
-    int  i, j, k, m, numModes;
+    int  i, j, k, m, numModes, nFields;
     
     //! Auxiliary variables
     char    LocalString[1000];
@@ -77,12 +77,20 @@ int main(int argc, char *argv[])
     NekDouble nu;
     string    BL_type;
     string    txt_file;
+    string    stability_solver;
     int       numLines; 
 
     
-    BL_type   = vSession->GetSolverInfo("BL_type");
-    txt_file  = vSession->GetSolverInfo("txt_file");
+    BL_type          = vSession->GetSolverInfo("BL_type");
+    txt_file         = vSession->GetSolverInfo("txt_file");
+    stability_solver = vSession->GetSolverInfo("stability_solver");
 
+    if(stability_solver != "velocity_correction_scheme" & stability_solver != "coupled")
+    {
+        fprintf(stderr,"Error: You must specify the stability solver in the session file properly.\n"); 
+        fprintf(stderr,"Options: 'velocity_correction_scheme' [output ===> (u,v,p)]; 'coupled' [output ===>(u,v)]\n");
+        exit(1);
+    }
 
     vSession->LoadParameter("Re",               Re,             1.0);
     vSession->LoadParameter("L",                L,              1.0);
@@ -103,21 +111,22 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Error: x_0 must be positive or at least equal to 0 ===> CHECK the session file\n");
         exit(1);
     }
-    std::cout<<"\n===================================================================\n";
+    std::cout<<"\n=========================================================================\n";
     std::cout<<"Falkner-Skan Boundary Layer Generation (version of March 23th 2012)\n"; 
-    std::cout<<"===================================================================\n";
-    std::cout<<"*******************************************************************\n";
+    std::cout<<"=========================================================================\n";
+    std::cout<<"*************************************************************************\n";
     std::cout<<"DATA FROM THE SESSION FILE:\n";
-    std::cout << "Reynolds number                               = " << Re            << std::endl;
-    std::cout << "Characteristic length [m]                     = " << L             << std::endl;
-    std::cout << "U_infinity [m/s]                              = " << U_inf         << std::endl;
-    std::cout << "Position x (parallel case only) [m]           = " << x             << std::endl;
-    std::cout << "Position x_0 to start the BL [m]              = " << x_0           << std::endl;
-    std::cout << "Number of lines of the .txt file              = " << numLines      << std::endl;
-    std::cout << "BL type                                       = " << BL_type       << std::endl;
-    std::cout << ".txt file read                                = " << txt_file      << std::endl;
-    std::cout<<"*******************************************************************\n";
-    std::cout<<"-------------------------------------------------------------------\n";
+    std::cout << "Reynolds number                               = " << Re               << std::endl;
+    std::cout << "Characteristic length [m]                     = " << L                << std::endl;
+    std::cout << "U_infinity [m/s]                              = " << U_inf            << std::endl;
+    std::cout << "Position x (parallel case only) [m]           = " << x                << std::endl;
+    std::cout << "Position x_0 to start the BL [m]              = " << x_0              << std::endl;
+    std::cout << "Number of lines of the .txt file              = " << numLines         << std::endl;
+    std::cout << "BL type                                       = " << BL_type          << std::endl;
+    std::cout << ".txt file read                                = " << txt_file         << std::endl;
+    std::cout << "Stability solver                              = " << stability_solver << std::endl;
+    std::cout<<"*************************************************************************\n";
+    std::cout<<"-------------------------------------------------------------------------\n";
     std::cout<<"MESH and EXPANSION DATA:\n";
     
     //! Computation of the kinematic viscosity
@@ -360,12 +369,16 @@ int main(int argc, char *argv[])
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(3);
     Exp[0] = Exp2D_uk;
     Exp[1] = Exp2D_vk;
-    Exp[2] = Exp2D_pk;
-
+    
+    if(stability_solver == "velocity_correction_scheme")
+        Exp[2] = Exp2D_pk;
+    
     //! Expansion coefficient extraction (necessary to write the .fld file)    
     Exp[0]->FwdTrans(Exp2D_uk->GetPhys(),Exp[0]->UpdateCoeffs());
     Exp[1]->FwdTrans(Exp2D_vk->GetPhys(),Exp[1]->UpdateCoeffs());
-    Exp[2]->FwdTrans(Exp2D_pk->GetPhys(),Exp[2]->UpdateCoeffs());
+    
+    if(stability_solver == "velocity_correction_scheme")
+        Exp[2]->FwdTrans(Exp2D_pk->GetPhys(),Exp[2]->UpdateCoeffs());    
     //! --------------------------------------------------------------------------------------------
 
 
@@ -375,7 +388,12 @@ int main(int argc, char *argv[])
     string FalknerSkan = "FalknerSkan.fld";
     
     //! Definition of the number of the fields
-    int nFields = 3;    
+    if(stability_solver == "coupled")
+        nFields = 2;
+    
+    if(stability_solver == "velocity_correction_scheme")
+        nFields = 3;    
+
     
     //! Definition of the Field
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp[0]->GetFieldDefinitions();
@@ -393,7 +411,7 @@ int main(int argc, char *argv[])
             {
                 FieldDef[i]->m_fields.push_back("v");
             }
-            else if(j == 2)
+            else if(j == 2 & stability_solver == "velocity_correction_scheme")
             {
                 FieldDef[i]->m_fields.push_back("p");
             }

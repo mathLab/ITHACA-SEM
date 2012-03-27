@@ -196,6 +196,11 @@ namespace Nektar
 			}
 		}
 
+		//SingleMode integration in wave space
+		if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+		{
+			integrate_in_wave_space = true;
+		}
 		
         int n_fields = m_fields.num_elements();
 		

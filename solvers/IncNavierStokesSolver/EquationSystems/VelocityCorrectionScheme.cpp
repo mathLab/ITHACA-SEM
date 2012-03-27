@@ -271,6 +271,15 @@ namespace Nektar
                                  inarray, outarray,m_time);
 
 
+		if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+		{
+			for(int i = 0; i < m_nConvectiveFields; ++i)
+			{
+				m_forces[i]->SetWaveSpace(true);					
+				m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdatePhys());
+			}
+		}
+		
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {

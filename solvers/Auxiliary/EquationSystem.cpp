@@ -129,8 +129,7 @@ namespace Nektar
 				
 				
 				if(m_session->DefinesSolverInfo("SingleMode")  &&
-                             m_session->GetSolverInfo("solvertype") != "CoupledLinearisedNS"
-                                  )
+                             m_session->GetSolverInfo("solvertype") != "CoupledLinearisedNS")
 				{
 					if(m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
 					{
@@ -561,6 +560,17 @@ namespace Nektar
                 fieldStr.push_back(m_session->GetVariable(i));
             }
             EvaluateFunction(fieldStr, m_forces, "BodyForce");
+			
+			if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+			{
+				for(int i=0; i< v_GetForceDimension(); ++i)
+				{					
+					//bring the forcing to be in SEM & Fourier coefficient space(full transformation)
+					m_forces[i]->FwdTrans(m_forces[i]->GetPhys(),
+										  m_forces[i]->UpdateCoeffs());
+				}
+				
+			}
         }
 
         // If a tangent vector policy is defined then the local tangent vectors

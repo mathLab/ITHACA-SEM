@@ -271,19 +271,19 @@ namespace Nektar
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
                                  inarray, outarray,m_time);
 
-		
-		if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
-		{
-			for(int i = 0; i < m_nConvectiveFields; ++i)
-			{
-				m_forces[i]->SetWaveSpace(true);					
-				m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdatePhys());
-			}
-		}
-		
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
+			
+			if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+			{
+				for(int i = 0; i < m_nConvectiveFields; ++i)
+				{
+					m_forces[i]->SetWaveSpace(true);					
+					m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdatePhys());
+				}
+			}
+			
             int nqtot      = m_fields[0]->GetTotPoints();
             for(int i = 0; i < m_nConvectiveFields; ++i)
             {
@@ -370,7 +370,6 @@ namespace Nektar
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
 		
-		//Entro in questa routine solo se ho almeno una condizione High Order
         Array<OneD, NekDouble> tmp;
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
@@ -378,10 +377,8 @@ namespace Nektar
         int  nint    = min(m_pressureCalls++,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
 
-		//Get values in PBndExp (in 0 and 0.25). PBndExp has dimensions composites with HOPBC (everything for example)
         PBndConds   = m_pressure->GetBndConditions();
         PBndExp     = m_pressure->GetBndCondExpansions();
-
 		
         // Reshuffle Bc Storage vector
         tmp = m_pressureHBCs[nlevels-1];

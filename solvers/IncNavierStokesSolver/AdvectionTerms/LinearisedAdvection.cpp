@@ -773,6 +773,7 @@ namespace Nektar
 				if(m_dealiasing)
 
 				{
+
 					//U du'/dx
 					pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
 
@@ -839,6 +840,7 @@ namespace Nektar
 					}
 					else 
 					{
+				
 
 						//Evaluate U dv'/dx
 						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
@@ -897,6 +899,7 @@ namespace Nektar
 						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
 						//Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy + W dw'/dz)+ w' dW/dz
 						Vmath::Vvtvp(nPointsTot,grad_base_w2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
+
 					}					
                 break;
 					

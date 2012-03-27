@@ -30,16 +30,15 @@ int main(int argc, char *argv[])
     string meshfile(argv[1]);
 
     MultiRegions::DisContField3DSharedPtr Exp, Fce;
-    MultiRegions::ExpListSharedPtr DerExp1, DerExp2, DerExp3;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
-    NekDouble  lambda;
+    StdRegions::ConstFactorMap factors;
     double   st, cps = (double)CLOCKS_PER_SEC;
 
-    if(argc != 3)
+    if(argc != 2)
     {
-        fprintf(stderr,"Usage: Helmholtz3D  meshfile boundaryfile\n");
+        fprintf(stderr,"Usage: Helmholtz3D  meshfile\n");
         exit(1);
     }
 
@@ -50,20 +49,15 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    lambda = vSession->GetParameter("Lambda");
-    const SpatialDomains::ExpansionVector &expansions = graph3D->GetExpansions();
+    factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
+    factors[StdRegions::eFactorTau] = 1.0;
+    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
+    LibUtilities::BasisKey bkey0
+                            = expansions.begin()->second->m_basisKeyVector[0];
+
     cout << "Solving 3D Helmholtz:"  << endl;
-    cout << "         Lambda     : " << lambda << endl; 
-#if 0 
-    for(i = 0; i < expansions.size(); ++i)
-    {
-        LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[i],0);
-        cout << "      Element " << i << "   : " << endl;
-        cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
-        cout << "         No. modes  : " << bkey.GetNumModes() << endl;
-    }
-    cout << endl;
-#endif
+    cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
+    cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
     //----------------------------------------------
    
     //----------------------------------------------
@@ -76,7 +70,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetPointsTot();
+    nq      = Exp->GetTotPoints();
     
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
@@ -115,7 +109,7 @@ int main(int argc, char *argv[])
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->HelmSolve(*Fce, lambda);
+    //Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
     //----------------------------------------------
     
     Timing("Helmholtz Solve ..");
@@ -123,7 +117,7 @@ int main(int argc, char *argv[])
 #if 0
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(*Fce, lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
     }
     
     Timing("100 Helmholtz Solves:... ");
@@ -131,15 +125,24 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at 
-    Exp->BwdTrans(*Exp);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
     Timing("Backard Transform ..");
     
-    //----------------------------------------------
-    // Write solution 
-    ofstream outfile("UDGHelmholtzFile3D.dat");
-    Exp->WriteToFile(outfile);
-    //----------------------------------------------
+    //-----------------------------------------------
+    // Write solution to file
+    string   out = meshfile.substr(0, meshfile.find_last_of(".")) + ".fld";
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+                                                = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    for(i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_fields.push_back("u");
+        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+    graph3D->Write(out, FieldDef, FieldData);
+    //-----------------------------------------------
     
     //----------------------------------------------
     // See if there is an exact solution, if so 
@@ -162,8 +165,9 @@ int main(int argc, char *argv[])
         Fce->SetPhysState(true);
 
 
-        cout << "L infinity error: " << Exp->Linf(*Fce) << endl;
-        cout << "L 2 error:        " << Exp->L2  (*Fce) << endl;
+        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "H 1 error  :       " << Exp->H1  (Fce->GetPhys()) << endl;
         //--------------------------------------------        
     }
     

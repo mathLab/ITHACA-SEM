@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
     for (j=0; j<=2; j++)
     {
-        GlobalArray[i].resize(numLines);
+        GlobalArray[j].resize(numLines);
         for (i=0; i<=numLines-1; i++)
         {
             pFile >> d;

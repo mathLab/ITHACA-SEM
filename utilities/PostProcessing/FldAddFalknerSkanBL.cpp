@@ -149,44 +149,44 @@ int main(int argc, char *argv[])
     y_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts);
     z_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts);
     Domain->GetCoords(x_QuadraturePts,y_QuadraturePts,z_QuadraturePts);
-    
+
     //! Reading the .txt file with eta, f(eta) and f'(eta) -----------------------------------------
     const char *txt_file_char;
     //string txt_file(argv[argc-1]);
     txt_file_char = txt_file.c_str();
-        
+
     ifstream pFile(txt_file_char);
     numLines = numLines/3;
     NekDouble d;
     //NekDouble GlobalArray[numLines][3];
-    std::vector<std::vector<NekDouble> > GlobalArray (numLines);
+    std::vector<std::vector<NekDouble> > GlobalArray (3);
 
-    for (i=0; i<=numLines-1; i++) 
+    for (j=0; j<=2; j++)
     {
-        GlobalArray[i].resize(3);
-        for (j=0; j<=2; j++)
+        GlobalArray[i].resize(numLines);
+        for (i=0; i<=numLines-1; i++)
         {
             pFile >> d;
-            GlobalArray[i][j] = d;
+            GlobalArray[j][i] = d;
         }
     }
     //! --------------------------------------------------------------------------------------------
 
-    
+
     //! Saving eta, f(eta) and f'(eta) into separate arrays ----------------------------------------
     Array<OneD,NekDouble> eta;
     Array<OneD,NekDouble> f;
     Array<OneD,NekDouble> df;
-    
+
     eta = Array<OneD,NekDouble>(numLines);
     f   = Array<OneD,NekDouble>(numLines);
     df  = Array<OneD,NekDouble>(numLines);
-    
-    for (i=0; i<numLines; i++) 
+
+    for (i=0; i<numLines; i++)
     {
-        eta[i] = GlobalArray[i][0];
-        f[i]   = GlobalArray[i][1];
-        df[i]  = GlobalArray[i][2];
+        eta[i] = GlobalArray[0][i];
+        f[i]   = GlobalArray[1][i];
+        df[i]  = GlobalArray[2][i];
     }
     //! --------------------------------------------------------------------------------------------
 

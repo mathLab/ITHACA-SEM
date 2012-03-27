@@ -13,6 +13,8 @@
 
 using namespace Nektar;
 
+std::string PortablePath(const boost::filesystem::path& path);
+
 int main(int argc, char *argv[])
 {
     MultiRegions::DisContField2DSharedPtr Exp,Fce,Sol;
@@ -122,28 +124,28 @@ int main(int argc, char *argv[])
         boost::filesystem::path("Geometry") /
         boost::filesystem::path(MeshFileDirectory.str()) /  
         boost::filesystem::path(MeshFileName.str());
-    vFilenames.push_back(MeshFilePath.file_string());
+    vFilenames.push_back(PortablePath(MeshFilePath));
 
     boost::filesystem::path BCfilePath = basePath / 
         boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Conditions") /
         boost::filesystem::path(BCfileName.str());
-    vFilenames.push_back(BCfilePath.file_string());
+    vFilenames.push_back(PortablePath(BCfilePath));
 
     boost::filesystem::path ExpansionsFilePath = basePath / 
         boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Expansions") /
         boost::filesystem::path(ExpansionsFileName.str());
-    vFilenames.push_back(ExpansionsFilePath.file_string());
+    vFilenames.push_back(PortablePath(ExpansionsFilePath));
 
     boost::filesystem::path GlobOptFilePath = basePath / 
         boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Optimisation") /
         boost::filesystem::path(GlobOptFileName.str());
-    vFilenames.push_back(GlobOptFilePath.file_string());
+    vFilenames.push_back(PortablePath(GlobOptFilePath));
 
     //----------------------------------------------
 
@@ -207,8 +209,11 @@ int main(int argc, char *argv[])
     //----------------------------------------------
   
     //----------------------------------------------
-    // Helmholtz solution taking physical forcing 
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),lambda);
+    // Helmholtz solution taking physical forcing
+    FlagList flags;
+    StdRegions::ConstFactorMap factors;
+    factors[StdRegions::eFactorLambda] = lambda;
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -303,7 +308,7 @@ int main(int argc, char *argv[])
     // We first do a single run in order to estimate the number of calls 
     // we are going to make
     gettimeofday(&timer1, NULL);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),lambda);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
     Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
     gettimeofday(&timer2, NULL);
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
@@ -329,7 +334,7 @@ int main(int argc, char *argv[])
     gettimeofday(&timer1, NULL);
     for(i = 0; i < NumCalls; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
         Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
     }
     gettimeofday(&timer2, NULL);
@@ -382,4 +387,16 @@ int main(int argc, char *argv[])
 
     
     return 0;
+}
+
+std::string PortablePath(const boost::filesystem::path& path)
+{
+    boost::filesystem::path temp = path;
+    #if BOOST_VERSION > 104200
+    temp.make_preferred();
+    return temp.string();
+    #else
+    return temp.file_string();
+    #endif
+
 }

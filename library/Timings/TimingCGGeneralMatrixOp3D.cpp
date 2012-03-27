@@ -3,7 +3,7 @@
 #include <sys/time.h>
 #include <iomanip>
 
-#include "boost/filesystem/path.hpp"
+#include "boost/filesystem.hpp"
 #include <MultiRegions/ContField3D.h>
 
 #ifdef NEKTAR_USING_CHUD
@@ -18,6 +18,7 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
                             MultiRegions::ContField3DSharedPtr &Fce,
                             int &NumCalls,
                             NekDouble lambda);
+std::string PortablePath(const boost::filesystem::path& path);
 
 int main(int argc, char *argv[])
 {
@@ -139,28 +140,28 @@ int main(int argc, char *argv[])
         boost::filesystem::path("Geometry") /
         boost::filesystem::path(MeshFileDirectory.str()) /
         boost::filesystem::path(MeshFileName.str());
-    vFilenames.push_back(MeshFilePath.file_string());
+    vFilenames.push_back(PortablePath(MeshFilePath));
 
     boost::filesystem::path BCfilePath = basePath /
         boost::filesystem::path("Timings") /
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Conditions") /
         boost::filesystem::path(BCfileName.str());
-    vFilenames.push_back(BCfilePath.file_string());
+    vFilenames.push_back(PortablePath(BCfilePath));
 
     boost::filesystem::path ExpansionsFilePath = basePath /
         boost::filesystem::path("Timings") /
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Expansions") /
         boost::filesystem::path(ExpansionsFileName.str());
-    vFilenames.push_back(ExpansionsFilePath.file_string());
+    vFilenames.push_back(PortablePath(ExpansionsFilePath));
 
     boost::filesystem::path GlobOptFilePath = basePath /
         boost::filesystem::path("Timings") /
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Optimisation") /
         boost::filesystem::path(GlobOptFileName.str());
-    vFilenames.push_back(GlobOptFilePath.file_string());
+    vFilenames.push_back(PortablePath(GlobOptFilePath));
     //----------------------------------------------
 
     StdRegions::MatrixType type;
@@ -265,9 +266,14 @@ int main(int argc, char *argv[])
 
         if (type == StdRegions::eHelmholtz)
         {
+            FlagList flags;
+            flags.set(eUseContCoeff, true);
+            StdRegions::ConstFactorMap factors;
+            factors[StdRegions::eFactorLambda] = lambda;
+
             //----------------------------------------------
             // Helmholtz solution taking physical forcing
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),lambda,true);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),flags,factors);
             // GeneralMatrixOp does not impose boundary conditions.
             //  MultiRegions::GlobalMatrixKey key(type, lambda, Exp-    >GetLocalToGlobalMap());
             //  Exp->GeneralMatrixOp (key, Fce->GetPhys(),Exp-    >UpdateContCoeffs(), true);
@@ -527,4 +533,17 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
     exeTime = (time2-time1);
     return exeTime;
+}
+
+
+std::string PortablePath(const boost::filesystem::path& path)
+{
+    boost::filesystem::path temp = path;
+    #if BOOST_VERSION > 104200
+    temp.make_preferred();
+    return temp.string();
+    #else
+    return temp.file_string();
+    #endif
+
 }

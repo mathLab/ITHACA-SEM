@@ -127,7 +127,7 @@ namespace Nektar
         {
             // Allocate the storage for points
             PointsBaseType::CalculatePoints();
-
+            
             // Populate m_points
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
@@ -151,7 +151,6 @@ namespace Nektar
         void NodalTetEvenlySpaced::NodalPointReorder3d()
         {
             unsigned int npts = GetNumPoints();
-            cout << "npts = " << npts << endl;
             using std::vector;
             vector<int> vertex;
             vector<int> iEdge_01;  // interior edge 0
@@ -306,8 +305,6 @@ namespace Nektar
 
             }
 
-            cout << endl;
-            
             for(unsigned int index=0; index<map.size(); ++index){
 
                 m_points[0][index] = points[0][map[index]];

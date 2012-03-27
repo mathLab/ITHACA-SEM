@@ -34,26 +34,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef STDNODALTETEXP_H
-#define STDNODALTETEXP_H
+#ifndef STDNODALPRISMEXP_H
+#define STDNODALPRISMEXP_H
 
-#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPrismExp.h>
 
 namespace Nektar
 {
     namespace StdRegions
     {
-        class StdNodalTetExp: public StdTetExp
+        class StdNodalPrismExp: public StdPrismExp
         {
         public:
-            STD_REGIONS_EXPORT StdNodalTetExp();
-            STD_REGIONS_EXPORT StdNodalTetExp(
+            STD_REGIONS_EXPORT StdNodalPrismExp();
+            STD_REGIONS_EXPORT StdNodalPrismExp(
                 const LibUtilities::BasisKey &Ba, 
                 const LibUtilities::BasisKey &Bb,
                 const LibUtilities::BasisKey &Bc,
                 const LibUtilities::PointsType Ntype);
-            STD_REGIONS_EXPORT StdNodalTetExp(const StdNodalTetExp &T);
-            STD_REGIONS_EXPORT ~StdNodalTetExp();
+            STD_REGIONS_EXPORT StdNodalPrismExp(const StdNodalPrismExp &T);
+            STD_REGIONS_EXPORT ~StdNodalPrismExp();
 
             //-------------------------------
             // Nodal basis specific routines
@@ -141,7 +141,7 @@ namespace Nektar
                 const StdMatrixKey &mkey);
         };
         
-        typedef boost::shared_ptr<StdNodalTetExp> StdNodalTetExpSharedPtr;
+        typedef boost::shared_ptr<StdNodalPrismExp> StdNodalPrismExpSharedPtr;
     } //end of namespace
 } //end of namespace
 #endif //STDNODALTETEXP_H

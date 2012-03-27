@@ -1034,7 +1034,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& physvals)
         {
             // Validation checks
-            ASSERTL0(xi[0] + xi[1] + xi[2] <= -1,
+            ASSERTL0(xi[0] + xi[1] + xi[2] <= -1 + NekConstants::kNekZeroTol,
                      "Coordinate outside bounds of tetrahedron.");
             ASSERTL0(xi[0] >= -1 && xi[1] >= -1 && xi[2] >= -1,
                      "Coordinate outside bounds of tetrahedron.");
@@ -1084,84 +1084,9 @@ namespace Nektar
             const int                     mode, 
                   Array<OneD, NekDouble> &outarray)
         {
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                ASSERTL0(false,"This function will not work with modified "
-                               "basis since we have not dealt with singular "
-                               "vertces/edges");
-            }
-
-            int     Qx = m_base[0]->GetNumPoints();
-            int     Qy = m_base[1]->GetNumPoints();
-            int     Qz = m_base[2]->GetNumPoints();
-
-            int     P = m_base[0]->GetNumModes() - 1;
-            int     Q = m_base[1]->GetNumModes() - 1;
-            int     R = m_base[2]->GetNumModes() - 1;
-
-
-            // Index map from the rectangle to the triangle
-            Array<OneD, int> mode_pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
-            for( int p = 0, m = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q - p; ++q, ++m ) {
-                    mode_pq[q + (Q+1)*p] = m;
-                }
-            }
-
-            // Create an index map from the hexahedron to the tetrahedron.
-            // The actual index is too difficult to compute explicitly.
-            Array<OneD, int> mode_pqr
-                                = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
-            for( int p = 0, m = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q - p; ++q ) {
-                    for( int r = 0; r <= R - p - q; ++r, ++m ) {
-                        mode_pqr[r + (R+1)*(q + (Q+1)*p)] = m;
-                    }
-                }
-            }
-
-            // Find the pqr matching the provided mode
-            int mode_p=0, mode_q=0, mode_r=0;
-            for( int p = 0, m = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q - p; ++q ) {
-                    for( int r = 0; r <= R - p - q; ++r, ++m ) {
-                        if( m == mode ) {
-                            mode_p = p;
-                            mode_q = q;
-                            mode_r = r;
-                        }
-                    }
-                }
-            }
-
-            const Array<OneD, const NekDouble>& bx = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& by = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble>& bz = m_base[2]->GetBdata();
-
-            int p = mode_p, q = mode_q, r = mode_r;
-
-            // Determine the index for specifying which mode to use in the basis
-            int sigma_p   = Qx*p;
-            int sigma_pq  = Qy*mode_pq[q + (Q+1)*p];
-            int sigma_pqr = Qz*mode_pqr[r + (R+1)*(q + (Q+1)*p)];
-            int sigma = Qx*Qy*Qz*mode;
-
-
-            // Compute tensor product of inarray with the 3 basis functions
-            Array<OneD, NekDouble> g_pqr
-                                = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
-            for( int k = 0; k < Qz; ++k ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int i = 0; i < Qx; ++i ) {
-                        int s = i + Qx*(j + Qy*(k + Qz*mode));
-                        outarray[s] =
-                            bx[i + sigma_p] *
-                            by[j + sigma_pq] *
-                            bz[k + sigma_pqr];
-                    }
-                }
-            }
-
+            Array<OneD, NekDouble> tmp(m_ncoeffs,0.0);
+            tmp[mode] = 1.0;
+            StdTetExp::v_BwdTrans(tmp, outarray);
         }
 
 

@@ -573,8 +573,6 @@ namespace Nektar
 
             // Deduce the quadrature weights
             NekVector<NekDouble> w = matL.SolveTranspose(g);
-
-            cout<< "It(Tet Weight) was solved!!!" << endl;
             
             return w;
         }

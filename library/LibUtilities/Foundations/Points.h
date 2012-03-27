@@ -140,6 +140,8 @@ namespace Nektar
                     break;
 
                 case eNodalTetElec:
+                case eNodalTetEvenlySpaced:
+                case eNodalPrismEvenlySpaced:
                     dimpoints = 3;
                     break;
                     
@@ -164,7 +166,12 @@ namespace Nektar
                     break;
 
                 case eNodalTetElec:
+                case eNodalTetEvenlySpaced:
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
+                    break;
+                    
+                case eNodalPrismEvenlySpaced:
+                    totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;
                     break;
                     
                 default:

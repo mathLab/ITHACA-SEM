@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdNodalTetExp.cpp
+// File StdNodalPrismExp.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,57 +29,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Nodal tetrahedral routines built upon StdExpansion3D
+// Description: Nodal prismatic routines built upon StdExpansion3D
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/StdNodalTetExp.h>
+#include <StdRegions/StdNodalPrismExp.h>
+
+#include <iomanip>
 
 namespace Nektar 
 {
     namespace StdRegions 
     {
-        StdNodalTetExp::StdNodalTetExp(
+        StdNodalPrismExp::StdNodalPrismExp(
             const LibUtilities::BasisKey &Ba, 
             const LibUtilities::BasisKey &Bb, 
             const LibUtilities::BasisKey &Bc,
             LibUtilities::PointsType Ntype):
-            StdExpansion  (StdTetData::getNumberOfCoefficients(
+            StdExpansion  (StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            3,Ba,Bb,Bc),
-            StdExpansion3D(StdTetData::getNumberOfCoefficients(
+            StdExpansion3D(StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            Ba,Bb,Bc),
-            StdTetExp     (Ba,Bb,Bc),
+            StdPrismExp   (Ba,Bb,Bc),
             m_nodalPointsKey()
         {
-            ASSERTL0(Ba.GetNumModes() <= Bb.GetNumModes(), 
-                     "order in 'a' direction is higher than order "
-                     "in 'b' direction");
             ASSERTL0(Ba.GetNumModes() <= Bc.GetNumModes(), 
                      "order in 'a' direction is higher than order "
-                     "in 'c' direction");
-            ASSERTL0(Bb.GetNumModes() <= Bc.GetNumModes(),
-                     "order in 'b' direction is higher than order "
                      "in 'c' direction");
             int nummodes = Ba.GetNumModes();
             m_nodalPointsKey = MemoryManager<LibUtilities::PointsKey>::
                 AllocateSharedPtr(nummodes,Ntype);
         }
 
-        StdNodalTetExp::StdNodalTetExp(const StdNodalTetExp &T):
+        StdNodalPrismExp::StdNodalPrismExp(const StdNodalPrismExp &T):
             StdExpansion(T),
             StdExpansion3D(T),
-            StdTetExp(T),
+            StdPrismExp(T),
             m_nodalPointsKey(T.m_nodalPointsKey)
         {
         }
 
-        StdNodalTetExp::~StdNodalTetExp()
+        StdNodalPrismExp::~StdNodalPrismExp()
         { 
         }
         
@@ -88,12 +84,12 @@ namespace Nektar
         // Nodal basis specific routines
         //-------------------------------
         
-        void StdNodalTetExp::NodalToModal()
+        void StdNodalPrismExp::NodalToModal()
         {
             NodalToModal(m_coeffs,m_coeffs); 
         }
 
-        void StdNodalTetExp::NodalToModal(
+        void StdNodalPrismExp::NodalToModal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
@@ -107,13 +103,13 @@ namespace Nektar
             modal = (*inv_vdm) * nodal;
         }
 
-        void StdNodalTetExp::NodalToModalTranspose()
+        void StdNodalPrismExp::NodalToModalTranspose()
         {
             NodalToModalTranspose(m_coeffs,m_coeffs); 
         }
 
         // Operate with transpose of NodalToModal transformation
-        void StdNodalTetExp::NodalToModalTranspose(
+        void StdNodalPrismExp::NodalToModalTranspose(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
@@ -127,12 +123,12 @@ namespace Nektar
             modal = Transpose(*inv_vdm) * nodal;
         }
 
-        void StdNodalTetExp::ModalToNodal()
+        void StdNodalPrismExp::ModalToNodal()
         {
             ModalToNodal(m_coeffs,m_coeffs);
         }
 
-        void StdNodalTetExp::ModalToNodal(
+        void StdNodalPrismExp::ModalToNodal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
@@ -147,15 +143,16 @@ namespace Nektar
             nodal = (*vdm)*modal;
         }
 
-        void StdNodalTetExp::GetNodalPoints(
+        void StdNodalPrismExp::GetNodalPoints(
             Array<OneD, const NekDouble> &x, 
             Array<OneD, const NekDouble> &y,
             Array<OneD, const NekDouble> &z)
         {
+            // Get 3D nodal distribution.
             LibUtilities::PointsManager()[*m_nodalPointsKey]->GetPoints(x,y,z);
         }
 
-        DNekMatSharedPtr StdNodalTetExp::GenNBasisTransMatrix()
+        DNekMatSharedPtr StdNodalPrismExp::GenNBasisTransMatrix()
         {
             int             i,j;
             Array<OneD, const NekDouble>  r, s, t;
@@ -165,7 +162,7 @@ namespace Nektar
             Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
                 m_ncoeffs, m_ncoeffs);
             GetNodalPoints(r,s,t);
-
+            
             //Store the values of m_phys in a temporary array
             int nqtot = GetTotPoints();
             Array<OneD,NekDouble> tmp_phys(nqtot);
@@ -173,8 +170,8 @@ namespace Nektar
             for(i = 0; i < m_ncoeffs; ++i)
             {
                 // fill physical space with mode i
-                StdTetExp::v_FillMode(i,tmp_phys);
-
+                StdPrismExp::v_FillMode(i,tmp_phys);
+                
                 // interpolate mode i to the Nodal points 'j' and
                 // store in outarray
                 for(j = 0; j < m_ncoeffs; ++j)
@@ -182,35 +179,35 @@ namespace Nektar
                     c[0] = r[j];
                     c[1] = s[j];
                     c[2] = t[j];
-                    (*Mat)(j,i) = StdTetExp::v_PhysEvaluate(c,tmp_phys);
+                    (*Mat)(j,i) = StdPrismExp::v_PhysEvaluate(c,tmp_phys);
                 }
             }
             
             return Mat;
         }
-
+ 
 
         //---------------------------------------
         // Transforms
         //---------------------------------------
         
-        void StdNodalTetExp::v_BwdTrans(
+        void StdNodalPrismExp::v_BwdTrans(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             v_BwdTrans_SumFac(inarray,outarray);
         }
 
-        void StdNodalTetExp::v_BwdTrans_SumFac(
+        void StdNodalPrismExp::v_BwdTrans_SumFac(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
             Array<OneD, NekDouble> tmp(m_ncoeffs);
             NodalToModal(inarray,tmp);
-            StdTetExp::v_BwdTrans_SumFac(tmp,outarray);
+            StdPrismExp::v_BwdTrans_SumFac(tmp,outarray);
         }
 
-        void StdNodalTetExp::v_FwdTrans(
+        void StdNodalPrismExp::v_FwdTrans(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
@@ -234,22 +231,22 @@ namespace Nektar
         // Inner product functions
         //---------------------------------------
         
-        void StdNodalTetExp::v_IProductWRTBase(
+        void StdNodalPrismExp::v_IProductWRTBase(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
             v_IProductWRTBase_SumFac(inarray,outarray);
         }
         
-        void StdNodalTetExp::v_IProductWRTBase_SumFac(
+        void StdNodalPrismExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray);
+            StdPrismExp::v_IProductWRTBase_SumFac(inarray,outarray);
             NodalToModalTranspose(outarray,outarray);    
         }
 
-        void StdNodalTetExp::v_IProductWRTDerivBase(
+        void StdNodalPrismExp::v_IProductWRTDerivBase(
             const int                           dir,
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
@@ -257,12 +254,12 @@ namespace Nektar
             v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
         }
         
-        void StdNodalTetExp::v_IProductWRTDerivBase_SumFac(
+        void StdNodalPrismExp::v_IProductWRTDerivBase_SumFac(
             const int                           dir, 
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdTetExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+            StdPrismExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             NodalToModalTranspose(outarray,outarray);
         }
         
@@ -270,7 +267,7 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        void StdNodalTetExp::v_FillMode(
+        void StdNodalPrismExp::v_FillMode(
             const int               mode, 
             Array<OneD, NekDouble> &outarray)
         {
@@ -356,14 +353,14 @@ namespace Nektar
         }
         */
 
-        int StdNodalTetExp::v_GetVertexMap(const int localVertexId)
+        int StdNodalPrismExp::v_GetVertexMap(const int localVertexId)
         {
             ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
                      "Local Vertex ID must be between 0 and 3");                
             return localVertexId;
         }
 
-        void StdNodalTetExp::v_GetBoundaryMap(
+        void StdNodalPrismExp::v_GetBoundaryMap(
             Array<OneD, unsigned int>& outarray)
         {
             unsigned int i;
@@ -380,7 +377,7 @@ namespace Nektar
             }
         }
 
-        void StdNodalTetExp::v_GetInteriorMap(
+        void StdNodalPrismExp::v_GetInteriorMap(
             Array<OneD, unsigned int>& outarray)
         {
             unsigned int i;
@@ -403,7 +400,7 @@ namespace Nektar
         // Wrapper functions
         //---------------------------------------
         
-        DNekMatSharedPtr StdNodalTetExp::v_GenMatrix(const StdMatrixKey &mkey)
+        DNekMatSharedPtr StdNodalPrismExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr Mat;
             
@@ -420,10 +417,10 @@ namespace Nektar
             return Mat;
         }
         
-        DNekMatSharedPtr StdNodalTetExp::v_CreateStdMatrix(
+        DNekMatSharedPtr StdNodalPrismExp::v_CreateStdMatrix(
             const StdMatrixKey &mkey)
         {
-            return StdNodalTetExp::v_GenMatrix(mkey);
+            return StdNodalPrismExp::v_GenMatrix(mkey);
         }
     } // end of namespace
 } // end of namespace

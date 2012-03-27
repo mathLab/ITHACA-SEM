@@ -55,7 +55,6 @@ namespace Nektar
 
             virtual ~NodalTetElec()
             {
-             cout << "****************Nodal Tet Elec distructor called **************************" << endl;
             }
 
             LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);

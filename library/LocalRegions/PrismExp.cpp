@@ -138,14 +138,12 @@ namespace Nektar
                                          Array<OneD,       NekDouble>& out_d1,
                                          Array<OneD,       NekDouble>& out_d2)
         {
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
+            int nqtot = GetTotPoints();
             
             Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
-            Array<OneD,       NekDouble> diff0(nquad0*nquad1*nquad2);
-            Array<OneD,       NekDouble> diff1(nquad0*nquad1*nquad2);
-            Array<OneD,       NekDouble> diff2(nquad0*nquad1*nquad2);
+            Array<OneD,       NekDouble> diff0(nqtot);
+            Array<OneD,       NekDouble> diff1(nqtot);
+            Array<OneD,       NekDouble> diff2(nqtot);
 
             StdPrismExp::v_PhysDeriv(inarray, diff0, diff1, diff2);
             
@@ -153,46 +151,46 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[2][0],1,&diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
+                    Vmath::Vmul  (nqtot,&gmat[0][0],1,&diff0[0],1,&out_d0[0],1);
+                    Vmath::Vvtvp (nqtot,&gmat[1][0],1,&diff1[0],1,&out_d0[0],1,&out_d0[0],1);
+                    Vmath::Vvtvp (nqtot,&gmat[2][0],1,&diff2[0],1,&out_d0[0],1,&out_d0[0],1);
                 }
                 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[3][0],1,&diff0[0],1, &out_d1[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[4][0],1,&diff1[0],1, &out_d1[0], 1,&out_d1[0],1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[5][0],1,&diff2[0],1, &out_d1[0], 1,&out_d1[0],1);
+                    Vmath::Vmul  (nqtot,&gmat[3][0],1,&diff0[0],1,&out_d1[0],1);
+                    Vmath::Vvtvp (nqtot,&gmat[4][0],1,&diff1[0],1,&out_d1[0],1,&out_d1[0],1);
+                    Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff2[0],1,&out_d1[0],1,&out_d1[0],1);
                 }
                 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[6][0],1,&diff0[0],1, &out_d2[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[7][0],1,&diff1[0],1, &out_d2[0], 1, &out_d2[0],1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[8][0],1,&diff2[0],1, &out_d2[0], 1, &out_d2[0],1);
+                    Vmath::Vmul  (nqtot,&gmat[6][0],1,&diff0[0],1,&out_d2[0],1);
+                    Vmath::Vvtvp (nqtot,&gmat[7][0],1,&diff1[0],1,&out_d2[0],1,&out_d2[0],1);
+                    Vmath::Vvtvp (nqtot,&gmat[8][0],1,&diff2[0],1,&out_d2[0],1,&out_d2[0],1);
                 }
             }
             else // regular geometry
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[0][0],&diff0[0],1, &out_d0[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[1][0],&diff1[0],1, &out_d0[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[2][0],&diff2[0],1, &out_d0[0], 1);
+                    Vmath::Smul (nqtot,gmat[0][0],&diff0[0],1,&out_d0[0],1);
+                    Blas::Daxpy (nqtot,gmat[1][0],&diff1[0],1,&out_d0[0],1);
+                    Blas::Daxpy (nqtot,gmat[2][0],&diff2[0],1,&out_d0[0],1);
                 }
                 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[3][0],&diff0[0],1, &out_d1[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[4][0],&diff1[0],1, &out_d1[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[5][0],&diff2[0],1, &out_d1[0], 1);
+                    Vmath::Smul (nqtot,gmat[3][0],&diff0[0],1,&out_d1[0],1);
+                    Blas::Daxpy (nqtot,gmat[4][0],&diff1[0],1,&out_d1[0],1);
+                    Blas::Daxpy (nqtot,gmat[5][0],&diff2[0],1,&out_d1[0],1);
                 }
                 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[6][0],&diff0[0],1, &out_d2[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[7][0],&diff1[0],1, &out_d2[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[8][0],&diff2[0],1, &out_d2[0], 1);
+                    Vmath::Smul (nqtot,gmat[6][0],&diff0[0],1,&out_d2[0],1);
+                    Blas::Daxpy (nqtot,gmat[7][0],&diff1[0],1,&out_d2[0],1);
+                    Blas::Daxpy (nqtot,gmat[8][0],&diff2[0],1,&out_d2[0],1);
                 }
             }
         }
@@ -403,7 +401,7 @@ namespace Nektar
                 Vmath::Vmul(nquad0,&gfac0[0],1,&tmp4[0]+i*nquad0,1,
                             &tmp4[0]+i*nquad0,1);
             }
-            
+
             Vmath::Vadd(nqtot, &tmp1[0], 1, &tmp4[0], 1, &tmp1[0], 1);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
@@ -615,14 +613,9 @@ namespace Nektar
 
             Array<OneD,const NekDouble> e_tmp;
             Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
-
+            
             StdRegions::FaceOrientation facedir = GetFaceOrient(face);
-
-	    if (face==1 || face==3)
-	    {
-	      cout<<facedir<<endl;
-	    }
-
+            
             switch(face)
             {
             case 0:
@@ -687,6 +680,10 @@ namespace Nektar
 		        Vmath::Vcopy(nquad1,e_tmp=inarray+(nquad0*nquad1-1-i),-nquad0,o_tmp=outarray+(i*nquad1),1);
                     }
 		} 
+                o_tmp=outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
                 break;
 	    case 1:
                 if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -696,7 +693,6 @@ namespace Nektar
                     {
                         Vmath::Vcopy(nquad0,e_tmp=inarray+(nquad0*nquad1*k),1,o_tmp=outarray+(k*nquad0),1);
                     }
-                    //Vmath::Vcopy(nquad0*nquad2,&outarray[0],1,&o_tmp[0],1);
                     o_tmp=outarray;
                 }
                 else
@@ -782,7 +778,11 @@ namespace Nektar
 		        Vmath::Vcopy(nquad2,e_tmp=inarray+(nquad0*nquad1*nquad2-1-j*nquad0),
                                      -nquad0*nquad1,o_tmp=outarray+(j*nquad2),1);
                     }
-		} 
+		}
+                o_tmp=outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
                 break;
 		case 3:
 	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -878,6 +878,10 @@ namespace Nektar
                                      -nquad0*nquad1,o_tmp=outarray+(j*nquad2),1);
                     }
 		} 
+                o_tmp=outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                             FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
                 break;
             default:
                 ASSERTL0(false,"face value (> 4) is out of range");
@@ -892,9 +896,25 @@ namespace Nektar
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
-            int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            //int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            int nqe;
             int vCoordDim = GetCoordim();
-
+            
+            switch(face)
+            {
+                case 0:
+                    nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+                    break;
+                case 1:
+                case 3:
+                    nqe = m_base[0]->GetNumPoints()*m_base[2]->GetNumPoints();
+                    break;
+                case 2:
+                case 4:
+                    nqe = m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints();
+                    break;
+            }
+            
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
             for (i = 0; i < vCoordDim; ++i)

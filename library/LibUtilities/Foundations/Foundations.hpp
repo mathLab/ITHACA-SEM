@@ -112,13 +112,14 @@ namespace Nektar
             eGaussLobattoKronrodLegendre,   //!<  1D Lobatto Kronrod quadrature points
             ePolyEvenlySpaced,              //!<  1D Evenly-spaced points using Lagrange polynomial
             eFourierEvenlySpaced,           //!<  1D Evenly-spaced points using Fourier Fit
-			eFourierSingleModeSpaced,       //!<  1D Non Evenly-spaced points for Single Mode analysis
+            eFourierSingleModeSpaced,       //!<  1D Non Evenly-spaced points for Single Mode analysis
             eBoundaryLayerPoints,           //!<  1D power law distribution for boundary layer points
             eNodalTriElec,                  //!<  2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,                //!<  2D Nodal Fekete Points on a Triangle
             eNodalTriEvenlySpaced,          //!<  2D Evenly-spaced points on a Triangle
             eNodalTetEvenlySpaced,          //!<  3D Evenly-spaced points on a Tetrahedron
             eNodalTetElec,                  //!<  3D Nodal Electrostatic Points on a Tetrahedron
+            eNodalPrismEvenlySpaced,        //!<  3D Evenly-spaced points on a Prism
             SIZE_PointsType                 //!<  Length of enum list
         };
 
@@ -143,13 +144,14 @@ namespace Nektar
             "GaussLobattoKronrodLegendre",
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
-			"FourierSingleModeSpaced",
+            "FourierSingleModeSpaced",
             "BoundaryLayerPoints",
             "NodalTriElec",
             "NodalTriFekete",
             "NodalTriEvenlySpaced",
             "NodalTetEvenlySpaced",
             "NodalTetElec",
+            "NodalPrismEvenlySpaced"
         };
 
     } // end of namespace

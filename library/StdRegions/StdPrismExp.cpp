@@ -885,8 +885,8 @@ namespace Nektar
             {
                 // Very top point of the prism
                 eta[0] = -1.0;
-                eta[1] = -1.0;
-                eta[2] = xi[2];
+                eta[1] = xi[1];
+                eta[2] = 1.0;
             }
             else
             {
@@ -927,61 +927,9 @@ namespace Nektar
 
         void StdPrismExp::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
-            int Qx = m_base[0]->GetNumPoints();
-            int Qy = m_base[1]->GetNumPoints();
-            int Qz = m_base[2]->GetNumPoints();
-
-            int P  = m_base[0]->GetNumModes() - 1;
-            int Q  = m_base[1]->GetNumModes() - 1;
-            int R  = m_base[2]->GetNumModes() - 1;
-            
-            Array<OneD, int> mode_pr = Array<OneD, int>((P+1)*(R+1), -1);
-            for (int p = 0, m = 0; p <= P; ++p) {
-                for (int r = 0; r <= R - p ; ++r, ++m) {
-                    int index = r + (R+1)*p;
-                    mode_pr[r + (R+1)*p] = m;
-                }
-            }
-
-            // Find the pqr matching the provided mode
-            int mode_p = 0, mode_q = 0, mode_r = 0;
-            for (int p = 0, m = 0; p <= P; ++p) {
-                for (int q = 0; q <= Q ; ++q) {
-                    for (int r = 0; r <= R - p; ++r, ++m) {
-                        if (m == mode) {
-                            mode_p = p;
-                            mode_q = q;
-                            mode_r = r;
-                        }
-                    }
-                }
-            }
-
-            const Array<OneD, const NekDouble>& bx = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& by = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble>& bz = m_base[2]->GetBdata();
-
-            int p = mode_p, q = mode_q, r = mode_r;
-            
-            // Determine the index for specifying which mode to use in the basis
-            int sigma_p   = Qx*p;
-            int sigma_q   = Qy*q;         
-            int sigma_qr  = Qz*mode_pr[r + (R+1)*p];
-            int sigma     = Qx*Qy*Qz*mode;
-
-
-            // Compute tensor product of inarray with the 3 basis functions
-            for (int k = 0; k < Qz; ++k) {
-                for (int j = 0; j < Qy; ++j) {
-                    for (int i = 0; i < Qx; ++i) {
-                        int s = i + Qx*(j + Qy*(k + Qz*mode));
-                        outarray[s] = 
-                            bx[i + sigma_p] * 
-                            by[j + sigma_q] * 
-                            bz[k + sigma_qr];
-                    }
-                }
-            }
+            Array<OneD, NekDouble> tmp(m_ncoeffs,0.0);
+            tmp[mode] = 1.0;
+            StdPrismExp::v_BwdTrans(tmp, outarray);
         }
 
 
@@ -1969,7 +1917,7 @@ namespace Nektar
          * 1   5   9    13  16  19
          * 0   4   8    12  15  18
          * 
-         * Note that in this element, we must have that P <= R.
+         * Note that in this element, we must have that \f$ P <= R \f$.
          */
         int StdPrismExp::GetMode(int p, int q, int r)
         {

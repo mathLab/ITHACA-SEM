@@ -66,6 +66,7 @@ SET(FoundationHeaders
     ./Foundations/NodalUtil.h
     ./Foundations/NodalTriEvenlySpaced.h
     ./Foundations/NodalTetEvenlySpaced.h
+    ./Foundations/NodalPrismEvenlySpaced.h
 )
 
 SET(InterpreterHeaders
@@ -162,6 +163,7 @@ SET(FoundationSources
 	./Foundations/NodalUtil.cpp
         ./Foundations/NodalTriEvenlySpaced.cpp
         ./Foundations/NodalTetEvenlySpaced.cpp
+        ./Foundations/NodalPrismEvenlySpaced.cpp
 )
 
 SET(InterpreterSources

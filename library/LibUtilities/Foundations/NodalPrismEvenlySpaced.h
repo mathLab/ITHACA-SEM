@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NodalTetEvenlySpaced.h
+// File NodalPrismEvenlySpaced.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: Header file of 2D Nodal Tetrahedron Evenly Spaced Points
+// Description: Header file of 3D Nodal Prism Evenly Spaced Points
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NODALTETEVENLYSPACED_H
-#define NODALTETEVENLYSPACED_H
+#ifndef NODALPRISMEVENLYSPACED_H
+#define NODALPRISMEVENLYSPACED_H
 
 #include <iostream>
 
@@ -51,17 +51,17 @@ namespace Nektar
     namespace LibUtilities 
     {
  
-        class NodalTetEvenlySpaced: public Points<NekDouble>
+        class NodalPrismEvenlySpaced: public Points<NekDouble>
         {
         public:
             typedef Points<NekDouble> PointsBaseType;
 
-            virtual ~NodalTetEvenlySpaced()
+            virtual ~NodalPrismEvenlySpaced()
             {
                 
             }
 
-            NodalTetEvenlySpaced(const PointsKey &key):PointsBaseType(key)
+            NodalPrismEvenlySpaced(const PointsKey &key):PointsBaseType(key)
             {
 
             }
@@ -70,7 +70,7 @@ namespace Nektar
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim()==3, "NodalTetEvenlySpaced Points can only interp to other 3d point distributions");
+                ASSERTL0(pkey.GetPointsDim()==3, "NodalPrismEvenlySpaced Points can only interp to other 3d point distributions");
                 Array<OneD, const NekDouble> x, y, z;
                 PointsManager()[pkey]->GetPoints(x, y, z);
                 
@@ -106,7 +106,7 @@ namespace Nektar
         private:
         
             /// Deafult constructor should not be called except by Create matrix           
-            NodalTetEvenlySpaced():PointsBaseType(NullPointsKey)
+            NodalPrismEvenlySpaced():PointsBaseType(NullPointsKey)
             {
             }
 
@@ -119,10 +119,8 @@ namespace Nektar
                                        const Array<OneD, const NekDouble>& yi,
                                        const Array<OneD, const NekDouble>& zi,
                                        Array<OneD, NekDouble>& interp);
-
-
-        }; // end of NodalTetEvenlySpaced
+        }; // end of NodalPrismEvenlySpaced
    } // end of namespace
 } // end of namespace 
 
-#endif //NODALTETEVENLYSPACED_H
+#endif //NODALPRISMEVENLYSPACED_H

@@ -2,13 +2,15 @@
 #include <cstdlib>
 #include <math.h>
 
-#include "StdRegions/StdExpansion2D.h"
-#include "StdRegions/StdHexExp.h"
-#include "StdRegions/StdPrismExp.h"
-#include "StdRegions/StdTetExp.h"
+#include <StdRegions/StdExpansion2D.h>
+#include <StdRegions/StdHexExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdNodalPrismExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdNodalTetExp.h>
 
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <StdRegions/StdRegions.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
@@ -53,18 +55,21 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Where type is an integer value which "
                        "dictates the basis as:\n");
 
-        fprintf(stderr,"\t Ortho_A    = 1\n");
-        fprintf(stderr,"\t Ortho_B    = 2\n");
-        fprintf(stderr,"\t Ortho_C    = 3\n");
-        fprintf(stderr,"\t Modified_A = 4\n");
-        fprintf(stderr,"\t Modified_B = 5\n");
-        fprintf(stderr,"\t Modified_C = 6\n");
-        fprintf(stderr,"\t Fourier    = 7\n");
-        fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
+        fprintf(stderr,"\t Ortho_A             =  1\n");
+        fprintf(stderr,"\t Ortho_B             =  2\n");
+        fprintf(stderr,"\t Ortho_C             =  3\n");
+        fprintf(stderr,"\t Modified_A          =  4\n");
+        fprintf(stderr,"\t Modified_B          =  5\n");
+        fprintf(stderr,"\t Modified_C          =  6\n");
+        fprintf(stderr,"\t Fourier             =  7\n");
+        fprintf(stderr,"\t Lagrange            =  8\n");
+        fprintf(stderr,"\t Legendre            =  9\n");
+        fprintf(stderr,"\t Chebyshev           = 10\n");
         fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
         fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+        fprintf(stderr,"\t Nodal tet (Electro) = 13\n");
+        fprintf(stderr,"\t Nodal tet (Even)    = 14\n");
+        fprintf(stderr,"\t Nodal prism (Even)  = 15\n");
 
         exit(1);
     }
@@ -82,24 +87,47 @@ int main(int argc, char *argv[]){
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
     int btype3_val = atoi(argv[4]);
-    if(( btype1_val <= 10)&&( btype2_val <= 10))
+    
+    if (btype1_val <= 10 && btype2_val <= 10)
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
         btype3 =   (LibUtilities::BasisType) btype3_val;
     }
-    else if(( btype1_val >=11)&&(btype2_val <= 12))
+    else if(btype1_val >=11 && btype2_val <= 15)
     {
-        btype1 =   LibUtilities::eOrtho_A;
-        btype2 =   LibUtilities::eOrtho_B;
-        btype3 =   LibUtilities::eOrtho_C;
+        if (regionshape == StdRegions::eTetrahedron)
+        {
+            btype1 = LibUtilities::eOrtho_A;
+            btype2 = LibUtilities::eOrtho_B;
+            btype3 = LibUtilities::eOrtho_C;
+        }
+        else if (regionshape == StdRegions::ePrism)
+        {
+            btype1 = LibUtilities::eOrtho_A;
+            btype2 = LibUtilities::eOrtho_A;
+            btype3 = LibUtilities::eOrtho_B;
+        }
+        
         if(btype1_val == 11)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }
-        else
+        else if (btype1_val == 12)
         {
             NodalType = LibUtilities::eNodalTriFekete;
+        }
+        else if (btype1_val == 13)
+        {
+            NodalType = LibUtilities::eNodalTetElec;
+        }
+        else if (btype1_val == 14)
+        {
+            NodalType = LibUtilities::eNodalTetEvenlySpaced;
+        }
+        else
+        {
+            NodalType = LibUtilities::eNodalPrismEvenlySpaced;
         }
     }
 
@@ -185,7 +213,8 @@ int main(int argc, char *argv[]){
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == StdRegions::eTetrahedron) 
+        {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -200,7 +229,8 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == StdRegions::eTetrahedron) 
+        {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
         else if (regionshape == StdRegions::ePrism)
@@ -225,7 +255,7 @@ int main(int argc, char *argv[]){
 
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
+        case StdRegions::eTetrahedron:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -234,9 +264,16 @@ int main(int argc, char *argv[]){
             const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
             const LibUtilities::BasisKey  Bkey3(btype3,order3,Pkey3);
 
-            E = new StdRegions::StdTetExp(Bkey1,Bkey2,Bkey3);
+            if(btype1_val >= 10)
+            {
+                E = new StdRegions::StdNodalTetExp(Bkey1,Bkey2,Bkey3,NodalType);
+            }
+            else
+            {
+                E = new StdRegions::StdTetExp(Bkey1,Bkey2,Bkey3);
+            }
             E->GetCoords(x,y,z);
-
+            
             //----------------------------------------------
             // Define solution to be projected
             for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -246,7 +283,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-    case StdRegions::ePrism:
+        case StdRegions::ePrism:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -255,7 +292,14 @@ int main(int argc, char *argv[]){
             const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
             const LibUtilities::BasisKey  Bkey3(btype3,order3,Pkey3);
 
-            E = new StdRegions::StdPrismExp(Bkey1,Bkey2,Bkey3);
+            if (btype1_val >= 10)
+            {
+                E = new StdRegions::StdNodalPrismExp(Bkey1,Bkey2,Bkey3,NodalType);
+            }
+            else
+            {
+                E = new StdRegions::StdPrismExp(Bkey1,Bkey2,Bkey3);
+            }
             E->GetCoords(x,y,z);
 
             //----------------------------------------------

@@ -1025,8 +1025,6 @@ namespace Nektar
                 cnt += j;
             }
 
-//--------------> NumDGBndryCoeffs is currently only implemented for Hex elements
-
             // Set up integer mapping array and sign change for each
             // degree of freedom + initialise some more data members
             m_staticCondLevel = 0;

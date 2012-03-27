@@ -167,10 +167,11 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
 		NekDouble Q, A_r, u_r, Au, uu;
-        
+        NekDouble R_t, A_l, u_l, u_0, c_0, c_l;
+		
 		SetBoundaryConditions(time);
 				
-		// Loop over Boundary Regions to find the Q-inflow type
+		// Loop over Boundary Regions to find the Q-inflow type and the terminal resistance type
 		for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
 		{					
 			if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eQinflow && m_omega == 0)
@@ -191,6 +192,31 @@ namespace Nektar
 				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = Au;
 				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = uu;
 			}
+			/* Find the terminal resistance boundary condition and calculate the reflection. We assume 
+			 * A_r = A_l and apply the reflection in u_r after paper "Computational Modelling of 1D 
+			 * blood flow"*/
+			else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTerminal)
+			{
+				R_t = (m_fields[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
+								
+				// Get the left values A_l and u_l needed for Eq. 37
+				A_l = m_fields[0]->GetCoeffs()[1];
+				u_l = m_fields[1]->GetCoeffs()[1];
+				
+				// Get the values at initial state u_0, c_0
+				u_0 = 0.0; //for all vessels start from initial condition 0
+				c_0 = sqrt(m_betaglobal[m_omega][0]/(2*m_rho))*sqrt(sqrt(m_A_0global[m_omega][0]));				
+				
+				// Calculate the boundary values
+				A_r = A_l;
+				c_l = sqrt(m_beta[GetTotPoints()-1]/(2*m_rho))*sqrt(sqrt(A_l));
+				u_r = (1-R_t)*((u_0+u_l) + 4*(c_l-c_0)) - u_l;
+				
+				// Store the new values in the boundary condition
+				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
+				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+			}
+			
 		}
 			
 		// Do actual projection

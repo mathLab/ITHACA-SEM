@@ -81,6 +81,7 @@ namespace Nektar
             eIsentropicVortex,
             eCalcBC,
             eQinflow,
+			eTerminal,
             eNoUserDefined
         };
 
@@ -97,6 +98,7 @@ namespace Nektar
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
                 known_type["Q-inflow"] = eQinflow;
+				known_type["Terminal"] = eTerminal;
                 known_type["WALL"] = eWALL;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;

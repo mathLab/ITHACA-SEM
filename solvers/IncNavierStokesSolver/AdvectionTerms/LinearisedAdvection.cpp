@@ -746,7 +746,7 @@ namespace Nektar
             
             //3D
         case 3:
-				
+			
 			grad1 = Array<OneD, NekDouble> (nPointsTot);
 			grad2 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
@@ -762,7 +762,7 @@ namespace Nektar
             pFields[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
             pFields[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
             pFields[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
-				         
+         
 				
 			switch (pVelocityComponent)
             {
@@ -770,7 +770,7 @@ namespace Nektar
                 //x-equation	
             case 0:
 					
-				if(m_session->DefinesSolverInfo("SingleMode")==false|| m_dealiasing)
+				if(m_dealiasing)
 
 				{
 					//U du'/dx
@@ -814,7 +814,7 @@ namespace Nektar
                 break;
                 //y-equation	
             case 1:
-					if(m_session->DefinesSolverInfo("SingleMode")==false|| m_dealiasing)
+					if(m_dealiasing)
 
 					{
 
@@ -859,7 +859,7 @@ namespace Nektar
                 
                 //z-equation	
             case 2:
-					if(m_session->DefinesSolverInfo("SingleMode")==false|| m_dealiasing)
+					if(m_dealiasing)
 					{
 
 						//U dw'/dx

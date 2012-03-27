@@ -128,7 +128,7 @@ namespace Nektar
         int nqtot            = pFields[0]->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
         Array<OneD, NekDouble > Deriv;
-        
+	
         m_nConvectiveFields = nConvectiveFields;
 
         for(i = 0; i < VelDim; ++i)
@@ -146,7 +146,6 @@ namespace Nektar
         {
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
-        
         for(i=0; i< m_nConvectiveFields; ++i)
         {
             v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,m_time,Deriv);

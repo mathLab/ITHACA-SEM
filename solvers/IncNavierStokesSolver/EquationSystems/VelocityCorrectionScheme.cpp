@@ -266,12 +266,13 @@ namespace Nektar
                                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                                     const NekDouble time)
     {
+
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
                                  inarray, outarray,m_time);
 
-
-		if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+		
+		if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 		{
 			for(int i = 0; i < m_nConvectiveFields; ++i)
 			{
@@ -368,6 +369,8 @@ namespace Nektar
     
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
+		
+		//Entro in questa routine solo se ho almeno una condizione High Order
         Array<OneD, NekDouble> tmp;
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
@@ -375,9 +378,11 @@ namespace Nektar
         int  nint    = min(m_pressureCalls++,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
 
+		//Get values in PBndExp (in 0 and 0.25). PBndExp has dimensions composites with HOPBC (everything for example)
         PBndConds   = m_pressure->GetBndConditions();
         PBndExp     = m_pressure->GetBndCondExpansions();
 
+		
         // Reshuffle Bc Storage vector
         tmp = m_pressureHBCs[nlevels-1];
         for(n = nlevels-1; n > 0; --n)
@@ -598,6 +603,7 @@ namespace Nektar
 			
 			for(int i = 0; i < fields.num_elements(); i++)
 			{
+				
 				if(m_pressure->GetWaveSpace())
 				{
 					velocity[i] = fields[i];
@@ -932,9 +938,17 @@ namespace Nektar
 							m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
 							m_HBC[5][j] = n;                                         
 							
-							m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
-							m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-							
+							if(m_session->DefinesSolverInfo("SingleMode")==true && 
+							   m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+							{
+								m_wavenumber[j] = 2*M_PI*sign/m_LhomZ;       
+								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+							}
+							else
+							{
+								m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
+								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+							}
 							sign = -1.0*sign;
 							
 							if(k%2==0)

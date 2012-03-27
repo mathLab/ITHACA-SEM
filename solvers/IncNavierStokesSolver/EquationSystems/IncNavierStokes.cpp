@@ -197,7 +197,7 @@ namespace Nektar
 		}
 
 		//SingleMode integration in wave space
-		if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+		if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 		{
 			integrate_in_wave_space = true;
 		}
@@ -222,7 +222,6 @@ namespace Nektar
             fields[i]  = m_fields[i]->UpdatePhys();
         }
 		
-        
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem

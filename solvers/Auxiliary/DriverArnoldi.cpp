@@ -69,6 +69,15 @@ namespace Nektar
         {
             m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
             m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
+			
+			if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+			{
+				for(int i = 0; i < m_nfields; ++i)
+				{
+					m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
+				}
+			}
+			
         }
         else
         {
@@ -76,21 +85,23 @@ namespace Nektar
             ASSERTL0(m_session->DefinesFunction("BodyForce"),"A BodyForce section needs to be defined for this solver type");
             m_nfields = m_equ[0]->UpdateFields().num_elements();
 
-	    for(int i = 0; i < m_nfields; ++i)
+			for(int i = 0; i < m_nfields; ++i)
             {
                m_equ[0]->UpdateForces()[i]->SetWaveSpace(true);
             }
 
         }
 
-		//if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")!="SpecifiedMode")
+		
+		/*
 		if(m_session->DefinesSolverInfo("SingleMode")==false)
 		{
 		for(int i = 0; i < m_nfields; ++i)
         {
+						
 			m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
         }
-		}
+		}*/
 
         m_session->LoadParameter("kdim",  m_kdim,  16);
         m_session->LoadParameter("nvec",  m_nvec,  2);
@@ -145,6 +156,7 @@ namespace Nektar
      */
     void DriverArnoldi::CopyArnoldiArrayToField(Array<OneD, NekDouble> &array)
     {
+		
         Array<OneD, MultiRegions::ExpListSharedPtr> fields;
         if(m_timeSteppingAlgorithm)
         {
@@ -170,6 +182,7 @@ namespace Nektar
      */
     void DriverArnoldi::CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
     {
+
         Array<OneD, MultiRegions::ExpListSharedPtr> fields;
         fields = m_equ[m_nequ-1]->UpdateFields();
         for (int k = 0; k < m_nfields; ++k)

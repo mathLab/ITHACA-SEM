@@ -668,6 +668,7 @@ namespace Nektar
                     const std::string& pFunctionName,
                     const NekDouble& pTime)
     {
+		
         ASSERTL0(m_session->DefinesFunction(pFunctionName),
                     "Function '" + pFunctionName + "' does not exist.");
 
@@ -932,12 +933,14 @@ namespace Nektar
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
                                                  m_fields[i]->UpdateCoeffs());
+
                 if (m_session->GetComm()->GetRank() == 0)
                 {
                     cout << "\tField "<< m_session->GetVariable(i)
                          <<": 0 (default)" << endl;
                 }
             }
+
         }
 
         if(dumpInitialConditions && m_checksteps)

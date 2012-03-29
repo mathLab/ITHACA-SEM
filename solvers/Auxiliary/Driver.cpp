@@ -92,6 +92,7 @@ namespace Nektar
                      "EquationSystem '" + vEquation + "' is not defined.\n"
                      "Ensure equation name is correct and module is compiled.\n");
 
+			
             // Retrieve the type of evolution operator to use
             /// @todo At the moment this is Navier-Stokes specific - generalise?
             m_EvolutionOperator = m_session->GetSolverInfoAsEnum<EvolutionOperatorType>("EvolutionOperator");

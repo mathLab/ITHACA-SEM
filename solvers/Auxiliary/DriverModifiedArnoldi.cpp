@@ -80,6 +80,7 @@ namespace Nektar
 	
         //FwdTrans Initial conditions to be in Coefficient Space
         m_equ[m_nequ-1] ->TransPhysToCoeff();
+
     }
     
 	
@@ -247,6 +248,7 @@ namespace Nektar
         CopyArnoldiArrayToField(src);
 		
         m_equ[0]->TransCoeffToPhys();
+
 		
         m_equ[0]->DoSolve();
 

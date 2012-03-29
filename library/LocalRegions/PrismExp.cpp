@@ -615,7 +615,7 @@ namespace Nektar
             Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
             
             StdRegions::FaceOrientation facedir = GetFaceOrient(face);
-            
+
             switch(face)
             {
             case 0:
@@ -682,7 +682,7 @@ namespace Nektar
 		} 
                 o_tmp=outarray;
                 //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp,
                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
                 break;
 	    case 1:
@@ -781,7 +781,7 @@ namespace Nektar
 		}
                 o_tmp=outarray;
                 //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
                 break;
 		case 3:
@@ -803,7 +803,7 @@ namespace Nektar
                                      -1,o_tmp=outarray+(k*nquad0),1);
                     }
 		}
-
+                o_tmp=outarray;
                 //interpolate
                 LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
@@ -880,7 +880,7 @@ namespace Nektar
 		} 
                 o_tmp=outarray;
                 //interpolate
-                LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
+                LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp,
                              FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
                 break;
             default:
@@ -896,10 +896,10 @@ namespace Nektar
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
-            //int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-            int nqe;
+            int nqe = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            //int nqe;
             int vCoordDim = GetCoordim();
-            
+            /*
             switch(face)
             {
                 case 0:
@@ -914,6 +914,7 @@ namespace Nektar
                     nqe = m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints();
                     break;
             }
+            */
             
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];

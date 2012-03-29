@@ -63,6 +63,14 @@ namespace Nektar
         typedef std::map<std::string, std::string>  TagMap;
         typedef std::multimap<std::string, std::map<std::string, std::string> > FilterMap;
 
+        struct CmdLineArg
+        {
+            std::string shortName;
+            std::string description;
+        };
+
+        typedef std::map<std::string, CmdLineArg>  CmdLineArgMap;
+
         typedef std::map<std::string, int>          EnumMap;
         typedef std::map<std::string, EnumMap>      EnumMapList;
 
@@ -243,6 +251,14 @@ namespace Nektar
             /* ------ FILTERS ------ */
             LIB_UTILITIES_EXPORT const FilterMap& GetFilters() const;
 
+            /* ------ CMDLINE ARGUMENTS ------- */
+            /// Checks if a specified cmdline argument has been given.
+            LIB_UTILITIES_EXPORT bool DefinesCmdLineArgument(const std::string& pName) const;
+            /// Retrieves a command-line argument value.
+            LIB_UTILITIES_EXPORT std::string GetCmdLineArgument(const std::string& pName) const;
+            /// Registers a command-line argument with the session reader.
+            LIB_UTILITIES_EXPORT inline static std::string RegisterCmdLineArgument(const std::string &pName, const std::string &pShortName, const std::string &pDescription);
+
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
@@ -280,6 +296,9 @@ namespace Nektar
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList          m_enums;
             LIB_UTILITIES_EXPORT static SolverInfoMap        m_solverInfoDefaults;
+
+            /// CmdLine argument map.
+            LIB_UTILITIES_EXPORT static CmdLineArgMap        m_cmdLineArguments;
 
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(int argc, char *argv[]);
@@ -410,6 +429,20 @@ namespace Nektar
             std::string vName = boost::to_upper_copy(pName);
             m_solverInfoDefaults[vName] = pValue;
             return pValue;
+        }
+
+
+        /**
+         *
+         */
+        inline std::string SessionReader::RegisterCmdLineArgument(const std::string &pName, const std::string &pShortName, const std::string &pDescription)
+        {
+            ASSERTL0(!pName.empty(), "Empty name for cmdline argument.");
+            CmdLineArg x;
+            x.shortName = pShortName;
+            x.description = pDescription;
+            m_cmdLineArguments[pName] = x;
+            return pName;
         }
 
 

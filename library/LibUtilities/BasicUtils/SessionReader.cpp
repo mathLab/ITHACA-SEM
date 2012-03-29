@@ -123,6 +123,17 @@ namespace Nektar
 
 
         /**
+         * Lists the possible command-line argument which can be specified for
+         * this executable.
+         *
+         * This list is populated through the #RegisterCmdLineArgument static
+         * member function which is called statically from various classes to
+         * register command-line arguments they need.
+         */
+        CmdLineArgMap SessionReader::m_cmdLineArguments;
+
+
+        /**
          * This constructor parses the command-line arguments given to the user
          * application to set up any MPI communication, read supplied XML
          * session files, and partition meshes where necessary.
@@ -209,6 +220,18 @@ namespace Nektar
                     ("verbose,v", "be verbose")
                     ("help,h", "print this help message")
             ;
+            CmdLineArgMap::const_iterator cmdIt;
+            for (cmdIt = m_cmdLineArguments.begin(); cmdIt != m_cmdLineArguments.end(); ++cmdIt)
+            {
+                std::string names = cmdIt->first;
+                if (cmdIt->second.shortName != "")
+                {
+                    names += "," + cmdIt->second.shortName;
+                }
+                desc.add_options()
+                    (names.c_str(), po::value<std::string>(), cmdIt->second.description.c_str())
+                ;
+            }
 
             // List hidden options (e.g. session file arguments are not actually
             // specified using the input-file option by the user).
@@ -876,6 +899,24 @@ namespace Nektar
         const FilterMap &SessionReader::GetFilters() const
         {
             return m_filters;
+        }
+
+
+        /**
+         *
+         */
+        bool SessionReader::DefinesCmdLineArgument(const std::string& pName) const
+        {
+            return (m_cmdLineOptions.find(pName) != m_cmdLineOptions.end());
+        }
+
+
+        /**
+         *
+         */
+        std::string SessionReader::GetCmdLineArgument(const std::string& pName) const
+        {
+            return m_cmdLineOptions.find(pName)->second.as<std::string>();
         }
 
 

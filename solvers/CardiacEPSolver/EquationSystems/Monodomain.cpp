@@ -89,81 +89,78 @@ namespace Nektar
         m_intVariables.push_back(0);
 
         // Load variable coefficients
-        /// @todo: move to an EvaluateFunction routine.
-        std::string varCoeffs[3] = {"d00", "d11", "d22"};
         StdRegions::VarCoeffType varCoeffEnum[3] = {
                 StdRegions::eVarCoeffD00,
                 StdRegions::eVarCoeffD11,
                 StdRegions::eVarCoeffD22
         };
         std::string varName = "intensity";
+        std::string varCoeffs[3] = {
+                "AnisotropicConductivityX",
+                "AnisotropicConductivityY",
+                "AnisotropicConductivityZ"
+        };
 
-        for (int i = 0; i < 3; ++i)
+        Array<OneD, NekDouble> vTemp;
+        if (m_session->DefinesFunction("IsotropicConductivity"))
         {
-            if (m_session->DefinesFunction(varCoeffs[i]))
+            EvaluateFunction(varName, vTemp, "IsotropicConductivity");
+            for (int i = 0; i < m_spacedim; ++i)
             {
-                // Load from FLD file.
-                if (m_session->GetFunctionType(varCoeffs[i],varName) == LibUtilities::eFunctionTypeFile)
-                {
-                    EvaluateFunction(varName, m_fields[0]->UpdatePhys(), varCoeffs[i]);
-
-                    // Normalise and invert (assuming image intensity data)
-                    int nq = m_fields[0]->GetNpoints();
-                    NekDouble f_min = m_session->GetParameter("d_min");
-                    NekDouble f_max = m_session->GetParameter("d_max");
-                    NekDouble f_range = f_max - f_min;
-                    NekDouble o_min = m_session->GetParameter("o_min");
-                    NekDouble o_max = m_session->GetParameter("o_max");
-                    Vmath::Sadd(nq, -f_min, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-                    for (int j = 0; j < nq; ++j)
-                    {
-                        if (m_fields[0]->GetPhys()[j] < 0)
-                        {
-                            m_fields[0]->UpdatePhys()[j] = 0.0;
-                        }
-                        if (m_fields[0]->GetPhys()[j] > f_range)
-                        {
-                            m_fields[0]->UpdatePhys()[j] = f_range;
-                        }
-                    }
-                    Vmath::Smul(nq, -1.0/f_range, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-                    Vmath::Sadd(nq, 1.0, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-                    Vmath::Smul(nq, o_max-o_min, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-                    Vmath::Sadd(nq, o_min, m_fields[0]->GetPhys(), 1, m_fields[0]->UpdatePhys(), 1);
-
-                    Array<OneD, NekDouble> tmp(nq);
-                    Vmath::Vcopy(nq, m_fields[0]->GetPhys(), 1, tmp, 1);
-                    m_vardiff[varCoeffEnum[i]] = tmp;
-                }
-                // Evaluate expression
-                else
-                {
-                    int nq = m_fields[0]->GetNpoints();
-                    Array<OneD,NekDouble> x0(nq);
-                    Array<OneD,NekDouble> x1(nq);
-                    Array<OneD,NekDouble> x2(nq);
-
-                    // get the coordinates
-                    m_fields[0]->GetCoords(x0,x1,x2);
-
-                    Array<OneD, NekDouble> tmp(nq);
-
-                    EvaluateFunction(varName, tmp, varCoeffs[i]);
-                    m_vardiff[varCoeffEnum[i]] = tmp;
-                }
-
-                // Dump actual variable coefficients for verification.
-                m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(),
-                                                 m_fields[0]->UpdateCoeffs());
-                std::stringstream filename;
-                filename << varCoeffs[i];
-                if (m_comm->GetSize() > 1)
-                {
-                    filename << "_P" << m_comm->GetRank();
-                }
-                filename << ".fld";
-                WriteFld(filename.str());
+                m_vardiff[varCoeffEnum[i]] = vTemp;
             }
+        }
+        else if (m_session->DefinesFunction(varCoeffs[0]))
+        {
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                ASSERTL0(m_session->DefinesFunction(varCoeffs[i], varName),
+                    "Function '" + varCoeffs[i] + "' not correctly defined.");
+                EvaluateFunction(varName, vTemp, varCoeffs[i]);
+                m_vardiff[varCoeffEnum[i]] = vTemp;
+            }
+        }
+
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            if (m_session->DefinesParameter("d_min"))
+            {
+                // Normalise and invert
+                int nq = m_fields[0]->GetNpoints();
+                NekDouble f_min = m_session->GetParameter("d_min");
+                NekDouble f_max = m_session->GetParameter("d_max");
+                NekDouble f_range = f_max - f_min;
+                NekDouble o_min = m_session->GetParameter("o_min");
+                NekDouble o_max = m_session->GetParameter("o_max");
+                Vmath::Sadd(nq, -f_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                for (int j = 0; j < nq; ++j)
+                {
+                    if (m_vardiff[varCoeffEnum[i]][j] < 0)
+                    {
+                        m_vardiff[varCoeffEnum[i]][j] = 0.0;
+                    }
+                    if (m_vardiff[varCoeffEnum[i]][j] > f_range)
+                    {
+                        m_vardiff[varCoeffEnum[i]][j] = f_range;
+                    }
+                }
+                Vmath::Smul(nq, -1.0/f_range, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Sadd(nq, 1.0, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Smul(nq, o_max-o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Sadd(nq, o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+            }
+
+            m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
+                                             m_fields[0]->UpdateCoeffs());
+            std::stringstream filename;
+            filename << varCoeffs[i];
+            if (m_comm->GetSize() > 1)
+            {
+                filename << "_P" << m_comm->GetRank();
+            }
+            filename << ".fld";
+            WriteFld(filename.str());
+
         }
 
         if (m_session->DefinesParameter("StimulusDuration"))

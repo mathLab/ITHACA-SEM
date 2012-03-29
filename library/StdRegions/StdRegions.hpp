@@ -224,7 +224,7 @@ namespace Nektar
             "VarCoeffVelX",
             "VarCoeffVelY"
         };
-        typedef std::map<StdRegions::VarCoeffType, Array<OneD, const NekDouble> > VarCoeffMap;
+        typedef std::map<StdRegions::VarCoeffType, Array<OneD, NekDouble> > VarCoeffMap;
         static VarCoeffMap NullVarCoeffMap;
 
         enum ConstFactorType

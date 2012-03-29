@@ -672,15 +672,16 @@ namespace Nektar
         ASSERTL0(m_session->DefinesFunction(pFunctionName),
                     "Function '" + pFunctionName + "' does not exist.");
 
+        unsigned int nq = m_fields[0]->GetNpoints();
+        if (pArray.num_elements() != nq)
+        {
+            pArray = Array<OneD, NekDouble>(nq);
+        }
+
         LibUtilities::FunctionType vType;
         vType = m_session->GetFunctionType(pFunctionName, pFieldName);
         if (vType == LibUtilities::eFunctionTypeExpression)
         {
-            int nq = m_fields[0]->GetNpoints();
-            if (nq != pArray.num_elements())
-            {
-                pArray = Array<OneD, NekDouble>(nq);
-            }
             Array<OneD,NekDouble> x0(nq);
             Array<OneD,NekDouble> x1(nq);
             Array<OneD,NekDouble> x2(nq);

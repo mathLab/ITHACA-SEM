@@ -39,13 +39,15 @@
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
-void RunL2RegressionTest(std::string demo, std::string input, std::string info);
-void MakeOkFile(std::string demo, std::string input, std::string info);
+void RunL2RegressionTest(std::string demo, std::string input, std::string info, unsigned int np = 1);
+void MakeOkFile(std::string demo, std::string input, std::string info, unsigned int np = 1);
 
 #ifdef MAKE_OK_FILE
 #define Execute($1,$2,$3)  MakeOkFile($1,$2,$3)
+#define ExecuteParallel($1,$2,$3,$4) MakeOkFile($1,$2,$3,$4)
 #else
 #define Execute($1,$2,$3)  RunL2RegressionTest($1,$2,$3)
+#define ExecuteParallel($1,$2,$3,$4)  RunL2RegressionTest($1,$2,$3,$4)
 #endif
 
 #ifdef _WINDOWS
@@ -141,6 +143,11 @@ int main(int argc, char* argv[])
     Execute("IncNavierStokesSolver","Test_Tet_channel_m8.xml","3D channel flow, Tetrahedral elements, P=8");
     Execute("IncNavierStokesSolver","Test_Prism_channel_m6.xml","3D channel flow, Prismatic elements, P=6");
 
+#ifdef NEKTAR_USE_MPI
+    ExecuteParallel("IncNavierStokesSolver","Test_Hex_channel_m8_par.xml","3D channel flow, Hex elements, par(2), P=8", 2);
+    ExecuteParallel("IncNavierStokesSolver","Test_Tet_channel_m8_par.xml","3D channel flow, Tet elements, par(2), P=8", 2);
+    ExecuteParallel("IncNavierStokesSolver","Test_ChanFlow_m3_par.xml","3D channel flow, 2D, par(2), P=8", 2);
+#endif
     if (tests_failed && !quiet)
     {
         std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;
@@ -152,7 +159,7 @@ int main(int argc, char* argv[])
     return tests_failed;
 }
 
-void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
+void RunL2RegressionTest(std::string Demo, std::string input, std::string info, unsigned int np)
 {
     tests_total++;
     if (!quiet)
@@ -160,7 +167,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
         std::cout << "TESTING: " << Demo << std::flush;
     }
 	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/bin/";
-    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
+    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/",np);
     int fail;
     
 	std::string basename = input;
@@ -228,11 +235,11 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     system(cleanup.c_str());
 };
 
-void MakeOkFile(std::string Demo, std::string input,				std::string info)
+void MakeOkFile(std::string Demo, std::string input,				std::string info, unsigned int np)
 {
     tests_total++;
 	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/bin/";
-    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
+    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/",np);
     int fail;
     
     std::string basename = input;

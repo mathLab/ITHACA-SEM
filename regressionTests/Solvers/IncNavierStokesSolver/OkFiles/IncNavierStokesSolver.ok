@@ -1,36 +1,36 @@
 IncNavierStokesSolver
 ==========================================
 Test_ChanFlow_m3.xml
-L 2 error (variable u) : 4.50814e-16
-L inf error (variable u) : 3.9968e-15
+L 2 error (variable u) : 4.80472e-16
+L inf error (variable u) : 4.57967e-15
 L 2 error (variable v) : 0
-L inf error (variable v) : 3.14264e-16
-L 2 error (variable p) : 6.75338e-15
-L inf error (variable p) : 4.4631e-14
+L inf error (variable v) : 3.4245e-16
+L 2 error (variable p) : 7.48275e-15
+L inf error (variable p) : 4.90719e-14
 ----------------------------------------
 Test_ChanFlow_m8_BodyForce.xml
 L 2 error (variable u) : 9.90432e-06
 L inf error (variable u) : 1.40068e-05
 L 2 error (variable v) : 0
-L inf error (variable v) : 5.41638e-16
-L 2 error (variable p) : 7.49767e-15
-L inf error (variable p) : 4.90237e-14
+L inf error (variable v) : 4.82146e-16
+L 2 error (variable p) : 5.171e-14
+L inf error (variable p) : 8.575e-14
 ----------------------------------------
 Test_ChanFlow_m8.xml
-L 2 error (variable u) : 5.09484e-16
-L inf error (variable u) : 1.09357e-14
-L 2 error (variable v) : 2.35822e-16
-L inf error (variable v) : 1.03989e-15
-L 2 error (variable p) : 1.52545e-14
-L inf error (variable p) : 4.70735e-14
+L 2 error (variable u) : 4.22105e-16
+L inf error (variable u) : 1.32394e-14
+L 2 error (variable v) : 2.38413e-16
+L inf error (variable v) : 1.26173e-15
+L 2 error (variable p) : 1.10131e-14
+L inf error (variable p) : 7.06102e-14
 ----------------------------------------
 Test_ChanFlow2D_bcsfromfiles.xml
-L 2 error (variable u) : 2.13768e-13
-L inf error (variable u) : 7.8515e-13
-L 2 error (variable v) : 2.80336e-13
-L inf error (variable v) : 2.86415e-13
-L 2 error (variable p) : 1.04507e-10
-L inf error (variable p) : 2.27695e-10
+L 2 error (variable u) : 1.92617e-13
+L inf error (variable u) : 5.32907e-13
+L 2 error (variable v) : 2.23871e-13
+L inf error (variable v) : 2.38208e-13
+L 2 error (variable p) : 4.90244e-11
+L inf error (variable p) : 6.19692e-11
 ----------------------------------------
 Test_KovaFlow_m3.xml
 L 2 error (variable u) : 0.343606
@@ -71,23 +71,23 @@ L 2 error (variable v) : 0.000172531
 L inf error (variable v) : 0.000353995
 ----------------------------------------
 Test_ChanFlow_m8_singular.xml
-L 2 error (variable u) : 5.32035e-15
-L inf error (variable u) : 2.89907e-14
-L 2 error (variable v) : 6.0642e-15
-L inf error (variable v) : 2.35696e-14
-L 2 error (variable p) : 1.35399e-12
-L inf error (variable p) : 1.76356e-12
+L 2 error (variable u) : 3.48952e-15
+L inf error (variable u) : 1.89015e-14
+L 2 error (variable v) : 3.91273e-15
+L inf error (variable v) : 1.58072e-14
+L 2 error (variable p) : 1.77585e-12
+L inf error (variable p) : 1.91747e-12
 ----------------------------------------
 Test_ChanFlow_LinNS_m8.xml
-L 2 error (variable u) : 2.58222e-14
-L inf error (variable u) : 2.79832e-13
-L 2 error (variable v) : 1.35898e-14
-L inf error (variable v) : 5.8052e-14
+L 2 error (variable u) : 3.94781e-14
+L inf error (variable u) : 7.17898e-13
+L 2 error (variable v) : 2.75246e-14
+L inf error (variable v) : 1.98533e-13
 ----------------------------------------
 ChanStability.xml
-L 2 error (variable u) : 0.0372934
+L 2 error (variable u) : 0.0372818
 L inf error (variable u) : 0
-L 2 error (variable v) : 0.0228499
+L 2 error (variable v) : 0.0228428
 L inf error (variable v) : 0
 L 2 error (variable p) : 0.0123609
 L inf error (variable p) : 0
@@ -95,10 +95,10 @@ L inf error (variable p) : 0
 ChanStability_adj.xml
 L 2 error (variable u) : 2.58928
 L inf error (variable u) : 1
-L 2 error (variable v) : 0.00334392
-L inf error (variable v) : 0.0028285
+L 2 error (variable v) : 0.00336105
+L inf error (variable v) : 0.00284298
 L 2 error (variable p) : 0.00596128
-L inf error (variable p) : 0.00590453
+L inf error (variable p) : 0.00593204
 ----------------------------------------
 ChanStability_Ar.xml
 L 2 error (variable u) : 0.0263526
@@ -125,9 +125,9 @@ L 2 error (variable p) : 0.191912
 L inf error (variable p) : 0
 ----------------------------------------
 bfs_tg.xml
-L 2 error (variable u) : 0.0212141
+L 2 error (variable u) : 0.0187646
 L inf error (variable u) : 0
-L 2 error (variable v) : 0.0220853
+L 2 error (variable v) : 0.0195351
 L inf error (variable v) : 0
 L 2 error (variable p) : 0.0157668
 L inf error (variable p) : 0
@@ -147,28 +147,28 @@ L 2 error (variable w) : 228.772
 L inf error (variable w) : 0
 ----------------------------------------
 Test_SinCos_LinNS_3DHom1D.xml
-L 2 error (variable u) : 6.9142e-16
-L inf error (variable u) : 5.61854e-15
-L 2 error (variable v) : 8.41062e-16
-L inf error (variable v) : 3.55271e-15
+L 2 error (variable u) : 5.58989e-16
+L inf error (variable u) : 2.33147e-15
+L 2 error (variable v) : 7.65096e-16
+L inf error (variable v) : 3.9968e-15
 L 2 error (variable w) : 1.15463e-05
 L inf error (variable w) : 1.11177e-05
 ----------------------------------------
 Test_2DFlow_lineforcing_bcfromfile.xml
-L 2 error (variable u) : 0.612372
+L 2 error (variable u) : 0.612387
 L inf error (variable u) : 1.5
-L 2 error (variable v) : 2.34962e-14
-L inf error (variable v) : 1.46978e-13
+L 2 error (variable v) : 5.22901e-14
+L inf error (variable v) : 2.37985e-13
 ----------------------------------------
 Test_ChanFlow_3DH1D_MVM.xml
-L 2 error (variable u) : 5.27625e-16
-L inf error (variable u) : 4.57967e-15
-L 2 error (variable v) : 0
-L inf error (variable v) : 3.19137e-16
-L 2 error (variable w) : 3.16555e-16
-L inf error (variable w) : 6.4962e-16
-L 2 error (variable p) : 5.88207e-14
-L inf error (variable p) : 1.27898e-13
+L 2 error (variable u) : 5.68523e-16
+L inf error (variable u) : 2.91434e-15
+L 2 error (variable v) : 1.06109e-16
+L inf error (variable v) : 3.58774e-16
+L 2 error (variable w) : 0
+L inf error (variable w) : 1.58877e-16
+L 2 error (variable p) : 6.88587e-14
+L inf error (variable p) : 2.32703e-13
 ----------------------------------------
 Test_ChanFlow_3DH1D_FFT.xml
 L 2 error (variable u) : 3.61746e-16
@@ -182,13 +182,13 @@ L inf error (variable p) : 6.39488e-14
 ----------------------------------------
 Test_ChanFlow_3DH2D_MVM.xml
 L 2 error (variable u) : 0
-L inf error (variable u) : 1.84649e-16
-L 2 error (variable v) : 5.19877e-16
-L inf error (variable v) : 1.60982e-15
+L inf error (variable u) : 6.46836e-17
+L 2 error (variable v) : 5.19758e-16
+L inf error (variable v) : 1.13798e-15
 L 2 error (variable w) : 0
-L inf error (variable w) : 6.72284e-18
-L 2 error (variable p) : 3.636e-15
-L inf error (variable p) : 7.01649e-15
+L inf error (variable w) : 2.21338e-17
+L 2 error (variable p) : 1.74242e-15
+L inf error (variable p) : 3.14746e-15
 ----------------------------------------
 Test_ChanFlow_3DH2D_FFT.xml
 L 2 error (variable u) : 0
@@ -211,12 +211,12 @@ L 2 error (variable p) : 8.55847e-05
 L inf error (variable p) : 0.000513632
 ----------------------------------------
 Test_ChanFlow_m3_SKS.xml
-L 2 error (variable u) : 5.1101e-16
-L inf error (variable u) : 4.71845e-15
+L 2 error (variable u) : 4.90422e-16
+L inf error (variable u) : 4.41314e-15
 L 2 error (variable v) : 0
-L inf error (variable v) : 3.23096e-16
-L 2 error (variable p) : 9.24888e-15
-L inf error (variable p) : 6.63913e-14
+L inf error (variable v) : 3.50915e-16
+L 2 error (variable p) : 7.68812e-15
+L inf error (variable p) : 4.52971e-14
 ----------------------------------------
 Test_KovaFlow_3DH1D_P5_20modes_SKS_MVM.xml
 L 2 error (variable u) : 4.2366e-05
@@ -230,40 +230,51 @@ L inf error (variable p) : 0.000565207
 ----------------------------------------
 Test_Hex_channel_m3.xml
 L 2 error (variable u) : 0
-L inf error (variable u) : 1.78015e-16
+L inf error (variable u) : 1.70737e-16
 L 2 error (variable v) : 0
-L inf error (variable v) : 1.95186e-16
-L 2 error (variable w) : 4.86964e-16
-L inf error (variable w) : 9.10383e-15
-L 2 error (variable p) : 6.69157e-15
-L inf error (variable p) : 6.83897e-14
+L inf error (variable v) : 2.73889e-16
+L 2 error (variable w) : 3.97937e-16
+L inf error (variable w) : 5.77316e-15
+L 2 error (variable p) : 7.17756e-15
+L inf error (variable p) : 4.66294e-14
 ----------------------------------------
 Test_Hex_channel_m8.xml
-L 2 error (variable u) : 2.48774e-15
-L inf error (variable u) : 1.71195e-14
-L 2 error (variable v) : 1.48847e-15
-L inf error (variable v) : 1.68209e-14
-L 2 error (variable w) : 7.45701e-15
-L inf error (variable w) : 1.22669e-12
-L 2 error (variable p) : 2.57963e-13
-L inf error (variable p) : 2.69917e-12
+L 2 error (variable u) : 2.43239e-15
+L inf error (variable u) : 1.39852e-14
+L 2 error (variable v) : 1.29949e-15
+L inf error (variable v) : 1.37616e-14
+L 2 error (variable w) : 7.46193e-15
+L inf error (variable w) : 9.62064e-13
+L 2 error (variable p) : 3.57147e-13
+L inf error (variable p) : 2.72737e-12
 ----------------------------------------
 Test_Tet_channel_m3.xml
 L 2 error (variable u) : 0
-L inf error (variable u) : 9.77232e-17
+L inf error (variable u) : 9.23433e-17
 L 2 error (variable v) : 0
-L inf error (variable v) : 1.3292e-16
+L inf error (variable v) : 1.66172e-16
 L 2 error (variable w) : 0
-L inf error (variable w) : 6.93889e-16
-L 2 error (variable p) : 3.10062e-15
-L inf error (variable p) : 2.13163e-14
+L inf error (variable w) : 6.10623e-16
+L 2 error (variable p) : 9.16134e-15
+L inf error (variable p) : 2.66454e-14
 ----------------------------------------
 Test_Tet_channel_m8.xml
-L 2 error (variable u) : 2.49266e-16
-L inf error (variable u) : 2.13107e-15
-L 2 error (variable v) : 2.53394e-16
-L inf error (variable v) : 2.12598e-15
-L 2 error (variable w) : 1.4014e-15
-L inf error (variable w) : 3.2141e-14
-L 2 error (variable p) : 1.95412e-14
-L inf error (variable p) : 4.68514e-13
+L 2 error (variable u) : 3.66381e-16
+L inf error (variable u) : 3.32493e-15
+L 2 error (variable v) : 3.93779e-16
+L inf error (variable v) : 3.41035e-15
+L 2 error (variable w) : 2.28948e-15
+L inf error (variable w) : 3.69149e-14
+L 2 error (variable p) : 8.19162e-14
+L inf error (variable p) : 4.79616e-13
+----------------------------------------
+Test_Prism_channel_m6.xml
+L 2 error (variable u) : 0
+L inf error (variable u) : 5.03534e-16
+L 2 error (variable v) : 0
+L inf error (variable v) : 5.40551e-16
+L 2 error (variable w) : 2.77932e-16
+L inf error (variable w) : 6.43929e-15
+L 2 error (variable p) : 1.08592e-14
+L inf error (variable p) : 6.57252e-14
+----------------------------------------

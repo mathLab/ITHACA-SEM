@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     
     //Test Channel Flow
     Execute("IncNavierStokesSolver","Test_ChanFlow_m3.xml","Channel Flow P=3");
-	Execute("IncNavierStokesSolver","Test_ChanFlow_m3_SKS.xml","Channel Flow P=3 - Skew-Symmetric advection");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_m3_SKS.xml","Channel Flow P=3 - Skew-Symmetric advection");
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8.xml","Channel Flow P=8");
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8_BodyForce.xml","Channel Flow P=8 BodyForce");    
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8_singular.xml","Channel Flow P=8 Singularity Check");
@@ -112,33 +112,34 @@ int main(int argc, char* argv[])
     //Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","bfs_tg.xml","Transient Growth (Modified Arnoldi): Backward-facing step");
 	
-	//Test 3D homogeneous 1D approach, velocity correction scheme, Laminar Channel Flow
-	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_MVM.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (MVM)");
-	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_MVM.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (MVM)");
-	Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes (MVM)");
-	Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_SKS_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes - Skew-Symmetric advection(MVM)");
+    //Test 3D homogeneous 1D approach, velocity correction scheme, Laminar Channel Flow
+    Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_MVM.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (MVM)");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_MVM.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (MVM)");
+    Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes (MVM)");
+    Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_SKS_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes - Skew-Symmetric advection(MVM)");
 #ifdef NEKTAR_USING_FFTW
-	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_FFT.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (FFT)");
-	Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_FFT.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (FFT)");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_FFT.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (FFT)");
+    Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_FFT.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (FFT)");
 #endif
 	
 #ifdef NEKTAR_USING_ARPACK
     //same stability tests with Arpack
-	/// @todo Fix ChanStability_Ar regression test to work on all architectures
+    /// @todo Fix ChanStability_Ar regression test to work on all architectures
 //	Execute("IncNavierStokesSolver","ChanStability_Ar.xml","Linear stability (Arpack): Channel");
 //	Execute("IncNavierStokesSolver","ChanStability_adj_Ar.xml","Adjoint stability (Arpack): Channel");
-	Execute("IncNavierStokesSolver","bfs_tg-AR.xml","Transient Growth (Arpack): Backward-facing step");
+    Execute("IncNavierStokesSolver","bfs_tg-AR.xml","Transient Growth (Arpack): Backward-facing step");
 //	Execute("IncNavierStokesSolver","ChanStability_Coupled_3D.xml","3D Linear Stability (Arpack): Channel Flow");
-
-	//Test Modified Arnoldi direct stability  (CoupledSolver)
-	//Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
+    
+    //Test Modified Arnoldi direct stability  (CoupledSolver)
+    //Execute("IncNavierStokesSolver","ChanStability_Coupled.xml","Linear stability with coupled solver (Arpack): Channel");
 #endif
-
+    
     //Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","Test_Hex_channel_m3.xml","3D channel flow, Hexahedral elements, P=3");
     Execute("IncNavierStokesSolver","Test_Hex_channel_m8.xml","3D channel flow, Hexahedral elements, P=8");
     Execute("IncNavierStokesSolver","Test_Tet_channel_m3.xml","3D channel flow, Tetrahedral elements, P=3");
     Execute("IncNavierStokesSolver","Test_Tet_channel_m8.xml","3D channel flow, Tetrahedral elements, P=8");
+    Execute("IncNavierStokesSolver","Test_Prism_channel_m6.xml","3D channel flow, Prismatic elements, P=6");
 
     if (tests_failed && !quiet)
     {

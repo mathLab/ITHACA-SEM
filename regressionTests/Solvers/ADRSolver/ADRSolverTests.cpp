@@ -126,6 +126,12 @@ int main(int argc, char* argv[])
 
     Execute("ADRSolver","Test_Advection_m14_DG_Order4.xml","2D unsteady DG advection, order 4, P=14");
 
+    Execute("ADRSolver","Test_Advection3D_m12_DG_hex.xml","3D unsteady DG advection, hexahedra, order 4, P=12");
+
+    Execute("ADRSolver","Test_Advection3D_m12_DG_tet.xml","3D unsteady DG advection, tetrahedra, order 4, P=12");
+
+    Execute("ADRSolver","Test_Advection3D_m12_DG_prism.xml","3D unsteady DG advection, prisms, order 4, P=14");
+
     Execute("ADRSolver","Test_ImDiffusion_m6.xml","2D unsteady DG implicit diffusion, order 3, P=6");
 
     Execute("ADRSolver","Test_ImDiffusion_m12.xml","2D unsteady DG implicit diffusion, order 3, P=12");

@@ -25,8 +25,8 @@ L 2 error (variable u) : 0.00194795
 L inf error (variable u) : 0.00302271
 ----------------------------------------
 Test_Helmholtz3D_modal.xml
-L 2 error (variable u) : 3.94573e-07
-L inf error (variable u) : 1.17288e-06
+L 2 error (variable w) : 3.94573e-07
+L inf error (variable w) : 1.17288e-06
 ----------------------------------------
 Test_Helmholtz3D_nodal.xml
 L 2 error (variable u) : 1.62207e-08
@@ -65,8 +65,8 @@ L 2 error (variable u) : 3.62709e-05
 L inf error (variable u) : 2.4442e-05
 ----------------------------------------
 Test_Advection1D_m14_Order4.xml
-L 2 error (variable u) : 8.1652e-11
-L inf error (variable u) : 3.02622e-10
+L 2 error (variable u) : 8.15608e-11
+L inf error (variable u) : 3.03012e-10
 ----------------------------------------
 Test_Advection_m12_Order1.xml
 L 2 error (variable u) : 0.0118581
@@ -77,8 +77,8 @@ L 2 error (variable u) : 9.55749e-05
 L inf error (variable u) : 9.27095e-05
 ----------------------------------------
 Test_Advection_m14_Order4.xml
-L 2 error (variable u) : 8.38724e-09
-L inf error (variable u) : 5.32505e-08
+L 2 error (variable u) : 8.38713e-09
+L inf error (variable u) : 5.32497e-08
 ----------------------------------------
 Test_Advection_m12_DG_Order1.xml
 L 2 error (variable u) : 0.0118577
@@ -89,7 +89,7 @@ L 2 error (variable u) : 9.18608e-05
 L inf error (variable u) : 9.63598e-05
 ----------------------------------------
 Test_Advection_m14_DG_Order4.xml
-L 2 error (variable u) : 3.88022e-09
+L 2 error (variable u) : 3.88016e-09
 L inf error (variable u) : 6.24598e-08
 ----------------------------------------
 Test_ImDiffusion_m6.xml
@@ -143,4 +143,16 @@ L inf error (variable u) : 1.02378e-07
 Test_UnsteadyAdvectionDiffusion_3DHomo2D_FFT.xml
 L 2 error (variable u) : 5.48207e-09
 L inf error (variable u) : 1.39886e-08
+----------------------------------------
+Test_Advection3D_m12_DG_hex.xml
+L 2 error (variable u) : 3.1094e-08
+L inf error (variable u) : 1.3031e-06
+----------------------------------------
+Test_Advection3D_m12_DG_tet.xml
+L 2 error (variable u) : 4.00034e-08
+L inf error (variable u) : 5.92099e-06
+----------------------------------------
+Test_Advection3D_m12_DG_prism.xml
+L 2 error (variable u) : 6.72764e-08
+L inf error (variable u) : 1.01404e-05
 ----------------------------------------

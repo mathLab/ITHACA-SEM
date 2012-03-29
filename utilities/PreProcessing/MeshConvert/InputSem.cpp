@@ -369,7 +369,6 @@ namespace Nektar
                             NodeSharedPtr n = boost::shared_ptr<Node>(
                                 new Node(nodeId, x, y, 0.0));
                             edgeNodes.push_back(n);
-                            m->vertexSet.insert(n);
                         }
                     }
                     
@@ -384,7 +383,6 @@ namespace Nektar
                             NodeSharedPtr n = boost::shared_ptr<Node>(
                                 new Node(nodeId, x, y, 0.0));
                             edgeNodes.push_back(n);
-                            m->vertexSet.insert(n);
                         }
                     }
                     

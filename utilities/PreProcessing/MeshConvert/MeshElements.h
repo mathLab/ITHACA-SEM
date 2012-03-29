@@ -106,21 +106,17 @@ namespace Nektar
             /// Define node equality based on coordinate.
             bool operator==(const Node& pSrc)
             {
-                return ((x==pSrc.x) && (y==pSrc.y) && (z==pSrc.z));
+                return x == pSrc.x && y == pSrc.y && z == pSrc.z;
             }
 
             /// Generate a %SpatialDomains::VertexComponent for this node.
             SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {
-                if (!m_geom)
-                {
-                    m_geom = MemoryManager<SpatialDomains::VertexComponent>::
-                        AllocateSharedPtr(coordDim,id,x,y,z);
-                }
-                
+                m_geom = MemoryManager<SpatialDomains::VertexComponent>::
+                    AllocateSharedPtr(coordDim,id,x,y,z);
                 return m_geom;
             }
-
+            
             /// ID of node.
             unsigned int id;
             /// X-coordinate.
@@ -150,9 +146,9 @@ namespace Nektar
             std::size_t operator()(NodeSharedPtr const& p) const
             {
                 std::size_t seed = 0;
-                boost::hash_combine(seed, p -> x);
-                boost::hash_combine(seed, p -> y);
-                boost::hash_combine(seed, p -> z);
+                boost::hash_combine(seed, p->x);
+                boost::hash_combine(seed, p->y);
+                boost::hash_combine(seed, p->z);
                 return seed;
             }
         };
@@ -206,11 +202,6 @@ namespace Nektar
             /// Generate a SpatialDomains::SegGeom object for this edge.
             SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 // Create edge vertices.
                 SpatialDomains::VertexComponentSharedPtr p[2];
                 p[0] = n1->GetGeom(coordDim);
@@ -370,11 +361,6 @@ namespace Nektar
             /// SpatialDomains::QuadGeom for this element.
             SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 int nEdge = edgeList.size();
                 
                 SpatialDomains::SegGeomSharedPtr edges[4];
@@ -550,6 +536,10 @@ namespace Nektar
             std::vector<FaceSharedPtr> GetFaceList() const {
                 return face;
             }
+            /// Access the list of volume nodes.
+            std::vector<NodeSharedPtr> GetVolumeNodes() const {
+                return volumeNodes;
+            }
             /// Access the list of tags associated with this element.
             std::vector<int> GetTagList() const {
                 return m_taglist;
@@ -633,8 +623,14 @@ namespace Nektar
             /// Generate a Nektar++ geometry object for this element.
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
             {
-                ASSERTL0(false, "This function should be implemented on a shape level.");
+                ASSERTL0(false, "This function should be implemented at a shape level.");
                 return boost::shared_ptr<SpatialDomains::Geometry>();
+            }
+            int GetMaxOrder();
+            /// Complete this object.
+            virtual void Complete(int order)
+            {
+                ASSERTL0(false, "This function should be implemented at a shape level.");
             }
 
         protected:
@@ -654,6 +650,8 @@ namespace Nektar
             std::vector<EdgeSharedPtr> edge;
             /// List of element faces.
             std::vector<FaceSharedPtr> face;
+            /// List of element volume nodes.
+            std::vector<NodeSharedPtr> volumeNodes;
             /// Pointer to the corresponding edge if element is a 2D boundary.
             EdgeSharedPtr m_edgeLink;
             /// Pointer to the corresponding face if element is a 3D boundary.
@@ -784,6 +782,10 @@ namespace Nektar
             std::string                inFilename;
             /// Intended target.
             std::string                outFilename;
+	    /// Map for Nektar prism -> tet splitting.
+	    ///
+	    /// @todo Make this not a hack.
+	    std::map<int, pair<int,int> > splitMap;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
             unsigned int               GetNumElements();
@@ -941,7 +943,8 @@ namespace Nektar
             virtual ~Tetrahedron() {}
 
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-
+            virtual void Complete(int order);
+            
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
             /**
@@ -985,6 +988,7 @@ namespace Nektar
             virtual ~Prism() {}
 
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+            virtual void Complete(int order);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
 

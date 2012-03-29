@@ -324,7 +324,7 @@ namespace Nektar
             tmp[  8] = ElmtConfig(eLine,           2,  true, false);
             tmp[  9] = ElmtConfig(eTriangle,       2,  true, false);
             tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true, false);
-            tmp[ 11] = ElmtConfig(eTetrahedron,    2, false, false);
+            tmp[ 11] = ElmtConfig(eTetrahedron,    2,  true,  true);
             tmp[ 12] = ElmtConfig(eHexahedron,     2,  true,  true);
             tmp[ 13] = ElmtConfig(ePrism,          2,  true, false);
             tmp[ 15] = ElmtConfig(ePoint,          1,  true, false);

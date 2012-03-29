@@ -50,33 +50,5 @@
  * including the selection of the preferred expansion basis, its
  * polynomial order and the preferred numerical quadrature.
  *
- * @section sectionMainContents Contents
- *
- * @subsection subsectionMainContentBackground Background formulation
- * - @subpage pageIntroduction
- * - @subpage pageConnectivity
- *
- * @subsection subsectionMainContentLibraries Libraries
- * - @subpage pageStructure
- * - @subpage pageStdRegions (Nektar#StdRegions)
- * - @subpage pageSpatialDomains (Nektar#SpatialDomains)
- * - @subpage pageLocalRegions (Nektar#LocalRegions)
- * - @subpage pageMultiRegions (Nektar#MultiRegions)
- * - @subpage pageLibUtilities (Nektar#LibUtilities)
- *
- * @subsection subsectionMainContentSolvers Applications
- * - @subpage pageXML
- * - @subpage pageSolvers
- *
- * @subsection subsectionMainContentDevelopment Development pages
- * - @subpage pageRepositoryUsage
- * - @subpage pageCodeStandard
- * - @subpage todo
- * - @subpage deprecated
- *
- * @subsection subsectionMainContentAppendix Appendices
- * - @subpage pageOptimisation
- * - @subpage pagePolylib
- *
  * The website of the Nektar++ project can be found on: http://www.nektar.info
  */

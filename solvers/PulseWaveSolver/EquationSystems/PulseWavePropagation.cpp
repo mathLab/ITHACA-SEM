@@ -300,7 +300,7 @@ namespace Nektar
 	/**
 	 *  Calculates the third term of the weak form (1): numerical flux at boundary
 	 *  \f$ \left[ \mathbf{\psi}^{\delta} \cdot \{ \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta})
-	 *  \} \right]_{x_e^l}^{x_eû} \right] \f$
+	 *  \} \right]_{x_e^l}^{x_eû} \f$
 	 */
     void PulseWavePropagation::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 											   Array<OneD, Array<OneD, NekDouble> > &numflux)

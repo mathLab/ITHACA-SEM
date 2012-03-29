@@ -82,7 +82,7 @@ namespace Nektar
         void CopyFile(string file1end, string file2end);
 
 
-        bool CheckEigIsStationary(void);
+        bool CheckEigIsStationary(bool reset = false);
         bool CheckIfAtNeutralPoint(void);
         void UpdateAlpha(int n);
         void UpdateWaveForceMag(int n);

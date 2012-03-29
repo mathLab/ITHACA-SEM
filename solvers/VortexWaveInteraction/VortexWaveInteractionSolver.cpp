@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
                 // Execute Another loop so that not same initial conditions as last iteration
                 vwi.ExecuteLoop();
             }
-
         }
     }
+    
     catch (const std::runtime_error&)
     {
         return 1;
@@ -113,6 +113,9 @@ void Mvdir(string dir, NekDouble dir_ending)
 
 void DoFixedForcingIteration(VortexWaveInteraction &vwi)
 {
+
+    // Reset eigenvalue checker in case used in previous iterations 
+    vwi.CheckEigIsStationary(true);
 
     switch(vwi.GetVWIIterationType())
     {

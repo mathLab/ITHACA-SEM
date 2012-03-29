@@ -55,26 +55,26 @@ namespace Nektar
         VWIFilenames.push_back(VWICondFile);
 
         // Create Incompressible NavierStokesSolver session reader.
-        m_sessionVWI = LibUtilities::SessionReader::CreateInstance(argc, argv, VWIFilenames);
+        m_sessionVWI = LibUtilities::SessionReader::CreateInstance(argc, argv, 
+                                                                   VWIFilenames);
         
-
-        m_sessionVWI->LoadParameter("AlphaStep",m_alphaStep,0.05);
+        m_sessionVWI->LoadParameter("AlphaStep",              m_alphaStep,0.05);
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
-        m_sessionVWI->LoadParameter("EigenvalueRelativeTol",m_eigRelTol,1e-3);
-        m_sessionVWI->LoadParameter("NeutralPointTolerance",m_neutralPointTol,1e-4);
-        m_sessionVWI->LoadParameter("MaxOuterIterations",m_maxOuterIterations,100);
+        m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-3);
+        m_sessionVWI->LoadParameter("NeutralPointTolerance",  m_neutralPointTol,1e-4);
+        m_sessionVWI->LoadParameter("MaxOuterIterations",     m_maxOuterIterations,100);
         
-        m_sessionVWI->LoadParameter("StartIteration", m_iterStart, 0);
-        m_sessionVWI->LoadParameter("EndIteration", m_iterEnd, 0);
+        m_sessionVWI->LoadParameter("StartIteration",m_iterStart, 0);
+        m_sessionVWI->LoadParameter("EndIteration",  m_iterEnd, 0);
 
-        m_sessionVWI->LoadParameter("WaveForceMagStep",m_waveForceMagStep,0.01);
+        m_sessionVWI->LoadParameter("WaveForceMagStep",   m_waveForceMagStep,0.01);
         m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
-        m_sessionVWI->LoadParameter("RollForceScale",m_rollForceScale,1.0);
+        m_sessionVWI->LoadParameter("RollForceScale",     m_rollForceScale,1.0);
         
         if(m_sessionVWI->DefinesSolverInfo("DeltaFcnApprox"))
         {
             m_deltaFcnApprox = true;
-            m_sessionVWI->LoadParameter("DeltaFcnDecay",m_deltaFcnDecay,1.0/500);
+            m_sessionVWI->LoadParameter("DeltaFcnDecay", m_deltaFcnDecay,1.0/500);
         }
         else
         {
@@ -293,7 +293,7 @@ namespace Nektar
                     m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
                     
                     // Scale forcing
-                    int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+                    int npoints = m_solverRoll->UpdateForces()[0]->GetNpoints();
                     for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
                     {
                         Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
@@ -307,7 +307,7 @@ namespace Nektar
             else // use internal definition of forcing in m_vwiForcing
             {
                 // Scale forcing
-                int npoints = m_solverRoll->UpdateForces()[0]->GetPhys().num_elements();
+                int npoints = m_solverRoll->UpdateForces()[0]->GetNpoints();
                 Array<OneD, NekDouble> physForce(npoints);
                 for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
                 {
@@ -315,7 +315,12 @@ namespace Nektar
                     Vmath::Smul(npoints,m_rollForceScale,physForce,1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
                 }
 
+                // Shift m_vwiForcing for new restart in case of relaxation 
+                int ncoeffs = m_solverRoll->UpdateForces()[0]->GetNcoeffs();
+                Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
+                Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
             }
+
             // Execute Roll 
             cout << "Executing Roll solver" << endl;
             m_solverRoll->DoSolve();
@@ -1056,18 +1061,17 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
             }
 	}
 
-
-
-
-
-
-
     }
 
-    bool VortexWaveInteraction::CheckEigIsStationary(void)
+    bool VortexWaveInteraction::CheckEigIsStationary(bool reset)
     {
         static NekDouble previous_real_evl = -1.0; 
         static NekDouble previous_imag_evl = -1.0; 
+     
+        if(reset)
+        {
+            previous_real_evl = -1.0;
+        }
         
         if(previous_real_evl == -1.0)
         {

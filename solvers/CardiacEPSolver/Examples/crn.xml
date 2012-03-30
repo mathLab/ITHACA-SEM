@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<NEKTAR>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
     <GEOMETRY DIM="2" SPACE="2">
+
         <VERTEX>
             <V ID="0">2.285e+00 3.636e-01 0.000e+00</V>
             <V ID="1">2.083e+00 0.000e+00 0.000e+00</V>
@@ -510,7 +513,6 @@
             <P> NumSteps       = FinTime/TimeStep            </P>
             <P> IO_CheckSteps  = 0.1/TimeStep      </P>
             <P> IO_InfoSteps   = 1              </P>
-            <P> IO_HistorySteps = 0.02/TimeStep </P>
             <P> StimulusDuration = 2.0 </P> <!-- ms -->
             <P> StimulusStrength = 3 </P>
             <P> ix = 1.0 </P>
@@ -553,38 +555,30 @@
             <E VAR="u" VALUE="-81.19" />
         </FUNCTION>
 
-        <FUNCTION NAME="d00">
-            <E VAR="intensity" VALUE="0.13341" />
-        </FUNCTION>
-
-        <FUNCTION NAME="d11">
-            <E VAR="intensity" VALUE="0.13341" />
-        </FUNCTION>
-
-        <FUNCTION NAME="d22">
+        <FUNCTION NAME="IsotropicConductivity">
             <E VAR="intensity" VALUE="0.13341" />
         </FUNCTION>
 
         <EXPRESSIONS>
             <E NAME="P" VALUE="1.0/(1.0 + exp( 32*(x-1)))" />
-            <E NAME="Q" VALUE="(-tanh((is*x-ix+ir)*(is*x-ix-ir)+(is*y-iy+ir)*   (is*y-iy-ir)+(is*z-iz+ir)*(is*z-iz-ir))/2.0+0.5)" />
-            <E NAME="R" VALUE="exp(-4*(t-D)*(t-D))" />
         </EXPRESSIONS>
 
         <FUNCTION NAME="Stimulus">
             <E VAR="u" VALUE="C*P" />
-            <!--<E VAR="u" VALUE="(-tanh((is*x-ix+ir)*(is*x-ix-ir)+(is*y-iy+ir)*
-                (is* y-iy-ir)+(is*z-iz+ir)*(is*z-iz-ir))/2.0+0.5)*100-81" />-->
-            <!--<E VAR="u" VALUE="100.0/(1.0 + exp( 32*(x-2.0)))" />-->
         </FUNCTION>
     </CONDITIONS>
 
-    <HISTORY>
-        <H ID="0">0.01 0.5 0.0</H>
-        <H ID="1">2.285e+00 3.636e-01 0.000e+00</H>
-        <H ID="2">5.194e+00 6.304e-01 0.000e+00</H>
-        <H ID="3">7.500e+00 1.000e+00 0.000e+00</H>
-        <H ID="4">1.000e+01 5.000e-01 0.000e+00</H>
-    </HISTORY>
-
+    <FILTERS>
+        <FILTER TYPE="HistoryPoints">
+            <PARAM NAME="OutputFile">crn.his</PARAM>
+            <PARAM NAME="OutputFrequency">1</PARAM>
+            <PARAM NAME="Points">
+                0.01 0.5 0.0
+                2.285e+00 3.636e-01 0.000e+00
+                5.194e+00 6.304e-01 0.000e+00
+                7.500e+00 1.000e+00 0.000e+00
+                1.000e+01 5.000e-01 0.000e+00
+            </PARAM>
+        </FILTER>
+    </FILTERS>
 </NEKTAR>

@@ -59,7 +59,11 @@ namespace Nektar
                     "Missing parameter 'OutputFile'.");
             m_outputFile = pParams.find("OutputFile")->second;
         }
-        m_outputFile += ".his";
+        if (!(m_outputFile.length() >= 4 
+                && m_outputFile.substr(m_outputFile.length() - 4) == ".his"))
+        {
+            m_outputFile += ".his";
+        }
 
         if (pParams.find("OutputFrequency") == pParams.end())
         {

@@ -579,12 +579,22 @@
         </FUNCTION>
     </CONDITIONS>
 
-    <HISTORY>
-        <H ID="0">0.0 0.5 0.0</H>
-        <H ID="1">2.0 0.5 0.000e+00</H>
-        <H ID="2">4.0 0.5 0.000e+00</H>
-        <H ID="3">6.0 0.5 0.000e+00</H>
-        <H ID="4">8.0 0.5 0.000e+00</H>
-    </HISTORY>
+    <FILTERS>
+        <FILTER TYPE="HistoryPoints">
+            <PARAM NAME="OutputFile">tt06epi.his</PARAM>
+            <PARAM NAME="OutputFrequency">10</PARAM>
+            <PARAM NAME="Points">
+                1 0.5 0
+                2 0.5 0
+                3 0.5 0
+                4 0.5 0
+                5 0.5 0
+                6 0.5 0
+                7 0.5 0
+                8 0.5 0
+                9 0.5 0
+            </PARAM>
+        </FILTER>
+    </FILTERS>
 
 </NEKTAR>

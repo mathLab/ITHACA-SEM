@@ -308,3 +308,23 @@ L inf error (variable v) : 7.92564e-13
 L 2 error (variable p) : 7.63786e-11
 L inf error (variable p) : 1.95849e-10
 ----------------------------------------
+Test_ChanFlow_3DH1D_Parallel_mode1.xml
+L 2 error (variable u) : 4.19442e-14
+L inf error (variable u) : 3.25184e-13
+L 2 error (variable v) : 2.31168e-13
+L inf error (variable v) : 3.63308e-13
+L 2 error (variable w) : 0
+L inf error (variable w) : 1.22076e-18
+L 2 error (variable p) : 5.34488e-11
+L inf error (variable p) : 1.47263e-10
+----------------------------------------
+Test_ChanFlow_3DH1D_Parallel_mode2.xml
+L 2 error (variable u) : 6.0936e-14
+L inf error (variable u) : 3.31513e-13
+L 2 error (variable v) : 3.30583e-13
+L inf error (variable v) : 3.67353e-13
+L 2 error (variable w) : 0
+L inf error (variable w) : 2.04232e-19
+L 2 error (variable p) : 7.65165e-11
+L inf error (variable p) : 1.49093e-10
+----------------------------------------

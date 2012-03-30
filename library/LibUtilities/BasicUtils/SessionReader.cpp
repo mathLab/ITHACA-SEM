@@ -1110,10 +1110,20 @@ namespace Nektar
             ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
             ReadParameters(e);
 			
-            if (m_comm->GetSize() > 1 && DefinesParameter("PROC_X"))
+            if (m_comm->GetSize() > 1)
             {
                 int nProcX;
-                LoadParameter("PROC_X", nProcX, 1);
+				
+				if(DefinesParameter("PROC_X"))
+				{
+					LoadParameter("PROC_X", nProcX, 1);
+				}
+				else 
+				{
+					nProcX = 1;
+					
+				}
+
                 ASSERTL0(m_comm->GetSize() % nProcX == 0,
                             "Cannot exactly partition using PROC_X value.");
                 int nProcSem = m_comm->GetSize() / nProcX;

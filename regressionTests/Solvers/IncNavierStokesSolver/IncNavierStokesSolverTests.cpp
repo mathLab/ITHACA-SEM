@@ -147,6 +147,8 @@ int main(int argc, char* argv[])
     ExecuteParallel("IncNavierStokesSolver","Test_Hex_channel_m8_par.xml","3D channel flow, Hex elements, par(2), P=8", 2);
     ExecuteParallel("IncNavierStokesSolver","Test_Tet_channel_m8_par.xml","3D channel flow, Tet elements, par(2), P=8", 2);
     ExecuteParallel("IncNavierStokesSolver","Test_ChanFlow_m3_par.xml","3D channel flow, 2D, par(2), P=8", 2);
+	ExecuteParallel("IncNavierStokesSolver","Test_ChanFlow_3DH1D_Parallel_mode1.xml","3D homogeneous 1D Channel Flow, SEM parallelisation (2 proc)", 2);
+	ExecuteParallel("IncNavierStokesSolver","Test_ChanFlow_3DH1D_Parallel_mode2.xml","3D homogeneous 1D Channel Flow, HOM parallelisation (2 proc)", 2);
 #endif
     if (tests_failed && !quiet)
     {

@@ -94,7 +94,7 @@ namespace Nektar
          */
         MPI_Comm CommMpi::GetComm()
         {
-            return m_comm;;
+            return m_comm;
         }
 
 
@@ -162,7 +162,7 @@ namespace Nektar
                       MPI_DOUBLE,
                       pProc,
                       0,
-                      MPI_COMM_WORLD,
+                      m_comm,
                       &status);
 
             ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
@@ -182,7 +182,7 @@ namespace Nektar
                           MPI_INT,
                           pProc,
                           0,
-                          MPI_COMM_WORLD);
+                          m_comm);
             }
             else
             {
@@ -191,7 +191,7 @@ namespace Nektar
                           MPI_INT,
                           pProc,
                           0,
-                          MPI_COMM_WORLD);
+                          m_comm);
             }
         }
 
@@ -207,7 +207,7 @@ namespace Nektar
                       MPI_INT,
                       pProc,
                       0,
-                      MPI_COMM_WORLD,
+                      m_comm,
                       &status);
 
             ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
@@ -234,7 +234,7 @@ namespace Nektar
                          MPI_DOUBLE,
                          pSendProc,
                          0,
-                         MPI_COMM_WORLD,
+                         m_comm,
                          &status);
 
             ASSERTL0(retval == MPI_SUCCESS,
@@ -261,7 +261,7 @@ namespace Nektar
                          MPI_INT,
                          pSendProc,
                          0,
-                         MPI_COMM_WORLD,
+                         m_comm,
                          &status);
 
             ASSERTL0(retval == MPI_SUCCESS,
@@ -283,7 +283,7 @@ namespace Nektar
 									          0,
 									          pSendProc,
 									          0,
-									          MPI_COMM_WORLD,
+									          m_comm,
 									          &status);
 			
             ASSERTL0(retval == MPI_SUCCESS,
@@ -307,7 +307,7 @@ namespace Nektar
 									          0,
 									          pSendProc,
 									          0,
-									          MPI_COMM_WORLD,
+									          m_comm,
 									          &status);
 			
             ASSERTL0(retval == MPI_SUCCESS,
@@ -332,7 +332,7 @@ namespace Nektar
                                         1,
                                         MPI_DOUBLE,
                                         vOp,
-                                        MPI_COMM_WORLD);
+                                        m_comm);
 
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
@@ -356,7 +356,7 @@ namespace Nektar
                                         1,
                                         MPI_INT,
                                         vOp,
-                                        MPI_COMM_WORLD);
+                                        m_comm);
 
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
@@ -380,7 +380,7 @@ namespace Nektar
                                         (int) pData.num_elements(),
                                         MPI_DOUBLE,
                                         vOp,
-                                        MPI_COMM_WORLD);
+                                        m_comm);
 
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
@@ -404,7 +404,7 @@ namespace Nektar
                                         (int) pData.num_elements(),
                                         MPI_INT,
                                         vOp,
-                                        MPI_COMM_WORLD);
+                                        m_comm);
 
             ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-reduce.");
@@ -422,7 +422,7 @@ namespace Nektar
 									  pRecvData.get(),
 									  (int) pRecvData.num_elements(),
 									  MPI_DOUBLE,
-									  MPI_COMM_WORLD);
+									  m_comm);
 									  
 			ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-to-All.");
@@ -440,10 +440,59 @@ namespace Nektar
 									  pRecvData.get(),
 									  (int) pRecvData.num_elements(),
 									  MPI_INT,
-									  MPI_COMM_WORLD);
+									  m_comm);
 			
 			ASSERTL0(retval == MPI_SUCCESS,
                      "MPI error performing All-to-All.");
+		}
+		
+		
+		/**
+         *
+         */
+		void CommMpi::v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
+								 Array<OneD, int>& pSendDataSizeMap,
+								 Array<OneD, int>& pSendDataOffsetMap,
+								 Array<OneD, NekDouble>& pRecvData,
+								 Array<OneD, int>& pRecvDataSizeMap,
+								 Array<OneD, int>& pRecvDataOffsetMap)
+		{
+			int retval = MPI_Alltoallv(pSendData.get(),
+									   pSendDataSizeMap.get(),
+									   pSendDataOffsetMap.get(),
+									   MPI_DOUBLE,
+									   pRecvData.get(),
+									   pRecvDataSizeMap.get(),
+									   pRecvDataOffsetMap.get(),
+									   MPI_DOUBLE,
+									   m_comm);
+									   
+		    ASSERTL0(retval == MPI_SUCCESS,
+					 "MPI error performing All-to-All-v.");
+		}
+		
+		/**
+         *
+         */
+		void CommMpi::v_AlltoAllv(Array<OneD, int>& pSendData,
+								  Array<OneD, int>& pSendDataSizeMap,
+								  Array<OneD, int>& pSendDataOffsetMap,
+								  Array<OneD, int>& pRecvData,
+								  Array<OneD, int>& pRecvDataSizeMap,
+								  Array<OneD, int>& pRecvDataOffsetMap)
+		{
+			int retval = MPI_Alltoallv(pSendData.get(),
+									   pSendDataSizeMap.get(),
+									   pSendDataOffsetMap.get(),
+									   MPI_INT,
+									   pRecvData.get(),
+									   pRecvDataSizeMap.get(),
+									   pRecvDataOffsetMap.get(),
+									   MPI_INT,
+									   m_comm);
+									   
+			ASSERTL0(retval == MPI_SUCCESS,
+					 "MPI error performing All-to-All-v.");
 		}
 
 

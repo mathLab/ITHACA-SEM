@@ -109,6 +109,18 @@ namespace Nektar
 									Array<OneD, NekDouble>& pRecvData);
             virtual void v_AlltoAll(Array<OneD, int>& pSendData,
 									Array<OneD, int>& pRecvData);
+			virtual void v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
+									Array<OneD, int>& pSendDataSizeMap,
+									Array<OneD, int>& pSendDataOffsetMap,
+									Array<OneD, NekDouble>& pRecvData,
+									Array<OneD, int>& pRecvDataSizeMap,
+									Array<OneD, int>& pRecvDataOffsetMap);
+			virtual void v_AlltoAllv(Array<OneD, int>& pSendData,
+									Array<OneD, int>& pSendDataSizeMap,
+									Array<OneD, int>& pSendDataOffsetMap,
+									Array<OneD, int>& pRecvData,
+									Array<OneD, int>& pRecvDataSizeMap,
+									Array<OneD, int>& pRecvDataOffsetMap);
             virtual void v_SplitComm(int pRows, int pColumns);
 
         private:

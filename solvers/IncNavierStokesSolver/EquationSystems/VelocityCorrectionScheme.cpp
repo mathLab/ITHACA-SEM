@@ -120,7 +120,7 @@ namespace Nektar
             ASSERTL0(0,"Integration method not suitable: Options include IMEXOrder1, IMEXOrder2 or IMEXOrder3");
             break;
         }
-		
+
 		// Count number of HBC conditions
 		Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
 		Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
@@ -304,7 +304,6 @@ namespace Nektar
                                                              const NekDouble time, 
                                                              const NekDouble aii_Dt)
     {
-
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
         int ncoeffs = m_fields[0]->GetNcoeffs();

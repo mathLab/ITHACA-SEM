@@ -207,6 +207,34 @@ namespace Nektar
 		{
 			
         }
+		
+		
+		/**
+         *
+         */
+		void CommSerial::v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
+									 Array<OneD, int>& pSendDataSizeMap,
+									 Array<OneD, int>& pSendDataOffsetMap,
+									 Array<OneD, NekDouble>& pRecvData,
+									 Array<OneD, int>& pRecvDataSizeMap,
+									 Array<OneD, int>& pRecvDataOffsetMap)
+		{
+			
+        }
+		
+		
+		/**
+         *
+         */
+		void CommSerial::v_AlltoAllv(Array<OneD, int>& pSendData,
+									 Array<OneD, int>& pSendDataSizeMap,
+									 Array<OneD, int>& pSendDataOffsetMap,
+									 Array<OneD, int>& pRecvData,
+									 Array<OneD, int>& pRecvDataSizeMap,
+									 Array<OneD, int>& pRecvDataOffsetMap)
+		{
+			
+        }
 
 
         /**

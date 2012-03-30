@@ -108,6 +108,18 @@ namespace Nektar
 														 Array<OneD, NekDouble>& pRecvData);
                 LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, int>& pSendData,
 														 Array<OneD, int>& pRecvData);
+			    LIB_UTILITIES_EXPORT inline void AlltoAllv(Array<OneD, NekDouble>& pSendData,
+														  Array<OneD, int>& pSendDataSizeMap,
+														  Array<OneD, int>& pSendDataOffsetMap,
+													      Array<OneD, NekDouble>& pRecvData,
+														  Array<OneD, int>& pRecvDataSizeMap,
+														  Array<OneD, int>& pRecvDataOffsetMap);
+			    LIB_UTILITIES_EXPORT inline void AlltoAllv(Array<OneD, int>& pSendData,
+													      Array<OneD, int>& pSendDataSizeMap,
+													      Array<OneD, int>& pSendDataOffsetMap,
+													      Array<OneD, int>& pRecvData,
+													      Array<OneD, int>& pRecvDataSizeMap,
+													      Array<OneD, int>& pRecvDataOffsetMap);
 
                 LIB_UTILITIES_EXPORT inline void SplitComm(int pRows, int pColumns);
                 LIB_UTILITIES_EXPORT inline CommSharedPtr GetRowComm();
@@ -154,6 +166,18 @@ namespace Nektar
 										Array<OneD, NekDouble>& pRecvData) = 0;
                 virtual void v_AlltoAll(Array<OneD, int>& pSendData,
 										Array<OneD, int>& pRecvData) = 0;
+			    virtual void v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
+										Array<OneD, int>& pSendDataSizeMap,
+										Array<OneD, int>& pSendDataOffsetMap,
+										Array<OneD, NekDouble>& pRecvData,
+										Array<OneD, int>& pRecvDataSizeMap,
+										Array<OneD, int>& pRecvDataOffsetMap) = 0;
+				virtual void v_AlltoAllv(Array<OneD, int>& pSendData,
+										Array<OneD, int>& pSendDataSizeMap,
+										Array<OneD, int>& pSendDataOffsetMap,
+										Array<OneD, int>& pRecvData,
+										Array<OneD, int>& pRecvDataSizeMap,
+										Array<OneD, int>& pRecvDataOffsetMap) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
         };
 
@@ -327,6 +351,33 @@ namespace Nektar
 		inline void Comm::AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
 		{
 			v_AlltoAll(pSendData,pRecvData);
+		}
+		
+		
+		/**
+         *
+         */
+		inline void Comm::AlltoAllv(Array<OneD, NekDouble>& pSendData,
+								 Array<OneD, int>& pSendDataSizeMap,
+								 Array<OneD, int>& pSendDataOffsetMap,
+								 Array<OneD, NekDouble>& pRecvData,
+								 Array<OneD, int>& pRecvDataSizeMap,
+								 Array<OneD, int>& pRecvDataOffsetMap)
+		{
+			v_AlltoAllv(pSendData,pSendDataSizeMap,pSendDataOffsetMap,pRecvData,pRecvDataSizeMap,pRecvDataOffsetMap);
+		}
+		
+		/**
+         *
+         */
+		inline void Comm::AlltoAllv(Array<OneD, int>& pSendData,
+								 Array<OneD, int>& pSendDataSizeMap,
+								 Array<OneD, int>& pSendDataOffsetMap,
+								 Array<OneD, int>& pRecvData,
+								 Array<OneD, int>& pRecvDataSizeMap,
+								 Array<OneD, int>& pRecvDataOffsetMap)
+		{
+			v_AlltoAllv(pSendData,pSendDataSizeMap,pSendDataOffsetMap,pRecvData,pRecvDataSizeMap,pRecvDataOffsetMap);
 		}
 
 

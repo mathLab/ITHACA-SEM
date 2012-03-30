@@ -58,7 +58,7 @@ namespace Nektar
         {
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
-			
+						
 			SetParalleInfo();
 			
 			m_planes = Array<OneD,ExpListSharedPtr>(m_num_planes_per_proc);
@@ -73,7 +73,7 @@ namespace Nektar
 				ASSERTL0(m_num_processes == 1,"Remove dealiasing if you want to run in parallel");
 				SetPaddingBase();
 			}
-        }
+		}
 
 
         /**
@@ -342,7 +342,7 @@ namespace Nektar
 		 * Inner product element by element
 		 */
 		void ExpListHomogeneous1D::v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-        {
+        { 
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
 			
@@ -352,7 +352,7 @@ namespace Nektar
 				
 				cnt1  += m_planes[n]->GetNcoeffs();
 				cnt   += m_planes[n]->GetTotPoints();
-            }
+            } 
         }
 		
 		/**
@@ -448,12 +448,13 @@ namespace Nektar
 			int num_dfts_per_proc    = num_points_per_plane/m_num_processes + (num_points_per_plane%m_num_processes > 0);
 			int copy_len             = num_dfts_per_proc;
 			
-			Array<OneD, Array< OneD, NekDouble> > tmp_inarray(m_num_processes);
-						
-			for(i = 0; i < m_num_processes;i++)
+			Array<OneD, int> SizeMap(m_num_processes,0);
+			Array<OneD, int> OffsetMap(m_num_processes,0);
+			
+			Array< OneD, NekDouble> tmp_outarray(num_dfts_per_proc*m_num_fourier_points,0.0);
+			
+			for(i = 0; i < m_num_processes ; i++)
 			{
-				tmp_inarray[i] = Array<OneD, NekDouble> (num_dfts_per_proc*m_num_planes_per_proc,0.0);
-				
 				if(i == m_num_processes-1)
 				{
 					copy_len = num_dfts_per_proc - ((num_dfts_per_proc*m_num_processes) - num_points_per_plane);
@@ -463,17 +464,15 @@ namespace Nektar
 				{
 					Vmath::Vcopy(copy_len,
 								 &(inarray[i*num_dfts_per_proc+j*num_points_per_plane]),1,
-								 &(tmp_inarray[i][j*num_dfts_per_proc]),1);
+								 &(outarray[i*num_dfts_per_proc*m_num_planes_per_proc+j*num_dfts_per_proc]),1);
 				}
+				
+				SizeMap[i]   = num_dfts_per_proc*m_num_planes_per_proc;
+				OffsetMap[i] = i*num_dfts_per_proc*m_num_planes_per_proc;				
 			}
-			for(i = 0; i < m_num_processes;i++)
-			{
-				if(i != m_rank_id)
-				{
-					m_comm->GetColumnComm()->SendRecvReplace(m_rank_id,i,tmp_inarray[i]);
-				}
-			}
-		    			
+			
+			m_comm->GetColumnComm()->AlltoAllv(outarray,SizeMap,OffsetMap,tmp_outarray,SizeMap,OffsetMap);
+			
 			// reshuffle
 			int packed_len;
 			
@@ -490,7 +489,7 @@ namespace Nektar
 
             for(i = 0; i < packed_len; ++i)
             {
-                Vmath::Vcopy(num_dfts_per_proc,&(tmp_inarray[0][i*num_dfts_per_proc]),1,
+                Vmath::Vcopy(num_dfts_per_proc,&(tmp_outarray[i*num_dfts_per_proc]),1,
                              &(outarray[i]),packed_len);
             }
         }
@@ -507,7 +506,13 @@ namespace Nektar
             int num_dofs             = inarray.num_elements();
 			int num_points_per_plane = num_dofs/m_num_planes_per_proc;
 			int num_dfts_per_proc    = num_points_per_plane/m_num_processes + (num_points_per_plane%m_num_processes > 0);
-			int copy_len;
+			int copy_len             = num_dfts_per_proc;
+			
+			Array<OneD, int> SizeMap(m_num_processes,0);
+			Array<OneD, int> OffsetMap(m_num_processes,0);
+			
+			Array< OneD, NekDouble> tmp_inarray(num_dfts_per_proc*m_num_fourier_points,0.0);
+			Array< OneD, NekDouble> tmp_outarray(num_dfts_per_proc*m_num_fourier_points,0.0);
 			
 			int packed_len;
 			
@@ -522,26 +527,22 @@ namespace Nektar
 			
             ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
 			
-			Array<OneD, Array< OneD, NekDouble> > tmp_inarray(m_num_processes);
-			
-			for(i = 0; i < m_num_processes;i++)
-			{
-				tmp_inarray[i] = Array<OneD, NekDouble> (num_dfts_per_proc*m_num_planes_per_proc,0.0);
-			}
-			
             for(i = 0; i < packed_len; ++i)
             {
                 Vmath::Vcopy(num_dfts_per_proc,&(inarray[i]),packed_len,
-                             &(tmp_inarray[0][i*num_dfts_per_proc]),1);
+                             &(tmp_inarray[i*num_dfts_per_proc]),1);
             }
 			
+			for(i = 0; i < m_num_processes ; i++)
+			{				
+				SizeMap[i]   = num_dfts_per_proc*m_num_planes_per_proc;
+				OffsetMap[i] = i*num_dfts_per_proc*m_num_planes_per_proc;				
+			}
+			
+			m_comm->GetColumnComm()->AlltoAllv(tmp_inarray,SizeMap,OffsetMap,tmp_outarray,SizeMap,OffsetMap);
+			
 			for(i = 0; i < m_num_processes;i++)
-			{
-				if(i != m_rank_id)
-				{
-					m_comm->GetColumnComm()->SendRecvReplace(m_rank_id,i,tmp_inarray[i]);
-				}
-				
+			{	
 				if(i == m_num_processes-1)
 				{
 					copy_len = num_dfts_per_proc - ((num_dfts_per_proc*m_num_processes)-num_points_per_plane);
@@ -550,7 +551,7 @@ namespace Nektar
 				for(j = 0; j < m_num_planes_per_proc;j++)
 				{
 					Vmath::Vcopy(copy_len,
-								 &(tmp_inarray[i][j*num_dfts_per_proc]),1,
+								 &(tmp_outarray[i*num_dfts_per_proc*m_num_planes_per_proc+j*num_dfts_per_proc]),1,
 								 &(outarray[i*num_dfts_per_proc+j*num_points_per_plane]),1);
 				}
 			}
@@ -658,7 +659,7 @@ namespace Nektar
 			std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
 			
-			std::vector<unsigned int> PlanesIDs(m_num_planes_per_proc);
+			std::vector<unsigned int> PlanesIDs;
 			for(int i = 0; i < m_num_planes_per_proc; i++)
 			{
 				PlanesIDs.push_back(m_planes_IDs[i]);
@@ -677,7 +678,7 @@ namespace Nektar
 			std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
 			
-			std::vector<unsigned int> PlanesIDs(m_num_planes_per_proc);
+			std::vector<unsigned int> PlanesIDs;
 			for(int i = 0; i < m_num_planes_per_proc; i++)
 			{
 				PlanesIDs.push_back(m_planes_IDs[i]);

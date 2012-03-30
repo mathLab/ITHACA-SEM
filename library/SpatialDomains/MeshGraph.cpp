@@ -1875,7 +1875,7 @@ namespace Nektar
 
                     if(fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += StdRegions::StdTriData::getNumberOfCoefficients(l,m)*fielddefs->m_numModes[cnt++];
+                        datasize += StdRegions::StdTriData::getNumberOfCoefficients(l,m)*fielddefs->m_homogeneousZIDs.size();
                     }
                     else
                     {
@@ -1889,7 +1889,7 @@ namespace Nektar
                     {
                         datasize += fielddefs->m_numModes[cnt++]*
                                 fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_numModes[cnt++];
+                                fielddefs->m_homogeneousZIDs.size();
                     }
                     else
                     {

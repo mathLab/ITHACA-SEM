@@ -1146,6 +1146,10 @@ namespace Nektar
     void EquationSystem::v_Output(void)
     {
         std::string outname = m_sessionName + ".fld";
+        if (m_comm->GetSize() > 1)
+        {
+            outname += "." + boost::lexical_cast<std::string>(m_comm->GetRank());
+        }
         WriteFld(outname);                 
     }
 

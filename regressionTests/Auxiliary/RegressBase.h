@@ -49,7 +49,7 @@
 
 #define SOLVER_L2ERROR_STR "L 2 error"
 
-#define REGRESS_DOUBLE_TOL 1e-9
+#define REGRESS_DOUBLE_TOL 1e-8
 
 #include <boost/filesystem.hpp>
 

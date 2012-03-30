@@ -121,46 +121,51 @@ namespace Nektar
             }
         }
 
-        for (int i = 0; i < m_spacedim; ++i)
+        if (!m_vardiff.empty())
         {
-            if (m_session->DefinesParameter("d_min"))
+            // Process each of the defined variable coefficients
+            for (int i = 0; i < m_spacedim; ++i)
             {
-                // Normalise and invert
-                int nq = m_fields[0]->GetNpoints();
-                NekDouble f_min = m_session->GetParameter("d_min");
-                NekDouble f_max = m_session->GetParameter("d_max");
-                NekDouble f_range = f_max - f_min;
-                NekDouble o_min = m_session->GetParameter("o_min");
-                NekDouble o_max = m_session->GetParameter("o_max");
-                Vmath::Sadd(nq, -f_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                for (int j = 0; j < nq; ++j)
+                // If scaling parameters defined, do scaling
+                if (m_session->DefinesParameter("d_min"))
                 {
-                    if (m_vardiff[varCoeffEnum[i]][j] < 0)
+                    // Normalise and invert
+                    int nq = m_fields[0]->GetNpoints();
+                    NekDouble f_min = m_session->GetParameter("d_min");
+                    NekDouble f_max = m_session->GetParameter("d_max");
+                    NekDouble f_range = f_max - f_min;
+                    NekDouble o_min = m_session->GetParameter("o_min");
+                    NekDouble o_max = m_session->GetParameter("o_max");
+                    Vmath::Sadd(nq, -f_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                    for (int j = 0; j < nq; ++j)
                     {
-                        m_vardiff[varCoeffEnum[i]][j] = 0.0;
+                        if (m_vardiff[varCoeffEnum[i]][j] < 0)
+                        {
+                            m_vardiff[varCoeffEnum[i]][j] = 0.0;
+                        }
+                        if (m_vardiff[varCoeffEnum[i]][j] > f_range)
+                        {
+                            m_vardiff[varCoeffEnum[i]][j] = f_range;
+                        }
                     }
-                    if (m_vardiff[varCoeffEnum[i]][j] > f_range)
-                    {
-                        m_vardiff[varCoeffEnum[i]][j] = f_range;
-                    }
+                    Vmath::Smul(nq, -1.0/f_range, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Sadd(nq, 1.0, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Smul(nq, o_max-o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Sadd(nq, o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
                 }
-                Vmath::Smul(nq, -1.0/f_range, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                Vmath::Sadd(nq, 1.0, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                Vmath::Smul(nq, o_max-o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                Vmath::Sadd(nq, o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-            }
 
-            m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
-                                             m_fields[0]->UpdateCoeffs());
-            std::stringstream filename;
-            filename << varCoeffs[i];
-            if (m_comm->GetSize() > 1)
-            {
-                filename << "_P" << m_comm->GetRank();
+                // Transform variable coefficient and write out to file.
+                m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
+                                                 m_fields[0]->UpdateCoeffs());
+                std::stringstream filename;
+                filename << varCoeffs[i];
+                if (m_comm->GetSize() > 1)
+                {
+                    filename << "_P" << m_comm->GetRank();
+                }
+                filename << ".fld";
+                WriteFld(filename.str());
             }
-            filename << ".fld";
-            WriteFld(filename.str());
-
         }
 
         if (m_session->DefinesParameter("StimulusDuration"))

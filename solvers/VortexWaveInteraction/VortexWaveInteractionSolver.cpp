@@ -127,6 +127,9 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             
             while(exit_iteration == false)
             {
+                // Reset eigenvalue checker in case used in previous iterations 
+                vwi.CheckEigIsStationary(true);
+
                 for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
                 {
                     vwi.ExecuteLoop();
@@ -173,6 +176,9 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             
             while(exit_iteration == false)
             {
+                // Reset eigenvalue checker in case used in previous iterations 
+                vwi.CheckEigIsStationary(true);
+
                 for(i = vwi.GetIterStart(); i < vwi.GetIterEnd(); ++i)
                 {
                     vwi.ExecuteLoop();

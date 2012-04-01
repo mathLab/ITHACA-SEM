@@ -442,56 +442,81 @@ namespace Nektar
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes)
         {
-			int i,j;
-            int num_dofs             = inarray.num_elements();
-			int num_points_per_plane = num_dofs/m_num_planes_per_proc;
-			int num_dfts_per_proc    = num_points_per_plane/m_num_processes + (num_points_per_plane%m_num_processes > 0);
-			int copy_len             = num_dfts_per_proc;
-			
-			Array<OneD, int> SizeMap(m_num_processes,0);
-			Array<OneD, int> OffsetMap(m_num_processes,0);
-			
-			Array< OneD, NekDouble> tmp_outarray(num_dfts_per_proc*m_num_fourier_points,0.0);
-			
-			for(i = 0; i < m_num_processes ; i++)
-			{
-				if(i == m_num_processes-1)
-				{
-					copy_len = num_dfts_per_proc - ((num_dfts_per_proc*m_num_processes) - num_points_per_plane);
-				}
-				
-				for(j = 0; j < m_num_planes_per_proc;j++)
-				{
-					Vmath::Vcopy(copy_len,
-								 &(inarray[i*num_dfts_per_proc+j*num_points_per_plane]),1,
-								 &(outarray[i*num_dfts_per_proc*m_num_planes_per_proc+j*num_dfts_per_proc]),1);
-				}
-				
-				SizeMap[i]   = num_dfts_per_proc*m_num_planes_per_proc;
-				OffsetMap[i] = i*num_dfts_per_proc*m_num_planes_per_proc;				
-			}
-			
+#ifdef NEKTAR_USE_MPI
+			 int i,j;
+			 int num_dofs             = inarray.num_elements();
+			 int num_points_per_plane = num_dofs/m_num_planes_per_proc;
+			 int num_dfts_per_proc    = num_points_per_plane/m_num_processes + (num_points_per_plane%m_num_processes > 0);
+			 int copy_len             = num_dfts_per_proc;
+			 
+			 Array<OneD, int> SizeMap(m_num_processes,0);
+			 Array<OneD, int> OffsetMap(m_num_processes,0);
+			 
+			 Array< OneD, NekDouble> tmp_outarray(num_dfts_per_proc*m_num_fourier_points,0.0);
+			 
+			 for(i = 0; i < m_num_processes ; i++)
+			 {
+				 if(i == m_num_processes-1)
+				 {
+					 copy_len = num_dfts_per_proc - ((num_dfts_per_proc*m_num_processes) - num_points_per_plane);
+				 }
+			 
+				 for(j = 0; j < m_num_planes_per_proc;j++)
+				 {
+					 Vmath::Vcopy(copy_len,
+								  &(inarray[i*num_dfts_per_proc+j*num_points_per_plane]),1,
+								  &(outarray[i*num_dfts_per_proc*m_num_planes_per_proc+j*num_dfts_per_proc]),1);
+				 }
+			 
+				 SizeMap[i]   = num_dfts_per_proc*m_num_planes_per_proc;
+				 OffsetMap[i] = i*num_dfts_per_proc*m_num_planes_per_proc;				
+			 }
+			 
 			m_comm->GetColumnComm()->AlltoAllv(outarray,SizeMap,OffsetMap,tmp_outarray,SizeMap,OffsetMap);
+			 
+			 // reshuffle
+			 int packed_len;
+			 
+			 if(UseNumModes)
+			 {
+				 packed_len = m_num_fourier_coeffs;
+			 }
+			 else
+			 {
+				 packed_len = m_num_fourier_points;
+			 }
+			 
+			 ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
+			 
+			 for(i = 0; i < packed_len; ++i)
+			 {
+				 Vmath::Vcopy(num_dfts_per_proc,&(tmp_outarray[i*num_dfts_per_proc]),1,
+							  &(outarray[i]),packed_len);
+			 }
+#else
+			int i, pts_per_plane;
+            int n = inarray.num_elements();
+            int packed_len;
 			
-			// reshuffle
-			int packed_len;
+            pts_per_plane = n/m_planes.num_elements();
 			
             if(UseNumModes)
             {
-                packed_len = m_num_fourier_coeffs;
+                packed_len = m_homogeneousBasis->GetNumModes();
             }
             else
             {
-                packed_len = m_num_fourier_points;
+                packed_len = m_planes.num_elements();
             }
-
+			
             ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
-
+			
             for(i = 0; i < packed_len; ++i)
             {
-                Vmath::Vcopy(num_dfts_per_proc,&(tmp_outarray[i*num_dfts_per_proc]),1,
+                Vmath::Vcopy(pts_per_plane,&(inarray[i*pts_per_plane]),1,
                              &(outarray[i]),packed_len);
             }
+#endif
         }
 
 		/*
@@ -502,6 +527,7 @@ namespace Nektar
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes)
         {
+#ifdef NEKTAR_USE_MPI
 			int i,j;
             int num_dofs             = inarray.num_elements();
 			int num_points_per_plane = num_dofs/m_num_planes_per_proc;
@@ -555,6 +581,33 @@ namespace Nektar
 								 &(outarray[i*num_dfts_per_proc+j*num_points_per_plane]),1);
 				}
 			}
+#else
+			int i,pts_per_plane;
+            int n = inarray.num_elements();
+            int packed_len;
+			
+            // use length of inarray to determine data storage type
+            // (i.e.modal or physical).
+            pts_per_plane = n/m_planes.num_elements();
+			
+            if(UseNumModes)
+            {
+                packed_len = m_homogeneousBasis->GetNumModes();
+            }
+            else
+            {
+                packed_len = m_planes.num_elements();
+            }
+			
+            ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
+			
+			
+            for(i = 0; i < packed_len; ++i)
+            {
+                Vmath::Vcopy(pts_per_plane,&(inarray[i]),packed_len,
+                             &(outarray[i*pts_per_plane]),1);
+            }
+#endif
         }
 
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs) const

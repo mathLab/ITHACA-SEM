@@ -53,55 +53,55 @@ int main(int argc, char *argv[])
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_fields.size();
     int vorticitydim;
-	if(expdim == 1)
-	{
-		if(fielddef[0]->m_numHomogeneousDir == 2)//3D Homogeneous 2D
-		{
-			vorticitydim = 3;
-		}
-		else // 1D
-		{
-			vorticitydim = 0;
-		}
-	}
-	else if(expdim ==2)
-	{
-		if(fielddef[0]->m_numHomogeneousDir == 1)// 3D Homogeneous 1D
-		{
-			vorticitydim = 3;
-		}
-		else //2D
-		{
-			vorticitydim = 1;
-		}
-		
-	}
-	else // Full 3D
-	{
-		vorticitydim = 3;
-	}
-
-	 
-    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + vorticitydim);
+    if(expdim == 1)
+    {
+        if(fielddef[0]->m_numHomogeneousDir == 2)//3D Homogeneous 2D
+        {
+            vorticitydim = 3;
+        }
+        else // 1D
+        {
+            vorticitydim = 0;
+        }
+    }
+    else if(expdim ==2)
+    {
+        if(fielddef[0]->m_numHomogeneousDir == 1)// 3D Homogeneous 1D
+        {
+            vorticitydim = 3;
+        }
+        else //2D
+        {
+            vorticitydim = 1;
+        }
 	
+    }
+    else // Full 3D
+    {
+        vorticitydim = 3;
+    }
+
+    
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + vorticitydim);
+    
     switch(expdim)
     {
     case 1:
         {
-			ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"Quasi-3D approach is only set up for 1 or 2 homogeneous directions");
+            ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"Quasi-3D approach is only set up for 1 or 2 homogeneous directions");
             
             if(fielddef[0]->m_numHomogeneousDir == 1)
             {
                 MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
-
+                
                 // Define Homogeneous expansion
                 int nplanes = fielddef[0]->m_numModes[1];
-
+                
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
-
+                
                 Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,ly,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp2DH1;
 
@@ -110,27 +110,27 @@ int main(int argc, char *argv[])
                     Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
                 }
             }
-			else if(fielddef[0]->m_numHomogeneousDir == 2)
+            else if(fielddef[0]->m_numHomogeneousDir == 2)
             {
                 MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
-				
+		
                 // Define Homogeneous expansion
                 int nylines = fielddef[0]->m_numModes[1];
-				int nzlines = fielddef[0]->m_numModes[2];
-				
+                int nzlines = fielddef[0]->m_numModes[2];
+		
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey PkeyY(nylines+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyY(fielddef[0]->m_basis[1],nylines,PkeyY);
-				
-				const LibUtilities::PointsKey PkeyZ(nzlines+1,LibUtilities::ePolyEvenlySpaced);
+                
+                const LibUtilities::PointsKey PkeyZ(nzlines+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
                 
-				NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
-				NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
-				
+                NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
+                NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
+		
                 Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp3DH2;
-				
+		
                 for(i = 1; i < nfields + vorticitydim; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(*Exp3DH2);
@@ -140,12 +140,12 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList1DSharedPtr Exp1D;
                 Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                                                        ::AllocateSharedPtr(vSession,graphShPt);
+                    ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] = Exp1D;
                 for(i = 1; i < nfields + vorticitydim; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList1D>
-                                                        ::AllocateSharedPtr(*Exp1D);
+                        ::AllocateSharedPtr(*Exp1D);
                 }
             }
         }
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 
                 // Define Homogeneous expansion
                 int nplanes = fielddef[0]->m_numModes[2];
-
+                
                 // choose points to be at evenly spaced points at
                 // nplanes + 1 points
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
@@ -179,13 +179,13 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList2DSharedPtr Exp2D;
                 Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                                                        ::AllocateSharedPtr(vSession,graphShPt);
+                    ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] =  Exp2D;
-
+                
                 for(i = 1; i < nfields + vorticitydim; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2D>
-                                                        ::AllocateSharedPtr(*Exp2D);
+                        ::AllocateSharedPtr(*Exp2D);
                 }
             }
         }
@@ -194,13 +194,13 @@ int main(int argc, char *argv[])
         {
             MultiRegions::ExpList3DSharedPtr Exp3D;
             Exp3D = MemoryManager<MultiRegions::ExpList3D>
-                                                    ::AllocateSharedPtr(vSession,graphShPt);
+                ::AllocateSharedPtr(vSession,graphShPt);
             Exp[0] =  Exp3D;
 
             for(i = 1; i < nfields + vorticitydim; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ExpList3D>
-                                                    ::AllocateSharedPtr(*Exp3D);
+                    ::AllocateSharedPtr(*Exp3D);
             }
         }
         break;
@@ -222,104 +222,104 @@ int main(int argc, char *argv[])
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
     //----------------------------------------------
-
-	int nq = Exp[0]->GetNpoints();
-	
-	Array<OneD, NekDouble> Uy(nq);
-	Array<OneD, NekDouble> Uz(nq);
-	Array<OneD, NekDouble> Vx(nq);
-	Array<OneD, NekDouble> Vz(nq);
-	Array<OneD, NekDouble> Wx(nq);
-	Array<OneD, NekDouble> Wy(nq);
-	Array<OneD, NekDouble> Qx(nq);  
-	Array<OneD, NekDouble> Qy(nq);
-	Array<OneD, NekDouble> Qz(nq);
-	
+    
+    int nq = Exp[0]->GetNpoints();
+    
+    Array<OneD, NekDouble> Uy(nq);
+    Array<OneD, NekDouble> Uz(nq);
+    Array<OneD, NekDouble> Vx(nq);
+    Array<OneD, NekDouble> Vz(nq);
+    Array<OneD, NekDouble> Wx(nq);
+    Array<OneD, NekDouble> Wy(nq);
+    Array<OneD, NekDouble> Qx(nq);  
+    Array<OneD, NekDouble> Qy(nq);
+    Array<OneD, NekDouble> Qz(nq);
+    
     switch(expdim)
     {
-		case 1:
-		{
-			if(fielddef[0]->m_numHomogeneousDir == 1)
-			{
-				ASSERTL0(false,"Not implemented yet");
-			}
-			else if(fielddef[0]->m_numHomogeneousDir == 2)
-			{
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[2]->GetPhys(),Wy);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[1]->GetPhys(),Vz);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[0]->GetPhys(),Uz);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[2]->GetPhys(),Wx);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
+    case 1:
+        {
+            if(fielddef[0]->m_numHomogeneousDir == 1)
+            {
+                ASSERTL0(false,"Not implemented yet");
+            }
+            else if(fielddef[0]->m_numHomogeneousDir == 2)
+            {
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[2]->GetPhys(),Wy);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[1]->GetPhys(),Vz);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[0]->GetPhys(),Uz);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[2]->GetPhys(),Wx);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
+		
+                Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
+                Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
+                Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
 				
-				Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
-				Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
-				Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
-				
-				Exp[4]->FwdTrans(Qx,Exp[4]->UpdateCoeffs());
-				Exp[5]->FwdTrans(Qy,Exp[5]->UpdateCoeffs());
-				Exp[6]->FwdTrans(Qz,Exp[6]->UpdateCoeffs());
-			}
-			else 
-			{
-				ASSERTL0(false,"Not implemented yet");
-			}
+                Exp[4]->FwdTrans(Qx,Exp[4]->UpdateCoeffs());
+                Exp[5]->FwdTrans(Qy,Exp[5]->UpdateCoeffs());
+                Exp[6]->FwdTrans(Qz,Exp[6]->UpdateCoeffs());
+            }
+            else 
+            {
+                ASSERTL0(false,"Not implemented yet");
+            }
+        }
+        break;
+    case 2:
+        {
+            if(fielddef[0]->m_numHomogeneousDir == 1)
+            {
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[2]->GetPhys(),Wy);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[1]->GetPhys(),Vz);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[0]->GetPhys(),Uz);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[2]->GetPhys(),Wx);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
+		
+                Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
+                Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
+                Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
+		
+                Exp[4]->FwdTrans(Qx,Exp[4]->UpdateCoeffs());
+                Exp[5]->FwdTrans(Qy,Exp[5]->UpdateCoeffs());
+                Exp[6]->FwdTrans(Qz,Exp[6]->UpdateCoeffs());
+            }
+            else 
+            {
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
+                Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
+		
+                Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
+		
+                Exp[3]->FwdTrans(Qz,Exp[3]->UpdateCoeffs());
+            }
+        }
+        break;
+    case 3:
+        {
+            Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[2]->GetPhys(),Wy);
+            Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[1]->GetPhys(),Vz);
+            Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[0]->GetPhys(),Uz);
+            Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[2]->GetPhys(),Wx);
+            Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
+            Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
+            
+            Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
+            Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
+            Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
+            
+            Exp[4]->FwdTrans(Qx,Exp[4]->UpdateCoeffs());
+            Exp[5]->FwdTrans(Qy,Exp[5]->UpdateCoeffs());
+            Exp[6]->FwdTrans(Qz,Exp[6]->UpdateCoeffs());
 		}
-		break;
-		case 2:
-		{
-			if(fielddef[0]->m_numHomogeneousDir == 1)
-			{
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[2]->GetPhys(),Wy);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[1]->GetPhys(),Vz);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[0]->GetPhys(),Uz);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[2]->GetPhys(),Wx);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
-				
-				Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
-				Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
-				Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
-				
-				Exp[4]->FwdTrans(Qx,Exp[4]->UpdateCoeffs());
-				Exp[5]->FwdTrans(Qy,Exp[5]->UpdateCoeffs());
-				Exp[6]->FwdTrans(Qz,Exp[6]->UpdateCoeffs());
-			}
-			else 
-			{
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
-				Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
-				
-				Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
-				
-				Exp[3]->FwdTrans(Qz,Exp[3]->UpdateCoeffs());
-			}
-		}
-		break;
-		case 3:
-		{
-			Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[2]->GetPhys(),Wy);
-			Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[1]->GetPhys(),Vz);
-			Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[0]->GetPhys(),Uz);
-			Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[2]->GetPhys(),Wx);
-			Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[1]->GetPhys(),Vx);
-			Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[0]->GetPhys(),Uy);
-			
-			Vmath::Vsub(nq,Wy,1,Vz,1,Qx,1);
-			Vmath::Vsub(nq,Uz,1,Wx,1,Qy,1);
-			Vmath::Vsub(nq,Vx,1,Uy,1,Qz,1);
-			
-			Exp[4]->FwdTrans(Qx,Exp[4]->UpdateCoeffs());
-			Exp[5]->FwdTrans(Qy,Exp[5]->UpdateCoeffs());
-			Exp[6]->FwdTrans(Qz,Exp[6]->UpdateCoeffs());
-		}
-		break;
-		default:
-		{
-			ASSERTL0(false,"Expansion dimension not recognised");
-		}
-		break;
-	}
+        break;
+    default:
+        {
+            ASSERTL0(false,"Expansion dimension not recognised");
+        }
+        break;
+    }
 	
     //-----------------------------------------------
     // Write solution to file with additional computed fields
@@ -333,29 +333,29 @@ int main(int argc, char *argv[])
 
     for(j = 0; j < nfields + vorticitydim; ++j)
     {
-		for(i = 0; i < FieldDef.size(); ++i)
-		{
-			if (j >= nfields)
-			{
+        for(i = 0; i < FieldDef.size(); ++i)
+        {
+            if (j >= nfields)
+            {
                 if(j == 4)
-				{
-					FieldDef[i]->m_fields.push_back("Qx");
-				}
-				else if(j == 5)
-				{
-					FieldDef[i]->m_fields.push_back("Qy");
-				}
-				else
-				{
-					FieldDef[i]->m_fields.push_back("Qz");
-				}
-			}
-			else
-			{
-				FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
-			}
-			Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-		}
+                {
+                    FieldDef[i]->m_fields.push_back("Qx");
+                }
+                else if(j == 5)
+                {
+                    FieldDef[i]->m_fields.push_back("Qy");
+                }
+                else
+                {
+                    FieldDef[i]->m_fields.push_back("Qz");
+                }
+            }
+            else
+            {
+                FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
+            }
+            Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+        }
     }
     graphShPt->Write(out, FieldDef, FieldData);
     //-----------------------------------------------

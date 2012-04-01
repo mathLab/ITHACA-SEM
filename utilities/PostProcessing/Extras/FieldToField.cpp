@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
     {  	    
         for(int i = 0; i < fielddata.size(); ++i)
         {
-cout<<"fielddef[i]->m_fields[j]="<<fielddef[i]->m_fields[j]<<endl;
-fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+            cout<<"fielddef[i]->m_fields[j]="<<fielddef[i]->m_fields[j]<<endl;
+            fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
         }             
         fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
     }

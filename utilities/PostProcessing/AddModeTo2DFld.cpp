@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     if(argc != 6)
     {
-        fprintf(stderr,"Usage: AddModeTo2DFld scal 2Dfieldfile1 fieldfile2 outfield\n"
+        fprintf(stderr,"Usage: AddModeTo2DFld scal1 scal2 2Dfieldfile1 fieldfile2 outfield\n"
                 "\t produces scal1*2Dfieldfiel1 + scal2*fieldfile2 in outfield\n" );
         exit(1);
     }

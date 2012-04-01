@@ -102,10 +102,15 @@ namespace Nektar
         if(m_sessionVWI->DefinesParameter("Relaxation"))
         {
             m_vwiRelaxation = m_sessionVWI->GetParameter("Relaxation");
+            // fix minimum number of iterations to be number of
+            // iterations required to make contribution of innitial
+            // forcing to 0.1
+            m_minInnerIterations = (int) (log(0.1)/log(m_vwiRelaxation)); 
         }
         else
         {
             m_vwiRelaxation = 0.0;
+            m_minInnerIterations = 1;
         }
         
         // Initialise NS Roll solver 
@@ -1067,16 +1072,19 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
     {
         static NekDouble previous_real_evl = -1.0; 
         static NekDouble previous_imag_evl = -1.0; 
-     
+        static int min_iter = 0;
+        
         if(reset)
         {
             previous_real_evl = -1.0;
+            min_iter = 0;
         }
         
-        if(previous_real_evl == -1.0)
+        if(previous_real_evl == -1.0 || min_iter < m_minInnerIterations)
         {
             previous_real_evl = m_leading_real_evl[0];
             previous_imag_evl = m_leading_imag_evl[0];
+            min_iter++;
             return false;
         }
 

@@ -152,7 +152,7 @@ namespace Nektar
         
         int m_nOuterIterations; 
         int m_maxOuterIterations; // Maximum number of outer iterations        
-
+        int m_minInnerIterations; // Minimum number of iterations in inner loop - based on relaxation factor
         int m_maxWaveForceMagIter; 
 
         bool m_deltaFcnApprox;  // Activate delta function approximation around wave 

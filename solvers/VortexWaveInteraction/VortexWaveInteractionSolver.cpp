@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
             vwi.AppendEvlToFile("ConvergedSolns",WaveForce);            
 
             vwi.SetWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
+            vwi.SetAlpha(vwi.GetAlpha() + vwi.GetDAlphaDWaveForceMag()*vwi.GetWaveForceMagStep());
+            
             // Save data directories. 
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
             {
@@ -173,6 +175,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             int i;
             int nouter_iter = vwi.GetNOuterIterations();
             bool exit_iteration = false;
+            NekDouble alpha_init = vwi.GetAlpha();
             
             while(exit_iteration == false)
             {
@@ -221,6 +224,9 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     exit_iteration = true;
                 }
             }
+            
+            vwi.UpdateDAlphaDWaveForceMag(alpha_init);
+
         }
         break;
     case eFixedAlphaWaveForcing:

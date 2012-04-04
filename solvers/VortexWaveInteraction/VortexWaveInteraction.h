@@ -86,6 +86,9 @@ namespace Nektar
         bool CheckIfAtNeutralPoint(void);
         void UpdateAlpha(int n);
         void UpdateWaveForceMag(int n);
+        void UpdateDAlphaDWaveForceMag(NekDouble alphainit);
+        
+
 
         void AppendEvlToFile(std::string file, int n);
         void AppendEvlToFile(std::string file, NekDouble WaveForceMag);
@@ -115,6 +118,11 @@ namespace Nektar
             return m_maxOuterIterations;
         }
 
+        NekDouble GetAlpha(void)
+        {
+            return m_alpha[0];
+        }
+            
         NekDouble GetWaveForceMag(void)
         {
             return m_waveForceMag[0];
@@ -125,15 +133,26 @@ namespace Nektar
             return m_waveForceMagStep;
         }
 
+        NekDouble GetDAlphaDWaveForceMag(void)
+        {
+            return m_dAlphaDWaveForceMag; 
+        }
+
         int GetMaxWaveForceMagIter(void)
         {
             return m_maxWaveForceMagIter;
         }
         
+        void SetAlpha(NekDouble alpha)
+        {
+            m_alpha[0] = alpha; 
+        }
+
         void SetWaveForceMag(NekDouble mag)
         {
             m_waveForceMag[0] = mag; 
         }
+
 
         bool IfIterInterface(void)
         {
@@ -172,6 +191,7 @@ namespace Nektar
         NekDouble m_neutralPointTol; 
         NekDouble m_eigRelTol; 
         NekDouble m_vwiRelaxation; 
+        NekDouble m_dAlphaDWaveForceMag;
 
         bool m_iterinterface;
 

@@ -68,6 +68,7 @@ namespace Nektar
         m_sessionVWI->LoadParameter("EndIteration",  m_iterEnd, 0);
 
         m_sessionVWI->LoadParameter("WaveForceMagStep",   m_waveForceMagStep,0.01);
+        m_sessionVWI->LoadParameter("DAlphaDWaveForceMag", m_dAlphaDWaveForceMag,0.0);
         m_sessionVWI->LoadParameter("MaxWaveForceMagIter",m_maxWaveForceMagIter,1);
         m_sessionVWI->LoadParameter("RollForceScale",     m_rollForceScale,1.0);
         
@@ -1258,6 +1259,11 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
 
         m_waveForceMag[0] = wavef_new;
         
+    }
+
+    void VortexWaveInteraction::UpdateDAlphaDWaveForceMag(NekDouble alpha_init)
+    {
+        m_dAlphaDWaveForceMag = (m_alpha[0]-alpha_init)/m_waveForceMagStep;
     }
 
     void VortexWaveInteraction::UpdateAlpha(int outeriter)

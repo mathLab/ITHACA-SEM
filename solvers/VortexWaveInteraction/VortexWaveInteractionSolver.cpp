@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     try
     { 
         VortexWaveInteraction vwi(argc,argv);
-        
+
         for(int i = 0; i < vwi.GetMaxWaveForceMagIter(); ++i)
         {
             DoFixedForcingIteration(vwi);

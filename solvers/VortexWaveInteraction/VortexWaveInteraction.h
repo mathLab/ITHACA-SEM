@@ -77,6 +77,8 @@ namespace Nektar
         void SaveLoopDetails(string dir, int i);
 
         void CalcNonLinearWaveForce(void);
+        void CalcL2ToLinfPressure  (void);
+        
         void SaveFile(string fileend, string dir, int n);
         void MoveFile(string fileend, string dir, int n);
         void CopyFile(string file1end, string file2end);
@@ -175,6 +177,8 @@ namespace Nektar
         int m_maxWaveForceMagIter; 
 
         bool m_deltaFcnApprox;  // Activate delta function approximation around wave 
+        bool m_useLinfPressureNorm; // Activate if use Pressure Linf Normalisation
+
         NekDouble m_deltaFcnDecay;   // Delta function decay level 
 
         Array<OneD, NekDouble>  m_waveForceMag;

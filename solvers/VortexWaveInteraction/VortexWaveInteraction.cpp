@@ -83,6 +83,15 @@ namespace Nektar
             m_deltaFcnDecay = 0.0;
         }
 
+        if(m_sessionVWI->DefinesSolverInfo("LinfPressureNorm"))
+        {
+            m_useLinfPressureNorm  = true;
+        }
+        else
+        {
+            m_useLinfPressureNorm  = false;
+        }
+
         if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
         {
               m_iterinterface = true;
@@ -93,8 +102,8 @@ namespace Nektar
         }
 
         m_alpha = Array<OneD, NekDouble> (storesize);
-        m_alpha[0]        = m_sessionVWI->GetParameter("Alpha");
-        m_waveForceMag      = Array<OneD, NekDouble> (storesize);
+        m_alpha[0]         = m_sessionVWI->GetParameter("Alpha");
+        m_waveForceMag     = Array<OneD, NekDouble> (storesize);
         m_waveForceMag[0]  = m_sessionVWI->GetParameter("WaveForceMag");
         
         m_leading_real_evl = Array<OneD, NekDouble> (storesize);
@@ -554,29 +563,41 @@ namespace Nektar
             m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
                                               m_wavePressure->GetPlane(1)->UpdatePhys());
 
-            // Determine normalisation of pressure so that |P|/A = 1
-            NekDouble norm = 0, l2;
-            l2    = m_wavePressure->GetPlane(0)->L2();
-            norm  = l2*l2;
-            l2    = m_wavePressure->GetPlane(1)->L2();
-            norm += l2*l2;
-            Vmath::Fill(2*npts,1.0,der1,1);
-            NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
-            norm = sqrt(area/norm);
+            NekDouble invnorm;
+
+            if(m_useLinfPressureNorm)
+            {
+                NekDouble Linf;
+                Linf = m_wavePressure->Linf(m_wavePressure->GetPhys());
+                
+                invnorm = 1.0/Linf;
+            }
+            else
+            {
+                // Determine normalisation of pressure so that |P|/A = 1
+                NekDouble l2;
+                l2    = m_wavePressure->GetPlane(0)->L2();
+                invnorm  = l2*l2;
+                l2    = m_wavePressure->GetPlane(1)->L2();
+                invnorm += l2*l2;
+                Vmath::Fill(2*npts,1.0,der1,1);
+                NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+                invnorm = sqrt(area/invnorm);
+            }
         
             // Get hold of arrays. 
             m_waveVelocities[0]->GetPlane(0)->BwdTrans(m_waveVelocities[0]->GetPlane(0)->GetCoeffs(),m_waveVelocities[0]->GetPlane(0)->UpdatePhys());
             Array<OneD, NekDouble> u_real = m_waveVelocities[0]->GetPlane(0)->UpdatePhys();
-            Vmath::Smul(npts,norm,u_real,1,u_real,1);
+            Vmath::Smul(npts,invnorm,u_real,1,u_real,1);
             m_waveVelocities[0]->GetPlane(1)->BwdTrans(m_waveVelocities[0]->GetPlane(1)->GetCoeffs(),m_waveVelocities[0]->GetPlane(1)->UpdatePhys());
             Array<OneD, NekDouble> u_imag = m_waveVelocities[0]->GetPlane(1)->UpdatePhys();
-            Vmath::Smul(npts,norm,u_imag,1,u_imag,1);
+            Vmath::Smul(npts,invnorm,u_imag,1,u_imag,1);
             m_waveVelocities[1]->GetPlane(0)->BwdTrans(m_waveVelocities[1]->GetPlane(0)->GetCoeffs(),m_waveVelocities[1]->GetPlane(0)->UpdatePhys());
             Array<OneD, NekDouble> v_real = m_waveVelocities[1]->GetPlane(0)->UpdatePhys(); 
-            Vmath::Smul(npts,norm,v_real,1,v_real,1);
+            Vmath::Smul(npts,invnorm,v_real,1,v_real,1);
             m_waveVelocities[1]->GetPlane(1)->BwdTrans(m_waveVelocities[1]->GetPlane(1)->GetCoeffs(),m_waveVelocities[1]->GetPlane(1)->UpdatePhys());
             Array<OneD, NekDouble> v_imag = m_waveVelocities[1]->GetPlane(1)->UpdatePhys();
-            Vmath::Smul(npts,norm,v_imag,1,v_imag,1);
+            Vmath::Smul(npts,invnorm,v_imag,1,v_imag,1);
         
             // Calculate non-linear terms for x and y directions
             // d/dx(u u* + u* u)
@@ -742,6 +763,33 @@ namespace Nektar
          }
     }
     
+    void VortexWaveInteraction::CalcL2ToLinfPressure(void)
+    {
+
+        ExecuteWave();
+
+        NekDouble Linf;
+        Linf = m_wavePressure->Linf(m_wavePressure->GetPhys());
+        cout << "Linf: " << Linf << endl;
+
+        NekDouble l2,norm;
+        l2    = m_wavePressure->GetPlane(0)->L2();
+        norm  = l2*l2;
+        l2    = m_wavePressure->GetPlane(1)->L2();
+        norm += l2*l2;
+
+        int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
+        Array<OneD, NekDouble> der1(npts);
+        Vmath::Fill(2*npts,1.0,der1,1);
+        NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+
+        l2 = sqrt(norm/area);
+
+        cout << "L2:   " << l2 << endl;
+        
+        cout << "Ratio Linf/L2: "<< Linf/l2 << endl;
+    }
+
     void VortexWaveInteraction::SaveFile(string file, string dir, int n)
     {
         static map<string,int> opendir;
@@ -1561,8 +1609,5 @@ cout<<"ucnt="<<cnt<<endl;
 
 
            cnt++;
-
-    }
-    
+    }    
 }
-    

@@ -307,7 +307,7 @@ TARGET_LINK_LIBRARIES(LibUtilities
 	${Boost_THREAD_LIBRARY}
 	${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-	tinyxml
+	${TINYXML_LIB}
 )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
 SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)

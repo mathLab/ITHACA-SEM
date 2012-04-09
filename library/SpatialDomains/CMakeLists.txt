@@ -83,7 +83,7 @@ ADD_NEKTAR_LIBRARY(SpatialDomains lib ${NEKTAR_LIBRARY_TYPE} ${SPATIAL_DOMAINS_S
 TARGET_LINK_LIBRARIES(SpatialDomains
         optimized LibUtilities debug LibUtilities-g
         optimized StdRegions  debug StdRegions-g
-        optimized tinyxml debug tinyxml
+        optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
         ${Boost_THREAD_LIBRARY}
 		${Boost_DATE_TIME_LIBRARY}
 		${Boost_IOSTREAMS_LIBRARY}
@@ -96,7 +96,4 @@ INSTALL(FILES ${SPATIAL_DOMAINS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/Spati
 
 
 ADD_NEKTAR_LIBRARY(tinyxml lib STATIC ${TINYXML_SOURCES} ${TINYXML_HEADERS})
-#INSTALL(TARGETS tinyxml RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
-#		        ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
-#			LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL) 
 

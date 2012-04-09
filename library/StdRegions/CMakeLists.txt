@@ -48,7 +48,7 @@ ADD_DEFINITIONS(-DSTD_REGIONS_EXPORTS)
 ADD_NEKTAR_LIBRARY(StdRegions lib ${NEKTAR_LIBRARY_TYPE} ${STD_REGIONS_SOURCES} ${STD_REGIONS_HEADERS})
 TARGET_LINK_LIBRARIES(StdRegions
         optimized LibUtilities debug LibUtilities-g
-        optimized tinyxml debug tinyxml
+        optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
         ${Boost_THREAD_LIBRARY}
 		${Boost_DATE_TIME_LIBRARY}
 	)

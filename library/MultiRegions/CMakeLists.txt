@@ -86,7 +86,7 @@ TARGET_LINK_LIBRARIES(MultiRegions
         optimized SpatialDomains debug SpatialDomains-g
         optimized LocalRegions   debug LocalRegions-g
         optimized StdRegions     debug StdRegions-g
-        optimized tinyxml debug tinyxml
+        optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
         ${Boost_THREAD_LIBRARY}
 		${Boost_DATE_TIME_LIBRARY}
 	)

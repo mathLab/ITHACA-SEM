@@ -65,22 +65,7 @@ SET(NEKTAR_BUILD_REGRESSION_TESTS ON CACHE BOOL
 SET(NEKTAR_BUILD_TIMINGS     OFF CACHE BOOL 
     "Build benchmark timing codes.")
 
-
-# Third party libraries to use
-SET(NEKTAR_USE_ARPACK OFF CACHE BOOL 
-    "Use Arpack routines for evaluating the eigenvalues and eigenvectors")
-SET(NEKTAR_USE_FFTW   OFF CACHE BOOL 
-    "Use FFTW routines for performing the Fast Fourier Transform.")
-SET(NEKTAR_USE_VTK    OFF CACHE BOOL 
-    "Use VTK library for utilities.")
-SET(NEKTAR_USE_MPI    OFF CACHE BOOL 
-    "Use MPICH2 for parallelisation.")
-
-
 # Build options
-SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL 
-    "Use STL with TinyXML library.")
-MARK_AS_ADVANCED(NEKTAR_USE_TINYXML_STL)
 SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL 
     "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
 MARK_AS_ADVANCED(NEKTAR_USE_DIRECT_BLAS_CALLS)
@@ -157,40 +142,17 @@ ENDIF( NOT WIN32 )
 INCLUDE (NektarCommon)
 
 # Find Libraries
-INCLUDE (FindLoki)
-INCLUDE (FindTinyXml)
-INCLUDE (FindMetis)
-INCLUDE (FindNistSparseBlas)
-
-IF( NEKTAR_USE_MPI )
-    INCLUDE (FindMPI)
-    MARK_AS_ADVANCED(MPI_LIBRARY)
-    MARK_AS_ADVANCED(MPI_EXTRA_LIBRARY)
-    MARK_AS_ADVANCED(file_cmd)
-    ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
-    INCLUDE (FindGSMPI)
-    INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
-ENDIF( NEKTAR_USE_MPI )
-
-IF( NEKTAR_USE_FFTW )   
-    INCLUDE (FindFFTW)
-    ADD_DEFINITIONS(-DNEKTAR_USING_FFTW)
-    INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
-ENDIF( NEKTAR_USE_FFTW )
-
-IF( NEKTAR_USE_ARPACK )
-    INCLUDE (FindArpack)
-    ADD_DEFINITIONS(-DNEKTAR_USING_ARPACK)
-    INCLUDE_DIRECTORIES(${ARPACK_INCLUDE_DIR})
-ENDIF( NEKTAR_USE_ARPACK)
-
-IF( NEKTAR_USE_VTK )
-    INCLUDE (FindVTK)
-    INCLUDE (${VTK_USE_FILE})
-    MARK_AS_ADVANCED(VTK_DIR)
-    ADD_DEFINITIONS(-DNEKTAR_USING_VTK)
-    INCLUDE_DIRECTORIES(${VTK_INCLUDE_DIRS})
-ENDIF( NEKTAR_USE_VTK )
+SET(TPURL http://ae-nektar.ae.ic.ac.uk/thirdparty)
+SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
+INCLUDE (ThirdPartyTinyxml)
+INCLUDE (ThirdPartyLoki)
+INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartySpblastk)
+INCLUDE (ThirdPartyBoost)
+INCLUDE (ThirdPartyFFTW)
+INCLUDE (ThirdPartyArpack)
+INCLUDE (ThirdPartyMPI)
+INCLUDE (ThirdPartyVTK)
 
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)
@@ -254,27 +216,6 @@ ELSE( NOT WIN32 )
     SET(Boost_USE_STATIC_LIBS ON)
 ENDIF( NOT WIN32 )
 
-SET(Boost_USE_MULTITHREAD ON)
-SET(Boost_ADDITIONAL_VERSIONS "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46.1" "1.40" "1.40.0" "1.35.0" "1.35")
-
-IF( NOT BOOST_ROOT )
-    #If the user has not set BOOST_ROOT, look in a couple common places first.
-    SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost) 
-    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
-    SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
-ELSE()
-    FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
-ENDIF()
-
-IF(NOT Boost_ZLIB_FOUND)
-	FIND_PACKAGE( ZLIB )
-	IF (ZLIB_FOUND)
-		SET(Boost_ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-		SET(Boost_ZLIB_LIBRARY_RELEASE ${ZLIB_LIBRARIES})
-		SET(Boost_ZLIB_LIBRARY_DEBUG ${ZLIB_LIBRARIES})
-	ENDIF()
-ENDIF()
 
 # Set up include directories
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})

@@ -1,0 +1,33 @@
+SET(NEKTAR_USE_MPI    OFF CACHE BOOL 
+    "Use MPICH2 for parallelisation.")
+SET(THIRDPARTY_BUILD_GSMPI OFF CACHE BOOL
+    "Build GSMPI if needed")
+
+IF( NEKTAR_USE_MPI )
+    INCLUDE (FindMPI)
+    MARK_AS_ADVANCED(MPI_LIBRARY)
+    MARK_AS_ADVANCED(MPI_EXTRA_LIBRARY)
+    MARK_AS_ADVANCED(file_cmd)
+    ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
+    INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
+    
+    IF (THIRDPARTY_BUILD_GSMPI)
+        EXTERNALPROJECT_ADD(
+            gsmpi-1.0
+            PREFIX ${TPSRC}
+            URL ${TPURL}/gsmpi-1.0.tar.bz2
+            URL_MD5 "a8ea5c3f9fac4695690ed344b380336f"
+            DOWNLOAD_DIR ${TPSRC}
+            CONFIGURE_COMMAND 
+                ${CMAKE_COMMAND} 
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist 
+                ${TPSRC}/src/gsmpi-1.0
+        )
+        SET(GSMPI_LIBRARY ${TPSRC}/dist/lib/libgsmpi.a CACHE FILEPATH
+            "GSMPI path" FORCE)
+    ELSE (THIRDPARTY_BUILD_GSMPI)
+        INCLUDE (FindGSMPI)
+    ENDIF (THIRDPARTY_BUILD_GSMPI)
+
+ENDIF( NEKTAR_USE_MPI )
+

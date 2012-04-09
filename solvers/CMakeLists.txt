@@ -17,7 +17,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
             ${Boost_ZLIB_LIBRARY}  
             ${Boost_DATE_TIME_LIBRARY}      
             ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-            optimized tinyxml debug tinyxml
+            optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
     )
 
     SET_LAPACK_LINK_LIBRARIES(${name})

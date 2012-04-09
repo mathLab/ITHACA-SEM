@@ -7,7 +7,7 @@ SET(LinkLibraries
     optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
     optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
     optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
-    optimized tinyxml debug tinyxml
+    optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
     optimized sbtk    debug sbtk
 )
 

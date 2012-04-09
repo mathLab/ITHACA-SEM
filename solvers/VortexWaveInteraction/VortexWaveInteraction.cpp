@@ -135,7 +135,7 @@ namespace Nektar
                                                                     m_sessionVWI->GetComm());
         std::string vEquation = m_sessionRoll->GetSolverInfo("SolverType");
         m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll);
-
+        m_solverRoll->PrintSummary(cout);
 
         int ncoeffs = m_solverRoll->UpdateFields()[0]->GetNcoeffs();
         m_vwiForcing = Array<OneD, Array<OneD, NekDouble> > (4);
@@ -352,8 +352,21 @@ namespace Nektar
              CopyFile(".fld",".rst");
         }
 
-        cout << "Executing cp -f session.fld session-Base.fld" << endl;
-        CopyFile(".fld","-Base.fld");
+        
+
+        // Write out data into base flow with variable Vx,Vy
+        cout << "Writing data to session-Base.fld" << endl;
+        
+        Array<OneD, std::string> variables(2);
+        variables[0] = "Vx";   variables[1] = "Vy";
+        Array<OneD, Array<OneD, NekDouble> > outfield(2);
+        outfield[0]  = m_solverRoll->UpdateFields()[0]->UpdateCoeffs(); 
+        outfield[1]  = m_solverRoll->UpdateFields()[1]->UpdateCoeffs(); 
+        std::string outname = m_sessionName  + "-Base.fld";
+        m_solverRoll->WriteFld(outname, m_solverRoll->UpdateFields()[0], 
+                               outfield, variables);
+
+        // CopyFile(".fld","-Base.fld");
 
 
     }
@@ -568,7 +581,8 @@ namespace Nektar
             if(m_useLinfPressureNorm)
             {
                 NekDouble Linf;
-                Linf = m_wavePressure->Linf(m_wavePressure->GetPhys());
+                Vmath::Fill(2*npts,0.0,der1,1);
+                Linf = m_wavePressure->Linf(der1);
                 
                 invnorm = 1.0/Linf;
             }
@@ -759,7 +773,7 @@ namespace Nektar
         
              std::string outname = m_sessionName  + ".vwi";
         
-              m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
+             m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
          }
     }
     
@@ -768,8 +782,16 @@ namespace Nektar
 
         ExecuteWave();
 
+        m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),
+                                              m_wavePressure->GetPlane(0)->UpdatePhys());
+        m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),
+                                              m_wavePressure->GetPlane(1)->UpdatePhys());
+
+        int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
         NekDouble Linf;
-        Linf = m_wavePressure->Linf(m_wavePressure->GetPhys());
+        Array<OneD, NekDouble> val(2*npts,0.0);
+        
+        Linf = m_wavePressure->Linf(val);
         cout << "Linf: " << Linf << endl;
 
         NekDouble l2,norm;
@@ -778,10 +800,9 @@ namespace Nektar
         l2    = m_wavePressure->GetPlane(1)->L2();
         norm += l2*l2;
 
-        int npts    = m_waveVelocities[0]->GetPlane(0)->GetNpoints();
-        Array<OneD, NekDouble> der1(npts);
-        Vmath::Fill(2*npts,1.0,der1,1);
-        NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+
+        Vmath::Fill(npts,1.0,val,1);
+        NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(val);
 
         l2 = sqrt(norm/area);
 

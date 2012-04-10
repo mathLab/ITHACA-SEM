@@ -156,7 +156,7 @@ namespace Nektar
         std::vector<std::string> AdvDiffFilenames;
         AdvDiffFilenames.push_back(meshfile);   
         AdvDiffFilenames.push_back(AdvDiffCondFile);
-
+        
         // Create AdvDiffusion session reader.
         m_sessionStreak = LibUtilities::SessionReader::CreateInstance(argc, argv, AdvDiffFilenames, m_sessionVWI->GetComm());
 
@@ -580,9 +580,11 @@ namespace Nektar
 
             if(m_useLinfPressureNorm)
             {
-                NekDouble Linf;
-                Vmath::Fill(2*npts,0.0,der1,1);
-                Linf = m_wavePressure->Linf(der1);
+                Vmath::Vmul(npts,m_wavePressure->GetPlane(0)->UpdatePhys(),1,m_wavePressure->GetPlane(0)->UpdatePhys(),1,der1,1);
+                Vmath::Vvtvp(npts,m_wavePressure->GetPlane(1)->UpdatePhys(),1,m_wavePressure->GetPlane(1)->UpdatePhys(),1,der1,1,der1,1);
+                Vmath::Vsqrt(npts,der1,1,der1,1);
+                
+                NekDouble Linf = Vmath::Vmax(npts,der1,1);
                 
                 invnorm = 1.0/Linf;
             }
@@ -791,7 +793,12 @@ namespace Nektar
         NekDouble Linf;
         Array<OneD, NekDouble> val(2*npts,0.0);
         
-        Linf = m_wavePressure->Linf(val);
+        Vmath::Vmul(npts,m_wavePressure->GetPlane(0)->UpdatePhys(),1,m_wavePressure->GetPlane(0)->UpdatePhys(),1,val,1);
+        Vmath::Vvtvp(npts,m_wavePressure->GetPlane(1)->UpdatePhys(),1,m_wavePressure->GetPlane(1)->UpdatePhys(),1,val,1,val,1);
+        Vmath::Vsqrt(npts,val,1,val,1);
+        
+               
+        Linf = Vmath::Vmax(npts,val,1);
         cout << "Linf: " << Linf << endl;
 
         NekDouble l2,norm;

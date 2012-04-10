@@ -3,7 +3,7 @@ SET(THIRDPARTY_BUILD_BOOST OFF CACHE BOOL
 
 IF (THIRDPARTY_BUILD_BOOST)
     INCLUDE(ExternalProject)
-    
+   
     IF (NOT WIN32)
         # Only build the libraries we need
         SET(BOOST_LIB_LIST --with-system --with-iostreams --with-filesystem 
@@ -14,17 +14,6 @@ IF (THIRDPARTY_BUILD_BOOST)
             SET(BOOST_FLAGS cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC)
         ENDIF ()
         
-        # Build the Zlib library separately
-        EXTERNALPROJECT_ADD(
-            zlib
-            PREFIX ${TPSRC}
-            URL ${TPURL}/zlib-1.2.3.tar.bz2
-            URL_MD5 "dee233bf288ee795ac96a98cc2e369b6"
-            DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND ./configure --shared --prefix=${TPSRC}/dist
-            BUILD_IN_SOURCE 1
-        )
-
         # Build Boost
         IF (APPLE)
             SET(TOOLSET darwin)
@@ -63,10 +52,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         SET(Boost_THREAD_LIBRARY boost_thread)
         SET(Boost_THREAD_LIBRARY_DEBUG boost_thread)
         SET(Boost_THREAD_LIBRARY_RELEASE boost_thread)
-        SET(Boost_ZLIB_LIBRARY z)
-        SET(Boost_ZLIB_LIBRARY_DEBUG z)
-        SET(Boost_ZLIB_LIBRARY_RELEASE z)
-        SET(Boost_INCLUDE_DIRS ${TPSRC}/dist/include/boost-1_49)
+        SET(Boost_INCLUDE_DIRS ${TPSRC}/dist/include 
+                               ${TPSRC}/dist/include/boost-1_49)
         LINK_DIRECTORIES(${TPSRC}/dist/lib)
     ELSE ()
         EXTERNALPROJECT_ADD(
@@ -95,15 +82,6 @@ ELSE (THIRDPARTY_BUILD_BOOST)
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
     ELSE()
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
-    ENDIF()
-
-    IF(NOT Boost_ZLIB_FOUND)
-        FIND_PACKAGE( ZLIB )
-        IF (ZLIB_FOUND)
-            SET(Boost_ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-            SET(Boost_ZLIB_LIBRARY_RELEASE ${ZLIB_LIBRARIES})
-            SET(Boost_ZLIB_LIBRARY_DEBUG ${ZLIB_LIBRARIES})
-        ENDIF()
     ENDIF()
 ENDIF (THIRDPARTY_BUILD_BOOST)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})

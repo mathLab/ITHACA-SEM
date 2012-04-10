@@ -56,6 +56,11 @@ ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3DHomo1D demos HDGHelmholtz3DHomo1DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz3DHomo1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz3DHomo1D)
 
+SET(Deriv3DHomo1D_SingleModeSource  Deriv3DHomo1D_SingleMode.cpp)
+ADD_NEKTAR_EXECUTABLE(Deriv3DHomo1D_SingleMode demos Deriv3DHomo1D_SingleModeSource)
+TARGET_LINK_LIBRARIES(Deriv3DHomo1D_SingleMode ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Deriv3DHomo1D_SingleMode)
+
 SET(Deriv3DHomo1DSource  Deriv3DHomo1D.cpp)
 ADD_NEKTAR_EXECUTABLE(Deriv3DHomo1D demos Deriv3DHomo1DSource)
 TARGET_LINK_LIBRARIES(Deriv3DHomo1D ${LinkLibraries})

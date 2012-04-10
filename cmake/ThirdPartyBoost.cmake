@@ -24,8 +24,13 @@ IF (THIRDPARTY_BUILD_BOOST)
             CONFIGURE_COMMAND ./configure --shared --prefix=${TPSRC}/dist
             BUILD_IN_SOURCE 1
         )
-        
+
         # Build Boost
+        IF (APPLE)
+            SET(TOOLSET darwin)
+        ELSE(APPLE)
+            SET(TOOLSET gcc)
+        ENDIF(APPLE)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
@@ -34,37 +39,35 @@ IF (THIRDPARTY_BUILD_BOOST)
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND ./bootstrap.sh --prefix=${TPSRC}/dist
             BUILD_COMMAND ./b2 link=shared ${BOOST_FLAGS} ${BOOST_LIB_LIST} 
-                            --layout=system toolset=gcc install
+                            --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1
         )
         
         # Set up CMake variables
-        SET(Boost_DATE_TIME_LIBRARY 
-            ${TPSRC}/dist/lib/libboost_date_time.so)
-        SET(Boost_FILESYSTEM_LIBRARY 
-            ${TPSRC}/dist/lib/libboost_filesystem.so)
-        SET(Boost_IOSTREAMS_LIBRARY 
-            ${TPSRC}/dist/lib/libboost_iostreams.so)
-        SET(Boost_IOSTREAMS_LIBRARY_DEBUG 
-            ${TPSRC}/dist/lib/libboost_iostreams.so)
-        SET(Boost_IOSTREAMS_LIBRARY_RELEASE 
-            ${TPSRC}/dist/lib/libboost_iostreams.so)
-        SET(Boost_PROGRAM_OPTIONS_LIBRARY 
-            ${TPSRC}/dist/lib/libboost_program_options.so)
-        SET(Boost_SYSTEM_LIBRARY
-            ${TPSRC}/dist/lib/libboost_system.so)
-        SET(Boost_THREAD_LIBRARY
-            ${TPSRC}/dist/lib/libboost_thread.so)
-        SET(Boost_THREAD_LIBRARY_DEBUG
-            ${TPSRC}/dist/lib/libboost_thread.so)
-        SET(Boost_THREAD_LIBRARY_RELEASE
-            ${TPSRC}/dist/lib/libboost_thread.so)
-        SET(Boost_ZLIB_LIBRARY_DEBUG
-            ${TPSRC}/dist/lib/libz.so)
-        SET(Boost_ZLIB_LIBRARY_RELEASE
-            ${TPSRC}/dist/lib/libz.so)
+        SET(Boost_DATE_TIME_LIBRARY boost_date_time)
+        SET(Boost_DATE_TIME_LIBRARY_DEBUG boost_date_time)
+        SET(Boost_DATE_TIME_LIBRARY_RELEASE boost_date_time)
+        SET(Boost_FILESYSTEM_LIBRARY boost_filesystem)
+        SET(Boost_FILESYSTEM_LIBRARY_DEBUG boost_filesystem)
+        SET(Boost_FILESYSTEM_LIBRARY_RELEASE boost_filesystem)
+        SET(Boost_IOSTREAMS_LIBRARY boost_iostreams)
+        SET(Boost_IOSTREAMS_LIBRARY_DEBUG boost_iostreams)
+        SET(Boost_IOSTREAMS_LIBRARY_RELEASE boost_iostreams)
+        SET(Boost_PROGRAM_OPTIONS_LIBRARY boost_program_options)
+        SET(Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG boost_program_options)
+        SET(Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE boost_program_options)
+        SET(Boost_SYSTEM_LIBRARY boost_system)
+        SET(Boost_SYSTEM_LIBRARY_DEBUG boost_system)
+        SET(Boost_SYSTEM_LIBRARY_RELEASE boost_system)
+        SET(Boost_THREAD_LIBRARY boost_thread)
+        SET(Boost_THREAD_LIBRARY_DEBUG boost_thread)
+        SET(Boost_THREAD_LIBRARY_RELEASE boost_thread)
+        SET(Boost_ZLIB_LIBRARY z)
+        SET(Boost_ZLIB_LIBRARY_DEBUG z)
+        SET(Boost_ZLIB_LIBRARY_RELEASE z)
         SET(Boost_INCLUDE_DIRS ${TPSRC}/dist/include/boost-1_49)
+        LINK_DIRECTORIES(${TPSRC}/dist/lib)
     ELSE ()
         EXTERNALPROJECT_ADD(
             boost

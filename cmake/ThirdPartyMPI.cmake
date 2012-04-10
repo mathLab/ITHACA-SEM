@@ -23,7 +23,7 @@ IF( NEKTAR_USE_MPI )
                 -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist 
                 ${TPSRC}/src/gsmpi-1.0
         )
-        SET(GSMPI_LIBRARY ${TPSRC}/dist/lib/libgsmpi.a CACHE FILEPATH
+        SET(GSMPI_LIBRARY gsmpi CACHE FILEPATH
             "GSMPI path" FORCE)
     ELSE (THIRDPARTY_BUILD_GSMPI)
         INCLUDE (FindGSMPI)

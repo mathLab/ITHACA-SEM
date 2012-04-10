@@ -5,6 +5,7 @@ MACRO(ADD_REGRESSION_EXECUTABLE name source)
             ${Boost_FILESYSTEM_LIBRARY} 
             ${Boost_SYSTEM_LIBRARY}
     )
+    ADD_DEPENDENCIES(${name} boost)
 
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
         TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)

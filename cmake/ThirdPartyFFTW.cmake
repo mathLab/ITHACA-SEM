@@ -16,7 +16,7 @@ IF( NEKTAR_USE_FFTW )
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND ${TPSRC}/src/fftw-3.2.2/configure --prefix=${TPSRC}/dist --quiet --enable-shared --disable-dependency-tracking
         )
-        SET(FFTW_LIB ${TPSRC}/dist/lib/libfftw3.so)
+        SET(FFTW_LIB fftw3)
         INCLUDE_DIRECTORIES(${TPSRC}/dist/include)
     ELSE ()
         INCLUDE (FindFFTW)

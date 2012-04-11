@@ -171,10 +171,31 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
     {
-        cout <<  "\tSolver Type     : Velocity Correction" <<endl;
+		cout <<  "\tSolver Type        : Velocity Correction" <<endl;
+		
+		if(m_session->DefinesSolverInfo("EvolutionOperator"))
+		{
+			cout << "\tEvolutionOperator  : " << m_session->GetSolverInfo("EvolutionOperator")<< endl;
+			
+		}
+		else
+		{
+			cout << "\tEvolutionOperator  : " << endl;
+		}
+		if(m_session->DefinesSolverInfo("Driver"))
+		{
+			cout << "\tDriver             : " << m_session->GetSolverInfo("Driver")<< endl;
+			
+		}
+		else{
+			cout << "\tDriver             : "<< endl;
+		}
+		
         TimeParamSummary(out);
-        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
-    }
+		cout << "\tTime integ.        : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+		
+	
+	}
 
 
     void VelocityCorrectionScheme::v_DoInitialise(void)
@@ -210,7 +231,13 @@ namespace Nektar
             {  
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
-                break;
+				break;
+				
+				
+
+				
+				
+				
             }
         case eNoEquationType:
         default:
@@ -228,7 +255,6 @@ namespace Nektar
 			//Backward Transformation in physical space for time evolution
 			m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
 										     m_fields[k]->UpdatePhys());
-			
 		}
 	}
 	
@@ -268,9 +294,10 @@ namespace Nektar
     {
 
         // evaluate convection terms
-        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
+		m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
                                  inarray, outarray,m_time);
 
+		
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {

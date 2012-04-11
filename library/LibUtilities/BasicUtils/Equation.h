@@ -74,14 +74,14 @@ namespace Nektar
                 catch (const std::runtime_error& e)
                 {
                     m_expr_id = -1;
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                     return;
                 }
                 catch (const std::string& e)
                 {
                     m_expr_id = -1;
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e);
                     return;
                 }
@@ -103,12 +103,12 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                 }
                 catch (const std::string& e)
                 {
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e);
                 }
                 return 0;
@@ -125,12 +125,12 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                 }
                 catch (const std::string& e)
                 {
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e);
                 }
                 return 0;
@@ -174,13 +174,13 @@ namespace Nektar
                 }
                 catch (const std::runtime_error& e)
                 {
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
                     return;
                 }
                 catch (const std::string& e)
                 {
-                    std::string msg(std::string("Equation::Constructor fails on expression [") + m_expr + std::string("]\n"));
+                    std::string msg(std::string("Equation::Evaluate fails on expression [") + m_expr + std::string("]\n"));
                     ASSERTL0(false, msg + std::string("ERROR: ") + e);
                     return;
                 }

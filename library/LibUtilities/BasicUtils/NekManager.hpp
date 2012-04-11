@@ -179,7 +179,8 @@ namespace Nektar
 
                         if( f )
                         {
-                            (*m_values)[key] = f(key);
+                            ValueType v = f(key);
+                            (*m_values)[key] = v;
                             return (*m_values)[key];
                         }
                         else

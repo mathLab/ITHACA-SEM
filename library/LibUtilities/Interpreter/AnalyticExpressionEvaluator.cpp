@@ -594,19 +594,24 @@ namespace Nektar
             while(work_left > 0)
             {
                 const int this_chunk_size = (std::min)(work_left, 1024);
-                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*0] = x[offset + i++]) ;
-                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*1] = y[offset + i++]) ;
-                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*2] = z[offset + i++]) ;
-                for (int i = 0; i < this_chunk_size; m_variable[i+this_chunk_size*3] = t[offset + i++]) ;
+                for (int i = 0; i < this_chunk_size; i++)
+                {
+                    m_variable[i+this_chunk_size*0] = x[offset + i];
+                    m_variable[i+this_chunk_size*1] = y[offset + i];
+                    m_variable[i+this_chunk_size*2] = z[offset + i];
+                    m_variable[i+this_chunk_size*3] = t[offset + i];
+                }
                 for (int i = 0; i < stack.size(); i++)
                 {
                     (*stack[i]).run_many(this_chunk_size);
                 }
-                for (int i = 0; i < this_chunk_size; result[offset + i] = m_state[i++]) ;
+                for (int i = 0; i < this_chunk_size; i++)
+                {
+                    result[offset + i] = m_state[i];
+                }
                 work_left -= this_chunk_size;
                 offset    += this_chunk_size;
             }
-
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);
         }

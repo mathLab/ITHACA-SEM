@@ -4,8 +4,8 @@ SET(METIS_SEARCH_PATHS
 	${CMAKE_SOURCE_DIR}/ThirdParty/modmetis-4.0/build/
 	${CMAKE_SOURCE_DIR}/../ThirdParty/modmetis-4.0/
 	${CMAKE_SOURCE_DIR}/../ThirdParty/modmetis-4.0/build
-    ${CMAKE_SOURCE_DIR}/ThirdParty/build/dist/lib 
-    ${CMAKE_SOURCE_DIR}/../ThirdParty/build/dist/lib)
+    ${CMAKE_SOURCE_DIR}/ThirdParty/dist/lib 
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/dist/lib)
 
 FIND_LIBRARY(METIS_LIB NAMES modmetis PATHS ${METIS_SEARCH_PATHS})
 

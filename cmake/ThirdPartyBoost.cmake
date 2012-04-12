@@ -71,6 +71,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 ELSE (THIRDPARTY_BUILD_BOOST)
     SET(Boost_USE_MULTITHREAD ON)
     SET(Boost_ADDITIONAL_VERSIONS "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
+    SET(Boost_NO_BOOST_CMAKE ON)
 
     IF( NOT BOOST_ROOT )
         #If the user has not set BOOST_ROOT, look in a couple common places first.

@@ -104,6 +104,7 @@ namespace Nektar
         {
         case eSteadyStokes: 
         case eSteadyOseen: 
+		case eSteadyNavierStokes:
         case eSteadyLinearisedNS: 
             break;
         case eUnsteadyNavierStokes:
@@ -139,7 +140,7 @@ namespace Nektar
         
         m_session->LoadParameter("Kinvis", m_kinvis);
         
-        if (m_equationType == eUnsteadyNavierStokes)
+        if (m_equationType == eUnsteadyNavierStokes || m_equationType == eSteadyNavierStokes)
         {
             std::string vConvectiveType = "Convective";
             if (m_session->DefinesTag("AdvectiveType"))
@@ -149,12 +150,13 @@ namespace Nektar
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
 		
-		if (m_equationType == eUnsteadyLinearisedNS)
+		if (m_equationType == eUnsteadyLinearisedNS)// || m_equationType == eSteadyNavierStokes)
         {
             std::string vConvectiveType = "Linearised";
             if (m_session->DefinesTag("AdvectiveType"))
             {
-                vConvectiveType = m_session->GetTag("Linearised");
+                //vConvectiveType = m_session->GetTag("Linearised");
+				vConvectiveType = m_session->GetTag("AdvectiveType");
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
@@ -245,10 +247,9 @@ namespace Nektar
             m_time += m_timestep;
        		
             // Write out current time step
-            if(m_session->GetComm()->GetRank() == 0
-               && !((n+1)%m_infosteps))
+            if(m_infosteps && !((n+1)%m_infosteps))
             {
-                cout << "Step: " << n+1 << "\t Time: " << m_time << endl;
+                cout << "Step: " << n+1 << "  Time: " << m_time << endl;
             }
 
             // Write out energy data to file
@@ -373,12 +374,10 @@ namespace Nektar
         int VelDim     = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
         Array<OneD, NekDouble > Deriv;
-        
         for(i = 0; i < VelDim; ++i)
         {
             velocity[i] = inarray[m_velocity[i]]; 
         }
-
         // Set up Derivative work space; 
         if(wk.num_elements())
         {
@@ -389,7 +388,6 @@ namespace Nektar
         {
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
-        
         m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
                                  m_velocity,inarray,outarray,m_time,Deriv);
     }

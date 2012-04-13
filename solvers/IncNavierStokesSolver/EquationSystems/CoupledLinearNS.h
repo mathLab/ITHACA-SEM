@@ -122,7 +122,8 @@ namespace Nektar
                            Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                            MultiRegions::ExpListSharedPtr &pressure,
                            const int HomogeneousMode = 0);
-        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        
+		void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                        Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                        const NekDouble time,
                                        const NekDouble a_iixDt);
@@ -130,6 +131,20 @@ namespace Nektar
         void EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                const NekDouble time);
+		
+		void SolveSteadyNavierStokes(void);
+		
+		void EvaluateNonLinearNS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
+								 Array<OneD, NekDouble> &Pressure,
+								 Array<OneD, Array<OneD, NekDouble> > &PreviousForcing,
+								 Array<OneD, Array<OneD, NekDouble> > &outarray);
+		
+		void EvaluateNonLinearNS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
+								 Array<OneD, NekDouble> &Pressure, 
+								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
+								 Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+								 MultiRegions::ExpListSharedPtr &pressure,
+								 Array<OneD, Array<OneD, NekDouble> > &outarray);
 
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         
@@ -143,6 +158,8 @@ namespace Nektar
         bool m_singleMode; 
         /// Id to identify when single mode is mean mode (i.e. beta=0);
         bool m_zeroMode;
+		
+		int m_counter;
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

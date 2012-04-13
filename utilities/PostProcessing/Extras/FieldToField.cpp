@@ -24,6 +24,10 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
+#ifdef __INTEL_COMPILER
+#include <mathimf.h>
+#endif
+
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -498,7 +502,12 @@ cout<<variables[0]<<endl;
                    offset = field0->GetPhys_Offset(elmtid);
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPhys() +offset);    
+
+#ifdef __INTEL_COMPILER
+                   if( isnan(field1->UpdatePhys()[r]) )
+#else
                    if( boost::math::isnan(field1->UpdatePhys()[r]) )
+#endif
                    {            
 cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
 cout<<"new val="<<field1->UpdatePhys()[r]<<endl;

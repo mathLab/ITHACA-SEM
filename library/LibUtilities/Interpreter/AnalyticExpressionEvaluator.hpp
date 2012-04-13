@@ -68,7 +68,11 @@ namespace boost_spirit = boost::spirit;
 #include <string>
 #include <vector>
 #include <map>
+#if defined(__INTEL_COMPILER)
+#include <mathimf.h>
+#else
 #include <cmath>
+#endif
 #include <errno.h>
 #include <stdlib.h>
 

@@ -39,7 +39,11 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
+#ifdef defined(__INTEL_COMPILER)
+    #include <mathimf.h>
+#else
+    #include <cmath>
+#endif
 
 namespace Nektar
 {
@@ -2296,7 +2300,7 @@ namespace Nektar
 #ifdef _MSC_VER
             temp.real( ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ));
 #else
-            temp.real() =   (a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c );
+            temp = std::complex<double>( (a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ), temp.imag() ) ;
 #endif
 
             delta_n = 0.5*sqrt( temp );

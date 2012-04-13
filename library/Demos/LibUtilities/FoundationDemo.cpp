@@ -43,7 +43,7 @@ long double derivativeFourierFunc(long double x, int N)
     return M_PI*M_PI*(a*cos(a*z) - b*sin(b*z));
 }
 
-long double function(long double x, int N, PointsType type)
+long double func(long double x, int N, PointsType type)
 {
     long double y = 0;
     if( type == eFourierEvenlySpaced)
@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> y(nPts);
     for(int i = 0; i < nPts; ++i)
     {
-        y[i] = function( z[i], nPts, pointsType );
+        y[i] = func( z[i], nPts, pointsType );
     }
     
 
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
     cout << "\nexact  = ";
     for(int i = 0; i < nNodes; ++i)
     {
-        cout << setw(6) << function(zNode[i], nPts, pointsType) << " ";
+        cout << setw(6) << func(zNode[i], nPts, pointsType) << " ";
     }
 
     // Display the pointwise error
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i < int(I.GetRows()); ++i)
     {
         //long double exact = function(zNode[i], nNodes, pointsType);
-        long double exact = function(zNode[i], nPts, pointsType);
+        long double exact = func(zNode[i], nPts, pointsType);
         long double error = exact - u[i];
         Linf = max(Linf, fabs(error));
         RMS += error*error;

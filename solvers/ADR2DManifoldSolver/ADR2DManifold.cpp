@@ -39,7 +39,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#ifdef defined(__INTEL_COMPILER)
+#if defined(__INTEL_COMPILER)
     #include <mathimf.h>
 #else
     #include <cmath>

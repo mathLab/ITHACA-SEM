@@ -24,7 +24,7 @@
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #include <mathimf.h>
 #endif
 
@@ -503,7 +503,7 @@ cout<<variables[0]<<endl;
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPhys() +offset);    
 
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
                    if( isnan(field1->UpdatePhys()[r]) )
 #else
                    if( boost::math::isnan(field1->UpdatePhys()[r]) )

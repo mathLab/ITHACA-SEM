@@ -112,6 +112,11 @@ namespace Nektar
             /// Generate a %SpatialDomains::VertexComponent for this node.
             SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
                 m_geom = MemoryManager<SpatialDomains::VertexComponent>::
                     AllocateSharedPtr(coordDim,id,x,y,z);
                 return m_geom;
@@ -202,6 +207,11 @@ namespace Nektar
             /// Generate a SpatialDomains::SegGeom object for this edge.
             SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
             {
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
                 // Create edge vertices.
                 SpatialDomains::VertexComponentSharedPtr p[2];
                 p[0] = n1->GetGeom(coordDim);
@@ -361,6 +371,11 @@ namespace Nektar
             /// SpatialDomains::QuadGeom for this element.
             SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
             {
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
                 int nEdge = edgeList.size();
                 
                 SpatialDomains::SegGeomSharedPtr edges[4];
@@ -623,6 +638,11 @@ namespace Nektar
             /// Generate a Nektar++ geometry object for this element.
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
             {
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
                 ASSERTL0(false, "This function should be implemented at a shape level.");
                 return boost::shared_ptr<SpatialDomains::Geometry>();
             }

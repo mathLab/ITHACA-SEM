@@ -84,17 +84,37 @@ namespace Nektar
             
             int id = m->vertexSet.size();
             vector<ElementSharedPtr> toComplete;
+
+            // Keep track of faces and edges to ensure that high-order nodes
+            // are only added once on common faces/edges.
+            boost::unordered_set<int> edgesDone;
+            boost::unordered_set<int> facesDone;
+            
+            int maxOrder = -1;
             
             // Do first pass over elements of expansion dimension to determine
             // which elements need completion.
             for (int i = 0; i < m->element[m->expDim].size(); ++i)
             {
                 ElementSharedPtr e = m->element[m->expDim][i];
-                int maxdim = e->GetMaxOrder();
-                if (e->GetConf().order == 1 && maxdim > 1)
+                if (e->GetMaxOrder() > maxOrder)
+                {
+                    maxOrder = e->GetMaxOrder();
+                }
+            }
+            
+            for (int i = 0; i < m->element[m->expDim].size(); ++i)
+            {
+                ElementSharedPtr e = m->element[m->expDim][i];
+                if (e->GetConf().order <  1        && maxOrder > 1 ||
+                    e->GetConf().order == maxOrder && e->GetConf().faceNodes == false)
                 {
                     toComplete.push_back(e);
                 }
+                // Generate geometry information for this element. This will
+                // be stored locally inside each element.
+                SpatialDomains::GeometrySharedPtr geom =
+                    m->element[m->expDim][i]->GetGeom(m->spaceDim);
             }
             
             // Complete these elements.
@@ -102,7 +122,7 @@ namespace Nektar
             {
                 toComplete[i]->Complete(toComplete[i]->GetMaxOrder());
             }
-
+            
             // Do second pass over elements to enumerate high-order vertices.
             for (int d = 1; d <= 3; ++d)
             {
@@ -119,16 +139,28 @@ namespace Nektar
                         
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
-                            tmp.insert(tmp.end(), 
-                                       edgeList[j]->edgeNodes.begin(),
-                                       edgeList[j]->edgeNodes.end());
+                            boost::unordered_set<int>::iterator it = 
+                                edgesDone.find(edgeList[j]->id);
+                            if (it == edgesDone.end())
+                            {
+                                tmp.insert(tmp.end(), 
+                                           edgeList[j]->edgeNodes.begin(),
+                                           edgeList[j]->edgeNodes.end());
+                                edgesDone.insert(edgeList[j]->id);
+                            }
                         }
                         
                         for (int j = 0; j < faceList.size(); ++j)
                         {
-                            tmp.insert(tmp.end(), 
-                                       faceList[j]->faceNodes.begin(),
-                                       faceList[j]->faceNodes.end());
+                            boost::unordered_set<int>::iterator it = 
+                                facesDone.find(faceList[j]->id);
+                            if (it == facesDone.end())
+                            {
+                                tmp.insert(tmp.end(), 
+                                           faceList[j]->faceNodes.begin(),
+                                           faceList[j]->faceNodes.end());
+                                facesDone.insert(faceList[j]->id);
+                            }
                         }
                         
                         tmp.insert(tmp.end(), volList.begin(), volList.end());
@@ -261,6 +293,7 @@ namespace Nektar
                         reverse(tags.begin()+4+3*(order-1), tags.begin()+4+4*(order-1));
                         reverse(tags.begin()+4+4*(order-1), tags.begin()+4+5*(order-1));
                         reverse(tags.begin()+4+5*(order-1), tags.begin()+4+6*(order-1));
+                        /*
                         // Swap face 2 nodes with face 3.
                         pos = 4 + 6*(order-1) + 2*(order-2)*(order-1)/2;
                         for (int j = 0; j < (order-2)*(order-1)/2; ++j)
@@ -323,54 +356,13 @@ namespace Nektar
                         {
                             tags[pos+j] = tmp[j];
                         }
+                        */
                     }
                     // Re-order prism vertices.
                     else if (e->GetConf().e == ePrism)
                     {
-                        // Mirror first in uv plane to swap around
-                        // triangular faces
-                        swap(tags[0], tags[3]);
-                        swap(tags[1], tags[4]);
-                        swap(tags[2], tags[5]);
-                        // Reorder base points so that face/vertices map
-                        // correctly.
-                        swap(tags[4], tags[2]);
-                        
-                        if (e->GetConf().order == 2)
-                        {
-                            vector<int> nodemap(18);
-                            
-                            // Vertices remain unchanged.
-                            nodemap[ 0] = tags[ 0];
-                            nodemap[ 1] = tags[ 1];
-                            nodemap[ 2] = tags[ 2];
-                            nodemap[ 3] = tags[ 3];
-                            nodemap[ 4] = tags[ 4];
-                            nodemap[ 5] = tags[ 5];
-                            // Reorder edge nodes: first mirror in uv
-                            // plane and then place in Nektar++ ordering.
-                            nodemap[12] = tags[ 6];
-                            nodemap[10] = tags[ 7];
-                            nodemap[ 6] = tags[ 8];
-                            nodemap[ 8] = tags[ 9];
-                            nodemap[13] = tags[10];
-                            nodemap[14] = tags[11];
-                            nodemap[ 9] = tags[12];
-                            nodemap[ 7] = tags[13];
-                            nodemap[11] = tags[14];
-                            // Face vertices remain unchanged.
-                            nodemap[15] = tags[15];
-                            nodemap[16] = tags[16];
-                            nodemap[17] = tags[17];
-                            
-                            tags = nodemap;
-                        }
-                        else if (e->GetConf().order > 2)
-                        {
-                            cerr << "Error: gmsh prisms only supported up "
-                                 << "to second order." << endl;
-                            abort();
-                        }
+                        // Swap nodes.
+                        swap(tags[2], tags[4]);
                     }
                     
                     // Finally write element nodes.

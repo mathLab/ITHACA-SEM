@@ -664,13 +664,14 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(1,4)] = 5 + 3*n;
             edgeNodeMap[pair<int,int>(2,4)] = 5 + 4*n;
             edgeNodeMap[pair<int,int>(3,4)] = 5 + 5*n;
-
+            
             // Add vertices
             for (int i = 0; i < 4; ++i) {
                 vertex.push_back(pNodeList[i]);
             }
 
             // Create edges (with corresponding set of edge points)
+            int eid = 0;
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
@@ -683,10 +684,14 @@ namespace Nektar
                                                       pNodeList[it->first.second-1],
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
+                edge.back()->id = eid++;
             }
-
-            //swap(edge[1], edge[3]);
-            //swap(edge[2], edge[3]);
+            
+            // Swap edges so that the ordering of the edge vector corresponds
+            // with Nektar++ ordering (since the mapping above will change
+            // this order depending on how the pairs are ordered).
+            swap(edge[1], edge[3]);
+            swap(edge[2], edge[3]);
             
             // Reorient the tet to ensure collapsed coordinates align between adjacent
             // elements.
@@ -835,7 +840,10 @@ namespace Nektar
                 // Apply Vandermonde matrix to project onto nodal space.
                 nodalTet->ModalToNodal(nodalTet->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
             }
-
+            
+            //int edgeMap[6] = {0,3,1,2,4,5};
+            //int edgeMap[6] = {0,1,2,3,4,5};
+            
             // Now extract points from the co-ordinate arrays into the
             // edge/face/volume nodes. First, extract edge-interior nodes.
             for (i = 0; i < 6; ++i)
@@ -1078,23 +1086,20 @@ namespace Nektar
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
             
-            // Create a standard nodal tetrahedron in order to get the
-            // Vandermonde matrix to perform interpolation to nodal points.
+            // Create a standard nodal prism in order to get the Vandermonde
+            // matrix to perform interpolation to nodal points.
             StdRegions::StdNodalPrismExpSharedPtr nodalPrism = 
                 MemoryManager<StdRegions::StdNodalPrismExp>::AllocateSharedPtr(
                     B0, B1, B2, LibUtilities::eNodalPrismEvenlySpaced);
             
-            Array<OneD, NekDouble> x;
-            Array<OneD, NekDouble> y;
-            Array<OneD, NekDouble> z;
-            
+            Array<OneD, NekDouble> x, y, z;
             nodalPrism->GetNodalPoints(x,y,z);
             
             SpatialDomains::PrismGeomSharedPtr geom = 
                 boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
                     this->GetGeom(3));
             
-            // Create basis key for a tetrahedron.
+            // Create basis key for a prism.
             LibUtilities::BasisKey C0(
                 LibUtilities::eOrtho_A, order+1,
                 LibUtilities::PointsKey(
@@ -1108,7 +1113,7 @@ namespace Nektar
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
             
-            // Create a tet.
+            // Create a prism.
             LocalRegions::PrismExpSharedPtr prism = 
                 MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
                     C0, C1, C2, geom);
@@ -1370,7 +1375,7 @@ namespace Nektar
             else if (pConf.faceNodes && !pConf.volumeNodes)
                 return 6*(n+1)*(n+1)-12*(n+1)+8;
             else
-                return 12*(n+1)-8;
+                return 12*(n+1)-16;
         }
     }
 }

@@ -277,7 +277,7 @@ namespace Nektar
                 {
                     tags.push_back(compIt->second);
                 }
-                tags.push_back(elType);
+                //tags.push_back(elType);
                 
                 // Create linear element
                 ElmtConfig conf(elType,1,false,false,false);

@@ -30,6 +30,9 @@ int main(int argc, char *argv[])
     }
 
     bool Extrude2DWithHomogeneous = false;
+	
+	bool SingleModePlot=false;
+	
     int nExtraPoints, nExtraPlanes;
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
@@ -39,11 +42,13 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("OutputExtraPlanes",nExtraPlanes,0);
 
     vSession->MatchSolverInfo("Extrude2DWithHomogeneous","True",Extrude2DWithHomogeneous,false);
+	vSession->MatchSolverInfo("SingleMode","ModifiedBasis",SingleModePlot,false);
+
 
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
-    //----------------------------------------------
+	//----------------------------------------------
 
     //----------------------------------------------
     // Import field file.
@@ -64,6 +69,14 @@ int main(int argc, char *argv[])
         fielddef[0]->m_basis.push_back(LibUtilities::eFourier);
     }
 
+	
+
+	if(SingleModePlot) // Set Up printing of perturbation
+	{
+        fielddef[0]->m_numModes.push_back(4); // Have to set this to 4 as default
+        fielddef[0]->m_basis.push_back(LibUtilities::eFourier); //Initialisation of a standard Fourier Expansion
+	}
+	
     //----------------------------------------------
     // Set up Expansion information
     for(i = 0; i < fielddef.size(); ++i)
@@ -96,7 +109,7 @@ int main(int argc, char *argv[])
         }
         fielddef[i]->m_numPoints = porder;
     }
-
+	
     graphShPt->SetExpansions(fielddef);
     bool useFFT = false;
 	bool dealiasing = false;
@@ -108,6 +121,9 @@ int main(int argc, char *argv[])
     int expdim   = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_fields.size();
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields);
+
+	//auxiliary expansion for plotting perturbations 
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp1(nfields);
 
     switch(expdim)
     {
@@ -180,25 +196,65 @@ int main(int argc, char *argv[])
             if(fielddef[0]->m_numHomogeneousDir == 1)
             {
                 MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
+				MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1_aux;
+				
+				
+				if(SingleModePlot)
+				{
+					int nplanes = fielddef[0]->m_numModes[2];
 
-                // Define Homogeneous expansion
-                int nplanes = fielddef[0]->m_numModes[2];
+					const LibUtilities::PointsKey Pkey(nplanes+nExtraPlanes,LibUtilities::eFourierSingleModeSpaced);					
+					//for plotting perturbations 
+					const LibUtilities::PointsKey Pkey1(nplanes+nExtraPlanes+1,LibUtilities::ePolyEvenlySpaced);
 
-                // choose points to be at evenly spaced points at
-                // nplanes + 1 points
-                const LibUtilities::PointsKey Pkey(nplanes+nExtraPlanes+1,LibUtilities::ePolyEvenlySpaced);
-                const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
-                NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
+					
+					const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
+					//Fourier expansion
+					const LibUtilities::BasisKey  Bkey1(fielddef[0]->m_basis[3],nplanes,Pkey1);
 
-                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
-                Exp[0] = Exp3DH1;
+					NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
+					
+                   
+					Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
+					
+					//for the single mode
+					Exp3DH1_aux = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey1,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
+					Exp1[0]= Exp3DH1_aux;
+					
+					
+					//Define Homogeneous Expansion
+					for(i = 1; i < nfields; ++i)
+					{
+						Exp1[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+                        ::AllocateSharedPtr(*Exp3DH1_aux);
+						
+					}
 
+
+				}
+				else
+				{
+					int nplanes = fielddef[0]->m_numModes[2];
+					
+					// choose points to be at evenly spaced points at
+					// nplanes + 1 points
+					const LibUtilities::PointsKey Pkey(nplanes+nExtraPlanes+1,LibUtilities::ePolyEvenlySpaced);
+					const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
+					NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
+					
+					
+					Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
+				}
+
+				
+				Exp[0] = Exp3DH1;
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
                         ::AllocateSharedPtr(*Exp3DH1);
+					
                 }
-            }
+		    }
             else
             {
                 MultiRegions::ExpList2DSharedPtr Exp2D;
@@ -246,38 +302,94 @@ int main(int argc, char *argv[])
     {
         for(int i = 0; i < fielddata.size(); ++i)
         {
+
             Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],
                                         fielddef[i]->m_fields[j]);
-        }
-        Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+        }	
+
+		if(SingleModePlot)
+		{
+		
+			
+			Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+
+			int dim=Exp[j]->GetNpoints();
+			
+			//copy into Exp1 with last plane equal to the first
+			Vmath::Vcopy(dim,&Exp[j]->GetPhys()[0],1,&Exp1[j]->UpdatePhys()[0],1);
+			Vmath::Vcopy(dim/2,&Exp[j]->GetPhys()[0],1,&Exp1[j]->UpdatePhys()[dim],1);
+			
+			int nq = Exp[0]->GetNpoints();
+			Array<OneD,NekDouble> x0(nq);
+			Array<OneD,NekDouble> x1(nq);
+			Array<OneD,NekDouble> x2(nq);
+			
+		}
+		else{
+			Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+		}
     }
     //----------------------------------------------
 
     //----------------------------------------------
     // Write solution  depending on #define
 #ifdef TECPLOT
-    std::string var = "";
+	
+	if(SingleModePlot)
+	{
+		std::string var = "";
 
-    for(int j = 0; j < Exp.num_elements(); ++j)
-    {
-	var = var + ", " + fielddef[0]->m_fields[j];
-    }
+		for(int j = 0; j < Exp1.num_elements(); ++j)
+		{
+			var = var + ", " + fielddef[0]->m_fields[j];
+		}
 
-    string   outname(strtok(argv[argc-1],"."));
-    outname += ".dat";
-    ofstream outfile(outname.c_str());
-    cout << "Writing file: " << outname << " ... ";
+		string   outname(strtok(argv[argc-1],"."));
+		outname += ".dat";
+	
+		ofstream outfile(outname.c_str());
+		cout << "Writing file: " << outname << " ... ";
     
-    Exp[0]->WriteTecplotHeader(outfile,var);
-    for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
-    {
-	Exp[0]->WriteTecplotZone(outfile,i);
-	for(int j = 0; j < Exp.num_elements(); ++j)
-        {
-            Exp[j]->WriteTecplotField(outfile,i);
-        }
-    }
-    cout << "Done " << endl;
+
+		Exp1[0]->WriteTecplotHeader(outfile,var);
+		for(int i = 0; i < Exp1[0]->GetNumElmts(); ++i)
+		{
+			Exp1[0]->WriteTecplotZone(outfile,i);
+			for(int j = 0; j < Exp1.num_elements(); ++j)
+			{
+				Exp1[j]->WriteTecplotField(outfile,i);
+			}
+		} 
+	}
+	else{
+	
+		std::string var = "";
+		
+		for(int j = 0; j < Exp.num_elements(); ++j)
+		{
+			var = var + ", " + fielddef[0]->m_fields[j];
+		}
+		
+		string   outname(strtok(argv[argc-1],"."));
+		
+		outname += ".dat";
+		
+		ofstream outfile(outname.c_str());
+		cout << "Writing file: " << outname << " ... ";
+		
+		
+		Exp[0]->WriteTecplotHeader(outfile,var);
+		for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
+		{
+			Exp[0]->WriteTecplotZone(outfile,i);
+			for(int j = 0; j < Exp.num_elements(); ++j)
+			{
+				Exp[j]->WriteTecplotField(outfile,i);
+			}
+		} 		
+		
+	}
+	cout << "Done" << endl;
 #else
     for(i = 0; i < nfields; ++i)
     {

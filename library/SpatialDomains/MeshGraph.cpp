@@ -2329,7 +2329,6 @@ namespace Nektar
                                     const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
                                     pkey = pkey2;
                                 }
-								cout << "basis " << basis[b] << endl;
                                 LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
                                 bkeyvec.push_back(bkey);
                             }
@@ -2482,7 +2481,6 @@ namespace Nektar
                 std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
         {
 
-			cout << "Inside set Expansion" << endl;
             int i,j,k,g,h,cnt,id;
             GeometrySharedPtr geom;
 

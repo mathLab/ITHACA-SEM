@@ -610,23 +610,15 @@ namespace Nektar
 				
 			}
 			
-			FILE *pFile3;
-			pFile3= fopen("Base_U.txt", "w");
-			for(int s=0; s< m_base[0]->GetNpoints(); ++s)
-			{
-				fprintf(pFile3, "base[%i]= %10.20lf\t  \n",s,m_base[0]->GetPhys()[s]); 
-			}
-			fclose(pFile3);
-			
         }
 		
-		//@ToDo: Post Processing for ModifiedBase
 		//std::string outname ="BaseFlow.bse";
 		//WriteFldBase(outname);
 		
 		if(m_session->DefinesParameter("N_slices"))
 		{
-			
+			m_nConvectiveFields = m_base.num_elements()-1;
+
 			for(int i=0; i<m_nConvectiveFields;++i)
 			{
 				
@@ -931,7 +923,9 @@ namespace Nektar
 			for (int i = 2; i < m_slices; i += 2) 
 			{
 				phase = (i>>1) * BetaT;
-				Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
+				
+				//-cos(phase) changed
+				Vmath::Svtvp(npoints, -cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
 				Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
 			}
 						

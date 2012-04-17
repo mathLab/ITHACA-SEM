@@ -2203,7 +2203,8 @@ namespace Nektar
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
-                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) )
+                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
+					        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0))
                     {
                         check++;
                     }
@@ -2328,6 +2329,7 @@ namespace Nektar
                                     const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
                                     pkey = pkey2;
                                 }
+								cout << "basis " << basis[b] << endl;
                                 LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
                                 bkeyvec.push_back(bkey);
                             }
@@ -2480,6 +2482,7 @@ namespace Nektar
                 std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
         {
 
+			cout << "Inside set Expansion" << endl;
             int i,j,k,g,h,cnt,id;
             GeometrySharedPtr geom;
 
@@ -2976,6 +2979,44 @@ namespace Nektar
                 }
             }
             break;
+					
+					
+				case eFourierSingleMode:
+				{
+					switch (shape)
+					{
+						case eSegment:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierSingleMode,nummodes,pkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						case eQuadrilateral:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierSingleMode,nummodes,pkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						case eHexahedron:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierSingleMode,nummodes,pkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						default:
+						{
+							ASSERTL0(false,"Expansion not defined in switch  for this shape");
+						}
+							break;
+					}
+				}
+					break;
 
             case eChebyshev:
             {
@@ -3139,6 +3180,14 @@ namespace Nektar
                             returnval.push_back(bkey1);
                         }
                             break;
+							
+						case eFourierSingleMode:
+                        {
+                            const LibUtilities::PointsKey pkey1(nummodes_x,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eFourierSingleMode,nummodes_x,pkey1);
+                            returnval.push_back(bkey1);
+                        }
+                            break;
 
                         case eChebyshev:
                         {
@@ -3165,7 +3214,16 @@ namespace Nektar
                             returnval.push_back(bkey2);
                         }
                             break;
+							
 
+						case eFourierSingleMode:
+                        {
+                            const LibUtilities::PointsKey pkey2(nummodes_y,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey2(LibUtilities::eFourierSingleMode,nummodes_y,pkey2);
+                            returnval.push_back(bkey2);
+                        }
+                            break;	
+							
                         case eChebyshev:
                         {
                             const LibUtilities::PointsKey pkey2(nummodes_y,LibUtilities::eGaussGaussChebyshev);
@@ -3187,6 +3245,14 @@ namespace Nektar
                         {
                             const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eFourierEvenlySpaced);
                             LibUtilities::BasisKey bkey3(LibUtilities::eFourier,nummodes_z,pkey3);
+                            returnval.push_back(bkey3);
+                        }
+                            break;
+							
+						case eFourierSingleMode:
+                        {
+                            const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey3(LibUtilities::eFourierSingleMode,nummodes_z,pkey3);
                             returnval.push_back(bkey3);
                         }
                             break;

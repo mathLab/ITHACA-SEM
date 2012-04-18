@@ -7,8 +7,7 @@ ENDMACRO()
 MACRO(SET_LAPACK_LINK_LIBRARIES name)
     IF( NEKTAR_USE_BLAS_LAPACK )
         IF( NEKTAR_USE_MKL AND MKL_FOUND )
-            TARGET_LINK_LIBRARIES(${name} ${MKL_LAPACK} 
-                optimized ${MKL} debug ${MKL} ${MKL_GUIDE})
+            TARGET_LINK_LIBRARIES(${name} ${MKL} )
         ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
 
         IF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT AND NIST_SPARSE_BLAS_FOUND )   
@@ -143,12 +142,9 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
     SET_COMMON_PROPERTIES(${name})
     
     IF( NEKTAR_USE_MKL AND MKL_FOUND )
-            TARGET_LINK_LIBRARIES(${name}
-                ${MKL_LAPACK}
-                optimized ${MKL} debug ${MKL}
-                ${MKL_GUIDE}
-    
-            )
+        TARGET_LINK_LIBRARIES(${name} ${MKL} )
+        SET_TARGET_PROPERTIES(${name}
+                PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -DMKL_ILP64")
     ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
         
 

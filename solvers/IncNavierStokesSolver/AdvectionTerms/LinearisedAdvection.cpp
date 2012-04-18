@@ -265,6 +265,15 @@ namespace Nektar
 						fft_out[0]=0;
 					}
 					
+					//scaling of the Fourier coefficients
+					NekDouble j=-1;
+					for (int i = 2; i < m_slices; i += 2) 
+					{
+						Vmath::Smul(2*npoints,j,&m_interp[k][i*npoints],1,&m_interp[k][i*npoints],1);
+						j=-j;
+						
+					}
+					
 				}
 				
 				if(m_session->DefinesParameter("period"))
@@ -924,9 +933,8 @@ namespace Nektar
 			{
 				phase = (i>>1) * BetaT;
 				
-				//-cos(phase) changed
-				Vmath::Svtvp(npoints, -cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
-				Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+				Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
+				Vmath::Svtvp(npoints, sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
 			}
 						
 		}

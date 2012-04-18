@@ -27,7 +27,12 @@ IF (THIRDPARTY_BUILD_BOOST)
             URL_MD5 "0d202cb811f934282dea64856a175698"
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND ./bootstrap.sh --prefix=${TPSRC}/dist
-            BUILD_COMMAND ./b2 link=shared ${BOOST_FLAGS} ${BOOST_LIB_LIST} 
+            BUILD_COMMAND NO_BZIP2=1 ./b2
+                            variant=release
+                            link=shared 
+                            include=${TPSRC}/dist/include
+                            linkflags="-L${TPSRC}/dist/lib"
+                            ${BOOST_FLAGS} ${BOOST_LIB_LIST} 
                             --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1

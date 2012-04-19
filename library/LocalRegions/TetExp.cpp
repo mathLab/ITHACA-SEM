@@ -715,7 +715,6 @@ namespace Nektar
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
 
-            Array<OneD,const NekDouble> e_tmp;
             Array<OneD,NekDouble>       o_tmp (GetFaceNumPoints(face));
             Array<OneD,NekDouble>       o_tmp2(FaceExp->GetTotPoints());
             Array<OneD,NekDouble>       o_tmp3;

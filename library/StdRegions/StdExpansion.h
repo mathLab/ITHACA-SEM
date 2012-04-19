@@ -985,7 +985,11 @@ namespace Nektar
              * inarray into \a outarray following the local edge orientation
              * and point distribution defined by defined in \a EdgeExp.
              */
-            inline void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            
+			void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+			{
+				v_GetEdgePhysVals(edge,inarray,outarray);
+			}
 
             void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion1D>   &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
@@ -1826,25 +1830,6 @@ namespace Nektar
                         Array<OneD, NekDouble> &outarray)
         {
             v_FwdTrans(inarray,outarray);
-        }
-
-
-        /**
-         * @note: this function will check to see if points distribution along
-         * the Tri expansion \a edge is the same as the local edge definition
-         * and if not interpolate. If they are the same no interpolation will
-         * be performed as can be seen in the function LibUtilities::Interp1D.
-         * @param   edge    The edge id which is to be extracted
-         * @param   EdgeExp The Edge Expansion defining the orientation and
-         *                  point distrubution points are to be interpolated.
-         * @param   inarray The 2D physical point set from which data is to be
-         *                  extracted.
-         * @param   outarray The output data
-         *
-         */
-        inline void StdExpansion::GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-        {
-            v_GetEdgePhysVals(edge,inarray,outarray);
         }
 
     } //end of namespace

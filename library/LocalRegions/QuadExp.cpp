@@ -652,56 +652,54 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            Array<OneD,const NekDouble> e_tmp;
-
             StdRegions::EdgeOrientation edgedir = GetEorient(edge);
             switch(edge)
             {
             case 0:
                 if(edgedir == StdRegions::eForwards)
                 {
-                    Vmath::Vcopy(nquad0,inarray,1,outarray,1);
+                    Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
                 }
                 else
                 {
-                    Vmath::Vcopy(nquad0,e_tmp = inarray+(nquad0-1),-1,
-                                 outarray,1);
+                    Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
+                                 &(outarray[0]),1);
                 }
 
                 break;
             case 1:
                 if(edgedir == StdRegions::eForwards)
                 {
-                    Vmath::Vcopy(nquad1,e_tmp = inarray+(nquad0-1),nquad0,
-                                 outarray,1);
+                    Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
+                                 &(outarray[0]),1);
                 }
                 else
                 {
-                    Vmath::Vcopy(nquad1,e_tmp = inarray+(nquad0*nquad1-1),
-                                 -nquad0, outarray,1);
+                    Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
+                                 -nquad0, &(outarray[0]),1);
                 }
                 break;
             case 2:
                 if(edgedir == StdRegions::eForwards)
                 {
-                    Vmath::Vcopy(nquad0,e_tmp = inarray+(nquad0*nquad1-1),-1,
-                                 outarray,1);
+                    Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1),-1,
+                                 &(outarray[0]),1);
                 }
                 else
                 {
-                    Vmath::Vcopy(nquad0,e_tmp = inarray+nquad0*(nquad1-1),1,
-                                 outarray,1);
+                    Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
+                                 &(outarray[0]),1);
                 }
                 break;
             case 3:
                 if(edgedir == StdRegions::eForwards)
                 {
-                    Vmath::Vcopy(nquad1,e_tmp = inarray + nquad0*(nquad1-1),
-                                 -nquad0,outarray,1);
+                    Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
+                                 -nquad0,&(outarray[0]),1);
                 }
                 else
                 {
-                    Vmath::Vcopy(nquad1,inarray,nquad0,outarray,1);
+                    Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
                 }
                 break;
             default:
@@ -717,7 +715,6 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            Array<OneD,const NekDouble> e_tmp;
             Array<OneD,NekDouble>       outtmp(max(nquad0,nquad1));
 
 
@@ -725,17 +722,17 @@ namespace Nektar
             switch(edge)
             {
             case 0:
-                Vmath::Vcopy(nquad0,inarray,1,outtmp,1);
+                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outtmp[0]),1);
                 break;
             case 1:
-                Vmath::Vcopy(nquad1,e_tmp = inarray+(nquad0-1),nquad0,outtmp,1);
+                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outtmp[0]),1);
                 break;
             case 2:
-                Vmath::Vcopy(nquad0,e_tmp = inarray+nquad0*(nquad1-1),1,
-                             outtmp,1);
+                Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
+                             &(outtmp[0]),1);
                 break;
             case 3:
-                Vmath::Vcopy(nquad1,inarray,nquad0,outtmp,1);
+                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outtmp[0]),1);
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");

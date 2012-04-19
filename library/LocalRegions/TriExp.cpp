@@ -668,20 +668,19 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            Array<OneD,const NekDouble> e_tmp;
             Array<OneD,NekDouble>       outtmp(max(nquad0,nquad1));
 
             // get points in Cartesian orientation
             switch(edge)
             {
             case 0:
-                Vmath::Vcopy(nquad0,inarray,1,outtmp,1);
+                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outtmp[0]),1);
                 break;
             case 1:
-                Vmath::Vcopy(nquad1,e_tmp = inarray+(nquad0-1),nquad0,outtmp,1);
+                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outtmp[0]),1);
                 break;
             case 2:
-                Vmath::Vcopy(nquad1,inarray,nquad0,outtmp,1);
+                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outtmp[0]),1);
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");

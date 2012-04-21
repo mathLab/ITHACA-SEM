@@ -32,6 +32,7 @@
 //  Description: Geometric factors base class.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/GeomFactors.h>

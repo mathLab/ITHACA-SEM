@@ -32,13 +32,13 @@
 //  Description: Geometric Factors base class
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
 #include <boost/unordered_set.hpp>
 
 #include <LibUtilities/Foundations/Points.h>
-
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <StdRegions/StdExpansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
@@ -111,7 +111,9 @@ namespace Nektar
             inline const Array<TwoD, const NekDouble> &GetGmat() const;
 
             /// Return the G matrix.
-            inline const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &GetDeriv() const;
+            inline const Array<
+                OneD, const Array<OneD, Array<OneD, NekDouble> > > 
+                    &GetDeriv() const;
 
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
@@ -127,15 +129,15 @@ namespace Nektar
 
             /// Set up quadrature metrics
             inline void SetUpQuadratureMetrics(
-                        StdRegions::ExpansionType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                       &tbasis);
+                StdRegions::ExpansionType shape,
+                const Array<OneD, const LibUtilities::BasisSharedPtr>
+                    &tbasis);
 
             /// Set up Laplacian metrics
             inline void SetUpLaplacianMetrics(
-                        StdRegions::ExpansionType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                       &tbasis);
+                StdRegions::ExpansionType shape,
+                const Array<OneD, const LibUtilities::BasisSharedPtr>
+                    &tbasis);
 
             /// Set up Tangents
             inline void SetUpTangents();
@@ -153,10 +155,10 @@ namespace Nektar
 
             /// Computes the edge tangents from 1D element
             inline void ComputeEdgeTangents(
-            	    	    const GeometrySharedPtr &geom2D,
-            	    	    const int edge,
-            	    	    const LibUtilities::PointsKey &to_key);
-
+                const GeometrySharedPtr       &geom2D,
+                const int                      edge,
+                const LibUtilities::PointsKey &to_key);
+            
             /// Set tangent orientation
             inline void SetTangentOrientation(std::string conn);
 
@@ -164,8 +166,9 @@ namespace Nektar
             inline void SetTangentCircularCentre(
                             Array<OneD,NekDouble> &centre);
             
-            /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
-            /// The tangent vectors are set using the function ComputeEdgeTangents.
+            /// Returns the tangent vectors evaluated at each quadrature point
+            /// for 1D elements.  The tangent vectors are set using the
+            /// function ComputeEdgeTangents.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                 &GetEdgeTangent() const;
 
@@ -192,12 +195,18 @@ namespace Nektar
                         const Array<OneD, const Array<OneD, NekDouble> > &in2,
                               Array<OneD, Array<OneD, NekDouble> > &out);
 
-            SPATIAL_DOMAINS_EXPORT const LibUtilities::PointsKey & GetPointsKey(unsigned int i) const
+            /// Returns the LibUtilities::PointsKey object associated with a
+            /// co-ordinate direction.
+            SPATIAL_DOMAINS_EXPORT const LibUtilities::PointsKey 
+                &GetPointsKey(unsigned int i) const
             {
                 ASSERTL1(i < m_pointsKey.num_elements(), "PointsKey out of range.");
                 return m_pointsKey[i];
             }
 
+            /// Computes a hash of this GeomFactors element, based on the
+            /// type, expansion/co-ordinate dimensions, metric, Jacobian and
+            /// the geometric factors themselves.
             const size_t GetHash() const
             {
                 size_t hash = 0;
@@ -269,13 +278,14 @@ namespace Nektar
             /// the number of quadrature points. Each block holds a component
             /// of the normal vectors.
             Array<OneD, Array<OneD,NekDouble> > m_normal;
+
             /// Array of size (coordim)x(nquad) which holds the components of
             /// the tangent vector at each quadrature point. The array is
             /// populated as \a m_coordDim consecutive blocks of size equal to
             /// the number of quadrature points. Each block holds a component
             /// of the tangent vectors.
-           
             Array<OneD, Array<OneD,NekDouble> > m_tangent;
+            
             /// Instance for a specific expansion/coordinate dimension without
             /// the generation of any factors. This constructor is protected
             /// since only dimension-specific GeomFactors classes should be
@@ -295,6 +305,7 @@ namespace Nektar
             	    	const GeometrySharedPtr &geom2D,
             	    	const int edge,
             	    	const LibUtilities::PointsKey &to_key);
+            
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();
 
@@ -303,18 +314,19 @@ namespace Nektar
 
             /// Set up quadrature metrics
             virtual void v_SetUpQuadratureMetrics(
-                        StdRegions::ExpansionType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                       &tbasis);
+                StdRegions::ExpansionType shape,
+                const Array<OneD, const LibUtilities::BasisSharedPtr>
+                    &tbasis);
 
             /// Set up Laplacian metrics
             virtual void v_SetUpLaplacianMetrics(
-                        StdRegions::ExpansionType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                       &tbasis);
-
+                StdRegions::ExpansionType shape,
+                const Array<OneD, const LibUtilities::BasisSharedPtr>
+                    &tbasis);
         };
 
+        /// A hash functor for geometric factors. Utilises
+        /// GeomFactors::GetHash.
         struct GeomFactorsHash : std::unary_function<GeomFactorsSharedPtr, std::size_t>
         {
             std::size_t operator()(GeomFactorsSharedPtr const& p) const
@@ -342,7 +354,8 @@ namespace Nektar
         }
 
         /// Return the G matrix.
-        inline const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > &GeomFactors::GetDeriv() const
+        inline const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >
+            &GeomFactors::GetDeriv() const
         {
             return m_deriv;
         }
@@ -455,15 +468,16 @@ namespace Nektar
             m_tangentDirCentre = centre;
         }
 
-        /// Returns the tangent vectors evaluated at each quadrature point for 1D elements. 
-		/// The tangent vectors are set using the function ComputeEdgeTangents.
-		inline const Array<OneD, const Array<OneD, NekDouble> >
-						&GeomFactors::GetEdgeTangent() const
-		{
-			ASSERTL0(m_tangent.num_elements()>0," tangent vectors are not computed for this line");	
-	     	return m_tangent;
-		}
-		
+        /// Returns the tangent vectors evaluated at each quadrature point for
+        /// 1D elements.  The tangent vectors are set using the function
+        /// ComputeEdgeTangents.
+        inline const Array<OneD, const Array<OneD, NekDouble> >
+            &GeomFactors::GetEdgeTangent() const
+        {
+            ASSERTL0(m_tangent.num_elements()>0," tangent vectors are not computed for this line");	
+            return m_tangent;
+        }
+	
         /// Returns a single tangent vector.
         inline const Array<OneD, const Array<OneD, NekDouble> >
                                                 &GeomFactors::GetTangent(int i)

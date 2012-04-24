@@ -12,9 +12,9 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
 
-    if(argc != 3)
+    if(argc != 2)
     {
-        fprintf(stderr,"Usage: FldToTecplot  meshfile fieldfile\n");
+        fprintf(stderr,"Usage: XmlToTecplot  meshfile\n");
         exit(1);
     }
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
+    string meshfile(argv[argc-1]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
     //----------------------------------------------
 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Write solution  depending on #define
     string   outfile(strtok(argv[argc-1],"."));
-    outfile +=  ".dat"; 
+    outfile +=  ".dat";
     ofstream outstrm(outfile.c_str());
 
     Exp[0]->WriteToFile(outstrm,eTecplot,"Dummy");

@@ -1066,6 +1066,8 @@ namespace Nektar
             int nVerts;
             int vertCnt;
             int edgeCnt;
+	    int localOffset=0;
+            int nTotalVerts=0;
             map<int, int>    vertTempGraphVertId;
             map<int, int>    edgeTempGraphVertId;
             map<int, int>    intTempGraphVertId;
@@ -1182,19 +1184,27 @@ namespace Nektar
                 {
                     m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
 
-                    nVerts = locExpansion->GetNverts();
-                    // For element i, store the temporary graph
-                    // vertex id's of all element edges and
-                    // verices in these 2 arrays below
-                    localVerts = Array<OneD, int>(nVerts,-1);
-                    localEdges = Array<OneD, int>(nVerts,-1);
-                    vertCnt = 0;
-                    edgeCnt = 0;
+                    nTotalVerts += locExpansion->GetNverts();
 
+		}
+	    }
+
+	    // For element i, store the temporary graph
+	    // vertex id's of all element edges and
+	    // verices in these 2 arrays below
+	    localVerts = Array<OneD, int>(nTotalVerts,-1);
+	    localEdges = Array<OneD, int>(nTotalVerts,-1);
+
+
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[elmtid]))
+                {
+                    vertCnt = 0;
+		    nVerts = locExpansion->GetNverts();
                     for(j = 0; j < nVerts; ++j)
                     {
-                        nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
-
                         meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
                         if(ReorderedGraphVertId[0].count(meshVertId) == 0)
                         {
@@ -1204,10 +1214,26 @@ namespace Nektar
                                 boost::add_vertex(boostGraphObj);
                                 vertTempGraphVertId[meshVertId] = tempGraphVertId++;
                             }
-                            localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
+                            localVerts[localOffset + vertCnt++] = vertTempGraphVertId[meshVertId];
                             vwgts_map[ vertTempGraphVertId[meshVertId] ] = Dofs[0][meshVertId];
                         }
+		    }
+		}
+		localOffset+=nVerts;
+	    }
 
+	    m_numNonDirVertexModes=tempGraphVertId;
+
+	    localOffset=0;
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[elmtid]))
+                {
+                    edgeCnt = 0;
+		    nVerts = locExpansion->GetNverts();
+                    for(j = 0; j < nVerts; ++j)
+                    {
                         meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
                         if(ReorderedGraphVertId[1].count(meshEdgeId) == 0)
                         {
@@ -1217,84 +1243,103 @@ namespace Nektar
                                 boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                             }
-                            localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
+                            localEdges[localOffset + edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
                             vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = Dofs[1][meshEdgeId];
-                        }
-                    }
+		        }
+		    }
+	        }
+		localOffset+=nVerts;
+	    }
 
-                    if(doInteriorMap)
+            if(doInteriorMap)
+            {
+                for(i = 0; i < locExpVector.size(); ++i)
+                {
+                    elmtid = locExp.GetOffset_Elmt_Id(i);
+                    if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[elmtid]))
                     {
+
                         boost::add_vertex(boostGraphObj);
                         intTempGraphVertId[elmtid] = tempGraphVertId++;
                         vwgts_map[ intTempGraphVertId[elmtid] ] = Dofs[2][elmtid];
                     }
+		}
+	    }
 
+	    localOffset=0;
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[elmtid]))
+                {
+                    nVerts = locExpansion->GetNverts();
                     // Now loop over all local edges and vertices
                     // of this element and define that all other
                     // edges and vertices of this element are
                     // adjacent to them.
                     for(j = 0; j < nVerts; j++)
                     {
-                        if(localVerts[j]==-1)
+                        if(localVerts[j+localOffset]==-1)
                         {
                             break;
                         }
                         
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localVerts[k]==-1)
+                            if(localVerts[k+localOffset]==-1)
                             {
                                 break;
                             }
                             if(k!=j)
                             {
-                                boost::add_edge( (size_t) localVerts[j], (size_t) localVerts[k],boostGraphObj);
+                                boost::add_edge( (size_t) localVerts[j+localOffset], (size_t) localVerts[k+localOffset],boostGraphObj);
                             }
                         }
 
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localEdges[k]==-1)
+                            if(localEdges[k+localOffset]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localVerts[j], (size_t) localEdges[k],boostGraphObj);
+                            boost::add_edge( (size_t) localVerts[j+localOffset], (size_t) localEdges[k+localOffset],boostGraphObj);
                         }
 
                         if(doInteriorMap)
                         {
-                            boost::add_edge( (size_t)  localVerts[j], (size_t) intTempGraphVertId[elmtid],boostGraphObj);
+                            boost::add_edge( (size_t)  localVerts[j+localOffset], (size_t) intTempGraphVertId[elmtid],boostGraphObj);
                         }
                     }
+
                     for(j = 0; j < nVerts; j++)
                     {
-                        if(localEdges[j]==-1)
+                        if(localEdges[j+localOffset]==-1)
                         {
                             break;
                         }
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localEdges[k]==-1)
+                            if(localEdges[k+localOffset]==-1)
                             {
                                 break;
                             }
                             if(k!=j)
                             {
-                                boost::add_edge( (size_t) localEdges[j], (size_t) localEdges[k],boostGraphObj);
+                                boost::add_edge( (size_t) localEdges[j+localOffset], (size_t) localEdges[k+localOffset],boostGraphObj);
                             }
                         }
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localVerts[k]==-1)
+                            if(localVerts[k+localOffset]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localEdges[j], (size_t) localVerts[k],boostGraphObj);
+                            boost::add_edge( (size_t) localEdges[j+localOffset], (size_t) localVerts[k+localOffset],boostGraphObj);
                         }
 
                         if(doInteriorMap)
                         {
-                            boost::add_edge( (size_t) localEdges[j],  (size_t) intTempGraphVertId[elmtid], boostGraphObj);
+                            boost::add_edge( (size_t) localEdges[j+localOffset],  (size_t) intTempGraphVertId[elmtid], boostGraphObj);
                         }
                     }
                     
@@ -1302,21 +1347,21 @@ namespace Nektar
                     {
                         for(j = 0; j < nVerts; j++)
                         {
-                            if(localVerts[j]==-1)
+                            if(localVerts[j+localOffset]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) intTempGraphVertId[elmtid], (size_t) localVerts[j], boostGraphObj);
+                            boost::add_edge( (size_t) intTempGraphVertId[elmtid], (size_t) localVerts[j+localOffset], boostGraphObj);
                         }
                         
                         for(j = 0; j < nVerts; j++)
                         {
-                            if(localEdges[j]==-1)
+                            if(localEdges[j+localOffset]==-1)
                             {
                                 break;
                             }
 
-                            boost::add_edge( (size_t) intTempGraphVertId[elmtid], (size_t) localEdges[j], boostGraphObj);
+                            boost::add_edge( (size_t) intTempGraphVertId[elmtid], (size_t) localEdges[j+localOffset], boostGraphObj);
                         }
                     }
 
@@ -1326,6 +1371,7 @@ namespace Nektar
                 {
                     ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
                 }
+		localOffset+=nVerts;
             }
 
 
@@ -1348,12 +1394,12 @@ namespace Nektar
                 {
                 case eDirectFullMatrix:
                 case eIterativeFull:
+                case eIterativeStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
                     break;
                 case eDirectStaticCond:
-                case eIterativeStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
                     }

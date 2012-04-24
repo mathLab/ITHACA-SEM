@@ -382,7 +382,7 @@ namespace Nektar
 						if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 						{
 							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);
+							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
 							
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{								
@@ -486,6 +486,7 @@ namespace Nektar
                 {
 					if(m_HomogeneousType == eHomogeneous1D)
                     {
+						
 						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
 						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
 						
@@ -648,11 +649,14 @@ namespace Nektar
 			NekDouble m_time,
             Array<OneD, NekDouble> &pWk)
     {
+		
+		
+
         int ndim       = m_nConvectiveFields;
         int nPointsTot = pFields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2;
 	
-		
+
         //Evaluation of the gradiend of each component of the base flow
         //\nabla U
         Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
@@ -747,7 +751,7 @@ namespace Nektar
             
             //3D
         case 3:
-			
+				
 			grad1 = Array<OneD, NekDouble> (nPointsTot);
 			grad2 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
@@ -760,14 +764,13 @@ namespace Nektar
 
 			pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
 			
-            pFields[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
-            pFields[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
-            pFields[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
+            m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
+            m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
+            m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
          
 				
 			switch (pVelocityComponent)
             {
-					
                 //x-equation	
             case 0:
 					

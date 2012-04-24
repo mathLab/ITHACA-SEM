@@ -306,6 +306,7 @@ namespace Nektar
         const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const
         {
             NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+	    return NullDNekMatSharedPtr;
         }
 
     } //end of namespace

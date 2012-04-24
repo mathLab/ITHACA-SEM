@@ -78,6 +78,7 @@ namespace Nektar
     typedef boost::shared_ptr<DNekSparseMat>     DNekSparseMatSharedPtr;
 
 
+    static DNekMatSharedPtr NullDNekMatSharedPtr;
     static DNekScalMatSharedPtr NullDNekScalMatSharedPtr;
     static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
 

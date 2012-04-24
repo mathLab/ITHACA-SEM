@@ -715,33 +715,37 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            Array<OneD,NekDouble>       outtmp(max(nquad0,nquad1));
-
-
             // get points in Cartesian orientation
             switch(edge)
             {
             case 0:
-                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outtmp[0]),1);
+                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
                 break;
             case 1:
-                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outtmp[0]),1);
+                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outarray[0]),1);
                 break;
             case 2:
                 Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
-                             &(outtmp[0]),1);
+                             &(outarray[0]),1);
                 break;
             case 3:
-                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outtmp[0]),1);
+                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
                 break;
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
                 break;
             }
 
-            // Interpolate if required
-            LibUtilities::Interp1D(m_base[edge%2]->GetPointsKey(),outtmp,
+			// Interpolate if required
+			if(m_base[edge%2]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
+			{
+				Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
+				
+				outtmp = outarray;
+				
+				LibUtilities::Interp1D(m_base[edge%2]->GetPointsKey(),outtmp,
                                    EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+			}
 
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)

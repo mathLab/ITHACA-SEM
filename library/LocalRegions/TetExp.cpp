@@ -1987,10 +1987,10 @@ namespace Nektar
 	    const int three=3;
             const int nVerts = 4;
             const double point[][3] = {
-	      {-1,-1/sqrt(3),-1/sqrt(6)},
-	      {1,-1/sqrt(3),-1/sqrt(6)},
-	      {0,2/sqrt(3),-1/sqrt(6)},
-	      {0,0,3/sqrt(6)}};
+	      {-1,-1/sqrt(double(3)),-1/sqrt(double(6))},
+	      {1,-1/sqrt(double(3)),-1/sqrt(double(6))},
+	      {0,2/sqrt(double(3)),-1/sqrt(double(6))},
+	      {0,0,3/sqrt(double(6))}};
         
             boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
 	    for(i=0; i < nVerts; ++i)

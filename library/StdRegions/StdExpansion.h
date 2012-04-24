@@ -436,6 +436,11 @@ namespace Nektar
             }
 
 
+            int GetTotalEdgeIntNcoeffs() const
+            {
+                return v_GetTotalEdgeIntNcoeffs();
+            }
+
             /** \brief This function returns the number of quadrature points
              *  belonging to the \a i-th edge
              *
@@ -496,6 +501,11 @@ namespace Nektar
             int GetFaceIntNcoeffs(const int i) const
             {
                 return v_GetFaceIntNcoeffs(i);
+            }
+
+            int GetTotalFaceIntNcoeffs() const
+            {
+                return v_GetTotalFaceIntNcoeffs();
             }
 
             LibUtilities::PointsKey GetFacePointsKey(const int i, const int j) const
@@ -1561,6 +1571,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
 
+            STD_REGIONS_EXPORT virtual int v_GetTotalEdgeIntNcoeffs() const;
+
             STD_REGIONS_EXPORT virtual int v_GetEdgeNumPoints(const int i) const;
 
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
@@ -1572,6 +1584,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
+
+            STD_REGIONS_EXPORT virtual int v_GetTotalFaceIntNcoeffs() const;
 
             STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(const int i, const int j) const;
             

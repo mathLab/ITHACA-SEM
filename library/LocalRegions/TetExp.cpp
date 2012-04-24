@@ -1477,6 +1477,46 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
                 }
                 break;
+             case StdRegions::ePreconditioner:
+                {
+                    LibUtilities::BasisKey TetBa = m_base[0]->GetBasisKey();
+		    LibUtilities::BasisKey TetBb = m_base[1]->GetBasisKey();
+		    LibUtilities::BasisKey TetBc = m_base[2]->GetBasisKey();
+
+		    SpatialDomains::TetGeomSharedPtr EquilateralTetGeom=CreateEquilateralTetGeom();
+
+		    //create TetExp with equilateral Tet geometry object
+                    TetExp eqtet(TetBa,TetBb,TetBc,EquilateralTetGeom);
+		
+		    int nquad0 = m_base[0]->GetNumPoints();
+		    int nquad1 = m_base[1]->GetNumPoints();
+		    int nquad2 = m_base[2]->GetNumPoints();
+
+		    int nq=nquad0*nquad1*nquad2;
+		    Array<OneD,NekDouble> coords[3];
+
+		    coords[0] = Array<OneD,NekDouble>(nq);
+		    coords[1] = Array<OneD,NekDouble>(nq);
+		    coords[2] = Array<OneD,NekDouble>(nq);
+		    eqtet.GetCoords(coords[0],coords[1],coords[2]);
+
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), eqtet);
+                    DNekScalMat &MassMat = *(eqtet.m_matrixManager[masskey]);
+                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), eqtet, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat &LapMat = *(eqtet.m_matrixManager[lapkey]);
+
+                    int rows = LapMat.GetRows();
+                    int cols = LapMat.GetColumns();
+
+                    DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
+
+                    NekDouble one = 1.0;
+                    (*helm) = LapMat + factor*MassMat;
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
+                }
+                break;
             case StdRegions::eIProductWRTBase:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1527,6 +1567,7 @@ namespace Nektar
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
+            case StdRegions::ePreconditioner:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries
@@ -1939,5 +1980,84 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
+
+        SpatialDomains::TetGeomSharedPtr TetExp::CreateEquilateralTetGeom()
+        {
+	    int i,j;
+	    const int three=3;
+            const int nVerts = 4;
+            const double point[][3] = {
+	      {-1,-1/sqrt(3),-1/sqrt(6)},
+	      {1,-1/sqrt(3),-1/sqrt(6)},
+	      {0,2/sqrt(3),-1/sqrt(6)},
+	      {0,0,3/sqrt(6)}};
+        
+            boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
+	    for(i=0; i < nVerts; ++i)
+	    {
+	        verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
+	    }
+
+            //////////////////////////////
+            // Set up Tetrahedron Edges //
+            //////////////////////////////
+
+           // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
+           const int nEdges = 6;
+           const int vertexConnectivity[][2] = {
+             {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
+           };
+
+           // Populate the list of edges
+	   SpatialDomains::SegGeomSharedPtr edges[nEdges];
+           for(i=0; i < nEdges; ++i)
+	   {
+               boost::shared_ptr<SpatialDomains::VertexComponent> vertsArray[2];
+	       for(j=0; j<2; ++j)
+	       {
+                   vertsArray[j] = verts[vertexConnectivity[i][j]];
+	       }
+
+               edges[i] = MemoryManager<SpatialDomains::SegGeom>
+                                ::AllocateSharedPtr(i, three, vertsArray);
+           }
+
+           //////////////////////////////
+           // Set up Tetrahedron faces //
+           //////////////////////////////
+ 
+	   const int nFaces = 4;
+           const int edgeConnectivity[][3] = {
+                 {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
+                 };
+           const bool isEdgeFlipped[][3] = {
+                 {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1}
+                 };
+
+           // Populate the list of faces
+	   SpatialDomains::TriGeomSharedPtr faces[nFaces];
+           for(i=0; i < nFaces; ++i)
+	   {
+	       SpatialDomains::SegGeomSharedPtr edgeArray[3];
+	       StdRegions::EdgeOrientation eorientArray[3];
+               for(j=0; j < 3; ++j)
+	       {
+                   edgeArray[j] = edges[edgeConnectivity[i][j]];
+                   eorientArray[j] = isEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
+	       }
+           
+
+	       faces[i] = MemoryManager<SpatialDomains::TriGeom>
+                                ::AllocateSharedPtr(i, edgeArray, eorientArray);
+	   }
+
+           SpatialDomains::TetGeomSharedPtr geom =
+                         MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces);
+
+	   geom->SetOwnData();
+
+           return geom;
+       }
+
     }//end of namespace
 }//end of namespace

@@ -287,6 +287,10 @@ namespace Vmath
     LIB_UTILITIES_EXPORT void Vcopy(int n, const int *x, const int incx, int *y,
                              const int incy);
 
+    // \brief copy one int vector to another
+    LIB_UTILITIES_EXPORT void Vcopy(int n, const unsigned int *x, const int incx, unsigned int *y,
+                             const int incy);
+
     // \brief copy one double vector to another
     LIB_UTILITIES_EXPORT void Vcopy(int n, const double *x, const int incx, double *y,
                              const int incy);

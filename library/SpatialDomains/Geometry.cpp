@@ -203,6 +203,11 @@ namespace Nektar
             return v_GetNumEdges();
         }
 
+        int Geometry::GetNumFaces() const
+        {
+            return v_GetNumFaces();
+        }
+
         int Geometry::GetShapeDim() const
         {
             return v_GetShapeDim();
@@ -213,6 +218,21 @@ namespace Nektar
                       NekDouble tol)
         {
             return v_ContainsPoint(gloCoord,tol);
+        }
+
+        int Geometry::GetVertexEdgeMap(int i, int j) const
+	{
+	    return v_GetVertexEdgeMap(i,j);
+        }
+
+        int Geometry::GetVertexFaceMap(int i, int j) const
+        {
+            return v_GetVertexFaceMap(i,j);
+        }
+
+        int Geometry::GetEdgeFaceMap(int i, int j) const
+        {
+            return v_GetEdgeFaceMap(i,j);
         }
 
         void Geometry::GenGeomFactors(
@@ -344,6 +364,12 @@ namespace Nektar
             return 0;
         }
 
+        int Geometry::v_GetNumFaces() const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is only valid for shape type geometries");
+            return 0;
+        }
 
         int Geometry::v_GetShapeDim() const
         {
@@ -359,6 +385,27 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");
             return false;
+        }
+
+        int Geometry::v_GetVertexEdgeMap(const int i, const int j) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return 0;
+        }
+
+        int Geometry::v_GetVertexFaceMap(const int i, const int j) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return 0;
+        }
+
+        int Geometry::v_GetEdgeFaceMap(const int i, const int j) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return 0;
         }
 
         NekDouble Geometry::v_GetCoord(

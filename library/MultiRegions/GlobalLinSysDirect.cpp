@@ -70,6 +70,7 @@ namespace Nektar
                 const int pNumRows,
                 const Array<OneD,const NekDouble> &pInput,
                       Array<OneD,      NekDouble> &pOutput,
+                const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
             DNekVec Vin(pInput.num_elements(),pInput);

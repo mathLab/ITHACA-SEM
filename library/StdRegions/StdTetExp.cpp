@@ -1189,6 +1189,15 @@ namespace Nektar
             }
         }
 
+        int StdTetExp::v_GetTotalEdgeIntNcoeffs() const
+        {
+            int P = m_base[0]->GetNumModes()-2;
+            int Q = m_base[1]->GetNumModes()-2;
+            int R = m_base[2]->GetNumModes()-2;
+
+            return P+Q+4*R;
+	}
+
         int StdTetExp::v_GetFaceNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
@@ -1235,6 +1244,17 @@ namespace Nektar
                 return Qi * (2*Ri - Qi - 1) / 2;
             }
         }
+
+        int StdTetExp::v_GetTotalFaceIntNcoeffs() const
+        {
+            int Pi = m_base[0]->GetNumModes() - 2;
+            int Qi = m_base[1]->GetNumModes() - 2;
+            int Ri = m_base[2]->GetNumModes() - 2;
+
+            return Pi * (2*Qi - Pi - 1) / 2 +
+	           Pi * (2*Ri - Pi - 1) / 2 +
+	           Qi * (2*Ri - Qi - 1);
+	}
 
         int StdTetExp::v_GetFaceNumPoints(const int i) const
         {

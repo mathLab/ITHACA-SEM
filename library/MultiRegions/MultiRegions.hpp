@@ -106,6 +106,23 @@ namespace Nektar
             eDiscontinuousGalerkin
         };
 
+        enum PreconditionerType
+        {
+            eNoPreconditioner,    ///< No Solution type specified
+            eDiagonal,
+            eInverseLinear,
+	    eLowEnergy
+        };
+
+        const char* const PreconditionerTypeMap[] =
+        {
+            "No Preconditioner",
+            "Diagonal",
+            "InverseLinear",
+	    "LowEnergy"
+        };
+
+
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
 

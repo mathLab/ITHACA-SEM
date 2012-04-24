@@ -254,9 +254,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
+ 	    STD_REGIONS_EXPORT virtual int  v_GetTotalEdgeIntNcoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetFaceNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int  v_GetFaceIntNcoeffs(
                     const int i) const;
+ 	    STD_REGIONS_EXPORT virtual int  v_GetTotalFaceIntNcoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetFaceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(
                     const int i, const int j) const;

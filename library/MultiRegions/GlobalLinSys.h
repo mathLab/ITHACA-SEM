@@ -37,6 +37,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace Nektar
 {
@@ -63,7 +64,7 @@ namespace Nektar
 
 
         /// A global linear system.
-        class GlobalLinSys
+        class GlobalLinSys: public boost::enable_shared_from_this<GlobalLinSys>
         {
         public:
             /// Constructor for full direct matrix solve.
@@ -79,6 +80,11 @@ namespace Nektar
             /// Returns the key associated with the system.
             const inline GlobalLinSysKey &GetKey(void) const;
 
+	    //Returns the local matrix associated with the system
+            const inline boost::weak_ptr<ExpList> &GetLocMat(void) const;
+
+            const inline DNekMatSharedPtr &GetGmat(void) const;
+
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             MULTI_REGIONS_EXPORT
@@ -88,6 +94,15 @@ namespace Nektar
                     const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                     const Array<OneD, const NekDouble> &dirForcing
                                                 = NullNekDouble1DArray);
+
+            /// Returns a shared pointer to the current object.
+	    boost::shared_ptr<GlobalLinSys> GetSharedThisPtr()
+	    {
+	        return shared_from_this();
+	    }
+
+            DNekScalMatSharedPtr GetBlock(unsigned int n);
+            DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
 
         protected:
             /// Key associated with this linear system.
@@ -102,10 +117,8 @@ namespace Nektar
                     const int pNumRows,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                     const int pNumDir = 0);
-
-            DNekScalMatSharedPtr GetBlock(unsigned int n);
-            DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
 
         private:
             /// Solve a linear system based on mapping.
@@ -121,7 +134,10 @@ namespace Nektar
                     const int pNumRows,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
-                    const int pNumDir) = 0;
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const int pNumDir)=0;
+
+            virtual const DNekMatSharedPtr& v_GetGmat(void) const;
 
             static std::string lookupIds[];
             static std::string def;
@@ -134,6 +150,14 @@ namespace Nektar
         const inline GlobalLinSysKey &GlobalLinSys::GetKey(void) const
         {
             return m_linSysKey;
+        }
+
+        /**
+         *
+         */
+        const inline boost::weak_ptr<ExpList> &GlobalLinSys::GetLocMat(void) const
+        {
+            return m_expList;
         }
 
 
@@ -157,9 +181,18 @@ namespace Nektar
                 const int pNumRows,
                 const Array<OneD,const NekDouble> &pInput,
                       Array<OneD,      NekDouble> &pOutput,
+                const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                 const int pNumDir)
         {
-            v_SolveLinearSystem(pNumRows, pInput, pOutput, pNumDir);
+	  v_SolveLinearSystem(pNumRows, pInput, pOutput, locToGloMap, pNumDir);
+        }
+
+        /**
+         *
+         */
+        inline const DNekMatSharedPtr& GlobalLinSys::GetGmat(void) const
+        {
+	  return v_GetGmat();
         }
 
     } //end of namespace

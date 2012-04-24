@@ -204,6 +204,8 @@ namespace Nektar
 
             inline const int GetFullSystemBandWidth() const;
 
+            inline int GetNumNonDirVertexModes() const;
+
             /// Returns the bandwidth of the boundary system.
             inline int GetBndSystemBandWidth() const;
             /// Returns the level of static condensation for this map.
@@ -233,6 +235,7 @@ namespace Nektar
             inline bool AtLastLevel() const;
             /// Returns the method of solving global systems.
             inline const GlobalSysSolnType  GetGlobalSysSolnType() const;
+            inline const PreconditionerType  GetPreconType() const;
             
         protected:
             /// Session object
@@ -296,6 +299,8 @@ namespace Nektar
             GlobalSysSolnType m_solnType;
             /// The bandwith of the global bnd system
             int m_bndSystemBandWidth;
+
+            PreconditionerType m_preconType;
 
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;
@@ -373,6 +378,8 @@ namespace Nektar
                           NekVector<      NekDouble>& pGlobal) const;
 
             virtual const int v_GetFullSystemBandWidth() const;
+
+            virtual int v_GetNumNonDirVertexModes() const;
 
         };
 
@@ -479,6 +486,11 @@ namespace Nektar
         inline const int LocalToGlobalBaseMap::GetFullSystemBandWidth() const
         {
             return v_GetFullSystemBandWidth();
+        }
+
+        inline int LocalToGlobalBaseMap::GetNumNonDirVertexModes() const
+        {
+            return v_GetNumNonDirVertexModes();
         }
 
         inline int LocalToGlobalBaseMap::GetLocalToGlobalBndMap(const int i)
@@ -781,6 +793,12 @@ namespace Nektar
                     LocalToGlobalBaseMap::GetGlobalSysSolnType() const
         {
             return m_solnType;
+        }
+
+        inline const PreconditionerType
+                    LocalToGlobalBaseMap::GetPreconType() const
+        {
+            return m_preconType;
         }
 
         inline void LocalToGlobalBaseMap::GlobalToLocalBndWithoutSign(

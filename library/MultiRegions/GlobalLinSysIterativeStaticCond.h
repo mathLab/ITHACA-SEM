@@ -142,6 +142,11 @@ namespace Nektar
 
             /// Compute the preconditioner for the Shur-complement matrix.
             virtual void v_ComputePreconditioner();
+
+            virtual void v_UniqueMap();
+
+            virtual const DNekMatSharedPtr& v_GetGmat(void) const;
+
          };
     }
 }

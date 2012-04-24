@@ -302,6 +302,12 @@ namespace Nektar
 
             return loc_mat;
         }
+
+        const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+        }
+
     } //end of namespace
 } //end of namespace
 

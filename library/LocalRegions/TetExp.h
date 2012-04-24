@@ -239,6 +239,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);
+
+	    LOCAL_REGIONS_EXPORT SpatialDomains::TetGeomSharedPtr CreateEquilateralTetGeom();
         };
 
         // type defines for use of TetExp in a boost vector

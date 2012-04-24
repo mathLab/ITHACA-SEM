@@ -37,6 +37,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/Preconditioner.h>
 
 namespace Nektar
 {
@@ -69,12 +70,17 @@ namespace Nektar
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
+            PreconditionerSharedPtr                     m_precon;
+
+	    MultiRegions::PreconditionerType m_precontype;
+
         private:
             /// Solve the matrix system
             virtual void v_SolveLinearSystem(
                     const int pNumRows,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                     const int pNumDir);
 
             virtual void v_DoMatrixMultiply(
@@ -82,6 +88,8 @@ namespace Nektar
                           Array<OneD, NekDouble>& pOutput) = 0;
 
             virtual void v_ComputePreconditioner() = 0;
+
+            virtual void v_UniqueMap() = 0;
         };
     }
 }

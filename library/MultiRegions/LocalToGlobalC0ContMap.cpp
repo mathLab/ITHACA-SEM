@@ -1530,9 +1530,13 @@ namespace Nektar
             int nVerts;
             int nEdges;
             int nFaces;
+            int nTotalVerts=0;
+            int nTotalEdges=0;
+            int nTotalFaces=0;
             int vertCnt;
             int edgeCnt;
             int faceCnt;
+	    int localOffset=0;
             map<int, int>          vertTempGraphVertId;
             map<int, int>          edgeTempGraphVertId;
             map<int, int>          faceTempGraphVertId;
@@ -1713,70 +1717,125 @@ namespace Nektar
                 }
             }
 
+
             /// - All other vertices and edges
-            for(i = 0; i < locExpVector.size(); ++i)
+	    for(i = 0; i < locExpVector.size(); ++i)
             {
                 if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
                 {
-                	nVerts = locExpansion->GetNverts();
-                	nEdges = locExpansion->GetNedges();
-                	nFaces = locExpansion->GetNfaces();
-                    // For element i, store the temporary graph
-                    // vertex id's of all element edges and
-                    // verices in these 2 arrays below
-                    localVerts = Array<OneD, int>(nVerts,-1);
-                    localEdges = Array<OneD, int>(nEdges,-1);
-                    localFaces = Array<OneD, int>(nFaces,-1);
-                    vertCnt = 0;
-                    edgeCnt = 0;
-                    faceCnt = 0;
+                    nTotalVerts += locExpansion->GetNverts();
+                    nTotalEdges += locExpansion->GetNedges();
+                    nTotalFaces += locExpansion->GetNfaces();
+		}
+	    }
+                    
+	    // For element i, store the temporary graph
+	    // vertex id's of all element edges and
+	    // vertices in these 2 arrays below
+	    localVerts = Array<OneD, int>(nTotalVerts,-1);
+            localEdges = Array<OneD, int>(nTotalEdges,-1);
+            localFaces = Array<OneD, int>(nTotalFaces,-1);
 
+	    for(i = 0; i < locExpVector.size(); ++i)
+            {
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                {
+                    vertCnt = 0;
+		    nVerts = locExpansion->GetNverts();
                     for(j = 0; j < nVerts; ++j)
                     {
                         meshVertId = (locExpansion->GetGeom3D())->GetVid(j);
                         if(vertReorderedGraphVertId.count(meshVertId) == 0)
                         {
-                        	if(vertTempGraphVertId.count(meshVertId) == 0)
-                        	{
-                        		boost::add_vertex(boostGraphObj);
-                        		vertTempGraphVertId[meshVertId] = tempGraphVertId++;
-                        	}
-                        	localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
-                        	vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
+                            if(vertTempGraphVertId.count(meshVertId) == 0)
+                            {
+                                boost::add_vertex(boostGraphObj);
+                                vertTempGraphVertId[meshVertId] = tempGraphVertId++;
+                            }
+                            localVerts[localOffset+vertCnt++] = vertTempGraphVertId[meshVertId];
+                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
                         }
                     }
+		}
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
+                }
+                localOffset+=nVerts;
+            }
+
+	    m_numNonDirVertexModes=tempGraphVertId;
+
+	    localOffset=0;
+	    for(i = 0; i < locExpVector.size(); ++i)
+            {
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                {
+                    edgeCnt = 0;
+		    nEdges = locExpansion->GetNedges();
+
                     for(j = 0; j < nEdges; ++j)
                     {
                     	nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j) - 2;
                         meshEdgeId = (locExpansion->GetGeom3D())->GetEid(j);
                         if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)
                         {
-                        	if(edgeTempGraphVertId.count(meshEdgeId) == 0)
-                        	{
-                        		boost::add_vertex(boostGraphObj);
-                        		edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
-                        	}
-                        	localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
-                        	vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
+                            if(edgeTempGraphVertId.count(meshEdgeId) == 0)
+                            {
+                                boost::add_vertex(boostGraphObj);
+                        	edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
+                            }
+                            localEdges[localOffset+edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
+                            vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
                         }
                     }
+		}
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
+                }
+                localOffset+=nEdges;
+            }
+            
+	    localOffset=0;
+	    for(i = 0; i < locExpVector.size(); ++i)
+            {
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                {
+                    nFaces = locExpansion->GetNfaces();
+                    faceCnt = 0;
                     for(j = 0; j < nFaces; ++j)
                     {
                     	nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
                         meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
                         if(faceReorderedGraphVertId.count(meshFaceId) == 0)
                         {
-                        	if(faceTempGraphVertId.count(meshFaceId) == 0)
-                        	{
-                        		boost::add_vertex(boostGraphObj);
-                        		faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
-                        	}
-                        	localFaces[faceCnt++] = faceTempGraphVertId[meshFaceId];
-                        	vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;
+                            if(faceTempGraphVertId.count(meshFaceId) == 0)
+                            {
+                                boost::add_vertex(boostGraphObj);
+                                faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
+                            }
+                            localFaces[localOffset+faceCnt++] = faceTempGraphVertId[meshFaceId];
+                            vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;
                         }
                     }
                     m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
+		}
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
+                }
+		localOffset+=nFaces;
+            }
 
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                {
+
+                    nVerts = locExpansion->GetNverts();
+                    nEdges = locExpansion->GetNedges();
+                    nFaces = locExpansion->GetNfaces();
                     // Now loop over all local faces, edges and vertices
                     // of this element and define that all other
                     // faces, edges and verices of this element are
@@ -1785,117 +1844,117 @@ namespace Nektar
                     // Vertices
                     for(j = 0; j < nVerts; j++)
                     {
-                        if(localVerts[j]==-1)
+                        if(localVerts[j+i*nVerts]==-1)
                         {
                             break;
                         }
                         // associate to other vertices
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localVerts[k]==-1)
+                            if(localVerts[k+i*nVerts]==-1)
                             {
                                 break;
                             }
                             if(k!=j)
                             {
-                                boost::add_edge( (size_t) localVerts[j], (size_t) localVerts[k],boostGraphObj);
+                                boost::add_edge( (size_t) localVerts[j+i*nVerts], (size_t) localVerts[k+i*nVerts],boostGraphObj);
                             }
                         }
                         // associate to other edges
                         for(k = 0; k < nEdges; k++)
                         {
-                            if(localEdges[k]==-1)
+                            if(localEdges[k+i*nEdges]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localVerts[j], (size_t) localEdges[k],boostGraphObj);
+                            boost::add_edge( (size_t) localVerts[j+i*nVerts], (size_t) localEdges[k+i*nEdges],boostGraphObj);
                         }
                         // associate to other faces
                         for(k = 0; k < nFaces; k++)
                         {
-                            if(localFaces[k]==-1)
+                            if(localFaces[k+i*nFaces]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localVerts[j], (size_t) localFaces[k],boostGraphObj);
+                            boost::add_edge( (size_t) localVerts[j+i*nVerts], (size_t) localFaces[k+i*nFaces],boostGraphObj);
                         }
                     }
 
                     // Edges
                     for(j = 0; j < nEdges; j++)
                     {
-                        if(localEdges[j]==-1)
+                        if(localEdges[j+i*nEdges]==-1)
                         {
                             break;
                         }
                         // Associate to other edges
                         for(k = 0; k < nEdges; k++)
                         {
-                            if(localEdges[k]==-1)
+                            if(localEdges[k+i*nEdges]==-1)
                             {
                                 break;
                             }
                             if(k!=j)
                             {
-                                boost::add_edge( (size_t) localEdges[j], (size_t) localEdges[k],boostGraphObj);
+                                boost::add_edge( (size_t) localEdges[j+i*nEdges], (size_t) localEdges[k+i*nEdges],boostGraphObj);
                             }
                         }
                         // Associate to vertices
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localVerts[k]==-1)
+                            if(localVerts[k+i*nVerts]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localEdges[j], (size_t) localVerts[k],boostGraphObj);
+                            boost::add_edge( (size_t) localEdges[j+i*nEdges], (size_t) localVerts[k+i*nVerts],boostGraphObj);
                         }
                         // Associate to faces
                         for(k = 0; k < nFaces; k++)
                         {
-                            if(localFaces[k]==-1)
+                            if(localFaces[k+i*nFaces]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localEdges[j], (size_t) localFaces[k],boostGraphObj);
+                            boost::add_edge( (size_t) localEdges[j+i*nEdges], (size_t) localFaces[k+i*nFaces],boostGraphObj);
                         }
                     }
 
                     // Faces
                     for(j = 0; j < nFaces; j++)
                     {
-                        if(localFaces[j]==-1)
+                        if(localFaces[j+i*nFaces]==-1)
                         {
                             break;
                         }
                         // Associate to other faces
                         for(k = 0; k < nFaces; k++)
                         {
-                            if(localFaces[k]==-1)
+                            if(localFaces[k+i*nFaces]==-1)
                             {
                                 break;
                             }
                             if(k!=j)
                             {
-                                boost::add_edge( (size_t) localFaces[j], (size_t) localFaces[k],boostGraphObj);
+                                boost::add_edge( (size_t) localFaces[j+i*nFaces], (size_t) localFaces[k+i*nFaces],boostGraphObj);
                             }
                         }
                         // Associate to vertices
                         for(k = 0; k < nVerts; k++)
                         {
-                            if(localVerts[k]==-1)
+                            if(localVerts[k+i*nVerts]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localFaces[j], (size_t) localVerts[k],boostGraphObj);
+                            boost::add_edge( (size_t) localFaces[j+i*nFaces], (size_t) localVerts[k+i*nVerts],boostGraphObj);
                         }
                         // Associate to edges
                         for(k = 0; k < nEdges; k++)
                         {
-                            if(localEdges[k]==-1)
+                            if(localEdges[k+i*nEdges]==-1)
                             {
                                 break;
                             }
-                            boost::add_edge( (size_t) localFaces[j], (size_t) localEdges[k],boostGraphObj);
+                            boost::add_edge( (size_t) localFaces[j+i*nFaces], (size_t) localEdges[k+i*nEdges],boostGraphObj);
                         }
                     }
                 }
@@ -1903,7 +1962,7 @@ namespace Nektar
                 {
                     ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
                 }
-            }
+	    }
 
 
             /**
@@ -1926,12 +1985,12 @@ namespace Nektar
                 {
                 case eDirectFullMatrix:
                 case eIterativeFull:
+                case eIterativeStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
                     break;
                 case eDirectStaticCond:
-                case eIterativeStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
                     }
@@ -2407,55 +2466,10 @@ namespace Nektar
             return m_fullSystemBandWidth;
         }
 
+        int LocalToGlobalC0ContMap::v_GetNumNonDirVertexModes() const
+        {
+            return m_numNonDirVertexModes;
+        }
+
     }
 }
-
-
-/**
- * $Log: LocalToGlobalC0ContMap.cpp,v $
- * Revision 1.14  2010/03/01 17:57:28  cantwell
- * Fixed 3D global matrix operations.
- * Fixed ProjectCont{1,2,3}D demos.
- * Fixed incorrectly placed ASSERT in boundary conditions.
- * Updated TimingGeneralMatrixOp3D to use contfield3d rather than explist3d.
- *
- * Revision 1.13  2009/11/02 11:19:44  pvos
- * Fixed a bug for reordering a graph without edges
- *
- * Revision 1.12  2009/10/30 14:02:55  pvos
- * Multi-level static condensation updates
- *
- * Revision 1.11  2009/05/10 23:17:12  sherwin
- * Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
- *
- * Revision 1.10  2009/04/27 21:34:58  sherwin
- * Modified WriteToField Method
- *
- * Revision 1.9  2009/04/20 16:14:06  sherwin
- * Updates for optimising bandwidth of DG solver and allowing write import on explist
- *
- * Revision 1.8  2009/04/03 15:06:35  sherwin
- * Added LinearAdvection, Generalised GenGlobalLinSys and added in bandwidth routine for DG solver
- *
- * Revision 1.7  2009/04/02 13:06:42  sherwin
- * Modified to take symmetric banded system for HDH solver
- *
- * Revision 1.6  2009/02/27 15:47:13  sherwin
- * Corrected bug in initialising just Neumann boundary conditions
- *
- * Revision 1.5  2008/12/19 15:12:39  pvos
- * Updates for precomputed dirichlet forcing functionality
- *
- * Revision 1.4  2008/11/05 16:15:24  pvos
- * Added bandwith calculation routines
- *
- * Revision 1.3  2008/09/23 18:21:00  pvos
- * Updates for working ProjectContField3D demo
- *
- * Revision 1.2  2008/09/17 13:46:40  pvos
- * Added LocalToGlobalC0ContMap for 3D expansions
- *
- * Revision 1.1  2008/09/16 13:36:06  pvos
- * Restructured the LocalToGlobalMap classes
- *
- **/

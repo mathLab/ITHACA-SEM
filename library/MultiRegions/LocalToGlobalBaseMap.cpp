@@ -95,6 +95,7 @@ namespace Nektar
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
+            m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
@@ -519,5 +520,12 @@ namespace Nektar
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
+
+        int LocalToGlobalBaseMap::v_GetNumNonDirVertexModes() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
     }
 }

@@ -966,6 +966,11 @@ namespace Nektar
             }
         }
 
+        int StdHexExp::v_GetTotalEdgeIntNcoeffs() const
+        {
+	  return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
+	}
+
 
         int StdHexExp::v_GetFaceNcoeffs(const int i) const
         {
@@ -1002,6 +1007,13 @@ namespace Nektar
             }
 
         }
+
+        int StdHexExp::v_GetTotalFaceIntNcoeffs() const
+        {
+	    return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
+	              (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
+		      (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
+	}
 
         int StdHexExp::v_GetFaceNumPoints(const int i) const
         {
@@ -2221,8 +2233,7 @@ namespace Nektar
                 {
                     for( p = 0; p < nummodes[0]; p++)
                     {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1]+q*nummodes[0] + p;
                     }
                 }
             }
@@ -2252,7 +2263,6 @@ namespace Nektar
 
             sort(outarray.get(), outarray.get() + nBndCoeffs);
         }
-
 
         DNekMatSharedPtr StdHexExp::v_GenMatrix(const StdMatrixKey &mkey)
         {

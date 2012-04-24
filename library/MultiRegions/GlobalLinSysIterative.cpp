@@ -79,12 +79,15 @@ namespace Nektar
                     const int nGlobal,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
+                    const LocalToGlobalBaseMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
             // Check if preconditioner has been computed and compute if needed.
-            if (!m_preconditioner)
+            if (!m_precon)
             {
-                v_ComputePreconditioner();
+	      //v_ComputePreconditioner();
+		v_UniqueMap();
+                m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(GetSharedThisPtr(),plocToGloMap);
             }
 
             // Get the communicator for performing data exchanges
@@ -116,11 +119,12 @@ namespace Nektar
             Array<OneD, NekDouble> vExchange(2);
 
             // INVERSE of preconditioner matrix.
-            const DNekMat &M = (*m_preconditioner);
+            //const DNekMat &M = (*m_preconditioner);
 
             // Initialise with zero as the initial guess.
             r = in;
-            z = M * r;
+	    m_precon->DoPreconditioner(r_A,z_A);
+            //z = M * r;
             d = z;
             k = 0;
 
@@ -160,8 +164,10 @@ namespace Nektar
                 // compute residual
                 r_new = r   - alpha*p;
 
+		m_precon->DoPreconditioner(r_new_A,z_new_A);
+
                 // Apply preconditioner to new residual
-                z_new = M * r_new;
+                //z_new = M * r_new;
 
                 // beta
                 vExchange[0] = Vmath::Dot2(nNonDir,

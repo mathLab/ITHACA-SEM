@@ -35,6 +35,7 @@ LocalToGlobalDGMap.cpp
 LocalToGlobalC0ContMap.cpp
 GlobalOptimizationParameters.cpp
 SubStructuredGraph.cpp
+Preconditioner.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -76,6 +77,7 @@ MultiRegions.hpp
 MultiRegionsDeclspec.h
 GlobalOptimizationParameters.h
 SubStructuredGraph.h
+Preconditioner.h
 )
 
 ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)

@@ -141,11 +141,11 @@ namespace Nektar
 
                 Array<OneD, NekDouble> offsetarray;
                 SolveLinearSystem(nGlobDofs, tmp + nDirDofs,
-                            offsetarray = pOutput + nDirDofs, nDirDofs);
+				  offsetarray = pOutput + nDirDofs, pLocToGloMap, nDirDofs);
             }
             else
             {
-                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(), pInput,pOutput);
+                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(), pInput,pOutput, pLocToGloMap);
             }
         }
 

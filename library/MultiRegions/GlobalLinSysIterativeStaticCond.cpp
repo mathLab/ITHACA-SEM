@@ -221,7 +221,7 @@ namespace Nektar
                     Array<OneD, NekDouble> offsetarray;
                     //Solve(F_HomBnd,V_GlobHomBnd);
                     //SolveLinearSystem(nGlobHomBndDofs, F+nDirBndDofs,offsetarray=out+nDirBndDofs);
-                    SolveLinearSystem(nGlobBndDofs, F, out, nDirBndDofs);
+                    SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
                 }
                 else
                 {
@@ -761,6 +761,18 @@ namespace Nektar
             {
                 M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
             }
+
         }
+
+        void GlobalLinSysIterativeStaticCond::v_UniqueMap()
+        {
+            m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
+	}
+
+        const DNekMatSharedPtr& GlobalLinSysIterativeStaticCond::v_GetGmat() const
+	{
+            return m_gmat;
+	}
+
     }
 }

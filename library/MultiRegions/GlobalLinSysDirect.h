@@ -80,6 +80,7 @@ namespace Nektar
                         const int pNumRows,
                         const Array<OneD,const NekDouble> &pInput,
                               Array<OneD,      NekDouble> &pOutput,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const int pNumDir = 0);
 
 		    private:

@@ -106,6 +106,8 @@ namespace Nektar
 
             virtual void v_ComputePreconditioner();
 
+            virtual void v_UniqueMap();
+
         };
     }
 }

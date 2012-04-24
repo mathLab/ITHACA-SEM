@@ -963,6 +963,25 @@ namespace Vmath
         }
     }
 
+    // \brief copy one unsigned int vector to another
+    void Vcopy(int n, const unsigned int *x, const int incx, unsigned int *y,
+                             const int incy)
+    {
+        if( incx ==1 && incy == 1)
+        {
+            memcpy(y,x,n*sizeof(int));
+        }
+        else
+        {
+            while( n-- )
+            {
+                *y = *x;
+                x += incx;
+                y += incy;
+            }
+        }
+    }
+
     // \brief copy one double vector to another
     void Vcopy(int n, const double *x, const int incx, double *y,
                              const int incy)

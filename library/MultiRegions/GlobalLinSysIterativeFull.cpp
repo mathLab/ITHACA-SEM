@@ -162,7 +162,7 @@ namespace Nektar
                 }
                 if (vCG)
                 {
-                    SolveLinearSystem(nGlobDofs, global_tmp, pOutput, nDirDofs);
+                    SolveLinearSystem(nGlobDofs, global_tmp, pOutput, pLocToGloMap, nDirDofs);
                 }
                 else
                 {
@@ -171,7 +171,7 @@ namespace Nektar
             }
             else
             {
-                SolveLinearSystem(nGlobDofs, pInput, pOutput);
+	      SolveLinearSystem(nGlobDofs, pInput, pOutput, pLocToGloMap);
             }
         }
 
@@ -376,5 +376,14 @@ namespace Nektar
             ComputeDiagonalPreconditionerSum(m_locToGloMap);
             m_map = m_locToGloMap->GetGlobalToUniversalMapUnique();
         }
+
+        /**
+         *
+         */
+        void GlobalLinSysIterativeFull::v_UniqueMap()
+        {
+            m_map = m_locToGloMap->GetGlobalToUniversalMapUnique();
+        }
+
     }
 }

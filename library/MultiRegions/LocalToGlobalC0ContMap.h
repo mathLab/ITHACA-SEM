@@ -139,6 +139,8 @@ namespace Nektar
             Array<OneD,int> m_globalToUniversalMap;
             /// Integer map of unique process coeffs to universal space (signed)
             Array<OneD,int> m_globalToUniversalMapUnique;
+	    /// Number of non Dirichlet vertex modes
+	    int m_numNonDirVertexModes;
 
         private:
             int m_maxStaticCondLevel;
@@ -225,6 +227,8 @@ namespace Nektar
                           NekVector<      NekDouble>& pGlobal) const;
 
             MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirVertexModes() const;
 
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;

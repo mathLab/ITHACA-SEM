@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList3D.h>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -458,7 +459,8 @@ namespace Nektar
             {
                 for (j = 0; j < 3; ++j)
                 {
-                    outfile << coords[j][i] << " ";
+                    outfile << setprecision(8) << scientific 
+                            << (float)coords[j][i] << " ";
                 }
                 outfile << endl;
             }

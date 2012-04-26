@@ -108,7 +108,54 @@ namespace Nektar
             {
                 return x == pSrc.x && y == pSrc.y && z == pSrc.z;
             }
+            
+            Node operator+(const Node &pSrc) const
+            {
+                return Node(id, x+pSrc.x, y+pSrc.y, z+pSrc.z);
+            }
+            
+            Node operator-(const Node &pSrc) const
+            {
+                return Node(id, x-pSrc.x, y-pSrc.y, z-pSrc.z);
+            }
 
+            Node operator*(const Node &pSrc) const
+            {
+                return Node(id, x*pSrc.x, y*pSrc.y, z*pSrc.z);
+            }
+            
+            Node operator*(const double &alpha) const
+            {
+                return Node(id, alpha*x, alpha*y, alpha*z);
+            }
+            
+            void operator+=(const Node &pSrc)
+            {
+                x += pSrc.x;
+                y += pSrc.y;
+                z += pSrc.z;
+            }
+            
+            void operator*=(const double &alpha)
+            {
+                x *= alpha;
+                y *= alpha;
+                z *= alpha;
+            }
+            
+            void operator/=(const double &alpha)
+            {
+                x /= alpha;
+                y /= alpha;
+                z /= alpha;
+            }
+            
+            double abs2() const
+            {
+                return x*x+y*y+z*z;
+            }
+
+            
             /// Generate a %SpatialDomains::VertexComponent for this node.
             SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {
@@ -638,11 +685,6 @@ namespace Nektar
             /// Generate a Nektar++ geometry object for this element.
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 ASSERTL0(false, "This function should be implemented at a shape level.");
                 return boost::shared_ptr<SpatialDomains::Geometry>();
             }
@@ -651,6 +693,22 @@ namespace Nektar
             virtual void Complete(int order)
             {
                 ASSERTL0(false, "This function should be implemented at a shape level.");
+            }
+            void Print()
+            {
+                int i, j;
+                for (i = 0; i < vertex.size(); ++i)
+                {
+                    cout << vertex[i]->x << " " << vertex[i]->y << " " << vertex[i]->z << endl;
+                }
+                for (i = 0; i < edge.size(); ++i)
+                {
+                    for (j = 0; j < edge[i]->edgeNodes.size(); ++j)
+                    {
+                        NodeSharedPtr n = edge[i]->edgeNodes[j];
+                        cout << n->x << " " << n->y << " " << n->z << endl;
+                    }
+                }
             }
 
         protected:
@@ -802,10 +860,6 @@ namespace Nektar
             std::string                inFilename;
             /// Intended target.
             std::string                outFilename;
-	    /// Map for Nektar prism -> tet splitting.
-	    ///
-	    /// @todo Make this not a hack.
-	    std::map<int, pair<int,int> > splitMap;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
             unsigned int               GetNumElements();

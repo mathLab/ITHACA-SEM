@@ -280,7 +280,7 @@ namespace Nektar
                 //tags.push_back(elType);
                 
                 // Create linear element
-                ElmtConfig conf(elType,1,false,false,false);
+                ElmtConfig conf(elType,1,false,false);
                 ElementSharedPtr E = GetElementFactory().
                     CreateInstance(elType,conf,nodeList,tags);
                 m->element[E->GetDim()].push_back(E);
@@ -426,25 +426,6 @@ namespace Nektar
                         }
                     }
 
-		    // Add prism -> tet splitting information to m->splitMap.
-		    int firstId = -1;
-
-		    for (j = 0; j < 3; ++j)
-		      {
-			if (vertId[j] == surf->first)
-			  {
-			    firstId = j;
-			    break;
-			  }
-		      }
-
-		    if (firstId == -1)
-		      {
-			cerr << "firstId not found!" << endl;
-			abort();
-		      }
-		    m->splitMap[elId] = pair<int,int>(firstId, surf->dir);
-		    
                     // If the element is a prism, check to see if orientation
                     // has changed and update order of surface vertices.
                     ElementSharedPtr e = m->element[m->expDim][elId];
@@ -782,15 +763,14 @@ namespace Nektar
             
             for (it = curveTags.begin(); it != curveTags.end(); ++it)
             {
-                ifstream hsf, inm;
-                string   line, fileName = it->second, inmFileName;
+                ifstream hsf;
+                string   line, fileName = it->second;
                 size_t   pos;
                 int      N, Nface, dot;
 
                 // Replace fro extension with hsf.
                 dot = fileName.find_last_of('.');
                 fileName = fileName.substr(0,dot);
-		inmFileName = fileName+".inm";
                 fileName += ".hsf";
                 
                 // Open hsf file.
@@ -801,15 +781,6 @@ namespace Nektar
                     abort();
                 }	       
                 
-		// Mashy
-		// Open inm file.
-		inm.open(inmFileName.c_str());
-                if (!inm.is_open())
-                {
-                    cerr << "Could not open intmat file " << fileName << endl;
-                    abort();
-                }
-
                 // Read in header line; determine element order, number of faces
                 // from this line.
                 getline(hsf, line);
@@ -913,13 +884,9 @@ namespace Nektar
                 for (int i = 0; i < Nface; ++i)
                 {
                     string               tmp;
-                    int                  fid, first, dir, firstId;
+                    int                  fid;
                     vector<unsigned int> nodeIds(3);
 
-		    getline(inm, line);
-		    ss.clear(); ss.str(line);
-		    ss >> first >> dir;
-		    
                     getline(hsf, line);
                     ss.clear(); ss.str(line);
                     ss >> tmp >> fid >> nodeIds[0] >> nodeIds[1] >> nodeIds[2];
@@ -930,11 +897,10 @@ namespace Nektar
                         abort();
                     }
                     
-                    hoData[it->first].insert(HOSurfSharedPtr(new HOSurf(nodeIds, faceMap[i], first, dir)));
+                    hoData[it->first].insert(HOSurfSharedPtr(new HOSurf(nodeIds, faceMap[i])));
                 }
                 
                 hsf.close();
-		inm.close();
             }
         }
         

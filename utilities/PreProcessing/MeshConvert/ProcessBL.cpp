@@ -67,7 +67,7 @@ namespace Nektar
         {
             // Create a duplicate of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
-            const int nLayers = 1;
+            const int nLayers = 4;
             const int layerWidth = 3;
             // Set to 0 for prismatic boundary layer and 1 for tetrahedral
             // boundary layer mesh.
@@ -230,23 +230,135 @@ namespace Nektar
                                      z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth]));
                     }		  
                     
+                    // Add high-order information to this element.
+
+                    /*
+                    // Edge 0
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         x[offset+k], 
+                                         y[offset+k],
+                                         z[offset+k])));
+                    }
+
+                    // Edge 1
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        double dx = (nodeList[2]->x-nodeList[1]->x)/(layerWidth-1);
+                        double dy = (nodeList[2]->y-nodeList[1]->y)/(layerWidth-1);
+                        double dz = (nodeList[2]->z-nodeList[1]->z)/(layerWidth-1);
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         nodeList[1]->x+k*dx,
+                                         nodeList[1]->y+k*dy,
+                                         nodeList[1]->z+k*dz)));
+                    }
+
+                    // Edge 2
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         x[offset+layerWidth+k], 
+                                         y[offset+layerWidth+k],
+                                         z[offset+layerWidth+k])));
+                    }
+                    
+                    // Edge 3
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        double dx = (nodeList[3]->x-nodeList[0]->x)/(layerWidth-1);
+                        double dy = (nodeList[3]->y-nodeList[0]->y)/(layerWidth-1);
+                        double dz = (nodeList[3]->z-nodeList[0]->z)/(layerWidth-1);
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         nodeList[0]->x+k*dx,
+                                         nodeList[0]->y+k*dy,
+                                         nodeList[0]->z+k*dz)));
+                    }
+
+                    // Edge 4
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         x[offset+k*(layerWidth)*(nLayers+1)], 
+                                         y[offset+k*(layerWidth)*(nLayers+1)],
+                                         z[offset+k*(layerWidth)*(nLayers+1)])));
+                    }
+
+                    // Edge 5
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         x[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
+                                         y[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1],
+                                         z[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
+                    }
+
+                    // Edge 6
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         x[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
+                                         y[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1],
+                                         z[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
+                    }
+
+                    // Edge 7
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         x[offset+layerWidth+k*(layerWidth)*(nLayers+1)], 
+                                         y[offset+layerWidth+k*(layerWidth)*(nLayers+1)],
+                                         z[offset+layerWidth+k*(layerWidth)*(nLayers+1)])));
+                    }   
+                    
+                    // Edge 8
+                    for (int k = 1; k < layerWidth-1; ++k)
+                    {
+                        double dx = (nodeList[5]->x-nodeList[4]->x)/(layerWidth-1);
+                        double dy = (nodeList[5]->y-nodeList[4]->y)/(layerWidth-1);
+                        double dz = (nodeList[5]->z-nodeList[4]->z)/(layerWidth-1);
+                        nodeList.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
+                                         nodeList[4]->x+k*dx,
+                                         nodeList[4]->y+k*dy,
+                                         nodeList[4]->z+k*dz)));
+                    }
+                    */
+                    
                     // Create element tags - 0 indicates place the element in
                     // the general domain.
                     vector<int> tags;
                     tags.push_back(0);
                     
                     // Create the element.
-                    ElmtConfig conf(ePrism, 1, false, false,false);
+                    ElmtConfig conf(ePrism, 1, false, false, false);
                     ElementSharedPtr elmt = GetElementFactory().
                         CreateInstance(ePrism,conf,nodeList,tags); 
 
-                    // Add high order information to bottom edge of each layer.
                     EdgeSharedPtr e0 = elmt->GetEdge(0);
                     EdgeSharedPtr e2 = elmt->GetEdge(2);
                     EdgeSharedPtr e4 = elmt->GetEdge(4);
                     EdgeSharedPtr e5 = elmt->GetEdge(5);
                     EdgeSharedPtr e6 = elmt->GetEdge(6);
                     EdgeSharedPtr e7 = elmt->GetEdge(7);
+
                     for (int k = 1; k < layerWidth-1; ++k)
                     {
                         e0->edgeNodes.push_back(
@@ -258,34 +370,34 @@ namespace Nektar
                         e2->edgeNodes.push_back(
                             NodeSharedPtr(
                                 new Node(nodeId++,
+                                         x[offset+layerWidth+k], 
+                                         y[offset+layerWidth+k],
+                                         z[offset+layerWidth+k])));
+                        e4->edgeNodes.push_back(
+                            NodeSharedPtr(
+                                new Node(nodeId++,
                                          x[offset+k*(layerWidth)*(nLayers+1)], 
                                          y[offset+k*(layerWidth)*(nLayers+1)],
                                          z[offset+k*(layerWidth)*(nLayers+1)])));
-                        e4->edgeNodes.push_back(
+                        e5->edgeNodes.push_back(
                             NodeSharedPtr(
                                 new Node(nodeId++,
                                          x[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
                                          y[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1],
                                          z[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
-                        e5->edgeNodes.push_back(
+                        e6->edgeNodes.push_back(
                             NodeSharedPtr(
                                 new Node(nodeId++,
                                          x[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
                                          y[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1],
                                          z[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
-                        e6->edgeNodes.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k], 
-                                         y[offset+layerWidth+k],
-                                         z[offset+layerWidth+k])));
                         e7->edgeNodes.push_back(
                             NodeSharedPtr(
                                 new Node(nodeId++,
                                          x[offset+layerWidth+k*(layerWidth)*(nLayers+1)], 
                                          y[offset+layerWidth+k*(layerWidth)*(nLayers+1)],
                                          z[offset+layerWidth+k*(layerWidth)*(nLayers+1)])));
-                    }   
+                    }
 
                     e0->curveType = pt;
                     e2->curveType = pt;
@@ -293,7 +405,7 @@ namespace Nektar
                     e5->curveType = pt;
                     e6->curveType = pt;
                     e7->curveType = pt;
-                    
+
                     // Change the surface elements of the quad face on the
                     // symmetry plane to match the layers of prisms.
                     if (bl0 != -1)
@@ -316,7 +428,7 @@ namespace Nektar
                             }
                             vector<int> tagBE;
                             tagBE = m->element[m->expDim-1][bl0]->GetTagList();
-                            ElmtConfig bconf(eQuadrilateral, 1, false, false);
+                            ElmtConfig bconf(eQuadrilateral, 1, false, false, false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
                                 CreateInstance(eQuadrilateral,bconf,qNodeList,tagBE);
                             elmt->SetBoundaryLink(0,m->element[m->expDim-1].size());
@@ -340,7 +452,7 @@ namespace Nektar
                 // Denotes a set of indices inside m->element[m->expDim-1]
                 // which are to be removed. These are precisely the
                 // quadrilateral boundary faces which will be replaced by two
-                // triangluar faces.
+                // triangular faces.
                 set<int> toRemove;
                 
                 // Represents table 2 of paper; each row i represents a
@@ -354,7 +466,7 @@ namespace Nektar
                     {4,3,5,1,0,2},
                     {5,4,3,2,1,0}
                 };
-                    
+                
                 // Represents table 3 of paper; the first three rows are the
                 // three tetrahedra if the first condition is met; the latter
                 // three rows are the three tetrahedra if the second condition
@@ -367,7 +479,7 @@ namespace Nektar
                     {0,4,2,5},
                     {0,4,5,3}
                 };
-
+                
                 // Represents the order of tetrahedral edges (in Nektar++
                 // ordering).
                 int tetEdges[6][2] = {
@@ -502,8 +614,8 @@ namespace Nektar
                             }
                         }
                         
-                        vector<int> tags;
-                        tags.push_back(0);
+                        vector<int> tags = el[i]->GetTagList();
+                        //tags.push_back(0);
                         
                         ElmtConfig conf(eTetrahedron, layerWidth-1, false, false);
                         ElementSharedPtr elmt = GetElementFactory().

@@ -49,10 +49,8 @@ namespace Nektar
         struct HOSurf
         {
             HOSurf(vector<unsigned int>  pVertId, 
-                   vector<NodeSharedPtr> pSurfVerts,
-		   int pFirst, int pDir) :
-                vertId(pVertId), surfVerts(pSurfVerts),
-                first(pFirst), dir(pDir) {}
+                   vector<NodeSharedPtr> pSurfVerts) :
+                vertId(pVertId), surfVerts(pSurfVerts) {}
 
             HOSurf(vector<unsigned int>  pVertId) : vertId(pVertId) {}
             
@@ -68,9 +66,6 @@ namespace Nektar
              */
             vector<NodeSharedPtr> surfVerts;
             
-            int first;
-            int dir;
-	  
             void Rotate (int i);
             void Reflect();
         };

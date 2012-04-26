@@ -424,6 +424,11 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+                
             // Create edge vertices.
             SpatialDomains::VertexComponentSharedPtr p[2];
             p[0] = vertex[0]->GetGeom(coordDim);
@@ -512,6 +517,11 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+
             SpatialDomains::SegGeomSharedPtr         edges[3];
             SpatialDomains::VertexComponentSharedPtr verts[3];
             
@@ -603,6 +613,11 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+
             SpatialDomains::SegGeomSharedPtr         edges[4];
             SpatialDomains::VertexComponentSharedPtr verts[4];
             
@@ -691,7 +706,7 @@ namespace Nektar
             // with Nektar++ ordering (since the mapping above will change
             // this order depending on how the pairs are ordered).
             swap(edge[1], edge[3]);
-            swap(edge[2], edge[3]);
+            swap(edge[1], edge[2]);
             
             // Reorient the tet to ensure collapsed coordinates align between adjacent
             // elements.
@@ -739,6 +754,11 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
         {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+
             SpatialDomains::TriGeomSharedPtr tfaces[4];
             
             for (int i = 0; i < 4; ++i)
@@ -840,9 +860,6 @@ namespace Nektar
                 // Apply Vandermonde matrix to project onto nodal space.
                 nodalTet->ModalToNodal(nodalTet->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
             }
-            
-            //int edgeMap[6] = {0,3,1,2,4,5};
-            //int edgeMap[6] = {0,1,2,3,4,5};
             
             // Now extract points from the co-ordinate arrays into the
             // edge/face/volume nodes. First, extract edge-interior nodes.
@@ -971,10 +988,13 @@ namespace Nektar
             {
                 vertex.push_back(pNodeList[i]);
             }
-            
+
+            edge.resize(9);
+            int edgeMap[9] = {0,3,4,1,5,6,2,7,8};
             int eid = 0;
+            
             // Create edges (with corresponding set of edge points)
-            for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
+            for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it, ++eid)
             {
                 vector<NodeSharedPtr> edgeNodes;
                 if (m_conf.order > 1) {
@@ -982,11 +1002,12 @@ namespace Nektar
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
-                                                      pNodeList[it->first.second-1],
-                                                      edgeNodes,
-                                                      m_conf.edgeCurveType)));
-                edge.back()->id = eid++;
+                edge[edgeMap[eid]] = EdgeSharedPtr(
+                    new Edge(pNodeList[it->first.first-1],
+                             pNodeList[it->first.second-1],
+                             edgeNodes,
+                             m_conf.edgeCurveType));
+                edge[edgeMap[eid]]->id = edgeMap[eid];
             }
             
             if (m_conf.reorient)
@@ -1052,6 +1073,11 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
         {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+
             SpatialDomains::Geometry2DSharedPtr faces[5];
             
             for (int i = 0; i < 5; ++i)
@@ -1350,6 +1376,11 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
         {
+            if (m_geom)
+            {
+                return m_geom;
+            }
+
             SpatialDomains::QuadGeomSharedPtr faces[6];
             
             for (int i = 0; i < 6; ++i)

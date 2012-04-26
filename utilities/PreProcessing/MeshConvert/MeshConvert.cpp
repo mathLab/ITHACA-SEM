@@ -61,9 +61,8 @@ int main(int argc, char* argv[]) {
     //ModuleSharedPtr pr  = GetModuleFactory().CreateInstance(ModuleKey("bl",  eProcessModule),m);
     //ModuleSharedPtr pr2 = GetModuleFactory().CreateInstance(ModuleKey("jac", eProcessModule),m);
     in -> Process();
-    pr -> Process();
+    //pr -> Process();
     //pr2-> Process();
-    //pr3-> Process();
     out-> Process();
     
     return 0;

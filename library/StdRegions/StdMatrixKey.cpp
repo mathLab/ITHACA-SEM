@@ -273,7 +273,7 @@ namespace Nektar
                 }
             }
 
-            return false;
+            return true;
         }
 
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)

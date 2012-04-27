@@ -172,7 +172,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
         
             LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::FaceOrientation v_GetFaceOrient(int face);
+                StdRegions::Orientation v_GetFaceOrient(int face);
 
             LOCAL_REGIONS_EXPORT virtual 
                 bool v_GetFaceDGForwards(const int i) const;

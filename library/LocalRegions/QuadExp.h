@@ -185,9 +185,9 @@ namespace Nektar
                             const int nmode_offset,
                                   Array<OneD, NekDouble> &coeffs);
             LOCAL_REGIONS_EXPORT virtual
-                StdRegions::EdgeOrientation v_GetEorient(int edge);
+                StdRegions::Orientation v_GetEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual
-                StdRegions::EdgeOrientation v_GetCartesianEorient(int edge);
+                StdRegions::Orientation v_GetCartesianEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(const int dir) const;

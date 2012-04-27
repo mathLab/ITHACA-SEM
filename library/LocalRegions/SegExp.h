@@ -168,10 +168,10 @@ namespace Nektar
                     SpatialDomains::Geometry1DSharedPtr& v_GetGeom1D() const;
 
             LOCAL_REGIONS_EXPORT virtual void 
-                    v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
+                    v_SetCoeffsToOrientation(StdRegions::Orientation dir);
 
             LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
-                    StdRegions::EdgeOrientation dir,
+                    StdRegions::Orientation dir,
                     Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
@@ -188,7 +188,7 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
 
-            LOCAL_REGIONS_EXPORT virtual StdRegions::PointOrientation v_GetPorient(int point);
+            LOCAL_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
 
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 

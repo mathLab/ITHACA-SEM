@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     for(int i=0; i < nFaces; ++i)
     {
         SegGeomSharedPtr edgeArray[3];
-        EdgeOrientation eorientArray[3];
+        Orientation eorientArray[3];
         for(int j=0; j < 3; ++j)
         {
             edgeArray[j] = edges[edgeConnectivity[i][j]];

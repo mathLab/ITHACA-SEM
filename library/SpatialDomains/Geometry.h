@@ -149,9 +149,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT int GetVid(int i) const;
                 SPATIAL_DOMAINS_EXPORT int GetEid(int i = 0) const;
                 SPATIAL_DOMAINS_EXPORT int GetNumVerts() const;
-                SPATIAL_DOMAINS_EXPORT StdRegions::EdgeOrientation
+                SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
                             GetEorient(const int i) const;
-                SPATIAL_DOMAINS_EXPORT StdRegions::PointOrientation
+                SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
                             GetPorient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT int GetNumEdges() const;
                 SPATIAL_DOMAINS_EXPORT int GetNumFaces() const;
@@ -210,9 +210,9 @@ namespace Nektar
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 virtual int  v_GetVid(int i) const;
                 virtual int  v_GetNumVerts() const;
-                virtual StdRegions::EdgeOrientation
+                virtual StdRegions::Orientation
                              v_GetEorient(const int i) const;
-                virtual StdRegions::PointOrientation
+                virtual StdRegions::Orientation
                              v_GetPorient(const int i) const;
                 virtual int  v_GetNumEdges() const;
                 virtual int  v_GetNumFaces() const;

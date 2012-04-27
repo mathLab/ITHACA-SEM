@@ -1213,7 +1213,7 @@ namespace Nektar
 
         void StdPrismExp::v_GetFaceToElementMap(
             const int                  fid,
-            const FaceOrientation      faceOrient,
+            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA,
@@ -1288,7 +1288,7 @@ namespace Nektar
                 {
                     for (j = 0; j < nummodesA; j++)
                     {
-                        if (faceOrient < 4)
+                        if (faceOrient < 9)
                         {
                             arrayindx[i*nummodesA+j] = i*nummodesA+j;
                         }
@@ -1319,7 +1319,7 @@ namespace Nektar
                     {
                         for (r = 0; r < nummodesB-p; ++r)
                         {
-                            if ((int)faceOrient == 2 && p > 1)
+                            if ((int)faceOrient == 7 && p > 1)
                             {
                                 signarray[idx] = p % 2 ? -1 : 1;
                             }
@@ -1351,7 +1351,7 @@ namespace Nektar
                     {
                         for (r = 0; r < nummodesB-p; ++r)
                         {
-                            if ((int)faceOrient == 2 && p > 1)
+                            if ((int)faceOrient == 7 && p > 1)
                             {
                                 signarray[idx] = p % 2 ? -1 : 1;
                             }
@@ -1378,7 +1378,7 @@ namespace Nektar
             {
                 // Triangles only have one possible orientation (base
                 // direction reversed); swap edge modes.
-                if ((int)faceOrient == 2)
+                if ((int)faceOrient == 7)
                 {
                     swap(maparray[0], maparray[nummodesA]);
                     for (i = 1; i < nummodesA-1; ++i)
@@ -1393,10 +1393,10 @@ namespace Nektar
                 // StdHexExp and reverses the 'b' and 'a' directions as
                 // appropriate (1st and 2nd if statements respectively) in
                 // quadrilateral faces.
-                if (faceOrient == 1 || faceOrient == 3 ||
-                    faceOrient == 6 || faceOrient == 7)
+                if (faceOrient == 6 || faceOrient == 8 ||
+                    faceOrient == 11 || faceOrient == 12)
                 {
-                    if (faceOrient < 4)
+                    if (faceOrient < 9)
                     {
                         for (i = 3; i < nummodesB; i += 2)
                         {
@@ -1430,10 +1430,10 @@ namespace Nektar
                     }
                 }
 
-                if (faceOrient == 2 || faceOrient == 3 ||
-                    faceOrient == 5 || faceOrient == 7)
+                if (faceOrient == 7 || faceOrient == 8 ||
+                    faceOrient == 10 || faceOrient == 12)
                 {
-                    if (faceOrient < 4)
+                    if (faceOrient < 9)
                     {
                         for (i = 0; i < nummodesB; i++)
                         {
@@ -1507,7 +1507,7 @@ namespace Nektar
 
         void StdPrismExp::v_GetEdgeInteriorMap(
             const int                  eid, 
-            const EdgeOrientation      edgeOrient,
+            const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD, int>          &signarray)
         {
@@ -1621,7 +1621,7 @@ namespace Nektar
 
         void StdPrismExp::v_GetFaceInteriorMap(
             const int                  fid,
-            const FaceOrientation      faceOrient,
+            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD, int>          &signarray)
         {
@@ -1666,7 +1666,7 @@ namespace Nektar
                 {
                     for (j = 0; j < nummodesA; j++)
                     {
-                        if (faceOrient < 4)
+                        if (faceOrient < 9)
                         {
                             arrayindx[i*nummodesA+j] = i*nummodesA+j;
                         }
@@ -1695,7 +1695,7 @@ namespace Nektar
                     {
                         for (r = 1; r <= R-p; ++r)
                         {
-                            if ((int)faceOrient == 2)
+                            if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = p % 2 ? -1 : 1;
                             }
@@ -1719,7 +1719,7 @@ namespace Nektar
                     {
                         for (r = 1; r <= R-p; ++r)
                         {
-                            if ((int)faceOrient == 2)
+                            if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = p % 2 ? -1 : 1;
                             }
@@ -1747,10 +1747,10 @@ namespace Nektar
             if (fid == 1 || fid == 3)
                 return;
 
-            if (faceOrient == 1 || faceOrient == 3 ||
-                faceOrient == 6 || faceOrient == 7)
+            if (faceOrient == 6 || faceOrient == 8 ||
+                faceOrient == 11 || faceOrient == 12)
             {
-                if (faceOrient < 4)
+                if (faceOrient < 9)
                 {
                     for (i = 1; i < nummodesB; i += 2)
                     {
@@ -1772,10 +1772,10 @@ namespace Nektar
                 }
             }
 
-            if (faceOrient == 2 || faceOrient == 3 ||
-                faceOrient == 5 || faceOrient == 7)
+            if (faceOrient == 7 || faceOrient == 8 ||
+                faceOrient == 10 || faceOrient == 12)
             {
-                if (faceOrient < 4)
+                if (faceOrient < 9)
                 {
                     for (i = 0; i < nummodesB; i++)
                     {

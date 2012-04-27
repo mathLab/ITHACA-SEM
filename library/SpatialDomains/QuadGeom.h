@@ -66,17 +66,17 @@ namespace Nektar
                     const int id, 
                     const VertexComponentSharedPtr verts[],  
                     const SegGeomSharedPtr edges[], 
-                    const StdRegions::EdgeOrientation eorient[]);
+                    const StdRegions::Orientation eorient[]);
 
             SPATIAL_DOMAINS_EXPORT QuadGeom(
                     const int id, 
                     const SegGeomSharedPtr edges[], 
-                    const StdRegions::EdgeOrientation eorient[]);
+                    const StdRegions::Orientation eorient[]);
 
             SPATIAL_DOMAINS_EXPORT QuadGeom(
                     const int id, 
                     const SegGeomSharedPtr edges[], 
-                    const StdRegions::EdgeOrientation eorient[], 
+                    const StdRegions::Orientation eorient[], 
                     const CurveSharedPtr &curve);
 
             SPATIAL_DOMAINS_EXPORT QuadGeom(const QuadGeom &in);
@@ -88,7 +88,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Lcoord);
   
             /// Get the orientation of face1.
-            SPATIAL_DOMAINS_EXPORT static StdRegions::FaceOrientation 
+            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation 
                     GetFaceOrientation(const QuadGeom &face1,
                                          const QuadGeom &face2);
 
@@ -99,7 +99,7 @@ namespace Nektar
         protected:
             VertexComponentVector               m_verts;
             SegGeomVector                       m_edges;
-            StdRegions::EdgeOrientation         m_eorient[kNedges];
+            StdRegions::Orientation         m_eorient[kNedges];
             int                                 m_fid;
             bool                                m_ownVerts;
             std::list<CompToElmt>               m_elmtMap;
@@ -153,10 +153,10 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT virtual const Geometry1DSharedPtr 
                     v_GetEdge(int i) const;
 
-            SPATIAL_DOMAINS_EXPORT virtual StdRegions::EdgeOrientation 
+            SPATIAL_DOMAINS_EXPORT virtual StdRegions::Orientation 
                     v_GetEorient(const int i) const;
 
-            SPATIAL_DOMAINS_EXPORT virtual StdRegions::EdgeOrientation 
+            SPATIAL_DOMAINS_EXPORT virtual StdRegions::Orientation 
                     v_GetCartesianEorient(const int i) const;
 
             /// Return the edge number of the given edge

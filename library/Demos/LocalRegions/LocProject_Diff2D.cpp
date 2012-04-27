@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   StdRegions::StdExpansion2D *E;
   Array<OneD, NekDouble> sol,x,y,dx,dy;
   Array<OneD, NekDouble> coords(8);
-  StdRegions::EdgeOrientation edgeDir = StdRegions::eForwards;
+  StdRegions::Orientation edgeDir = StdRegions::eForwards;
 
 
   if((argc != 16)&&(argc != 14))
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
           edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
           edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[0]);
 
-          StdRegions::EdgeOrientation eorient[3];
+          StdRegions::Orientation eorient[3];
           eorient[0] = edgeDir;
           eorient[1] = edgeDir;
           eorient[2] = edgeDir;
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
           edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[3]);
           edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,verts[3],verts[0]);
 
-          StdRegions::EdgeOrientation eorient[4];
+          StdRegions::Orientation eorient[4];
           eorient[0] = edgeDir;
           eorient[1] = edgeDir;
           eorient[2] = edgeDir;

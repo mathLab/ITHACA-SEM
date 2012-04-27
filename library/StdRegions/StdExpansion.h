@@ -855,22 +855,22 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
-            StdRegions::FaceOrientation GetFaceOrient(int face)
+            StdRegions::Orientation GetFaceOrient(int face)
             {
                 return v_GetFaceOrient(face);
             }
 
-            StdRegions::EdgeOrientation GetEorient(int edge)
+            StdRegions::Orientation GetEorient(int edge)
             {
                 return v_GetEorient(edge);
             }
 			
-			StdRegions::PointOrientation GetPorient(int point)
+			StdRegions::Orientation GetPorient(int point)
             {
                 return v_GetPorient(point);
             }
 
-            StdRegions::EdgeOrientation GetCartesianEorient(int edge)
+            StdRegions::Orientation GetCartesianEorient(int edge)
             {
                 return v_GetCartesianEorient(edge);
             }
@@ -960,28 +960,28 @@ namespace Nektar
                 return v_GetVertexMap(localVertexId);
             }
 
-            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+            void GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                     Array<OneD, unsigned int> &maparray,
                                     Array<OneD, int> &signarray)
             {
                 v_GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             }
 
-            void GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+            void GetFaceInteriorMap(const int fid, const Orientation faceOrient,
                                     Array<OneD, unsigned int> &maparray,
                                     Array<OneD, int> &signarray)
             {
                 v_GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
             }
 
-            void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+            void GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray)
             {
                 v_GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
-            void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+            void GetFaceToElementMap(const int fid, const Orientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray,
                                      int nummodesA = -1, int nummodesB = -1)
@@ -1273,13 +1273,13 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
-            STD_REGIONS_EXPORT virtual StdRegions::FaceOrientation v_GetFaceOrient(int face);
+            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetFaceOrient(int face);
 
-            STD_REGIONS_EXPORT virtual StdRegions::EdgeOrientation v_GetEorient(int edge);
+            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetEorient(int edge);
             
-            STD_REGIONS_EXPORT virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge);
+            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetCartesianEorient(int edge);
 
-			STD_REGIONS_EXPORT virtual StdRegions::PointOrientation v_GetPorient(int point);
+			STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
 			
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
@@ -1696,19 +1696,19 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual int v_GetVertexMap(int localVertexId);
 
-            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+            STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(const int fid, const Orientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int> &signarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+            STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(const int fid, const Orientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int> &signarray,
                                                int nummodesA = -1, int nummodesB = -1);

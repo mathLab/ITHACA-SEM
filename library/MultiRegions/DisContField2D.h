@@ -267,6 +267,10 @@ namespace Nektar
             GlobalLinSysMapShPtr                               m_globalBndMat;
             ExpList1DSharedPtr                                 m_trace;
             LocalToGlobalDGMapSharedPtr                        m_traceMap;
+			
+			Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
+            Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
+            Array<OneD,StdRegions::Orientation>    m_edgedir;
 
 
             // virtual functions

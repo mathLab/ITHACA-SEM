@@ -280,11 +280,11 @@ namespace Nektar
         ///
         ///  Since both edges are passed, it does
         ///  not need any information from the EdgeComponent instance.
-        StdRegions::EdgeOrientation SegGeom::GetEdgeOrientation(
+        StdRegions::Orientation SegGeom::GetEdgeOrientation(
                 const SegGeom& edge1,
                 const SegGeom& edge2)
         {
-            StdRegions::EdgeOrientation returnval = StdRegions::eForwards;
+            StdRegions::Orientation returnval = StdRegions::eForwards;
 
             /// Backward direction.  Vertex 0 is connected to edge 2.
             if ((*edge1.GetVertex(0) == *edge2.GetVertex(0)) ||
@@ -487,7 +487,7 @@ namespace Nektar
             return m_xmap[i]->UpdatePhys();
         }
 
-        StdRegions::PointOrientation SegGeom::v_GetPorient(const int i) const
+        StdRegions::Orientation SegGeom::v_GetPorient(const int i) const
         {
             //cout << "StdRegions::PointOrientation GetPorient"<<endl;
             ASSERTL2((i >=0) && (i <= 1),"Point id must be between 0 and 1");

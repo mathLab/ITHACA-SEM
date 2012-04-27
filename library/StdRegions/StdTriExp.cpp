@@ -1192,7 +1192,7 @@ namespace Nektar
         
         void StdTriExp::v_GetEdgeToElementMap(
             const int                  eid, 
-            const EdgeOrientation      edgeOrient,
+            const Orientation      edgeOrient,
             Array<OneD, unsigned int>& maparray,
             Array<OneD,          int>& signarray)
         {
@@ -1320,7 +1320,7 @@ namespace Nektar
 
         void StdTriExp::v_GetEdgeInteriorMap(
             const int                  eid,
-            const EdgeOrientation      edgeOrient,
+            const Orientation      edgeOrient,
             Array<OneD, unsigned int>& maparray,
             Array<OneD,          int>& signarray)
         {

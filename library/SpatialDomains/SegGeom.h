@@ -90,7 +90,7 @@ namespace Nektar
                         const int i,
                         const Array<OneD, const NekDouble> &Lcoord);
 
-                SPATIAL_DOMAINS_EXPORT static StdRegions::EdgeOrientation
+                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
                         GetEdgeOrientation(const SegGeom& edge1,
                                            const SegGeom& edge2);
 
@@ -106,7 +106,7 @@ namespace Nektar
                 std::list<CompToElmt>                             m_elmtMap;
                 Array<OneD, StdRegions::StdExpansion1DSharedPtr>  m_xmap;
                 SpatialDomains::VertexComponentSharedPtr          m_verts[kNverts];
-                StdRegions::PointOrientation                      m_porient[kNverts];
+                StdRegions::Orientation                           m_porient[kNverts];
 
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
@@ -145,7 +145,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
-                SPATIAL_DOMAINS_EXPORT virtual StdRegions::PointOrientation
+                SPATIAL_DOMAINS_EXPORT virtual StdRegions::Orientation
                         v_GetPorient(const int i) const;
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom ();

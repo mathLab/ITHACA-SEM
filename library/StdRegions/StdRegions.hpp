@@ -270,9 +270,7 @@ namespace Nektar
             "Hexahedron"
         };
 
-
-
-
+		
         // Hold the dimension of each of the types of shapes.
         const unsigned int ExpansionTypeDimMap[SIZE_ExpansionType] =
         {
@@ -285,40 +283,53 @@ namespace Nektar
             3,  // ePrism
             3,  // eHexahedron
         };
-
-        enum EdgeOrientation
+		
+		enum IndexMapType
+		{
+			eEdgeToElement,
+			eFaceToElement,
+			eEdgeInterior,
+			eFaceInterior,
+			eBoundary,
+			eVertex
+		};
+		
+		const char* const IndexMapTypeMap[] =
         {
-            eForwards,
-            eBackwards
+            "EdgeToElement",
+			"FaceToElement",
+			"EdgeInterior",
+			"FaceInterior",
+			"Boundary",
+			"Vertex"
         };
 		
-		enum PointOrientation
-        {
-            eFwd,
-            eBwd
-        };
-
-        const char* const EdgeOrientationMap[] =
-        {
-            "Forwards",
-            "Backwards"
-        };
-
-        enum FaceOrientation
-        {
-            eDir1FwdDir1_Dir2FwdDir2,
+		enum Orientation
+		{
+			eNoOrientation,
+			eFwd,
+            eBwd,
+			eForwards,
+            eBackwards,
+			eDir1FwdDir1_Dir2FwdDir2,
             eDir1FwdDir1_Dir2BwdDir2,
             eDir1BwdDir1_Dir2FwdDir2,
             eDir1BwdDir1_Dir2BwdDir2,
             eDir1FwdDir2_Dir2FwdDir1,
             eDir1FwdDir2_Dir2BwdDir1,
             eDir1BwdDir2_Dir2FwdDir1,
-            eDir1BwdDir2_Dir2BwdDir1
-        };
-
-        const char* const FaceOrientationMap[] =
+            eDir1BwdDir2_Dir2BwdDir1,
+			SIZE_Orientation
+		};
+		
+		const char* const OrientationMap[] =
         {
-            "Dir1FwdDir1_Dir2FwdDir2",
+            "NoOrientation",
+			"Fwd",
+			"Bwd",
+			"Forwards",
+            "Backwards",
+			"Dir1FwdDir1_Dir2FwdDir2",
             "Dir1FwdDir1_Dir2BwdDir2",
             "Dir1BwdDir1_Dir2FwdDir2",
             "Dir1BwdDir1_Dir2BwdDir2",

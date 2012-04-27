@@ -16,6 +16,7 @@ StdSegExp.cpp
 StdPointExp.cpp
 StdTetExp.cpp
 StdTriExp.cpp
+IndexMapKey.cpp
 )
 
 SET(STD_REGIONS_HEADERS
@@ -42,6 +43,7 @@ StdTriExp.h
 LocalRegionsDeclarations.hpp
 SpatialDomainsDeclarations.hpp
 StdRegions.hpp
+IndexMapKey.h
 )
 
 ADD_DEFINITIONS(-DSTD_REGIONS_EXPORTS)

@@ -456,8 +456,8 @@ namespace Nektar
             SpatialDomains::ElementEdgeVectorSharedPtr element1;
             SpatialDomains::ElementEdgeVectorSharedPtr element2;
 
-            StdRegions::EdgeOrientation orient1;
-            StdRegions::EdgeOrientation orient2;
+            StdRegions::Orientation orient1;
+            StdRegions::Orientation orient2;
 
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
@@ -624,7 +624,7 @@ namespace Nektar
         {
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
-            StdRegions::EdgeOrientation edgedir;
+            StdRegions::Orientation edgedir;
             int nquad_e,cnt,n,e,npts,offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
 
@@ -900,7 +900,7 @@ namespace Nektar
 
             Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > elmtToTrace = m_traceMap->GetElmtToTrace();
 
-            StdRegions::EdgeOrientation edgedir;
+            StdRegions::Orientation edgedir;
 
             int     eid,cnt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
@@ -1145,7 +1145,7 @@ namespace Nektar
             Array<OneD, NekDouble> force, out_tmp,qrhs;
             Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > elmtToTrace = m_traceMap->GetElmtToTrace();
 
-            StdRegions::EdgeOrientation edgedir;
+            StdRegions::Orientation edgedir;
 
             int     eid,nq_elmt, nm_elmt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();

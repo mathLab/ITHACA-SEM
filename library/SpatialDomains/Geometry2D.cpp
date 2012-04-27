@@ -80,7 +80,7 @@ namespace Nektar
             return v_GetFace(i);
         }
 
-        StdRegions::FaceOrientation Geometry2D::GetFaceOrient(const int i) const
+        StdRegions::Orientation Geometry2D::GetFaceOrient(const int i) const
         {
             return v_GetFaceOrient(i);
         }
@@ -95,7 +95,7 @@ namespace Nektar
             return v_GetVertex(i);
         }
 
-        StdRegions::EdgeOrientation Geometry2D::GetCartesianEorient(const int i) const
+        StdRegions::Orientation Geometry2D::GetCartesianEorient(const int i) const
         {
             return v_GetCartesianEorient(i);
         }
@@ -161,7 +161,7 @@ namespace Nektar
             return returnval;
         }
 
-        StdRegions::EdgeOrientation Geometry2D::v_GetEorient(const int i) const
+        StdRegions::Orientation Geometry2D::v_GetEorient(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");
@@ -176,14 +176,14 @@ namespace Nektar
             return returnval;
         }
 
-        StdRegions::FaceOrientation Geometry2D::v_GetFaceOrient(const int i) const
+        StdRegions::Orientation Geometry2D::v_GetFaceOrient(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");
             return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
         }
 
-        StdRegions::EdgeOrientation Geometry2D::v_GetCartesianEorient(const int i) const
+        StdRegions::Orientation Geometry2D::v_GetCartesianEorient(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");

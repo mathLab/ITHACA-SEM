@@ -78,7 +78,7 @@ namespace Nektar
         QuadGeom::QuadGeom(const int id,
                            const VertexComponentSharedPtr verts[],
                            const SegGeomSharedPtr edges[],
-                           const StdRegions::EdgeOrientation eorient[]):
+                           const StdRegions::Orientation eorient[]):
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
@@ -128,7 +128,7 @@ namespace Nektar
          */
         QuadGeom::QuadGeom(const int id,
                            const SegGeomSharedPtr edges[],
-                           const StdRegions::EdgeOrientation eorient[],
+                           const StdRegions::Orientation eorient[],
                            const CurveSharedPtr &curve) :
             Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
             m_fid(id)
@@ -220,7 +220,7 @@ namespace Nektar
          */
         QuadGeom::QuadGeom(const int id,
                            const SegGeomSharedPtr edges[],
-                           const StdRegions::EdgeOrientation eorient[]):
+                           const StdRegions::Orientation eorient[]):
             Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
             m_fid(id)
         {
@@ -327,11 +327,11 @@ namespace Nektar
        /**
         * TODO: implement eight different case of face orientation
         */
-       StdRegions::FaceOrientation QuadGeom::GetFaceOrientation(
+       StdRegions::Orientation QuadGeom::GetFaceOrientation(
                    const QuadGeom &face1,
                    const QuadGeom &face2)
        {
-           StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+           StdRegions::Orientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
            // TODO : implement
 	   // eDir1FwdDir1_Dir2BwdDir2
 	   // eDir1BwdDir1_Dir2FwdDir2
@@ -706,7 +706,7 @@ namespace Nektar
         /**
          *
          */
-        StdRegions::EdgeOrientation QuadGeom::v_GetEorient(const int i) const
+        StdRegions::Orientation QuadGeom::v_GetEorient(const int i) const
         {
             ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
             return m_eorient[i];
@@ -716,7 +716,7 @@ namespace Nektar
         /**
          *
          */
-        StdRegions::EdgeOrientation QuadGeom::v_GetCartesianEorient(const int i) const
+        StdRegions::Orientation QuadGeom::v_GetCartesianEorient(const int i) const
         {
             ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
             if(i < 2)

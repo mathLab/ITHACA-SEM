@@ -62,7 +62,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
-            SPATIAL_DOMAINS_EXPORT StdRegions::FaceOrientation 
+            SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 
                 GetFaceOrient(const int i) const;
             SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
 
@@ -73,8 +73,8 @@ namespace Nektar
             VertexComponentVector                            m_verts;
             SegGeomVector                                    m_edges;
             Geometry2DVector                                 m_faces;
-            std::vector<StdRegions::EdgeOrientation>         m_eorient;
-            std::vector<StdRegions::FaceOrientation>         m_forient;
+            std::vector<StdRegions::Orientation>             m_eorient;
+            std::vector<StdRegions::Orientation>             m_forient;
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
             std::list<CompToElmt>                            m_elmtmap;
             bool                                             m_owndata;
@@ -99,10 +99,10 @@ namespace Nektar
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetVid(int i) const;
             virtual const SegGeomSharedPtr      v_GetEdge(int i) const;
-            virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const;
+            virtual StdRegions::Orientation v_GetEorient(const int i) const;
             virtual int                         v_GetEid(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
-            virtual StdRegions::FaceOrientation v_GetFaceOrient(const int i) const;
+            virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
             virtual int                         v_GetFid(int i) const;
             virtual int                         v_GetEid() const;
             virtual Array<OneD,NekDouble>      &v_UpdatePhys(const int i);

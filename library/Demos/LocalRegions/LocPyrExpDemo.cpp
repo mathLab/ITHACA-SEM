@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
             if(f==0){
                 int i = quadId[f];
                 SegGeomSharedPtr edgeArray[4];
-                EdgeOrientation eorientArray[4]; 
+                Orientation eorientArray[4]; 
                 for(int j=0; j < 4; ++j){
                     edgeArray[j] = edges[quadEdgeConnectivity[i][j]];
                     eorientArray[j] = isQuadEdgeFlipped[i][j] ? eBackwards : eForwards;
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
             else {
                 int i = triId[f];
                 SegGeomSharedPtr edgeArray[3];
-                EdgeOrientation eorientArray[3];
+                Orientation eorientArray[3];
                 for(int j=0; j < 3; ++j){
                     edgeArray[j] = edges[triEdgeConnectivity[i][j]];
                     eorientArray[j] = isTriEdgeFlipped[i][j] ? eBackwards : eForwards;

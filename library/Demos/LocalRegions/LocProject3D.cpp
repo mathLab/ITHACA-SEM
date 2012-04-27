@@ -460,7 +460,7 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
       QuadGeomSharedPtr faces[nFaces];
       for( int i = 0; i < nFaces; ++i ) {
           SegGeomSharedPtr edgeArray[4];
-          EdgeOrientation eorientArray[4];
+          Orientation eorientArray[4];
           for( int j = 0; j < 4; ++j ) {
               edgeArray[j]    = edges[edgeConnectivity[i][j]];
               eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
@@ -554,7 +554,7 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
         if (i == 1 || i == 3) 
         {
             SegGeomSharedPtr edgeArray[3];
-            EdgeOrientation eorientArray[3];
+            Orientation eorientArray[3];
             
             for (int j = 0; j < 3; ++j) {
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
@@ -567,7 +567,7 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
         else
         {
             SegGeomSharedPtr edgeArray[4];
-            EdgeOrientation eorientArray[4];
+            Orientation eorientArray[4];
             
             for (int j = 0; j < 4; ++j) {
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
@@ -645,7 +645,7 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
     TriGeomSharedPtr faces[nFaces];
     for(int i=0; i < nFaces; ++i){
         SegGeomSharedPtr edgeArray[3];
-        EdgeOrientation eorientArray[3];
+        Orientation eorientArray[3];
         for(int j=0; j < 3; ++j){
             edgeArray[j] = edges[edgeConnectivity[i][j]];
             eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;

@@ -978,7 +978,7 @@ namespace Nektar
         
         void StdPyrExp::v_GetFaceToElementMap(
             const int                  fid, 
-            const FaceOrientation      faceOrient,
+            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA, 
@@ -1051,7 +1051,7 @@ namespace Nektar
             {
                 for(int b = 0; isQuad ? (b <  nummodesB) : (b < nummodesB - a); ++b)
                 {
-                    if( faceOrient < 4 ) // Not transposed
+                    if( faceOrient < 9 ) // Not transposed
                     {
                         arrayindex[b + nummodesB*a] = b + nummodesB*a;
                     }
@@ -1126,11 +1126,11 @@ namespace Nektar
             
             }
 
-            if( (faceOrient==1) || (faceOrient==3) ||
-                (faceOrient==6) || (faceOrient==7) )
+            if( (faceOrient==6) || (faceOrient==8) ||
+                (faceOrient==11) || (faceOrient==12) )
             {    
 
-                if(faceOrient<4)
+                if(faceOrient<9)
                 {
                     for(i = 3; i < nummodesB; i+=2)
                     {
@@ -1166,10 +1166,10 @@ namespace Nektar
                 }
             }
                 
-            if( (faceOrient==2) || (faceOrient==3) ||
-                (faceOrient==5) || (faceOrient==7) )
+            if( (faceOrient==7) || (faceOrient==8) ||
+                (faceOrient==10) || (faceOrient==12) )
             {  
-                if(faceOrient<4)
+                if(faceOrient<9)
                 {                                   
                     for(i = 0; i < nummodesB; i++)
                     {

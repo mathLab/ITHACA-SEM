@@ -1052,27 +1052,27 @@ namespace Nektar
             }
 
 
-            StdRegions::FaceOrientation StdExpansion::v_GetFaceOrient(int face)
+            StdRegions::Orientation StdExpansion::v_GetFaceOrient(int face)
 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
                 return eDir1FwdDir1_Dir2FwdDir2;
             }
 
-            StdRegions::EdgeOrientation StdExpansion::v_GetEorient(int edge)
+            StdRegions::Orientation StdExpansion::v_GetEorient(int edge)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
                 return eForwards;
             }
 		
-			StdRegions::PointOrientation StdExpansion::v_GetPorient(int point)
+			StdRegions::Orientation StdExpansion::v_GetPorient(int point)
 			{
 				NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
 				return eFwd;
 			}
 
 
-            StdRegions::EdgeOrientation StdExpansion::v_GetCartesianEorient(int edge)
+            StdRegions::Orientation StdExpansion::v_GetCartesianEorient(int edge)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
                 return eForwards;
@@ -1445,28 +1445,28 @@ namespace Nektar
                 return 0;
             }
 
-            void StdExpansion::v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+            void StdExpansion::v_GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            void StdExpansion::v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+            void StdExpansion::v_GetFaceInteriorMap(const int fid, const Orientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            void StdExpansion::v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+            void StdExpansion::v_GetEdgeToElementMap(const int eid, const Orientation edgeOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int> &signarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            void StdExpansion::v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+            void StdExpansion::v_GetFaceToElementMap(const int fid, const Orientation faceOrient,
                                                      Array<OneD, unsigned int> &maparray,
                                                      Array<OneD, int> &signarray,
                                                      int nummodesA, int nummodesB)

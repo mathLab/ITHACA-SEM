@@ -595,7 +595,7 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-        StdRegions::FaceOrientation PrismExp::v_GetFaceOrient(int face)
+        StdRegions::Orientation PrismExp::v_GetFaceOrient(int face)
         {
             return m_geom->GetFaceOrient(face);
         }
@@ -613,7 +613,7 @@ namespace Nektar
 
             Array<OneD,NekDouble>       o_tmp(nquad0*nquad1*nquad2);
             
-            StdRegions::FaceOrientation facedir = GetFaceOrient(face);
+            StdRegions::Orientation facedir = GetFaceOrient(face);
 
             switch(face)
             {

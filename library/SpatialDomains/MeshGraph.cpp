@@ -3331,7 +3331,7 @@ namespace Nektar
         /**
          *
          */
-        TriGeomSharedPtr MeshGraph::AddTriangle(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[])
+        TriGeomSharedPtr MeshGraph::AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[])
         {
             int indx = m_triGeoms.rbegin()->first + 1;
             TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, orient));
@@ -3346,7 +3346,7 @@ namespace Nektar
         /**
          *
          */
-        QuadGeomSharedPtr MeshGraph::AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[])
+        QuadGeomSharedPtr MeshGraph::AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::Orientation orient[])
         {
             int indx = m_quadGeoms.rbegin()->first + 1;
             QuadGeomSharedPtr quadgeom(MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, orient));

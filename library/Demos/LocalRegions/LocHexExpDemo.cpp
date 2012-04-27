@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
     QuadGeomSharedPtr faces[nFaces];
     for( int i = 0; i < nFaces; ++i ) {
         SegGeomSharedPtr edgeArray[4];
-        EdgeOrientation eorientArray[4];
+        Orientation eorientArray[4];
         for( int j = 0; j < 4; ++j ) {
             edgeArray[j]    = edges[edgeConnectivity[i][j]];
             eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;

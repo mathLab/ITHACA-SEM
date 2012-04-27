@@ -696,7 +696,7 @@ namespace Nektar
         }
 
 
-        StdRegions::FaceOrientation TetExp::v_GetFaceOrient(int face)
+        StdRegions::Orientation TetExp::v_GetFaceOrient(int face)
         {
             return m_geom->GetFaceOrient(face);
         }
@@ -718,7 +718,7 @@ namespace Nektar
             Array<OneD,NekDouble>       o_tmp (GetFaceNumPoints(face));
             Array<OneD,NekDouble>       o_tmp2(FaceExp->GetTotPoints());
             Array<OneD,NekDouble>       o_tmp3;
-            StdRegions::FaceOrientation facedir = GetFaceOrient(face);
+            StdRegions::Orientation facedir = GetFaceOrient(face);
 
             switch(face)
             {
@@ -769,7 +769,7 @@ namespace Nektar
             int nq1 = FaceExp->GetNumPoints(0);
             int nq2 = FaceExp->GetNumPoints(1);
             
-            if ((int)facedir == 2)
+            if ((int)facedir == 7)
             {
                 for (int j = 0; j < nq2; ++j)
                 {
@@ -2039,7 +2039,7 @@ namespace Nektar
            for(i=0; i < nFaces; ++i)
 	   {
 	       SpatialDomains::SegGeomSharedPtr edgeArray[3];
-	       StdRegions::EdgeOrientation eorientArray[3];
+	       StdRegions::Orientation eorientArray[3];
                for(j=0; j < 3; ++j)
 	       {
                    edgeArray[j] = edges[edgeConnectivity[i][j]];

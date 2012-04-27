@@ -640,7 +640,7 @@ namespace Nektar
                 //Number of interior edge coefficients
                 nEdgeCoeffs=vExp->GetEdgeNcoeffs(eid)-2;
 
-                StdRegions::EdgeOrientation eOrient=vExp->GetGeom()->GetEorient(eid);
+                StdRegions::Orientation eOrient=vExp->GetGeom()->GetEorient(eid);
                 Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
                 Array< OneD, int > signarray = Array<OneD, int>(nEdgeCoeffs,1);
 
@@ -663,7 +663,7 @@ namespace Nektar
                 //Number of interior edge coefficients
                 nFaceCoeffs=vExp->GetFaceIntNcoeffs(fid);
  
-                StdRegions::FaceOrientation fOrient=vExp->GetFaceOrient(fid);
+                StdRegions::Orientation fOrient=vExp->GetFaceOrient(fid);
                 Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nFaceCoeffs);
                 Array< OneD, int > signarray = Array<OneD, int>(nFaceCoeffs,1);
 

@@ -70,7 +70,7 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT ~PointGeom();
 
-                SPATIAL_DOMAINS_EXPORT static StdRegions::PointOrientation
+                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
                             GetPointOrientation(const SegGeom& edge1,
                                                 const SegGeom& edge2);
 

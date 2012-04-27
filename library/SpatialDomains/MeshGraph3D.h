@@ -126,7 +126,7 @@ namespace Nektar
                 }
             }
 
-            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline const StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
                 {
@@ -145,9 +145,9 @@ namespace Nektar
             }
 
 
-            inline const StdRegions::EdgeOrientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline const StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
-                StdRegions::EdgeOrientation returnval;
+                StdRegions::Orientation returnval;
 
                 if(expansion == StdRegions::eTriangle)
                 {

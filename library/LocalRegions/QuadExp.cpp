@@ -285,7 +285,7 @@ namespace Nektar
 
                 Array<OneD, NekDouble> physEdge[4];
                 Array<OneD, NekDouble> coeffEdge[4];
-                StdRegions::EdgeOrientation orient[4];
+                StdRegions::Orientation orient[4];
                 for(i = 0; i < 4; i++)
                 {
                     physEdge[i]  = Array<OneD, NekDouble>(npoints[i%2]);
@@ -652,7 +652,7 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
 
-            StdRegions::EdgeOrientation edgedir = GetEorient(edge);
+            StdRegions::Orientation edgedir = GetEorient(edge);
             switch(edge)
             {
             case 0:
@@ -1213,13 +1213,13 @@ namespace Nektar
         }
 
 
-        StdRegions::EdgeOrientation QuadExp::v_GetEorient(int edge)
+        StdRegions::Orientation QuadExp::v_GetEorient(int edge)
         {
             return m_geom->GetEorient(edge);
         }
 
 
-        StdRegions::EdgeOrientation QuadExp::v_GetCartesianEorient(int edge)
+        StdRegions::Orientation QuadExp::v_GetCartesianEorient(int edge)
         {
             return m_geom->GetCartesianEorient(edge);
         }

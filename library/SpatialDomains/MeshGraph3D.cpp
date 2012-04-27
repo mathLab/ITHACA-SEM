@@ -262,7 +262,7 @@ namespace Nektar
                             GetSegGeom(edge3)
                         };
 
-                        StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] =
+                        StdRegions::Orientation edgeorient[TriGeom::kNedges] =
                         {
                             SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
@@ -310,7 +310,7 @@ namespace Nektar
                         {GetSegGeom(edge1),GetSegGeom(edge2),
                          GetSegGeom(edge3),GetSegGeom(edge4)};
 
-                        StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
+                        StdRegions::Orientation edgeorient[QuadGeom::kNedges] =
                         {
                             SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),

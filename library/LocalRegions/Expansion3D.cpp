@@ -109,7 +109,7 @@ namespace Nektar
             int                         i;
             Array<OneD, unsigned int>   map;
             Array<OneD, int>            sign;
-            StdRegions::FaceOrientation facedir = GetFaceOrient(face);
+            StdRegions::Orientation facedir = GetFaceOrient(face);
             
             GetFaceToElementMap(face,facedir,map,sign);
             int order_e = map.num_elements(); // Order of the element

@@ -479,8 +479,8 @@ namespace Nektar
             SpatialDomains::ElementEdgeVectorSharedPtr element1;
             SpatialDomains::ElementEdgeVectorSharedPtr element2;
 
-            StdRegions::EdgeOrientation orient1;
-            StdRegions::EdgeOrientation orient2;
+            StdRegions::Orientation orient1;
+            StdRegions::Orientation orient2;
 
             SpatialDomains::BoundaryConditionShPtr locBCond;
 

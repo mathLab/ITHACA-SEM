@@ -914,7 +914,7 @@ namespace Nektar
                         SpatialDomains::ElementFaceVectorSharedPtr con_elmt
                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetElementsFromFace(FaceGeom);
 
-                        StdRegions::FaceOrientation cur_face_orientation
+                        StdRegions::Orientation cur_face_orientation
                             = (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceOrient((*con_elmt)[0]->m_FaceIndx);	
                         
                         switch(cur_face_orientation)
@@ -976,7 +976,7 @@ namespace Nektar
                         
                         SpatialDomains::ElementFaceVectorSharedPtr con_elmt
                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetElementsFromFace(FaceGeom);
-                        StdRegions::FaceOrientation cur_face_orientation
+                        StdRegions::Orientation cur_face_orientation
                             = (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceOrient((*con_elmt)[0]->m_FaceIndx);	
                         
                         switch(cur_face_orientation)
@@ -1215,12 +1215,12 @@ namespace Nektar
                     Array<OneD,          int> elmSign1(order_e);
                     Array<OneD, unsigned int> elmMap2 (order_e);
                     Array<OneD,          int> elmSign2(order_e);
-                    StdRegions::FaceOrientation fo = (*exp3D)[eid]->GetFaceOrient(j);
+                    StdRegions::Orientation fo = (*exp3D)[eid]->GetFaceOrient(j);
                     
                     // Construct mapping which will permute global IDs
                     // according to face orientations. 
                     (*exp3D)[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign2);
-                    (*exp3D)[eid]->GetFaceToElementMap(j,(StdRegions::FaceOrientation)0,elmMap2,elmSign2);
+                    (*exp3D)[eid]->GetFaceToElementMap(j,(StdRegions::Orientation)0,elmMap2,elmSign2);
                     
                     std::map<int,int> orientMap;
                     

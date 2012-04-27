@@ -576,7 +576,7 @@ cout<<"layer region="<<Ireg<<endl;
 
             SpatialDomains::SegGeomSharedPtr segmentGeomreg;
             SpatialDomains::ElementEdgeVectorSharedPtr elementreg;
-            StdRegions::EdgeOrientation orientreg;            
+            StdRegions::Orientation orientreg;            
             SpatialDomains::BoundaryRegion::iterator regIt;
             Array<OneD, unsigned int> bmapreg;
             //fields to store the Re Im parts in physical space:  

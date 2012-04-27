@@ -810,13 +810,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
-        void SegExp::v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+        void SegExp::v_SetCoeffsToOrientation(StdRegions::Orientation dir)
         {
             v_SetCoeffsToOrientation(dir,m_coeffs,m_coeffs);
         }
 
         void SegExp::v_SetCoeffsToOrientation(
-                StdRegions::EdgeOrientation dir,
+                StdRegions::Orientation dir,
                 Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray)
         {
@@ -835,7 +835,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
-        StdRegions::PointOrientation SegExp::v_GetPorient(int point)
+        StdRegions::Orientation SegExp::v_GetPorient(int point)
         {
             return m_geom->GetPorient(point);
         }

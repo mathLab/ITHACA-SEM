@@ -71,7 +71,7 @@ namespace Nektar
             
             int order0, points0, order1, points1;
             
-            if (m_forient[0] < 4)
+            if (m_forient[0] < 9)
             {
                 tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
                 tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
@@ -94,7 +94,7 @@ namespace Nektar
                 points0 = *max_element(tmp.begin(), tmp.end());
             }
             
-            if (m_forient[0] < 4)
+            if (m_forient[0] < 9)
             {
                 tmp.clear();
                 tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
@@ -672,9 +672,10 @@ namespace Nektar
                         orientation++;
                     }
                 }
-
-                // Fill the m_forient array
-                m_forient[f] = (StdRegions::FaceOrientation) orientation;
+				
+				orientation = orientation + 5;
+				// Fill the m_forient array
+                m_forient[f] = (StdRegions::Orientation) orientation;
             }
         }
     }; //end of namespace

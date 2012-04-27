@@ -66,7 +66,7 @@ namespace Nektar
             /// certainly be simplified but works for now!
             vector<int> tmp1, tmp2;
 
-            if (m_forient[0] < 4)
+            if (m_forient[0] < 9)
             {
                 tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (0));
                 tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (2));
@@ -81,7 +81,7 @@ namespace Nektar
                 tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
             }
             
-            if (m_forient[5] < 4)
+            if (m_forient[5] < 9)
             {
                 tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (0));
                 tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (2));
@@ -102,7 +102,7 @@ namespace Nektar
             tmp1.clear();
             tmp2.clear();
             
-            if (m_forient[0] < 4)
+            if (m_forient[0] < 9)
             {
                 tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (1));
                 tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (3));
@@ -117,7 +117,7 @@ namespace Nektar
                 tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
             }
 
-            if (m_forient[5] < 4)
+            if (m_forient[5] < 9)
             {
                 tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (1));
                 tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (3));
@@ -138,7 +138,7 @@ namespace Nektar
             tmp1.clear();
             tmp2.clear();
 
-            if (m_forient[1] < 4)
+            if (m_forient[1] < 9)
             {
                 tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (1));
                 tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (3));
@@ -153,7 +153,7 @@ namespace Nektar
                 tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
             }
             
-            if (m_forient[3] < 4)
+            if (m_forient[3] < 9)
             {
                 tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (1));
                 tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (3));
@@ -822,9 +822,10 @@ namespace Nektar
                         orientation++;
                     }
                 }
-
+				
+				orientation = orientation + 5;
                 // Fill the m_forient array
-                m_forient[f] = (StdRegions::FaceOrientation) orientation;
+                m_forient[f] = (StdRegions::Orientation) orientation;
             }
         }
 

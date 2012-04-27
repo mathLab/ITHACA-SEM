@@ -100,42 +100,42 @@ namespace Nektar
                 e8, e9, e10, e11
             };
 
-            Nektar::StdRegions::EdgeOrientation edgeorient0[Nektar::SpatialDomains::QuadGeom::kNedges] =
+            Nektar::StdRegions::Orientation edgeorient0[Nektar::SpatialDomains::QuadGeom::kNedges] =
             {
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[0], *edgesF0[1]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[1], *edgesF0[2]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[2], *edgesF0[3]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF0[3], *edgesF0[0])
             };
-            Nektar::StdRegions::EdgeOrientation edgeorient1[Nektar::SpatialDomains::QuadGeom::kNedges] =
+            Nektar::StdRegions::Orientation edgeorient1[Nektar::SpatialDomains::QuadGeom::kNedges] =
             {
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[0], *edgesF1[1]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[1], *edgesF1[2]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[2], *edgesF1[3]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF1[3], *edgesF1[0])
             };
-            Nektar::StdRegions::EdgeOrientation edgeorient2[Nektar::SpatialDomains::QuadGeom::kNedges] =
+            Nektar::StdRegions::Orientation edgeorient2[Nektar::SpatialDomains::QuadGeom::kNedges] =
             {
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[0], *edgesF2[1]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[1], *edgesF2[2]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[2], *edgesF2[3]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF2[3], *edgesF2[0])
             };
-            Nektar::StdRegions::EdgeOrientation edgeorient3[Nektar::SpatialDomains::QuadGeom::kNedges] =
+            Nektar::StdRegions::Orientation edgeorient3[Nektar::SpatialDomains::QuadGeom::kNedges] =
             {
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[0], *edgesF3[1]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[1], *edgesF3[2]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[2], *edgesF3[3]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF3[3], *edgesF3[0])
             };
-            Nektar::StdRegions::EdgeOrientation edgeorient4[Nektar::SpatialDomains::QuadGeom::kNedges] =
+            Nektar::StdRegions::Orientation edgeorient4[Nektar::SpatialDomains::QuadGeom::kNedges] =
             {
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[0], *edgesF4[1]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[1], *edgesF4[2]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[2], *edgesF4[3]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF4[3], *edgesF4[0])
             };
-            Nektar::StdRegions::EdgeOrientation edgeorient5[Nektar::SpatialDomains::QuadGeom::kNedges] =
+            Nektar::StdRegions::Orientation edgeorient5[Nektar::SpatialDomains::QuadGeom::kNedges] =
             {
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF5[0], *edgesF5[1]),
                 Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edgesF5[1], *edgesF5[2]),

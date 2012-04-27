@@ -229,7 +229,7 @@ namespace Nektar
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
                 const int                  fid,
-                const FaceOrientation      faceOrient,
+                const Orientation      faceOrient,
                 Array<OneD, unsigned int> &maparray,
                 Array<OneD,          int> &signarray,
                 int                        nummodesA=-1,
@@ -238,12 +238,12 @@ namespace Nektar
             /*
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
                 const int eid,
-                const EdgeOrientation edgeOrient,
+                const Orientation edgeOrient,
                 Array<OneD, unsigned int> &maparray,
                 Array<OneD, int> &signarray);
             STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(
                 const int fid,
-                const FaceOrientation faceOrient,
+                const Orientation faceOrient,
                 Array<OneD, unsigned int> &maparray,
                 Array<OneD, int>& signarray);
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
@@ -424,14 +424,14 @@ namespace Nektar
                 return GetVertexMap(localVertexId);
             }
 
-            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+            virtual void v_GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
             {
                 GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             } 
                       
-            virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+            virtual void v_GetFaceToElementMap(const int fid, const Orientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int>& signarray)
             {

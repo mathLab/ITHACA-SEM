@@ -426,7 +426,7 @@ namespace Nektar
                 int nEdge = edgeList.size();
                 
                 SpatialDomains::SegGeomSharedPtr edges[4];
-                StdRegions::EdgeOrientation      edgeo[4];
+                StdRegions::Orientation      edgeo[4];
                 
                 for (int i = 0; i < nEdge; ++i)
                 {

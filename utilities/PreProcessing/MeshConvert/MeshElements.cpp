@@ -531,7 +531,7 @@ namespace Nektar
                 verts[i] = vertex[i]->GetGeom(coordDim);
             }
             
-            StdRegions::EdgeOrientation edgeorient[3] = {
+            StdRegions::Orientation edgeorient[3] = {
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
@@ -627,7 +627,7 @@ namespace Nektar
                 verts[i] = vertex[i]->GetGeom(coordDim);
             }
             
-            StdRegions::EdgeOrientation edgeorient[4] = {
+            StdRegions::Orientation edgeorient[4] = {
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),

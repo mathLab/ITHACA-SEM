@@ -188,12 +188,12 @@ namespace Nektar
             return v_GetNumVerts();
         }
 
-        StdRegions::EdgeOrientation Geometry::GetEorient(const int i) const
+        StdRegions::Orientation Geometry::GetEorient(const int i) const
         {
             return v_GetEorient(i);
         }
 
-        StdRegions::PointOrientation Geometry::GetPorient(const int i) const
+        StdRegions::Orientation Geometry::GetPorient(const int i) const
         {
             return v_GetPorient(i);
         }
@@ -343,14 +343,14 @@ namespace Nektar
             return 0;
         }
 
-        StdRegions::EdgeOrientation Geometry::v_GetEorient(const int i) const
+        StdRegions::Orientation Geometry::v_GetEorient(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                 "This function is not valid for this geometry.");
             return StdRegions::eForwards;
         }
 
-        StdRegions::PointOrientation Geometry::v_GetPorient(const int i) const
+        StdRegions::Orientation Geometry::v_GetPorient(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                 "This function is not valid for this geometry.");

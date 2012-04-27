@@ -100,7 +100,7 @@ namespace Nektar
             int i;
             Array<OneD,unsigned int>     map;
             Array<OneD,int>              sign;
-            StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
+            StdRegions::Orientation  edgedir = GetEorient(edge);
             
             GetEdgeToElementMap(edge,edgedir,map,sign);
             // Order of the element
@@ -175,7 +175,7 @@ namespace Nektar
 //            int order_e = EdgeExp->GetNcoeffs();
 //            Array<OneD,unsigned int>     map;
 //            Array<OneD,int>              sign;
-//            StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
+//            StdRegions::Orientation  edgedir = GetEorient(edge);
 //
 //            //    ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
 //
@@ -394,7 +394,7 @@ namespace Nektar
 
             DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
             
-            StdRegions::EdgeOrientation edgedir = GetEorient(edge);
+            StdRegions::Orientation edgedir = GetEorient(edge);
 
             DNekVec                Coeffs  (ncoeffs,outarray,eWrapper);
             DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
@@ -492,7 +492,7 @@ namespace Nektar
             // Map to edge
             Array<OneD,unsigned int>    emap;
             Array<OneD, int>            sign;
-            StdRegions::EdgeOrientation edgedir = GetEorient(edge);
+            StdRegions::Orientation edgedir = GetEorient(edge);
             GetEdgeToElementMap(edge,edgedir,emap,sign);
             for (unsigned int i = 0; i < EdgeExp->GetNcoeffs(); ++i)
             {
@@ -533,7 +533,7 @@ namespace Nektar
 
                     Array<OneD,unsigned int> emap;
                     Array<OneD,int> sign;
-                    StdRegions::EdgeOrientation edgedir = StdRegions::eForwards;
+                    StdRegions::Orientation edgedir = StdRegions::eForwards;
                     Expansion1DSharedPtr EdgeExp;
                     StdRegions::StdExpansion1DSharedPtr EdgeExp2;
 
@@ -775,7 +775,7 @@ namespace Nektar
                     
                     Array<OneD,unsigned int>    emap;
                     Array<OneD, int>            sign;
-                    StdRegions::EdgeOrientation edgedir;
+                    StdRegions::Orientation edgedir;
                     
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry, nbndry);

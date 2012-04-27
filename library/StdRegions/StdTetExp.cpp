@@ -1455,7 +1455,7 @@ namespace Nektar
          */
         void StdTetExp::v_GetFaceToElementMap(
             const int                  fid, 
-            const FaceOrientation      faceOrient,
+            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA,
@@ -1518,7 +1518,7 @@ namespace Nektar
                     {
                         for (j = 0; j < Q-i; ++j)
                         {
-                            if ((int)faceOrient == 2 && i > 1)
+                            if ((int)faceOrient == 7 && i > 1)
                             {
                                 signarray[idx] = (i%2 ? -1 : 1);
                             }
@@ -1532,7 +1532,7 @@ namespace Nektar
                     {
                         for (k = 0; k < Q-i; ++k)
                         {
-                            if ((int)faceOrient == 2 && i > 1)
+                            if ((int)faceOrient == 7 && i > 1)
                             {
                                 signarray[idx] = (i%2 ? -1: 1);
                             }
@@ -1546,7 +1546,7 @@ namespace Nektar
                     {
                         for (k = 0; k < Q-1-j; ++k)
                         {
-                            if ((int)faceOrient == 2 && j > 1)
+                            if ((int)faceOrient == 7 && j > 1)
                             {
                                 signarray[idx] = ((j+1)%2 ? -1: 1);
                             }
@@ -1569,7 +1569,7 @@ namespace Nektar
                     {
                         for (k = 0; k < Q-j; ++k)
                         {
-                            if ((int)faceOrient == 2 && j > 1)
+                            if ((int)faceOrient == 7 && j > 1)
                             {
                                 signarray[idx] = (j%2 ? -1: 1);
                             }
@@ -1581,7 +1581,7 @@ namespace Nektar
                     ASSERTL0(false, "Element map not available.");
             }
 
-            if ((int)faceOrient == 2)
+            if ((int)faceOrient == 7)
             {
                 swap(maparray[0], maparray[Q]);
                 
@@ -1636,7 +1636,7 @@ namespace Nektar
          */
         void StdTetExp::v_GetEdgeInteriorMap(
             const int                  eid, 
-            const EdgeOrientation      edgeOrient,
+            const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray)
         {
@@ -1753,7 +1753,7 @@ namespace Nektar
 
         void StdTetExp::v_GetFaceInteriorMap(
             const int                  fid, 
-            const FaceOrientation      faceOrient,
+            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray)
         {
@@ -1786,7 +1786,7 @@ namespace Nektar
                     {
                         for (j = 1; j < Q-i; ++j)
                         {
-                            if ((int)faceOrient == 2)
+                            if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = (i%2 ? -1 : 1);
                             }
@@ -1800,7 +1800,7 @@ namespace Nektar
                     {
                         for (k = 1; k < R-i; ++k)
                         {
-                            if ((int)faceOrient == 2)
+                            if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = (i%2 ? -1: 1);
                             }
@@ -1814,7 +1814,7 @@ namespace Nektar
                     {
                         for (k = 1; k < R-1-j; ++k)
                         {
-                            if ((int)faceOrient == 2)
+                            if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = ((j+1)%2 ? -1: 1);
                             }
@@ -1828,7 +1828,7 @@ namespace Nektar
                     {
                         for (k = 1; k < R-j; ++k)
                         {
-                            if ((int)faceOrient == 2)
+                            if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = (j%2 ? -1: 1);
                             }

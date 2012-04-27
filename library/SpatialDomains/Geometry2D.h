@@ -88,9 +88,9 @@ namespace Nektar
             // Orientation functions
             //---------------------------------------
 
-            SPATIAL_DOMAINS_EXPORT StdRegions::FaceOrientation
+            SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
                         GetFaceOrient(const int i) const;
-            SPATIAL_DOMAINS_EXPORT StdRegions::EdgeOrientation
+            SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
                         GetCartesianEorient(const int i) const;
 
 
@@ -110,9 +110,9 @@ namespace Nektar
             virtual const VertexComponentSharedPtr v_GetVertex(int i) const;
             virtual const Geometry1DSharedPtr   v_GetEdge(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
-            virtual StdRegions::FaceOrientation v_GetFaceOrient(const int i) const;
-            virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const;
-            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const;
+            virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
+            virtual StdRegions::Orientation v_GetEorient(const int i) const;
+            virtual StdRegions::Orientation v_GetCartesianEorient(const int i) const;
             virtual int                         v_WhichEdge(SegGeomSharedPtr edge);
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
 

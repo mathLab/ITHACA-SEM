@@ -73,13 +73,13 @@ namespace Nektar
 
 
             STD_REGIONS_EXPORT void SetCoeffsToOrientation(
-                    StdRegions::EdgeOrientation dir)
+                    StdRegions::Orientation dir)
             {
                 v_SetCoeffsToOrientation(dir);
             }
 
             STD_REGIONS_EXPORT void SetCoeffsToOrientation(
-                    StdRegions::EdgeOrientation dir,
+                    StdRegions::Orientation dir,
                     Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
@@ -121,14 +121,14 @@ namespace Nektar
                 return 0;
             }
 
-            virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+            virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir,
                                                   Array<OneD, const NekDouble> &inarray,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }
 
-            virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+            virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir)
             {
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }

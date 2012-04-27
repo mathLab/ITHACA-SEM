@@ -78,7 +78,7 @@ namespace Nektar
       /**
        * @brief Return the orientation of face i in this element.
        */
-      StdRegions::FaceOrientation Geometry3D::GetFaceOrient(const int i) const
+      StdRegions::Orientation Geometry3D::GetFaceOrient(const int i) const
       {
           return v_GetFaceOrient(i);
       }
@@ -119,7 +119,7 @@ namespace Nektar
               Array<OneD, unsigned int> mapArray (nFaceCoeffs);
               Array<OneD,          int> signArray(nFaceCoeffs);
 
-              if (m_forient[i] < 4)
+              if (m_forient[i] < 9)
               {
                   m_xmap[0]->GetFaceToElementMap(
                       i,m_forient[i],mapArray,signArray,
@@ -243,7 +243,7 @@ namespace Nektar
       /**
        * @brief Return the orientation of edge i in this element.
        */
-      inline StdRegions::EdgeOrientation Geometry3D::v_GetEorient(
+      inline StdRegions::Orientation Geometry3D::v_GetEorient(
           const int i) const
       {
           ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
@@ -275,7 +275,7 @@ namespace Nektar
       /**
        * @brief Return the orientation of face i in this element.
        */
-      StdRegions::FaceOrientation Geometry3D::v_GetFaceOrient(const int i) const
+      StdRegions::Orientation Geometry3D::v_GetFaceOrient(const int i) const
       {
           ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
                    "Face ID must be between 0 and "+

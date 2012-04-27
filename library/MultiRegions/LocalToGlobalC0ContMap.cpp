@@ -394,7 +394,7 @@ namespace Nektar
             StdRegions::StdExpansion2DSharedPtr locExpansion;
             LocalRegions::SegExpSharedPtr       bndSegExp;
             LibUtilities::BasisType             bType;
-            StdRegions::EdgeOrientation         edgeOrient;
+            StdRegions::Orientation         edgeOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
@@ -724,8 +724,8 @@ namespace Nektar
             int meshFaceId;
             int vGlobalId;
             int maxBndGlobalId = 0;
-            StdRegions::EdgeOrientation         edgeOrient;
-            StdRegions::FaceOrientation         faceOrient;
+            StdRegions::Orientation         edgeOrient;
+            StdRegions::Orientation         faceOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
@@ -1520,8 +1520,8 @@ namespace Nektar
             StdRegions::StdExpansion3DSharedPtr locExpansion;
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
             LibUtilities::BasisType             bType;
-            StdRegions::EdgeOrientation         edgeOrient;
-            StdRegions::FaceOrientation         faceOrient;
+            StdRegions::Orientation         edgeOrient;
+            StdRegions::Orientation         faceOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;

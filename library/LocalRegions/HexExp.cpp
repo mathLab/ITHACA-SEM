@@ -829,7 +829,7 @@ namespace Nektar
         }
 
         
-        StdRegions::FaceOrientation HexExp::v_GetFaceOrient(int face)
+        StdRegions::Orientation HexExp::v_GetFaceOrient(int face)
         {
             return m_geom->GetFaceOrient(face);
         }
@@ -837,7 +837,7 @@ namespace Nektar
         
         bool HexExp::v_GetFaceDGForwards(const int i) const
         {
-            StdRegions::FaceOrientation fo = m_geom->GetFaceOrient(i);
+            StdRegions::Orientation fo = m_geom->GetFaceOrient(i);
             
             return fo == StdRegions::eDir1FwdDir1_Dir2FwdDir2 || 
                    fo == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
@@ -856,7 +856,7 @@ namespace Nektar
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
 
-            StdRegions::FaceOrientation facedir = GetFaceOrient(face);
+            StdRegions::Orientation facedir = GetFaceOrient(face);
 
             switch(face)
             {

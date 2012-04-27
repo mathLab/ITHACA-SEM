@@ -69,7 +69,7 @@ namespace Nektar
         StdRegions::StdExpansion2DSharedPtr locExpansion;
         LocalRegions::SegExpSharedPtr       bndSegExp;
         LibUtilities::BasisType             bType;
-        StdRegions::EdgeOrientation         edgeOrient;
+        StdRegions::Orientation         edgeOrient;
         Array<OneD, unsigned int>           edgeInteriorMap;
         Array<OneD, int>                    edgeInteriorSign;
         int nvel = fields.num_elements();

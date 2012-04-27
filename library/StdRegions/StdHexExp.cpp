@@ -1188,7 +1188,7 @@ namespace Nektar
          */
         void StdHexExp::v_GetFaceToElementMap(
             const int                  fid,
-            const FaceOrientation      faceOrient,
+            const Orientation      faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA,
@@ -1253,7 +1253,7 @@ namespace Nektar
             {
                 for(j = 0; j < nummodesA; j++)
                 {
-                    if( faceOrient < 4 )
+                    if( faceOrient < 9 )
                     {
                         arrayindx[i*nummodesA+j] = i*nummodesA+j;
                     }
@@ -1311,11 +1311,11 @@ namespace Nektar
                 }
             }
 
-            if( (faceOrient==1) || (faceOrient==3) ||
-                (faceOrient==6) || (faceOrient==7) )
+            if( (faceOrient==6) || (faceOrient==8) ||
+                (faceOrient==11) || (faceOrient==12) )
             {
 
-                if(faceOrient<4)
+                if(faceOrient<9)
                 {
                     for(i = 3; i < nummodesB; i+=2)
                     {
@@ -1349,10 +1349,10 @@ namespace Nektar
                 }
             }
 
-            if( (faceOrient==2) || (faceOrient==3) ||
-                (faceOrient==5) || (faceOrient==7) )
+            if( (faceOrient==7) || (faceOrient==8) ||
+                (faceOrient==10) || (faceOrient==12) )
             {
-                if(faceOrient<4)
+                if(faceOrient<9)
                 {
                     for(i = 0; i < nummodesB; i++)
                     {
@@ -1470,7 +1470,7 @@ namespace Nektar
          * @param   signarray   ?
          */
         void StdHexExp::v_GetEdgeInteriorMap(const int eid,
-                                const EdgeOrientation edgeOrient,
+                                const Orientation edgeOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int> &signarray)
         {
@@ -1768,7 +1768,7 @@ namespace Nektar
          * interior of a given face. Accounts for face orientation.
          */
         void StdHexExp::v_GetFaceInteriorMap(const int fid,
-                                const FaceOrientation faceOrient,
+                                const Orientation faceOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int>& signarray)
         {
@@ -1847,7 +1847,7 @@ namespace Nektar
             {
                 for(j = 0; j < (nummodesA-2); j++)
                 {
-                    if( faceOrient < 4 )
+                    if( faceOrient < 9 )
                     {
                         arrayindx[i*(nummodesA-2)+j] = i*(nummodesA-2)+j;
                     }
@@ -1899,7 +1899,7 @@ namespace Nektar
                 {
                     if( bType[2] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( ((int) faceOrient) % 2 )
+                        if( (((int) faceOrient)-5) % 2 )
                         {
                             IdxRange[2][0] = nummodes[2] - 2;
                             IdxRange[2][1] = 0;
@@ -1919,7 +1919,7 @@ namespace Nektar
                         IdxRange[2][1] = nummodes[2];
                         Incr[2] = 1;
 
-                        if( ((int) faceOrient) % 2 )
+                        if( (((int) faceOrient)-5) % 2 )
                         {
                             for(i = 3; i < nummodes[2]; i+=2)
                             {
@@ -1962,7 +1962,7 @@ namespace Nektar
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( ((int) faceOrient) % 2 )
+                        if( (((int) faceOrient)-5) % 2 )
                         {
                             IdxRange[1][0] = nummodes[1] - 2;
                             IdxRange[1][1] = 0;
@@ -1982,7 +1982,7 @@ namespace Nektar
                         IdxRange[1][1] = nummodes[1];
                         Incr[1] = 1;
 
-                        if( ((int) faceOrient) % 2 )
+                        if( (((int) faceOrient)-5) % 2 )
                         {
                             for(i = 3; i < nummodes[1]; i+=2)
                             {
@@ -1996,7 +1996,7 @@ namespace Nektar
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( ((int) faceOrient) % 4 > 1 )
+                        if( (((int) faceOrient)-5) % 4 > 1 )
                         {
                             IdxRange[1][0] = nummodes[1] - 2;
                             IdxRange[1][1] = 0;
@@ -2016,7 +2016,7 @@ namespace Nektar
                         IdxRange[1][1] = nummodes[1];
                         Incr[1] = 1;
 
-                        if( ((int) faceOrient) % 4 > 1 )
+                        if( (((int) faceOrient)-5) % 4 > 1 )
                         {
                             for(i = 3; i < nummodes[1]; i+=2)
                             {
@@ -2056,7 +2056,7 @@ namespace Nektar
                 {
                     if( bType[0] == LibUtilities::eGLL_Lagrange)
                     {
-                        if( ((int) faceOrient) % 4 > 1 )
+                        if( (((int) faceOrient)-5) % 4 > 1 )
                         {
                             IdxRange[0][0] = nummodes[0] - 2;
                             IdxRange[0][1] = 0;
@@ -2076,7 +2076,7 @@ namespace Nektar
                         IdxRange[0][1] = nummodes[0];
                         Incr[0] = 1;
 
-                        if( ((int) faceOrient) % 4 > 1 )
+                        if( (((int) faceOrient)-5) % 4 > 1 )
                         {
                             for(i = 3; i < nummodes[0]; i+=2)
                             {

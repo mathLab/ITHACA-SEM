@@ -536,9 +536,11 @@ namespace Nektar
                         orientation++;
                     }
                 }
+				
+				orientation = orientation + 5;
 
                 // Fill the m_forient array
-                m_forient[f] = (StdRegions::FaceOrientation) orientation;
+                m_forient[f] = (StdRegions::Orientation) orientation;
             }
         }
     }; //end of namespace

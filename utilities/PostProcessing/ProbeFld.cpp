@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     }
 
     LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+            = LibUtilities::SessionReader::CreateInstance(3, argv);
 
     //----------------------------------------------
     // Read in mesh from input file

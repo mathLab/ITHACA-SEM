@@ -72,7 +72,10 @@ namespace Nektar
                     std::string("StdExpansionStdMatrix")),
             m_stdStaticCondMatrixManager(
                     boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1),
-                    std::string("StdExpansionStdStaticCondMatrix"))
+                    std::string("StdExpansionStdStaticCondMatrix")),
+		    m_IndexMapManager(
+							  boost::bind(&StdExpansion::CreateIndexMap,this, _1),
+					std::string("StdExpansionIndexMap"))
         {
             switch(m_numbases)
             {
@@ -109,7 +112,8 @@ namespace Nektar
             m_coeffs(m_ncoeffs),
             m_phys((T.m_phys).num_elements()),
             m_stdMatrixManager(T.m_stdMatrixManager),
-            m_stdStaticCondMatrixManager(T.m_stdStaticCondMatrixManager)
+            m_stdStaticCondMatrixManager(T.m_stdStaticCondMatrixManager),
+		    m_IndexMapManager(T.m_IndexMapManager)
         {
             //CopyArray(T.m_base, m_base);
             CopyArray(T.m_coeffs, m_coeffs);
@@ -200,6 +204,68 @@ namespace Nektar
 
             return returnval;
         }
+		
+		IndexMapValuesSharedPtr StdExpansion::CreateIndexMap(const IndexMapKey &ikey)
+		{
+			IndexMapValuesSharedPtr returnval;
+			
+			IndexMapType itype = ikey.GetIndexMapType();
+	
+			int entity = ikey.GetIndexEntity();
+			
+			Orientation orient = ikey.GetIndexOrientation();
+			
+			Array<OneD,unsigned int>     map;
+            Array<OneD,int>             sign;
+			
+			switch(itype)
+			{
+				case eEdgeToElement:
+				{
+					v_GetEdgeToElementMap(entity,orient,map,sign);
+				}
+				break;
+				case eFaceToElement:
+				{
+					ASSERTL0(false,"Face to Element Index Map not implemented yet.")
+				}
+				break;
+				case eEdgeInterior:
+				{
+					v_GetEdgeInteriorMap(entity,orient,map,sign);
+				}
+				break;
+				case eFaceInterior:
+				{
+					v_GetFaceInteriorMap(entity,orient,map,sign);
+				}
+				break;
+				case eBoundary:
+				{
+					ASSERTL0(false,"Boundary Index Map not implemented yet.")
+				}
+				break;
+				case eVertex:
+				{
+					ASSERTL0(false,"Vertex Index Map not implemented yet.")
+				}
+				break;
+				default:
+				{
+					ASSERTL0(false,"The Index Map you are requiring is not between the possible options.")
+				}
+			}
+			
+			returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.num_elements());
+			
+			for(int i = 0; i < map.num_elements(); i++)
+			{
+				(*returnval)[i].index =  map[i];
+				(*returnval)[i].sign  =  sign[i];
+			}
+			
+			return returnval;
+		}
 
         NekDouble StdExpansion::Linf()
         {

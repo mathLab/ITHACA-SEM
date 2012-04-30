@@ -45,12 +45,14 @@ namespace Nektar
     {
         class StdExpansion;
 		
-		struct IndexMapValue
+		struct IndexValue
 		{
 			unsigned short index;
 			short sign;
 		};
-
+		
+		typedef Array<OneD, IndexValue> IndexMapValues;
+		
         class IndexMapKey
         {
         public:
@@ -83,6 +85,16 @@ namespace Nektar
             {
                 return m_indexMapType;
             }
+			
+			Orientation GetIndexOrientation() const
+			{
+				return m_orientation;
+			}
+			
+			int GetIndexEntity() const
+			{
+				return m_entityID;
+			}
 
         protected:
 			
@@ -104,6 +116,8 @@ namespace Nektar
         STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs);
 
         typedef  boost::shared_ptr<IndexMapKey> IndexMapKeySharedPtr;
+		
+		typedef  boost::shared_ptr<IndexMapValues> IndexMapValuesSharedPtr;
 
     } // end of namespace
 } // end of namespace

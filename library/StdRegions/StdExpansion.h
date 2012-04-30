@@ -44,6 +44,7 @@
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
+#include <StdRegions/IndexMapKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
 
@@ -56,7 +57,7 @@ namespace Nektar
         class StdExpansion2D;
 
         typedef Array<OneD, Array<OneD, NekDouble> > NormalVector;
-
+		
         /** \brief The base class for all shapes
          *
          *  This is the lowest level basic class for all shapes and so
@@ -1403,10 +1404,16 @@ namespace Nektar
             Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-
+			LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
+			
             bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager.AlreadyCreated(mkey);
+            }
+			
+			bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
+            {
+                return m_IndexMapManager.AlreadyCreated(ikey);
             }
 
             bool StdStaticCondMatManagerAlreadyCreated(const StdMatrixKey &mkey)
@@ -1414,11 +1421,12 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager.AlreadyCreated(mkey);
             }
 
+			
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey)
             {
                 return v_CreateStdMatrix(mkey);
             }
-
+			
             /** \brief Create the static condensation of a matrix when
                 using a boundary interior decomposition
 
@@ -1433,6 +1441,15 @@ namespace Nektar
                 D^{-1} C       & D^{-1} \end{array} \right ] \f$
             **/
             STD_REGIONS_EXPORT DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
+			
+			/** \brief Create an IndexMap which contains mapping information linking any specific
+			 element shape with either its boundaries, edges, faces, verteces, etc. 
+			 
+			 The index member of the IndexMapValue struct gives back an integer associated with an entity index
+			 The sign member of the same struct gives back a sign to algebrically apply entities orientation
+			 **/
+			STD_REGIONS_EXPORT IndexMapValuesSharedPtr CreateIndexMap(const IndexMapKey &ikey);
+            
 
             STD_REGIONS_EXPORT void BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray,
                                 Array<OneD, NekDouble> &outarray);

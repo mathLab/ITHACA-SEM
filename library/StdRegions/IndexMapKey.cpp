@@ -54,6 +54,19 @@ namespace Nektar
         {
 
         }
+		
+		IndexMapKey::IndexMapKey( const StdRegions::IndexMapType indexmapType,
+								  const unsigned short &entityID,
+								  const StdRegions::Orientation orientation):
+		m_indexMapType(indexmapType),
+		m_entityID(entityID),
+		m_orientation(orientation)
+		{
+			m_polyorder[0] = 0;
+			m_polyorder[1] = 0;
+			m_polyorder[2] = 0;
+			m_expansionType = eNoExpansionType;
+		}
 
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs,
                       const StdRegions::IndexMapType indexmapType):

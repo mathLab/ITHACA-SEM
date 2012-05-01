@@ -98,13 +98,19 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int i;
-            Array<OneD,unsigned int>     map;
-            Array<OneD,int>              sign;
+
+			StdRegions::IndexMapValuesSharedPtr map;
             StdRegions::Orientation  edgedir = GetEorient(edge);
-            
-            GetEdgeToElementMap(edge,edgedir,map,sign);
-            // Order of the element
-            int order_e = map.num_elements();
+			Array<OneD, unsigned short> poly(3);
+			poly[0] = EdgeExp->GetBasis(0)->GetNumModes();
+			poly[1] = 0;
+			poly[2] = 0;
+			
+			StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetExpansionType(),poly,edge,edgedir);
+			//ikey = MemoryManager<StdRegions::IndexMapKey>::AllocateSharedPtr(StdRegions::eEdgeToElement,DetExpansionType(),poly,edge,edgedir);
+			map = StdExpansion::CreateIndexMap(ikey);
+
+			int order_e = (*map).num_elements();
             // Order of the trace
             int n_coeffs = (EdgeExp->GetCoeffs()).num_elements();
             
@@ -160,7 +166,7 @@ namespace Nektar
             // add data to outarray if forward edge normal is outwards
             for(i = 0; i < order_e; ++i)
             {
-                outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
+                outarray[((*map)[i].index)] += ((*map)[i].sign)*EdgeExp->GetCoeff(i);
             }
         }
 

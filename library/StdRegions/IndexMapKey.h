@@ -61,7 +61,11 @@ namespace Nektar
 										    Array<OneD, unsigned short> &polyorder,
 										    const unsigned short &entityID = 0,
 										    const StdRegions::Orientation orientation = eNoOrientation);
-
+			
+			STD_REGIONS_EXPORT IndexMapKey( const StdRegions::IndexMapType indexmapType,
+										    const unsigned short &entityID,
+										    const StdRegions::Orientation orientation);
+										   
             STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs,const StdRegions::IndexMapType indexmapType);
 
             STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs);

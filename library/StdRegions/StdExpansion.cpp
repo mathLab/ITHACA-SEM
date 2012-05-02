@@ -227,7 +227,7 @@ namespace Nektar
 				break;
 				case eFaceToElement:
 				{
-					ASSERTL0(false,"Face to Element Index Map not implemented yet.")
+					ASSERTL0(false,"Face to Element Index Map not implemented yet.");
 				}
 				break;
 				case eEdgeInterior:
@@ -242,17 +242,17 @@ namespace Nektar
 				break;
 				case eBoundary:
 				{
-					ASSERTL0(false,"Boundary Index Map not implemented yet.")
+					ASSERTL0(false,"Boundary Index Map not implemented yet.");
 				}
 				break;
 				case eVertex:
 				{
-					ASSERTL0(false,"Vertex Index Map not implemented yet.")
+					ASSERTL0(false,"Vertex Index Map not implemented yet.");
 				}
 				break;
 				default:
 				{
-					ASSERTL0(false,"The Index Map you are requiring is not between the possible options.")
+					ASSERTL0(false,"The Index Map you are requiring is not between the possible options.");
 				}
 			}
 			

@@ -82,6 +82,7 @@ SET(CommunicationHeaders
     ./Communication/Comm.h
     ./Communication/CommSerial.h
     ./Communication/GsLib.hpp
+    ./Communication/Transposition.h
 )
 
 SET(ExpressionTemplates
@@ -178,6 +179,7 @@ SET(PolylibSources
 SET(CommunicationSources
     ./Communication/Comm.cpp
     ./Communication/CommSerial.cpp
+    ./Communication/Transposition.cpp
 )
 
 IF(NEKTAR_USE_MPI)

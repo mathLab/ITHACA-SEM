@@ -670,7 +670,7 @@ namespace Nektar
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
-			case LibUtilities::eLagrange:
+			case LibUtilities::eG_Lagrange:
             case LibUtilities::eChebyshev:
             case LibUtilities::eFourier:
                 outarray[1]= nummodes-1;
@@ -697,7 +697,7 @@ namespace Nektar
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
-			case LibUtilities::eLagrange:
+			case LibUtilities::eG_Lagrange:
             case LibUtilities::eChebyshev:
             case LibUtilities::eFourier:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)

@@ -106,7 +106,7 @@ namespace Nektar
                 case eModified_A:
                 case eFourier:
                 case eGLL_Lagrange:
-				case eLagrange:
+				case eG_Lagrange:
                 case eLegendre:
                 case eChebyshev:
                 case eMonomial:

@@ -531,7 +531,7 @@ namespace Nektar
                 }//end scope
                 break;
                     
-			case eLagrange:
+			case eG_Lagrange:
                 {
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
@@ -955,7 +955,7 @@ namespace Nektar
         {
             return ( m_basistype == eGLL_Lagrange &&
                 GetPointsType() == eGaussLobattoLegendre &&
-                GetNumModes() == GetNumPoints() || m_basistype == eLagrange);
+                GetNumModes() == GetNumPoints() || m_basistype == eG_Lagrange);
         }
 
         // BasisKey compared to BasisKey

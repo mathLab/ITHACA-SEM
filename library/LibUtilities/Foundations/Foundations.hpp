@@ -56,8 +56,8 @@ namespace Nektar
             eLegendre,			//!< Legendre Polynomials \f$ L_p(z_i) = P^{0,0}_p(z_i)\f$. Same as Ortho_A
             eChebyshev,			//!< Chebyshev Polynomials \f$ T_p(z_i) = P^{-1/2,-1/2}_p(z_i)\f$
             eMonomial,			//!< Monomial polynomials \f$ L_p(z_i) = z_i^{p}\f$
-            eFourierSingleMode,         //!< Fourier ModifiedExpansion with just the first mode   \f$ \exp(i \pi  z_i)\f$
-            eLagrange,			//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
+            eFourierSingleMode, //!< Fourier ModifiedExpansion with just the first mode   \f$ \exp(i \pi  z_i)\f$
+            eG_Lagrange,		//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
             eDG_DG_Left,		//!< Derivative of the left correction function for DG FR  \f$ dGL_{p}(z_i) \f$
             eDG_DG_Right,		//!< Derivative of the Right correction function for DG FR \f$ dGR_{p}(z_i) \f$
             eDG_SD_Left,		//!< Derivative of the left correction function for SD FR  \f$ dGL_{p}(z_i) \f$
@@ -82,7 +82,7 @@ namespace Nektar
             "Chebyshev",
             "Monomial",
             "FourierSingleMode",
-            "Lagrange",
+            "G_Lagrange",
             "DG_DG_Left",
             "DG_DG_Right",
             "DG_SD_Left",

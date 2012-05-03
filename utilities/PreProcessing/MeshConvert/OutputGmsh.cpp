@@ -106,7 +106,7 @@ namespace Nektar
             for (int i = 0; i < m->element[m->expDim].size(); ++i)
             {
                 ElementSharedPtr e = m->element[m->expDim][i];
-                if (e->GetConf().order <  1        && maxOrder > 1 ||
+                if (e->GetConf().order <= 1        && maxOrder > 1 ||
                     e->GetConf().order == maxOrder && e->GetConf().faceNodes == false)
                 {
                     toComplete.push_back(e);
@@ -120,7 +120,7 @@ namespace Nektar
             // Complete these elements.
             for (int i = 0; i < toComplete.size(); ++i)
             {
-                toComplete[i]->Complete(toComplete[i]->GetMaxOrder());
+                toComplete[i]->Complete(maxOrder);
             }
             
             // Do second pass over elements to enumerate high-order vertices.
@@ -245,7 +245,7 @@ namespace Nektar
                     {
                         tags.push_back(nodeList[j]->id);
                     }
-
+                    
                     if (e->GetConf().order > 1)
                     {
                         for (int j = 0; j < edgeList.size(); ++j)
@@ -374,7 +374,6 @@ namespace Nektar
                     mshFile << endl;
                 }
             }
-            
             mshFile << "$EndElements" << endl;
         }
     }

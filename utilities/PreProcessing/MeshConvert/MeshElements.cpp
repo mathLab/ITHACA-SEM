@@ -1096,7 +1096,7 @@ namespace Nektar
          */
         void Prism::Complete(int order)
         {
-            int i, j;
+            int i, j, pos;
             
             // Create basis key for a nodal tetrahedron.
             LibUtilities::BasisKey B0(
@@ -1104,11 +1104,11 @@ namespace Nektar
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussLobattoLegendre));
             LibUtilities::BasisKey B1(
-                LibUtilities::eOrtho_B, order+1,
+                LibUtilities::eOrtho_A, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussLobattoLegendre));
             LibUtilities::BasisKey B2(
-                LibUtilities::eOrtho_C, order+1,
+                LibUtilities::eOrtho_B, order+1,
                 LibUtilities::PointsKey(
                     order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
             
@@ -1168,7 +1168,7 @@ namespace Nektar
             // edge/face/volume nodes. First, extract edge-interior nodes.
             for (i = 0; i < 9; ++i)
             {
-                int pos = 4 + i*(order-1);
+                pos = 6 + i*(order-1);
                 edge[i]->edgeNodes.clear();
                 for (j = 0; j < order-1; ++j)
                 {
@@ -1178,20 +1178,23 @@ namespace Nektar
             }
 
             // Now extract face-interior nodes.
+            pos = 6 + 9*(order-1);
             for (i = 0; i < 5; ++i)
             {
-                int pos = 4 + 6*(order-1) + i*(order-2)*(order-1)/2;
+                int facesize = i % 2 ? (order-2)*(order-1)/2 : (order-1)*(order-1);
+                pos += facesize;
                 face[i]->faceNodes.clear();
-                for (j = 0; j < (order-2)*(order-1)/2; ++j)
+                for (j = 0; j < facesize; ++j)
                 {
                     face[i]->faceNodes.push_back(
                         NodeSharedPtr(new Node(0, xo[pos+j], yo[pos+j], zo[pos+j])));
                 }
             }
             
+            pos += (order-1)*(order-1);
+            
             // Finally extract volume nodes.
-            int pos = 4 + 6*(order-1) + 4*(order-2)*(order-1)/2;
-            for (i = pos; i < (order+1)*(order+2)*(order+3)/6; ++i)
+            for (i = pos; i < (order+1)*(order+1)*(order+2)/2; ++i)
             {
                 volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));

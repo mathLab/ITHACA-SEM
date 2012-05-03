@@ -56,16 +56,12 @@ namespace Nektar
         class IndexMapKey
         {
         public:
-            STD_REGIONS_EXPORT IndexMapKey( const StdRegions::IndexMapType indexmapType,
-											const StdRegions::ExpansionType expansionType,
-										    Array<OneD, unsigned short> &polyorder,
-										    const unsigned short &entityID = 0,
-										    const StdRegions::Orientation orientation = eNoOrientation);
-			
-			STD_REGIONS_EXPORT IndexMapKey( const StdRegions::IndexMapType indexmapType,
-										    const unsigned short &entityID,
-										    const StdRegions::Orientation orientation);
-										   
+            STD_REGIONS_EXPORT IndexMapKey(const StdRegions::IndexMapType indexmapType,
+										   const StdRegions::ExpansionType expansionType,
+										   unsigned short &p, unsigned short &q,unsigned short &r,
+										   const unsigned short &entityID = 0,
+										   const StdRegions::Orientation orientation = eNoOrientation);
+													   
             STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs,const StdRegions::IndexMapType indexmapType);
 
             STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs);
@@ -106,7 +102,9 @@ namespace Nektar
             
 			ExpansionType m_expansionType;
 			
-			Array<OneD, unsigned short> m_polyorder;
+			unsigned short m_p;
+			unsigned short m_q;
+			unsigned short m_r;
 			
 			unsigned short m_entityID;
 			

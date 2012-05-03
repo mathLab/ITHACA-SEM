@@ -43,36 +43,27 @@ namespace Nektar
     
         IndexMapKey::IndexMapKey(const StdRegions::IndexMapType indexmapType,
 								 const StdRegions::ExpansionType expansionType,
-								 Array<OneD, unsigned short> &polyorder,
+								 unsigned short &p, unsigned short &q,unsigned short &r,
 								 const unsigned short &entityID,
 								 const StdRegions::Orientation orientation):
 		m_indexMapType(indexmapType),
 		m_expansionType(expansionType),
-		m_polyorder(polyorder),
+		m_p(p),
+		m_q(q),
+		m_r(r),
 		m_entityID(entityID),
 		m_orientation(orientation)
         {
 
         }
 		
-		IndexMapKey::IndexMapKey( const StdRegions::IndexMapType indexmapType,
-								  const unsigned short &entityID,
-								  const StdRegions::Orientation orientation):
-		m_indexMapType(indexmapType),
-		m_entityID(entityID),
-		m_orientation(orientation)
-		{
-			m_polyorder[0] = 0;
-			m_polyorder[1] = 0;
-			m_polyorder[2] = 0;
-			m_expansionType = eNoExpansionType;
-		}
-
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs,
                       const StdRegions::IndexMapType indexmapType):
 		m_indexMapType(indexmapType),
 		m_expansionType(rhs.m_expansionType),
-		m_polyorder(rhs.m_polyorder),
+		m_p(rhs.m_p),
+		m_q(rhs.m_q),
+		m_r(rhs.m_r),
 		m_entityID(rhs.m_entityID),
 		m_orientation(rhs.m_orientation)
         {
@@ -81,7 +72,9 @@ namespace Nektar
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs):
 		m_indexMapType(rhs.m_indexMapType),
 		m_expansionType(rhs.m_expansionType),
-		m_polyorder(rhs.m_polyorder),
+		m_p(rhs.m_p),
+		m_q(rhs.m_q),
+		m_r(rhs.m_r),
 		m_entityID(rhs.m_entityID),
 		m_orientation(rhs.m_orientation)
         {
@@ -116,15 +109,18 @@ namespace Nektar
             {
                 return false;
             }
-			
-			for(int i = 0 ; i < 3 ; i++)
+			if(lhs.m_p != rhs.m_p)
 			{
-				if(lhs.m_polyorder[i] != rhs.m_polyorder[i])
-				{
-					return false;
-				}
+				return false;
 			}
-			
+			if(lhs.m_q != rhs.m_q)
+			{
+				return false;
+			}
+			if(lhs.m_r != rhs.m_r)
+			{
+				return false;
+			}
 			if(lhs.m_entityID != rhs.m_entityID)
             {
                 return false;

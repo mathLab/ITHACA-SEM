@@ -151,9 +151,8 @@ namespace Nektar
 				HomogeneousFwdTrans(inarray2,V2,UseContCoeffs);
 			}
 			
-			ShuffleIntoHomogeneous1DClosePacked(V1,ShufV1,false);
-			ShuffleIntoHomogeneous1DClosePacked(V2,ShufV2,false);
-			
+			m_transposition->Transpose(V1,ShufV1,false,LibUtilities::eXYtoZ);
+			m_transposition->Transpose(V2,ShufV2,false,LibUtilities::eXYtoZ);
 
 			/////////////////////////////////////////////////////////////////////////////
 			// Creating padded vectors for each pencil
@@ -193,20 +192,15 @@ namespace Nektar
 
 				//Copying the first half of the padded pencil in the full vector (Fourier space)
 				Vmath::Vcopy(nplanes,&(PadRe_pencil_coeff[0]),1,&(ShufV1V2[i*nplanes]),1);
-				
 			}
 			
 			if(m_WaveSpace)
 			{
-
-				//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
-				UnshuffleFromHomogeneous1DClosePacked(ShufV1V2,outarray,false);
-				
+				m_transposition->Transpose(ShufV1V2,outarray,false,LibUtilities::eZtoXY);				
 			}
 			else 
 			{
-				//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
-				UnshuffleFromHomogeneous1DClosePacked(ShufV1V2,V1V2,false);
+				m_transposition->Transpose(ShufV1V2,V1V2,false,LibUtilities::eZtoXY);
 				//Moving the results in physical space for the output
 				HomogeneousBwdTrans(V1V2,outarray,UseContCoeffs);
 			}
@@ -827,14 +821,14 @@ namespace Nektar
 				{
 					StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
 					
-					ShuffleIntoHomogeneous1DClosePacked(inarray,temparray,false);
+					m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
 					
 					for(int i = 0; i < nP_pts; i++)
 					{
 						StdSeg.PhysDeriv(tmp1 = temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
 					}
 					
-					UnshuffleFromHomogeneous1DClosePacked(outarray,out_d2,false);
+					m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
 					
 					Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);
 					
@@ -909,14 +903,14 @@ namespace Nektar
 					{
 						StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
 						
-						ShuffleIntoHomogeneous1DClosePacked(inarray,temparray,false);
+						m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
 						
 						for(int i = 0; i < nP_pts; i++)
 						{
 							StdSeg.PhysDeriv(tmp1 = temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
 						}
 						
-						UnshuffleFromHomogeneous1DClosePacked(outarray,out_d,false);
+						m_transposition->Transpose(outarray,out_d,false,LibUtilities::eZtoXY);
 						
 						Vmath::Smul(nT_pts,2.0/m_lhom,out_d,1,out_d,1);
 					}

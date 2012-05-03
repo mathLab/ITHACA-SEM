@@ -101,13 +101,12 @@ namespace Nektar
 
 			StdRegions::IndexMapValuesSharedPtr map;
             StdRegions::Orientation  edgedir = GetEorient(edge);
-			Array<OneD, unsigned short> poly(3);
-			poly[0] = EdgeExp->GetBasis(0)->GetNumModes();
-			poly[1] = 0;
-			poly[2] = 0;
+			unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
+			unsigned short num_mod1 = 0; 
+			unsigned short num_mod2 = 0; 
 			
-			StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetExpansionType(),poly,edge,edgedir);
-			//ikey = MemoryManager<StdRegions::IndexMapKey>::AllocateSharedPtr(StdRegions::eEdgeToElement,DetExpansionType(),poly,edge,edgedir);
+			StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetExpansionType(),num_mod0,num_mod1,num_mod2,edge,edgedir);
+			
 			map = StdExpansion::CreateIndexMap(ikey);
 
 			int order_e = (*map).num_elements();

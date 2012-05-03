@@ -98,16 +98,6 @@ namespace Nektar
 									  const Array<OneD, NekDouble> &inarray2,
 									  Array<OneD, NekDouble> &outarray, 
 									  bool UseContCoeffs = false);
-
-            MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous1DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes = false);
-
-            MULTI_REGIONS_EXPORT void UnshuffleFromHomogeneous1DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes = false);
 			
 			MULTI_REGIONS_EXPORT void SetPaddingBase(void);
 						

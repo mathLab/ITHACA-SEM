@@ -709,6 +709,14 @@ namespace Nektar
                         cout << n->x << " " << n->y << " " << n->z << endl;
                     }
                 }
+                for (i = 0; i < face.size(); ++i)
+                {
+                    for (j = 0; j < face[i]->faceNodes.size(); ++j)
+                    {
+                        NodeSharedPtr n = face[i]->faceNodes[j];
+                        cout << n->x << " " << n->y << " " << n->z << endl;
+                    }
+                }
             }
 
         protected:

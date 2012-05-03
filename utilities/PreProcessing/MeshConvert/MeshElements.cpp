@@ -1182,16 +1182,14 @@ namespace Nektar
             for (i = 0; i < 5; ++i)
             {
                 int facesize = i % 2 ? (order-2)*(order-1)/2 : (order-1)*(order-1);
-                pos += facesize;
                 face[i]->faceNodes.clear();
                 for (j = 0; j < facesize; ++j)
                 {
                     face[i]->faceNodes.push_back(
                         NodeSharedPtr(new Node(0, xo[pos+j], yo[pos+j], zo[pos+j])));
                 }
+                pos += facesize;
             }
-            
-            pos += (order-1)*(order-1);
             
             // Finally extract volume nodes.
             for (i = pos; i < (order+1)*(order+1)*(order+2)/2; ++i)

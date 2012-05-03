@@ -108,7 +108,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(i));
             }
 
-            for(n = 1; n < m_num_planes_per_proc; ++n)
+            for(n = 1; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n] = MemoryManager<DisContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,True,False);
                 for(i = 0; i < nel; ++i)
@@ -193,11 +193,11 @@ namespace Nektar
             int n;
             const Array<OneD, const NekDouble> z = m_homogeneousBasis->GetZ();
 			
-			Array<OneD, NekDouble> local_z(m_num_planes_per_proc);
+			Array<OneD, NekDouble> local_z(m_planes.num_elements());
 			
-			for(n = 0; n < m_num_planes_per_proc; n++)
+			for(n = 0; n < m_planes.num_elements(); n++)
 			{
-				local_z[n] = z[m_planes_IDs[n]];
+				local_z[n] = z[m_transposition->GetPlaneID(n)];
 			}
 
             for(n = 0; n < m_planes.num_elements(); ++n)
@@ -239,9 +239,9 @@ namespace Nektar
 				HomogeneousFwdTrans(inarray,fce);
 			}
 
-            for(n = 0; n < m_num_planes_per_proc; ++n)
+            for(n = 0; n < m_planes.num_elements(); ++n)
             {
-                beta = 2*M_PI*m_K[n]/m_lhom;
+                beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                 new_factors = factors;
                 new_factors[StdRegions::eFactorLambda] += beta*beta;
                 m_planes[n]->HelmSolve(fce + cnt,

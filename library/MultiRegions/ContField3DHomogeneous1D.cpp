@@ -92,7 +92,7 @@ namespace Nektar
                 (*m_exp).push_back(m_planes[0]->GetExp(i));
             }
 
-            for(n = 1; n < m_num_planes_per_proc; ++n)
+            for(n = 1; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,False,CheckIfSingularSystem);
                 
@@ -198,9 +198,9 @@ namespace Nektar
 				HomogeneousFwdTrans(inarray,fce,flags.isSet(eUseContCoeff));
 			}
 
-            for(n = 0; n < m_num_planes_per_proc; ++n)
+            for(n = 0; n < m_planes.num_elements(); ++n)
             {
-				beta = 2*M_PI*m_K[n]/m_lhom;
+				beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
 				new_factors = factors;
 				new_factors[StdRegions::eFactorLambda] += beta*beta;
 

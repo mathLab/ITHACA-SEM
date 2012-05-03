@@ -41,6 +41,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/FFT/NektarFFT.h>
+#include <LibUtilities/Communication/Transposition.h>
 
 namespace Nektar
 {
@@ -109,9 +110,7 @@ namespace Nektar
                               bool UseNumModes = false);
 			
 			MULTI_REGIONS_EXPORT void SetPaddingBase(void);
-			
-			MULTI_REGIONS_EXPORT void SetParalleInfo(void);
-			
+						
             LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {
                 return m_homogeneousBasis;
@@ -130,15 +129,8 @@ namespace Nektar
             {
                 return m_planes[n];
             }
-			
-			// Parallel info and IDs
-			int m_num_planes_per_proc;        // number of planes on each process
-			int m_num_fourier_points;         // total number Fourier point = total number of planes
-			int m_num_fourier_coeffs;         // total number Fourier coefficients = total number of Fourier modes
-			int m_num_processes;              // number of total parallel processes per columns (split of the planes)
-			int m_rank_id;                    // rank of the process
-			Array<OneD, unsigned int> m_planes_IDs;    // IDs of the planes on the process
-			Array<OneD, unsigned int> m_K;             // Fourier wave numbers associated with the planes on the process
+						
+			LibUtilities::TranspositionSharedPtr      m_transposition;
 			
         protected:
             

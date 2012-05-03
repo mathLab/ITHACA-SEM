@@ -43,7 +43,7 @@ namespace Nektar
 		// Constructors
 		
 		Transposition::Transposition(const LibUtilities::BasisKey &HomoBasis0,
-									 LibUtilities::CommSharedPtr &hcomm)
+									 LibUtilities::CommSharedPtr hcomm)
 		{
 			m_hcomm = hcomm;
 			m_num_homogeneous_directions = 1;
@@ -90,7 +90,7 @@ namespace Nektar
 		
 		Transposition::Transposition(const LibUtilities::BasisKey &HomoBasis0,
 									 const LibUtilities::BasisKey &HomoBasis1,
-									 LibUtilities::CommSharedPtr &hcomm)
+									 LibUtilities::CommSharedPtr hcomm)
 		{
 			m_hcomm = hcomm;
 			m_num_homogeneous_directions = 2;
@@ -109,7 +109,7 @@ namespace Nektar
 		Transposition::Transposition(const LibUtilities::BasisKey &HomoBasis0,
 									 const LibUtilities::BasisKey &HomoBasis1,
 									 const LibUtilities::BasisKey &HomoBasis2,
-									 LibUtilities::CommSharedPtr &hcomm)
+									 LibUtilities::CommSharedPtr hcomm)
 		{
 			m_hcomm = hcomm;
 			m_num_homogeneous_directions = 3;
@@ -136,7 +136,7 @@ namespace Nektar
 		//=================================================================================
 		// TODO: Need to generalise the following methods for 1D, 2D and 3D
 		
-		int Transposition::GetK(int i)
+		unsigned int Transposition::GetK(int i)
 		{
 			return m_K[i];
 		}
@@ -146,7 +146,7 @@ namespace Nektar
 			return m_K;
 		}
 		
-		int Transposition::GetPlaneID(int i)
+		unsigned int Transposition::GetPlaneID(int i)
 		{
 			return m_planes_IDs[i];
 		}
@@ -160,7 +160,7 @@ namespace Nektar
 		// Main method: General transposition, the dir parameters define if 1D,2D,3D 
 	    // and which transposition is required at the same time 
 		
-		void Transposition::Transpose(Array<OneD,NekDouble> &inarray,Array<OneD, NekDouble> &outarray,bool UseNumMode,TranspositionDir dir)
+		void Transposition::Transpose(const Array<OneD,const NekDouble> &inarray,Array<OneD, NekDouble> &outarray,bool UseNumMode,TranspositionDir dir)
 		{
 			switch(dir)
 			{
@@ -219,7 +219,7 @@ namespace Nektar
 		//=================================================================================
 		// Homogeneous 1D transposition from SEM to Homogeneous ordering
 		
-		void Transposition::TransposeXYtoZ(Array<OneD,NekDouble> &inarray,Array<OneD, NekDouble> &outarray,bool UseNumMode)
+		void Transposition::TransposeXYtoZ(const Array<OneD,const NekDouble> &inarray,Array<OneD, NekDouble> &outarray,bool UseNumMode)
 		{
 			if(m_num_processes[0] > 1)
 			{
@@ -303,7 +303,7 @@ namespace Nektar
 		//=================================================================================
 		// Homogeneous 1D transposition from Homogeneous to SEM ordering
 		
-		void Transposition::TransposeZtoXY(Array<OneD,NekDouble> &inarray,Array<OneD, NekDouble> &outarray,bool UseNumMode)
+		void Transposition::TransposeZtoXY(const Array<OneD,const NekDouble> &inarray,Array<OneD, NekDouble> &outarray,bool UseNumMode)
 		{
 			if(m_num_processes[0] > 1)
 			{

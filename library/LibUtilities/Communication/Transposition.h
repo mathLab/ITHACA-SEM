@@ -68,28 +68,28 @@ namespace Nektar
 		public:
 			
 			LIB_UTILITIES_EXPORT Transposition(const LibUtilities::BasisKey &HomoBasis0, 
-											   LibUtilities::CommSharedPtr &hcomm);
+											   LibUtilities::CommSharedPtr hcomm);
 			
 			LIB_UTILITIES_EXPORT Transposition(const LibUtilities::BasisKey &HomoBasis0,
 											   const LibUtilities::BasisKey &HomoBasis1,
-											   LibUtilities::CommSharedPtr &hcomm);
+											   LibUtilities::CommSharedPtr hcomm);
 			
 			LIB_UTILITIES_EXPORT Transposition(const LibUtilities::BasisKey &HomoBasis0,
 											   const LibUtilities::BasisKey &HomoBasis1,
 											   const LibUtilities::BasisKey &HomoBasis2,
-											   LibUtilities::CommSharedPtr &hcomm);
+											   LibUtilities::CommSharedPtr hcomm);
 
 			LIB_UTILITIES_EXPORT ~Transposition();
 			
-			LIB_UTILITIES_EXPORT int GetK(int i);
+			LIB_UTILITIES_EXPORT unsigned int GetK(int i);
 			
 			LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetKs(void);
 			
-			LIB_UTILITIES_EXPORT int GetPlaneID(int i);
+			LIB_UTILITIES_EXPORT unsigned int GetPlaneID(int i);
 			
 			LIB_UTILITIES_EXPORT Array<OneD, unsigned int> GetPlanesIDs(void);
 			
-			LIB_UTILITIES_EXPORT void Transpose(Array<OneD,NekDouble> &inarray,
+			LIB_UTILITIES_EXPORT void Transpose(const Array<OneD,const NekDouble> &inarray,
 												Array<OneD, NekDouble> &outarray, 
 												bool UseNumMode = false, 
 												TranspositionDir dir = eNoTrans);
@@ -100,11 +100,11 @@ namespace Nektar
 			
 		private:
 			
-			LIB_UTILITIES_EXPORT void TransposeXYtoZ(Array<OneD,NekDouble> &inarray,
+			LIB_UTILITIES_EXPORT void TransposeXYtoZ(const Array<OneD,const NekDouble> &inarray,
 													 Array<OneD, NekDouble> &outarray, 
 													 bool UseNumMode = false);
 			
-			LIB_UTILITIES_EXPORT void TransposeZtoXY(Array<OneD,NekDouble> &inarray,
+			LIB_UTILITIES_EXPORT void TransposeZtoXY(const Array<OneD,const NekDouble> &inarray,
 													 Array<OneD, NekDouble> &outarray, 
 													 bool UseNumMode = false);
 			

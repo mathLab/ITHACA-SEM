@@ -191,11 +191,11 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
-			Array<OneD, NekDouble> local_pts(m_num_planes_per_proc);
+			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
 			
-			for(n = 0; n < m_num_planes_per_proc; n++)
+			for(n = 0; n < m_planes.num_elements(); n++)
 			{
-				local_pts[n] = pts[m_planes_IDs[n]];
+				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
 			}
 			
             Array<OneD, NekDouble> z(nzplanes);
@@ -244,11 +244,11 @@ namespace Nektar
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
 			
-			Array<OneD, NekDouble> local_pts(m_num_planes_per_proc);
+			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
 			
-			for(n = 0; n < m_num_planes_per_proc; n++)
+			for(n = 0; n < m_planes.num_elements(); n++)
 			{
-				local_pts[n] = pts[m_planes_IDs[n]];
+				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
 			}
 			
             Array<OneD, NekDouble> z(nzplanes);
@@ -279,7 +279,7 @@ namespace Nektar
 
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_num_planes_per_proc;
+            int nquad2 = m_planes.num_elements();
 
             Array<OneD,NekDouble> coords[3];
 
@@ -309,7 +309,7 @@ namespace Nektar
             int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_num_planes_per_proc;
+            int nquad2 = m_planes.num_elements();
             int ntot = nquad0*nquad1*nquad2;
             int ntotminus = (nquad0-1)*(nquad1-1)*(nquad2-1);
 
@@ -385,11 +385,11 @@ namespace Nektar
             int cnt = 0;
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
-			Array<OneD, NekDouble> local_w(m_num_planes_per_proc);
+			Array<OneD, NekDouble> local_w(m_planes.num_elements());
 			
-			for(int n = 0; n < m_num_planes_per_proc; n++)
+			for(int n = 0; n < m_planes.num_elements(); n++)
 			{
-				local_w[n] = w[m_planes_IDs[n]];
+				local_w[n] = w[m_transposition->GetPlaneID(n)];
 			}
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
@@ -408,11 +408,11 @@ namespace Nektar
         {
             NekDouble errL2,err = 0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
-			Array<OneD, NekDouble> local_w(m_num_planes_per_proc);
+			Array<OneD, NekDouble> local_w(m_planes.num_elements());
 			
-			for(int n = 0; n < m_num_planes_per_proc; n++)
+			for(int n = 0; n < m_planes.num_elements(); n++)
 			{
-				local_w[n] = w[m_planes_IDs[n]];
+				local_w[n] = w[m_transposition->GetPlaneID(n)];
 			}
 
             for(int n = 0; n < m_planes.num_elements(); ++n)

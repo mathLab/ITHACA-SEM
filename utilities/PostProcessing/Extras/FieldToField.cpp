@@ -3,16 +3,20 @@
 #include <math.h>
 #include <iomanip>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <SpatialDomains/SpatialData.h>
+
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
-#include <MultiRegions/ExpList2DHomogeneous1D.h>
+#include <MultiRegions/ExpListHomogeneous1D.h>
+#include <MultiRegions/ExpListHomogeneous2D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
@@ -23,10 +27,6 @@
 #include <tinyxml/tinyxml.h>
 
 #include <boost/math/special_functions/fpclassify.hpp>
-
-#if defined(__INTEL_COMPILER)
-#include <mathimf.h>
-#endif
 
 using namespace Nektar;
 
@@ -43,6 +43,10 @@ int main(int argc, char *argv[])
                     Array<OneD, std::string> &variables, bool &homogeneous);
 
     void GenerateField(MultiRegions::ExpListSharedPtr field0,
+    	               Array<OneD, NekDouble> x1,
+    	               Array<OneD, NekDouble> y1,
+    	               MultiRegions::ExpListSharedPtr field1);
+    void GenerateFieldHomo(MultiRegions::ExpListSharedPtr field0,
     	               Array<OneD, NekDouble> x1,
     	               Array<OneD, NekDouble> y1,
     	               MultiRegions::ExpListSharedPtr field1);
@@ -71,7 +75,7 @@ int main(int argc, char *argv[])
     //nfiles0=5;
     std::vector<std::string> filenames0;
     filenames0.push_back(meshfile0);
-    filenames0.push_back(fieldfile0);
+    filenames0.push_back(meshfile0);
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv, filenames0);
             //= LibUtilities::SessionReader::CreateInstance(2, argv);
@@ -79,7 +83,6 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile0);
     //----------------------------------------------          
     // Import fieldfile0.
-
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile0,fielddef,fielddata);
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
     //read info from fldfile
     Array<OneD, std::string> variables ;
     cout<<fieldfile0<<endl;
-    bool homo=false;
+    bool homo=true;
     Readflddef(fieldfile0, variables, homo);
 
     // Define Expansion    
@@ -97,25 +100,70 @@ int main(int argc, char *argv[])
     Array<OneD, MultiRegions::ExpListSharedPtr> fields; 
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);  
     SetFields(graphShPt,fielddef, vSession,fields,nfields,homo);
-    int nq = fields[0]->GetTotPoints();
+    int nq;//pointsper plane
     //-----------------------------------------------
     cout<<"nfields="<<nfields<<endl;   
     // Copy data from file:fill fields with the fielddata
-    for(int j = 0; j < nfields; ++j)
-    {  	    
-        for(int i = 0; i < fielddata.size(); ++i)
-        {
-            cout<<"fielddef[i]->m_fields[j]="<<fielddef[i]->m_fields[j]<<endl;
-            fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
-        }             
-        fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
+    if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+    {
+        nq = fields[0]->GetPlane(1)->GetTotPoints();
+        //THE IM PHYS VALUES ARE WRONG USING bwdTrans !!!
+        for(int j = 0; j < nfields; ++j)
+        {  
+            for(int i = 0; i < fielddata.size(); ++i)
+            {
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+            } 
+            //bwd plane 0
+            fields[j]->GetPlane(0)->BwdTrans_IterPerExp(fields[j]->GetPlane(0)->GetCoeffs(),  
+                          fields[j]->GetPlane(0)->UpdatePhys() );
+
+            //bwd plane 1
+            fields[j]->GetPlane(1)->BwdTrans_IterPerExp(fields[j]->GetPlane(1)->GetCoeffs(), 
+                          fields[j]->GetPlane(1)->UpdatePhys() );
+            
+
+
+
+
+
+
+        }    
+    }
+    else
+    {
+        nq = fields[0]->GetTotPoints();
+        for(int j = 0; j < nfields; ++j)
+        {  	    
+            for(int i = 0; i < fielddata.size(); ++i)
+            {
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+            }             
+            fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
+        }
     }
     //----------------------------------------------    
-    
+/*    
+         for(int g=0; g<fields[0]->GetPlane(1)->GetTotPoints(); g++)
+         {
+cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<fields[0]->GetPlane(1)->GetPhys()[g]<<endl;
+         }
+*/
+
+
     // store mesh0 quadrature points    
     Array<OneD, NekDouble> x0(nq);
     Array<OneD, NekDouble> y0(nq);  
-    fields[0]->GetCoords(x0,y0);    
+    Array<OneD, NekDouble> z0(nq);
+
+    if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+    {
+       fields[0]->GetPlane(1)->GetCoords(x0,y0,z0);    
+    }
+    else
+    {
+       fields[0]->GetCoords(x0,y0);  
+    }
   
     //----------------------------------------------    
   
@@ -124,9 +172,10 @@ int main(int argc, char *argv[])
     //Name of the output fieldfile
     string fieldfile1(argv[argc-1]);           
     //-----------------------------------------------    
-    
+  
     //define the output field:
     Array<OneD, MultiRegions::ExpListSharedPtr> outfield; 
+
     outfield = Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);   
     //set output fields over the graphShPt1 graph
     SpatialDomains::MeshGraphSharedPtr graphShPt1;     
@@ -153,23 +202,52 @@ int main(int argc, char *argv[])
     {
     	    cout<<"2D case"<<endl;
 */    	    
-            graphShPt1 = SpatialDomains::MeshGraph::Read(meshfile1);  	     	    
+            graphShPt1 = SpatialDomains::MeshGraph::Read(meshfile1);  	
+//            std::vector<std::string> filenames1;       
+//            filenames1.push_back(meshfile1);   
+//            filenames1.push_back(meshfile1);     
+
+//            argc=2;
+//            argv[1]=argv[3];
+            //argv[2]=argv[4];
+//cout<<argv[1]<<"  a="<<argv[2]<<endl;
+//            LibUtilities::SessionReaderSharedPtr vSession1
+//               = LibUtilities::SessionReader::CreateInstance(argc, argv, filenames1, vSession->GetComm());
             SetFields(graphShPt1,fielddef, vSession, outfield,nfields,homo);    	    
 //    }
     //------------------------------------------------ 
 
 
     // store the new points:
-    int nq1 = outfield[0]->GetTotPoints();
+    int nq1;
+    if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+    {
+        nq1 = outfield[0]->GetPlane(1)->GetTotPoints();
+    }
+    else
+    {
+        nq1 = outfield[0]->GetTotPoints();
+    }
     Array<OneD, NekDouble> x1(nq1);
     Array<OneD, NekDouble> y1(nq1);
-    outfield[0]->GetCoords(x1,y1);
+    Array<OneD, NekDouble> z1(nq1);
+    
+    if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+    {
+       outfield[0]->GetPlane(1)->GetCoords(x1,y1,z1);    
+    }
+    else
+    {
+       outfield[0]->GetCoords(x1,y1);
+    }
 /*    
     for(int u=0; u<nq; u++)
     {
 cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;    	    
     }
 */    
+
+
     //------------------------------------------------
     
     //check 2Dmeshes compatibilities
@@ -180,9 +258,19 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
     //-----------------------------------------------
     
     //generate the new fields
-    for(int t=0; t< nfields; t++)
+    if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
     {
-    	 GenerateField(fields[t], x1, y1, outfield[t]);
+        for(int t=0; t< nfields; t++)
+        {        
+    	    GenerateFieldHomo(fields[t], x1, y1, outfield[t]);
+        }
+    }
+    else
+    {
+        for(int t=0; t< nfields; t++)
+        {        
+    	    GenerateField(fields[t], x1, y1, outfield[t]);
+        }
     }
     //------------------------------------------------
 /*
@@ -243,7 +331,7 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
 		};
 	
 		enum HomogeneousType HomogeneousType = eNotHomogeneous;
-cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;		
+	
                 if(cnt==0)
                 { 	
 		if(session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -293,6 +381,7 @@ cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;
 		cnt++;
 		int i;		
 		int expdim   = graphShPt->GetMeshDimension();
+                //Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);  
 		//Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);    
 		// I can always have 3 variables in a 2D mesh (oech vel component i a function which can depend on 1-3 var)
 		// Continuous Galerkin projection
@@ -366,7 +455,7 @@ cout<<"cnt="<<cnt<<" Homodir="<<HomoDirec<<endl;
                      break;
              	     case 2:
              	     {
-cout<<"setfields"<<endl;             	     	     
+
                           ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
                           //if(fielddef[0]->m_numHomogeneousDir == 1)
@@ -382,9 +471,10 @@ cout<<"setfields"<<endl;
                           	const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
                           	const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                           	NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
-
+cout<<fielddef[0]->m_fields[0]<<endl;
                           	Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
                           	     AllocateSharedPtr(session,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
+
                           	Exp[0] = Exp3DH1;
                           	for(i = 1; i < nvariables; ++i)
                           	{                         		
@@ -425,6 +515,7 @@ cout<<"set field="<<i<<endl;
              	     ASSERTL0(false,"Expansion dimension not recognised");
              	     break;
              	}
+  
         }
 
 	void Readflddef(string fieldfile, Array<OneD, std::string> &variables,
@@ -502,12 +593,7 @@ cout<<variables[0]<<endl;
                    offset = field0->GetPhys_Offset(elmtid);
                    field1->UpdatePhys()[r] = field0->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPhys() +offset);    
-
-#if defined(__INTEL_COMPILER)
-                   if( isnan(field1->UpdatePhys()[r]) )
-#else
                    if( boost::math::isnan(field1->UpdatePhys()[r]) )
-#endif
                    {            
 cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
 cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
@@ -517,11 +603,62 @@ cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
              }        
 	}	
 
-       bool Checkbndmeshes(  Array<OneD, NekDouble> x0,
+        void GenerateFieldHomo(MultiRegions::ExpListSharedPtr field0,
+    	               Array<OneD, NekDouble> x1,
+    	               Array<OneD, NekDouble> y1,
+    	               MultiRegions::ExpListSharedPtr field1)
+        {
+             Array<OneD, NekDouble> coords(2);
+	     int nq1 = field1->GetPlane(1)->GetTotPoints();
+             ASSERTL0(nq1 == field1->GetPlane(1)->GetTotPoints(), "problem");
+             int elmtid, offset;
+
+             //plane 0
+             for(int r=0; r< nq1; r++)
+             {
+                   coords[0] = x1[r];
+                   coords[1] = y1[r];
+                  
+                   elmtid = field0->GetPlane(0)->GetExpIndex(coords, 0.00001);
+                   offset = field0->GetPlane(0)->GetPhys_Offset(elmtid);
+                   field1->GetPlane(0)->UpdatePhys()[r] = field0->GetPlane(0)->GetExp(elmtid)->
+                           PhysEvaluate(coords, field0->GetPlane(0)->GetPhys() +offset);    
+                   if( boost::math::isnan(field1->GetPlane(0)->UpdatePhys()[r]) )
+                   {            
+cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
+cout<<"new val="<<field1->GetPlane(0)->UpdatePhys()[r]<<endl;
+                       //ASSERTL0( abs(field1->UpdatePhys()[r])<10000000000, "interp failed");
+                   }
+
+              } 
+
+
+             //plane1
+             for(int r=0; r< nq1; r++)
+             {
+                   coords[0] = x1[r];
+                   coords[1] = y1[r];
+                  
+                   elmtid = field0->GetPlane(1)->GetExpIndex(coords, 0.00001);
+                   offset = field0->GetPlane(1)->GetPhys_Offset(elmtid);
+                   field1->GetPlane(1)->UpdatePhys()[r] = field0->GetPlane(1)->GetExp(elmtid)->
+                           PhysEvaluate(coords, field0->GetPlane(1)->GetPhys() +offset);    
+                   if( boost::math::isnan(field1->GetPlane(1)->UpdatePhys()[r]) )
+                   {            
+cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
+cout<<"new val="<<field1->GetPlane(1)->UpdatePhys()[r]<<endl;
+                       //ASSERTL0( abs(field1->UpdatePhys()[r])<10000000000, "interp failed");
+                   }
+
+              }              
+        }
+    
+
+        bool Checkbndmeshes(  Array<OneD, NekDouble> x0,
     	                      Array<OneD, NekDouble> y0,       	       
     	                      Array<OneD, NekDouble> x1,
     	                      Array<OneD, NekDouble> y1)
-       {
+        {
        	       NekDouble x0min,x0max,y0min, y0max;
        	       NekDouble x1min,x1max,y1min, y1max;       	       
        	       NekDouble tol = 0.0000001;
@@ -570,8 +707,20 @@ cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
 		
                 for(int j=0; j< fieldcoeffs.num_elements(); ++j)
 		{  
-		     outfield[j]->FwdTrans_IterPerExp(outfield[j]->GetPhys(),outfield[j]->UpdateCoeffs());
-		     //outfield[j]->FwdTrans(outfield[j]->GetPhys(),outfield[j]->UpdateCoeffs()); 		     
+                     if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+                     {
+                         //plane 0
+                         outfield[j]->GetPlane(0)->FwdTrans_IterPerExp(outfield[j]->GetPlane(0)->GetPhys(),outfield[j]->GetPlane(0)->UpdateCoeffs());
+
+                         //plane 1
+                         outfield[j]->GetPlane(1)->FwdTrans_IterPerExp(outfield[j]->GetPlane(1)->GetPhys(),outfield[j]->GetPlane(1)->UpdateCoeffs());
+                         
+                     }
+                     else
+                     {  
+		         outfield[j]->FwdTrans_IterPerExp(outfield[j]->GetPhys(),outfield[j]->UpdateCoeffs());
+                     }
+ 		     
 		     fieldcoeffs[j] = outfield[j]->UpdateCoeffs();			
 		     for(int i=0; i< FieldDef.size(); i++)
 		     {		     	     

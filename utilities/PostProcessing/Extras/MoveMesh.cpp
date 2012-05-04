@@ -41,9 +41,10 @@ int main(int argc, char *argv[])
     	        Array<OneD, NekDouble> &xold_up, Array<OneD, NekDouble> &yold_up,
     	        Array<OneD, NekDouble> &xold_low, Array<OneD, NekDouble> &yold_low,
     	        Array<OneD, NekDouble> &xold_c, Array<OneD, NekDouble> &yold_c,      	        
-    	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc); 
+    	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc, NekDouble cr); 
     void GenerateAddPointsNewtonIt( NekDouble &xi, NekDouble &yi,NekDouble &x0, NekDouble &y0,
-    	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction);
+    	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction,
+                NekDouble cr);
     void GenerateCurveSp(Array<OneD, NekDouble> &x_c, Array<OneD, NekDouble> &y_c,
                 Array<OneD, NekDouble> &x_lay, Array<OneD, NekDouble> &y_lay);
     void GenerateCurve(int npoints, int npused, Array<OneD, NekDouble> &x_c, 
@@ -52,27 +53,55 @@ int main(int argc, char *argv[])
     	         Array<OneD, NekDouble> &curve, MultiRegions::ExpListSharedPtr & bndfield, 
     	         Array<OneD, NekDouble>& outx, Array<OneD, NekDouble>& outy,
     	         Array<OneD, int>&Eids);
-    NekDouble yMove(NekDouble y, NekDouble yold_up, NekDouble Deltaold);   
+    void MapEdgeVertices(MultiRegions::ExpListSharedPtr field, Array<OneD, int> &V1,
+                 Array<OneD, int> &V2); 
+    void Findlay_eids(Array<OneD, Array<OneD, NekDouble> >& layers_y,
+                 Array<OneD, int> V1, Array<OneD, int> V2, 
+                 Array<OneD, Array<OneD, int > >& lay_Vids,
+                 Array<OneD, Array<OneD, int > >& lay_eids);
+    void MoveLayers(Array<OneD, NekDouble> & ynew,
+                 Array<OneD, NekDouble>  yc,
+                 Array<OneD, NekDouble> Addpointsy,
+                 Array<OneD, Array<OneD, NekDouble > >& layers_y,
+                 Array<OneD, Array<OneD, int> >lay_Vids,
+                 NekDouble delt, NekDouble delt_opp,string movelay, int npedge);
+
     void Replacevertices(string filename, Array<OneD, NekDouble> newx, 
     	               Array<OneD,  NekDouble> newy,
-    	               Array<OneD, NekDouble> x_lay, Array<OneD, NekDouble> y_lay,
+    	               Array<OneD, NekDouble> x_crit, Array<OneD, NekDouble> y_crit,
     	               Array<OneD, NekDouble> & Pcurvx, 
     	               Array<OneD, NekDouble> & Pcurvy,
-    	               Array<OneD, int>&Eids, int Npoints, string s_alp);
+    	               Array<OneD, int>&Eids, int Npoints, string s_alp,
+                       Array<OneD, Array<OneD, NekDouble> > x_lay,
+                       Array<OneD, Array<OneD, NekDouble> > y_lay,
+                       Array<OneD, Array<OneD, int > >lay_eids, bool curv_lay);
     
     
     
     int i,j;
-    if(argc != 5)
-    {
-        fprintf(stderr,"Usage: ./MoveMesh  meshfile fieldfile  changefile   alpha\n");
-        exit(1);
-    }
+
 //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(2, argv);
     //----------------------------------------------
- 
+    NekDouble cr;
+    //set cr =0
+    cr=0;
+    //change argc from 6 to 5 allow the loading of cr to be optional
+    if(argc > 6 || argc <5 )
+    {
+        fprintf(stderr,
+            "Usage: ./MoveMesh  meshfile fieldfile  changefile   alpha  cr(optional)\n");
+        exit(1);
+    }
+    else if( argc == 6 &&
+               vSession->DefinesSolverInfo("INTERFACE")
+               && vSession->GetSolverInfo("INTERFACE")=="phase" )
+    {
+        cr = boost::lexical_cast<double>(argv[argc-1]);
+        argc=5;
+    }
+
     // Read in mesh from input file
     string meshfile(argv[argc-4]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
@@ -96,11 +125,10 @@ int main(int argc, char *argv[])
     SetFields(graphShPt,boundaryConditions,vSession,fields,nfields);
     //---------------------------------------------------------------
 
-    
     // store name of the file to change
     string changefile(argv[argc-2]);
     //----------------------------------------------
-    
+      
     //store the value of alpha
     string charalp (argv[argc-1]);
     //NekDouble alpha = boost::lexical_cast<double>(charalp);
@@ -132,7 +160,7 @@ cout<<"read alpha="<<charalp<<endl;
     	    streak->ExtractDataToCoeffs(fielddef[i], fielddata[i], fielddef[i]->m_fields[0]);
     }
     streak->BwdTrans_IterPerExp(streak->GetCoeffs(), streak->UpdatePhys());
-    
+ 
     //------------------------------------------------  
 /*  
 static int cnt=0;
@@ -168,7 +196,7 @@ cout<<"cnt="<<cnt<<"   x="<<xs[j]<<"  y="<<ys[j]<<"  U="<<streak->GetPhys()[j]<<
     int nIregions, lastIregion; 
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();    
     Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
-   
+       
     nIregions=0;
     int nbnd= bndConditions.num_elements();
     for(int r=0; r<nbnd; r++)
@@ -186,7 +214,7 @@ cout<<"nIregions="<<nIregions<<endl;
     //set expansion along a layers
     Array<OneD, MultiRegions::ExpListSharedPtr> bndfieldx= fields[0]->GetBndCondExpansions();        
     //--------------------------------------------------------
-     
+
     //determine the points in the lower and upper curve...
     int nq1D= bndfieldx[lastIregion]->GetTotPoints();
     int nedges = bndfieldx[lastIregion]->GetExpSize();
@@ -240,7 +268,7 @@ cout<<"nIregions="<<nIregions<<endl;
 //cout<<"VIdup="<<Vids_up[v2]<<endl;
     //update x_connect    
     vertexU->GetCoords(x_connect,yt,zt);
-      
+cout<<"okok"<<endl;       
     i=2;
     while(i<nvertl)
     { 
@@ -253,7 +281,7 @@ cout<<"nIregions="<<nIregions<<endl;
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
      }   
-    
+   
     //-----------------------------------------------------------------------------------
     
     
@@ -285,7 +313,7 @@ cout<<"nIregions="<<nIregions<<endl;
          vertex->GetCoords(x_connect,yt,zt);
          i++;           
      }   
-     
+   
      //calculate the distances between the layer and the upper/lower curve
      
      Array<OneD, NekDouble> Deltaup (nvertl, -200);
@@ -329,7 +357,7 @@ cout<<"nIregions="<<nIregions<<endl;
     //generate additional points using the Newton iteration                
     //determine the xposition for every edge (in the middle even if it 
     // is not necessary
-    //PARAMETER which determines the number of points @todo put as an input      
+    //PARAMETER which determines the number of points per edge @todo put as an input      
     int npedge=5;
     /*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/ 
     //find the points where u=0 and determine the sign of the shift and the delta
@@ -347,7 +375,7 @@ cout<<"nIregions="<<nIregions<<endl;
     Array<OneD, NekDouble> dU(nq);
     streak->PhysDeriv(MultiRegions::eY, streak->GetPhys(), dU);
     Computestreakpositions(nvertl, streak, x,y,xold_up, yold_up,
-    	                   xold_low, yold_low, xold_c, yold_c, x_c, y_c);    
+    	                   xold_low, yold_low, xold_c, yold_c, x_c, y_c,cr);    
     // if the curve is low the old layer point, it has to shift down  
     NekDouble shift;  
     for(int q=0; q<nvertl; q++)
@@ -585,7 +613,7 @@ cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	         }                   	 
 	         Addpointsy[r*(npedge-2) +w] = y1 + ((y2-y1)/(x2-x1))*(Addpointsx[r*(npedge-2) +w]-x1);	         
 	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w],
-	              	      Addpointsx[r*(npedge-2) +w],  Addpointsy[r*(npedge-2) +w], streak, derstreak); 
+	              	      Addpointsx[r*(npedge-2) +w],  Addpointsy[r*(npedge-2) +w], streak, derstreak,cr); 
 
                // Lay_x->UpdatePhys()[r*npedge +1 +w]= Addpointsx[r*(npedge-2) +w];
                // Lay_y->UpdatePhys()[r*npedge +1 +w]= Addpointsy[r*(npedge-2) +w];                
@@ -613,7 +641,7 @@ cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	         }
 	         Addpointsy[r*(npedge-2) +w] = y2 + ((y1-y2)/(x1-x2))*(Addpointsx[r*(npedge-2) +w]-x2);	         	         
 	         GenerateAddPointsNewtonIt( Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], 
-	               Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], streak, derstreak); 
+	               Addpointsx[r*(npedge-2) +w], Addpointsy[r*(npedge-2) +w], streak, derstreak,cr); 
                // Lay_x->UpdatePhys()[r*npedge +1]= Addpointsx[r*(npedge-2) +w];
                // Lay_y->UpdatePhys()[r*npedge +1]= Addpointsy[r*(npedge-2) +w];   
              }
@@ -629,13 +657,14 @@ cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 //cout<<"calculate cpoints coords"<<endl;	 
          Cpointsy[r] = y1 + (y2-y1)/2;
          GenerateAddPointsNewtonIt( Cpointsx[r], Cpointsy[r],Cpointsx[r], Cpointsy[r],
-    	       streak, derstreak); 
+    	       streak, derstreak,cr); 
          NekDouble diff = Cpointsy[r]-Addpointsy[r*(npedge-2)];
 //cout<<"diff="<<diff<<endl;         
 	 Eids[r] = Eid;
 
     }      
     //-------------------------------------------------------------
+
 
     //force the continuity of the layer
 
@@ -753,13 +782,62 @@ cout<<xl<<"     "<<Addpointsy[e]<<"      "<<Crlay_pointsx[e]<<"       "
 cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
 */
     //------------------------------------------------------------    
+
+    // determine the number of layers
+    int nlays=0;
+
+  
+    int cnt=0;
+    //find coords and Vids of the layers vertices
+    int nVertTot = graphShPt->GetNvertices();
+
+    cnt=0;
+    for(int n=0; n<nVertTot; n++)
+    {
+         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(n);
+         NekDouble x,y,z;
+         vertex->GetCoords(x,y,z); 
+         //tollerance 5e-2 to get the points
+         if(x<= xold_c[0] +5e-2 && x >= xold_c[0] -5e-2
+         && y<= yold_up[0] && y>=yold_low[0]
+         && y!= yold_c[0])
+         {     
+             cnt++;
+//cout<<"vert index="<<m<<"   vertID="<<n<<endl;                  
+         }
+    }
+
+    nlays =cnt;
+    Array<OneD, Array<OneD, NekDouble> > layers_y(nlays);
+    Array<OneD, Array<OneD, NekDouble> > layers_x(nlays);
+    Array<OneD, Array<OneD, int > >lay_Vids(nlays);    
+    Array<OneD, Array<OneD, int > >lay_eids(nlays);  
+    //initialise layers_y,lay_eids
+    for(int g=0; g<nlays; g++)
+    {
+        layers_y[g]= Array<OneD, NekDouble> ( (nvertl-1)*npedge );
+        lay_Vids[g]= Array<OneD, int> (nvertl);
+        lay_eids[g]= Array<OneD, int> (nvertl-1);
+    }
   
     //------------------------------------------------------------
     
     //calculate the new cordinates of the vertices    
-    int nVertTot = graphShPt->GetNvertices();
     Array<OneD, NekDouble> xnew(nVertTot);
     Array<OneD, NekDouble> ynew(nVertTot,-20);
+    Array<OneD, int> Up(nvertl);//Vids lay Up
+    Array<OneD, int> Down(nvertl);//Vids lay Down
+    NekDouble Delta0 = 0.2;
+    int cntup=0;
+    int cntlow=0;
+    Array<OneD, int> Acntlay(nvertl,0);
+    //Vids needed only if a layers has to be moved
+    NekDouble bleft=-10;
+    NekDouble tright = 10;
+    NekDouble bright = -10;
+    NekDouble tleft  = 10;
+    cnt=0;
+    int bottomleft, topright,bottomright,topleft;
     for(int i=0; i<nVertTot; i++)
     {
          bool mvpoint =false;
@@ -769,24 +847,53 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
          vertex->GetCoords(x,y,z); 
          //x coord doesn't change
          xnew[i]=x;
+cout<<"x="<<x<<"  y="<<y<<endl;
+         //bottom, left (x=0, y<ydown)        
+         if(x==0 && y< yold_low[0] 
+            && y> bleft)
+         {
+              bleft = y;
+              bottomleft = i;
+         }
+         //top, right
+         if(x== xold_c[nvertl-1] && y> yold_up[nvertl-1]
+            && y<tright)
+         {
+              tright = y;
+              topright = i;
+         }
+         //bottom, right]
+         if(x==xold_c[nvertl-1] && y<yold_low[nvertl-1]
+            && y> bright)
+         {
+              bright = y;
+              bottomright = i;
+         } 
+         //top, left
+         if(x== 0 && y> yold_up[0]
+            && y<tleft)
+         {
+              tleft = y;
+              topleft = i;
+         }
          //find the corresponding yold_l and deltaold
          for(int j=0; j<nvertl; j++)
          {	      
              if((xold_up[j]==x)&&(yold_up[j]==y))
              {        	 
-                 //ynew[i]=y_c[j] + Sign[j]*Deltaup[j];
-                 ratio = (1-y)*(1+y)/( (1-yold_c[j])*(1+yold_c[j]) );
-                 ynew[i] = y + Sign[j]*Delta_c[j]*ratio;
-                 //ynew[i] = y_c[j] +(y-yold_c[j])*ratio;
+                 //ratio = (1-y)*(1+y)/( (1-yold_c[j])*(1+yold_c[j]) );
+                 //ynew[i] = y + Sign[j]*Delta_c[j]*ratio;
+                 ynew[i] = y_c[j] +Delta0;
                  mvpoint=true;
+                 Up[j] = i;
              }
              if((xold_low[j]==x)&&(yold_low[j]==y))
              {
-             	 //ynew[i]= y_c[j] + Sign[j]*Deltalow[j];
-                 ratio = (1-y)*(1+y)/( (1-yold_c[j])*(1+yold_c[j]) );
-                 ynew[i] = y + Sign[j]*Delta_c[j]*ratio;
-                 //ynew[i] = y_c[j] +(y-yold_c[j])*ratio;             	 
+                 //ratio = (1-y)*(1+y)/( (1-yold_c[j])*(1+yold_c[j]) );
+                 //ynew[i] = y + Sign[j]*Delta_c[j]*ratio;          	 
+                 ynew[i] = y_c[j] -Delta0;
              	 mvpoint=true;
+                 Down[j] = i;
              }
              if((xold_c[j]==x)&&(yold_c[j]==y))
              {
@@ -807,54 +914,314 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
                     qp_closer=k;
                 }               
              } 
-             if( y>yold_up[qp_closer] )
+             if( y>yold_up[qp_closer] && y< 1)
              {	        
-                //ynew[i] = y + Sign[qp_closer]*Deltaup[qp_closer];
-                 ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
-                 ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
-//cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;                    
-                 //ynew[i] = y_c[qp_closer] +(y-yold_c[qp_closer])*ratio;                 
+
+                 //ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
+                 //ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
+
+                 //ratio = (1-y)*(1+y)/(  (1-yold_up[qp_closer])*(1+yold_up[qp_closer]) );
+                 //distance prop to layerup
+                 ynew[i] = y_c[qp_closer] +(y-yold_c[qp_closer])*
+                   (1-y_c[qp_closer])/(1-yold_c[qp_closer]);
+//cout<<"upper zone y="<<y<<"  ratio="<<ratio<<endl;         
+
+           
+            
              }
-             else if(y<yold_low[qp_closer])
+             else if(y<yold_low[qp_closer] && y> -1)
              {
-             	//ynew[i] = y + Sign[qp_closer]*Deltalow[qp_closer];
-                 ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
-                 ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;              
-                 //ynew[i] = y_c[qp_closer] +(y-yold_c[qp_closer])*ratio;                  
+
+                 //ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
+                 //ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;              
+
+                 //ratio = (1-y)*(1+y)/(  (1-yold_low[qp_closer])*(1+yold_low[qp_closer]) );
+                 //distance prop to layerlow
+                 ynew[i] = y_c[qp_closer] + (y-yold_c[qp_closer] )*
+                         (-1-y_c[qp_closer])/(-1-yold_c[qp_closer]);
+               
              }
+
              else if ( y>yold_c[qp_closer] && y < yold_up[qp_closer])
              {
-                //ynew[i] = y_c[qp_closer] +Sign[qp_closer]*abs(yold_up[qp_closer]-y);
-                 ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
-                 ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
-                 //ynew[i] = y_c[qp_closer] +(y-yold_c[qp_closer])*ratio;                  
+                 if(x==0){ cntup++; }
+                 //ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
+                 //ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
+                
              }
              else if (y<yold_c[qp_closer] && y > yold_low[qp_closer])
              {
-             	//ynew[i] = y_c[qp_closer] +Sign[qp_closer]*abs(yold_low[qp_closer]-y);
-                 ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
-                 ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
-                 //ynew[i] = y_c[qp_closer] +(y-yold_c[qp_closer])*ratio;                  
+                if(x==0){ cntlow++; }
+                // ratio = (1-y)*(1+y)/( (1-yold_c[qp_closer])*(1+yold_c[qp_closer]) );
+                // ynew[i] = y + Sign[qp_closer]*Delta_c[qp_closer]*ratio;
+           
              }
-             else
+             else if( y==1 || y==-1)//bcs don't move
              {
+                ynew[i] =y;
              	cout<<"point x="<<xnew[i]<<"  y="<<y<<"  closer x="<<xold_up[qp_closer]<<endl;   
-             	ASSERTL0(false, "impossible to shift the point");
              }
-             if(ynew[i]>1 || ynew[i]<-1)
+
+             //internal layers are not moved yet so...
+             if( (ynew[i]>1 || ynew[i]<-1)
+                 && ( y>yold_up[qp_closer]  || y<yold_low[qp_closer]) )
              {
-             	cout<<"point x="<<xnew[i]<<"  y="<<y<<"  closer x="<<xold_up[qp_closer]<<endl;              	     
+             	cout<<"point x="<<xnew[i]<<"  y="<<y<<"  closer x="<<xold_up[qp_closer]<<" ynew="<<ynew[i]<<endl;              	     
              	ASSERTL0(false, "shifting out of range");
              }
+
          }         
-cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;          
+cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;     
+         //count number of layers nlays(again) initialise vectors
+         //(crit lay not incl but uplay and down lay included)
+         //nb tollerance 10-5 to get the points
+         for(int m=0; m<nvertl; m++)
+         {
+ 
+             if( x>= x_c[m] -5e-2 && x<= x_c[m] +5e-2 
+              && y<= yold_up[m] && y>=yold_low[m]
+              && y!= yold_c[m])
+             {     
+cout<<"LAY  x"<<x<<"  y="<<y<<endl;
+cout<<"yup="<<yold_up[4]<<"  ylow="<<yold_low[4]<<endl;
+
+                 //need to fill layers_y to order it(through Findlay_eids)
+                 layers_y[Acntlay[m]][m]= y;
+                 lay_Vids[Acntlay[m]][m]= i;
+                 
+                 Acntlay[m]++;
+             }
+
+         }
+cout<<"end"<<endl;
+             
+    }
+cout<<"cntlow="<<cntlow<<endl;
+    ASSERTL0(Acntlay[4]==nlays, "something wrong with the number of layers");
+    //order layers coords:
+    //V1[eid],V2[eid] vertices associate with the edge Id=eid
+    Array<OneD, int> V1;
+    Array<OneD, int> V2;    
+    MapEdgeVertices(streak,V1,V2);
+    //find eids which belong to each layer(essentially order the 
+    // lay_Vids[n][m] on m layers)
+    Findlay_eids(layers_y, V1, V2, lay_Vids, lay_eids);
+    //determine the new coords of the vertices and the curve points 
+    //for each edge
+    int np_lay = (nvertl-1)*npedge;//nedges*npedge    
+    // 0<h<nlays-1 to fill only the 'internal' layers(no up,low);
+    for(int h=1; h<nlays-1; h++)
+    {
+        for(int s=0; s<nvertl; s++)
+        {
+            //check if ynew is still empty
+            ASSERTL0(ynew[ lay_Vids[h][s] ]==-20, "ynew layers not empty");
+            if(h<cntlow+1)//layers under the crit lay
+            {
+                //y= ylow+delta
+
+                ynew[ lay_Vids[h][s] ]  = ynew[Down[s]]+  h*abs(ynew[Down[s]] - y_c[s])/(cntlow+1);
+                //put the layer vertical
+                xnew[lay_Vids[h][s]  ] = x_c[s];
+cout<<"ynew="<<ynew[ lay_Vids[h][s] ]<<" ydown="<<ynew[Down[s]]<<
+" delta="<<abs(ynew[Down[s]] - y_c[s])/(cntlow+1)<<endl;
+                //until now layers_y=yold
+                layers_y[h][s] = ynew[ lay_Vids[h][s] ];
+            }
+            else
+            {
+                //y = yc+delta
+                ynew[ lay_Vids[h][s] ]  = y_c[s] + (h-cntlow)*abs(ynew[Up[s]] - y_c[s])/(cntup+1);
+                //put the layer vertical
+                xnew[lay_Vids[h][s]  ] = x_c[s];
+                //until now layers_y=yold
+                layers_y[h][s] = ynew[ lay_Vids[h][s] ];
+            } 
+        }
+    }
+    //------------------------------------------------------------------
+
+
+
+/*
+    int cnt=0;
+    //find coords and Vids of the layers vertices
+    for(int m=0; m< nvertl; m++)
+    {
+        cnt=0;
+        for(int n=0; n<nVertTot; n++)
+        {
+             //tollerance 10-4 to get the points
+             if(xnew[n]<= x_c[m] +5e-2 && xnew[n]>= x_c[m] -5e-2
+              && ynew[n]<= ynew[Up[m]] && ynew[n]>=ynew[Down[m]]
+              && ynew[n]!= y_c[m])
+             {
+                 //initialise layers_y,lay_eids
+                 if(m==0)
+                 {
+                     layers_y[cnt]= Array<OneD, NekDouble> ( (nvertl-1)*npedge );
+                     lay_Vids[cnt]= Array<OneD, int> (nvertl);
+                     lay_eids[cnt]= Array<OneD, int> (nvertl-1);
+                 }
+                 layers_y[cnt][m]= ynew[n];
+                 lay_Vids[cnt][m]= n;
+                 
+                 cnt++;
+//cout<<"vert index="<<m<<"   vertID="<<n<<endl;
+                  
+             }
+        }
+cout<<m<<"  cnt="<<cnt<<"  nlays="<<nlays<<endl;
+cout<<"x="<<x_c[m]<<"  yoldup="<<yold_up[m]<<" yold_low="<<yold_low[m]<<endl;
+        ASSERTL0(cnt==nlays, "something wrong with the number of layers");
+    }
+*/
+
+    // curve the edges around the NEW critical layer
+    bool curv_lay=true;
+    if( curv_lay==true)
+    {
+       //determine the new coords of the vertices and the curve points 
+       //for each edge
+       int np_lay = (nvertl-1)*npedge;//nedges*npedge
+
+       //NB delta=ynew-y_c DEPENDS ON the coord trnaf ynew= y+Delta_c*ratio!!!
+       Array<OneD, NekDouble> delta(nlays);
+
+       for(int m=0; m<nlays; m++)
+       {
+           delta[m] = (ynew[lay_Vids[m][0]] - y_c[0])/1.0;
+           layers_x[m]= Array<OneD, NekDouble>(np_lay);
+           //y_lay[m]= Array<OneD, NekDouble>(np_lay);
+
+           for(int h=0; h< nvertl; h++)
+           {
+               //shift using the dinstance delta from the crit layer AT x=0
+               //for each layer
+
+  
+//cout<<m<<"Vid:"<<lay_Vids[m][h]<<"  mod from y="<<ynew[lay_Vids[m][h] ]<<"  to y="<<y_c[h] +delta[m]<<endl;     
+               ynew[lay_Vids[m][h] ]= y_c[h] +delta[m];      
+//cout<<"Vid x="<<xnew[lay_Vids[m][h] ]<<"   y="<<ynew[lay_Vids[m][h] ]<<endl;
+               if(h< nedges)
+               {
+                   //v1
+                   layers_y[m][h*npedge +0] = y_c[h] +delta[m];
+                   layers_x[m][h*npedge +0] = xnew[lay_Vids[m][h] ];
+                   //v2             
+                   layers_y[m][h*npedge +npedge-1] = y_c[h+1] +delta[m]; 
+                   layers_x[m][h*npedge +npedge-1] = xnew[lay_Vids[m][h+1] ];
+                   //middle points (shift crit lay points by delta):
+                   for(int d=0; d< npedge-2; d++)
+                   {
+                       layers_y[m][h*npedge +d+1]=  Addpointsy[h*(npedge-2) +d] +delta[m];    
+                       layers_x[m][h*npedge +d+1]=  Addpointsx[h*(npedge-2) +d];
+                   }
+               }
+           }
+      }
+
+  
+      //check x,y coords
+      NekDouble tmpdiff;
+      for(int f=0; f< nlays; f++)
+      {
+//cout<<"delta lay="<<f<<"  is:"<<delta[f]<<endl;
+           for(int u=0; u< nvertl; u++)
+           {          
+                if(u<nedges)
+                {
+//cout<<"v0="<<u<<"  D="<<abs(ynew[lay_Vids[f][u] ]- y_c[u])<<"  v1="<<u+1<<
+//"  D="<<abs(ynew[lay_Vids[f][u+1] ]- y_c[u+1])<<endl; 
+                     tmpdiff= 
+                      abs(ynew[lay_Vids[f][u] ]- y_c[u])-abs(ynew[lay_Vids[f][u+1] ]- y_c[u+1]);
+//cout<<"diff="<<tmpdiff<<endl;
+                     ASSERTL0(
+                      abs(tmpdiff)<1e-5,
+                      "delta wrong");
+                 }
+                 if(u==0) 
+                 {
+//cout<<"vert x="<<xnew[lay_Vids[f][u] ]<<"  curv x="<<layers_x[f][0]<<endl;
+                    ASSERTL0(xnew[lay_Vids[f][u] ]==layers_x[f][0],"wro");
+//cout<<"vert y="<<ynew[lay_Vids[f][u] ]<<"  curv y="<<layers_y[f][0]<<endl;
+                    ASSERTL0(ynew[lay_Vids[f][u] ]==layers_y[f][0],"wroy");
+                 }
+                 else if(u== nvertl-1)
+                 {
+//cout<<"vert x="<<xnew[lay_Vids[f][u] ]<<"  curv x="<<layers_x[f][(nedges-1)*npedge +npedge-1]<<endl;
+                      ASSERTL0(
+         xnew[lay_Vids[f][u] ]==layers_x[f][(nedges-1)*npedge +npedge-1],"wroLAST");
+
+
+//cout<<"vert y="<<ynew[lay_Vids[f][u] ]<<"  curv y="<<layers_y[f][(nedges-1)*npedge +npedge-1]<<endl;
+                      ASSERTL0(ynew[lay_Vids[f][u] ]==layers_y[f][(nedges-1)*npedge +npedge-1],"wroyLAST");
+                 }
+                 else
+                 {
+//cout<<"vert x="<<xnew[lay_Vids[f][u] ]<<"  curv x1="<<layers_x[f][u*npedge +0]<<" curv x2="
+//<<layers_x[f][(u-1)*npedge +npedge-1]<<endl;
+                      ASSERTL0(xnew[lay_Vids[f][u] ]== layers_x[f][u*npedge +0],"wrongg");
+                      ASSERTL0(layers_x[f][u*npedge +0]== layers_x[f][(u-1)*npedge +npedge-1],"wrong1");
+
+//cout<<"vert y="<<ynew[lay_Vids[f][u] ]<<"  curv y1="<<layers_y[f][u*npedge +0]<<" curv y2="
+//<<layers_y[f][(u-1)*npedge +npedge-1]<<endl;
+                      ASSERTL0(ynew[lay_Vids[f][u] ]== layers_y[f][u*npedge +0],"wronggy");
+                      ASSERTL0(layers_y[f][u*npedge +0]== layers_y[f][(u-1)*npedge +npedge-1],"wrong1y");
+                 }
+            }
+       }
     }
 
-    //------------------------------------------------------------------
+    //------------------------------------------------------------
+
+    //check if the layers need to be shifted
+    string movelay;
+    int Vid_di;
+    NekDouble delt, delt_opp;
+    NekDouble tmpleft=10;
+    NekDouble tmpright = -10;
+
+    //check top left (x=0, y>yup)
+    //last layer nlays-1
+    if(
+         (  abs(ynew[topleft]-ynew[ lay_Vids[nlays-1][0] ])<0.01)||
+         (  ynew[topleft]< ynew[lay_Vids[nlays-1][0] ])
+      )
+    {
+
+        movelay = "layup";
+        //calculate the new delta based on the space at the border:
+        delt = abs(y_c[0]-ynew[topleft])/(nlays/2);
+        delt_opp = abs(y_c[0]-ynew[bottomleft])/(nlays/2);
+cout<<"move layerup to down:"<<endl;
+    }
+    //check bottom right (x=pi/2, y<ydown)
+    //first lay: 0
+    if(
+        (  abs(ynew[bottomright]-ynew[ lay_Vids[0][(nvertl-1)] ])<0.01 ) ||
+        (  ynew[bottomright]> ynew[ lay_Vids[0][(nvertl-1)] ]  )
+      )
+      {
+
+         movelay= "laydown";
+         //calculate the new delta based on the space at the border:
+         delt = abs(y_c[nvertl-1]-ynew[bottomright])/(nlays/2);
+         delt_opp = abs(y_c[nvertl-1]-ynew[topright])/(nlays/2);
+cout<<"move layerdown to up:"<<endl;
+            
+      }
+        
+    
+    //MoveLayers(ynew, y_c, Addpointsy, layers_y, lay_Vids, delt, delt_opp, movelay, npedge);
+
+    //--------------------------------------------------------------
+
+
     
     //replace the vertices with the new ones
-    //Replacevertices(changefile, xnew , ynew, x_c, y_c, Cpointsx, Cpointsy, Eids, npedge);
-    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge, charalp);
+
+    Replacevertices(changefile, xnew , ynew, x_c, y_c, Addpointsx, Addpointsy, Eids, npedge, charalp, layers_x,layers_y, lay_eids, curv_lay);
           	       
 }
 				
@@ -897,8 +1264,8 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 			   (HomoStr == "1D")||(HomoStr == "Homo1D"))
 			{
 				HomogeneousType = eHomogeneous1D;
-				session->LoadParameter("HomModesZ",npointsZ);
-				session->LoadParameter("LZ",       LhomZ   );
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 1;
 			}
 			
@@ -906,10 +1273,10 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 			   (HomoStr == "2D")||(HomoStr == "Homo2D"))
 			{
 				HomogeneousType = eHomogeneous2D;
-				session->LoadParameter("HomModesY",npointsY);
-				session->LoadParameter("LY",       LhomY   );
-				session->LoadParameter("HomModesZ",npointsZ);
-				session->LoadParameter("LZ",       LhomZ   );
+				npointsY        = session->GetParameter("HomModesY");
+				LhomY           = session->GetParameter("LY");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 2;
 			}
 			
@@ -917,12 +1284,12 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
 				HomogeneousType = eHomogeneous3D;
-				session->LoadParameter("HomModesX",npointsX);
-				session->LoadParameter("LX",       LhomX   );
-				session->LoadParameter("HomModesY",npointsY);
-				session->LoadParameter("LY",       LhomY   );
-				session->LoadParameter("HomModesZ",npointsZ);
-				session->LoadParameter("LZ",       LhomZ   );
+				npointsX        = session->GetParameter("HomModesX");
+				LhomX           = session->GetParameter("LX");
+				npointsY        = session->GetParameter("HomModesY");
+				LhomY           = session->GetParameter("LY");
+				npointsZ        = session->GetParameter("HomModesZ");
+				LhomZ           = session->GetParameter("LZ");
 				HomoDirec       = 3;
 			}
 			
@@ -937,10 +1304,12 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 	    Exp= Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);	     
         // Continuous Galerkin projection
 
+
             switch(expdim)
             {
                 case 1:
                 {
+ 
 /*                	
                     if(HomogeneousType == eHomogeneous2D)
                     {
@@ -987,6 +1356,7 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
 
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield;
+
                         firstfield = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(session,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
 
@@ -1030,14 +1400,15 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
             }
         }
   
-        void OrderVertices(int nedges, SpatialDomains::MeshGraphSharedPtr graphShPt,
+        void OrderVertices (int nedges, SpatialDomains::MeshGraphSharedPtr graphShPt,
         	MultiRegions::ExpListSharedPtr & bndfield, 
         	Array<OneD, int>& Vids, int v1,int v2, NekDouble x_connect, int & lastedge, 
         	Array<OneD, NekDouble>& x, Array<OneD, NekDouble>& y)
         {
             int nvertl = nedges+1;
             int edge;
-            Array<OneD, int> Vids_temp(nvertl,-10);         	
+            Array<OneD, int> Vids_temp(nvertl,-10);      
+            NekDouble x0layer =  -1.6;
             for(int j=0; j<nedges; j++)
             {
    	        LocalRegions::SegExpSharedPtr  bndSegExplow = 
@@ -1053,7 +1424,7 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
    	            if(x1==x_connect && edge!=lastedge)
    	            {  
    	            	 //first 2 points   
-			 if(x_connect==0)
+			 if(x_connect==x0layer)
 			 {			 	 
 			     Vids[v1]=Vids_temp[j+k]; 
 			     x[v1]=x1;
@@ -1121,7 +1492,7 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
     	        Array<OneD, NekDouble> &xold_up, Array<OneD, NekDouble> &yold_up,
     	        Array<OneD, NekDouble> &xold_low, Array<OneD, NekDouble> &yold_low,
     	        Array<OneD, NekDouble> &xold_c, Array<OneD, NekDouble> &yold_c,    	        
-    	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc)   	        
+    	        Array<OneD, NekDouble> &xc,  Array<OneD, NekDouble> &yc, NekDouble cr)   	        
 	{
 cout<<"Computestreakpositions"<<endl;    
 	     int nq = streak->GetTotPoints();	
@@ -1181,23 +1552,14 @@ cout<<q<<"   xup="<<xold_up[q]<<"   yup="<<yold_up[q]<<"    ydown="<<yold_low[q]
                     {
                     	 if(x[j]==xold_up[q] && y[j]<= yold_up[q] && y[j]>= yold_low[q])
                     	 {
-                             if(streak->GetPhys()[j]< streaktmppos && streak->GetPhys()[j]>0)
+                             if(streak->GetPhys()[j]< streaktmppos && streak->GetPhys()[j]>cr)
                              {	                 	      
                                  streaktmppos = streak->GetPhys()[j];
                                  ipos =j;
                              }
-static int cnt=0;
-if(  
-//abs(streak->GetPhys()[j])< 0.01
-//x[j]==(xold_up[2])
- x[j]<=(xold_up[8]+0.01)
- && x[j]>=(xold_up[8]-0.01)  
-)
-{
-cnt++;
-cout<<"cnt="<<cnt<<"   x="<<x[j]<<"  y="<<y[j]<<"  U="<<streak->GetPhys()[j]<<endl;
-}
-                             if( abs(streak->GetPhys()[j]) < -streaktmpneg && streak->GetPhys()[j]<0)
+                             static int cnt=0;
+
+                             if( abs(streak->GetPhys()[j]) < -streaktmpneg && streak->GetPhys()[j]<cr)
                              {
 //cout<<"test streakneg="<<streak->GetPhys()[j]<<endl;
               	                 streaktmpneg = streak->GetPhys()[j];
@@ -1297,49 +1659,60 @@ cout<<" streak x="<<x_c[q]<<"   y="<<y_c[q]<<" streak_p="<<streaktmppos<<"   str
               	   elmtid = streak->GetExpIndex(coord,0.00001);
            	   offset = streak->GetPhys_Offset(elmtid);
            	   F = 1000;
-		   while( abs(F)> 0.00000001)
+		   while( abs(F)> 0.000000001)
 		   {
+
+                	   
+              	        elmtid = streak->GetExpIndex(coord,0.00001);
+           	        offset = streak->GetPhys_Offset(elmtid);
 		   	U = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() + offset);
 		   	dU  = streak->GetExp(elmtid)->PhysEvaluate(coord, derstreak + offset);
-		   	coord[1] = coord[1] - U/dU;   
-		   	F = U;   
+		   	coord[1] = coord[1] - (U-cr)/dU;   
+		   	F = U-cr;   
 		   	ASSERTL0( coord[0]==xc[e], " x coordinate must remain the same");
               	        //stvalues[e] = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() +offset );
 //cout<<"elmtid="<<elmtid<<"  x="<<coord[0]<<"   y="<<coord[1]<<"    stvalue="<<U<<endl;
 	           }
-                   yc[e] = coord[1];
+                   yc[e] = coord[1] - (U-cr)/dU;
+                   NekDouble tol = 1e-3;
+                   ASSERTL0( U<= cr + tol, "streak wrong+");
+                   ASSERTL0( U>= cr -tol, "streak wrong-");
 	           //Utilities::Zerofunction(coord[0], coord[1], xtest, ytest, streak, derstreak);
-//cout<<"result streakvert x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
+cout<<"result streakvert x="<<xc[e]<<"  y="<<yc[e]<<"   streak="<<U<<endl;	           
               }
-           
 		
 	}
 
 
 	void GenerateAddPointsNewtonIt( NekDouble &xi, NekDouble &yi,NekDouble &x0, NekDouble &y0,
-    	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction)
+    	        MultiRegions::ExpListSharedPtr &function, Array<OneD, NekDouble> &derfunction,
+                NekDouble cr)
 	{
 		int elmtid,offset;
 		NekDouble F,U,dU;
 		Array<OneD, NekDouble> coords(2);	
-		coords[0] = xi;
-		coords[1] = yi;	
-//cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
-		elmtid = function->GetExpIndex(coords, 0.00001);
-                //@to do if GetType(elmtid)==triangular WRONG!!!
-cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<endl;			
-		offset = function->GetPhys_Offset(elmtid);
+
+                coords[0] = xi;
+	        coords[1] = yi;
+
 		F =1000;
 		while( abs(F)> 0.00000001)
 	        {
+	
+//cout<<"generate newton it xi="<<xi<<"  yi="<<yi<<endl;			
+		     elmtid = function->GetExpIndex(coords, 0.00001);
+                //@to do if GetType(elmtid)==triangular WRONG!!!
+cout<<"gen newton xi="<<xi<<"  yi="<<yi<<"  elmtid="<<elmtid<<"  F="<<F<<endl;			
+		     offset = function->GetPhys_Offset(elmtid);
+
 		     U = function->GetExp(elmtid)->PhysEvaluate(coords, function->GetPhys() + offset);
 		     dU  = function->GetExp(elmtid)->PhysEvaluate(coords, derfunction + offset);
-		     coords[1] = coords[1] - U/dU;   
-		     F = U;   
+		     coords[1] = coords[1] - (U-cr)/dU;   
+		     F = U-cr;   
 		     ASSERTL0( coords[0]==xi, " x coordinate must remain the same");	             	
 	        }
 	        x0 = xi;
-	        y0 = coords[1];
+	        y0 = coords[1] - (U-cr)/dU;
 cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;	        
 	}
 
@@ -1453,49 +1826,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                }
         }
 
-        
-        NekDouble yMove(NekDouble y, NekDouble yold_up, NekDouble Deltaold)
-        {
-            NekDouble ynew;        	
-            //algorithm for yold_l>0	 
-            if(yold_up>=0)
-            {
-            	    
-                if(y>=0 && y<=1)
-                {	
-            	    ynew= y - Deltaold*(1-y)/(1-yold_up) ;
-            	}
-            	else if(y>=-1 && y<0)
-                {
-                    ynew= y - Deltaold*(1+y)/(1-yold_up);
-                }
-                else if(y>1 && y<-1)
-                {                	
-                    ASSERTL0(false, "y range wrong!!!");
-                }               
-            }
-            //algorithm for yold_l<0
-            else if(yold_up<0)
-            {
-                if(y>=0 && y<=1)
-                {	
-            	    ynew= y - Deltaold*(1-y)/(1+yold_up) ;
-            	}
-            	else if(y>=-1 && y<0)
-                {
-                    ynew= y - Deltaold*(1+y)/(1+yold_up);                     
-                }
-                else if(y>1 && y<-1)
-                {                	
-                    ASSERTL0(false, "y range wrong!!!");
-                }              
-            }
-            else
-            {
-            	    ASSERTL0(false,"the upper curve corresponds to the critical layer");            	 
-            }  
-            return ynew;
-	}        	
+	
 	
 	
         void GenerateAddPoints(int region, SpatialDomains::MeshGraphSharedPtr &mesh,int np, int npused,
@@ -1568,13 +1899,262 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             }
             
         }
+
+        void MapEdgeVertices(MultiRegions::ExpListSharedPtr field, Array<OneD, int> &V1,
+                 Array<OneD, int> &V2)
+        {
+            const boost::shared_ptr<StdRegions::StdExpansionVector> exp2D = field->GetExp();
+            int nel        = exp2D->size();
+            LocalRegions::QuadExpSharedPtr locQuadExp;
+            LocalRegions::TriExpSharedPtr  locTriExp;
+            SpatialDomains::Geometry1DSharedPtr SegGeom;
+            int id;
+            int cnt=0;
+            Array<OneD, int> V1tmp(4*nel, 10000);
+            Array<OneD, int> V2tmp(4*nel, 10000);
+            for(int i=0; i<nel; i++)
+            { 
+                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i]))
+                {
+                     for(int j = 0; j < locQuadExp->GetNedges(); ++j)
+                     {
+                         SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
+                         id = SegGeom->GetEid();
+
+                         if( V1[id] != 10000)
+                         {
+                              V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
+                              V2tmp[id]= SegGeom->GetVertex(1)->GetVid();
+                              cnt++;
+                         }
+                         else
+                         {
+                              ASSERTL0(false,"Failed to find edge map");
+                         }
+                     }
+                }
+                //in the future the tri edges may be not necessary (if the nedges is known)
+
+                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i]))
+                {
+                     for(int j = 0; j < locTriExp->GetNedges(); ++j)
+                     {
+                         SegGeom = (locTriExp->GetGeom2D())->GetEdge(j);
+                         id = SegGeom->GetEid();
+
+                         if( V1[id] != 10000)
+                         {
+                              V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
+                              V2tmp[id]= SegGeom->GetVertex(1)->GetVid();
+                              cnt++;
+                         }
+                         else
+                         {
+                              ASSERTL0(false,"Failed to find edge map");
+                         }
+                     }
+
+                }
+           
+            }  
+
+            V1 = Array<OneD, int>(cnt);
+            V2 = Array<OneD, int>(cnt);
+            //populate the output vectors V1,V2
+            for(int g=0; g<cnt; g++)
+            {
+                V1[g] = V1tmp[g];
+                V2[g] = V2tmp[g];
+            }
+
+        }
+
+        void Findlay_eids(Array<OneD, Array<OneD, NekDouble> >& layers_y,
+                 Array<OneD, int> V1, Array<OneD, int> V2, 
+                 Array<OneD, Array<OneD, int > >& lay_Vids,
+                 Array<OneD, Array<OneD, int > >& lay_eids)
+        {
+             int neids = V1.num_elements();
+             int nlays = layers_y.num_elements();
+             int nvertl = lay_Vids[0].num_elements();
+             Array<OneD, NekDouble > tmpy(nlays,-1000);
+             Array<OneD, int > tmpVids(nlays,-1000);
+             Array<OneD, int > tmpIndex(nlays,-1000);
+
+             //sort layers_y low to high
+             for(int a=0; a<nvertl; a++)
+             {
+                  tmpy = Array<OneD, NekDouble> (nlays,-1000);
+                  //copy into array:(not possible use Vmath with matrices)
+                  for(int t=0; t<nlays; t++)
+                  {
+                       tmpy[t] = layers_y[t][a];
+                       tmpVids[t] = lay_Vids[t][a];                       
+                  }
+                  
+
+                  for(int b=0; b<nlays; b++)
+                  {
+                       tmpIndex[b] = Vmath::Imin(nlays,tmpy,1);
+                       layers_y[b][a] = tmpy[tmpIndex[b]];
+                       lay_Vids[b][a] = tmpVids[tmpIndex[b]];  
+                       //tmpy[b] =  Vmath::Vmin(nlays,&(layers_y[0][a]),1);
+                       ASSERTL0(layers_y[b][a]==Vmath::Vmin(nlays,tmpy,1),
+                       "sort failed ");
+                       tmpy[tmpIndex[b]] =  1000;
+                     
+                  }
+
+             }
+
+             for(int a=0; a< nvertl-1; a++)
+             {
+                  for(int b=0; b<nlays; b++)
+                  {
+                      for(int p=0; p< neids; p++)
+                      {
+                          if( 
+                              (lay_Vids[b][a] == V1[p] && lay_Vids[b][a+1]==V2[p])||
+                              (lay_Vids[b][a] == V2[p] && lay_Vids[b][a+1]==V1[p])
+                            )
+                            {
+                                lay_eids[b][a] = p;  
+                                break;
+                            }
+                      }
+                  } 
+              }               
+           
+        }
+
+
+
         
+        void MoveLayers(Array<OneD, NekDouble> & ynew,
+                 Array<OneD, NekDouble> yc,
+                 Array<OneD, NekDouble> Addpointsy,
+                 Array<OneD, Array<OneD, NekDouble > >& layers_y,
+                 Array<OneD, Array<OneD, int> >lay_Vids,
+                 NekDouble delt, NekDouble delt_opp,string movelay, int npedge)
+        {
+             int nvertl = yc.num_elements();
+             int nedges = nvertl-1;
+             int nlays = layers_y.num_elements();
+             int np_lay = layers_y[0].num_elements();
+             Array<OneD, Array<OneD, NekDouble> > tmpy(layers_y.num_elements());
+             Array<OneD, Array<OneD, NekDouble> > tmpynew(layers_y.num_elements());
+             int cntup=1;
+             NekDouble delta;
+             //cp layers_y  into tmpy and move the first one     
+cout<<"movelay"<<movelay<<endl;        
+             if(movelay == "laydown")
+             {             
+                 delta = abs(layers_y[nlays-1][(nvertl-2)*npedge+npedge-1]-yc[nvertl-1]);
+
+                 for(int g=0; g<  nlays;  g++)
+                 {
+                      tmpy[g] = Array<OneD, NekDouble> (np_lay);
+                      tmpynew[g] = Array<OneD, NekDouble>(nvertl);
+                      for(int h=0; h< nvertl; h++)
+                      {
+
+                          //move layers_up
+                          if(g==0 )
+                          {  
+                               tmpynew[g][h]= yc[h] + delta + delta/(nlays/2);
+
+                               if(h<nedges)
+                               {
+
+                                  //v1
+                                  tmpy[g][h*npedge +0] = yc[h] + delta+ delta/(nlays/2);
+                                  //v2
+                                  tmpy[g][h*npedge +npedge-1] = yc[h+1] + delta+delta/(nlays/2);
+                                  //middle points (shift crit lay points by delta):
+                                  for(int d=0; d< npedge-2; d++)
+                                  {
+                                        tmpy[g][h*npedge +d+1]=  
+                                        Addpointsy[h*(npedge-2) +d] +delta + delta/(nlays/2);    
+
+                                  }
+                              }                             
+                           }
+                           else
+                           {
+                               tmpynew[g][h]= ynew[ lay_Vids[g][h] ];
+                               if(h<nedges)
+                               {
+                                  //v1
+                                  tmpy[g][h*npedge +0] = layers_y[g][h*npedge +0];
+                                  //v2
+                                  tmpy[g][h*npedge +npedge-1] = layers_y[g][h*npedge +npedge-1];
+                                  //middle points (shift crit lay points by delta):
+                                  for(int d=0; d< npedge-2; d++)
+                                  {
+                                       tmpy[g][h*npedge +d+1]=  layers_y[g][h*npedge +d+1];
+                                  }                                
+                               } 
+                           }                              
+
+                      }
+                 }
+
+                 //copy back in a different order
+                 int cnt=-1;
+                 int vcnt=-1;
+                 for(int g=0; g<  nlays;  g++)
+                 {
+cout<<"move y coords"<<g<<endl;
+                      for(int h=0; h<np_lay; h++)
+                      {
+                          //first becomes last
+                          if(g==0)
+                          {
+                               layers_y[nlays-1][h]= tmpy[0][h];
+                          }
+                          else
+                          { 
+                               layers_y[cnt][h] = tmpy[g][h];
+                          }                          
+                      }
+                      cnt++;
+
+                      for(int v=0; v<nvertl; v++)
+                      {
+                          if(g==0)
+                          {
+                               ynew[lay_Vids[nlays-1][v]] = tmpynew[0][v];
+                          }
+                          else
+                          {
+                               ynew[lay_Vids[vcnt][v] ] = tmpynew[g][v];          
+                          }
+                      }
+                      vcnt++;
+
+
+                      
+                  }
+             }
+             if( movelay =="layup")
+             {
+                  ASSERTL0(false, "not implemented layup");
+             }
+                
+
+
+             
+	}      
+    
         void Replacevertices(string filename, Array<OneD, NekDouble> newx, 
     	               Array<OneD,  NekDouble> newy,
-    	               Array<OneD, NekDouble> x_lay, Array<OneD, NekDouble> y_lay,
+    	               Array<OneD, NekDouble> x_crit, Array<OneD, NekDouble> y_crit,
     	               Array<OneD, NekDouble> & Pcurvx, 
     	               Array<OneD, NekDouble> & Pcurvy,
-    	               Array<OneD, int>&Eids, int Npoints, string s_alp)	
+    	               Array<OneD, int>&Eids, int Npoints, string s_alp,
+                       Array<OneD, Array<OneD, NekDouble> > x_lay,
+                       Array<OneD, Array<OneD, NekDouble> > y_lay,
+                       Array<OneD, Array<OneD, int > >lay_eids, bool curv_lay)	
 	{     
 	    //load existing file
             string newfile;
@@ -1667,7 +2247,6 @@ cout<<"alpha="<<s_alp<<endl;
             }
 
 
-
 	    // Find the Mesh tag and same the dim and space attributes
 	    meshnew = masternew->FirstChildElement("GEOMETRY");
 
@@ -1727,8 +2306,9 @@ cout<<"alpha="<<s_alp<<endl;
 	    	 
 	    	   vertexnew = vertexnew->NextSiblingElement("V");  
        	   }	
-       	    //meshnew->LinkEndChild(elementnew);
-          	    
+
+
+ 
        	    //read the curved tag
             TiXmlElement* curvednew = meshnew->FirstChildElement("CURVED");
 	    ASSERTL0(curvednew, "Unable to find mesh CURVED tag in file.");            
@@ -1740,6 +2320,7 @@ cout<<"alpha="<<s_alp<<endl;
             int index;
    	    int indexeid, v1,v2;
    	    NekDouble x1,x2,y1,y2;
+            //if edgenew belongs to the crit lay replace it, else delete it.
    	    while (edgenew)
    	    {
    	    	   indexeid =-1;
@@ -1756,7 +2337,7 @@ cout<<"alpha="<<s_alp<<endl;
 	           //find the corresponding index curve point
 	           for(int u=0; u<Eids.num_elements(); u++)
 	           {
-//cout<<"Eids="<<Eids[u]<<endl;	           	   
+//cout<<"Eids="<<Eids[u]<<"  eid="<<eid<<endl;	           	   
 	               if(Eids[u]==eid)
 	               {
 	                  indexeid = u;
@@ -1764,84 +2345,114 @@ cout<<"alpha="<<s_alp<<endl;
 	           }
 	           if(indexeid==-1)
    	    	   {
-   	    	      ASSERTL0(false, "edge to update not found");	   
+                      curvednew->RemoveChild(edgenew);
+   	    	      //ASSERTL0(false, "edge to update not found");	   
    	    	   }
+                   else
+                   {
 
 
-                   std::string edgeBodyStr;
-		   //read the body of the edge
-		   TiXmlNode *edgeBody = edgenew->FirstChild();
-		   if(edgeBody->Type() == TiXmlNode::TEXT)
-		   {
-		      edgeBodyStr += edgeBody->ToText()->Value();
-		      edgeBodyStr += " ";
-		   }
-   	    	   ASSERTL0(!edgeBodyStr.empty(), "Edge definitions must contain edge data");
-   	    	   //remove the old coordinates
-   	    	   edgenew->RemoveChild(edgeBody);
-   	    	   //write the new points coordinates
-   	    	   if(x_lay[cnt]< x_lay[cnt+1])
-   	    	   {
-   	    	      //x1 = x_lay[cnt];
-   	    	      //x2 = x_lay[cnt+1];
-   	    	      //y1 = y_lay[cnt];
-   	    	      //y2 = y_lay[cnt+1];
-   	    	      v1 = cnt;
-   	    	      v2 = cnt+1;
-   	    	   }
-   	    	   else
-   	    	   {
-   	    	      //x1 = x_lay[cnt+1];
-   	    	      //x2 = x_lay[cnt];
-   	    	      //y1 = y_lay[cnt+1];
-   	    	      //y2 = y_lay[cnt];
-   	    	      v1 = cnt+1;
-   	    	      v2 = cnt;
-                      cout<<"Warning: the edges can have the vertices in the reverse order";   	    	      
-   	    	   }
-		   //we need at least 5 digits (setprecision 5) to get the streak position with
-		   // precision 10^-10
+                        std::string edgeBodyStr;
+		        //read the body of the edge
+		        TiXmlNode *edgeBody = edgenew->FirstChild();
+       		        if(edgeBody->Type() == TiXmlNode::TEXT)
+          	        {
+		             edgeBodyStr += edgeBody->ToText()->Value();
+                             edgeBodyStr += " ";
+		        }
+   	    	        ASSERTL0(!edgeBodyStr.empty(), "Edge definitions must contain edge data");
+         	        //remove the old coordinates
+   	    	        edgenew->RemoveChild(edgeBody);
+   	    	        //write the new points coordinates
+   	    	        if(x_crit[cnt]< x_crit[cnt+1])
+   	    	        {
+   	    	            //x1 = x_crit[cnt];
+   	    	            //x2 = x_crit[cnt+1];
+   	    	            //y1 = y_crit[cnt];
+   	    	            //y2 = y_crit[cnt+1];
+   	    	            v1 = cnt;
+   	    	            v2 = cnt+1;
+   	    	        }
+   	    	        else
+   	    	        {
+   	    	            //x1 = x_crit[cnt+1];
+   	    	            //x2 = x_crit[cnt];
+   	    	            //y1 = y_crit[cnt+1];
+   	    	            //y2 = y_crit[cnt];
+   	    	            v1 = cnt+1;
+   	    	            v2 = cnt;
+                            cout<<"Warning: the edges can have the vertices in the reverse order";   	    	      
+   	    	        }
+		        //we need at least 5 digits (setprecision 5) to get the streak position with
+		        // precision 10^-10
 		   
-                   //Determine the number of points
-                   err = edgenew->QueryIntAttribute("NUMPOINTS", &numPts);
-                   ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
-                   edgenew->SetAttribute("NUMPOINTS", Npoints);
-		   stringstream st;
-		   st << std::scientific << std::setprecision(8) << x_lay[v1] << "   "
-	    	   << y_lay[v1] << "   " << 0.000<<"   ";
-cout<<x_lay[v1]<<"       "<<y_lay[v1]<<endl;
-		   for(int a=0; a< Npoints-2; a++)
-		   {		       	   
-		      st << std::scientific << std::setprecision(8) <<
-		      "    "<<Pcurvx[indexeid*(Npoints-2) +a]<<"    "<<Pcurvy[indexeid*(Npoints-2) +a]
-		      <<"    "<<0.000<<"   "; 
-cout<<Pcurvx[indexeid*(Npoints-2) +a]<<"        "<<Pcurvy[indexeid*(Npoints-2)+a]<<endl;	      
-		   }
-		   st << std::scientific << std::setprecision(8) <<
-		   "    "<<x_lay[v2]<<"   "<< y_lay[v2] <<"   "<< 0.000;
-cout<<x_lay[v2]<<"       "<<y_lay[v2]<<endl;
-	    	   edgenew->LinkEndChild(new TiXmlText(st.str()));    		   
+                        //Determine the number of points
+                        err = edgenew->QueryIntAttribute("NUMPOINTS", &numPts);
+                        ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
+                        edgenew->SetAttribute("NUMPOINTS", Npoints);
+		        stringstream st;
+		        st << std::scientific << std::setprecision(8) << x_crit[v1] << "   "
+	    	        << y_crit[v1] << "   " << 0.000<<"   ";
+//cout<<x_crit[v1]<<"       "<<y_crit[v1]<<endl;
+		        for(int a=0; a< Npoints-2; a++)
+                        {		       	   
+		             st << std::scientific << std::setprecision(8) <<
+		             "    "<<Pcurvx[indexeid*(Npoints-2) +a]<<"    "<<Pcurvy[indexeid*(Npoints-2) +a]
+		             <<"    "<<0.000<<"   "; 
+//cout<<Pcurvx[indexeid*(Npoints-2) +a]<<"        "<<Pcurvy[indexeid*(Npoints-2)+a]<<endl;	      
+		        }
+		        st << std::scientific << std::setprecision(8) <<
+		        "    "<<x_crit[v2]<<"   "<< y_crit[v2] <<"   "<< 0.000;
+//cout<<x_crit[v2]<<"       "<<y_crit[v2]<<endl;
+                        edgenew->LinkEndChild(new TiXmlText(st.str()));    		   
 
 //cout<<st.str()<<endl;		
-/*
-	    	   stringstream s;
-	    	   s << std::scientific << std::setprecision(5) <<  x_lay[v1] << "   "
-	    	   << y_lay[v1] << "   " << 0.000<<"        "<< Pcurvx[indexeid]<< "   "<<
-	    	   Pcurvy[indexeid]<<"   "<<0.000 <<"       "<<x_lay[v2]<<"   "<< y_lay[v2] 
-	    	   <<"   "<< 0.000;
-	    	   edgenew->LinkEndChild(new TiXmlText(s.str()));    
-*/  
-/*	    	   
-                   if(x_lay[cnt] < x_lay[cnt+1])
-                   {
-                      cout<<"Warning: the edges can have the vertices in the reverse order";
-                   }
-*/                   
-   	    	   edgenew = edgenew->NextSiblingElement("E");
+  
+                        //if(x_crit[cnt] < x_crit[cnt+1])
+                        //{
+                        //   cout<<"Warning: the edges can have the vertices in the reverse order";
+                        //}
+                    }
+                   
+   	    	    edgenew = edgenew->NextSiblingElement("E");
    	    	    
    	    }
-   	    
-   	    
+
+            //write also the others layers curve points
+            if(curv_lay == true)
+            {
+cout<<"write other curved edges"<<endl;
+               TiXmlElement * curved = meshnew->FirstChildElement("CURVED");
+               int idcnt = 300;
+               int nlays = lay_eids.num_elements();
+               int neids_lay = lay_eids[0].num_elements();
+               //TiXmlComment * comment = new TiXmlComment();
+               //comment->SetValue("   new edges  ");
+               //curved->LinkEndChild(comment);
+
+               for (int g=0; g< nlays; ++g)  
+               {
+                    for(int p=0; p< neids_lay; p++)
+                    {
+                        stringstream st;
+                        TiXmlElement * e = new TiXmlElement( "E" );
+                        e->SetAttribute("ID",        idcnt++);
+                        e->SetAttribute("EDGEID",    lay_eids[g][p]);
+                        e->SetAttribute("NUMPOINTS", Npoints);
+                        e->SetAttribute("TYPE", "PolyEvenlySpaced");
+                        for(int c=0; c< Npoints; c++)
+                        {
+                             st << std::scientific << std::setprecision(8) <<x_lay[g][p*Npoints +c]
+                             << "   " << y_lay[g][p*Npoints +c] << "   " << 0.000<<"   ";
+
+                        }
+                        TiXmlText * t0 = new TiXmlText(st.str());
+                        e->LinkEndChild(t0);
+                        curved->LinkEndChild(e);
+                    }
+ 
+               }  	    
+            }	    
    	    
    	    
    	    

@@ -170,7 +170,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
 
         }
     case eFixedWaveForcing:
-    case eVWIInitialAlpha:
+    case eFixedWaveForcingPhase:
         {
             int i;
             int nouter_iter = vwi.GetNOuterIterations();
@@ -186,17 +186,10 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 {
                     vwi.ExecuteLoop();
                     vwi.SaveLoopDetails("Save", i);
-                    vwi.AppendEvlToFile("conv.his",i);            
-                        
-                    if(vwi.CheckEigIsStationary() && vwi.GetVWIIterationType()!=eVWIInitialAlpha)
-                    {
-                        vwi.SaveLoopDetails("Save_Outer", nouter_iter);
-                        break;
-                    }
-                    else if(vwi.GetVWIIterationType()==eVWIInitialAlpha)
-                    {
-                        break;
-                    }
+                    vwi.AppendEvlToFile("conv.his",i);                    
+                    vwi.SaveLoopDetails("Save_Outer", nouter_iter);
+                    break;
+
                 }
                 
                 // check to see if growth was converged. 
@@ -214,10 +207,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 {
                     vwi.UpdateAlpha(nouter_iter);
                 }
-                if( vwi.GetVWIIterationType()==eVWIInitialAlpha )
-                {  
-                    vwi.CalcNonLinearWaveForce();  
-                }                
+             
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;

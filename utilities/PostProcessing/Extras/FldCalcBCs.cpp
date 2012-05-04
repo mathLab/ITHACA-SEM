@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         SpatialDomains::BoundaryConditionsSharedPtr& boundaryConditions,
 		LibUtilities::SessionReaderSharedPtr &session,
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
-    Array<OneD, int> GetReflectionIndex(Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,
+    Array<OneD, int> GetReflectionIndex(MultiRegions::ExpListSharedPtr Exp,
     int Ireg);
     void Extractlayerdata(Array<OneD, int> Iregions, int coordim, 
             SpatialDomains::MeshGraphSharedPtr &mesh,   
@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
        	    MultiRegions::ContField1DSharedPtr &outfieldy,
-       	    MultiRegions::ExpListSharedPtr &streak,
-            Array<OneD, int>  Refindices, NekDouble alpha);
+       	    MultiRegions::ExpListSharedPtr &streak, bool symm,
+            Array<OneD, int>  Refindices, NekDouble alpha, NekDouble cr);
     void Manipulate(Array<OneD, int> Iregions, int coordim, SpatialDomains::MeshGraphSharedPtr &mesh,   
     	    SpatialDomains::BoundaryConditions &bcs,
     	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &infields,  
@@ -98,7 +98,26 @@ cout<<"argc="<<argc<<endl;
         alpha = boost::lexical_cast<double>(alp_s);        
     }
     //----------------------------------------------
-      
+
+    //load the phase:
+    NekDouble cr=0.0;
+    if(   vSession->DefinesSolverInfo("INTERFACE")
+           &&vSession->GetSolverInfo("INTERFACE")=="phase" )
+    {
+         vSession->LoadParameter("phase",cr,NekConstants::kNekUnsetDouble);
+    }   
+cout<<"cr="<<cr<<endl;
+    //-----------------------------------------------
+
+
+    //determine if the symmetrization is on:
+    bool symm =false;
+    if( vSession->DefinesSolverInfo("symmetrization") )
+    {
+         symm =true;
+    }
+    
+  
     // Import field file.
     string fieldfile(argv[argc-3]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
@@ -107,21 +126,27 @@ cout<<"argc="<<argc<<endl;
     //----------------------------------------------
 
     // Define Expansion    
+    std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
     int nfields; 
     nfields = fielddef[0]->m_fields.size(); 
     Array<OneD, MultiRegions::ExpListSharedPtr> fields; 
+    if(solvtype == "CoupledLinearisedNS" && nfields==1)
+    {
+         nfields++;
+    }
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
+
    
 
-    std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
-    if(solvtype == "CoupledLinearisedNS")
+    int lastfield;
+    if(solvtype == "CoupledLinearisedNS" && nfields!=2)
     {
       	    
          SetFields(graphShPt,boundaryConditions,vSession,fields,nfields-1);
  	 //decomment
          //nfields = nfields-1;
 //start
-         int lastfield = nfields-1;
+         lastfield = nfields-1;
          cout<<"Set pressure: "<<lastfield<<endl;           
          int nplanes = fielddef[0]->m_numModes[2];
          const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
@@ -132,6 +157,36 @@ cout<<"argc="<<argc<<endl;
          fields[lastfield] = Exp3DH1;        
 //end       
     }
+    else if(solvtype == "CoupledLinearisedNS" && nfields==2)
+    {
+         cout<<"Set pressure split"<<endl;
+           
+         int nplanes = fielddef[0]->m_numModes[2];
+         const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
+         const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
+         NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
+cout<<"set ppp"<<endl;
+/*
+         //to use GetBndCondExpansions() a contfield is needed and you j=have to
+         //call it "u" to get the bndconds
+         MultiRegions::ContField3DHomogeneous1DSharedPtr Cont3DH1;
+         Cont3DH1 = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt, "u");
+         fields[0] = Cont3DH1;    
+*/
+          fields[0] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                ::AllocateSharedPtr        (vSession,Bkey,lz,false,false,graphShPt,vSession->GetVariable(0)); 
+
+
+
+         //pressure is field 1
+         lastfield = nfields-1;
+         MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
+         Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,false,false,graphShPt,fielddef[0]->m_fields[0]);
+         fields[lastfield] = Exp3DH1;
+
+
+           
+    }
     else
     {
 
@@ -140,43 +195,40 @@ cout<<"argc="<<argc<<endl;
     //----------------------------------------------       
 
     // Copy data from file:fill fields with the fielddata
-    for(j = 0; j < nfields; ++j)
-    {  	       	    
-        for(int i = 0; i < fielddata.size(); ++i)
-        {
-            fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
-        }             
-        fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());               
-    }
-    //----------------------------------------------
-                            
-    //--------------------------------------------------------------    
-
-
-
-    // determine the I regions
-    //hypothesis: the number of I regions is the same for all the variables
-    //hypothesis: all the I regions have the same nq points
-    int nIregions, lastIregion; 
-    const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = fields[0]->GetBndConditions();      
-    Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
-    //3 internal layers:
-    Array<OneD, int> Ilayers =Array<OneD, int>(3,-1);     
-    nIregions=0;
-    int nbnd= bndConditions.num_elements();    
-    for(int r=0; r<nbnd; r++)
+    if(lastfield==1)
     {
-    	  if(bndConditions[r]->GetUserDefined()==SpatialDomains::eCalcBC)
-    	  {
-    	  	  lastIregion=r;
-    	  	  Iregions[r]=r;
-    	  	  Ilayers[nIregions]=r;
-    	  	  nIregions++;
-//cout<<"Iregion="<<r<<endl;    	  	  
-    	  }    	  
-    } 
-    ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""CalcBC"" specified");
+        for(int i = 0; i < fielddata.size(); ++i)
+        {        	
+            fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
+        }             
+        fields[0]->BwdTrans(fields[0]->GetCoeffs(),fields[0]->UpdatePhys());
+cout<<"field:"<<fielddef[i]->m_fields[0]<<endl;
+        for(int i = 0; i < fielddata.size(); ++i)
+        {        	
+            fields[lastfield]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
+        }             
+        fields[lastfield]->BwdTrans_IterPerExp(fields[lastfield]->GetCoeffs(),fields[lastfield]->UpdatePhys());        
+    }
+    else
+    {
+        for(j = 0; j < nfields; ++j)
+        {  	       	    
+            for(int i = 0; i < fielddata.size(); ++i)
+            {
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+            }             
+            fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());               
+        }
+    }
 
+    //----------------------------------------------
+         //the phys values are the same (WRONG) but the coeffs are CORRECT!!!
+/*
+         for(int g=0; g<fields[0]->GetPlane(1)->GetNcoeffs(); g++)
+         {
+cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<fields[lastfield]->GetPlane(1)->GetCoeff(g)<<endl;
+         }
+*/
 
     // import the streak 
     //import the streak field
@@ -206,6 +258,39 @@ cout<<"argc="<<argc<<endl;
     int totpoints = fields[0]->GetPlane(0)->GetTotPoints();
 //end   	
     //---------------------------------------------------------------    
+
+
+
+    // determine the I regions
+    //hypothesis: the number of I regions is the same for all the variables
+    //hypothesis: all the I regions have the same nq points
+    int nIregions, lastIregion; 
+    const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = streak->GetBndConditions();      
+
+    Array<OneD, int> Iregions =Array<OneD, int>(bndConditions.num_elements(),-1);    
+    //3 internal layers:
+    Array<OneD, int> Ilayers =Array<OneD, int>(3,-1);     
+    nIregions=0;
+    int nbnd= bndConditions.num_elements();    
+    for(int r=0; r<nbnd; r++)
+    {
+    	  if(bndConditions[r]->GetUserDefined()==SpatialDomains::eCalcBC)
+    	  {
+    	  	  lastIregion=r;
+    	  	  Iregions[r]=r;
+    	  	  Ilayers[nIregions]=r;
+    	  	  nIregions++;
+//cout<<"Iregion="<<r<<endl;    	  	  
+    	  }    	  
+    } 
+    ASSERTL0(nIregions>0,"there is any boundary region with the tag USERDEFINEDTYPE=""CalcBC"" specified");
+    //-----------------------------------------------------------------
+
+
+
+
+
+
 
     //set 1D output fields:
     //initialise fields
@@ -257,9 +342,9 @@ cout<<"OOOK"<<endl;
     //for 2 variables(u,v) only:
     int coordim = graphShPt->GetMeshDimension(); 
     //remark Ilayers[2] is the critical layer             	   
-    static Array<OneD, int> Refindices = GetReflectionIndex(fields, Ilayers[2]);
+    static Array<OneD, int> Refindices = GetReflectionIndex(streak, Ilayers[2]);
     Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, 
-                    fields, outfieldx,outfieldy,streak,Refindices, alpha);       	       
+                    fields, outfieldx,outfieldy,streak,symm,Refindices, alpha,cr);       	       
 
     //--------------------------------------------------------------------------------------
 
@@ -440,13 +525,13 @@ cout<<"OOOK"<<endl;
         }   	   
 
 
-        Array<OneD, int> GetReflectionIndex(Array<OneD,MultiRegions::ExpListSharedPtr> &Exp, int Ireg)
+        Array<OneD, int> GetReflectionIndex( MultiRegions::ExpListSharedPtr Exp, int Ireg)
         {
            int i,j;
-
-           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp =Exp[0]->GetBndCondExpansions();
+           //remember Exp is the streak so GetPlane(0) is not needed
+           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp =Exp->GetBndCondExpansions();
            MultiRegions::ExpListSharedPtr Ilayer = Iexp[Ireg];
-           int npts = Ilayer->GetPlane(0)->GetNpoints();
+           int npts = Ilayer->GetNpoints();
            Array<OneD, int> index(npts);
 
            Array<OneD, NekDouble> coord(2);
@@ -454,7 +539,7 @@ cout<<"OOOK"<<endl;
            Array<OneD, NekDouble> coord_y(npts);
         
            //-> Dermine the point which is on coordinate (x -> -x + Lx/2, y-> -y)
-           Ilayer->GetPlane(0)->GetCoords(coord_x,coord_y);
+           Ilayer->GetCoords(coord_x,coord_y);
            NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
            NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
            NekDouble xnew,ynew;
@@ -502,8 +587,8 @@ cout<<"OOOK"<<endl;
     	    Array<OneD,MultiRegions::ExpListSharedPtr> &infields,  
     	    MultiRegions::ContField1DSharedPtr &outfieldx,
        	    MultiRegions::ContField1DSharedPtr &outfieldy,
-       	    MultiRegions::ExpListSharedPtr &streak,
-            Array<OneD, int>  Refindices, NekDouble alpha)
+       	    MultiRegions::ExpListSharedPtr &streak, bool symm,
+            Array<OneD, int>  Refindices, NekDouble alpha,NekDouble cr)
         {
             //1 I regions is expected: (the layer is the last region)
             ASSERTL0(Iregions.num_elements()==3, "something wrong with the number of I layers");
@@ -513,7 +598,20 @@ cout<<"layer region="<<Ireg<<endl;
 
     
             //take the pressure from infields
-            MultiRegions::ExpListSharedPtr pressure =infields[3];
+
+
+            int pfield;
+            if(infields.num_elements()==2)
+            {
+                pfield =1;
+            }
+            else
+            {
+                pfield =3;
+            }
+cout<<"uouo"<<pfield<<endl;
+            MultiRegions::ExpListSharedPtr pressure =infields[pfield];
+
             Array<OneD, MultiRegions::ExpListSharedPtr> Iexp =infields[0]->GetBndCondExpansions();
             MultiRegions::ExpListSharedPtr Ilayer = Iexp[Ireg];
 
@@ -535,7 +633,6 @@ cout<<"layer region="<<Ireg<<endl;
 
             
           
-            
             
             int np = streak->GetTotPoints();
             Array<OneD, NekDouble> gradx(np);
@@ -719,7 +816,7 @@ cout<<"layer region="<<Ireg<<endl;
 		     int Imoffsetreg = pressure->GetPlane(1)->GetCoeff_Offset(elmtidreg);
 		     int stoffsetreg = streak->GetCoeff_Offset(elmtidreg);
 		     
-//cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
+cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
 		     
 
 
@@ -767,6 +864,7 @@ cout<<"layer region="<<Ireg<<endl;
 		     	   stcoeffsreg[offsetregIExp +d] = stcoeffsedgereg[d];
 		     	   stgradxcoeffsreg[offsetregIExp +d] = stgradxcoeffsedge[d];
 		     	   stgradycoeffsreg[offsetregIExp +d] = stgradycoeffsedge[d];      
+cout<<"results: Re="<<Recoeffsedgereg[d]<<"  Im="<<Imcoeffsedgereg[d]<<endl;
 		     	   
 		     }
 		     
@@ -929,17 +1027,18 @@ cout<<"layer region="<<Ireg<<endl;
              Array<OneD, NekDouble> f_z(nq1D,0.0);
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, x1d, f_z);
              Array<OneD, NekDouble> fcoeffs(Nregcoeffs,0.0);
-	     //outfieldx->FwdTrans(f_z, fcoeffs);
-	     //outfieldx->BwdTrans(fcoeffs, f_z); 
+	     outfieldx->FwdTrans(f_z, fcoeffs);
+	     outfieldx->BwdTrans(fcoeffs, f_z); 
              Vmath::Zero(Nregcoeffs, fcoeffs,1);
              Array<OneD, NekDouble> f_zz(nq1D,0.0);
 
              Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eX, f_z, f_zz);
-	     //outfieldx->FwdTrans(f_zz, fcoeffs);
-	     //outfieldx->BwdTrans(fcoeffs, f_zz); 
+	     outfieldx->FwdTrans(f_zz, fcoeffs);
+	     outfieldx->BwdTrans(fcoeffs, f_zz); 
              Array<OneD, NekDouble> delta(nq1D);
              Array<OneD, NekDouble> curv_unsigned(nq1D,0.0);
              Array<OneD, NekDouble> curv(nq1D,0.0);
+
 
         
 
@@ -967,45 +1066,60 @@ cout<<"layer region="<<Ireg<<endl;
              {
                   P2reg[e] = Rephysreg[e]*Rephysreg[e] + Imphysreg[e]*Imphysreg[e];
              }
-             //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
-             NekDouble norm;
-//////////////////////////////////////////////////2D norm
+
+
+             //calculate the s variable:
+             Array<OneD, NekDouble> s0d(nq1D,0.0);
 /*
-             Array<OneD, NekDouble> P2(np, 0.0);
+             Array<OneD, NekDouble> tmp(nq1D);
+             for( int e=0; e<nq1D; e++)
+             {
+                   tmp[e] = sqrt(1+f_z[e]*f_z[e]);
+
+             }
+*/
+
+             //normalise the pressure  norm*sqrt[ (\int Psquare)/Area]=1 =>
+             NekDouble norm2D;
+//////////////////////////////////////////////////2D norm
+
+             Array<OneD, NekDouble> P2_2D(np, 0.0);
              for(int h=0; h< np; h++)
              {
-                   P2[h] = pressure->GetPlane(0)->GetPhys()[h]*pressure->GetPlane(0)->GetPhys()[h]
+                   P2_2D[h] = pressure->GetPlane(0)->GetPhys()[h]*pressure->GetPlane(0)->GetPhys()[h]
                            + pressure->GetPlane(1)->GetPhys()[h]*pressure->GetPlane(1)->GetPhys()[h];
              }
-             NekDouble intP2 = pressure->GetPlane(0)->PhysIntegral(P2);
+             NekDouble intP2_2D = pressure->GetPlane(0)->PhysIntegral(P2_2D);
 
 
 
              NekDouble tmp = pressure->GetPlane(0)->L2();             
-             norm = tmp*tmp;
+             norm2D = tmp*tmp;
              tmp = pressure->GetPlane(1)->L2();
-             norm += tmp*tmp;
+             norm2D += tmp*tmp;
                           
              Array<OneD, NekDouble> I (2*np,1.0); 
              //Vmath::Fill(2*np,1.0,I,1);            
              NekDouble Area = pressure->GetPlane(0)->PhysIntegral(I);           
-             norm = sqrt(Area/norm);
+             norm2D = sqrt(Area/norm2D);
 
              Array<OneD, NekDouble>  I_int(np,1.0);
              NekDouble Area1 = pressure->GetPlane(0)->PhysIntegral(I_int);
-             NekDouble normint = sqrt(Area1/intP2);
-cout<<"norm="<<norm<<"    area="<<Area<<"    intP2="<<intP2<<"   normint="<<normint<<endl;
-*/
+             NekDouble normint2D = sqrt(Area1/intP2_2D);
+cout<<"norm2D="<<norm2D<<"    area="<<Area<<"    intP2_2D="<<intP2_2D<<"   normint2D="<<normint2D<<endl;
+
 ///////////////////////////////////////////////////////////1D norm
+             NekDouble norm;
              Array<OneD, NekDouble> sqrtlen(nq1D);
              for(int u=0; u<nq1D; u++)
              {
                    sqrtlen[u] = sqrt(1+f_z[u]*f_z[u]);
+                   s0d[u] = Ilayer->GetPlane(0)->PhysIntegral(sqrtlen);
              }
              NekDouble  length = Ilayer->GetPlane(0)->PhysIntegral(sqrtlen);
              NekDouble  int1D = Ilayer->GetPlane(0)->PhysIntegral(P2reg);
              norm = sqrt(length/int1D);
-             
+cout<<"norm1D="<<norm<<endl;             
              //norm*pressure
              Vmath::Smul(nq1D,norm,Rephysreg,1,Rephysreg,1);                       
              Vmath::Smul(nq1D,norm,Imphysreg,1,Imphysreg,1);      
@@ -1225,7 +1339,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
  	       alpha = session->GetParameter("ALPHA");
            }
 cout<<"alpha="<<alpha<<endl;
-
+           ASSERTL0(alpha!=0, "alpha cannot be 0");
            NekDouble alpha53;
            //alpha53=1;
            alpha53 = std::pow ((alpha*alpha),pow);
@@ -1248,10 +1362,7 @@ cout<<"alpha^-5/3="<<alpha53<<endl;
 	   outfieldy->BwdTrans(tycoeffs, ty);
 cout<<"RHO=="<<rho<<endl;	
 
-
-
-
-
+      
 
 
 
@@ -1294,16 +1405,22 @@ cout<<"RHO=="<<rho<<endl;
             outfieldy->BwdTrans(finalcoeffs, outfieldy->UpdatePhys());  
 
             //symmetrize the jumps conditions
-            Array<OneD, NekDouble> tmpx(nq1D);
-            Array<OneD, NekDouble> tmpy(nq1D);
-cout<<"symmetrise the jump conditions"<<endl;                                    
-            for(int i = 0; i < nq1D; ++i)
+            if(symm ==true)
             {
-            	tmpx[i] =0.5*(outfieldx->GetPhys()[i] - outfieldx->GetPhys()[Refindices[i]]);
-            	tmpy[i] =0.5*(outfieldy->GetPhys()[i] - outfieldy->GetPhys()[Refindices[i]]);
+                Array<OneD, NekDouble> tmpx(nq1D);
+                Array<OneD, NekDouble> tmpy(nq1D);
+
+cout<<"symmetrise the jump conditions"<<endl;   
+                                 
+                for(int i = 0; i < nq1D; ++i)
+                {
+            	    tmpx[i] =0.5*(outfieldx->GetPhys()[i] - outfieldx->GetPhys()[Refindices[i]]);
+            	    tmpy[i] =0.5*(outfieldy->GetPhys()[i] - outfieldy->GetPhys()[Refindices[i]]);
+                }
+                Vmath::Vcopy(nq1D, tmpx,1, outfieldx->UpdatePhys(),1);
+                Vmath::Vcopy(nq1D, tmpy,1, outfieldy->UpdatePhys(),1);
             }
-            Vmath::Vcopy(nq1D, tmpx,1, outfieldx->UpdatePhys(),1);
-            Vmath::Vcopy(nq1D, tmpy,1, outfieldy->UpdatePhys(),1);
+
 /*
 
 	    //calculate J,K
@@ -1374,12 +1491,17 @@ cout<<"symmetrise the jump conditions"<<endl;
 */
 
 
+cout<<"length layer="<<length<<endl;
+            //calc dUds
+            Array<OneD, NekDouble> dUds(nq1D); 
+            Ilayer->GetPlane(0)->PhysDeriv(MultiRegions::eS, stphysreg, dUds);
 
             bool signjac=true;
             Array<OneD, int> indexjacwarn(nq1D,-1);
             NekDouble invjac2D;
             NekDouble jactest;
             NekDouble laytest=0;
+            NekDouble basetest;
 	    for(int g=0; g<nq1D; g++)
 	    {
                 //pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;       
@@ -1390,6 +1512,7 @@ cout<<"symmetrise the jump conditions"<<endl;
                 invjac2D = (gmat0[g]*tx[g] +gmat2[g]*ty[g]);
                 jactest = (invjac2D + (1/Jac[g]))/2.;
                 jactest = (invjac2D- (1/Jac[g]))/jactest;
+                basetest = abs(curv[g]);
 /*
 cout<<x0d[g]<<"       "<<
 //stphysreg[g]<<"      "<<lambda[g]<<"      "<<
@@ -1411,16 +1534,28 @@ outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]
 <<endl;
 */
-                laytest += stphysreg[g];
+
+                    laytest = (abs(stphysreg[g])-cr);
+
 
 cout<<setw(14)<<x0d[g]<<"      "<<setw(13)<<x1d[g]<<
 "      "<<Rephysreg[g]<<"   "<<dP_re[g]<<"     "
-<<stphysreg[g]<<"      "<<mu53[g]<<"       "<<curv[g]
+<<stphysreg[g]<<"      "<<dUreg[g]<<"       "<<mu53[g]<<"       "<<curv[g]
+
+//<<"          "<<-1.5*std::pow(abs(curv[g]),-1./5.)<<"      "
+//<<"        "<<std::pow(delta[g],-0.5)-0.45*ty[g]+(f_z[g]*f_z[g])/(std::pow(delta[g],0.5))<<"         "
+
+<<"      "<<f_z[g]<<"         "
+<<f_zz[g]<<"        "
+//<<-1.5*std::pow(abs(curv[g]/delta[g]),-1./5.)<<"        "
+<<s0d[g]
 <<setw(13)<<"      "<<dP_square[g]<<"      "<<setw(13)<<prod[g]
 <<"       "<<
+
 //(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<"      "<<1/Jac[g]
 //<<"       "<<dermu53[g]
 //<<"        "<<derfun1D[g]
+//nx[g]<<"     "<<ny[g]<<"      "<<
 tx[g]<<"     "<<ty[g]<<"      "<<
 //f1[g]<<"        "<<f2[g]
 //prod_b[g]<<"      "<<dersprod_b[g]
@@ -1430,9 +1565,9 @@ tx[g]<<"     "<<ty[g]<<"      "<<
 pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
 <<outfieldx->GetPhys()[g]<<"      "
 <<outfieldy->GetPhys()[g]<<"     "<<Imphysreg[g]<<"      "<<dP_im[g]
-<<"       "<<P2reg[g]<<"       "<<P2reg_aft[g]<<endl;
+<<"       "<<"AA"<<endl;
 
-//cout<<"jactest="<<jactest<<endl;
+//cout<<"laytest="<<laytest<<endl;
 //cout<<"(gmat0[g]*tx[g] +gmat2[g]*ty[g])="<<(gmat0[g]*tx[g] +gmat2[g]*ty[g])<<
 //"      1/jac1D="<<1./Jac[g]<<endl;
                 ASSERTL0(invjac2D*Jac[g]>0, " sign jac problem..");
@@ -1445,7 +1580,7 @@ pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
                 }
 
 	    }
-            ASSERTL0(abs(laytest)<0.001, "critical layer wrong");
+            ASSERTL0(abs(laytest)<0.002, "critical layer wrong");
          
 // gamma(1/3)= 2.6789385347077476337            
             // need the tangents related to the expList1D outfieldx[region]
@@ -1465,7 +1600,7 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
 	    } 
 //end
 	}
-	
+ 
 	
 	
 	

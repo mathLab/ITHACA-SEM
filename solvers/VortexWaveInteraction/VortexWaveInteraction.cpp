@@ -346,11 +346,9 @@ namespace Nektar
 
         
         // Copy .fld file to .rst and base.fld
-        if(GetVWIIterationType()!=eVWIInitialAlpha)
-        {
-             cout << "Executing cp -f session.fld session.rst" << endl;
-             CopyFile(".fld",".rst");
-        }
+        cout << "Executing cp -f session.fld session.rst" << endl;
+        CopyFile(".fld",".rst");
+
 
         
 
@@ -468,42 +466,15 @@ namespace Nektar
              char c_alpha[16]="";
     	     sprintf(c_alpha,"%f",m_alpha[0]);    
              string syscall;
-             if( GetVWIIterationType()==eVWIInitialAlpha )
-             {
-                  string filePost = m_sessionName + "_advPost.xml";
-                  syscall = "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
-                       + filePost +"     "+
-                       "meshhalf_pos_Spen_stability_moved.fld  meshhalf_pos_Spen_advPost_moved.fld "
-                       +c_alpha +"  > data_alpha0";
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-             
-                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_u_5.bc  "+m_sessionName+"_u_5.bc";  
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_v_5.bc  "+m_sessionName+"_v_5.bc";  
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-             }
-             else
-             {
-                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
+
+             syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
                      + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
+             cout<<syscall.c_str()<<endl;
+             if(system(syscall.c_str()))
+             {
+                  ASSERTL0(false,syscall.c_str());
              }
+
 
              
              
@@ -929,7 +900,9 @@ namespace Nektar
 	{
              static int cnt=0;       
              string syscall;
-
+             char c[16]="";
+             string movedmesh = m_sessionName + "_advPost_moved.xml";
+             string movedinterpmesh = m_sessionName + "_interp_moved.xml";
              //rewrite the Rollsessionfile (we start from the waleffe forcing)
              //string meshbndjumps = m_sessionName +"_bndjumps.xml";             
              //if(cnt==0)
@@ -937,155 +910,147 @@ namespace Nektar
                  //take the conditions tag from meshbndjumps and copy into 
                  // the rolls session file
              //}
-             char c[16]="";
-    	     sprintf(c,"%d",cnt);  
+
+
+             sprintf(c,"%d",cnt);  
              //save old roll solution
              string oldroll = m_sessionName +"_roll_"+c +".fld";    
-	     syscall = "cp -f " + m_sessionName+"-Base.fld" + "  " + oldroll;
+             syscall = "cp -f " + m_sessionName+"-Base.fld" + "  " + oldroll;
              cout<<syscall.c_str()<<endl;
              if(system(syscall.c_str()))
              {
                   ASSERTL0(false,syscall.c_str());
              } 
-	     //move the mesh around the critical layer
+             //define file names
              string filePost   = m_sessionName + "_advPost.xml";
              string filestreak   = m_sessionName + "_streak.fld";
+             string filewave    = m_sessionName + "_wave.fld";
+             string filewavepressure = m_sessionName + "_wave_p_split.fld";
              string fileinterp = m_sessionName + "_interp.xml";
+             string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
+             string interwavepressure  = m_sessionName +"_wave_p_split_interp_"+ c +".fld";
              char alpchar[16]="";
 cout<<"alpha = "<<m_alpha[0]<<endl;
              sprintf(alpchar, "%f", m_alpha[0]);
 
-             syscall  = "../../utilities/PostProcessing/Extras/MoveMesh-g  "
+
+             if( m_sessionVWI->DefinesSolverInfo("INTERFACE") 
+                && m_sessionVWI->GetSolverInfo("INTERFACE")!="phase" )
+             {
+
+
+                 syscall  = "../../utilities/PostProcessing/Extras/MoveMesh-g  "
                              + filePost +"  "+ filestreak +"  "+ fileinterp + "   "+ alpchar; 
 
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                      ASSERTL0(false,syscall.c_str());
+                 }
 
-             //move the advPost mesh (remark update alpha!!!)
-             syscall  =  "../../utilities/PostProcessing/Extras/MoveMesh-g  "
-                      + filePost + "  " + filestreak + "  " + filePost + "    "+ alpchar;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+                 //move the advPost mesh (remark update alpha!!!)
+                 syscall  =  "../../utilities/PostProcessing/Extras/MoveMesh-g  "
+                       + filePost + "  " + filestreak + "  " + filePost + "    "+ alpchar;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                     ASSERTL0(false,syscall.c_str());
+                 }
 
 
 
-             //save oldstreak
-             string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
-	     syscall = "cp -f " + filestreak + "  " + oldstreak;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
+                 //save oldstreak
+                 string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
+        	 syscall = "cp -f " + filestreak + "  " + oldstreak;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                      ASSERTL0(false,syscall.c_str());
+                 } 
 
-	     //interpolate the streak field into the new mesh
-             string movedmesh = m_sessionName + "_advPost_moved.xml";
-             string movedinterpmesh = m_sessionName + "_interp_moved.xml";
+    	         //interpolate the streak field into the new mesh
+                 string movedmesh = m_sessionName + "_advPost_moved.xml";
+                 string movedinterpmesh = m_sessionName + "_interp_moved.xml";
 
-             //create the interp streak             
-             string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
-             syscall  =  "../../utilities/PostProcessing/Extras/FieldToField-g  "
+                 //create the interp streak             
+                 string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
+                 syscall  =  "../../utilities/PostProcessing/Extras/FieldToField-g  "
                       + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
 	              + interpstreak;
 
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                      ASSERTL0(false,syscall.c_str());
+                 } 
 
 
 
              
 
 
-             //save the old mesh     
-             string meshfile = m_sessionName + ".xml";                  
-             string meshold = m_sessionName +"_"+ c +".xml";
-	     syscall = "cp -f " + meshfile + "  " + meshold;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
+                 //save the old mesh     
+                 string meshfile = m_sessionName + ".xml";                  
+                 string meshold = m_sessionName +"_"+ c +".xml";
+     	         syscall = "cp -f " + meshfile + "  " + meshold;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                     ASSERTL0(false,syscall.c_str());
+                 }  
 
-             //overwriting the meshfile with the new mesh
-	     syscall = "cp -f " + movedmesh + "  " + meshfile;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
+                 //overwriting the meshfile with the new mesh
+	         syscall = "cp -f " + movedmesh + "  " + meshfile;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                     ASSERTL0(false,syscall.c_str());
+                 }
 
-             //overwriting the streak file!!          
-             syscall = "cp -f " + interpstreak + "  " + filestreak;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
+                 //overwriting the streak file!!          
+                 syscall = "cp -f " + interpstreak + "  " + filestreak;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                     ASSERTL0(false,syscall.c_str());
+                 } 
 
-             //calculate the wave
-             ExecuteWave();
+                 //calculate the wave
+                 ExecuteWave();
 
-             //save the wave field:
-             string oldwave = m_sessionName +"_wave_"+c +".fld";    
-	     syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             } 
+                 //save the wave field:
+                 string oldwave = m_sessionName +"_wave_"+c +".fld";    
+	         syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                      ASSERTL0(false,syscall.c_str());
+                 } 
 
-             //save old jump conditions:
-             string ujump = m_sessionName+"_u_5.bc";
-	     syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }              
+                 //save old jump conditions:
+                 string ujump = m_sessionName+"_u_5.bc";
+	         syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                      ASSERTL0(false,syscall.c_str());
+                 }              
 
-             string vjump = m_sessionName+"_v_5.bc";
-	     syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }    
-
-
-
-
-
-             cnt++;
+                 string vjump = m_sessionName+"_v_5.bc";
+     	         syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
+                 cout<<syscall.c_str()<<endl;
+                 if(system(syscall.c_str()))
+                 {
+                     ASSERTL0(false,syscall.c_str());
+                 }    
+                 cnt++;
 
 
 
 
-             if(GetVWIIterationType()==eVWIInitialAlpha)
-             {
-                  syscall = "cp -f " + filePost +"   " + meshfile;
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-
-
-                  cout<<"initial alpha="<<m_alpha[0]<<endl;
-             }
-             else
-             {
                   //use relaxation
                   if(GetVWIIterationType()!=eFixedWaveForcingWithSubIterationOnAlpha 
-                     || GetVWIIterationType()!=eVWIInitialAlpha)
+                    )
                   {
                        // the critical layer should be the bnd region 3
                        int reg =3;
@@ -1102,18 +1067,6 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                   {
                        ASSERTL0(false,syscall.c_str());
                   }
-/*
-                  //interpolate the .rst into the new mesh
-                  string rstfile = m_sessionName + ".rst";
-                  syscall  =  "../../../utilities/builds/PostProcessing/Extras/FieldToField-g  "
-                          + filePost + "  " + rstfile + "  " + movedmesh + "  " 
-	                  + rstfile;
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }                 
-*/
 
                   //move the new name_interp_moved.xml into name_interp.xml
 	          syscall = "cp -f " + movedinterpmesh + "  " + fileinterp;
@@ -1128,9 +1081,178 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                   if(system(syscall.c_str()))
                   {
                        ASSERTL0(false,syscall.c_str());
-                  }   
+                  } 
+ 
 
              }
+             else if(GetVWIIterationType()==eFixedWaveForcingPhase &&
+                    m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
+             {
+                  //determine cr:
+                  NekDouble cr;
+                  string cr_str;
+                  stringstream st;
+             
+                  //calculate the wave
+                  ExecuteWave();
+   
+                  //save oldstreak
+                  string oldstreak = m_sessionName +"_streak_"+ c +".fld";            
+	          syscall = "cp -f " + filestreak + "  " + oldstreak;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  } 
+
+                  //save wave
+	          syscall = "cp -f " + m_sessionName+".fld" + "  " + filewave;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  } 
+                  //save the old mesh     
+                  string meshfile = m_sessionName + ".xml";                  
+                  string meshold = m_sessionName +"_"+ c +".xml";
+	          syscall = "cp -f " + meshfile + "  " + meshold;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }  
+
+                  //save the oldwave field:
+                  string oldwave = m_sessionName +"_wave_"+c +".fld";    
+    	          syscall = "cp -f " + m_sessionName+".fld" + "  " + oldwave;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }         
+                  cnt++;
+
+
+                  cr = m_leading_imag_evl[0]/m_alpha[0];
+                  //m_sessionVWI->LoadParameter("phase",cr,NekConstants::kNekUnsetDouble);
+                  st << cr; 
+                  cr_str = st.str();
+cout<<"phase="<<cr_str<<endl;
+                  //NB -g or NOT!!!
+                  //move the mesh around the critical layer    
+                  syscall  = "../../utilities/PostProcessing/Extras/MoveMesh  "
+                               + filePost +"  "+ filestreak +"  "+ fileinterp + "   "+ alpchar
+                               +"      "+cr_str; 
+  
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+                  //NB -g or NOT!!!
+                  //move the advPost mesh (remark update alpha!!!)
+                  syscall  =  "../../utilities/PostProcessing/Extras/MoveMesh  "
+                        + filePost + "  " + filestreak + "  " + filePost + "    "+ alpchar
+                               +"      "+cr_str; 
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }
+
+                  //interp streak into the new mesh
+                  syscall  =  "../../utilities/PostProcessing/Extras/FieldToField-g  "
+                        + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
+	                + interpstreak;
+
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }
+
+                  //split wave sol
+                  syscall  =  "../../utilities/PostProcessing/Extras/SplitFld  "
+                        + filePost + "  " + filewave;
+
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }                
+                  //interp wave
+                  syscall  =  "../../utilities/PostProcessing/Extras/FieldToField  "
+                        + filePost + "  " + filewavepressure + "  " + movedmesh + "  " 
+	                + interwavepressure;
+
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }
+
+
+
+
+                  //use relaxation
+                  if(GetVWIIterationType()!=eFixedWaveForcingWithSubIterationOnAlpha 
+                    )
+                  {
+                      // the critical layer should be the bnd region 3
+                      int reg =3;
+                      //FileRelaxation(reg);
+                  }
+                  char c1[16]="";
+                  sprintf(c1,"%d",cnt);   
+                  //calculate the jump conditions
+                  //NB -g or NOT!!!
+                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs  "
+                        + movedmesh + "  " + interwavepressure + "  " 
+                        + interpstreak + ">  data"+c1;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }
+
+
+                  //overwriting the meshfile with the new mesh
+	          syscall = "cp -f " + movedmesh + "  " + meshfile;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }
+
+                  //overwriting the streak file!!          
+                  syscall = "cp -f " + interpstreak + "  " + filestreak;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                    ASSERTL0(false,syscall.c_str());
+                  } 
+                  //move the new name_interp_moved.xml into name_interp.xml
+	          syscall = "cp -f " + movedinterpmesh + "  " + fileinterp;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  } 
+                  //move the new name_advPost_moved.xml into name_advPost.xml
+	          syscall = "cp -f " + movedmesh + "  " + filePost;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+
+
+
+             }
+
+
+
+         
 
 	}
 	else
@@ -1167,7 +1289,11 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
 
         cout << "Growth tolerance: " << fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) << endl; 
         cout << "Phase tolerance: " << fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) << endl; 
-            
+        //set a low tol for interfaceVWI
+        if(    m_sessionRoll->DefinesSolverInfo("INTERFACE")  )
+        {
+            m_eigRelTol = 1e-2;
+        }            
         // See if real and imaginary growth have converged to with m_eigRelTol
         if((fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_eigRelTol)||(fabs(m_leading_real_evl[0]) < 1e-6))
         {

@@ -122,7 +122,7 @@ namespace Nektar
 
 
                 if(vertex[0]->dist(*(curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
-                {
+                {               
                     std::string err = "Vertex 0 is separated from first point by more than ";
                     std::stringstream strstrm;
                     strstrm << NekConstants::kVertexTheSameDouble;

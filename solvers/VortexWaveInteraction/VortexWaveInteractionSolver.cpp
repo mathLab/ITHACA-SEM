@@ -176,7 +176,13 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             int nouter_iter = vwi.GetNOuterIterations();
             bool exit_iteration = false;
             NekDouble alpha_init = vwi.GetAlpha();
-            
+	    NekDouble saveEigRelTol = vwi.GetEigRelTol();
+	    int init_search = 1;
+	    NekDouble saveAlphaStep = vwi.GetAlphaStep();
+	    
+	    // initial set m_eigelTol to 1e-1;
+	    vwi.SetEigRelTol(1e-1);
+
             while(exit_iteration == false)
             {
                 // Reset eigenvalue checker in case used in previous iterations 
@@ -187,8 +193,11 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     vwi.ExecuteLoop();
                     vwi.SaveLoopDetails("Save", i);
                     vwi.AppendEvlToFile("conv.his",i);                    
-                    vwi.SaveLoopDetails("Save_Outer", nouter_iter);
-                    break;
+		    if(vwi.CheckEigIsStationary())
+		      {
+                        vwi.SaveLoopDetails("Save_Outer", nouter_iter);
+                        break;
+		      }
 
                 }
                 
@@ -211,7 +220,21 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
-                    exit_iteration = true;
+		    if(init_search)
+		    {
+			init_search = 0;
+			vwi.SetEigRelTol(saveEigRelTol);
+			//if(nouter_iter > 1)
+			//{
+			//vwi.SetAlphaStep(??);
+			//}
+			nouter_iter = 1;
+		    }
+		    else
+		    {
+		        vwi.SetAlphaStep(saveAlphaStep);
+		      exit_iteration = true;
+		    }
                 }
             }
             

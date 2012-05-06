@@ -125,6 +125,12 @@ namespace Nektar
             return m_alpha[0];
         }
             
+
+        NekDouble GetAlphaStep(void)
+        {
+            return m_alphaStep;
+        }
+
         NekDouble GetWaveForceMag(void)
         {
             return m_waveForceMag[0];
@@ -145,6 +151,13 @@ namespace Nektar
             return m_maxWaveForceMagIter;
         }
         
+        
+	NekDouble GetEigRelTol(void)
+	{
+	  return m_eigRelTol;
+	}
+	
+
         void SetAlpha(NekDouble alpha)
         {
             m_alpha[0] = alpha; 
@@ -155,6 +168,15 @@ namespace Nektar
             m_waveForceMag[0] = mag; 
         }
 
+	void SetEigRelTol(NekDouble tol)
+	{
+	    m_eigRelTol = tol;
+	}
+
+        void  SetAlphaStep(NekDouble step)
+        {
+	    m_alphaStep = step;
+        }
 
         bool IfIterInterface(void)
         {

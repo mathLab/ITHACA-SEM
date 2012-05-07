@@ -98,7 +98,7 @@ void Mvdir(string dir, NekDouble dir_ending)
     {
         ASSERTL0(false,saveOuterIter.c_str());
     }
-
+    
     // Mv directory
     string newdir  = dir + boost::lexical_cast<std::string>(dir_ending);
     string syscall = "mv -f " + dir + " " + newdir;
@@ -107,7 +107,7 @@ void Mvdir(string dir, NekDouble dir_ending)
     {
         ASSERTL0(false,syscall.c_str());
     }
-
+    
     // make new directory
     syscall = "mkdir " + dir;
     system(syscall.c_str());
@@ -215,6 +215,11 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 
 		exit_iteration = vwi.CheckIfAtNeutralPoint();
 
+                if(exit_iteration == false)
+                {
+                    vwi.UpdateAlpha(nouter_iter);
+                }
+
 		// Redo iteration if at first coarse search 
 		if((exit_iteration == true) && (init_search == 1))
 		{
@@ -224,11 +229,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
 		  nouter_iter = 1;
 		  exit_iteration = false;
 		}
-		else
-                {
-                    vwi.UpdateAlpha(nouter_iter);
-                }
-             
+                
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;

@@ -153,10 +153,15 @@ namespace Nektar
         
         
 	NekDouble GetEigRelTol(void)
+
 	{
 	  return m_eigRelTol;
 	}
 	
+	int GetMinInnerIterations(void)
+	{
+	  return  m_minInnerIterations;
+	}
 
         void SetAlpha(NekDouble alpha)
         {
@@ -177,6 +182,11 @@ namespace Nektar
         {
 	    m_alphaStep = step;
         }
+
+	void  SetMinInnerIterations(int niter)
+	{
+	  m_minInnerIterations = niter;
+	}
 
         bool IfIterInterface(void)
         {

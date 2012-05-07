@@ -177,11 +177,13 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             bool exit_iteration = false;
             NekDouble alpha_init = vwi.GetAlpha();
 	    NekDouble saveEigRelTol = vwi.GetEigRelTol();
+	    int saveMinIters = vwi.GetMinInnerIterations();
 	    int init_search = 1;
-	    NekDouble saveAlphaStep = vwi.GetAlphaStep();
 	    
-	    // initial set m_eigelTol to 1e-1;
+	    // initial set m_eigelTol to 1e-1 and inner iterations to 1 for 
+	    // quick search 
 	    vwi.SetEigRelTol(1e-1);
+	    vwi.SetMinInnerIterations(2);
 
             while(exit_iteration == false)
             {
@@ -198,7 +200,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                         vwi.SaveLoopDetails("Save_Outer", nouter_iter);
                         break;
 		      }
-
                 }
                 
                 // check to see if growth was converged. 
@@ -211,8 +212,19 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 }
                 
                 vwi.AppendEvlToFile("OuterIter.his",nouter_iter++);            
-                exit_iteration = vwi.CheckIfAtNeutralPoint();
-                if(exit_iteration == false)
+                
+		exit_iteration = vwi.CheckIfAtNeutralPoint();
+
+		// Redo iteration if at first coarse search 
+		if((exit_iteration == true) && (init_search == 1))
+		{
+		  init_search = 0;
+		  vwi.SetEigRelTol(saveEigRelTol);
+		  vwi.SetMinInnerIterations(saveMinIters);
+		  nouter_iter = 1;
+		  exit_iteration = false;
+		}
+		else
                 {
                     vwi.UpdateAlpha(nouter_iter);
                 }
@@ -220,21 +232,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 if(nouter_iter >= vwi.GetMaxOuterIterations())
                 {
                     cerr << "Failed to converge after "<< vwi.GetMaxOuterIterations() << " outer iterations" << endl;
-		    if(init_search)
-		    {
-			init_search = 0;
-			vwi.SetEigRelTol(saveEigRelTol);
-			//if(nouter_iter > 1)
-			//{
-			//vwi.SetAlphaStep(??);
-			//}
-			nouter_iter = 1;
-		    }
-		    else
-		    {
-		        vwi.SetAlphaStep(saveAlphaStep);
-		      exit_iteration = true;
-		    }
+		    exit_iteration = true;
                 }
             }
             

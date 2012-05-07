@@ -60,7 +60,17 @@ namespace Nektar
         
         m_sessionVWI->LoadParameter("AlphaStep",              m_alphaStep,0.05);
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
-        m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-3);
+
+        //set a low tol for interfaceVWI
+        if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
+	{
+	  m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-2);
+	}
+	else
+	{
+	  m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-3);
+	}
+
         m_sessionVWI->LoadParameter("NeutralPointTolerance",  m_neutralPointTol,1e-4);
         m_sessionVWI->LoadParameter("MaxOuterIterations",     m_maxOuterIterations,100);
         
@@ -1310,11 +1320,7 @@ cout<<"phase="<<cr_str<<endl;
 
         cout << "Growth tolerance: " << fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) << endl; 
         cout << "Phase tolerance: " << fabs((m_leading_imag_evl[0] - previous_imag_evl)/m_leading_imag_evl[0]) << endl; 
-        //set a low tol for interfaceVWI
-        if(    m_sessionRoll->DefinesSolverInfo("INTERFACE")  )
-        {
-            m_eigRelTol = 1e-2;
-        }            
+
         // See if real and imaginary growth have converged to with m_eigRelTol
         if((fabs((m_leading_real_evl[0] - previous_real_evl)/m_leading_real_evl[0]) < m_eigRelTol)||(fabs(m_leading_real_evl[0]) < 1e-6))
         {

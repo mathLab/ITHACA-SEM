@@ -49,7 +49,6 @@ namespace Nektar
         eFixedWaveForcing,
         eFixedAlphaWaveForcing,
         eFixedWaveForcingWithSubIterationOnAlpha,
-        eFixedWaveForcingPhase,
         eVWIIterationTypeSize
     };
 
@@ -58,8 +57,7 @@ namespace Nektar
         "FixedAlpha",
         "FixedWaveForcing",
         "FixedAlphaWaveForcing",
-        "FixedWaveForcingWithSubIterationOnAlpha",
-        "FixedWaveForcingPhase"
+        "FixedWaveForcingWithSubIterationOnAlpha"
     };
 
     class VortexWaveInteraction

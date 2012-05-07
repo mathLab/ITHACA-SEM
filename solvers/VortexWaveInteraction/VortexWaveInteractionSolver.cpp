@@ -170,7 +170,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
 
         }
     case eFixedWaveForcing:
-    case eFixedWaveForcingPhase:
         {
             int i;
             int nouter_iter = vwi.GetNOuterIterations();

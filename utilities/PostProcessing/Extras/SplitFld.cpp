@@ -149,11 +149,12 @@ int main(int argc, char *argv[])
      // copy Data into FieldData and set variable
 
          int lastfield = nfields-1;
+/*
          for(int g=0; g<Exp[0]->GetPlane(1)->GetNcoeffs(); g++)
          {
 cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<Exp[lastfield]->GetPlane(1)->GetCoeff(g)<<endl;
          }  
-
+*/
      for(int j =0; j<nfields; j++)
      {
           outfile = out;

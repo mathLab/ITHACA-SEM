@@ -658,7 +658,7 @@ cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	     }    
              for(int w=0; w< npedge-2; w++)
              {    
-cout<<"ed="<<w<<endl;
+
                  Addpointsx[r*(npedge-2) +w] = x1 +((x2-x1)/(npedge - 1))*(w+1);   
                  if( Addpointsx[r*(npedge-2) +w] > x2 || Addpointsx[r*(npedge-2) +w] < x1)
 	         {
@@ -902,7 +902,7 @@ cout<<"nlays="<<nlays<<endl;
          vertex->GetCoords(x,y,z); 
          //x coord doesn't change
          xnew[i]=x;
-cout<<"x="<<x<<"  y="<<y<<endl;
+//cout<<"x="<<x<<"  y="<<y<<endl;
          //bottom, left (x=0, y<ydown)        
          if(x==0 && y< yold_low[0] 
             && y> bleft)
@@ -1014,7 +1014,7 @@ cout<<"x="<<x<<"  y="<<y<<endl;
              else if( y==1 || y==-1)//bcs don't move
              {
                 ynew[i] =y;
-             	cout<<"point x="<<xnew[i]<<"  y="<<y<<"  closer x="<<xold_up[qp_closer]<<endl;   
+             	//cout<<"point x="<<xnew[i]<<"  y="<<y<<"  closer x="<<xold_up[qp_closer]<<endl;   
              }
 
              //internal layers are not moved yet so...
@@ -1026,7 +1026,7 @@ cout<<"x="<<x<<"  y="<<y<<endl;
              }
 
          }         
-cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;     
+//cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;     
          //count number of layers nlays(again) initialise vectors
          //(crit lay not incl but uplay and down lay included)
          //nb tollerance 10-5 to get the points
@@ -1037,8 +1037,8 @@ cout<<i<<"        "<<xnew[i]<<"     "<<ynew[i]<<endl;
               && y<= yold_up[m] && y>=yold_low[m]
               && y!= yold_c[m])
              {     
-cout<<"LAY  x"<<x<<"  y="<<y<<endl;
-cout<<"yup="<<yold_up[4]<<"  ylow="<<yold_low[4]<<endl;
+//cout<<"LAY  x"<<x<<"  y="<<y<<endl;
+//cout<<"yup="<<yold_up[4]<<"  ylow="<<yold_low[4]<<endl;
 
                  //need to fill layers_y to order it(through Findlay_eids)
                  layers_y[Acntlay[m]][m]= y;
@@ -1048,7 +1048,6 @@ cout<<"yup="<<yold_up[4]<<"  ylow="<<yold_low[4]<<endl;
              }
 
          }
-cout<<"end"<<endl;
              
     }
 cout<<"cntlow="<<cntlow<<endl;
@@ -1078,8 +1077,8 @@ cout<<"cntlow="<<cntlow<<endl;
                 ynew[ lay_Vids[h][s] ]  = ynew[Down[s]]+  h*abs(ynew[Down[s]] - y_c[s])/(cntlow+1);
                 //put the layer vertical
                 xnew[lay_Vids[h][s]  ] = x_c[s];
-cout<<"ynew="<<ynew[ lay_Vids[h][s] ]<<" ydown="<<ynew[Down[s]]<<
-" delta="<<abs(ynew[Down[s]] - y_c[s])/(cntlow+1)<<endl;
+//cout<<"ynew="<<ynew[ lay_Vids[h][s] ]<<" ydown="<<ynew[Down[s]]<<
+//" delta="<<abs(ynew[Down[s]] - y_c[s])/(cntlow+1)<<endl;
                 //until now layers_y=yold
                 layers_y[h][s] = ynew[ lay_Vids[h][s] ];
             }
@@ -1132,8 +1131,8 @@ cout<<"x="<<x_c[m]<<"  yoldup="<<yold_up[m]<<" yold_low="<<yold_low[m]<<endl;
     }
 */
 
-    // curve the edges around the NEW critical layer
-    bool curv_lay=false;
+    // curve the edges around the NEW critical layer (bool to turn on/off)
+    bool curv_lay=true;
     if( curv_lay==true)
     {
        //determine the new coords of the vertices and the curve points 

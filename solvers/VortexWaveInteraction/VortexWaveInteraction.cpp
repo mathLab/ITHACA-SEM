@@ -900,7 +900,7 @@ namespace Nektar
 	//roll session file to use the interface loop
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
 	{
-             static int cnt=0;       
+             static int cnt=0;     
              bool skiprollstreak=false;
              if(cnt==0 && m_sessionVWI->GetParameter("rollstreakfromit")==1)
              {
@@ -921,6 +921,7 @@ namespace Nektar
 	         sleep(3);
 #endif
              }
+              
              string syscall;
              char c[16]="";
              string movedmesh = m_sessionName + "_advPost_moved.xml";
@@ -956,12 +957,11 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
              sprintf(alpchar, "%f", m_alpha[0]);
 
 
-             if( m_sessionVWI->DefinesSolverInfo("INTERFACE") 
-                && m_sessionVWI->GetSolverInfo("INTERFACE")!="phase" )
+             if( m_sessionVWI->GetSolverInfo("INTERFACE")!="phase" )
              {
+cout<<"zerophase"<<endl;
 
-
-                 syscall  = "../../utilities/PostProcessing/Extras/MoveMesh-g  "
+                 syscall  = "../../utilities/PostProcessing/Extras/MoveMesh  "
                              + filePost +"  "+ filestreak +"  "+ fileinterp + "   "+ alpchar; 
 
                  cout<<syscall.c_str()<<endl;
@@ -971,7 +971,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                  }
 
                  //move the advPost mesh (remark update alpha!!!)
-                 syscall  =  "../../utilities/PostProcessing/Extras/MoveMesh-g  "
+                 syscall  =  "../../utilities/PostProcessing/Extras/MoveMesh  "
                        + filePost + "  " + filestreak + "  " + filePost + "    "+ alpchar;
                  cout<<syscall.c_str()<<endl;
                  if(system(syscall.c_str()))
@@ -995,8 +995,8 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                  string movedinterpmesh = m_sessionName + "_interp_moved.xml";
 
                  //create the interp streak             
-                 string interpstreak = m_sessionName +"_interpstreak_"+ c +".fld";  
-                 syscall  =  "../../utilities/PostProcessing/Extras/FieldToField-g  "
+
+                 syscall  =  "../../utilities/PostProcessing/Extras/FieldToField  "
                       + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
 	              + interpstreak;
 
@@ -1082,7 +1082,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                   sprintf(c1,"%d",cnt);   
                   //calculate the jump conditions
                   string wavefile  = m_sessionName +".fld"; 
-                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
+                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs  "
                         + movedmesh + "  " + wavefile + "  " + interpstreak + ">  data"+c1;
                   cout<<syscall.c_str()<<endl;
                   if(system(syscall.c_str()))
@@ -1107,9 +1107,10 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
  
 
              }
-             else if(GetVWIIterationType()==eFixedWaveForcingPhase &&
+             else if(//GetVWIIterationType()==eFixedWaveForcingPhase &&
                     m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
-             {
+             {    
+cout<<"phase"<<endl;
                   //determine cr:
                   NekDouble cr;
                   string cr_str;
@@ -1151,15 +1152,31 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                   if(system(syscall.c_str()))
                   {
                        ASSERTL0(false,syscall.c_str());
-                  }         
+                  }       
+
+                  //save old jump conditions:
+                  string ujump = m_sessionName+"_u_5.bc";
+	          syscall = "cp -f " + ujump + "  " + m_sessionName+"_u_5.bc_"+c;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }              
+
+                  string vjump = m_sessionName+"_v_5.bc";
+     	          syscall = "cp -f " + vjump + "  " + m_sessionName+"_v_5.bc_"+c;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                     ASSERTL0(false,syscall.c_str());
+                  }
                   cnt++;
 
 
                   cr = m_leading_imag_evl[0]/m_alpha[0];
-                  //m_sessionVWI->LoadParameter("phase",cr,NekConstants::kNekUnsetDouble);
                   st << cr; 
                   cr_str = st.str();
-cout<<"phase="<<cr_str<<endl;
+cout<<"cr="<<cr_str<<endl;
                   //NB -g or NOT!!!
                   //move the mesh around the critical layer    
                   syscall  = "../../utilities/PostProcessing/Extras/MoveMesh  "
@@ -1183,7 +1200,7 @@ cout<<"phase="<<cr_str<<endl;
                   }
 
                   //interp streak into the new mesh
-                  syscall  =  "../../utilities/PostProcessing/Extras/FieldToField-g  "
+                  syscall  =  "../../utilities/PostProcessing/Extras/FieldToField  "
                         + fileinterp + "  " + filestreak + "  " + movedinterpmesh + "  " 
 	                + interpstreak;
 
@@ -1226,10 +1243,20 @@ cout<<"phase="<<cr_str<<endl;
                   }
                   char c1[16]="";
                   sprintf(c1,"%d",cnt);   
+
+                  //cp wavepressure to m_sessionName.fld(to get
+                  // the right bcs names using FldCalcBCs)
+                  syscall = "cp -f "+ interwavepressure +"  "+m_sessionName+".fld";
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                      ASSERTL0(false,syscall.c_str());
+                  }
+
                   //calculate the jump conditions
                   //NB -g or NOT!!!
                   syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs  "
-                        + movedmesh + "  " + interwavepressure + "  " 
+                        + movedmesh + "  " +m_sessionName+".fld"  + "  " 
                         + interpstreak + ">  data"+c1;
                   cout<<syscall.c_str()<<endl;
                   if(system(syscall.c_str()))
@@ -1246,7 +1273,7 @@ cout<<"phase="<<cr_str<<endl;
                       ASSERTL0(false,syscall.c_str());
                   }
 
-                  //overwriting the streak file!!          
+                  //overwriting the streak file!!    (maybe is useless)      
                   syscall = "cp -f " + interpstreak + "  " + filestreak;
                   cout<<syscall.c_str()<<endl;
                   if(system(syscall.c_str()))
@@ -1351,9 +1378,19 @@ cout<<"phase="<<cr_str<<endl;
         bool returnval = false;
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
         {
-              if( abs(m_leading_real_evl[0]) < 1e-4  &&  abs(m_leading_imag_evl[0]) <2e-6 )
+              if(m_sessionVWI->GetSolverInfo("INTERFACE")=="phase")
               {
-                     returnval = true;
+                  if( abs(m_leading_real_evl[0]) < 1e-4 )
+                  {
+                        returnval = true;
+                  }
+              }
+              else
+              {
+                  if( abs(m_leading_real_evl[0]) < 1e-4  &&  abs(m_leading_imag_evl[0]) <2e-6 )
+                  {
+                        returnval = true;
+                  }
               }
               
         }

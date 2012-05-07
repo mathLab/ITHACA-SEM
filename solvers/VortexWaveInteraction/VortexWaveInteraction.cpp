@@ -62,14 +62,8 @@ namespace Nektar
         m_sessionVWI->LoadParameter("OuterIterationStoreSize",storesize,10);
 
         //set a low tol for interfaceVWI
-        if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
-	{
-	  m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-2);
-	}
-	else
-	{
-	  m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-3);
-	}
+	m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-3);
+       
 
         m_sessionVWI->LoadParameter("NeutralPointTolerance",  m_neutralPointTol,1e-4);
         m_sessionVWI->LoadParameter("MaxOuterIterations",     m_maxOuterIterations,100);
@@ -146,6 +140,12 @@ namespace Nektar
         std::string vEquation = m_sessionRoll->GetSolverInfo("SolverType");
         m_solverRoll = GetEquationSystemFactory().CreateInstance(vEquation, m_sessionRoll);
         m_solverRoll->PrintSummary(cout);
+
+
+        if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
+	{
+	  m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-2);
+	}
 
         int ncoeffs = m_solverRoll->UpdateFields()[0]->GetNcoeffs();
         m_vwiForcing = Array<OneD, Array<OneD, NekDouble> > (4);

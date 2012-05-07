@@ -226,16 +226,35 @@ cout<<"nIregions="<<nIregions<<endl;
 
     //order the ids on the lower curve lastIregion starting from the id on x=0
     NekDouble x_connect;
-    //first point for x_connect=0
+    NekDouble x0,y0,z0,xt,yt,zt;
     int lastedge=-1;
     int v1,v2;
+    //first point for x_connect=0(or-1.6 for the full mesh (-pi,pi)  )
+    x_connect=0;
+    SpatialDomains::VertexComponentSharedPtr vertex0 =
+       graphShPt->GetVertex
+       (
+       ( (boost::dynamic_pointer_cast<LocalRegions
+           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
+         )->GetGeom1D()
+       )
+       ->GetVid(0)
+       );
+    vertex0->GetCoords(x0,y0,z0);
+    if( x0 != 0.0)
+    {
+cout<<"WARNING x0="<<x0<<endl;
+       x_connect=x0;       
+    }
     v1=0;
     v2=1;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-1], 
-       	Vids_low, v1, v2 , 0 ,lastedge, xold_low,yold_low);    
+       	Vids_low, v1, v2 , x_connect ,lastedge, xold_low,yold_low);    
+    ASSERTL0(Vids_low[v2]!=-10, "Vids_low[v2] is wrong");
     SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_low[v2]);    
-    NekDouble xt,yt,zt;
+
     //update x_connect    
+cout<<"x_conn="<<x_connect<<"   yt="<<yt<<"  zt="<<zt<<" vid="<<Vids_low[v2]<<endl;
     vertex->GetCoords(x_connect,yt,zt);
       
     i=2;
@@ -257,18 +276,34 @@ cout<<"nIregions="<<nIregions<<endl;
     Array<OneD, int> Vids_up(nvertl,-10);   
     Array<OneD,NekDouble> xold_up(nvertl);
     Array<OneD,NekDouble> yold_up(nvertl);     
-    //first point for x_connect=0
+    //first point for x_connect=0 (or-1.6)
+    x_connect=0;
+    vertex0 =
+       graphShPt->GetVertex
+       (
+       ( (boost::dynamic_pointer_cast<LocalRegions
+           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
+         )->GetGeom1D()
+       )
+       ->GetVid(0)
+       );
+    vertex0->GetCoords(x0,y0,z0);
+    if( x0 != 0.0)
+    {
+cout<<"WARNING x0="<<x0<<endl;
+       x_connect=x0;       
+    }
     lastedge=-1;
 
     v1=0;
     v2=1;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2 ], 
-        	Vids_up, v1, v2 , 0 ,lastedge, xold_up, yold_up);    
+        	Vids_up, v1, v2 , x_connect ,lastedge, xold_up, yold_up);    
     SpatialDomains::VertexComponentSharedPtr vertexU = graphShPt->GetVertex(Vids_up[v2]);    
 //cout<<"VIdup="<<Vids_up[v2]<<endl;
     //update x_connect    
     vertexU->GetCoords(x_connect,yt,zt);
-cout<<"okok"<<endl;       
+
     i=2;
     while(i<nvertl)
     { 
@@ -289,13 +324,30 @@ cout<<"okok"<<endl;
     Array<OneD, int> Vids_c(nvertl,-10);   
     Array<OneD,NekDouble> xold_c(nvertl);
     Array<OneD,NekDouble> yold_c(nvertl);     
-    //first point for x_connect=0
+    //first point for x_connect=0(or-1.6)
+    x_connect=0;
+    vertex0 =
+       graphShPt->GetVertex
+       (
+       ( (boost::dynamic_pointer_cast<LocalRegions
+           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
+         )->GetGeom1D()
+       )
+       ->GetVid(0)
+       );
+    vertex0->GetCoords(x0,y0,z0);
+    if( x0 != 0.0)
+    {
+cout<<"WARNING x0="<<x0<<endl;
+       x_connect=x0;       
+    }
     lastedge=-1;
 
     v1=0;
     v2=1;
+
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion], 
-        	Vids_c, v1, v2 , 0 ,lastedge, xold_c, yold_c);    
+        	Vids_c, v1, v2 , x_connect ,lastedge, xold_c, yold_c);    
     SpatialDomains::VertexComponentSharedPtr vertexc = graphShPt->GetVertex(Vids_c[v2]);    
 
     //update x_connect    
@@ -606,6 +658,7 @@ cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	     }    
              for(int w=0; w< npedge-2; w++)
              {    
+cout<<"ed="<<w<<endl;
                  Addpointsx[r*(npedge-2) +w] = x1 +((x2-x1)/(npedge - 1))*(w+1);   
                  if( Addpointsx[r*(npedge-2) +w] > x2 || Addpointsx[r*(npedge-2) +w] < x1)
 	         {
@@ -656,6 +709,7 @@ cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	 }    	    
 //cout<<"calculate cpoints coords"<<endl;	 
          Cpointsy[r] = y1 + (y2-y1)/2;
+cout<<"central point:"<<endl;
          GenerateAddPointsNewtonIt( Cpointsx[r], Cpointsy[r],Cpointsx[r], Cpointsy[r],
     	       streak, derstreak,cr); 
          NekDouble diff = Cpointsy[r]-Addpointsy[r*(npedge-2)];
@@ -808,6 +862,7 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
     }
 
     nlays =cnt;
+cout<<"nlays="<<nlays<<endl;
     Array<OneD, Array<OneD, NekDouble> > layers_y(nlays);
     Array<OneD, Array<OneD, NekDouble> > layers_x(nlays);
     Array<OneD, Array<OneD, int > >lay_Vids(nlays);    
@@ -1078,7 +1133,7 @@ cout<<"x="<<x_c[m]<<"  yoldup="<<yold_up[m]<<" yold_low="<<yold_low[m]<<endl;
 */
 
     // curve the edges around the NEW critical layer
-    bool curv_lay=true;
+    bool curv_lay=false;
     if( curv_lay==true)
     {
        //determine the new coords of the vertices and the curve points 
@@ -1408,7 +1463,7 @@ cout<<"move layerdown to up:"<<endl;
             int nvertl = nedges+1;
             int edge;
             Array<OneD, int> Vids_temp(nvertl,-10);      
-            NekDouble x0layer =  -1.6;
+            NekDouble x0layer =  0.0;
             for(int j=0; j<nedges; j++)
             {
    	        LocalRegions::SegExpSharedPtr  bndSegExplow = 
@@ -1920,18 +1975,13 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                      {
                          SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
                          id = SegGeom->GetEid();
-
-                         if( V1[id] != 10000)
+                         if( V1tmp[id] == 10000)
                          {
                               V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
                               V2tmp[id]= SegGeom->GetVertex(1)->GetVid();
                               cnt++;
                          }
-                         else
-                         {
-                              ASSERTL0(false,"Failed to find edge map");
-                         }
-                     }
+                     }         
                 }
                 //in the future the tri edges may be not necessary (if the nedges is known)
 
@@ -1942,15 +1992,11 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                          SegGeom = (locTriExp->GetGeom2D())->GetEdge(j);
                          id = SegGeom->GetEid();
 
-                         if( V1[id] != 10000)
+                         if( V1tmp[id] == 10000)
                          {
                               V1tmp[id]= SegGeom->GetVertex(0)->GetVid();
                               V2tmp[id]= SegGeom->GetVertex(1)->GetVid();
                               cnt++;
-                         }
-                         else
-                         {
-                              ASSERTL0(false,"Failed to find edge map");
                          }
                      }
 
@@ -1964,7 +2010,9 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             for(int g=0; g<cnt; g++)
             {
                 V1[g] = V1tmp[g];
+                ASSERTL0(V1tmp[g]!=10000, "V1 wrong");
                 V2[g] = V2tmp[g];
+                ASSERTL0(V2tmp[g]!=10000, "V2 wrong");
             }
 
         }

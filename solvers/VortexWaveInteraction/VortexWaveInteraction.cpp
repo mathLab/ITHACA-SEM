@@ -884,21 +884,33 @@ namespace Nektar
 
     void VortexWaveInteraction::ExecuteLoop(bool CalcWaveForce)
     {
-        ExecuteRoll();
 
-#ifndef _WIN32
-	sleep(3);
-#endif
-        ExecuteStreak();
-#ifndef _WIN32
-	sleep(3);
-#endif
 
 	//the global info has to be written in the 
 	//roll session file to use the interface loop
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
 	{
              static int cnt=0;       
+             bool skiprollstreak=false;
+             if(cnt==0 && m_sessionVWI->GetParameter("rollstreakfromit")==1)
+             {
+                  skiprollstreak =true;
+                  cout<<"skip roll-streak at the first iteration"<<endl;
+             }
+             
+             
+             if(skiprollstreak != true)
+             {
+
+                 ExecuteRoll();
+#ifndef _WIN32
+   	         sleep(3);
+#endif
+                 ExecuteStreak();
+#ifndef _WIN32
+	         sleep(3);
+#endif
+             }
              string syscall;
              char c[16]="";
              string movedmesh = m_sessionName + "_advPost_moved.xml";
@@ -1257,6 +1269,15 @@ cout<<"phase="<<cr_str<<endl;
 	}
 	else
 	{
+            ExecuteRoll();
+
+#ifndef _WIN32
+	    sleep(3);
+#endif
+            ExecuteStreak();
+#ifndef _WIN32
+            sleep(3);
+#endif
             ExecuteWave();
 
             if(CalcWaveForce)

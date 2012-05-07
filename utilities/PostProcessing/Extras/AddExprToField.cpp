@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     if(argc != 3)
     {
-        fprintf(stderr,"Usage: FldAddField  meshfile fieldfile\n");
+        fprintf(stderr,"Usage: AddExprToField  meshfile fieldfile\n");
         exit(1);
     }
 
@@ -39,16 +39,15 @@ int main(int argc, char *argv[])
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile,fielddef,fielddata);
-	bool useFFT = false;
-	bool deal = false;
+    bool useFFT = false;
+    bool deal = false;
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_fields.size();
-    int addfields = 1;
-    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + addfields);
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields);
 	
     switch(expdim)
     {
@@ -108,7 +107,7 @@ int main(int argc, char *argv[])
                 Exp1D = MemoryManager<MultiRegions::ExpList1D>
                                                         ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] = Exp1D;
-                for(i = 1; i < nfields + addfields; ++i)
+                for(i = 1; i < nfields ; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList1D>
                                                         ::AllocateSharedPtr(*Exp1D);
@@ -148,7 +147,7 @@ int main(int argc, char *argv[])
                                                         ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] =  Exp2D;
 
-                for(i = 1; i < nfields + addfields; ++i)
+                for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2D>
                                                         ::AllocateSharedPtr(*Exp2D);
@@ -163,7 +162,7 @@ int main(int argc, char *argv[])
                                                     ::AllocateSharedPtr(vSession,graphShPt);
             Exp[0] =  Exp3D;
 
-            for(i = 1; i < nfields + addfields; ++i)
+            for(i = 1; i < nfields; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ExpList3D>
                                                     ::AllocateSharedPtr(*Exp3D);
@@ -186,22 +185,33 @@ int main(int argc, char *argv[])
                                         fielddata[i],
                                         fielddef [i]->m_fields[j]);
         }
-        Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+        Exp[j]->BwdTrans_IterPerExp(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
     //----------------------------------------------
 
     //----------------------------------------------
     // Add expression to field
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     int nq = Exp[0]->GetNpoints();
     Array<OneD, NekDouble> x(nq);
     Array<OneD, NekDouble> y(nq);
     Exp[0]->GetCoords(x,y);
     //Array<OneD, NekDouble> tmp(nq, 1000);
-    for (i = 0; i < Exp.num_elements(); ++i)
-    {
-           Vmath::Vadd(nq, Exp[i]->GetPhys(),1,y,1,Exp[i]->UpdatePhys(),1);    
-    }
+    NekDouble pi = 3.14159265;
+    NekDouble tmp;
+    //the Exp.num_elements()==1!!!
+    ASSERTL0(Exp.num_elements()==1, "the field is not a streak");
 
+    for (int i = 0; i < nq; ++i)
+    {
+           //sin(pi*y)*cos(x)
+           tmp = 0.1*sin(pi*y[i])*cos(x[i]);
+           //Vmath::Vadd(nq, Exp[0]->GetPhys(),1,tmp,1,Exp[0]->UpdatePhys(),1);    
+           Exp[0]->UpdatePhys()[i] = Exp[0]->GetPhys()[i] +tmp;
+    }
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     //-----------------------------------------------
     // Write solution to file with additional computed fields
@@ -214,12 +224,12 @@ int main(int argc, char *argv[])
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(Exp.num_elements());   	
 
-    for(j = 0; j < nfields ; ++j)
+    for(int j = 0; j < nfields ; ++j)
     {
-                Exp[j]->FwdTrans(Exp[j]->GetPhys(),Exp[j]->UpdateCoeffs());	
+                Exp[j]->FwdTrans_IterPerExp(Exp[j]->GetPhys(),Exp[j]->UpdateCoeffs());	
 cout<<"  Exp[0][0]="<<Exp[0]->GetPhys()[0]<<endl;	     
 		fieldcoeffs[j] = Exp[j]->UpdateCoeffs();
-		for(i = 0; i < FieldDef.size(); ++i)
+		for(int i = 0; i < FieldDef.size(); ++i)
 		{
 			FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
 			Exp[j]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);

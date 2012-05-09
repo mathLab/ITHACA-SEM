@@ -1072,7 +1072,6 @@ namespace Nektar
                 // Only do partitioning on the rank-0 proc in MPI_COMM_WORLD
                 if (m_comm->GetRank() == 0)
                 {
-                    cout << "Partition mesh: " << vCommMesh->GetSize() << endl;
                     SessionReaderSharedPtr vSession = GetSharedThisPtr();
                     MeshPartitionSharedPtr vPartitioner = MemoryManager<MeshPartition>::AllocateSharedPtr(vSession);
                     vPartitioner->PartitionMesh(vCommMesh->GetSize());
@@ -1128,7 +1127,6 @@ namespace Nektar
                 ASSERTL0(m_comm->GetSize() % nProcX == 0,
                             "Cannot exactly partition using PROC_X value.");
                 int nProcSem = m_comm->GetSize() / nProcX;
-                cout << "ProcX: " << nProcX << ", ProcSEM: " << nProcSem << endl;
                 m_comm->SplitComm(nProcX, nProcSem);
             }
         }

@@ -843,7 +843,7 @@ namespace Nektar
                 NekVector<NekDouble> Rv_component(efRow,rv_array,eWrapper);
 
                 //trans(R_{v})=-inv(S_{ef,ef})*trans(S_{v,ef})
-                Rv_component=-Mvef*Vvef;
+                Rv_component=-(Mvef*Vvef);
 
                 // Populate R with R_{ve} components
                 for(n=0; n<edgemodearray.num_elements(); ++n)
@@ -1515,7 +1515,7 @@ namespace Nektar
 
                 // Multiply the inverse edge-face (Mef) coupling matrix
                 // with the vertex-face/edge vector (Vvef)
-                Rv_component=-Mvef*Vvef;
+                Rv_component=-(Mvef*Vvef);
 
                 for(eid=0; eid < nConnectedEdges; ++eid)
                 {

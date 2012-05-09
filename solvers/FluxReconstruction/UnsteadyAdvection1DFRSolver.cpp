@@ -50,15 +50,17 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
 
-	// Reading in the session file. 
-	// Literally the .xml file containg the mesh and any additional parameters (like the advection form and the time-integration details)
+	/// Reading in the session file
 	LibUtilities::SessionReaderSharedPtr pSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
 	
-	// Usage check
+	/// Checking usage
 	if((argc != 2)&&(argc != 3))
-    {fprintf(stderr,"Usage: ./UnsteadyAdvection1DFRSolver meshfile [SysSolnType]\n");exit(1);}
+    {
+        fprintf(stderr,"Usage: ./UnsteadyAdvection1DFRSolver meshfile [SysSolnType]\n");
+        exit(1);
+    }
 	
-	// Instantiate teh object to hold the spatial discretisation
+	/// Instantiating the object to hold the spatial discretisation
 	Advection1DFR solver(pSession);
 	
 	/// The time integration method to use.
@@ -66,9 +68,9 @@ int main(int argc, char *argv[])
 	/// The time integration scheme operators to use.
 	LibUtilities::TimeIntegrationSchemeOperators ODE;
 	
-	// Defining the RHS operator, i.e. the advection oprator
-	// the projection operator is compulsory for CG because we need to reinforce BC
-	// for DG is just a "copy" of the degrees of freedom
+	/// Defining the RHS operator, i.e. the advection oprator
+	/// the projection operator is compulsory for CG because we need to reinforce BC
+	/// for DG is just a "copy" of the degrees of freedom
 	ODE.DefineOdeRhs(&Advection1DFR::EvaluateAdvectionTerm,solver);
 	ODE.DefineProjection(&Advection1DFR::Projection,solver);
 	
@@ -76,10 +78,10 @@ int main(int argc, char *argv[])
 	// high order schemes which need other schemes to be initialised
 	Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
 	
-	// Solution of the ODE system 
+	/// Solution of the ODE system 
 	LibUtilities::TimeIntegrationSolutionSharedPtr ode_solution;
 	
-	// We create a vector in which we strore our solution step by step.
+	/// Creating a vector in which we strore our solution step by step.
 	// At the really beginning we put in equal to the physical value of the object Domain
 	// inside Advection1DFR, where we have stored the initial solution
 	Array<OneD, Array<OneD, NekDouble> > U(1);
@@ -87,7 +89,7 @@ int main(int argc, char *argv[])
 	
 	U[0] = solver.GetDomain()->GetPhys();
 	
-	// Determine TimeIntegrationMethod to use, specified in the session file
+	/// Determining TimeIntegrationMethod to use, specified in the session file
 	for (int i = 0; i < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++i)
 	{
 		bool match;
@@ -125,17 +127,18 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	/////////////////////////////////////////////////////////////
-	// Perform the time integration
+    /// ------------------------------------------------------
+	/// Performing the time integration
+    /// ------------------------------------------------------
 	for(int n = 0; n < solver.GetNumSteps(); ++n)
 	{
 		U = IntScheme[0]->TimeIntegrate(solver.GetTimeStep(),ode_solution,ODE);
-	
 		solver.UpdateTime();
 		
-		// Coping the solution in the member variable m_phys of the object Domain
+		/// Coping the solution in the member variable m_phys of the object Domain
 	    solver.GetDomain()->UpdatePhys() = U[0];
-		// Updating the variable m_coeffs of the object Domain (the coefficinet space)
+		
+        /// Updating the variable m_coeffs of the object Domain (the coefficinet space)
 		solver.GetDomain()->FwdTrans(U[0],solver.GetDomain()->UpdateCoeffs());
 	}
 

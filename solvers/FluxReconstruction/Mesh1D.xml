@@ -44,14 +44,14 @@
     <CONDITIONS>
     
     <SOLVERINFO>
-        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-        <I PROPERTY="RiemannSolver" VALUE="Up-Wind" />
-        <I PROPERTY="Gfunctions" VALUE="DG" />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        <I PROPERTY="RiemannSolver"         VALUE="Up-Wind"             />
+        <I PROPERTY="Gfunctions"            VALUE="DG"                  />
     </SOLVERINFO>
 
     <PARAMETERS>
-        <P> TimeStep = 0.0001 </P>
-        <P> NumSteps = 2000 </P>
+        <P> TimeStep = 0.001   </P>
+        <P> NumSteps = 20000     </P>
     </PARAMETERS>
 
     <VARIABLES>

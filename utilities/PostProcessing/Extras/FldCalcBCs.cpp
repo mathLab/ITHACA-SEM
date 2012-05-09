@@ -197,13 +197,14 @@ cout<<"set ppp"<<endl;
     // Copy data from file:fill fields with the fielddata
     if(lastfield==1)
     {
-        for(int i = 0; i < fielddata.size(); ++i)
+        int i;
+        for(i = 0; i < fielddata.size(); ++i)
         {        	
             fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
         }             
         fields[0]->BwdTrans(fields[0]->GetCoeffs(),fields[0]->UpdatePhys());
 cout<<"field:"<<fielddef[i]->m_fields[0]<<endl;
-        for(int i = 0; i < fielddata.size(); ++i)
+        for(i = 0; i < fielddata.size(); ++i)
         {        	
             fields[lastfield]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
         }             

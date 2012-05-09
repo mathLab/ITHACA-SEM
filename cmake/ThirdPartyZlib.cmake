@@ -16,13 +16,25 @@ IF (THIRDPARTY_BUILD_ZLIB)
     SET(Boost_ZLIB_LIBRARY_DEBUG z)
     SET(Boost_ZLIB_LIBRARY_RELEASE z)
 ELSE (THIRDPARTY_BUILD_ZLIB)
-    # Find a system ZLIB library and use that instead
+  # Attempt to identify Macports libraries, if they exist. This prevents
+  # cmake warnings later on.
+  IF (APPLE)
+    FIND_LIBRARY(ZLIB_LIBRARY z PATHS /opt/local/lib NO_DEFAULT_PATH)
+  ENDIF()
+  
+  # Find a system ZLIB library and use that instead
+  IF (ZLIB_LIBRARY-NOTFOUND OR NOT APPLE) 
     FIND_PACKAGE( ZLIB )
     IF (ZLIB_FOUND)
-        SET(Boost_ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-        SET(Boost_ZLIB_LIBRARY_RELEASE ${ZLIB_LIBRARIES})
-        SET(Boost_ZLIB_LIBRARY_DEBUG ${ZLIB_LIBRARIES})
+      SET(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
     ENDIF()
+  ENDIF()
+  
+  IF (ZLIB_LIBRARY)
+    SET(Boost_ZLIB_LIBRARY ${ZLIB_LIBRARY})
+    SET(Boost_ZLIB_LIBRARY_RELEASE ${ZLIB_LIBRARY})
+    SET(Boost_ZLIB_LIBRARY_DEBUG ${ZLIB_LIBRARY})
+  ENDIF()
 ENDIF (THIRDPARTY_BUILD_ZLIB)
 
 

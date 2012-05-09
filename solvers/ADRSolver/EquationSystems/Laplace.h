@@ -36,7 +36,9 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_LAPLACE_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_LAPLACE_H
 
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

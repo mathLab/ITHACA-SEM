@@ -62,10 +62,10 @@ namespace Nektar
       friend class MemoryManager<NavierStokesCFE>;
 
     /// Creates an instance of this class
-    static EquationSystemSharedPtr create(
+    static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-      EquationSystemSharedPtr p = MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
+      SolverUtils::EquationSystemSharedPtr p = MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
       p->InitObject();
       return p;
     }

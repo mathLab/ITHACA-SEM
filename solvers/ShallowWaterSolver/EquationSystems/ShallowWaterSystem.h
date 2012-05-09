@@ -36,7 +36,9 @@
 #ifndef NEKTAR_SOLVERS_SHALLOWWATERSOLVER_EQUATIONSYSTEMS_SHALLOWWATERSYSTEM_H
 #define NEKTAR_SOLVERS_SHALLOWWATERSOLVER_EQUATIONSYSTEMS_SHALLOWWATERSYSTEM_H
 
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

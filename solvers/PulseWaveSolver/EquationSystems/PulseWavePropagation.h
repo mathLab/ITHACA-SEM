@@ -36,8 +36,10 @@
 #ifndef NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 
-#include <Auxiliary/UnsteadySystem.h>
+#include <SolverUtils/UnsteadySystem.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

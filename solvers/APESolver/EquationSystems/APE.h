@@ -36,8 +36,10 @@
 #ifndef NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
 #include <APESolver/EquationSystems/APESystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {     

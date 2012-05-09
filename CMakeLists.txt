@@ -232,7 +232,7 @@ ENDIF( NEKTAR_USE_PRECOMPILED_HEADERS )
 
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
-    SET(NEKTAR++_LIBRARIES LibUtilities StdRegions SpatialDomains LocalRegions
+    SET(NEKTAR++_LIBRARIES SolverUtils LibUtilities StdRegions SpatialDomains LocalRegions
         MultiRegions)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)

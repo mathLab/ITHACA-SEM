@@ -51,7 +51,7 @@ namespace Nektar
       friend class MemoryManager<CompressibleFlowSystem>;
 
     /// Creates an instance of this class
-    static EquationSystemSharedPtr create(
+    static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
       return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);

@@ -37,7 +37,7 @@
 
 namespace Nektar
 {
-    string VelocityCorrectionScheme::className = GetEquationSystemFactory().RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
+    string VelocityCorrectionScheme::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
     
     
     /**

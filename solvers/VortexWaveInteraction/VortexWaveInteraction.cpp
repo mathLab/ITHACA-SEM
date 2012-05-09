@@ -32,6 +32,7 @@
 // Description: Vortex Wave Interaction class
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <VortexWaveInteraction/VortexWaveInteraction.h>
 
 namespace Nektar

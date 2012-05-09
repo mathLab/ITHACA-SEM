@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_VELOCITYCORRECTIONSCHEME_H
 #define NEKTAR_SOLVERS_VELOCITYCORRECTIONSCHEME_H
 
-#include<IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
 namespace Nektar
 {     
@@ -55,9 +55,9 @@ namespace Nektar
     public:           
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
+        static SolverUtils::EquationSystemSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }

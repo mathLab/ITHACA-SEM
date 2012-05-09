@@ -37,9 +37,11 @@
 #include <cstdlib>
 #include <cmath> 
 
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
 using namespace Nektar;
+using namespace Nektar::SolverUtils;
 
 int main(int argc, char *argv[])
 {

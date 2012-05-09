@@ -36,7 +36,9 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTIONDIFFUSION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTIONDIFFUSION_H
 
-#include <Auxiliary/UnsteadySystem.h>
+#include <SolverUtils/UnsteadySystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

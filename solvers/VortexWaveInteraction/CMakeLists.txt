@@ -1,9 +1,4 @@
 SET(VortexWaveInteractionSolverSource
-       ../Auxiliary/Driver.cpp
-       ../Auxiliary/DriverStandard.cpp
-       ../Auxiliary/DriverArnoldi.cpp
-       ../Auxiliary/DriverModifiedArnoldi.cpp
-       ../Auxiliary/EquationSystem.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
@@ -19,11 +14,6 @@ SET(VortexWaveInteractionSolverSource
        )
 
 SET(CalcL2ToLinfPressureSource
-       ../Auxiliary/Driver.cpp
-       ../Auxiliary/DriverStandard.cpp
-       ../Auxiliary/DriverArnoldi.cpp
-       ../Auxiliary/DriverModifiedArnoldi.cpp
-       ../Auxiliary/EquationSystem.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
@@ -37,11 +27,6 @@ SET(CalcL2ToLinfPressureSource
        ./CalcL2ToLinfPressure.cpp
        ./VortexWaveInteraction.cpp 
        )
-
-IF (NEKTAR_USE_ARPACK)
-    SET(VortexWaveInteractionSolverSource ${VortexWaveInteractionSolverSource}
-        ../Auxiliary/DriverArpack.cpp)
-ENDIF (NEKTAR_USE_ARPACK)
 
 ADD_SOLVER_EXECUTABLE(VortexWaveInteractionSolver solvers 
 		     ${VortexWaveInteractionSolverSource})

@@ -7,7 +7,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
 
     SET_COMMON_PROPERTIES(${name})
-    
+
     # TODO - If your executable needs to link to any other libraries,  
     # add them here.
     TARGET_LINK_LIBRARIES(${name}

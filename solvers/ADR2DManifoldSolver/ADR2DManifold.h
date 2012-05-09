@@ -38,10 +38,12 @@
 #define NEKTAR_SOLVERS_ADVECTIONDIFFUSIONREACTION_ADVECTIONDIFFUSIONREACTION_H
 
 #include <MultiRegions/DisContField2D.h>
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

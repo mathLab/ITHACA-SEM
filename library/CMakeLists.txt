@@ -1,5 +1,5 @@
 SET(LibrarySubDirs LibUtilities LocalRegions MultiRegions SpatialDomains
-StdRegions)
+StdRegions SolverUtils)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs Demos)
 SET(TimingsSubDirs Timings)

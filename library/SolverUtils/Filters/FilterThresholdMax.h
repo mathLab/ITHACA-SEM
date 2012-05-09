@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterHistoryPoints.h
+// File FilterThresholdMax.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,59 +29,54 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs values at specific points during time-stepping.
+// Description: Outputs time when solution first exceeds a threshold value.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef FILTERHISTORYPOINTS_H_
-#define FILTERHISTORYPOINTS_H_
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERTHRESHOLDMAX_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERTHRESHOLDMAX_H
 
-#include <SpatialDomains/MeshGraph.h>
-#include <Auxiliary/Filters/Filter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
-
-    class FilterHistoryPoints : public Filter
+    namespace SolverUtils
     {
-    public:
-        friend class MemoryManager<FilterHistoryPoints>;
+        class FilterThresholdMax : public Filter
+        {
+        public:
+            friend class MemoryManager<FilterThresholdMax>;
 
-        /// Creates an instance of this class
-        static FilterSharedPtr create(
+            /// Creates an instance of this class
+            static FilterSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams) {
-            FilterSharedPtr p = MemoryManager<FilterHistoryPoints>::AllocateSharedPtr(pSession, pParams);
-            //p->InitObject();
-            return p;
-        }
+                FilterSharedPtr p = MemoryManager<FilterThresholdMax>::AllocateSharedPtr(pSession, pParams);
+                //p->InitObject();
+                return p;
+            }
 
-        ///Name of the class
-        static std::string className;
+            ///Name of the class
+            static std::string className;
 
-        FilterHistoryPoints(
+            SOLVER_UTILS_EXPORT FilterThresholdMax(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams);
-        ~FilterHistoryPoints();
+            SOLVER_UTILS_EXPORT ~FilterThresholdMax();
 
-    protected:
-        virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual bool v_IsTimeDependent();
+        protected:
+            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual bool v_IsTimeDependent();
 
-    private:
-        SpatialDomains::VertexComponentVector   m_historyPoints;
-        unsigned int                            m_index;
-        unsigned int                            m_outputFrequency;
-        std::string                             m_outputFile;
-        std::ofstream                           m_outputStream;
-        std::stringstream                       m_historyPointStream;
-        std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
-                                                m_historyList;
-        std::map<int, int>                      m_historyLocalPointMap;
-    };
-
+        private:
+            Array<OneD, NekDouble> m_threshold;
+            NekDouble m_thresholdValue;
+            NekDouble m_initialValue;
+            std::string m_outputFile;
+        };
+    }
 }
 
-#endif /* FILTERCHECKPOINT_H_ */
+#endif /* FILTERTHRESHOLDMAX_H_ */

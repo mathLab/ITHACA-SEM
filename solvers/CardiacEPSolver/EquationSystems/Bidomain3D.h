@@ -36,8 +36,10 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN3D_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_BIDOMAIN3D_H
 
-#include <Auxiliary/UnsteadySystem.h>
+#include <SolverUtils/UnsteadySystem.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

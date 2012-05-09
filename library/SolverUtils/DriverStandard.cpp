@@ -33,67 +33,64 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Auxiliary/DriverStandard.h>
+#include <SolverUtils/DriverStandard.h>
 
 namespace Nektar
-
 {
-    string DriverStandard::className = GetDriverFactory().RegisterCreatorFunction("Standard", DriverStandard::create);
-    string DriverStandard::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","Standard",0);
+    namespace SolverUtils
+    {
+        string DriverStandard::className = GetDriverFactory().RegisterCreatorFunction("Standard", DriverStandard::create);
+        string DriverStandard::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","Standard",0);
 
-    /**
+        /**
 	 *
-     */
-    DriverStandard::DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession)
-        : Driver(pSession)
-    {
-    }
-    
-    
-    /**
-     *
-     */
-    DriverStandard:: ~DriverStandard()
-    {
-    }
-    
-    
-    /**
-     *
-     */
-    void DriverStandard::v_InitObject(ostream &out)
-    {
-        Driver::v_InitObject(out);
-    }
-    
-    
-    void DriverStandard::v_Execute(ostream &out)
-        
-    {
-        m_equ[0]->PrintSummary(out);
-        m_equ[0]->DoInitialise();
-        m_equ[0]->DoSolve();
-        m_equ[0]->Output();
-        
-        // Evaluate and output computation time and solution accuracy.
-        // The specific format of the error output is essential for the
-        // regression tests to work.
-        // Evaluate L2 Error
-        for(int i = 0; i < m_equ[0]->GetNvariables(); ++i)
+         */
+        DriverStandard::DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession)
+            : Driver(pSession)
         {
-            NekDouble vL2Error = m_equ[0]->L2Error(i,false);
-            NekDouble vLinfError = m_equ[0]->LinfError(i);
-            if (m_comm->GetRank() == 0)
+        }
+    
+    
+        /**
+         *
+         */
+        DriverStandard:: ~DriverStandard()
+        {
+        }
+    
+    
+        /**
+         *
+         */
+        void DriverStandard::v_InitObject(ostream &out)
+        {
+            Driver::v_InitObject(out);
+        }
+    
+    
+        void DriverStandard::v_Execute(ostream &out)
+        
+        {
+            m_equ[0]->PrintSummary(out);
+            m_equ[0]->DoInitialise();
+            m_equ[0]->DoSolve();
+            m_equ[0]->Output();
+        
+            // Evaluate and output computation time and solution accuracy.
+            // The specific format of the error output is essential for the
+            // regression tests to work.
+            // Evaluate L2 Error
+            for(int i = 0; i < m_equ[0]->GetNvariables(); ++i)
             {
-                out << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
-                out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
+                NekDouble vL2Error = m_equ[0]->L2Error(i,false);
+                NekDouble vLinfError = m_equ[0]->LinfError(i);
+                if (m_comm->GetRank() == 0)
+                {
+                    out << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
+                    out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
+                }
             }
         }
     }
 }
 
-
-
-/**
- * $Log $
-**/

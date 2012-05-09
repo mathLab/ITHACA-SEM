@@ -36,8 +36,10 @@
 #ifndef NEKTAR_SOLVERS_VORTEXWAVEINTERACTION_H
 #define NEKTAR_SOLVERS_VORTEXWAVEINTERACTION_H
 
-#include <Auxiliary/Driver.h>
+#include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {     

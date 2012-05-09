@@ -33,61 +33,63 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_DRIVERARPACK_H
-#define NEKTAR_SOLVERS_DRIVERARPACK_H
+#ifndef NEKTAR_SOLVERUTILS_DRIVERARPACK_H
+#define NEKTAR_SOLVERUTILS_DRIVERARPACK_H
 
 #include <LibUtilities/LinearAlgebra/Arpack.hpp>
 
-#include <Auxiliary/DriverArnoldi.h>
+#include <SolverUtils/DriverArnoldi.h>
 
 namespace Nektar
 {
-    /// Base class for the development of solvers.
-    class DriverArpack: public DriverArnoldi
+    namespace SolverUtils
     {
-    public:
-        friend class MemoryManager<DriverArpack>;
+        /// Base class for the development of solvers.
+        class DriverArpack: public DriverArnoldi
+        {
+        public:
+            friend class MemoryManager<DriverArpack>;
 		
-        /// Creates an instance of this class
-        static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-            DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+            /// Creates an instance of this class
+            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
+                DriverSharedPtr p = MemoryManager<DriverArpack>::AllocateSharedPtr(pSession);
+                p->InitObject();
+                return p;
+            }
         
-        ///Name of the class
-        static std::string className;
+            ///Name of the class
+            static std::string className;
 
 
                 
-    protected:
-        int m_maxn;			//Maximum size of the problem
-        int m_maxnev;			//maximum number of eigenvalues requested
-        int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
+        protected:
+            int m_maxn;			//Maximum size of the problem
+            int m_maxnev;			//maximum number of eigenvalues requested
+            int m_maxncv;			//Largest number of basis vector used in Implicitly Restarted Arnoldi
 
 
 //        std::string m_arpackProblemType;   //Arpack input for problem type
-        /// Constructor
-        DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
+            /// Constructor
+            DriverArpack( const LibUtilities::SessionReaderSharedPtr        pSession);
         
-        /// Destructor
-        virtual ~DriverArpack();
+            /// Destructor
+            virtual ~DriverArpack();
         
-        /// Virtual function for initialisation implementation.
-        virtual void v_InitObject(ostream &out = cout);
+            /// Virtual function for initialisation implementation.
+            virtual void v_InitObject(ostream &out = cout);
 
-        /// Virtual function for solve implementation.
-        virtual void v_Execute(ostream &out = cout);
+            /// Virtual function for solve implementation.
+            virtual void v_Execute(ostream &out = cout);
 
-        static std::string arpackProblemTypeLookupIds[];
-        static std::string arpackProblemTypeDefault;
-        static std::string driverLookupId;
+            static std::string arpackProblemTypeLookupIds[];
+            static std::string arpackProblemTypeDefault;
+            static std::string driverLookupId;
 
-    private:
-        static std::string ArpackProblemTypeTrans[];
-    };
-	
+        private:
+            static std::string ArpackProblemTypeTrans[];
+        };
+    }
 } //end of namespace
 
-#endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
+#endif //NEKTAR_SOLVERUTILS_DRIVERARPACK_H
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Filter.cpp
+// File AdvectionTerm.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,52 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Base class for filters.
+// Description: Driver class for the stability solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <Auxiliary/Filters/Filter.h>
+#ifndef NEKTAR_SOLVERUTILS_DRIVERSTANDARD_H
+#define NEKTAR_SOLVERUTILS_DRIVERSTANDARD_H
+
+#include <SolverUtils/Driver.h>
 
 namespace Nektar
 {
-    FilterFactory& GetFilterFactory()
+    namespace SolverUtils
     {
-        typedef Loki::SingletonHolder<FilterFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy > Type;
-        return Type::Instance();
-    }
+        /// Base class for the development of solvers.
+        class DriverStandard: public Driver
+        {
+        public:
+            friend class MemoryManager<DriverStandard>;
 
+            /// Creates an instance of this class
+            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
+                DriverSharedPtr p = MemoryManager<DriverStandard>::AllocateSharedPtr(pSession);
+                p->InitObject();
+                return p;
+            }
+	
+            ///Name of the class
+            static std::string className;
+	
+        protected:
+            /// Constructor
+            DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession);
 
-    Filter::Filter(const LibUtilities::SessionReaderSharedPtr& pSession) :
-            m_session(pSession)
-    {
-    }
+            /// Destructor
+            virtual ~DriverStandard();
+        
+            /// Second-stage initialisation
+            virtual void v_InitObject(ostream &out = cout);
 
-    Filter::~Filter()
-    {
-    }
+            /// Virtual function for solve implementation.
+            virtual void v_Execute(ostream &out = cout);
+		
+            static std::string driverLookupId;
+	};
+    }	
+} //end of namespace
 
-}
+#endif //NEKTAR_SOLVERUTILS_DRIVERSTANDARD_H
+

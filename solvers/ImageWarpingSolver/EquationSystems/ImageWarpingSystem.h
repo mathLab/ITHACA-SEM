@@ -36,7 +36,9 @@
 #ifndef NEKTAR_SOLVERS_IMAGEWARPINGSOLVER_EQUATIONSYSTEMS_IMAGEWARPINGSYSTEM_H
 #define NEKTAR_SOLVERS_IMAGEWARPINGSOLVER_EQUATIONSYSTEMS_IMAGEWARPINGSYSTEM_H
 
-#include <Auxiliary/UnsteadySystem.h>
+#include <SolverUtils/UnsteadySystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

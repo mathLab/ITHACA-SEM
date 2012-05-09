@@ -39,7 +39,7 @@
 namespace Nektar
 {
 
-    string CoupledLinearNS::className = GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
+    string CoupledLinearNS::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
 
 
     /**

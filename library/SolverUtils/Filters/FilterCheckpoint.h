@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterThresholdMax.h
+// File FilterCheckpoint.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,53 +29,54 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs time when solution first exceeds a threshold value.
+// Description: Outputs solution fields during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef FILTERTHRESHOLDMAX_H_
-#define FILTERTHRESHOLDMAX_H_
+#ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H
+#define NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H
 
-#include <Auxiliary/Filters/Filter.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
-
-    class FilterThresholdMax : public Filter
+    namespace SolverUtils
     {
-    public:
-        friend class MemoryManager<FilterThresholdMax>;
+        class FilterCheckpoint : public Filter
+        {
+        public:
+            friend class MemoryManager<FilterCheckpoint>;
 
-        /// Creates an instance of this class
-        static FilterSharedPtr create(
+            /// Creates an instance of this class
+            static FilterSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams) {
-            FilterSharedPtr p = MemoryManager<FilterThresholdMax>::AllocateSharedPtr(pSession, pParams);
-            //p->InitObject();
-            return p;
-        }
+                FilterSharedPtr p = MemoryManager<FilterCheckpoint>::AllocateSharedPtr(pSession, pParams);
+                //p->InitObject();
+                return p;
+            }
 
-        ///Name of the class
-        static std::string className;
+            ///Name of the class
+            static std::string className;
 
-        FilterThresholdMax(
+            SOLVER_UTILS_EXPORT FilterCheckpoint(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams);
-        ~FilterThresholdMax();
+            SOLVER_UTILS_EXPORT ~FilterCheckpoint();
 
-    protected:
-        virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-        virtual bool v_IsTimeDependent();
+        protected:
+            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual bool v_IsTimeDependent();
 
-    private:
-        Array<OneD, NekDouble> m_threshold;
-        NekDouble m_thresholdValue;
-        NekDouble m_initialValue;
-        std::string m_outputFile;
-    };
-
+        private:
+            unsigned int m_index;
+            unsigned int m_outputIndex;
+            unsigned int m_outputFrequency;
+            std::string m_outputFile;
+        };
+    }
 }
 
-#endif /* FILTERTHRESHOLDMAX_H_ */
+#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

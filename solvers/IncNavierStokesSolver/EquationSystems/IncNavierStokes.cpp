@@ -35,7 +35,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
-#include <Auxiliary/EquationSystem.h>
 #include <cstdio>
 #include <cstdlib>
 

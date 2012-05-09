@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_UNSTEADYSYSTEM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_UNSTEADYSYSTEM_H
 
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
 
 namespace Nektar
 {     
@@ -71,7 +71,7 @@ namespace Nektar
     };
   
   
-  class UnsteadySystem: public EquationSystem
+  class UnsteadySystem: public SolverUtils::EquationSystem
   {
   public:           
     /// Destructor

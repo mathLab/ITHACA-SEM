@@ -41,7 +41,7 @@
 
 namespace Nektar
 {
-    string NavierStokesCFE::className = GetEquationSystemFactory().RegisterCreatorFunction("NavierStokesCFE", NavierStokesCFE::create, "NavierStokes equations in conservative variables.");
+    string NavierStokesCFE::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("NavierStokesCFE", NavierStokesCFE::create, "NavierStokes equations in conservative variables.");
 
     NavierStokesCFE::NavierStokesCFE(
             const LibUtilities::SessionReaderSharedPtr& pSession)

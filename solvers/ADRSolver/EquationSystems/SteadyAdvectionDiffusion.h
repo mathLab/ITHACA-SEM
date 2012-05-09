@@ -35,7 +35,9 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_ADVECTIONDIFFUSION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_ADVECTIONDIFFUSION_H
 
-#include <Auxiliary/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {

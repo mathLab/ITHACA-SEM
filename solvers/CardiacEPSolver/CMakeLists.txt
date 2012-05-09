@@ -12,14 +12,6 @@ SET(CardiacEPSolverSource
        ./CellModels/TenTusscher06Epi.cpp
        ./CellModels/TenTusscher06M.cpp
        ./CellModels/TenTusscher06Endo.cpp
-       ../Auxiliary/UnsteadySystem.cpp
-       ../Auxiliary/EquationSystem.cpp
-       ../Auxiliary/Driver.cpp
-       ../Auxiliary/DriverStandard.cpp
-       ../Auxiliary/Filters/Filter.cpp
-       ../Auxiliary/Filters/FilterThresholdMax.cpp
-       ../Auxiliary/Filters/FilterCheckpoint.cpp
-       ../Auxiliary/Filters/FilterHistoryPoints.cpp
 )
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 

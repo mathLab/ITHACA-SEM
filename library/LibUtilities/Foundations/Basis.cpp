@@ -514,7 +514,7 @@ namespace Nektar
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussLobattoLegendre)];
                     const Array<OneD, const NekDouble>& zp(m_points->GetZ());
-                    
+
                     for (p=0; p<numModes; ++p, mode += numPoints)
                     {
                         for(q = 0; q < numPoints; ++q)
@@ -525,8 +525,8 @@ namespace Nektar
 
                     // define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
-                        numPoints, m_bdata.data(),numPoints,0.0,
-                        m_dbdata.data(),numPoints);
+                                numPoints, m_bdata.data(),numPoints,0.0,
+                                m_dbdata.data(),numPoints);
 
                 }//end scope
                 break;
@@ -580,32 +580,30 @@ namespace Nektar
                 break;
 					
 			
-				//Fourier Single Mode (1st mode)
-				case eFourierSingleMode:
+            // Fourier Single Mode (1st mode)
+            case eFourierSingleMode:
 					
-					for(i = 0; i < numPoints; ++i)
-					{
-						m_bdata[i] = cos(M_PI*z[i]);
-						m_bdata[numPoints+i] = sin(M_PI*z[i]);
+                for(i = 0; i < numPoints; ++i)
+                {
+                    m_bdata[i] = cos(M_PI*z[i]);
+                    m_bdata[numPoints+i] = sin(M_PI*z[i]);
 						
-						m_dbdata[i] = -M_PI*sin(M_PI*z[i]);
-						m_dbdata[numPoints+i] = M_PI*cos(M_PI*z[i]);
+                    m_dbdata[i] = -M_PI*sin(M_PI*z[i]);
+                    m_dbdata[numPoints+i] = M_PI*cos(M_PI*z[i]);
+                }
 					
-
-					}
-					
-					for (p=1; p < numModes/2; ++p)
-					{
-						for(i = 0; i < numPoints; ++i)
-						{
-							m_bdata[ 2*p   *numPoints+i] = 0.;
-							m_bdata[(2*p+1)*numPoints+i] = 0.;
+                for (p=1; p < numModes/2; ++p)
+                {
+                    for(i = 0; i < numPoints; ++i)
+                    {
+                        m_bdata[ 2*p   *numPoints+i] = 0.;
+                        m_bdata[(2*p+1)*numPoints+i] = 0.;
 							
-							m_dbdata[ 2*p   *numPoints+i] = 0.;
-							m_dbdata[(2*p+1)*numPoints+i] = 0.;
-						}
-					}
-					break;
+                        m_dbdata[ 2*p   *numPoints+i] = 0.;
+                        m_dbdata[(2*p+1)*numPoints+i] = 0.;
+                    }
+                }
+                break;
 					
 
             case eChebyshev:
@@ -626,8 +624,8 @@ namespace Nektar
 
                 // define derivative basis
                 Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
-                    numPoints, m_bdata.data(),numPoints,0.0,m_dbdata.data(),
-                    numPoints);
+                            numPoints, m_bdata.data(),numPoints,0.0,m_dbdata.data(),
+                            numPoints);
                 break;
 
             case eMonomial:
@@ -651,7 +649,7 @@ namespace Nektar
                     
             /** \brief Left derivative of the correction function for FR DG method (see J Sci Comput (2011) 47: 50–72)
                      
-                \f$\tilde dGL_{DG} = = (-1)^{p}/2( d(L_(p-1)) - d(L_{p}) ) = \f$
+                \f$\tilde dGL_{DG} = (-1)^{p}/2( d(L_(p)) - d(L_{p+1}) )\f$
                      
             */
             case eDG_DG_Left:
@@ -693,7 +691,7 @@ namespace Nektar
                     
                 /** \brief Right derivative of the correction function for FR DG method (see J Sci Comput (2011) 47: 50–72)
                      
-                    \f$\tilde dGR_{DG} = = 1/2( d(L_{p-1}) + d(L_{p}) ) = \f$
+                    \f$\tilde dGR_{DG} = 1/2( d(L_{p}) + d(L_{p+1}) ) \f$
                      
                 */
                 case eDG_DG_Right:
@@ -736,7 +734,7 @@ namespace Nektar
                  
                 /** \brief Left derivative of the correction function for FR SD method (see J Sci Comput (2011) 47: 50–72)
                      
-                    \f$\tilde dGL_{SD} = = (-1)^{p}/2( d(L_{p}) - (pd(L_{p-1}) + (p+1)d(L_{p+1}))/(2p + 1) ) = \f$
+                    \f$\tilde dGL_{SD} = (-1)^{p}/2( d(L_{p}) - (pd(L_{p-1}) + (p+1)d(L_{p+1}))/(2p + 1) ) \f$
                      
                 */
                 case eDG_SD_Left:
@@ -781,7 +779,7 @@ namespace Nektar
                     
                 /** \brief Right derivative of the correction function for FR SD method (see J Sci Comput (2011) 47: 50–72)
                      
-                    \f$\tilde dGR_{SD} = = 1/2( d(L_{p}) + (pd(L_{p-1}) + (p+1)d(L_{p+1}))/(2p + 1) ) = \f$
+                    \f$\tilde dGR_{SD} = 1/2( d(L_{p}) + (pd(L_{p-1}) + (p+1)d(L_{p+1}))/(2p + 1) ) \f$
                      
                 */
                 case eDG_SD_Right:
@@ -827,7 +825,7 @@ namespace Nektar
                     
                 /** \brief Left derivative of the correction function for FR HU method (see J Sci Comput (2011) 47: 50–72)
                      
-                    \f$\tilde dGL_{HU} = = (-1)^{p}/2( d(L_{p}) - ((p+1)d(L_{p-1}) + pd(L_{p+1}))/(2p + 1) ) = \f$
+                    \f$\tilde dGL_{HU} = (-1)^{p}/2( d(L_{p}) - ((p+1)d(L_{p-1}) + pd(L_{p+1}))/(2p + 1) ) \f$
                      
                 */                   
                 case eDG_HU_Left:
@@ -872,7 +870,7 @@ namespace Nektar
                     
                 /** \brief Right derivative of the correction function for FR HU method (see J Sci Comput (2011) 47: 50–72)
                      
-                    \f$\tilde dGR_{SD} = = 1/2( d(L_{p}) + ((p+1)d(L_{p-1}) + pd(L_{p+1}))/(2p + 1) ) = \f$
+                    \f$\tilde dGR_{SD} = 1/2( d(L_{p}) + ((p+1)d(L_{p-1}) + pd(L_{p+1}))/(2p + 1) ) \f$
                      
                 */
                 case eDG_HU_Right:

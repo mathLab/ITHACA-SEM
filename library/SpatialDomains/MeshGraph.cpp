@@ -1405,6 +1405,53 @@ namespace Nektar
                         out.push(boost::iostreams::zlib_compressor());
                         out.push(archiveStringStream);
                         boost::iostreams::copy(out, compressedData);
+
+                        // try decompressing to see if compression accurate
+                        try
+                        {
+                            std::stringstream elementDecompressedData;
+                            boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+                            in.push(boost::iostreams::zlib_decompressor());
+                            in.push(compressedData);
+                            
+                            boost::iostreams::copy(in, elementDecompressedData);
+                        }
+                        catch (boost::iostreams::zlib_error e)
+                        {
+                            if (e.error() == boost::iostreams::zlib::stream_end)
+                            {
+                                cout <<  "Stream end zlib error";
+                            }
+                            else if (e.error() == boost::iostreams::zlib::stream_error)
+                            {
+                                cout <<   "Stream zlib error";
+                            }
+                            else if (e.error() == boost::iostreams::zlib::version_error)
+                            {
+                                cout << "Version zlib error";
+                            }
+                            else if (e.error() == boost::iostreams::zlib::data_error)
+                            {
+                                cout <<  "Data zlib error";
+                            }
+                            else if (e.error() == boost::iostreams::zlib::mem_error)
+                            {
+                                cout << "Memory zlib error";
+                            }
+                            else if (e.error() == boost::iostreams::zlib::buf_error)
+                            {
+                                cout <<"Buffer zlib error";
+                            }
+                            else
+                            {
+                                cout <<  "Unknown zlib error";
+                            }
+
+                            cout << endl << "Retrying compression will not check again" << endl;
+                            compressedData.clear();
+                            compressedData.str("");
+                            boost::iostreams::copy(out, compressedData);
+                        }
                     }
 
                     // If the string length is not divisible by 3,

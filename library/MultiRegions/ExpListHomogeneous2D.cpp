@@ -71,9 +71,14 @@ namespace Nektar
            
 			m_homogeneousBasis_y = LibUtilities::BasisManager()[HomoBasis_y];
 			m_homogeneousBasis_z = LibUtilities::BasisManager()[HomoBasis_z];
+			
+			m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis_y,HomoBasis_z,m_comm->GetColumnComm());
+			
+			m_Ycomm = m_comm->GetColumnComm()->GetRowComm();
+			m_Zcomm = m_comm->GetColumnComm()->GetRowComm();
 
-            m_ny = m_homogeneousBasis_y->GetNumPoints();
-			m_nz = m_homogeneousBasis_z->GetNumPoints();
+            m_ny = m_homogeneousBasis_y->GetNumPoints()/m_Ycomm->GetSize();
+			m_nz = m_homogeneousBasis_z->GetNumPoints()/m_Zcomm->GetSize();
 			
             m_lines = Array<OneD,ExpListSharedPtr>(m_ny*m_nz);
 
@@ -85,6 +90,7 @@ namespace Nektar
 			
 			if(m_dealiasing)
 			{
+				ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Remove dealiasing if you want to run in parallel");
 				SetPaddingBase();
 			}
         }
@@ -109,7 +115,10 @@ namespace Nektar
 		    m_padsize_y(In.m_padsize_y),
 		    m_padsize_z(In.m_padsize_z),
 		    MatBwdPAD(In.MatBwdPAD),
-		    MatFwdPAD(In.MatFwdPAD)
+		    MatFwdPAD(In.MatFwdPAD),
+		    m_transposition(In.m_transposition),
+		    m_Ycomm(In.m_Ycomm),
+		    m_Zcomm(In.m_Ycomm)
         {
             m_lines = Array<OneD, ExpListSharedPtr>(In.m_lines.num_elements());
         }
@@ -159,10 +168,10 @@ namespace Nektar
 				HomogeneousFwdTrans(inarray1,V1,UseContCoeffs);
 				HomogeneousFwdTrans(inarray2,V2,UseContCoeffs);
 			}
-						
-			ShuffleIntoHomogeneous2DClosePacked(V1,ShufV1,false);
-			ShuffleIntoHomogeneous2DClosePacked(V2,ShufV2,false);
-
+			
+			m_transposition->Transpose(V1,ShufV1,false,LibUtilities::eXtoYZ);
+			m_transposition->Transpose(V2,ShufV2,false,LibUtilities::eXtoYZ);
+			
 			Array<OneD, NekDouble> PadV1_slab_coeff(m_padsize_y*m_padsize_z,0.0);
 			Array<OneD, NekDouble> PadV2_slab_coeff(m_padsize_y*m_padsize_z,0.0);
 			Array<OneD, NekDouble> PadRe_slab_coeff(m_padsize_y*m_padsize_z,0.0);
@@ -210,13 +219,12 @@ namespace Nektar
 			
 			if(m_WaveSpace)
 			{
-				//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
-				UnshuffleFromHomogeneous2DClosePacked(ShufV1V2,outarray,false);
+				m_transposition->Transpose(ShufV1V2,outarray,false,LibUtilities::eYZtoX);
 			}
 			else 
 			{
-				//Unshuffle the dealiased result vector (still in Fourier space) in the original ordering
-				UnshuffleFromHomogeneous2DClosePacked(ShufV1V2,V1V2,false);
+				m_transposition->Transpose(ShufV1V2,V1V2,false,LibUtilities::eYZtoX);
+				
 				//Moving the results in physical space for the output
 				HomogeneousBwdTrans(V1V2,outarray,UseContCoeffs);
 			}
@@ -363,8 +371,7 @@ namespace Nektar
 				Array<OneD, NekDouble> fft_in(s);
                 Array<OneD, NekDouble> fft_out(s);
 				
-			
-				ShuffleIntoHomogeneous2DClosePacked(inarray,fft_in,false);
+			    m_transposition->Transpose(inarray,fft_in,false,LibUtilities::eXtoYZ);
 				
 				if(IsForwards)
 				{
@@ -382,7 +389,7 @@ namespace Nektar
 					}
 				}
 				
-				Transpose(fft_out,fft_in,true);
+				m_transposition->Transpose(fft_out,fft_in,false,LibUtilities::eYZtoZY);
 				
 				if(IsForwards)
 				{
@@ -400,9 +407,11 @@ namespace Nektar
 					}
 				}
 				
-				Transpose(fft_out,fft_in,false);
+				//TODO: required ZYtoX routine
+				m_transposition->Transpose(fft_out,fft_in,false,LibUtilities::eZYtoYZ);
 				
-				UnshuffleFromHomogeneous2DClosePacked(fft_in,outarray,false);
+				m_transposition->Transpose(fft_in,outarray,false,LibUtilities::eYZtoX);
+
 			}
 			else 
 			{
@@ -455,17 +464,17 @@ namespace Nektar
                 NekVector<NekDouble> inZ (ncolsZ,sortedinarrayZ,eWrapper);
                 NekVector<NekDouble> outZ(nrowsZ,sortedoutarrayZ,eWrapper);
 				
-                ShuffleIntoHomogeneous2DClosePacked(inarray,sortedinarrayY,!IsForwards);
-				
+				m_transposition->Transpose(inarray,sortedinarrayY,!IsForwards,LibUtilities::eXtoYZ);
+                
                 outY = (*blkmatY)*inY;
 				
-				Transpose(sortedoutarrayY,sortedinarrayZ,true);
+				m_transposition->Transpose(sortedoutarrayY,sortedinarrayZ,false,LibUtilities::eYZtoZY);
 				
                 outZ = (*blkmatZ)*inZ;
 				
-				Transpose(sortedoutarrayZ,sortedoutarrayY,false);
+				m_transposition->Transpose(sortedoutarrayZ,sortedoutarrayY,false,LibUtilities::eZYtoYZ);
 				
-                UnshuffleFromHomogeneous2DClosePacked(sortedoutarrayY,outarray,IsForwards);
+				m_transposition->Transpose(sortedoutarrayY,outarray,false,LibUtilities::eYZtoX);
 			}
         }
 
@@ -913,15 +922,15 @@ namespace Nektar
 				{
 					StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
 					
-					ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
+					m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXtoYZ);
 					
 					for(int i = 0; i < n_points_line; i++)
 					{
 						StdQuad.PhysDeriv(tmp1 = temparray + i*nyzlines, tmp2 = temparray1 + i*nyzlines, tmp3 = temparray2 + i*nyzlines);
 					}
 					
-					UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d1,false);
-					UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d2,false);
+					m_transposition->Transpose(temparray1,out_d1,false,LibUtilities::eYZtoX);
+					m_transposition->Transpose(temparray2,out_d2,false,LibUtilities::eYZtoX);
 					Vmath::Smul(npoints,2.0/m_lhom_y,out_d1,1,out_d1,1);
 					Vmath::Smul(npoints,2.0/m_lhom_z,out_d2,1,out_d2,1);
 				}
@@ -1019,7 +1028,7 @@ namespace Nektar
 					{
 						StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
 						
-						ShuffleIntoHomogeneous2DClosePacked(inarray,temparray,false);
+						m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXtoYZ);
 						
 						for(int i = 0; i < n_points_line; i++)
 						{
@@ -1028,12 +1037,12 @@ namespace Nektar
 						
 						if (dir == 1)
 						{
-							UnshuffleFromHomogeneous2DClosePacked(temparray1,out_d,false);
+							m_transposition->Transpose(temparray1,out_d,false,LibUtilities::eYZtoX);
 							Vmath::Smul(npoints,2.0/m_lhom_y,out_d,1,out_d,1);
 						}
 						else 
 						{
-							UnshuffleFromHomogeneous2DClosePacked(temparray2,out_d,false);
+							m_transposition->Transpose(temparray2,out_d,false,LibUtilities::eYZtoX);
 							Vmath::Smul(npoints,2.0/m_lhom_z,out_d,1,out_d,1);
 						}
 					}

@@ -1112,22 +1112,40 @@ namespace Nektar
 			
             if (m_comm->GetSize() > 1)
             {
-                int nProcX;
+                int nProcZ = 1;
+				int nProcY = 1;
+				int nProcX = 1;
 				
+				if(DefinesParameter("PROC_Z"))
+				{
+					LoadParameter("PROC_Z", nProcZ, 1);
+				}
+				if(DefinesParameter("PROC_Y"))
+				{
+					LoadParameter("PROC_Y", nProcY, 1);
+				}
 				if(DefinesParameter("PROC_X"))
 				{
 					LoadParameter("PROC_X", nProcX, 1);
 				}
-				else 
-				{
-					nProcX = 1;
-					
-				}
 
-                ASSERTL0(m_comm->GetSize() % nProcX == 0,
-                            "Cannot exactly partition using PROC_X value.");
-                int nProcSem = m_comm->GetSize() / nProcX;
-                m_comm->SplitComm(nProcX, nProcSem);
+                ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0, "Cannot exactly partition using PROC_Z value.");
+				
+				ASSERTL0(nProcZ % nProcY == 0, "Cannot exactly partition using PROC_Y value.");
+				
+				ASSERTL0(nProcY % nProcX == 0, "Cannot exactly partition using PROC_X value.");
+                
+				// number of precesses associated with the spectral method
+				int nProcSm = nProcZ*nProcY*nProcX;
+				
+				// number of precesses associated with the spectral element method
+				int nProcSem = m_comm->GetSize() / nProcSm;
+                
+				m_comm->SplitComm(nProcSm,nProcSem);
+				
+				m_comm->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ);
+				
+				m_comm->GetColumnComm()->GetColumnComm()->SplitComm(nProcX,nProcY);
             }
         }
 

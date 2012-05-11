@@ -41,6 +41,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/FFT/NektarFFT.h>
+#include <LibUtilities/Communication/Transposition.h>
 
 namespace Nektar
 {
@@ -134,11 +135,15 @@ namespace Nektar
 								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 			
 			/// FFT variables
-			bool                                    m_useFFT;
+			bool                                     m_useFFT;
 			LibUtilities::NektarFFTSharedPtr        m_FFT_y;
 			LibUtilities::NektarFFTSharedPtr        m_FFT_z;
 			Array<OneD,NekDouble>                   m_tmpIN;
 			Array<OneD,NekDouble>                   m_tmpOUT;
+			
+			LibUtilities::TranspositionSharedPtr      m_transposition;
+			LibUtilities::CommSharedPtr               m_Ycomm;
+			LibUtilities::CommSharedPtr               m_Zcomm;
 
         protected:
 

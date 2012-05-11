@@ -101,8 +101,19 @@ namespace Nektar
 			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_processes          = Array<OneD,int>(m_num_homogeneous_directions);
 			
+			m_num_homogeneous_points[0]  = HomoBasis0.GetNumPoints();
+			m_num_homogeneous_coeffs[0]  = HomoBasis0.GetNumModes();
+			m_num_homogeneous_points[1]  = HomoBasis1.GetNumPoints();
+			m_num_homogeneous_coeffs[1]  = HomoBasis1.GetNumModes();
+			
+			m_num_processes[0]           = m_hcomm->GetRowComm()->GetSize();
+			m_num_processes[1]           = m_hcomm->GetColumnComm()->GetSize();
+			
+			m_num_points_per_proc[0]     = m_num_homogeneous_points[0]/m_num_processes[0];
+			m_num_points_per_proc[1]     = m_num_homogeneous_points[1]/m_num_processes[1];
+			
 			//=================================================================================
-			// TODO: Need set up for 2D
+			// TODO: Need set up for 2D lines IDs and Ks if Fourier
 			//=================================================================================
 		}
 		
@@ -176,22 +187,22 @@ namespace Nektar
 				break;
 				case eXtoYZ:
 				{
-					ASSERTL0(false,"Transposition not implemented yet.");
+					TransposeXtoYZ(inarray,outarray,UseNumMode);
 				}
 				break;
 				case eYZtoX:
 				{
-					ASSERTL0(false,"Transposition not implemented yet.");
+					TransposeYZtoX(inarray,outarray,UseNumMode);
 				}
 				break;
 				case eYZtoZY:
 				{
-					ASSERTL0(false,"Transposition not implemented yet.");
+					TransposeYZtoZY(inarray,outarray,UseNumMode);
 				}
 				break;
 				case eZYtoYZ:
 				{
-					ASSERTL0(false,"Transposition not implemented yet.");
+					TransposeZYtoYZ(inarray,outarray,UseNumMode);
 				}
 				break;
 				case eXtoY:
@@ -385,6 +396,134 @@ namespace Nektar
 				{
 					Vmath::Vcopy(pts_per_plane,&(inarray[i]),packed_len,
 								 &(outarray[i*pts_per_plane]),1);
+				}
+			}
+		}
+		
+		//=================================================================================
+		// Homogeneous 2D transposition from SEM to Homogeneous(YZ) ordering
+		
+		void Transposition::TransposeXtoYZ(const Array<OneD,const NekDouble> &inarray,
+										   Array<OneD, NekDouble> &outarray, 
+										   bool UseNumMode)
+		{
+			if(m_num_processes[0] > 1 || m_num_processes[1] > 1)
+			{
+				ASSERTL0(false,"Parallel transposition not implemented yet for 3D-Homo-2D approach.");
+			}
+			else 
+			{
+				int i, pts_per_line;
+				int n = inarray.num_elements();
+				int packed_len;
+				
+				pts_per_line = n/(m_num_homogeneous_points[0]*m_num_homogeneous_points[1]);
+				
+				if(UseNumMode)
+				{
+					packed_len = (m_num_homogeneous_coeffs[0]*m_num_homogeneous_coeffs[1]);
+				}
+				else
+				{
+					packed_len = (m_num_homogeneous_points[0]*m_num_homogeneous_points[1]);
+				}
+				
+				ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
+				
+				for(i = 0; i < packed_len; ++i)
+				{
+					Vmath::Vcopy(pts_per_line,&(inarray[i*pts_per_line]),1,&(outarray[i]),packed_len);
+				}
+			}
+		}
+		
+		//=================================================================================
+		// Homogeneous 2D transposition from Homogeneous (YZ) ordering to SEM
+		
+		void Transposition::TransposeYZtoX(const Array<OneD,const NekDouble> &inarray,
+										   Array<OneD, NekDouble> &outarray, 
+										   bool UseNumMode)
+		{
+			if(m_num_processes[0] > 1 || m_num_processes[1] > 1)
+			{
+				ASSERTL0(false,"Parallel transposition not implemented yet for 3D-Homo-2D approach.");
+			}
+			else 
+			{
+				int i,pts_per_line;
+				int n = inarray.num_elements();
+				int packed_len;
+
+				pts_per_line = n/(m_num_homogeneous_points[0]*m_num_homogeneous_points[1]);
+				
+				if(UseNumMode)
+				{
+					packed_len = (m_num_homogeneous_coeffs[0]*m_num_homogeneous_coeffs[1]);
+				}
+				else
+				{
+					packed_len = (m_num_homogeneous_points[0]*m_num_homogeneous_points[1]);
+				}
+				
+				ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
+				
+				for(i = 0; i < packed_len; ++i)
+				{
+					Vmath::Vcopy(pts_per_line,&(inarray[i]),packed_len,&(outarray[i*pts_per_line]),1);
+				}
+			}
+		}
+		
+		//=================================================================================
+		// Homogeneous 2D transposition from Y ordering to Z
+		
+		void Transposition::TransposeYZtoZY(const Array<OneD,const NekDouble> &inarray,
+											Array<OneD, NekDouble> &outarray, 
+											bool UseNumMode)
+		{
+			if(m_num_processes[0] > 1 || m_num_processes[1] > 1)
+			{
+				ASSERTL0(false,"Parallel transposition not implemented yet for 3D-Homo-2D approach.");
+			}
+			else 
+			{
+				int n = m_num_homogeneous_points[0]*m_num_homogeneous_points[1];
+				int s = inarray.num_elements();   
+				
+				int pts_per_line  = s/n;
+				
+				int packed_len = pts_per_line*m_num_homogeneous_points[1];
+				
+				for(int i = 0; i < m_num_homogeneous_points[0] ; ++i)
+				{
+					Vmath::Vcopy(packed_len,&(inarray[i]),m_num_homogeneous_points[0],&(outarray[i*packed_len]),1);
+				}
+			}
+		}
+		
+		//=================================================================================
+		// Homogeneous 2D transposition from Z ordering to Y
+		
+		void Transposition::TransposeZYtoYZ(const Array<OneD,const NekDouble> &inarray,
+											Array<OneD, NekDouble> &outarray, 
+											bool UseNumMode)
+		{
+			if(m_num_processes[0] > 1 || m_num_processes[1] > 1)
+			{
+				ASSERTL0(false,"Parallel transposition not implemented yet for 3D-Homo-2D approach.");
+			}
+			else 
+			{
+				int n = m_num_homogeneous_points[0]*m_num_homogeneous_points[1];
+				int s = inarray.num_elements();   
+				
+				int pts_per_line  = s/n;
+				
+				int packed_len = pts_per_line*m_num_homogeneous_points[1];
+				
+				for(int i = 0; i < packed_len ; ++i)
+				{
+					Vmath::Vcopy(m_num_homogeneous_points[0],&(inarray[i]),packed_len,&(outarray[i*m_num_homogeneous_points[0]]),1);
 				}
 			}
 		}

@@ -108,6 +108,22 @@ namespace Nektar
 													 Array<OneD, NekDouble> &outarray, 
 													 bool UseNumMode = false);
 			
+			LIB_UTILITIES_EXPORT void TransposeXtoYZ(const Array<OneD,const NekDouble> &inarray,
+													 Array<OneD, NekDouble> &outarray, 
+													 bool UseNumMode = false);
+			
+			LIB_UTILITIES_EXPORT void TransposeYZtoX(const Array<OneD,const NekDouble> &inarray,
+													 Array<OneD, NekDouble> &outarray, 
+													 bool UseNumMode = false);
+			
+			LIB_UTILITIES_EXPORT void TransposeYZtoZY(const Array<OneD,const NekDouble> &inarray,
+													 Array<OneD, NekDouble> &outarray, 
+													 bool UseNumMode = false);
+			
+			LIB_UTILITIES_EXPORT void TransposeZYtoYZ(const Array<OneD,const NekDouble> &inarray,
+													  Array<OneD, NekDouble> &outarray, 
+													  bool UseNumMode = false);
+			
 			int m_num_homogeneous_directions;
 			
 			Array<OneD,int> m_num_points_per_proc;     // number of homogenous points on each process for each of the three homogeneous direction

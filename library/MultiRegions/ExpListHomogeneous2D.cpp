@@ -407,48 +407,65 @@ namespace Nektar
 			else 
 			{
 				
-			    DNekBlkMatSharedPtr blkmat;
+			    DNekBlkMatSharedPtr blkmatY;
+				DNekBlkMatSharedPtr blkmatZ;
 				
                 if(inarray.num_elements() == m_npoints) //transform phys space
                 {
 					if(IsForwards)
 					{
-						blkmat = GetHomogeneous2DBlockMatrix(eForwardsPhysSpace2D);
+						blkmatY = GetHomogeneous2DBlockMatrix(eForwardsPhysSpaceY1D);
+						blkmatZ = GetHomogeneous2DBlockMatrix(eForwardsPhysSpaceZ1D);
 					}
 					else
 					{
-						blkmat = GetHomogeneous2DBlockMatrix(eBackwardsPhysSpace2D);
+						blkmatY = GetHomogeneous2DBlockMatrix(eBackwardsPhysSpaceY1D);
+						blkmatZ = GetHomogeneous2DBlockMatrix(eBackwardsPhysSpaceZ1D);
 					}
                 }
 				else
                 {
 					if(IsForwards)
 					{
-						blkmat = GetHomogeneous2DBlockMatrix(eForwardsCoeffSpace2D,UseContCoeffs);
+						blkmatY = GetHomogeneous2DBlockMatrix(eForwardsCoeffSpaceY1D,UseContCoeffs);
+						blkmatZ = GetHomogeneous2DBlockMatrix(eForwardsCoeffSpaceZ1D,UseContCoeffs);
 					}
 					else
 					{
-						blkmat = GetHomogeneous2DBlockMatrix(eBackwardsCoeffSpace2D,UseContCoeffs);
+						blkmatY = GetHomogeneous2DBlockMatrix(eBackwardsCoeffSpaceY1D,UseContCoeffs);
+						blkmatZ = GetHomogeneous2DBlockMatrix(eBackwardsCoeffSpaceZ1D,UseContCoeffs);;
 					}
                 }
 				
-                int nrows = blkmat->GetRows();
-                int ncols = blkmat->GetColumns();
+                int nrowsY = blkmatY->GetRows();
+                int ncolsY = blkmatY->GetColumns();
 				
-                Array<OneD, NekDouble> sortedinarray(ncols);
-                Array<OneD, NekDouble> sortedoutarray(nrows);
+                Array<OneD, NekDouble> sortedinarrayY(ncolsY);
+                Array<OneD, NekDouble> sortedoutarrayY(nrowsY);
 				
+				int nrowsZ = blkmatZ->GetRows();
+                int ncolsZ = blkmatZ->GetColumns();
 				
-                ShuffleIntoHomogeneous2DClosePacked(inarray,sortedinarray,!IsForwards);
+                Array<OneD, NekDouble> sortedinarrayZ(ncolsZ);
+                Array<OneD, NekDouble> sortedoutarrayZ(nrowsZ);
 				
-                // Create NekVectors from the given data arrays
-                NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
-                NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
+                NekVector<NekDouble> inY (ncolsY,sortedinarrayY,eWrapper);
+                NekVector<NekDouble> outY(nrowsY,sortedoutarrayY,eWrapper);
 				
-                // Perform matrix-vector multiply.
-                out = (*blkmat)*in;
+                NekVector<NekDouble> inZ (ncolsZ,sortedinarrayZ,eWrapper);
+                NekVector<NekDouble> outZ(nrowsZ,sortedoutarrayZ,eWrapper);
 				
-                UnshuffleFromHomogeneous2DClosePacked(sortedoutarray,outarray,IsForwards);
+                ShuffleIntoHomogeneous2DClosePacked(inarray,sortedinarrayY,!IsForwards);
+				
+                outY = (*blkmatY)*inY;
+				
+				Transpose(sortedoutarrayY,sortedinarrayZ,true);
+				
+                outZ = (*blkmatZ)*inZ;
+				
+				Transpose(sortedoutarrayZ,sortedoutarrayY,false);
+				
+                UnshuffleFromHomogeneous2DClosePacked(sortedoutarrayY,outarray,IsForwards);
 			}
         }
 
@@ -566,14 +583,34 @@ namespace Nektar
         {
             int i;
             int n_exp = 0;
-            DNekMatSharedPtr    loc_mat;
+            
+			DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
-			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
-			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
 			
+			LibUtilities::BasisSharedPtr Basis;
+			
+			int NumPoints = 0;
+			int NumModes = 0;
+			int NumPencils = 0;
+			
+			if((mattype == eForwardsCoeffSpaceY1D) || (mattype == eBackwardsCoeffSpaceY1D)
+			   ||(mattype == eForwardsPhysSpaceY1D) || (mattype == eBackwardsPhysSpaceY1D))
+			{
+				Basis = m_homogeneousBasis_y;
+				NumPoints  = m_homogeneousBasis_y->GetNumModes();
+				NumModes   = m_homogeneousBasis_y->GetNumPoints();
+				NumPencils = m_homogeneousBasis_z->GetNumPoints();
+			}
+			else 
+			{
+				Basis = m_homogeneousBasis_z;
+				NumPoints  = m_homogeneousBasis_z->GetNumModes();
+				NumModes   = m_homogeneousBasis_z->GetNumPoints();
+				NumPencils = m_homogeneousBasis_y->GetNumPoints();
+			}
 
-            if((mattype == eForwardsCoeffSpace2D)
-               ||(mattype == eBackwardsCoeffSpace2D)) // will operate on m_coeffs
+            if((mattype == eForwardsCoeffSpaceY1D) || (mattype == eForwardsCoeffSpaceZ1D)
+               ||(mattype == eBackwardsCoeffSpaceY1D)||(mattype == eBackwardsCoeffSpaceZ1D))
             {
                 if(UseContCoeffs)
                 {
@@ -592,42 +629,43 @@ namespace Nektar
             Array<OneD,unsigned int> nrows(n_exp);
             Array<OneD,unsigned int> ncols(n_exp);
 
-            if((mattype == eForwardsCoeffSpace2D)||(mattype == eForwardsPhysSpace2D))
+			if((mattype == eForwardsCoeffSpaceY1D)||(mattype == eForwardsPhysSpaceY1D) || 
+			   (mattype == eForwardsCoeffSpaceZ1D)||(mattype == eForwardsPhysSpaceZ1D))
             {
-                nrows = Array<OneD, unsigned int>(n_exp,NumMod_y*NumMod_z);
-                ncols = Array<OneD, unsigned int>(n_exp,m_lines.num_elements());
+                nrows = Array<OneD, unsigned int>(n_exp*NumPencils,NumModes);
+                ncols = Array<OneD, unsigned int>(n_exp*NumPencils,NumPoints);
             }
             else
             {
-                nrows = Array<OneD, unsigned int>(n_exp,m_lines.num_elements());
-                ncols = Array<OneD, unsigned int>(n_exp,NumMod_y*NumMod_z);
+                nrows = Array<OneD, unsigned int>(n_exp*NumPencils,NumPoints);
+                ncols = Array<OneD, unsigned int>(n_exp*NumPencils,NumModes);
             }
 
             MatrixStorage blkmatStorage = eDIAGONAL;
-            BlkMatrix = MemoryManager<DNekBlkMat>
-                ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
+            BlkMatrix = MemoryManager<DNekBlkMat>::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
-            StdRegions::StdQuadExp StdQuad(m_homogeneousBasis_y->GetBasisKey(),m_homogeneousBasis_z->GetBasisKey());
-
-            if((mattype == eForwardsCoeffSpace2D)||(mattype == eForwardsPhysSpace2D))
+            StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+			
+            if((mattype == eForwardsCoeffSpaceY1D)||(mattype == eForwardsPhysSpaceY1D) || 
+			   (mattype == eForwardsCoeffSpaceZ1D)||(mattype == eForwardsPhysSpaceZ1D))
             {
 				StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-                                                StdQuad.DetExpansionType(),
-                                                StdQuad);
+                                                StdSeg.DetExpansionType(),
+                                                StdSeg);
 				
-                loc_mat = StdQuad.GetStdMatrix(matkey);				
+                loc_mat = StdSeg.GetStdMatrix(matkey);				
             }
             else
             {
                 StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                                StdQuad.DetExpansionType(),
-                                                StdQuad);
+                                                StdSeg.DetExpansionType(),
+                                                StdSeg);
 
-                loc_mat = StdQuad.GetStdMatrix(matkey);
+                loc_mat = StdSeg.GetStdMatrix(matkey);
             }
 
             // set up array of block matrices.
-            for(i = 0; i < n_exp; ++i)
+            for(i = 0; i < (n_exp*NumPencils); ++i)
             {
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }

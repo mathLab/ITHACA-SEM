@@ -1104,8 +1104,6 @@ namespace Nektar
         // boundary conditions
         void DisContField1D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &VertID)
         {
-			
-			cout << "\n\nGetBoundaryToElmtMap"<<endl;
             map<int, int> VertGID;
             int i,n,id;
             int bid,cnt,Vid;

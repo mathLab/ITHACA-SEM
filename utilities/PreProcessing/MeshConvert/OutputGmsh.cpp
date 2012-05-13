@@ -103,6 +103,8 @@ namespace Nektar
                 }
             }
             
+            //maxOrder = 4;
+            
             for (int i = 0; i < m->element[m->expDim].size(); ++i)
             {
                 ElementSharedPtr e = m->element[m->expDim][i];
@@ -198,7 +200,8 @@ namespace Nektar
             
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
-                mshFile << (*it)->id << " " << (*it)->x << " " 
+                mshFile << (*it)->id << " " << scientific << setprecision(10)
+                        << (*it)->x << " " 
                         << (*it)->y  << " " << (*it)->z 
                         << endl;
             }
@@ -293,7 +296,7 @@ namespace Nektar
                         reverse(tags.begin()+4+3*(order-1), tags.begin()+4+4*(order-1));
                         reverse(tags.begin()+4+4*(order-1), tags.begin()+4+5*(order-1));
                         reverse(tags.begin()+4+5*(order-1), tags.begin()+4+6*(order-1));
-                        /*
+                        
                         // Swap face 2 nodes with face 3.
                         pos = 4 + 6*(order-1) + 2*(order-2)*(order-1)/2;
                         for (int j = 0; j < (order-2)*(order-1)/2; ++j)
@@ -352,17 +355,46 @@ namespace Nektar
                                 tmp[a] = tags[pos+j+k*(2*(order-2)+1-k)/2];
                             }
                         }
+                        
                         for (int j = 0; j < (order-1)*(order-2)/2; ++j)
                         {
                             tags[pos+j] = tmp[j];
                         }
-                        */
                     }
                     // Re-order prism vertices.
                     else if (e->GetConf().e == ePrism)
                     {
+                        int order = e->GetConf().order;
+                        if (order > 2)
+                        {
+                            cerr << "Temporary error: Gmsh prisms only supported up to 2nd order!" << endl;
+                            abort();
+                        }
+                        
                         // Swap nodes.
-                        swap(tags[2], tags[4]);
+                        vector<int> temp (18);
+                        temp[0] = tags[0];
+                        temp[1] = tags[1];
+                        temp[2] = tags[4];
+                        temp[3] = tags[3];
+                        temp[4] = tags[2];
+                        temp[5] = tags[5];
+                        temp[6] = tags[6];
+                        temp[7] = tags[10];
+                        temp[8] = tags[9];
+                        temp[9] = tags[11];
+                        temp[10] = tags[7];
+                        temp[11] = tags[14];
+                        temp[12] = tags[8];
+                        temp[13] = tags[13];
+                        temp[14] = tags[12];
+                        temp[15] = tags[15];
+                        temp[16] = tags[17];
+                        temp[17] = tags[16];
+                        for (int k = 0; k < 18; ++k)
+                        {
+                            tags[k] = temp[k];
+                        }
                     }
                     
                     // Finally write element nodes.

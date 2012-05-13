@@ -702,12 +702,6 @@ namespace Nektar
                 edge.back()->id = eid++;
             }
             
-            // Swap edges so that the ordering of the edge vector corresponds
-            // with Nektar++ ordering (since the mapping above will change
-            // this order depending on how the pairs are ordered).
-            swap(edge[1], edge[3]);
-            swap(edge[1], edge[2]);
-            
             // Reorient the tet to ensure collapsed coordinates align between adjacent
             // elements.
             if (m_conf.reorient)
@@ -718,6 +712,8 @@ namespace Nektar
             // Create faces
             int face_ids[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+            int face_edges[4][3];
+            
             for (int j = 0; j < 4; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
@@ -733,6 +729,7 @@ namespace Nektar
                         if ( ((*(edge[i]->n1)==*a) && (*(edge[i]->n2)==*b))
                                 || ((*(edge[i]->n1)==*b) && (*(edge[i]->n2) == *a)) )
                         {
+                            face_edges[j][k] = i;
                             faceEdges.push_back(edge[i]);
                             break;
                         }
@@ -750,6 +747,15 @@ namespace Nektar
                 face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
             }
+
+            vector<EdgeSharedPtr> tmp(6);
+            tmp[0] = edge[face_edges[0][0]];
+            tmp[1] = edge[face_edges[0][1]];
+            tmp[2] = edge[face_edges[0][2]];
+            tmp[3] = edge[face_edges[1][2]];
+            tmp[4] = edge[face_edges[1][1]];
+            tmp[5] = edge[face_edges[2][1]];
+            edge = tmp;
         }
         
         SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
@@ -758,7 +764,7 @@ namespace Nektar
             {
                 return m_geom;
             }
-
+            
             SpatialDomains::TriGeomSharedPtr tfaces[4];
             
             for (int i = 0; i < 4; ++i)
@@ -866,6 +872,7 @@ namespace Nektar
             for (i = 0; i < 6; ++i)
             {
                 int pos = 4 + i*(order-1);
+                //int ed = m_test[i];
                 edge[i]->edgeNodes.clear();
                 for (j = 0; j < order-1; ++j)
                 {
@@ -912,24 +919,31 @@ namespace Nektar
          * lowest ID. These vertices are swapped if the element is incorrectly
          * oriented.
          */
-        void Tetrahedron::OrientTet() {
+        void Tetrahedron::OrientTet()
+        {
             // Order vertices with highest global vertex at top degenerate
             // point. Place second highest global vertex at base degenerate
             // point.
-            sort(vertex.begin(), vertex.end());
-
+            /*
+            vector<pair<NodeSharedPtr,int> > v(4);
+            for (int i = 0; i < 4; ++i)
+            {
+                v[i] = pair<NodeSharedPtr,int>(vertex[i], i);
+            }
+            sort(v.begin(), v.end());
+            
             // Calculate a.(b x c) to determine tet volume; if negative,
             // reverse order of non-degenerate points to correctly orientate
             // the tet.
-            double ax  = vertex[1]->x-vertex[0]->x;
-            double ay  = vertex[1]->y-vertex[0]->y;
-            double az  = vertex[1]->z-vertex[0]->z;
-            double bx  = vertex[2]->x-vertex[0]->x;
-            double by  = vertex[2]->y-vertex[0]->y;
-            double bz  = vertex[2]->z-vertex[0]->z;
-            double cx  = vertex[3]->x-vertex[0]->x;
-            double cy  = vertex[3]->y-vertex[0]->y;
-            double cz  = vertex[3]->z-vertex[0]->z;
+            double ax  = v[1].first->x-v[0].first->x;
+            double ay  = v[1].first->y-v[0].first->y;
+            double az  = v[1].first->z-v[0].first->z;
+            double bx  = v[2].first->x-v[0].first->x;
+            double by  = v[2].first->y-v[0].first->y;
+            double bz  = v[2].first->z-v[0].first->z;
+            double cx  = v[3].first->x-v[0].first->x;
+            double cy  = v[3].first->y-v[0].first->y;
+            double cz  = v[3].first->z-v[0].first->z;
             double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
             vol       /= 6.0;
             
@@ -937,16 +951,53 @@ namespace Nektar
             {
                 cerr << "Warning: degenerate tetrahedron, volume = " << vol << endl;
             }
-            
+
             if (vol < 0)
             {
-                swap(vertex[0], vertex[1]);
-                orientation = 1;
+                swap(v[0], v[1]);
             }
-            else
+
+            int face_ids[4][3] = {
+                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+            
+            for (int i = 0; i < 4; ++i)
             {
-                orientation = 0;
+                vertex[i] = v[i].first;
+                
+                vector<int> vlist(3);
+                for (int j = 0; j < 3; ++j)
+                {
+                    vlist[j] = v[face_ids[i][j]].second;
+                }
+                //vlist.sort();
             }
+            */
+           sort(vertex.begin(), vertex.end());
+	
+           // Calculate a.(b x c) to determine tet volume; if negative,
+           // reverse order of non-degenerate points to correctly orientate
+           // the tet.
+           double ax  = vertex[1]->x-vertex[0]->x;
+           double ay  = vertex[1]->y-vertex[0]->y;
+           double az  = vertex[1]->z-vertex[0]->z;
+           double bx  = vertex[2]->x-vertex[0]->x;
+           double by  = vertex[2]->y-vertex[0]->y;
+           double bz  = vertex[2]->z-vertex[0]->z;
+           double cx  = vertex[3]->x-vertex[0]->x;
+           double cy  = vertex[3]->y-vertex[0]->y;
+           double cz  = vertex[3]->z-vertex[0]->z;
+           double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
+           vol       /= 6.0;
+	   
+           if (fabs(vol) <= 1e-10)
+           {
+               cerr << "Warning: degenerate tetrahedron, volume = " << vol << endl;
+           }
+	   
+           if (vol < 0)
+           {
+               swap(vertex[0], vertex[1]);
+           }
         }
 
 
@@ -989,12 +1040,9 @@ namespace Nektar
                 vertex.push_back(pNodeList[i]);
             }
 
-            edge.resize(9);
-            int edgeMap[9] = {0,3,4,1,5,6,2,7,8};
             int eid = 0;
-            
             // Create edges (with corresponding set of edge points)
-            for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it, ++eid)
+            for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
                 if (m_conf.order > 1) {
@@ -1002,12 +1050,12 @@ namespace Nektar
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge[edgeMap[eid]] = EdgeSharedPtr(
+                edge.push_back(EdgeSharedPtr(
                     new Edge(pNodeList[it->first.first-1],
                              pNodeList[it->first.second-1],
                              edgeNodes,
-                             m_conf.edgeCurveType));
-                edge[edgeMap[eid]]->id = edgeMap[eid];
+                             m_conf.edgeCurveType)));
+                edge.back()->id = eid++;
             }
             
             if (m_conf.reorient)
@@ -1018,6 +1066,7 @@ namespace Nektar
             // Create faces
             int face_ids[5][4] = {
                 {0,1,2,3},{0,1,4,-1},{1,2,5,4},{3,2,5,-1},{0,3,5,4}};
+            int face_edges[5][4];
             int faceoffset = 0;
             for (int j = 0; j < 5; ++j)
             {
@@ -1037,6 +1086,7 @@ namespace Nektar
                             (edge[i]->n1 == b && edge[i]->n2 == a))
                         {
                             faceEdges.push_back(edge[i]);
+                            face_edges[j][k] = i;
                             break;
                         }
                     }
@@ -1055,6 +1105,19 @@ namespace Nektar
                 face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
             }
+
+            // Re-order edge array to be consistent with Nektar++ ordering.
+            vector<EdgeSharedPtr> tmp(9);
+            tmp[0] = edge[face_edges[0][0]];
+            tmp[1] = edge[face_edges[0][1]];
+            tmp[2] = edge[face_edges[0][2]];
+            tmp[3] = edge[face_edges[0][3]];
+            tmp[4] = edge[face_edges[1][2]];
+            tmp[5] = edge[face_edges[1][1]];
+            tmp[6] = edge[face_edges[2][1]];
+            tmp[7] = edge[face_edges[3][2]];
+            tmp[8] = edge[face_edges[4][2]];
+            edge = tmp;
         }
 
         /**

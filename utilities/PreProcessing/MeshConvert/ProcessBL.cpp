@@ -52,10 +52,10 @@ namespace Nektar
         ModuleKey ProcessBL::className = 
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey("bl", eProcessModule), ProcessBL::create);
-      
+        
         ProcessBL::ProcessBL(MeshSharedPtr m) : ProcessModule(m)
         {
-
+            
         }
       
         ProcessBL::~ProcessBL()
@@ -67,7 +67,7 @@ namespace Nektar
         {
             // Create a duplicate of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
-            const int nLayers = 4;
+            const int nLayers = 8;
             const int layerWidth = 3;
             // Set to 0 for prismatic boundary layer and 1 for tetrahedral
             // boundary layer mesh.
@@ -106,6 +106,10 @@ namespace Nektar
             // Face 4 diagonals
             edgeMap[pair<int,int>(0,5)] = pair<int,int>(0,            nq*nq+nq);
             edgeMap[pair<int,int>(3,4)] = pair<int,int>(nq*(nq-1),    nq*nq-nq);
+
+            // Prismatic node -> face map.
+            int prismFaceNodes[5][4] = {
+                {0,1,2,3},{0,1,4,-1},{1,2,5,4},{3,2,5,-1},{0,3,5,4}};
             
             // Default PointsType.
             LibUtilities::PointsType pt = LibUtilities::eGaussLobattoLegendre;
@@ -120,7 +124,15 @@ namespace Nektar
                 }
 	      
                 // Find quadrilateral boundary faces if any
-                int bl0 = el[i]->GetBoundaryLink(0);
+                std::map<int, int> bLink;
+                for (int j = 0; j < 5; j += 2)
+                {
+                    int bl = el[i]->GetBoundaryLink(j);
+                    if (bl != -1)
+                    {
+                        bLink[j] = bl;
+                    }
+                }
 	       
                 // Get elemental geometry object.
                 SpatialDomains::PrismGeomSharedPtr geom = 
@@ -408,26 +420,29 @@ namespace Nektar
 
                     // Change the surface elements of the quad face on the
                     // symmetry plane to match the layers of prisms.
-                    if (bl0 != -1)
+                    map<int,int>::iterator it;
+                    for (it = bLink.begin(); it != bLink.end(); ++it)
                     {
+                        int fid = it->first;
+                        int bl  = it->second;
                         if (j == 0)
                         {
-                            ElementSharedPtr e = m->element[m->expDim-1][bl0];
-                            e->SetVertex(0, nodeList[0]);
-                            e->SetVertex(1, nodeList[1]);
-                            e->SetVertex(2, nodeList[2]);
-                            e->SetVertex(3, nodeList[3]);
-                            elmt->SetBoundaryLink(0,bl0);
+                            ElementSharedPtr e = m->element[m->expDim-1][bl];
+                            e->SetVertex(0, nodeList[prismFaceNodes[fid][0]]);
+                            e->SetVertex(1, nodeList[prismFaceNodes[fid][1]]);
+                            e->SetVertex(2, nodeList[prismFaceNodes[fid][2]]);
+                            e->SetVertex(3, nodeList[prismFaceNodes[fid][3]]);
+                            elmt->SetBoundaryLink(fid,bl);
                         }
                         else
                         {
                             vector<NodeSharedPtr> qNodeList(4);
                             for (int k = 0; k < 4; ++k)
                             {
-                                qNodeList[k] = nodeList[k];
+                                qNodeList[k] = nodeList[prismFaceNodes[fid][k]];
                             }
                             vector<int> tagBE;
-                            tagBE = m->element[m->expDim-1][bl0]->GetTagList();
+                            tagBE = m->element[m->expDim-1][bl]->GetTagList();
                             ElmtConfig bconf(eQuadrilateral, 1, false, false, false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
                                 CreateInstance(eQuadrilateral,bconf,qNodeList,tagBE);
@@ -561,8 +576,6 @@ namespace Nektar
                     Array<OneD, NekDouble> zs(layerWidth*layerWidth*layerWidth);
                     qs->GetCoords(xs,ys,zs);
                     
-                    int bl0 = el[i]->GetBoundaryLink(0);
-                    
                     for (int j = 0; j < 3; ++j)
                     {
                         vector<NodeSharedPtr> tetNodes(4);
@@ -624,26 +637,44 @@ namespace Nektar
                         m->element[m->expDim].push_back(elmt);
                     }
 
+                    // Find quadrilateral boundary faces if any.
+                    std::map<int, int> bLink;
+                    for (int j = 0; j < 5; j += 2)
+                    {
+                        int bl = el[i]->GetBoundaryLink(j);
+                        if (bl != -1)
+                        {
+                            bLink[j] = bl;
+                        }
+                    }
+                    
                     // Now check to see if this one of the quadrilateral faces
-                    // is associated with a boundary condition. If it does, we
+                    // is associated with a boundary condition. If it is, we
                     // split the face into two triangles and mark the existing
                     // face for removal.
                     //
                     // Note that this algorithm has significant room for
                     // improvement and is likely one of the least optimal
                     // approachs - however implementation is simple.
-                    if (bl0 != -1)
+                    for (int fid = 0; fid < 5; fid += 2)
                     {
-                        vector<NodeSharedPtr> triNodeList    (3);
-                        vector<int>           faceNodes      (3);
+                        int bl = el[i]->GetBoundaryLink(fid);
+
+                        if (bl == -1)
+                        {
+                            continue;
+                        }
+
+                        vector<NodeSharedPtr> triNodeList(3);
+                        vector<int>           faceNodes  (3);
                         vector<int>           tmp;
                         vector<int>           tagBE;
                         ElmtConfig            bconf(eTriangle, 1, false, false);
                         ElementSharedPtr      elmt;
                         
                         // Mark existing boundary face for removal.
-                        toRemove.insert(bl0);
-                        tagBE =  m->element[m->expDim-1][bl0]->GetTagList();
+                        toRemove.insert(bl);
+                        tagBE =  m->element[m->expDim-1][bl]->GetTagList();
                         
                         // First loop over tets.
                         for (int j = 0; j < 3; ++j)
@@ -667,7 +698,17 @@ namespace Nektar
                                 if (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2 ||
                                     faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3 ||
                                     faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 3 ||
-                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3)
+                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3 ||
+                                    
+                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 5 ||
+                                    faceNodes[0] == 1 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
+                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 4 ||
+                                    faceNodes[0] == 2 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
+
+                                    faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 5 ||
+                                    faceNodes[0] == 0 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
+                                    faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 4 ||
+                                    faceNodes[0] == 3 && faceNodes[1] == 4 && faceNodes[2] == 5)
                                 {
                                     triNodeList[0] = nodeList[mapPrism[tmp[0]]];
                                     triNodeList[1] = nodeList[mapPrism[tmp[1]]];

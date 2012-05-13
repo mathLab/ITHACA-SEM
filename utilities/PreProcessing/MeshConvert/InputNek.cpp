@@ -641,6 +641,23 @@ namespace Nektar
                 // correctly.
                 if (elm->GetDim() == 3)
                 {
+                    // 3D elements may have been reoriented, so face IDs will
+                    // change.
+                    if (elm->GetConf().e == ePrism && faceId % 2 == 0)
+                    {
+                        boost::shared_ptr<Prism> p = 
+                            boost::dynamic_pointer_cast<Prism>(elm);
+                        if (p->orientation == 1)
+                        {
+                            faceId = (faceId+2) % 5;
+                        }
+                        else if (p->orientation == 2)
+                        {
+                            faceId = (faceId+4) % 5;
+                        }
+                        cout << faceId << endl;
+                    }
+                    
                     FaceSharedPtr f = elm->GetFace(faceId);
                     bool tri = f->vertexList.size() == 3;
                     

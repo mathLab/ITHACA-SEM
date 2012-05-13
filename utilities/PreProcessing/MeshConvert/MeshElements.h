@@ -747,6 +747,8 @@ namespace Nektar
             std::map<int,int> m_boundaryLinks;
             /// Nektar++ geometry object for this element.
             SpatialDomains::GeometrySharedPtr m_geom;
+            std::map<int,int> m_test;
+            
         };
         /// Container for elements; key is expansion dimension, value is
         /// vector of elements of that dimension.
@@ -1032,7 +1034,7 @@ namespace Nektar
             /**
              * Orientation of tet; unchanged = 0; base vertex swapped = 1.
              */
-            unsigned int orientation;
+            int orientationMap[4];
 
         protected:
             void OrientTet();

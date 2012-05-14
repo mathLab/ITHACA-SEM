@@ -67,7 +67,7 @@ namespace Nektar
         {
             // Create a duplicate of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
-            const int nLayers = 8;
+            const int nLayers = 3;
             const int layerWidth = 3;
             // Set to 0 for prismatic boundary layer and 1 for tetrahedral
             // boundary layer mesh.
@@ -240,119 +240,7 @@ namespace Nektar
                                      x[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth], 
                                      y[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth],
                                      z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth]));
-                    }		  
-                    
-                    // Add high-order information to this element.
-
-                    /*
-                    // Edge 0
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+k], 
-                                         y[offset+k],
-                                         z[offset+k])));
                     }
-
-                    // Edge 1
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        double dx = (nodeList[2]->x-nodeList[1]->x)/(layerWidth-1);
-                        double dy = (nodeList[2]->y-nodeList[1]->y)/(layerWidth-1);
-                        double dz = (nodeList[2]->z-nodeList[1]->z)/(layerWidth-1);
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         nodeList[1]->x+k*dx,
-                                         nodeList[1]->y+k*dy,
-                                         nodeList[1]->z+k*dz)));
-                    }
-
-                    // Edge 2
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k], 
-                                         y[offset+layerWidth+k],
-                                         z[offset+layerWidth+k])));
-                    }
-                    
-                    // Edge 3
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        double dx = (nodeList[3]->x-nodeList[0]->x)/(layerWidth-1);
-                        double dy = (nodeList[3]->y-nodeList[0]->y)/(layerWidth-1);
-                        double dz = (nodeList[3]->z-nodeList[0]->z)/(layerWidth-1);
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         nodeList[0]->x+k*dx,
-                                         nodeList[0]->y+k*dy,
-                                         nodeList[0]->z+k*dz)));
-                    }
-
-                    // Edge 4
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+k*(layerWidth)*(nLayers+1)], 
-                                         y[offset+k*(layerWidth)*(nLayers+1)],
-                                         z[offset+k*(layerWidth)*(nLayers+1)])));
-                    }
-
-                    // Edge 5
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
-                                         y[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1],
-                                         z[offset+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
-                    }
-
-                    // Edge 6
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1], 
-                                         y[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1],
-                                         z[offset+layerWidth+k*(layerWidth)*(nLayers+1)+layerWidth-1])));
-                    }
-
-                    // Edge 7
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         x[offset+layerWidth+k*(layerWidth)*(nLayers+1)], 
-                                         y[offset+layerWidth+k*(layerWidth)*(nLayers+1)],
-                                         z[offset+layerWidth+k*(layerWidth)*(nLayers+1)])));
-                    }   
-                    
-                    // Edge 8
-                    for (int k = 1; k < layerWidth-1; ++k)
-                    {
-                        double dx = (nodeList[5]->x-nodeList[4]->x)/(layerWidth-1);
-                        double dy = (nodeList[5]->y-nodeList[4]->y)/(layerWidth-1);
-                        double dz = (nodeList[5]->z-nodeList[4]->z)/(layerWidth-1);
-                        nodeList.push_back(
-                            NodeSharedPtr(
-                                new Node(nodeId++,
-                                         nodeList[4]->x+k*dx,
-                                         nodeList[4]->y+k*dy,
-                                         nodeList[4]->z+k*dz)));
-                    }
-                    */
                     
                     // Create element tags - 0 indicates place the element in
                     // the general domain.
@@ -360,7 +248,7 @@ namespace Nektar
                     tags.push_back(0);
                     
                     // Create the element.
-                    ElmtConfig conf(ePrism, 1, false, false, false);
+                    ElmtConfig conf(ePrism, 1, true, true, false);
                     ElementSharedPtr elmt = GetElementFactory().
                         CreateInstance(ePrism,conf,nodeList,tags); 
 
@@ -443,10 +331,10 @@ namespace Nektar
                             }
                             vector<int> tagBE;
                             tagBE = m->element[m->expDim-1][bl]->GetTagList();
-                            ElmtConfig bconf(eQuadrilateral, 1, false, false, false);
+                            ElmtConfig bconf(eQuadrilateral, 1, true, true, false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
                                 CreateInstance(eQuadrilateral,bconf,qNodeList,tagBE);
-                            elmt->SetBoundaryLink(0,m->element[m->expDim-1].size());
+                            elmt->SetBoundaryLink(fid,m->element[m->expDim-1].size());
                             m->element[m->expDim-1].push_back(boundaryElmt);
                         }
                     }
@@ -454,7 +342,7 @@ namespace Nektar
                     m->element[m->expDim].push_back(elmt);
                 }
             }
-            
+
             /*
              * Split all element types into tetrahedra. This is based on the
              * algorithm found in:
@@ -473,7 +361,7 @@ namespace Nektar
                 // Represents table 2 of paper; each row i represents a
                 // rotation of the prism nodes such that vertex i is placed at
                 // position 0.
-                int indir[6][6] = {
+                static int indir[6][6] = {
                     {0,1,2,3,4,5},
                     {1,2,0,4,5,3},
                     {2,0,1,5,3,4},
@@ -486,7 +374,7 @@ namespace Nektar
                 // three tetrahedra if the first condition is met; the latter
                 // three rows are the three tetrahedra if the second condition
                 // is met.
-                int prismTet[6][4] = {
+                static int prismTet[6][4] = {
                     {0,1,2,5},
                     {0,1,5,4},
                     {0,4,5,3},
@@ -497,13 +385,14 @@ namespace Nektar
                 
                 // Represents the order of tetrahedral edges (in Nektar++
                 // ordering).
-                int tetEdges[6][2] = {
+                static int tetEdges[6][2] = {
                     {0,1}, {1,2},
                     {0,2}, {0,3},
                     {1,3}, {2,3}};
                 
                 // A tetrahedron nodes -> faces map.
-                int tetFaceNodes[4][3] = {{0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+                static int tetFaceNodes[4][3] = {
+                    {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
 
                 // Make a copy of the element list.
                 el = m->element[m->expDim];
@@ -541,12 +430,13 @@ namespace Nektar
                         }
                     }
                     
-                    int offset = 0;
+                    int offset;
                     
                     // Split prism using paper criterion.
                     if (min(nodeList[indir[minId][1]]->id, nodeList[indir[minId][5]]->id) <
                         min(nodeList[indir[minId][2]]->id, nodeList[indir[minId][4]]->id))
                     {
+                        offset = 0;
                     }
                     else if (min(nodeList[indir[minId][1]]->id, nodeList[indir[minId][5]]->id) >
                              min(nodeList[indir[minId][2]]->id, nodeList[indir[minId][4]]->id))
@@ -637,17 +527,6 @@ namespace Nektar
                         m->element[m->expDim].push_back(elmt);
                     }
 
-                    // Find quadrilateral boundary faces if any.
-                    std::map<int, int> bLink;
-                    for (int j = 0; j < 5; j += 2)
-                    {
-                        int bl = el[i]->GetBoundaryLink(j);
-                        if (bl != -1)
-                        {
-                            bLink[j] = bl;
-                        }
-                    }
-                    
                     // Now check to see if this one of the quadrilateral faces
                     // is associated with a boundary condition. If it is, we
                     // split the face into two triangles and mark the existing
@@ -659,17 +538,17 @@ namespace Nektar
                     for (int fid = 0; fid < 5; fid += 2)
                     {
                         int bl = el[i]->GetBoundaryLink(fid);
-
+                        
                         if (bl == -1)
                         {
                             continue;
                         }
-
+                        
                         vector<NodeSharedPtr> triNodeList(3);
                         vector<int>           faceNodes  (3);
                         vector<int>           tmp;
                         vector<int>           tagBE;
-                        ElmtConfig            bconf(eTriangle, 1, false, false);
+                        ElmtConfig            bconf(eTriangle, 1, true, true);
                         ElementSharedPtr      elmt;
                         
                         // Mark existing boundary face for removal.
@@ -695,20 +574,21 @@ namespace Nektar
                                 // If this face matches a triple denoting a
                                 // split quad face, add the face to the
                                 // expansion list.
-                                if (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2 ||
-                                    faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3 ||
-                                    faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 3 ||
-                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3 ||
-                                    
-                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 5 ||
-                                    faceNodes[0] == 1 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
-                                    faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 4 ||
-                                    faceNodes[0] == 2 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
-
-                                    faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 5 ||
-                                    faceNodes[0] == 0 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
-                                    faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 4 ||
-                                    faceNodes[0] == 3 && faceNodes[1] == 4 && faceNodes[2] == 5)
+                                if (fid == 0 && (
+                                        faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2  ||
+                                        faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3  ||
+                                        faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 3  ||
+                                        faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3) ||
+                                    fid == 2 && (
+                                        faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 5  ||
+                                        faceNodes[0] == 1 && faceNodes[1] == 4 && faceNodes[2] == 5  ||
+                                        faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 4  ||
+                                        faceNodes[0] == 2 && faceNodes[1] == 4 && faceNodes[2] == 5) ||
+                                    fid == 4 && (
+                                        faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 5 ||
+                                        faceNodes[0] == 0 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
+                                        faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 4 ||
+                                        faceNodes[0] == 3 && faceNodes[1] == 4 && faceNodes[2] == 5))
                                 {
                                     triNodeList[0] = nodeList[mapPrism[tmp[0]]];
                                     triNodeList[1] = nodeList[mapPrism[tmp[1]]];

@@ -655,7 +655,12 @@ namespace Nektar
                         {
                             faceId = (faceId+4) % 5;
                         }
-                        cout << faceId << endl;
+                    }
+                    else if (elm->GetConf().e == eTetrahedron)
+                    {
+                        boost::shared_ptr<Tetrahedron> t =
+                            boost::dynamic_pointer_cast<Tetrahedron>(elm);
+                        faceId = t->orientationMap[faceId];
                     }
                     
                     FaceSharedPtr f = elm->GetFace(faceId);
@@ -670,7 +675,7 @@ namespace Nektar
                     
                     ElementType seg = tri ? eTriangle : eQuadrilateral;
                     tags.push_back(seg);
-                    ElmtConfig conf(seg,1,true,false,false,
+                    ElmtConfig conf(seg,1,true,true,false,
                                     LibUtilities::eGaussLobattoLegendre);
                     surfEl = GetElementFactory().
                         CreateInstance(seg,conf,nodeList,tags);
@@ -686,7 +691,7 @@ namespace Nektar
                     vector<int> tags;
                     tags.push_back(eLine);
                     
-                    ElmtConfig conf(eLine,1,true,false,false,
+                    ElmtConfig conf(eLine,1,true,true,false,
                                     LibUtilities::eGaussLobattoLegendre);
                     surfEl = GetElementFactory().
                         CreateInstance(eLine,conf,nodeList,tags);

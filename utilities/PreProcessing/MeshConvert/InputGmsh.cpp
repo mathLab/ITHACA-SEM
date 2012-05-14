@@ -315,12 +315,12 @@ namespace Nektar
             std::map<unsigned int, ElmtConfig> tmp;
             
             //                    Elmt type,   order,  face, volume
-            tmp[  1] = ElmtConfig(eLine,           1, false, false);
-            tmp[  2] = ElmtConfig(eTriangle,       1, false, false);
-            tmp[  3] = ElmtConfig(eQuadrilateral,  1, false, false);
-            tmp[  4] = ElmtConfig(eTetrahedron,    1, false, false);
-            tmp[  5] = ElmtConfig(eHexahedron,     1, false, false);
-            tmp[  6] = ElmtConfig(ePrism,          1, false, false);
+            tmp[  1] = ElmtConfig(eLine,           1,  true,  true);
+            tmp[  2] = ElmtConfig(eTriangle,       1,  true,  true);
+            tmp[  3] = ElmtConfig(eQuadrilateral,  1,  true,  true);
+            tmp[  4] = ElmtConfig(eTetrahedron,    1,  true,  true);
+            tmp[  5] = ElmtConfig(eHexahedron,     1,  true,  true);
+            tmp[  6] = ElmtConfig(ePrism,          1,  true,  true);
             tmp[  8] = ElmtConfig(eLine,           2,  true, false);
             tmp[  9] = ElmtConfig(eTriangle,       2,  true, false);
             tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true, false);

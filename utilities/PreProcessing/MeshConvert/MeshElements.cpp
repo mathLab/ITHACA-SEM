@@ -906,6 +906,40 @@ namespace Nektar
             m_conf.volumeNodes = true;
         }
 
+        struct TetOrient
+        {
+            TetOrient(vector<int> nid, int fid) : nid(nid), fid(fid) {}
+            vector<int> nid;
+            int fid;
+        };
+        
+        struct TetOrientHash : std::unary_function<struct TetOrient, std::size_t>
+        {
+            std::size_t operator()(struct TetOrient const& p) const
+            {
+                return boost::hash_range(p.nid.begin(), p.nid.end());
+            }
+        };
+        typedef boost::unordered_set<struct TetOrient, TetOrientHash> TetOrientSet;
+
+        bool operator==(const struct TetOrient &a, const struct TetOrient &b)
+        {
+            if (a.nid.size() != b.nid.size())
+            {
+                return false;
+            }
+            
+            for (int i = 0; i < a.nid.size(); ++i)
+            {
+                if (a.nid[i] != b.nid[i])
+                {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
         /**
          * @brief Orient tetrahedron to align degenerate vertices.
          * 
@@ -921,29 +955,44 @@ namespace Nektar
          */
         void Tetrahedron::OrientTet()
         {
+            static int face_ids[4][3] = {
+                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+            
+            TetOrientSet faces;
+
+            // Create a copy of the original vertex ordering. This is used to
+            // construct a mapping, #orientationMap, which maps the original
+            // face ordering to the new face ordering.
+            for (int i = 0; i < 4; ++i)
+            {
+                vector<int> nodes(3);
+                
+                nodes[0] = vertex[face_ids[i][0]]->id;
+                nodes[1] = vertex[face_ids[i][1]]->id;
+                nodes[2] = vertex[face_ids[i][2]]->id;
+                
+                sort(nodes.begin(), nodes.end());
+                struct TetOrient faceNodes(nodes, i);
+                faces.insert(faceNodes);
+            }
+            
             // Order vertices with highest global vertex at top degenerate
             // point. Place second highest global vertex at base degenerate
             // point.
-            /*
-            vector<pair<NodeSharedPtr,int> > v(4);
-            for (int i = 0; i < 4; ++i)
-            {
-                v[i] = pair<NodeSharedPtr,int>(vertex[i], i);
-            }
-            sort(v.begin(), v.end());
+            sort(vertex.begin(), vertex.end());
             
             // Calculate a.(b x c) to determine tet volume; if negative,
             // reverse order of non-degenerate points to correctly orientate
             // the tet.
-            double ax  = v[1].first->x-v[0].first->x;
-            double ay  = v[1].first->y-v[0].first->y;
-            double az  = v[1].first->z-v[0].first->z;
-            double bx  = v[2].first->x-v[0].first->x;
-            double by  = v[2].first->y-v[0].first->y;
-            double bz  = v[2].first->z-v[0].first->z;
-            double cx  = v[3].first->x-v[0].first->x;
-            double cy  = v[3].first->y-v[0].first->y;
-            double cz  = v[3].first->z-v[0].first->z;
+            double ax  = vertex[1]->x-vertex[0]->x;
+            double ay  = vertex[1]->y-vertex[0]->y;
+            double az  = vertex[1]->z-vertex[0]->z;
+            double bx  = vertex[2]->x-vertex[0]->x;
+            double by  = vertex[2]->y-vertex[0]->y;
+            double bz  = vertex[2]->z-vertex[0]->z;
+            double cx  = vertex[3]->x-vertex[0]->x;
+            double cy  = vertex[3]->y-vertex[0]->y;
+            double cz  = vertex[3]->z-vertex[0]->z;
             double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
             vol       /= 6.0;
             
@@ -954,50 +1003,27 @@ namespace Nektar
 
             if (vol < 0)
             {
-                swap(v[0], v[1]);
+                swap(vertex[0], vertex[1]);
             }
 
-            int face_ids[4][3] = {
-                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+            TetOrientSet::iterator it;
             
+            // Search for the face in the original set of face nodes. Then use
+            // this to construct the #orientationMap.
             for (int i = 0; i < 4; ++i)
             {
-                vertex[i] = v[i].first;
+                vector<int> nodes(3);
                 
-                vector<int> vlist(3);
-                for (int j = 0; j < 3; ++j)
-                {
-                    vlist[j] = v[face_ids[i][j]].second;
-                }
-                //vlist.sort();
+                nodes[0] = vertex[face_ids[i][0]]->id;
+                nodes[1] = vertex[face_ids[i][1]]->id;
+                nodes[2] = vertex[face_ids[i][2]]->id;
+                sort(nodes.begin(), nodes.end());
+                
+                struct TetOrient faceNodes(nodes, 0);
+                
+                it = faces.find(faceNodes);
+                orientationMap[it->fid] = i;
             }
-            */
-           sort(vertex.begin(), vertex.end());
-	
-           // Calculate a.(b x c) to determine tet volume; if negative,
-           // reverse order of non-degenerate points to correctly orientate
-           // the tet.
-           double ax  = vertex[1]->x-vertex[0]->x;
-           double ay  = vertex[1]->y-vertex[0]->y;
-           double az  = vertex[1]->z-vertex[0]->z;
-           double bx  = vertex[2]->x-vertex[0]->x;
-           double by  = vertex[2]->y-vertex[0]->y;
-           double bz  = vertex[2]->z-vertex[0]->z;
-           double cx  = vertex[3]->x-vertex[0]->x;
-           double cy  = vertex[3]->y-vertex[0]->y;
-           double cz  = vertex[3]->z-vertex[0]->z;
-           double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
-           vol       /= 6.0;
-	   
-           if (fabs(vol) <= 1e-10)
-           {
-               cerr << "Warning: degenerate tetrahedron, volume = " << vol << endl;
-           }
-	   
-           if (vol < 0)
-           {
-               swap(vertex[0], vertex[1]);
-           }
         }
 
 

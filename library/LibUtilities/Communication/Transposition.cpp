@@ -319,7 +319,7 @@ namespace Nektar
 			if(m_num_processes[0] > 1)
 			{
 				int i,j;
-				int num_dofs             = inarray.num_elements();
+				int num_dofs             = outarray.num_elements();
 				int num_points_per_plane = num_dofs/m_num_points_per_proc[0];
 				int num_pencil_per_proc  = num_points_per_plane/m_num_processes[0] + (num_points_per_plane%m_num_processes[0] > 0);
 				int copy_len             = num_pencil_per_proc;

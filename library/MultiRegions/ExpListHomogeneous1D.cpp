@@ -358,7 +358,7 @@ namespace Nektar
             {				
 				int num_dofs             = inarray.num_elements();
 				int num_points_per_plane = num_dofs/m_planes.num_elements();
-				int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize(); + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
+				int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
 		
                 Array<OneD, NekDouble> fft_in(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints());
                 Array<OneD, NekDouble> fft_out(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints());

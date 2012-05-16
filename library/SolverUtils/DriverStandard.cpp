@@ -64,8 +64,10 @@ namespace Nektar
          */
         void DriverStandard::v_InitObject(ostream &out)
         {
+			cout << "InitObject" << endl;
             Driver::v_InitObject(out);
-        }
+			cout << "InitObject done " << endl;
+		}
     
     
         void DriverStandard::v_Execute(ostream &out)

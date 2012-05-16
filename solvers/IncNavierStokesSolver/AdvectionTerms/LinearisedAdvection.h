@@ -85,6 +85,9 @@ namespace Nektar
 	protected:
         //Storage of the base flow
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
+		
+		//Auxiliary base flow for half mode analysis
+		Array<OneD, MultiRegions::ExpListSharedPtr>     m_base_aux;
 		//number of slices
 		int                                             m_slices;
 		//period length

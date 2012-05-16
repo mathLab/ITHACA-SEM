@@ -81,7 +81,7 @@ namespace Nektar
         }
 
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
-        
+
         // Set to 1 for first step and it will then be increased in
         // time advance routines
         switch(intMethod)
@@ -120,7 +120,6 @@ namespace Nektar
             ASSERTL0(0,"Integration method not suitable: Options include IMEXOrder1, IMEXOrder2 or IMEXOrder3");
             break;
         }
-
 		// Count number of HBC conditions
 		Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
 		Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp = m_pressure->GetBndCondExpansions();
@@ -151,16 +150,14 @@ namespace Nektar
 				m_pressureHBCs[n] = Array<OneD, NekDouble>(cnt);
 			}
 		}
-		
+
 		// creating a Map to store the information regarding High-Order pressure BCs
 		// to improve efficiency
 		FillHOPBCMap(m_HBCnumber);
-		
 		// setting time-intration class operators
         m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
         
         m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
-
     }
 
     VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
@@ -301,8 +298,8 @@ namespace Nektar
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
-			
-			if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+			   if(m_session->DefinesSolverInfo("SingleMode")==true && 
+			   (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
 			{
 				for(int i = 0; i < m_nConvectiveFields; ++i)
 				{
@@ -316,7 +313,8 @@ namespace Nektar
             {
                 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
             }
-        }        
+        }
+        
 
 		if(m_HBCnumber > 0)
 		{
@@ -324,6 +322,7 @@ namespace Nektar
 			EvaluatePressureBCs(inarray, outarray);
 
 		}
+		
     }
 
     void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -344,9 +343,10 @@ namespace Nektar
         }
 		
         SetBoundaryConditions(time);
-
+				
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
+
 		
         // Solver Pressure Poisson Equation 
 #ifdef UseContCoeffs
@@ -354,9 +354,8 @@ namespace Nektar
         flags.set(eUseContCoeff, true);
         m_pressure->HelmSolve(F[0], m_pressure->UpdateContCoeffs(),flags,factors);
 #else
-		
-		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
 
+		m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
 #endif
 		
         // Viscous Term forcing
@@ -379,7 +378,7 @@ namespace Nektar
             m_fields[i]->BwdTrans(m_fields[i]->GetContCoeffs(),outarray[i],true);
 #else
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
-			
+
 			//SingleMode Analysis (putting to zero every plane except the considered mode)
 			if(m_SingleMode==true)
 			{
@@ -962,9 +961,10 @@ namespace Nektar
 							m_HBC[5][j] = n;                                         
 							
 							if(m_session->DefinesSolverInfo("SingleMode")==true && 
-							   m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+							   (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
 							{
-								m_wavenumber[j] = 2*M_PI*sign/m_LhomZ;       
+								//m_wavenumber[j] = 2*M_PI*sign/m_LhomZ;
+								m_wavenumber[j] = 2*M_PI/m_LhomZ;       
 								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
 							}
 							else
@@ -976,7 +976,16 @@ namespace Nektar
 							
 							if(k%2==0)
 							{
-								m_HBC[6][j] = m_HBC[0][j] + num_elm_per_plane;
+								if(m_session->DefinesSolverInfo("SingleMode")==true && 
+                                   m_session->GetSolverInfo("SingleMode")=="HalfMode")
+								{
+									m_HBC[6][j] = m_HBC[0][j];
+
+								}
+								else
+								{
+									m_HBC[6][j] = m_HBC[0][j] + num_elm_per_plane;
+								}
 							}
 							else 
 							{

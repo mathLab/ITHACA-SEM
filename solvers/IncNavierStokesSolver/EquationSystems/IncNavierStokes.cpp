@@ -159,6 +159,7 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
+		
     }
 
     IncNavierStokes::~IncNavierStokes(void)
@@ -198,7 +199,8 @@ namespace Nektar
 		}
 
 		//SingleMode integration in wave space
-		if(m_session->DefinesSolverInfo("SingleMode")==true && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+		if(m_session->DefinesSolverInfo("SingleMode")==true && 
+		   ((m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
 		{
 			integrate_in_wave_space = true;
 		}

@@ -156,6 +156,11 @@ namespace Nektar
                             m_npointsZ=2;
 						
                         }
+						else if(m_session->GetSolverInfo("SingleMode")=="HalfMode")
+						{
+							m_npointsZ=1;
+
+						}
                         else 
                         {
                             ASSERTL0(false, "SolverInfo Single Mode not valid");	
@@ -243,6 +248,7 @@ namespace Nektar
             int nvariables = m_session->GetVariables().size();
             bool DeclareCoeffPhysArrays = true;
 
+
             m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
             m_spacedim = m_graph->GetSpaceDimension()+m_HomoDirec;
             m_expdim   = m_graph->GetMeshDimension();
@@ -298,7 +304,33 @@ namespace Nektar
                                     m_fields[i]->SetWaveSpace(false);
 
                                 }
-                            }
+							}
+								//Half mode stability analysis
+							else if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="HalfMode")
+								{
+									const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
+									
+									const LibUtilities::BasisKey  BkeyZR(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
+									const LibUtilities::BasisKey  BkeyZI(LibUtilities::eFourierHalfModeIm,m_npointsZ,PkeyZ);
+									
+									
+									for(i = 0 ; i < m_fields.num_elements(); i++)
+									{
+										if(i==m_fields.num_elements()-2)
+										{
+											m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+											::AllocateSharedPtr(m_session,BkeyZI,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
+											
+										}
+										m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+										::AllocateSharedPtr(m_session,BkeyZR,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
+										
+										//necessary to perform to HomoBwdTrans for the fields (are complex differently from the base flow)
+										m_fields[i]->SetWaveSpace(false);
+										
+									}
+								}
+                            
                             //normal homogeneous 1D
                             else
                             {	
@@ -563,7 +595,8 @@ namespace Nektar
                 }
                 EvaluateFunction(fieldStr, m_forces, "BodyForce");
 			
-                if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+                if(m_session->DefinesSolverInfo("SingleMode")&& 
+				   (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis" ||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
                 {
                     for(int i=0; i< v_GetForceDimension(); ++i)
                     {					
@@ -584,6 +617,7 @@ namespace Nektar
 
             // Zero all physical fields initially.
             ZeroPhysFields();
+			
         }
 
         /**

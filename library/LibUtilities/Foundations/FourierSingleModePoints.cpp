@@ -54,15 +54,15 @@ namespace Nektar
 
 			if(npts==1)
             {
-                m_points[0][0] = 0.0;
+                m_points[0][0] = 0.25;
             }
 			else
 			
 			{
             ASSERTL0(npts==2, "Fourier points for single mode analysis should be 2");
 			
-			m_points[0][0] = -1.0;
-			m_points[0][1] = -0.5;
+			m_points[0][0] = 0.0;
+			m_points[0][1] = 0.5;
 			}
 		}
 

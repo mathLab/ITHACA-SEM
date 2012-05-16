@@ -179,12 +179,13 @@ namespace Nektar
                 const StdRegions::VarCoeffMap &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing)
         {
+			
             int n;
             int cnt = 0;
             int cnt1 = 0;
             NekDouble beta;
             StdRegions::ConstFactorMap new_factors;
-
+			
             Array<OneD, NekDouble> e_out;
             Array<OneD, NekDouble> fce(inarray.num_elements());
 

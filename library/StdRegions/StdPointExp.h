@@ -36,8 +36,7 @@
 #ifndef NEKTAR_LIBS_STDREGIONS_STDPOINTEXP_H
 #define NEKTAR_LIBS_STDREGIONS_STDPOINTEXP_H
 
-#include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdExpansion0D.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 
@@ -46,25 +45,96 @@ namespace Nektar
     namespace StdRegions
     {
 
-		class StdPointExp: virtual public StdExpansion
+		class StdPointExp: virtual public StdExpansion0D
     {
         
     public:
-            STD_REGIONS_EXPORT StdPointExp();
-            STD_REGIONS_EXPORT ~StdPointExp();
 		
-			STD_REGIONS_EXPORT void BwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
-			
-			STD_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
-
+		/// Class representing a point  in reference space
 		
+        /// All interface of this class sits in StdExpansion class
+		
+		STD_REGIONS_EXPORT StdPointExp();
+		
+		STD_REGIONS_EXPORT StdPointExp(const LibUtilities::BasisKey &Ba);
+		
+		STD_REGIONS_EXPORT StdPointExp(const StdPointExp &T);
+		
+		STD_REGIONS_EXPORT ~StdPointExp();
 		
     protected:
             Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
             Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
 		
-			STD_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-													Array<OneD, NekDouble> &outarray);
+		//----------------------------
+		// Evaluations Methods
+		//---------------------------
+					
+			STD_REGIONS_EXPORT virtual void v_GetCoords(
+													Array<OneD, NekDouble> &coords_0,
+													Array<OneD, NekDouble> &coords_1,
+													Array<OneD, NekDouble> &coords_2);
+		
+		//----------------------------
+		// Helper functions
+		//---------------------------
+		
+			STD_REGIONS_EXPORT virtual ExpansionType
+			v_DetExpansionType() const;
+		
+		//-----------------------------
+		// Transforms
+		//-----------------------------
+		
+			STD_REGIONS_EXPORT virtual void v_BwdTrans(
+												   const Array<OneD, const NekDouble>& inarray,
+												   Array<OneD, NekDouble> &outarray);
+		
+			STD_REGIONS_EXPORT virtual void v_FwdTrans(
+												   const Array<OneD, const NekDouble>& inarray,
+												   Array<OneD, NekDouble> &outarray);
+		
+			STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
+														  const Array<OneD, const NekDouble>& inarray,
+														  Array<OneD, NekDouble> &outarray);
+		
+			STD_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
+																  const Array<OneD, const NekDouble>& inarray,
+																  Array<OneD, NekDouble> &outarray);
+		
+		//----------------------------
+		// Inner product functions
+		//----------------------------
+		
+
+			STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+														  const Array<OneD, const NekDouble>& inarray,
+														  Array<OneD, NekDouble> &outarray);
+		
+			STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
+														  const Array<OneD, const NekDouble>& base,
+														  const Array<OneD, const NekDouble>& inarray,
+														  Array<OneD, NekDouble> &outarray,
+														  int coll_check);
+		
+			STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
+																 const Array<OneD, const NekDouble>& inarray,
+																 Array<OneD, NekDouble> &outarray);
+		
+			STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase (
+																const int dir,
+																const Array<OneD, const NekDouble> &inarray,
+																Array<OneD, NekDouble> &outarray);
+		//----------------------------
+		// Evaluations Methods
+		//---------------------------
+		
+			STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(
+																const StdMatrixKey &mkey);
+		
+			STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
+																	  const StdMatrixKey &mkey);
+		
 		
     private:
 			virtual int v_GetNverts() const
@@ -72,24 +142,7 @@ namespace Nektar
 				return 1;
 			}
 		
-			virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-									Array<OneD, NekDouble> &outarray)
-			{
-				BwdTrans(inarray, outarray);
-			}
-		
-			virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-									Array<OneD, NekDouble> &outarray)
-			{
-				FwdTrans(inarray, outarray);
-			}
-		
-			virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-										   Array<OneD, NekDouble> &outarray)
-			{
-				IProductWRTBase(inarray,outarray);
-			}	
-        
+		        
     };
 
     // type defines for use of PointExp in a boost vector

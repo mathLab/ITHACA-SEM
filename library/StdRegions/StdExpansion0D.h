@@ -52,13 +52,26 @@ namespace Nektar
 
         public:
 
-            STD_REGIONS_EXPORT StdExpansion0D();
+			STD_REGIONS_EXPORT StdExpansion0D();
+            STD_REGIONS_EXPORT StdExpansion0D(int numcoeffs, const LibUtilities::BasisKey &Ba);
             STD_REGIONS_EXPORT StdExpansion0D(const StdExpansion0D &T);
             STD_REGIONS_EXPORT virtual ~StdExpansion0D();
-
+			
+			STD_REGIONS_EXPORT void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
+													Array<OneD,       NekDouble>& outarray);
+			
             
         protected:
 			std::map<int, NormalVector> m_vertexNormals;
+			
+			
+			STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+																const Array<OneD, const NekDouble>& coords);
+			
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+																const Array<OneD, const NekDouble>& coords,
+																const Array<OneD, const NekDouble>& physvals);
+			
 
         private:
 

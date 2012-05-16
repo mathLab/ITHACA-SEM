@@ -85,6 +85,12 @@ namespace Nektar
 				m_K[1] = 1;
 			}
 			
+			if(HomoBasis0.GetBasisType() == LibUtilities::eFourierHalfModeRe || 
+			   HomoBasis0.GetBasisType() == LibUtilities::eFourierHalfModeIm)
+			{
+				m_K[0]=1;
+			}
+			
 			//=================================================================================
         }
 		

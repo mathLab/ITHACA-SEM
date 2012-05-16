@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 			
 	
 	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierSingleModeSpaced);
-	const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,nzpoints,PkeyZ);
+	const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierHalfModeRe,nzpoints,PkeyZ);
 		
 	Exp_u = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,deal,graph2D,vSession->GetVariable(0));
 	Exp_v = MemoryManager<MultiRegions::ContField3DHomogeneous1D>::AllocateSharedPtr(vSession,BkeyZ,lz,useFFT,deal,graph2D,vSession->GetVariable(1));
@@ -112,8 +112,10 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 	
 	//Taking derivative and printing the error
-	
+	cout << "Deriv u" << endl;
 	Exp_u->PhysDeriv(Exp_u->GetPhys(),Exp_u->UpdatePhys(),dump,dump,false);
+	cout << "Deriv u done" << endl;
+
 	
 	cout << "L infinity error:  " << Exp_u->Linf(dudx) << endl;
 	cout << "L 2 error  :       " << Exp_u->L2  (dudx) << endl;	

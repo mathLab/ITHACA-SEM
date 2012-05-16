@@ -490,26 +490,55 @@ namespace Nektar
             BlkMatrix = MemoryManager<DNekBlkMat>
                 ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
-            StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
-
-            if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
-            {
-                StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-                                                StdSeg.DetExpansionType(),
-                                                StdSeg);
-
-                loc_mat = StdSeg.GetStdMatrix(matkey);
+			//Half Mode
+			if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
+			{
+				StdRegions::StdPointExp StdPoint(m_homogeneousBasis->GetBasisKey());
 				
-            }
-            else
-            {
-                StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                                StdSeg.DetExpansionType(),
-                                                StdSeg);
-
-                loc_mat = StdSeg.GetStdMatrix(matkey);
+				if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
+				{
+					StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
+													StdPoint.DetExpansionType(),
+													StdPoint);
+					
+					loc_mat = StdPoint.GetStdMatrix(matkey);
+					
+				}
+				else
+				{
+					StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
+													StdPoint.DetExpansionType(),
+													StdPoint);
+					
+					loc_mat = StdPoint.GetStdMatrix(matkey);
+					
+				}
+			}
+			//other cases
+			else 
+			{
+				StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
 				
-            }
+				if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
+				{
+					StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
+													StdSeg.DetExpansionType(),
+													StdSeg);
+					
+					loc_mat = StdSeg.GetStdMatrix(matkey);
+					
+				}
+				else
+				{
+					StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
+													StdSeg.DetExpansionType(),
+													StdSeg);
+					
+					loc_mat = StdSeg.GetStdMatrix(matkey);
+					
+				}				
+				
+			}
 
             // set up array of block matrices.
             for(int i = 0; i < num_trans_per_proc; ++i)
@@ -776,7 +805,8 @@ namespace Nektar
 				m_planes[i]->PhysDeriv(tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
 			}
 			
-			if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+			if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
+			   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)			
 			{
 				if(m_WaveSpace)
 				{
@@ -790,13 +820,26 @@ namespace Nektar
 				NekDouble sign = -1.0;
 				NekDouble beta;
 				
-				for(int i = 0; i < m_planes.num_elements(); i++)
+				
+				if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
+				   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
 				{
-					beta = sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+					beta = sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
 					
-					Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
-					
-					sign = -1.0*sign;
+					Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+				}
+				
+				//Fully complex
+				else
+				{
+					for(int i = 0; i < m_planes.num_elements(); i++)
+					{
+						beta = sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+						
+						Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+						
+						sign = -1.0*sign;
+					}
 				}
 				
 				if(m_WaveSpace)
@@ -860,7 +903,8 @@ namespace Nektar
 			}
 			else
 			{
-				if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+				if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
+				   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)	
 				{
 					if(m_WaveSpace)
 					{
@@ -873,14 +917,25 @@ namespace Nektar
 					
 					NekDouble sign = -1.0;
 					NekDouble beta;
-					
-					for(int i = 0; i < m_planes.num_elements(); i++)
+
+					if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
+					   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
 					{
-						beta = sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+						beta = 2*M_PI*(m_transposition->GetK(0))/m_lhom;
 						
-						Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+						Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+					}
+					//Fully complex
+					else
+					{
+						for(int i = 0; i < m_planes.num_elements(); i++)
+						{
+							beta = sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
 						
-						sign = -1.0*sign;
+							Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+						
+							sign = -1.0*sign;
+						}
 					}
 					if(m_WaveSpace)
 					{

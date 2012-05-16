@@ -68,6 +68,7 @@ namespace Nektar
     {
         enum ElementType
         {
+			//eStdPointExp,
             eStdSegExp,
             eSegExp,
             eStdQuadExp,
@@ -91,6 +92,7 @@ namespace Nektar
 
         const char* const ElementTypeMap[] =
         {
+			//"StdPointExp",
             "StdSegExp",
             "SegExp",
             "StdQuadExp",
@@ -254,6 +256,7 @@ namespace Nektar
             ePyramid,
             ePrism,
             eHexahedron,
+			ePoint,
             SIZE_ExpansionType
         };
 
@@ -267,7 +270,8 @@ namespace Nektar
             "Tetrahedron",
             "Pyramid",
             "Prism",
-            "Hexahedron"
+            "Hexahedron",
+			"Point"
         };
 
 		

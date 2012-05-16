@@ -3,6 +3,10 @@ SET(LinkLibraries
     optimized LibUtilities debug LibUtilities-g
     optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
 )
+SET(StdProject0DSource  StdProject0D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject0D demos StdProject0DSource)
+TARGET_LINK_LIBRARIES(StdProject0D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(StdProject0D)
 	  
 SET(StdProject1DSource  StdProject1D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject1D demos StdProject1DSource)

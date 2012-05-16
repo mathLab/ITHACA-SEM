@@ -108,6 +108,11 @@ namespace Nektar
 						m_npointsZ=2;
 
 					}
+					else if(m_session->GetSolverInfo("SingleMode")=="HalfMode")
+					{
+						m_npointsZ=1;
+						
+					}
 					else 
 					{
 						ASSERTL0(false, "SolverInfo Single Mode not valid");	
@@ -326,9 +331,8 @@ namespace Nektar
 					}
 					
 				}
-					
+		
 			}
-				
 	}
 
     LinearisedAdvection::~LinearisedAdvection()
@@ -341,7 +345,7 @@ namespace Nektar
         int nvariables = m_session->GetVariables().size();
         int i;
         m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
-        
+        m_base_aux=Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         if (m_projectionType == MultiRegions::eGalerkin)
         {
             switch (m_expdim)
@@ -379,7 +383,8 @@ namespace Nektar
 					if(m_HomogeneousType == eHomogeneous1D)
 					{
 
-						if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+						if(m_session->DefinesSolverInfo("SingleMode")&& 
+						  (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"))
 						{
 							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
 							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
@@ -390,6 +395,20 @@ namespace Nektar
 								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
 								
 							} 
+						}
+						else if(m_session->DefinesSolverInfo("SingleMode")&& 
+						   (m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+						{
+							//1 plane field (half mode expansion)
+							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
+							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
+							
+							for(i = 0 ; i < m_base.num_elements(); i++)
+							{																
+								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+							} 
+						
 						}
 						else 
 						{
@@ -537,7 +556,6 @@ namespace Nektar
 
 		//Get Homogeneous
 
-
         pGraph->Import(pInfile,FieldDef,FieldData);
 
         int nvar = m_session->GetVariables().size();
@@ -649,27 +667,31 @@ namespace Nektar
 			NekDouble m_time,
             Array<OneD, NekDouble> &pWk)
     {
-		
-		
-
         int ndim       = m_nConvectiveFields;
         int nPointsTot = pFields[0]->GetNpoints();
+		int nP_plane =  nPointsTot/2;
+
         Array<OneD, NekDouble> grad0,grad1,grad2;
+
 	
 
         //Evaluation of the gradiend of each component of the base flow
         //\nabla U
         Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
-        // \nabla V
+       
+		// \nabla V
         Array<OneD, NekDouble> grad_base_v0,grad_base_v1,grad_base_v2;
+
         // \nabla W
         Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
+
 	
-        
-        grad0 = Array<OneD, NekDouble> (nPointsTot);
-        grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
-        grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
-        grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);		
+
+			grad0 = Array<OneD, NekDouble> (nPointsTot);
+			grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
+			grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
+			grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);	
+		
 		
 		//Evaluation of the base flow for periodic cases
 		//(it requires fld files)
@@ -752,23 +774,34 @@ namespace Nektar
             //3D
         case 3:
 				
-			grad1 = Array<OneD, NekDouble> (nPointsTot);
-			grad2 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
-			
-			grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
+					grad1 = Array<OneD, NekDouble> (nPointsTot);
+					grad2 = Array<OneD, NekDouble> (nPointsTot);
+					grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
+					grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
+					grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
+					
+					grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
+					grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
+					grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
+					
+					m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
+					m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
+					m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);	
+		
+				if(m_session->DefinesSolverInfo("SingleMode")&&m_session->GetSolverInfo("SingleMode")=="HalfMode")
+				{
+					for(int i=0; i<grad_base_u2.num_elements();++i)
+					{
+						grad_base_u2[i]=0;
+						grad_base_v2[i]=0;
+						grad_base_w2[i]=0;
 
+					}
+				}
+						
 			pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
 			
-            m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
-            m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
-            m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
-         
-				
+								
 			switch (pVelocityComponent)
             {
                 //x-equation	
@@ -777,7 +810,6 @@ namespace Nektar
 				if(m_dealiasing)
 
 				{
-
 					//U du'/dx
 					pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
 
@@ -845,7 +877,6 @@ namespace Nektar
 					else 
 					{
 				
-
 						//Evaluate U dv'/dx
 						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
 						//Evaluate U dv'/dx+ V dv'/dy
@@ -891,6 +922,7 @@ namespace Nektar
 					}
 					else 
 					{
+
 						//Evaluate U dw'/dx
 						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
 						//Evaluate U dw'/dx+ V dw'/dx

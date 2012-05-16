@@ -674,7 +674,6 @@ namespace Nektar
                     vector<int> tags;
                     
                     ElementType seg = tri ? eTriangle : eQuadrilateral;
-                    tags.push_back(seg);
                     ElmtConfig conf(seg,1,true,true,false,
                                     LibUtilities::eGaussLobattoLegendre);
                     surfEl = GetElementFactory().
@@ -689,7 +688,6 @@ namespace Nektar
                     nodeList.push_back(f->n2);
                     
                     vector<int> tags;
-                    tags.push_back(eLine);
                     
                     ElmtConfig conf(eLine,1,true,true,false,
                                     LibUtilities::eGaussLobattoLegendre);

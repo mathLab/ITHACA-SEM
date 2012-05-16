@@ -228,6 +228,13 @@ namespace Nektar
                     // Write out number of element tags and then the tags
                     // themselves.
                     vector<int> tags = e->GetTagList();
+                    
+                    if (tags.size() == 1)
+                    {
+                        tags.push_back(tags[0]);
+                        tags.push_back(0);
+                    }
+                    
                     mshFile << tags.size() << " ";
                     
                     for (int j = 0; j < tags.size(); ++j)

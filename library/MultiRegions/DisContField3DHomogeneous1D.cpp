@@ -284,19 +284,24 @@ namespace Nektar
 		
                 ElmtID = Array<OneD, int>(nplanes*MapSize);
                 EdgeID = Array<OneD, int>(nplanes*MapSize);
-                for(int i = 0; i < nplanes; i++)
+
+                // If this mesh (or partition) has no BCs, skip this step.
+                if (MapSize > 0)
                 {
-                    for(int j = 0; j < MapSize; j++)
+                    for(int i = 0; i < nplanes; i++)
                     {
-                        ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_plane;
-                        EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+                        for(int j = 0; j < MapSize; j++)
+                        {
+                            ElmtID[j+i*MapSize] = ElmtID_tmp[j] + i*nel_per_plane;
+                            EdgeID[j+i*MapSize] = EdgeID_tmp[j];
+                        }
                     }
+                    m_BCtoElmMap = Array<OneD, int>(nplanes*MapSize);
+                    m_BCtoEdgMap = Array<OneD, int>(nplanes*MapSize);
+
+                    Vmath::Vcopy(nplanes*MapSize,ElmtID,1,m_BCtoElmMap,1);
+                    Vmath::Vcopy(nplanes*MapSize,EdgeID,1,m_BCtoEdgMap,1);
                 }
-                m_BCtoElmMap = Array<OneD, int>(nplanes*MapSize);
-                m_BCtoEdgMap = Array<OneD, int>(nplanes*MapSize);
-		
-                Vmath::Vcopy(nplanes*MapSize,ElmtID,1,m_BCtoElmMap,1);
-                Vmath::Vcopy(nplanes*MapSize,EdgeID,1,m_BCtoEdgMap,1);
             }
             else 
             {

@@ -1025,7 +1025,7 @@ namespace Nektar
             int s = (systemSingular ? 1 : 0);
             m_comm->AllReduce(s, LibUtilities::ReduceMin);
             systemSingular = (s == 1 ? true : false);
-            if(systemSingular == true && checkIfSystemSingular)
+            if(systemSingular == true && checkIfSystemSingular && m_comm->GetRowComm()->GetRank() == 0)
             {
                 if(m_session->DefinesParameter("SingularElement"))
                 {

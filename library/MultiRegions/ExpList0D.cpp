@@ -141,10 +141,10 @@ namespace Nektar
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         EdgeDone[id] = elmtid;
 						
-                        if (periodicVertices.count(id) > 0)
-                        {
-						   EdgeDone[periodicVertices.find(id)->second] = elmtid;
-                        }
+                        //if (periodicVertices.count(id) > 0)
+                        //{
+						//   EdgeDone[periodicVertices.find(id)->second] = elmtid;
+                        //}
 						
                         Point->SetElmtId(elmtid++);
 						(*m_exp).push_back(Point);

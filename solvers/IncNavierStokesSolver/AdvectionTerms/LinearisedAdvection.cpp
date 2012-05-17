@@ -619,17 +619,21 @@ namespace Nektar
             }
 			
 			//In case ModifiedBasis it is used 
-			if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+			if(m_session->DefinesSolverInfo("SingleMode") && (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"||
+															  m_session->GetSolverInfo("SingleMode")=="HalfMode"))
 			{
 				m_base[j]->SetWaveSpace(true);
 			
 				m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
 									m_base[j]->UpdatePhys());
 
-							
+				
+				if(m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+				{
 				//copy the bwd into the second plane for single Mode Analysis
 			    int ncplane=(m_base[0]->GetNpoints())/m_npointsZ;
 				Vmath::Vcopy(ncplane,&m_base[j]->GetPhys()[0],1,&m_base[j]->UpdatePhys()[ncplane],1);
+				}
 			}
 			else
 			{

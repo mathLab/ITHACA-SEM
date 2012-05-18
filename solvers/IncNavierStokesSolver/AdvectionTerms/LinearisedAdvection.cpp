@@ -78,47 +78,38 @@ namespace Nektar
                (HomoStr == "1D")||(HomoStr == "Homo1D"))
             {
                 m_HomogeneousType = eHomogeneous1D;
-               // m_npointsZ        = m_session->GetParameter("HomModesZ");
                 m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 1;
 				m_SingleMode	   =false;
-
-				if(m_session->DefinesSolverInfo("SingleMode"))
+				m_HalfMode		   =false;
+				m_MultipleModes    =false;
+				
+				m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+				m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+				m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
+				
+				if(m_session->DefinesSolverInfo("ModeType"))
 				{
-					if(m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
-					{
-						m_SingleMode=true;
-						if(m_session->DefinesParameter("NumMode"))
-						{
-							//read mode from session file
-							m_NumMode=m_session->GetParameter("NumMode");
-						}
-						else 
-						{
-							//first mode by default
-							m_NumMode=1;
-						}
-						
-						//number of plane to create in case of single modes analysis.
-						m_npointsZ=2+2*m_NumMode;
-						
-					}
-					else if(m_session->GetSolverInfo("SingleMode")=="ModifiedBasis") 
+					if(m_SingleMode)
 					{
 						m_npointsZ=2;
-
+						
 					}
-					else if(m_session->GetSolverInfo("SingleMode")=="HalfMode")
+					else if(m_HalfMode)
 					{
 						m_npointsZ=1;
 						
 					}
-					else 
+					else if(m_MultipleModes)
 					{
-						ASSERTL0(false, "SolverInfo Single Mode not valid");	
+						m_npointsZ        = m_session->GetParameter("HomModesZ");
 					}
-					
-					
+					else
+					{
+						ASSERTL0(false, "SolverInfo ModeType not valid");	
+						
+						
+					}
 				}
 				else 
 				{
@@ -345,7 +336,6 @@ namespace Nektar
         int nvariables = m_session->GetVariables().size();
         int i;
         m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
-        m_base_aux=Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         if (m_projectionType == MultiRegions::eGalerkin)
         {
             switch (m_expdim)
@@ -382,9 +372,7 @@ namespace Nektar
 				{
 					if(m_HomogeneousType == eHomogeneous1D)
 					{
-
-						if(m_session->DefinesSolverInfo("SingleMode")&& 
-						  (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"))
+						if(m_SingleMode)
 						{
 							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
 							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
@@ -396,8 +384,7 @@ namespace Nektar
 								
 							} 
 						}
-						else if(m_session->DefinesSolverInfo("SingleMode")&& 
-						   (m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+						else if(m_HalfMode)
 						{
 							//1 plane field (half mode expansion)
 							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
@@ -617,18 +604,15 @@ namespace Nektar
                                                    FieldDef[i]->m_fields[j]);
 				}
             }
-			
-			//In case ModifiedBasis it is used 
-			if(m_session->DefinesSolverInfo("SingleMode") && (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"||
-															  m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+
+			if(m_SingleMode || m_HalfMode)
 			{
 				m_base[j]->SetWaveSpace(true);
 			
 				m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
 									m_base[j]->UpdatePhys());
 
-				
-				if(m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+				if(m_SingleMode)
 				{
 				//copy the bwd into the second plane for single Mode Analysis
 			    int ncplane=(m_base[0]->GetNpoints())/m_npointsZ;
@@ -792,7 +776,8 @@ namespace Nektar
 					m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
 					m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);	
 		
-				if(m_session->DefinesSolverInfo("SingleMode")&&m_session->GetSolverInfo("SingleMode")=="HalfMode")
+				//HalfMode has W(x,y,t)=0
+				if(m_HalfMode)
 				{
 					for(int i=0; i<grad_base_u2.num_elements();++i)
 					{

@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     {
         quiet = true;
     }
+	
     // 1D Projection Tests
     Execute("StdProject1D", "1 6 7","Seg Ortho. Basis, P=6, Q=7");
 

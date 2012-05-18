@@ -109,10 +109,18 @@ namespace Nektar
             m_spacedim = m_graph->GetSpaceDimension();
         
             // Setting parameteres for homogenous problems
-            m_HomoDirec       = 0;
-            m_useFFT          = false;
-            m_dealiasing      = false;
-            m_SingleMode	   =false;
+            m_HomoDirec			= 0;
+            m_useFFT			= false;
+            m_dealiasing		= false;
+            m_SingleMode		= false;
+			m_HalfMode			= false;
+			m_MultipleModes		= false;
+
+
+			m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+			m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+			m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
+
 
             m_HomogeneousType = eNotHomogeneous;
 
@@ -125,49 +133,33 @@ namespace Nektar
                    (HomoStr == "1D")||(HomoStr == "Homo1D"))
                 {
                     m_HomogeneousType = eHomogeneous1D;
-                    //m_session->LoadParameter("HomModesZ",m_npointsZ);
                     m_session->LoadParameter("LZ",m_LhomZ);
                     m_HomoDirec       = 1;
 				
-				
-                    if(m_session->DefinesSolverInfo("SingleMode")  &&
-                       m_session->GetSolverInfo("solvertype") != "CoupledLinearisedNS")
-                    {
-                        if(m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
-                        {
-                            m_SingleMode=true;
-                            if(m_session->DefinesParameter("NumMode"))
-                            {
-                                //read mode from session file
-                                m_NumMode=m_session->GetParameter("NumMode");
-                            }
-                            else 
-                            {
-                                //first mode by default
-                                m_NumMode=1;
-                            }
-						
-                            //number of plane to create in case of single modes analysis.
-                            m_npointsZ=2+2*m_NumMode;
-						
-                        }
-                        else if(m_session->GetSolverInfo("SingleMode")=="ModifiedBasis") 
-                        {
-                            m_npointsZ=2;
-						
-                        }
-						else if(m_session->GetSolverInfo("SingleMode")=="HalfMode")
+					//Stability Analysis flags
+					if(m_session->DefinesSolverInfo("ModeType"))
+					{
+						if(m_SingleMode)
+						{
+							m_npointsZ=2;
+							
+						}
+						else if(m_HalfMode)
 						{
 							m_npointsZ=1;
 
 						}
-                        else 
-                        {
-                            ASSERTL0(false, "SolverInfo Single Mode not valid");	
-                        }
-					
-					
-                    }
+						else if(m_MultipleModes)
+						{
+							m_npointsZ        = m_session->GetParameter("HomModesZ");
+						}
+						else
+						{
+							ASSERTL0(false, "SolverInfo ModeType not valid");	
+
+							
+						}
+					}
                     else 
                     {
                         m_npointsZ        = m_session->GetParameter("HomModesZ");
@@ -288,8 +280,9 @@ namespace Nektar
                     {
                         if(m_HomogeneousType == eHomogeneous1D)
                         {
-                            //Modified basis for stability analysis
-                            if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
+                            //FourierSingleMode basis for stability analysis
+							if(m_SingleMode)
+
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
 
@@ -306,7 +299,7 @@ namespace Nektar
                                 }
 							}
 								//Half mode stability analysis
-							else if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="HalfMode")
+							else if(m_HalfMode)
 								{
 									const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
 									
@@ -344,7 +337,7 @@ namespace Nektar
                                         ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
 								
 							
-                                    if(m_session->DefinesSolverInfo("SingleMode")&& m_session->GetSolverInfo("SingleMode")=="SpecifiedMode")
+									if(m_MultipleModes)
                                     {
                                         m_fields[i]->SetWaveSpace(false);
                                     }
@@ -595,8 +588,7 @@ namespace Nektar
                 }
                 EvaluateFunction(fieldStr, m_forces, "BodyForce");
 			
-                if(m_session->DefinesSolverInfo("SingleMode")&& 
-				   (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis" ||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+				if(m_SingleMode || m_HalfMode)
                 {
                     for(int i=0; i< v_GetForceDimension(); ++i)
                     {					
@@ -1944,7 +1936,8 @@ namespace Nektar
                     out << "\tUsing MVM "  << endl;
                 }
 			
-                if(m_SingleMode==true)
+                //if(m_SingleMode==true)
+				if(m_MultipleModes==true)
                 {
                     out << "\tSelected Mode    : " << m_NumMode << endl;
 

@@ -820,7 +820,7 @@ namespace Nektar
 				NekDouble sign = -1.0;
 				NekDouble beta;
 				
-				
+				//Half Mode
 				if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
 				   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
 				{
@@ -918,6 +918,7 @@ namespace Nektar
 					NekDouble sign = -1.0;
 					NekDouble beta;
 
+					//HalfMode
 					if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
 					   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
 					{

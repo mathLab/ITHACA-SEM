@@ -405,7 +405,12 @@ namespace Nektar
             int m_checksteps;            ///< Number of steps between checkpoints
             int m_spacedim;              ///< Spatial dimension (> expansion dim)
             int m_expdim;                ///< Dimension of the expansion
-            bool m_SingleModeBasis;       ///< Flag for the SingleMode Basis 
+            bool m_SingleModeBasis;      ///< Flag for the SingleMode Basis
+			bool m_SingleMode;			 ///< flag to determine if use single mode or not
+			bool m_HalfMode;		     ///< flag to determine if use half mode or not
+			bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not
+
+
 
             /// Type of projection, i.e. Galerkin or DG.
             enum MultiRegions::ProjectionType m_projectionType;
@@ -437,7 +442,6 @@ namespace Nektar
 
             bool m_dealiasing;           ///< flag to determine if use dealising or not
 		
-            bool m_SingleMode;			 ///< flag to determine if use single mode or not
 		
             enum HomogeneousType m_HomogeneousType;
 

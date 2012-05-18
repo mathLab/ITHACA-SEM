@@ -2251,7 +2251,9 @@ namespace Nektar
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
-					        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0))
+					        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
+							(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
+							(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
                     {
                         check++;
                     }
@@ -3062,6 +3064,80 @@ namespace Nektar
 					}
 				}
 					break;
+					
+				case eFourierHalfModeRe:
+				{
+					switch (shape)
+					{
+						case eSegment:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeRe,nummodes,pkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						case eQuadrilateral:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeRe,nummodes,pkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						case eHexahedron:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeRe,nummodes,pkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						default:
+						{
+							ASSERTL0(false,"Expansion not defined in switch  for this shape");
+						}
+							break;
+					}
+				}
+					break;
+					
+				case eFourierHalfModeIm:
+				{
+					switch (shape)
+					{
+						case eSegment:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeIm,nummodes,pkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						case eQuadrilateral:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeIm,nummodes,pkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						case eHexahedron:
+						{
+							const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eFourierSingleModeSpaced);
+							LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeIm,nummodes,pkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+							returnval.push_back(bkey);
+						}
+							break;
+						default:
+						{
+							ASSERTL0(false,"Expansion not defined in switch  for this shape");
+						}
+							break;
+					}
+				}
+					break;
 
             case eChebyshev:
             {
@@ -3233,6 +3309,23 @@ namespace Nektar
                             returnval.push_back(bkey1);
                         }
                             break;
+							
+						case eFourierHalfModeRe:
+                        {
+                            const LibUtilities::PointsKey pkey1(nummodes_x,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eFourierHalfModeRe,nummodes_x,pkey1);
+                            returnval.push_back(bkey1);
+                        }
+                            break;
+							
+						case eFourierHalfModeIm:
+                        {
+                            const LibUtilities::PointsKey pkey1(nummodes_x,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eFourierHalfModeIm,nummodes_x,pkey1);
+                            returnval.push_back(bkey1);
+                        }
+                            break;
+							
 
                         case eChebyshev:
                         {
@@ -3241,6 +3334,8 @@ namespace Nektar
                             returnval.push_back(bkey1);
                         }
                             break;
+						
+	
 
                         default:
                         {
@@ -3268,6 +3363,22 @@ namespace Nektar
                             returnval.push_back(bkey2);
                         }
                             break;	
+							
+						case eFourierHalfModeRe:
+                        {
+                            const LibUtilities::PointsKey pkey2(nummodes_y,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey2(LibUtilities::eFourierHalfModeRe,nummodes_y,pkey2);
+                            returnval.push_back(bkey2);
+                        }
+                            break;
+						
+						case eFourierHalfModeIm:
+                        {
+                            const LibUtilities::PointsKey pkey2(nummodes_y,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey2(LibUtilities::eFourierHalfModeIm,nummodes_y,pkey2);
+                            returnval.push_back(bkey2);
+                        }
+                            break;
 							
                         case eChebyshev:
                         {
@@ -3298,6 +3409,22 @@ namespace Nektar
                         {
                             const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eFourierSingleModeSpaced);
                             LibUtilities::BasisKey bkey3(LibUtilities::eFourierSingleMode,nummodes_z,pkey3);
+                            returnval.push_back(bkey3);
+                        }
+                            break;
+							
+						case eFourierHalfModeRe:
+                        {
+                            const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey3(LibUtilities::eFourierHalfModeRe,nummodes_z,pkey3);
+                            returnval.push_back(bkey3);
+                        }
+                            break;
+					
+						case eFourierHalfModeIm:
+                        {
+                            const LibUtilities::PointsKey pkey3(nummodes_z,LibUtilities::eFourierSingleModeSpaced);
+                            LibUtilities::BasisKey bkey3(LibUtilities::eFourierHalfModeIm,nummodes_z,pkey3);
                             returnval.push_back(bkey3);
                         }
                             break;

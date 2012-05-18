@@ -93,8 +93,7 @@ int main(int argc, char *argv[])
   // Define a point expansion based on basis definition
 	const LibUtilities::PointsKey Pkey(nq,Qtype);
 	const LibUtilities::BasisKey Bkey(btype,order,Pkey);
-  cout << "StdSegExp" << endl;
-  E = new StdRegions::StdPointExp(Bkey);
+	E = new StdRegions::StdPointExp(Bkey);
 
   //-----------------------------------------------
 
@@ -152,40 +151,20 @@ int main(int argc, char *argv[])
   E->FwdTrans(sol,E->UpdateCoeffs());
   //---------------------------------------------
 	
-	cout << "z[0]=" << z[0] << " m_coeffs[0]=" << E->GetCoeffs()[0] << endl;
-	//cout << "z[1]=" << z[1] << " m_coeffs[1]=" << E->GetCoeffs()[1] << endl;
+  cout << "z[0]=  " << z[0] << "   coefficient=   " << E->GetCoeffs()[0] << endl;
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
   E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
   //-------------------------------------------  
 
-	cout << "z[0]=" << z[0] << " m_phys[0]=" << E->GetPhys()[0] << endl;
-	//cout << "z[1]=" << z[1] << " m_phys[1]=" << E->GetPhys()[1] << endl;
+  cout << "z[0]=  " << z[0] << "    physical value=  " << E->GetPhys()[0] << endl;
 
   //--------------------------------------------
   // Calculate L_inf error 
   cout << "L infinity error: " << E->Linf(sol) << endl;
   //--------------------------------------------
  
-  //-------------------------------------------
-  // Evaulate solution at mid point and print error
-	if(btype !=  LibUtilities::eFourierSingleMode || (btype !=  LibUtilities::eFourierHalfModeRe) || (btype !=  LibUtilities::eFourierHalfModeIm)  )
-	{
-		if(btype != LibUtilities::eFourier)
-		{
-			sol[0] = 1;
-		} 
-		else 
-		{
-			sol[0] =  order/2;
-		}
-
-		Array<OneD,NekDouble> x = Array<OneD, NekDouble>(1);
-		x[0] = 0;
-		NekDouble nsol = E->PhysEvaluate(x);
-		cout << "error at x = 0: " << nsol - sol[0] << endl;
-	}
 
   //-------------------------------------------
 

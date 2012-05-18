@@ -198,9 +198,8 @@ namespace Nektar
 			}
 		}
 
-		//SingleMode integration in wave space
-		if(m_session->DefinesSolverInfo("SingleMode")==true && 
-		   ((m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+		//SingleMode and HalfMode integration must be in wave space
+		if(m_SingleMode || m_HalfMode)
 		{
 			integrate_in_wave_space = true;
 		}

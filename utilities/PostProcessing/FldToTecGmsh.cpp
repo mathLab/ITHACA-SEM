@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
     bool Extrude2DWithHomogeneous = false;
 	
 	bool SingleModePlot=false;
+	bool HalfModePlot=false;
+
 	
     int nExtraPoints, nExtraPlanes;
     LibUtilities::SessionReaderSharedPtr vSession
@@ -42,7 +44,8 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("OutputExtraPlanes",nExtraPlanes,0);
 
     vSession->MatchSolverInfo("Extrude2DWithHomogeneous","True",Extrude2DWithHomogeneous,false);
-	vSession->MatchSolverInfo("SingleMode","ModifiedBasis",SingleModePlot,false);
+	vSession->MatchSolverInfo("ModeType","SingleMode",SingleModePlot,false);
+	vSession->MatchSolverInfo("ModeType","HalfMode",HalfModePlot,false);
 
 
     // Read in mesh from input file
@@ -75,6 +78,14 @@ int main(int argc, char *argv[])
 	{
         fielddef[0]->m_numModes.push_back(4); // Have to set this to 4 as default
         fielddef[0]->m_basis.push_back(LibUtilities::eFourier); //Initialisation of a standard Fourier Expansion
+	}
+	
+	if(HalfModePlot)
+	{
+		fielddef[0]->m_numModes.push_back(4); // Have to set this to 4 as default
+		fielddef[0]->m_basis.push_back(LibUtilities::eFourier); //Initialisation of a standard Fourier Expansion
+		fielddef[0]->m_basis.push_back(LibUtilities::eFourierHalfModeIm);//Initialisation of a HalfModeFourierIm Expansion
+
 	}
 	
     //----------------------------------------------
@@ -197,40 +208,76 @@ int main(int argc, char *argv[])
             {
                 MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
 				MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1_aux;
-				
+				MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1_Im;
 				
 				if(SingleModePlot)
 				{
 					int nplanes = fielddef[0]->m_numModes[2];
 
 					const LibUtilities::PointsKey Pkey(nplanes+nExtraPlanes,LibUtilities::eFourierSingleModeSpaced);					
-					//for plotting perturbations 
-					const LibUtilities::PointsKey Pkey1(nplanes+nExtraPlanes+1,LibUtilities::ePolyEvenlySpaced);
+					//for plotting perturbations (4planes)
+					const LibUtilities::PointsKey Pkey1(nplanes+nExtraPlanes+2+1,LibUtilities::ePolyEvenlySpaced);
 
-					
+					//SingleMode Basis
 					const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
 					//Fourier expansion
-					const LibUtilities::BasisKey  Bkey1(fielddef[0]->m_basis[3],nplanes,Pkey1);
+					const LibUtilities::BasisKey  Bkey1(fielddef[0]->m_basis[3],nplanes+2,Pkey1);
 
 					NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 					
-                   
+                   //Fourier SingleMode Expansion with two points
 					Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
 					
-					//for the single mode
+					//Fourier 4 modes expansion
 					Exp3DH1_aux = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey1,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
 					Exp1[0]= Exp3DH1_aux;
 					
 					
-					//Define Homogeneous Expansion
+					//Define Homogeneous standard 4 plane Fourier Expansion
 					for(i = 1; i < nfields; ++i)
 					{
 						Exp1[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
                         ::AllocateSharedPtr(*Exp3DH1_aux);
-						
 					}
 
 
+				}
+				else if(HalfModePlot)
+				{
+					int nplanes = fielddef[0]->m_numModes[2];
+					
+					const LibUtilities::PointsKey Pkey(nplanes+nExtraPlanes,LibUtilities::eFourierSingleModeSpaced);					
+					//for plotting perturbations (4planes)
+					const LibUtilities::PointsKey Pkey1(nplanes+nExtraPlanes+3+1,LibUtilities::ePolyEvenlySpaced);
+					
+					//FourierHalfModeRe Basis
+					const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
+					//Fourier expansion
+					const LibUtilities::BasisKey  Bkey1(fielddef[0]->m_basis[3],nplanes+3,Pkey1);
+					//FourierHalfModeIm Expansion
+					const LibUtilities::BasisKey  Bkey2(fielddef[0]->m_basis[4],nplanes,Pkey);
+
+					
+					NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
+					
+					//FourierHalfModeRe Expansion
+					Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
+					//FourierHalfModeIm Expansion
+					Exp3DH1_Im = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey2,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[2]);
+
+					//Fourier 4 modes expansion
+					Exp3DH1_aux = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey1,lz,useFFT,dealiasing,graphShPt,fielddef[0]->m_fields[0]);
+					Exp1[0]= Exp3DH1_aux;
+					
+					
+					//Define Homogeneous standard 4 plane Fourier Expansion
+					for(i = 1; i < nfields; ++i)
+					{
+						Exp1[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+                        ::AllocateSharedPtr(*Exp3DH1_aux);
+					}
+					
+					
 				}
 				else
 				{
@@ -247,13 +294,37 @@ int main(int argc, char *argv[])
 				}
 
 				
-				Exp[0] = Exp3DH1;
-                for(i = 1; i < nfields; ++i)
-                {
-                    Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+				//it is a FourierSingleMode or HalfMode in case
+				if(HalfModePlot)
+				{
+					Exp[0] = Exp3DH1;
+					for(i = 1; i < nfields; ++i)
+					{
+						//w must have imaginary basis
+						if(i==2)
+						{
+							Exp[2] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+							::AllocateSharedPtr(*Exp3DH1_Im);
+						}
+						else
+						{
+							Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+									::AllocateSharedPtr(*Exp3DH1);
+						}
+					}
+
+					
+				}
+				else
+				{
+					Exp[0] = Exp3DH1;
+					for(i = 1; i < nfields; ++i)
+					{
+						Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
                         ::AllocateSharedPtr(*Exp3DH1);
 					
-                }
+					}
+				}
 		    }
             else
             {
@@ -309,23 +380,39 @@ int main(int argc, char *argv[])
 
 		if(SingleModePlot)
 		{
-		
+		    //it is on two planes for single mode
+			int dim=Exp[j]->GetNcoeffs();
+			//copy the single mode on the 4planes expansion
+			Vmath::Vcopy(dim,&Exp[j]->GetCoeffs()[0],1,&Exp1[j]->UpdateCoeffs()[dim],1);
 			
-			Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
+			Exp1[j]->BwdTrans(Exp1[j]->GetCoeffs(),Exp1[j]->UpdatePhys());
+			
 
-			int dim=Exp[j]->GetNpoints();
 			
-			//copy into Exp1 with last plane equal to the first
-			Vmath::Vcopy(dim,&Exp[j]->GetPhys()[0],1,&Exp1[j]->UpdatePhys()[0],1);
-			Vmath::Vcopy(dim/2,&Exp[j]->GetPhys()[0],1,&Exp1[j]->UpdatePhys()[dim],1);
+
+		}
+		else if(HalfModePlot)
+		{
+			//it is one planes for single mode
+			int dim=Exp[j]->GetNcoeffs();
+			//copy the  mode on the 4planes expansion
+			if(j==2)
+			{ 
+				//copy on the 4th plane
+				//Vmath::Vcopy(dim,&Exp[j]->GetCoeffs()[0],1,&Exp1[j]->UpdateCoeffs()[3*dim],1);
+				Vmath::Vcopy(dim,&Exp[j]->GetCoeffs()[0],1,&Exp1[j]->UpdateCoeffs()[2*dim],1);
+
+			}
+			else
+			{
+				Vmath::Vcopy(dim,&Exp[j]->GetCoeffs()[0],1,&Exp1[j]->UpdateCoeffs()[2*dim],1);
+			}
 			
-			int nq = Exp[0]->GetNpoints();
-			Array<OneD,NekDouble> x0(nq);
-			Array<OneD,NekDouble> x1(nq);
-			Array<OneD,NekDouble> x2(nq);
+			Exp1[j]->BwdTrans(Exp1[j]->GetCoeffs(),Exp1[j]->UpdatePhys());
 			
 		}
-		else{
+		else
+		{
 			Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
 		}
     }
@@ -335,7 +422,7 @@ int main(int argc, char *argv[])
     // Write solution  depending on #define
 #ifdef TECPLOT
 	
-	if(SingleModePlot)
+	if(SingleModePlot || HalfModePlot)
 	{
 		std::string var = "";
 

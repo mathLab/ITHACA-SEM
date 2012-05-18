@@ -298,8 +298,7 @@ namespace Nektar
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
-			   if(m_session->DefinesSolverInfo("SingleMode")==true && 
-			   (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+			if(m_SingleMode || m_HalfMode)
 			{
 				for(int i = 0; i < m_nConvectiveFields; ++i)
 				{
@@ -369,21 +368,22 @@ namespace Nektar
 #ifdef UseContCoeffs
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateContCoeffs(),flags,factors);
 			
-			//SingleMode Analysis (putting to zero every plane except the considered mode)
-			if(m_SingleMode==true)
-			{
-				Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
-			}
+			//to have single mode using 4 planes
+			//if(m_MultipleModes)
+			//{
+			//	Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
+			//}
 			
             m_fields[i]->BwdTrans(m_fields[i]->GetContCoeffs(),outarray[i],true);
 #else
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
 
-			//SingleMode Analysis (putting to zero every plane except the considered mode)
-			if(m_SingleMode==true)
-			{
-				Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
-			}
+			//to have single mode using 4 planes (put 0 mean mode)
+			//if(m_MultipleModes)
+			//{
+			//  Vmath::Zero((m_fields[i]->GetNcoeffs())/(2),&m_fields[i]->UpdateCoeffs()[0],1);
+			//	Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
+			//}
 			
 			
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
@@ -960,8 +960,7 @@ namespace Nektar
 							m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
 							m_HBC[5][j] = n;                                         
 							
-							if(m_session->DefinesSolverInfo("SingleMode")==true && 
-							   (m_session->GetSolverInfo("SingleMode")=="ModifiedBasis"||m_session->GetSolverInfo("SingleMode")=="HalfMode"))
+							if(m_SingleMode || m_HalfMode || m_MultipleModes)
 							{
 								//m_wavenumber[j] = 2*M_PI*sign/m_LhomZ;
 								m_wavenumber[j] = 2*M_PI/m_LhomZ;       
@@ -976,8 +975,7 @@ namespace Nektar
 							
 							if(k%2==0)
 							{
-								if(m_session->DefinesSolverInfo("SingleMode")==true && 
-                                   m_session->GetSolverInfo("SingleMode")=="HalfMode")
+								if(m_HalfMode)
 								{
 									m_HBC[6][j] = m_HBC[0][j];
 

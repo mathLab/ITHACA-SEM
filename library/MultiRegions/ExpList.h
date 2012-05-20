@@ -890,8 +890,6 @@ namespace Nektar
 			// or not
             bool m_WaveSpace;
 			
-			bool m_SingleModeBasis;
-
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
             const DNekScalBlkMatSharedPtr GenBlockMatrix(
@@ -1293,15 +1291,6 @@ namespace Nektar
         {
             return m_transState;
         }
-		
-		/**
-         *
-         */
-        inline void ExpList::SetModifiedBasis(const bool modbasis)
-        {
-            m_SingleModeBasis = modbasis;
-        }
-		
 		
 		/**
          *

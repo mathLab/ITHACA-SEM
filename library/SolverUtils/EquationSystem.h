@@ -405,7 +405,6 @@ namespace Nektar
             int m_checksteps;            ///< Number of steps between checkpoints
             int m_spacedim;              ///< Spatial dimension (> expansion dim)
             int m_expdim;                ///< Dimension of the expansion
-            bool m_SingleModeBasis;      ///< Flag for the SingleMode Basis
 			bool m_SingleMode;			 ///< flag to determine if use single mode or not
 			bool m_HalfMode;		     ///< flag to determine if use half mode or not
 			bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not
@@ -840,11 +839,6 @@ namespace Nektar
         {
             v_NumFluxforVector(ufield,qfield, qflux);
         }
-	
-	inline void EquationSystem::SetModifiedBasis(const bool modbasis)
-	{
-            m_SingleModeBasis=modbasis;
-	}
     }
 }
 

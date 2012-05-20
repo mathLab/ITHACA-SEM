@@ -95,7 +95,6 @@ namespace Nektar
 		Array<OneD,NekDouble>							m_tmpIN;
 		Array<OneD,NekDouble>							m_tmpOUT;
 		bool											m_useFFTW;
-		bool m_SingleModeBasis;							///< Flag for the SingleMode Basis 
 		bool m_SingleMode;			 ///< flag to determine if use single mode or not
 		bool m_HalfMode;		     ///< flag to determine if use half mode or not
 		bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not

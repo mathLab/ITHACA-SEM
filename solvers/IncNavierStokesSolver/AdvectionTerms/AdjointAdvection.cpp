@@ -66,6 +66,9 @@ namespace Nektar
 		m_HomoDirec       = 0;
         m_useFFT          = false;
         m_HomogeneousType = eNotHomogeneous;
+		m_SingleMode	   =false;
+		m_HalfMode		   =false;
+		m_MultipleModes    =false;
 		
         if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
         {
@@ -78,9 +81,6 @@ namespace Nektar
                 m_HomogeneousType = eHomogeneous1D;
                 m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 1;
-				m_SingleMode	   =false;
-				m_HalfMode		   =false;
-				m_MultipleModes    =false;
 				
 				if(m_session->DefinesSolverInfo("ModeType"))
 				{

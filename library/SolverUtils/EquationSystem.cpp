@@ -117,12 +117,6 @@ namespace Nektar
 			m_MultipleModes		= false;
 
 			
-			if(m_session->DefinesSolverInfo("ModeType"))
-			{
-				   m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
-				   m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
-				   m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
-			}
 
             m_HomogeneousType = eNotHomogeneous;
 
@@ -138,6 +132,14 @@ namespace Nektar
                     m_session->LoadParameter("LZ",m_LhomZ);
                     m_HomoDirec       = 1;
 				
+					if(m_session->DefinesSolverInfo("ModeType"))
+					{
+						m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+						m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+						m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
+					}
+					
+					
 					//Stability Analysis flags
 					if(m_session->DefinesSolverInfo("ModeType"))
 					{

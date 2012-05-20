@@ -72,7 +72,6 @@ namespace Nektar
                 m_period  = m_session->GetParameter("TimeStep")* m_session->GetParameter("NumSteps");
                 m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
 			
-                //if(m_session->DefinesSolverInfo("SingleMode") && m_session->GetSolverInfo("SingleMode")=="ModifiedBasis")
 				if(m_session->DefinesSolverInfo("ModeType") && 
 				   (m_session->GetSolverInfo("ModeType")=="SingleMode"|| m_session->GetSolverInfo("ModeType")=="HalfMode") )
                 {

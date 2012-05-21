@@ -119,6 +119,16 @@ int main(int argc, char* argv[])
     Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_MVM.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (MVM)");
     Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes (MVM)");
     Execute("IncNavierStokesSolver","Test_KovaFlow_3DH1D_P5_20modes_SKS_MVM.xml","Kovasznay Flow 3D homogeneous 1D, P=5, 20 Fourier modes - Skew-Symmetric advection(MVM)");
+
+	//Test of stability basis
+	Execute("IncNavierStokesSolver","Test_HM.xml","Fourier Half Mode Basis, P=3");
+	Execute("IncNavierStokesSolver","Test_SM.xml","Fourier Single Mode Basis, P=7");
+	Execute("IncNavierStokesSolver","Test_SM_Adj.xml","Fourier Single Mode Adjoint Basis, P=7");
+	Execute("IncNavierStokesSolver","Test_HM_Adj.xml","Fourier Half Mode Adjoint Basis, P=3");
+
+	
+
+
 #ifdef NEKTAR_USING_FFTW
     Execute("IncNavierStokesSolver","Test_ChanFlow_3DH1D_FFT.xml","Laminar Channel Flow 3D homogeneous 1D, P=3, 20 Fourier modes (FFT)");
     Execute("IncNavierStokesSolver","Test_ChanFlow_3DH2D_FFT.xml","Laminar Channel Flow 3D homogeneous 2D, P=3, 8x8 Fourier modes (FFT)");

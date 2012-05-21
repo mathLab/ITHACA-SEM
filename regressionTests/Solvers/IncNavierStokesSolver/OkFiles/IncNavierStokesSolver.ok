@@ -328,3 +328,44 @@ L inf error (variable w) : 2.04232e-19
 L 2 error (variable p) : 7.65165e-11
 L inf error (variable p) : 1.49093e-10
 ----------------------------------------
+Test_HM.xml
+L 2 error (variable u) : 4.32172e-16
+L inf error (variable u) : 1.33227e-15
+L 2 error (variable v) : 3.54254e-16
+L inf error (variable v) : 1.60982e-15
+L 2 error (variable w) : 3.03818e-16
+L inf error (variable w) : 8.88178e-16
+L 2 error (variable p) : 1.55664e-14
+L inf error (variable p) : 4.94116e-14
+----------------------------------------
+Test_SM.xml
+L 2 error (variable u) : 2.24489e-12
+L inf error (variable u) : 6.96315e-12
+L 2 error (variable v) : 4.81917e-13
+L inf error (variable v) : 2.96951e-12
+L 2 error (variable w) : 8.76291e-13
+L inf error (variable w) : 3.96565e-12
+L 2 error (variable p) : 3.4035e-11
+L inf error (variable p) : 5.33225e-10
+----------------------------------------
+Test_SM_Adj.xml
+L 2 error (variable u) : 2.13451e-12
+L inf error (variable u) : 4.84993e-12
+L 2 error (variable v) : 1.34124e-13
+L inf error (variable v) : 8.81961e-13
+L 2 error (variable w) : 6.32384e-13
+L inf error (variable w) : 1.78035e-12
+L 2 error (variable p) : 4.76387e-11
+L inf error (variable p) : 1.43931e-10
+----------------------------------------
+Test_HM_Adj.xml
+L 2 error (variable u) : 4.28392e-16
+L inf error (variable u) : 1.77636e-15
+L 2 error (variable v) : 2.76714e-16
+L inf error (variable v) : 1.05471e-15
+L 2 error (variable w) : 2.37347e-16
+L inf error (variable w) : 8.32667e-16
+L 2 error (variable p) : 1.12508e-14
+L inf error (variable p) : 4.6355e-14
+----------------------------------------
+

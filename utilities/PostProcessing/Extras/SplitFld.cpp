@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
    
 
     std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
-    if(solvtype == "CoupledLinearisedNS")
+    if(solvtype == "CoupledLinearisedNS" && vSession->DefinesSolverInfo("HOMOGENEOUS") )
     {
       	    
          SetFields(graphShPt,boundaryConditions,vSession,Exp,nfields-1);
@@ -155,6 +155,7 @@ int main(int argc, char *argv[])
 cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<Exp[lastfield]->GetPlane(1)->GetCoeff(g)<<endl;
          }  
 */
+
      for(int j =0; j<nfields; j++)
      {
           outfile = out;

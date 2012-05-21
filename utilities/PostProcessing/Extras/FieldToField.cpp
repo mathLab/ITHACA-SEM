@@ -30,6 +30,9 @@
 
 using namespace Nektar;
 
+//@todo : read the field info (i.e. if Homogeneous) from the
+// fldfile instead of the sessionfile
+
 int main(int argc, char *argv[])
 {
 
@@ -168,6 +171,7 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
     //----------------------------------------------    
   
     //Read in the mesh1
+    cout<<"read second mesh"<<endl;
     string meshfile1(argv[argc-2]);    
     //Name of the output fieldfile
     string fieldfile1(argv[argc-1]);           
@@ -662,6 +666,7 @@ cout<<"new val="<<field1->GetPlane(1)->UpdatePhys()[r]<<endl;
        	       NekDouble x0min,x0max,y0min, y0max;
        	       NekDouble x1min,x1max,y1min, y1max;       	       
        	       NekDouble tol = 0.0000001;
+               NekDouble tol1 = 0.00001;
        	       x0min = Vmath::Vmin(x0.num_elements(),x0,1);
        	       x0max = Vmath::Vmax(x0.num_elements(),x0,1);
        	       y0min = Vmath::Vmin(y0.num_elements(),y0,1);
@@ -672,18 +677,28 @@ cout<<"new val="<<field1->GetPlane(1)->UpdatePhys()[r]<<endl;
        	       y1min = Vmath::Vmin(y1.num_elements(),y1,1);
        	       y1max = Vmath::Vmax(y1.num_elements(),y1,1);       	       
 
+//cout<<std::setprecision(8)<<"x0max="<<x0max<<endl;
+//cout<<std::setprecision(8)<<"x1max="<<x1max<<endl;
 //cout<<"abs(x0min-x1min )="<<abs(x0min-x1min )<<endl;
 //cout<<"abs(x0max-x1max)="<<abs(x0max-x1max)<<endl;
 //cout<<"abs(y0min-y1min)="<<abs(y0min-y1min)<<endl;
 //cout<<"abs(y0max-y1max)="<<abs(y0max-y1max)<<endl;
 
-               if(  abs(x0min-x1min )< tol
-                    && abs(x0max-x1max)< tol
-               	    && abs(y0min-y1min)< tol
-                    && abs(y0max-y1max)< tol
+               if(  abs(x0min-x1min )< tol1
+                    && abs(x0max-x1max)< tol1
+               	    && abs(y0min-y1min)< tol1
+                    && abs(y0max-y1max)< tol1
                  )
                {
-               	   return true;
+                   if(abs(x0min-x1min )> tol
+                    || abs(x0max-x1max)> tol
+               	    || abs(y0min-y1min)> tol
+                    || abs(y0max-y1max)> tol  )
+                   {
+                        cout<<"Warning: mesh boundary points differ more than 10^-7"<<endl;
+                   }
+
+               	   return true;                  
                }
                else
                { 

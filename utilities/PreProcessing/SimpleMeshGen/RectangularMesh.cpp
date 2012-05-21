@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
-
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
             for(k = 0; k < nx; ++k)
             {
                 cout << "    <V ID=\"" << j*nx+k << "\">\t";
-                cout << xc[k] << " "   << yc[j] << " 0.0";
+                cout << std::setprecision(8)<< xc[k] << " "   << yc[j] << " 0.0";
                 cout << "  </V>" << endl; 
             }
         }

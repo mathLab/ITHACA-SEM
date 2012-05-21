@@ -202,11 +202,12 @@ int main(int argc, char *argv[])
     NekDouble tmp;
     //the Exp.num_elements()==1!!!
     ASSERTL0(Exp.num_elements()==1, "the field is not a streak");
-
+cout<<"before  Exp[0][1]="<<Exp[0]->GetPhys()[9]<<endl;
     for (int i = 0; i < nq; ++i)
     {
            //sin(pi*y)*cos(x)
-           tmp = 0.1*sin(pi*y[i])*cos(x[i]);
+           tmp = 0.01*sin(pi*y[i])*cos(x[i]);
+//cout<<"add[0][1]="<<tmp<<endl;
            //Vmath::Vadd(nq, Exp[0]->GetPhys(),1,tmp,1,Exp[0]->UpdatePhys(),1);    
            Exp[0]->UpdatePhys()[i] = Exp[0]->GetPhys()[i] +tmp;
     }
@@ -227,7 +228,7 @@ int main(int argc, char *argv[])
     for(int j = 0; j < nfields ; ++j)
     {
                 Exp[j]->FwdTrans_IterPerExp(Exp[j]->GetPhys(),Exp[j]->UpdateCoeffs());	
-cout<<"  Exp[0][0]="<<Exp[0]->GetPhys()[0]<<endl;	     
+cout<<"  Exp[0][0]="<<Exp[0]->GetPhys()[9]<<endl;	     
 		fieldcoeffs[j] = Exp[j]->UpdateCoeffs();
 		for(int i = 0; i < FieldDef.size(); ++i)
 		{

@@ -407,6 +407,16 @@ namespace Nektar
         cout << "Executing cp -f session.fld session_streak.fld" << endl;
         CopyFile(".fld","_streak.fld");
 
+        if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
+        {
+            for(int g=0; g< solverStreak->GetNvariables(); ++g)
+            {
+               NekDouble vL2Error = solverStreak->L2Error(g,false);
+               NekDouble vLinfError = solverStreak->LinfError(g);
+               cout << "L 2 error (variable " << solverStreak->GetVariable(g) << ") : " << vL2Error << endl;
+               cout << "L inf error (variable " << solverStreak->GetVariable(g) << ") : " << vLinfError << endl;
+            }
+        }
     }
 
     void VortexWaveInteraction::ExecuteWave(void)
@@ -461,6 +471,13 @@ namespace Nektar
 
         m_waveVelocities = solverWave->GetEqu()[0]->UpdateFields();
         m_wavePressure   = solverWave->GetEqu()[0]->GetPressure();
+
+
+        if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
+        {
+            cout << "Growth =" <<m_leading_real_evl[0]<<endl; 
+            cout << "Phase =" <<m_leading_imag_evl[0]<<endl; 
+        }
         
     }
 
@@ -477,15 +494,42 @@ namespace Nektar
              char c_alpha[16]="";
     	     sprintf(c_alpha,"%f",m_alpha[0]);    
              string syscall;
-
-             syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs-g  "
-                     + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
+             if( m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
              {
-                  ASSERTL0(false,syscall.c_str());
+                  string filePost = m_sessionName + "_advPost.xml";
+                  syscall = "../../utilities/PostProcessing/Extras/FldCalcBCs  "
+                       + filePost +"     "+
+                       "meshhalf_pos_Spen_stability_moved.fld  meshhalf_pos_Spen_advPost_moved.fld "
+                       +c_alpha +"  > data_alpha0";
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+             
+                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_u_5.bc  "+m_sessionName+"_u_5.bc";  
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_v_5.bc  "+m_sessionName+"_v_5.bc";  
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
              }
-
+             else
+             {
+                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs  "
+                     + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
+                  cout<<syscall.c_str()<<endl;
+                  if(system(syscall.c_str()))
+                  {
+                       ASSERTL0(false,syscall.c_str());
+                  }
+             }
 
              
              
@@ -698,24 +742,32 @@ namespace Nektar
             m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der2, m_vwiForcing[1]);
 #else
             int i;
-            static Array<OneD, int> index = GetReflectionIndex();
- 
-            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
-            for(i = 0; i < npts; ++i)
+            //by default the symmetrization is on
+            bool symm=true;
+            m_sessionVWI->MatchSolverInfo("Symmetrization","True",symm,true);
+            if(symm== true )
             {
-                 val[i] = 0.5*(der1[i] - der1[index[i]]);
-            }
 
-            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
+               cout<<"symmetrization is active"<<endl;              
+               static Array<OneD, int> index = GetReflectionIndex();
+
+               m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[0],der1);
+               for(i = 0; i < npts; ++i)
+               {
+                   val[i] = 0.5*(der1[i] - der1[index[i]]);
+               }
+
+               m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
 
 
-            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
-            for(i = 0; i < npts; ++i)
-            {
-                 val[i] = 0.5*(der1[i] - der1[index[i]]);
-            }        
+               m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
+               for(i = 0; i < npts; ++i)
+               {
+                   val[i] = 0.5*(der1[i] - der1[index[i]]);
+               }        
             
-            m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
+               m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
+            }
 #endif
 
 
@@ -1108,8 +1160,7 @@ cout<<"zerophase"<<endl;
  
 
              }
-             else if(//GetVWIIterationType()==eFixedWaveForcingPhase &&
-                    m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
+             else if(  m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
              {    
 cout<<"phase"<<endl;
                   //determine cr:
@@ -1299,6 +1350,8 @@ cout<<"cr="<<cr_str<<endl;
 
 
              }
+
+
 
 
 
@@ -1702,7 +1755,7 @@ cout<<"cr="<<cr_str<<endl;
     void VortexWaveInteraction::FileRelaxation(int reg)
     {
           cout<<"relaxation..."<<endl;
-static int cnt=0;
+          static int cnt=0;
           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp 
                                            =m_rollField[0]->GetBndCondExpansions();
           //cast to 1D explist (otherwise appenddata doesn't work)
@@ -1746,7 +1799,6 @@ static int cnt=0;
 
           if(cnt!=0)
           {
-cout<<"ucnt="<<cnt<<endl;
               if(m_vwiRelaxation==1.0)
               {
                  Vmath::Vcopy(nq, m_bcsForcing[0],1, tmp_forcing,1);

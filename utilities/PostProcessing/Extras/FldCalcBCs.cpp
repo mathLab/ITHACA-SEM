@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
     Array<OneD, int> GetReflectionIndex(MultiRegions::ExpListSharedPtr Exp,
     int Ireg);
+    Array<OneD, int>  GetReflectionIndex2D(MultiRegions::ExpListSharedPtr wavefield);
     void Extractlayerdata(Array<OneD, int> Iregions, int coordim, 
             SpatialDomains::MeshGraphSharedPtr &mesh,   
             LibUtilities::SessionReaderSharedPtr &session,
@@ -46,6 +47,12 @@ int main(int argc, char *argv[])
     	    Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldx,
        	       Array<OneD,MultiRegions::ExpList1DSharedPtr> &outfieldy,
        	       MultiRegions::ExpListSharedPtr &streak);
+
+    void CalcNonLinearForcing(SpatialDomains::MeshGraphSharedPtr &mesh,
+                            LibUtilities::SessionReaderSharedPtr &session, string fieldfile,
+                	    Array<OneD,MultiRegions::ExpListSharedPtr> &waveFields,
+                            MultiRegions::ExpListSharedPtr &streak, 
+                            Array<OneD, int> Refindices, bool symm );  
     void WriteBcs(string variable, int region, string fieldfile, SpatialDomains::MeshGraphSharedPtr &mesh, 
     	    MultiRegions::ContField1DSharedPtr &outregionfield);
     void WriteFld(string outfile, SpatialDomains::MeshGraphSharedPtr &mesh, Array<OneD,
@@ -111,10 +118,11 @@ cout<<"cr="<<cr<<endl;
 
 
     //determine if the symmetrization is on:
-    bool symm =false;
-    if( vSession->DefinesSolverInfo("symmetrization") )
+    bool symm =true;
+    vSession->MatchSolverInfo("Symmetrization","True",symm,true);
+    if( symm == true )
     {
-         symm =true;
+         cout<<"symmetrization is active"<<endl;    
     }
     
   
@@ -197,14 +205,13 @@ cout<<"set ppp"<<endl;
     // Copy data from file:fill fields with the fielddata
     if(lastfield==1)
     {
-        int i;
-        for(i = 0; i < fielddata.size(); ++i)
+        for(int i = 0; i < fielddata.size(); ++i)
         {        	
             fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
         }             
         fields[0]->BwdTrans(fields[0]->GetCoeffs(),fields[0]->UpdatePhys());
 cout<<"field:"<<fielddef[i]->m_fields[0]<<endl;
-        for(i = 0; i < fielddata.size(); ++i)
+        for(int i = 0; i < fielddata.size(); ++i)
         {        	
             fields[lastfield]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
         }             
@@ -339,24 +346,39 @@ cout<<"OOOK"<<endl;
     //--------------------------------------------------------
 */    
     
-    //manipulate data
-    //for 2 variables(u,v) only:
-    int coordim = graphShPt->GetMeshDimension(); 
-    //remark Ilayers[2] is the critical layer             	   
-    static Array<OneD, int> Refindices = GetReflectionIndex(streak, Ilayers[2]);
-    Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, 
+    bool coarseVWI=false;
+
+    if(coarseVWI==false)
+    {    
+       //manipulate data    
+       //for 2 variables(u,v) only:
+       int coordim = graphShPt->GetMeshDimension(); 
+       //remark Ilayers[2] is the critical layer             	   
+       static Array<OneD, int> Refindices = GetReflectionIndex(streak, Ilayers[2]);
+       Extractlayerdata(Ilayers,coordim, graphShPt,vSession, bcs, 
                     fields, outfieldx,outfieldy,streak,symm,Refindices, alpha,cr);       	       
 
-    //--------------------------------------------------------------------------------------
+       //--------------------------------------------------------------------------------------
 
+    
+       //write bcs files: one for each I region and each variable
+       string var="u";
+       WriteBcs(var,lastIregion, fieldfile,graphShPt,outfieldx);
+       var="v";
+       WriteBcs(var,lastIregion, fieldfile,graphShPt,outfieldy);      	      	      
 
-  
-
-    //write bcs files: one for each I region and each variable
-    string var="u";
-    WriteBcs(var,lastIregion, fieldfile,graphShPt,outfieldx);
-    var="v";
-    WriteBcs(var,lastIregion, fieldfile,graphShPt,outfieldy);      	      	      
+       //--------------------------------------------------------------------------------
+    }
+    else
+    {
+       cout<<"CalcNonLinearForcing"<<endl;
+       static Array<OneD, int> Refindices;
+       if(symm==true)
+       {
+           Refindices = GetReflectionIndex2D(fields[0]);
+       }
+       CalcNonLinearForcing(graphShPt,vSession, fieldfile, fields,  streak, Refindices,symm ) ; 
+    }
     
 }
 				
@@ -865,7 +887,7 @@ cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;
 		     	   stcoeffsreg[offsetregIExp +d] = stcoeffsedgereg[d];
 		     	   stgradxcoeffsreg[offsetregIExp +d] = stgradxcoeffsedge[d];
 		     	   stgradycoeffsreg[offsetregIExp +d] = stgradycoeffsedge[d];      
-cout<<"results: Re="<<Recoeffsedgereg[d]<<"  Im="<<Imcoeffsedgereg[d]<<endl;
+//cout<<"results: Re="<<Recoeffsedgereg[d]<<"  Im="<<Imcoeffsedgereg[d]<<endl;
 		     	   
 		     }
 		     
@@ -1581,7 +1603,14 @@ pjump[g]<<setw(13)<<"        "<<d2v[g]<<"       "
                 }
 
 	    }
-            ASSERTL0(abs(laytest)<0.002, "critical layer wrong");
+            if(cr==0)
+            {
+                ASSERTL0(abs(laytest)<0.002, "critical layer wrong");
+            }
+            else
+            {
+                cout<<"WARNING:  crit may be wrong"<<endl;
+            }
          
 // gamma(1/3)= 2.6789385347077476337            
             // need the tangents related to the expList1D outfieldx[region]
@@ -1621,10 +1650,289 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
 	
 	
 	
+       void CalcNonLinearForcing(SpatialDomains::MeshGraphSharedPtr &mesh,
+                            LibUtilities::SessionReaderSharedPtr &session, string fieldfile,
+                	    Array<OneD,MultiRegions::ExpListSharedPtr> &waveFields,
+                            MultiRegions::ExpListSharedPtr &streak, 
+                            Array<OneD, int> Refindices, bool symm )
+       {
+
+
+            
+            int npts    = waveFields[0]->GetPlane(0)->GetNpoints();
+            int ncoeffs = waveFields[0]->GetPlane(0)->GetNcoeffs();
+
+            Array<OneD, NekDouble> val(npts), der1(2*npts);
+            Array<OneD, NekDouble> der2 = der1 + npts; 
+
+
+
+            Array<OneD, MultiRegions::ExpListSharedPtr> waveVelocities;
+  
+            int nvel = waveFields.num_elements()-1;
+            waveVelocities = Array<OneD, MultiRegions::ExpListSharedPtr>(nvel);  
+            //fill velocity fields (both coeffs, phys)
+            for( int i=0; i< nvel; i++)
+            {
+              waveVelocities[i] = waveFields[i];
+              Vmath::Vcopy(npts, waveFields[i]->GetPlane(0)->GetPhys(),1, waveVelocities[i]->GetPlane(0)->UpdatePhys(),1 );
+              Vmath::Vcopy(npts, waveFields[i]->GetPlane(1)->GetPhys(),1, waveVelocities[i]->GetPlane(1)->UpdatePhys(),1 );
+
+              Vmath::Vcopy(ncoeffs, waveFields[i]->GetPlane(0)->GetCoeffs(),1, waveVelocities[i]->GetPlane(0)->UpdateCoeffs(),1 );
+              Vmath::Vcopy(ncoeffs, waveFields[i]->GetPlane(1)->GetCoeffs(),1, waveVelocities[i]->GetPlane(1)->UpdateCoeffs(),1 );
+
+            }
+            MultiRegions::ExpListSharedPtr    wavePressure;
+            wavePressure = waveFields[nvel];
+
+            //nvel=lastfield!!!
+            Vmath::Vcopy(npts, waveFields[nvel]->GetPlane(0)->GetPhys(),1, wavePressure->GetPlane(0)->UpdatePhys(),1 );
+            Vmath::Vcopy(npts, waveFields[nvel]->GetPlane(1)->GetPhys(),1, wavePressure->GetPlane(1)->UpdatePhys(),1 );
+
+            Vmath::Vcopy(ncoeffs, waveFields[nvel]->GetPlane(0)->GetCoeffs(),1, wavePressure->GetPlane(0)->UpdateCoeffs(),1 );
+            Vmath::Vcopy(ncoeffs, waveFields[nvel]->GetPlane(1)->GetCoeffs(),1, wavePressure->GetPlane(1)->UpdateCoeffs(),1 );
+            
+
+ 
+
+            static int projectfield = -1;
+            // Set project field to be first field that has a Neumann
+            // boundary since this not impose any condition on the vertical boundaries
+            // Othersise set to zero. 
+            if(projectfield == -1)
+            {
+                 Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+                
+                 for(int i = 0; i < waveVelocities.num_elements(); ++i)
+                 {
+                      BndConds = waveVelocities[i]->GetBndConditions();
+                      for(int j = 0; j < BndConds.num_elements(); ++j)
+                      {
+                           if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                           {
+                                projectfield = i;
+                                break;
+                           }
+                      }
+                      if(projectfield != -1)
+                      {
+                           break;
+                      }
+                 }
+                 if(projectfield == -1)
+                 {
+                       cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
+                       projectfield = 0;
+                 }
+            }
+
+      
+            // determine inverse of area normalised field. 
+            wavePressure->GetPlane(0)->BwdTrans(wavePressure->GetPlane(0)->GetCoeffs(),
+                                              wavePressure->GetPlane(0)->UpdatePhys());
+            wavePressure->GetPlane(1)->BwdTrans(wavePressure->GetPlane(1)->GetCoeffs(),
+                                              wavePressure->GetPlane(1)->UpdatePhys());
+
+            // Determine normalisation of pressure so that |P|/A = 1
+            NekDouble norm = 0, l2;
+            l2    = wavePressure->GetPlane(0)->L2();
+            norm  = l2*l2;
+            l2    = wavePressure->GetPlane(1)->L2();
+            norm += l2*l2;
+            Vmath::Fill(2*npts,1.0,der1,1);
+            NekDouble area = waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+            norm = sqrt(area/norm);
+        
+            // Get hold of arrays. 
+            waveVelocities[0]->GetPlane(0)->BwdTrans(waveVelocities[0]->GetPlane(0)->GetCoeffs(),waveVelocities[0]->GetPlane(0)->UpdatePhys());
+            Array<OneD, NekDouble> u_real = waveVelocities[0]->GetPlane(0)->UpdatePhys();
+            Vmath::Smul(npts,norm,u_real,1,u_real,1);
+            waveVelocities[0]->GetPlane(1)->BwdTrans(waveVelocities[0]->GetPlane(1)->GetCoeffs(),waveVelocities[0]->GetPlane(1)->UpdatePhys());
+            Array<OneD, NekDouble> u_imag = waveVelocities[0]->GetPlane(1)->UpdatePhys();
+            Vmath::Smul(npts,norm,u_imag,1,u_imag,1);
+            waveVelocities[1]->GetPlane(0)->BwdTrans(waveVelocities[1]->GetPlane(0)->GetCoeffs(),waveVelocities[1]->GetPlane(0)->UpdatePhys());
+            Array<OneD, NekDouble> v_real = waveVelocities[1]->GetPlane(0)->UpdatePhys(); 
+            Vmath::Smul(npts,norm,v_real,1,v_real,1);
+            waveVelocities[1]->GetPlane(1)->BwdTrans(waveVelocities[1]->GetPlane(1)->GetCoeffs(),waveVelocities[1]->GetPlane(1)->UpdatePhys());
+            Array<OneD, NekDouble> v_imag = waveVelocities[1]->GetPlane(1)->UpdatePhys();
+            Vmath::Smul(npts,norm,v_imag,1,v_imag,1);
+        
+            // Calculate non-linear terms for x and y directions
+            // d/dx(u u* + u* u)
+            Vmath::Vmul (npts,u_real,1,u_real,1,val,1);
+            Vmath::Vvtvp(npts,u_imag,1,u_imag,1,val,1,val,1);
+            Vmath::Smul (npts,2.0,val,1,val,1);
+            waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
+        
+        
+            // d/dy(v u* + v* u)
+            Vmath::Vmul (npts,u_real,1,v_real,1,val,1);
+            Vmath::Vvtvp(npts,u_imag,1,v_imag,1,val,1,val,1);
+            Vmath::Smul (npts,2.0,val,1,val,1);
+            waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
+        
+            Vmath::Vadd(npts,der1,1,der2,1,der1,1);
+        
+            NekDouble rho = session->GetParameter("RHO");
+            NekDouble Re = session->GetParameter("RE");
+cout<<"Re="<<Re<<endl;
+            NekDouble waveForceMag = rho*rho*std::pow(Re,-1./3.);
+
+            Array<OneD, Array<OneD, NekDouble > >  vwiForcing; 
+            vwiForcing = Array<OneD, Array<OneD, NekDouble> > (2);
+            vwiForcing[0] = Array<OneD, NekDouble> (2*ncoeffs);
+            for(int i = 1; i < 2; ++i)
+            {
+                 vwiForcing[i] = vwiForcing[i-1] + ncoeffs;
+            }
+
+            if(projectfield!=0)
+            {
+                waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,vwiForcing[0]);
+            }
+            else
+            {
+                waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,vwiForcing[0]);
+            }
+
+cout<<"waveforcemag="<<waveForceMag<<endl;
+            Vmath::Smul(ncoeffs,-waveForceMag, vwiForcing[0],1, vwiForcing[0],1);
+
+            // d/dx(u v* + u* v)
+            waveVelocities[0]->GetPlane(0)->PhysDeriv(0,val,der1);
+        
+            // d/dy(v v* + v* v)
+            Vmath::Vmul(npts,v_real,1,v_real,1,val,1);
+            Vmath::Vvtvp(npts,v_imag,1,v_imag,1,val,1,val,1);
+            Vmath::Smul (npts,2.0,val,1,val,1);
+            waveVelocities[0]->GetPlane(0)->PhysDeriv(1,val,der2);
+        
+            Vmath::Vadd(npts,der1,1,der2,1,der1,1);
+
+            if(projectfield!=0)
+            {
+                waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,vwiForcing[1]);
+            }
+            else
+            {
+                waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(der1,vwiForcing[1]);
+            }
+
+            Vmath::Smul(ncoeffs,- waveForceMag, vwiForcing[1],1, vwiForcing[1],1);
+            
+            int i;     
+            if(symm==true)
+            {
+               cout<<"symmetrization"<<endl;
+
+
+               waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(vwiForcing[0],der1);
+               for(int i = 0; i < npts; ++i)
+               {
+                    val[i] = 0.5*(der1[i] - der1[Refindices[i]]);
+               }
+  
+               waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, vwiForcing[0]);
+
+
+               waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(vwiForcing[1],der1);
+               for(int i = 0; i < npts; ++i)
+               {
+                    val[i] = 0.5*(der1[i] - der1[Refindices[i]]);
+               }        
+            
+               waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, vwiForcing[1]);
+
+            }
+     
+            // dump output
+            Array<OneD, std::string> variables(2);
+            Array<OneD, Array<OneD, NekDouble> > outfield(2);
+            variables[0] = "u";   
+            variables[1] = "v";
+            outfield[0]  = vwiForcing[0];
+            outfield[1]  = vwiForcing[1];
+      
+            string sessionName = fieldfile.substr(0,fieldfile.find_last_of("."));
+            std::string outname = sessionName  + ".vwi";
+        
+            
+
+
+ 	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    			= waveVelocities[0]->GetPlane(0)->GetFieldDefinitions();  			
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());    		
+    	    //Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(outfield.num_elements());   	
+	    string var;
+            for(int j=0; j< vwiForcing.num_elements(); ++j)
+	    {  
+ 		     
+		 //fieldcoeffs =vwiForcing;			
+		 for(int i=0; i< FieldDef.size(); i++)
+		 {	     	     
+		     //var = vSession->GetVariable(j);		     	   		    
+                     var =  variables[j];	   
+		     FieldDef[i]->m_fields.push_back(var);   
+ 		     waveVelocities[0]->GetPlane(0)->AppendFieldData(FieldDef[i], FieldData[i], vwiForcing[j]);  
+		  }
+	     }
+	     mesh->Write(outname,FieldDef,FieldData);
+
+            //session->WriteFld(outname, waveVelocities[0]->GetPlane(0), outfield, variables);
+         
+       }
 	
 	
-	
-	
+       Array<OneD, int> GetReflectionIndex2D(
+                                          MultiRegions::ExpListSharedPtr wavefield)
+       {
+           int i,j;
+           int npts = wavefield->GetPlane(0)->GetNpoints();
+           Array<OneD, int> index(npts);
+
+           Array<OneD, NekDouble> coord(2);
+           Array<OneD, NekDouble> coord_x(npts);
+           Array<OneD, NekDouble> coord_y(npts);
+        
+           //-> Dermine the point which is on coordinate (x -> -x + Lx/2, y-> -y)
+           wavefield->GetPlane(0)->GetCoords(coord_x,coord_y);
+           NekDouble xmax = Vmath::Vmax(npts,coord_x,1);
+           NekDouble tol = NekConstants::kGeomFactorsTol*NekConstants::kGeomFactorsTol;
+           NekDouble xnew,ynew;
+
+           int start  = npts-1; 
+           for(i = 0; i < npts; ++i)
+           {
+               xnew = - coord_x[i]  + xmax;
+               ynew = - coord_y[i];
+
+               for(j = start; j >=0 ; --j)
+               {
+                   if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
+                   {
+                       index[i] = j;
+                       start = j;
+                       break;
+                   }
+               }
+            
+               if(j == -1)
+               {
+                
+                   for(j = npts-1; j > start; --j)
+                   {
+                    
+                       if((coord_x[j]-xnew)*(coord_x[j]-xnew) + (coord_y[j]-ynew)*(coord_y[j]-ynew) < tol)
+                       {
+                           index[i] = j;
+                           break;
+                       }
+                   }
+                   ASSERTL0(j != start,"Failsed to find matching point");
+               }
+           }
+           return index;
+       }	
 	
 	
 	

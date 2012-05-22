@@ -664,7 +664,7 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;
 
 
-            ASSERTL0(!(m_comm->GetSize() > 1 && m_solnType == eIterativeMultiLevelStaticCond),
+            ASSERTL0(!(m_comm->GetRowComm()->GetSize() > 1 && m_solnType == eIterativeMultiLevelStaticCond),
                      "Parallel Multi-Level Static Condensation not yet supported.");
             SetUpUniversalC0ContMap(locExp);
 
@@ -924,7 +924,8 @@ namespace Nektar
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
             bool systemSingular = true;
-            
+            LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
+
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
              */
@@ -975,7 +976,7 @@ namespace Nektar
             Array<OneD, int> counts (n, 0);
             Array<OneD, int> offsets(n, 0);
             counts[p] = ReorderedGraphVertId[0].size();
-            m_comm->AllReduce(counts, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(counts, LibUtilities::ReduceSum);
             for (i = 1; i < n; ++i)
             {
                 offsets[i] = offsets[i-1] + counts[i-1];
@@ -990,7 +991,7 @@ namespace Nektar
             {
                 vertexlist[offsets[p] + i] = it->first;
             }
-            m_comm->AllReduce(vertexlist, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(vertexlist, LibUtilities::ReduceSum);
 
             // Ensure Dirchlet vertices are consistently recorded between
             // processes (e.g. Dirichlet region meets Neumann region across a
@@ -1028,13 +1029,13 @@ namespace Nektar
 
             // Check between processes if the whole system is singular
             int s = (systemSingular ? 1 : 0);
-            m_comm->AllReduce(s, LibUtilities::ReduceMin);
+            vCommRow->AllReduce(s, LibUtilities::ReduceMin);
             systemSingular = (s == 1 ? true : false);
 
             // Count the number of boundary regions on each process
             Array<OneD, int> bccounts(n, 0);
             bccounts[p] = bndCondExp.num_elements();
-            m_comm->AllReduce(bccounts, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(bccounts, LibUtilities::ReduceSum);
 
             // Find the process rank with the maximum number of boundary regions
             int maxBCIdx = Vmath::Imax(n, bccounts, 1);

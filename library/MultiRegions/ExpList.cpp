@@ -1727,7 +1727,8 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 err  = std::max(err,(*m_exp)[i]->Linf(soln + m_phys_offset[i]));
             }
-            m_comm->AllReduce(err, LibUtilities::ReduceMax);
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
+
             return err;
         }
 
@@ -1759,7 +1760,8 @@ namespace Nektar
                 errl2 = (*m_exp)[i]->L2(soln+m_phys_offset[i]);
                 err += errl2*errl2;
             }
-			m_comm->AllReduce(err, LibUtilities::ReduceSum);
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
             return sqrt(err);
         }
 

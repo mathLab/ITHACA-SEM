@@ -320,6 +320,11 @@ namespace Nektar
          */
         void CommMpi::v_AllReduce(NekDouble& pData, enum ReduceOperator pOp)
         {
+            if (GetSize() == 1)
+            {
+                return;
+            }
+
             MPI_Op vOp;
             switch (pOp)
             {
@@ -344,6 +349,11 @@ namespace Nektar
          */
         void CommMpi::v_AllReduce(int& pData, enum ReduceOperator pOp)
         {
+            if (GetSize() == 1)
+            {
+                return;
+            }
+
             MPI_Op vOp;
             switch (pOp)
             {
@@ -368,6 +378,11 @@ namespace Nektar
          */
         void CommMpi::v_AllReduce(Array<OneD, NekDouble>& pData, enum ReduceOperator pOp)
         {
+            if (GetSize() == 1)
+            {
+                return;
+            }
+
             MPI_Op vOp;
             switch (pOp)
             {
@@ -392,6 +407,11 @@ namespace Nektar
          */
         void CommMpi::v_AllReduce(Array<OneD, int>& pData, enum ReduceOperator pOp)
         {
+            if (GetSize() == 1)
+            {
+                return;
+            }
+
             MPI_Op vOp;
             switch (pOp)
             {

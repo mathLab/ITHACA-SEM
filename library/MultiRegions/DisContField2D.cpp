@@ -353,7 +353,7 @@ namespace Nektar
             // Compare with all other processes. Return true only if all
             // processes report having the same boundary conditions.
             int vSame = (returnval?1:0);
-            m_comm->AllReduce(vSame, LibUtilities::ReduceMin);
+            m_comm->GetRowComm()->AllReduce(vSame, LibUtilities::ReduceMin);
 
             return (vSame == 1);
         }

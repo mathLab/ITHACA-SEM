@@ -91,7 +91,7 @@ namespace Nektar
             }
 
             // Get the communicator for performing data exchanges
-            LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm();
+            LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
 
             // Get vector sizes
             int nNonDir = nGlobal - nDir;

@@ -61,7 +61,9 @@ int main(int argc, char *argv[])
                 MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
 
                 // Define Homogeneous expansion
-                int nplanes = fielddef[0]->m_numModes[1];
+                //int nplanes = fielddef[0]->m_numModes[1];
+				int nplanes; 
+				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
                 
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
@@ -81,8 +83,13 @@ int main(int argc, char *argv[])
                 MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
 		
                 // Define Homogeneous expansion
-                int nylines = fielddef[0]->m_numModes[1];
-                int nzlines = fielddef[0]->m_numModes[2];
+                //int nylines = fielddef[0]->m_numModes[1];
+                //int nzlines = fielddef[0]->m_numModes[2];
+				
+				int nylines;
+				int nzlines;
+				vSession->LoadParameter("HomModesY",nylines,fielddef[0]->m_numModes[1]);
+				vSession->LoadParameter("HomModesZ",nzlines,fielddef[0]->m_numModes[2]);
 		
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey PkeyY(nylines+1,LibUtilities::ePolyEvenlySpaced);
@@ -125,7 +132,10 @@ int main(int argc, char *argv[])
                 MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
 
                 // Define Homogeneous expansion
-                int nplanes = fielddef[0]->m_numModes[2];
+                //int nplanes = fielddef[0]->m_numModes[2];
+				
+				int nplanes; 
+				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[2]);
 
                 // choose points to be at evenly spaced points at
                 // nplanes + 1 points

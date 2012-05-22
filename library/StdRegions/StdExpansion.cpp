@@ -74,7 +74,7 @@ namespace Nektar
                     boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1),
                     std::string("StdExpansionStdStaticCondMatrix")),
 		    m_IndexMapManager(
-							  boost::bind(&StdExpansion::CreateIndexMap,this, _1),
+					boost::bind(&StdExpansion::CreateIndexMap,this, _1),
 					std::string("StdExpansionIndexMap"))
         {
             switch(m_numbases)

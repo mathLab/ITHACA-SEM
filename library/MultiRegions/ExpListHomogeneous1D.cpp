@@ -662,6 +662,7 @@ namespace Nektar
             }
 
             int modes_offset = 0;
+			int planes_offset = 0;
             Array<OneD, NekDouble> coeff_tmp;             
             for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
@@ -674,13 +675,14 @@ namespace Nektar
 
                 for(n = 0; n < nzmodes; ++n)
                 {
+					planes_offset = fielddef->m_homogeneousZIDs[n];
                     if(datalen == (*m_exp)[eid]->GetNcoeffs())
                     {
-                        Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid]+ n*ncoeffs_per_plane],1);
+                        Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid]+ planes_offset*ncoeffs_per_plane],1);
                     }
                     else // unpack data to new order
                     {
-                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid] + n*ncoeffs_per_plane);
+                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane);
                     }
                     
                     offset += datalen;

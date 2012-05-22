@@ -126,8 +126,8 @@ namespace Nektar
 
 		// Set up mapping from pressure boundary condition to pressure
 		// element details.
-		m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,
-                                                 m_pressureBCtoTraceID);
+		m_pressure->GetBoundaryToElmtMap(m_pressureBCtoElmtID,m_pressureBCtoTraceID);
+		
 		// Storage array for high order pressure BCs
 		m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
 
@@ -190,10 +190,7 @@ namespace Nektar
 		
         TimeParamSummary(out);
 		cout << "\tTime integ.        : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
-		
-	
 	}
-
 
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
@@ -229,21 +226,13 @@ namespace Nektar
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
 				break;
-				
-				
-
-				
-				
-				
             }
         case eNoEquationType:
         default:
             ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
         }
-
     }
 
-	
 	void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
 	{
 		int nfields = m_fields.num_elements() - 1;
@@ -262,15 +251,9 @@ namespace Nektar
 		for (int k=0 ; k < nfields; ++k)
 		{
 			//Forward Transformation in physical space for time evolution
-			m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
-										     m_fields[k]->UpdateCoeffs());
-
-			
+			m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
 		}
-
 	}
-	
-	
 	
     Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
     {
@@ -291,11 +274,9 @@ namespace Nektar
     {
 
         // evaluate convection terms
-		m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity, 
-                                 inarray, outarray,m_time);
+		m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
 
-		
-        //add the force
+		//add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
 			if(m_SingleMode || m_HalfMode)
@@ -314,14 +295,11 @@ namespace Nektar
             }
         }
         
-
 		if(m_HBCnumber > 0)
 		{
 			// Set pressure BCs
 			EvaluatePressureBCs(inarray, outarray);
-
 		}
-		
     }
 
     void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -385,13 +363,11 @@ namespace Nektar
 			//	Vmath::Zero(m_NumMode*(m_fields[i]->GetNcoeffs())/(m_NumMode+1),&m_fields[i]->UpdateCoeffs()[0],1);
 			//}
 			
-			
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
 #endif
         }
     }
 
-    
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
     {
 		

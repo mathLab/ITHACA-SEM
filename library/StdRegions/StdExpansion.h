@@ -824,12 +824,16 @@ namespace Nektar
             {
                 return m_stdStaticCondMatrixManager[mkey];
             }
+			
+			inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
+            {
+                return m_IndexMapManager[ikey];
+            }
 
             const Array<OneD, const NekDouble>& GetPhysNormals(void)
             {
                 return v_GetPhysNormals();
             }
-
 
             void SetPhysNormals(Array<OneD, const NekDouble> &normal)
             {

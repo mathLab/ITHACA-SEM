@@ -99,7 +99,7 @@ namespace Nektar
         {
             int i;
 
-			StdRegions::IndexMapValuesSharedPtr map;
+			
             StdRegions::Orientation  edgedir = GetEorient(edge);
 			unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
 			unsigned short num_mod1 = 0; 
@@ -107,7 +107,7 @@ namespace Nektar
 			
 			StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetExpansionType(),num_mod0,num_mod1,num_mod2,edge,edgedir);
 			
-			map = StdExpansion::CreateIndexMap(ikey);
+			StdRegions::IndexMapValuesSharedPtr map = StdExpansion::GetIndexMap(ikey);
 
 			int order_e = (*map).num_elements();
             // Order of the trace

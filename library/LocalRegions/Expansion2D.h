@@ -277,9 +277,7 @@ namespace Nektar
                 m_elementLeft = f;
                 m_elementFaceLeft = face;
             }
-	}
-
-
+	    }
     } //end of namespace
 } //end of namespace
 

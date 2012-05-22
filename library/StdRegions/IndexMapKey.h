@@ -70,13 +70,13 @@ namespace Nektar
             {
             }
 
-            /// Used to lookup the create function in NekManager.
+            // Used to lookup the create function in NekManager.
             struct opLess
             {
                 STD_REGIONS_EXPORT bool operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const;
             };
 
-            /// Used for finding value given the key in NekManager.
+            // Used for finding value given the key in NekManager.
             STD_REGIONS_EXPORT friend bool operator<(const IndexMapKey &lhs, const IndexMapKey &rhs);
             STD_REGIONS_EXPORT friend bool operator==(const IndexMapKey &lhs, const IndexMapKey &rhs);
             STD_REGIONS_EXPORT friend bool opLess::operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const;
@@ -114,6 +114,7 @@ namespace Nektar
 			
             IndexMapKey();
         };
+		//=======================================================================================
 
         STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs);
 

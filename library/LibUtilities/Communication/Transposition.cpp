@@ -51,7 +51,6 @@ namespace Nektar
 			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_homogeneous_points = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_homogeneous_coeffs = Array<OneD,int>(m_num_homogeneous_directions);
-			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_processes          = Array<OneD,int>(m_num_homogeneous_directions);
 			
 			m_num_homogeneous_points[0]  = HomoBasis0.GetNumPoints();
@@ -104,7 +103,6 @@ namespace Nektar
 			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_homogeneous_points = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_homogeneous_coeffs = Array<OneD,int>(m_num_homogeneous_directions);
-			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_processes          = Array<OneD,int>(m_num_homogeneous_directions);
 			
 			m_num_homogeneous_points[0]  = HomoBasis0.GetNumPoints();
@@ -134,7 +132,6 @@ namespace Nektar
 			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_homogeneous_points = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_homogeneous_coeffs = Array<OneD,int>(m_num_homogeneous_directions);
-			m_num_points_per_proc    = Array<OneD,int>(m_num_homogeneous_directions);
 			m_num_processes          = Array<OneD,int>(m_num_homogeneous_directions);
 			
 			//=================================================================================
@@ -416,6 +413,11 @@ namespace Nektar
 			if(m_num_processes[0] > 1 || m_num_processes[1] > 1)
 			{
 				ASSERTL0(false,"Parallel transposition not implemented yet for 3D-Homo-2D approach.");
+				
+				int num_dofs = inarray.num_elements();
+				int num_points_per_line = num_dofs/(m_num_points_per_proc[0]*m_num_points_per_proc[1]);
+				
+				
 			}
 			else 
 			{

@@ -49,7 +49,7 @@ namespace Nektar
         {
         public:
             /// Destructor
-            virtual ~UnsteadySystem();
+            SOLVER_UTILS_EXPORT virtual ~UnsteadySystem();
 		
             /// Calculate the largest time-step for maintaining a stable
             /// solution (using CFL).
@@ -63,7 +63,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(NekDouble CFL);
 		
             /// CFL number
-            SOLVER_UTILS_EXPORT NekDouble m_cfl;
+            NekDouble m_cfl;
 		
             // Mapping of the real convective field on the standard element.
             // This function gives back the convective filed in the standard
@@ -102,63 +102,63 @@ namespace Nektar
             std::vector<FilterSharedPtr>                    m_filters;
 
             /// Initialises UnsteadySystem class members.
-            UnsteadySystem(const LibUtilities::SessionReaderSharedPtr& pSession);
+            SOLVER_UTILS_EXPORT UnsteadySystem(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-            virtual void v_InitObject();
+            SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
             /// Solves an unsteady problem.
-            virtual void v_DoSolve();
+            SOLVER_UTILS_EXPORT virtual void v_DoSolve();
 
             /// Sets up initial conditions.
-            virtual void v_DoInitialise();
+            SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
 
             /// Print a summary of time stepping parameters.
-            virtual void v_PrintSummary(std::ostream &out);
+            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
 
             ///
-            virtual void v_NumericalFlux(
+            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
 
             ///
-            virtual void v_NumericalFlux(
+            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY );
 
             ///
-            virtual void v_NumFluxforScalar(
+            SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
                 Array<OneD, Array<OneD, NekDouble> > &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 
             ///
-            virtual void v_NumFluxforVector(
+            SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
                 Array<OneD, Array<OneD, NekDouble> > &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble> > &qflux);
 
             /// Evaulate flux = m_fields*ivel for i th component of Vu for
             /// direction j
-            virtual void v_GetFluxVector(const int i, const int j,
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, const int j,
                                          Array<OneD, Array<OneD, NekDouble> > &physfield,
                                          Array<OneD, Array<OneD, NekDouble> > &flux);
 		
             /// Virtual function to get the time step
-            virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
+            SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
                                             const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
 		
             /// Virtual function to get the time step
-            virtual NekDouble v_GetTimeStep(NekDouble CFL);
+            SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(NekDouble CFL);
 
         private:
             ///
-            void WeakPenaltyforScalar(const int var,
+            SOLVER_UTILS_EXPORT void WeakPenaltyforScalar(const int var,
                                       const Array<OneD, const NekDouble> &physfield,
                                       Array<OneD,       NekDouble> &penaltyflux,
                                       NekDouble time=0.0);
 
             ///
-            void WeakPenaltyforVector(
+            SOLVER_UTILS_EXPORT void WeakPenaltyforVector(
                 const int var,
                 const int dir,
                 const Array<OneD, const NekDouble> &physfield,

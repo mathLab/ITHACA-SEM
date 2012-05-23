@@ -58,7 +58,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr&,
             const std::map<std::string, std::string>&
             > FilterFactory;
-        FilterFactory& GetFilterFactory();
+        SOLVER_UTILS_EXPORT FilterFactory& GetFilterFactory();
 
         class Filter
         {

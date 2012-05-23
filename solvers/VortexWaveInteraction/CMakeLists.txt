@@ -25,6 +25,7 @@ SET(CalcL2ToLinfPressureSource
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
        ./CalcL2ToLinfPressure.cpp
+       ./VortexWaveInteraction.h
        ./VortexWaveInteraction.cpp 
        )
 

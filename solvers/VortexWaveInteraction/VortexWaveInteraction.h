@@ -41,6 +41,10 @@
 
 using namespace Nektar::SolverUtils;
 
+#if defined(_MSC_VER) && defined(MoveFile)
+#undef MoveFile
+#endif
+
 namespace Nektar
 {     
 

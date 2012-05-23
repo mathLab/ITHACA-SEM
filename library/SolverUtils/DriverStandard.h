@@ -60,16 +60,16 @@ namespace Nektar
 	
         protected:
             /// Constructor
-            DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession);
+            SOLVER_UTILS_EXPORT DriverStandard(const LibUtilities::SessionReaderSharedPtr pSession);
 
             /// Destructor
-            virtual ~DriverStandard();
+            SOLVER_UTILS_EXPORT virtual ~DriverStandard();
         
             /// Second-stage initialisation
-            virtual void v_InitObject(ostream &out = cout);
+            SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
 
             /// Virtual function for solve implementation.
-            virtual void v_Execute(ostream &out = cout);
+            SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
 		
             static std::string driverLookupId;
 	};

@@ -59,7 +59,7 @@ namespace Nektar
             std::string, Driver,
             const LibUtilities::SessionReaderSharedPtr&
             > DriverFactory;
-        DriverFactory& GetDriverFactory();
+        SOLVER_UTILS_EXPORT DriverFactory& GetDriverFactory();
     
         /// Base class for the development of solvers.
         class Driver
@@ -99,14 +99,14 @@ namespace Nektar
             /// Initialises EquationSystem class members.
             Driver(const LibUtilities::SessionReaderSharedPtr pSession);
         
-            virtual void v_InitObject(ostream &out = cout);
+            SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
         
             /// Virtual function for solve implementation.
-            virtual void v_Execute(ostream &out = cout) = 0;
+            SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout) = 0;
         
 
-            virtual Array<OneD, NekDouble> v_GetRealEvl(void);         
-            virtual Array<OneD, NekDouble> v_GetImagEvl(void);
+            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetRealEvl(void);         
+            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetImagEvl(void);
 
 
             static std::string evolutionOperatorLookupIds[];

@@ -67,7 +67,7 @@ namespace Nektar
             std::string, EquationSystem,
             const LibUtilities::SessionReaderSharedPtr&
             > EquationSystemFactory;
-        EquationSystemFactory& GetEquationSystemFactory();
+        SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
         /// A base class for describing how to solve specific equations.
         class EquationSystem
@@ -458,7 +458,7 @@ namespace Nektar
 
 
             /// Initialises EquationSystem class members.
-            EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
+            SOLVER_UTILS_EXPORT EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession);
 
             // Here for consistency purposes with old version
             int nocase_cmp(const string & s1, const string& s2)
@@ -466,77 +466,77 @@ namespace Nektar
                 return NoCaseStringCompare(s1,s2);
             }
 
-            virtual void v_InitObject();
+            SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
             /// Evaluates the boundary conditions at the given time.
-            void SetBoundaryConditions(NekDouble time);
+            SOLVER_UTILS_EXPORT void SetBoundaryConditions(NekDouble time);
 
             /// Virtual function for initialisation implementation.
-            virtual void v_DoInitialise();
+            SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
 
             /// Virtual function for solve implementation.
-            virtual void v_DoSolve();
+            SOLVER_UTILS_EXPORT virtual void v_DoSolve();
 		
             /// Virtual function for the L_inf error computation between fields and a given exact solution.
-            virtual NekDouble v_LinfError(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+            SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 		
             /// Virtual function for the L_2 error computation between fields and a given exact solution.
-            virtual NekDouble v_L2Error(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray, bool Normalised = false);
+            SOLVER_UTILS_EXPORT virtual NekDouble v_L2Error(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray, bool Normalised = false);
         
             /// Virtual function for transformation to physical space.
-            virtual void v_TransCoeffToPhys();
+            SOLVER_UTILS_EXPORT virtual void v_TransCoeffToPhys();
 		
             /// Virtual function for transformation to coefficient space.
-            virtual void v_TransPhysToCoeff();
+            SOLVER_UTILS_EXPORT virtual void v_TransPhysToCoeff();
 
             /// Virtual function for printing summary information.
-            virtual void v_PrintSummary(std::ostream &out);
+            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
 
-            virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
+            SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
                                                 bool dumpInitialConditions = true);
 
-            virtual void v_EvaluateExactSolution(unsigned int field,
+            SOLVER_UTILS_EXPORT virtual void v_EvaluateExactSolution(unsigned int field,
                                                  Array<OneD, NekDouble> &outfield,
                                                  const NekDouble time);
 		
             //Initialise m_base in order to store the base flow from a file 
-            void SetUpBaseFields( SpatialDomains::MeshGraphSharedPtr &mesh);
+            SOLVER_UTILS_EXPORT void SetUpBaseFields( SpatialDomains::MeshGraphSharedPtr &mesh);
         
             // Fill m_base with the values stored in a fld file
-            void ImportFldBase(std::string pInfile, SpatialDomains::MeshGraphSharedPtr 
+            SOLVER_UTILS_EXPORT void ImportFldBase(std::string pInfile, SpatialDomains::MeshGraphSharedPtr 
                                pGraph);
 
             // Ouptut field information
-            virtual void v_Output(void);
+            SOLVER_UTILS_EXPORT virtual void v_Output(void);
 
             // Get pressure field if available
-            virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
+            SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
 
         private:
 
-            virtual Array<OneD, bool> v_GetSystemSingularChecks();
-            virtual int v_GetForceDimension();
-            virtual void v_GetFluxVector(const int i, Array<OneD,
+            SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
+            SOLVER_UTILS_EXPORT virtual int v_GetForceDimension();
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, Array<OneD,
                                          Array<OneD, NekDouble> >&physfield,
                                          Array<OneD, Array<OneD, NekDouble> >&flux);
-            virtual void v_GetFluxVector(const int i, const int j,
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, const int j,
                                          Array<OneD, Array<OneD, NekDouble> >&physfield,
                                          Array<OneD, Array<OneD, NekDouble> >&flux);
-            virtual void v_GetFluxVector(const int i, Array<OneD,
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, Array<OneD,
                                          Array<OneD, NekDouble> >&physfield,
                                          Array<OneD, Array<OneD, NekDouble> >&fluxX,
                                          Array<OneD, Array<OneD, NekDouble> > &fluxY);
-            virtual void v_NumericalFlux(
+            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
-            virtual void v_NumericalFlux(
+            SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY );
-            virtual void v_NumFluxforScalar(
+            SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
                 Array<OneD, Array<OneD, NekDouble> > &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
-            virtual void v_NumFluxforVector(
+            SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
                 Array<OneD, Array<OneD, NekDouble> > &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
                 Array<OneD, Array<OneD, NekDouble > >  &qflux);

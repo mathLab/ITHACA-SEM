@@ -51,21 +51,28 @@ namespace Nektar
     {
         UnsteadySystem::v_InitObject();
 
-        // Define Velocity fields
+        /// Define a global variable to store the advection velocities
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        
+        /// Read the advection velocities from session file 
         std::vector<std::string> vel;
         vel.push_back("Vx");
         vel.push_back("Vy");
         vel.push_back("Vz");
+        
+        /// Resize the advection velocitites vector to the dimension of the problem
         vel.resize(m_spacedim);
 
+        /// Store in the global variable m_velocity the advection velocities
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
 
+        /// If explicit it computes the RHS and the PROJECTION for the time integration
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs     (&UnsteadyAdvection::DoOdeRhs,        this);
             m_ode.DefineProjection (&UnsteadyAdvection::DoOdeProjection, this);
         }
+        /// Otherwise it gives an error because there is no implicit integration at the moment
         else
         {
             ASSERTL0(false, "Implicit unsteady Advection not set up.");
@@ -77,49 +84,100 @@ namespace Nektar
 
     }
 
-    void UnsteadyAdvection::DoOdeRhs(
-                                     const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                                     Array<OneD,        Array<OneD, NekDouble> >&outarray,
+    void UnsteadyAdvection::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                                      const NekDouble time)
     {
-        int i;
-        int nvariables = inarray.num_elements();
-        int npoints = GetNpoints();
+        /// Counter variables
+        int i, j;
+        
+        /// Always equal to one because there is only the field u for the linear advection equation 
+        int nVariables      = inarray.num_elements();
+        
+        /// Number of quadrature points
+        int nQuadraturePts  = GetNpoints();
+        
+        /// Number of elements
+        int nElements       = m_fields[0]->GetExpSize();
 
+        /// Switch on the projection type (Discontinuous or Continuous)
         switch (m_projectionType)
         {
+            /// Discontinuous approach
             case MultiRegions::eDiscontinuousGalerkin:
             {
-                int ncoeffs    = inarray[0].num_elements();
-                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
-
-                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
-                for(i = 1; i < nvariables; ++i)
+                /// Discontinuous Galerkin approach standard
+                if(m_discontinuousApproach == "StandardDG")
                 {
-                    WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
+                    /// Get the number of coefficients
+                    int ncoeffs    = inarray[0].num_elements();
+                    
+                    /// Define an auxiliary variable to compute the RHS 
+                    Array<OneD, Array<OneD, NekDouble> > WeakAdv(nVariables);
+                    WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nVariables);
+                    for(i = 1; i < nVariables; ++i)
+                    {
+                        WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
+                    }
+                    
+                    /// Call the method to compute the weak flux
+                    WeakDGAdvection(inarray, WeakAdv, true, true);
+                    
+                    /// Operations to compute the RHS
+                    for(i = 0; i < nVariables; ++i)
+                    {
+                        /// Multiply the flux by the inverse of the mass matrix
+                        m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
+                        
+                        /// Store in outarray the physical values of the RHS
+                        m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
+                        
+                        /// Negate the RHS
+                        Vmath::Neg(nQuadraturePts, outarray[i], 1);
+                    }
                 }
-                
-                WeakDGAdvection(inarray, WeakAdv,true,true);
-
-                for(i = 0; i < nvariables; ++i)
-                {
-                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
-                                                       WeakAdv[i]);
-                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+                /// Flux reconstruction approach
+                else if(m_discontinuousApproach == "FR-DG" || m_discontinuousApproach == "FR-SD" || m_discontinuousApproach == "FR-HU")
+                {                    
+                    
+                    /// Call the method to compute the strong divergence of the flux
+                    StrongFRAdvection(inarray, outarray, true);
+                    
+                    /// Array to store the Jacobian and its inverse
+                    Array<OneD, const NekDouble>jac(nElements);
+                    Array<OneD, NekDouble>      jacobian(nElements);
+                    Array<OneD, NekDouble>      tmparray;
+                    
+                    /// Evaluation of the jacobian of each element
+                    for(i = 0; i < nElements; i++)
+                    {
+                        jac         = m_fields[0]->GetExp(i)->GetGeom1D()->GetJac();
+                        jacobian[i] = jac[0];
+                    }
+                    /// Operations to compute the RHS
+                    for(i = 0; i < nVariables; ++i)
+                    {
+                        for(j = 0; j < nElements; j++)
+                        {
+                            Vmath::Smul(nQuadraturePts/nElements, 1/jacobian[j], 
+                                        tmparray = outarray[i] + j*nQuadraturePts/nElements, 1.0, 
+                                        tmparray = outarray[i] + j*nQuadraturePts/nElements, 1.0);
+                        }
+                        
+                        Vmath::Neg(nQuadraturePts, outarray[i], 1);
+                    }
                 }
-
                 break;
             }
+                
+            /// Continuous approach
             case MultiRegions::eGalerkin:
             {
-                // Calculate -V\cdot Grad(u);
-                for(i = 0; i < nvariables; ++i)
+                /// Calculate - ( V \cdot Grad(u) );
+                for(i = 0; i < nVariables; ++i)
                 {
-                    AdvectionNonConservativeForm(m_velocity,
-                                                 inarray[i],
-                                                 outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+                    AdvectionNonConservativeForm(m_velocity, inarray[i], outarray[i]);
+                    Vmath::Neg(nQuadraturePts, outarray[i], 1);
                 }
                 break;
             }
@@ -131,13 +189,12 @@ namespace Nektar
     /**
      *
      */
-    void UnsteadyAdvection::DoOdeProjection(const Array<OneD,
-                                            const Array<OneD, NekDouble> >&inarray,
-                                            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+    void UnsteadyAdvection::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                                  Array<OneD,       Array<OneD, NekDouble> >&outarray,
                                             const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nVariables = inarray.num_elements();
         SetBoundaryConditions(time);
 
         switch(m_projectionType)
@@ -145,11 +202,11 @@ namespace Nektar
         case MultiRegions::eDiscontinuousGalerkin:
             {
                 // Just copy over array
-                int npoints = GetNpoints();
+                int nQuadraturePts = GetNpoints();
 
-                for(i = 0; i < nvariables; ++i)
+                for(i = 0; i < nVariables; ++i)
                 {
-                    Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+                    Vmath::Vcopy(nQuadraturePts,inarray[i],1,outarray[i],1);
                 }
             }
             break;
@@ -157,7 +214,7 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
-                for(i = 0; i < nvariables; ++i)
+                for(i = 0; i < nVariables; ++i)
                 {
                     m_fields[i]->FwdTrans(inarray[i],coeffs,false);
                     m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);

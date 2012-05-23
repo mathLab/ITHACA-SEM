@@ -56,31 +56,38 @@ namespace Nektar
         }
         /// Name of class
         static std::string className;
-
+        
+        /// Destructor
         virtual ~UnsteadyAdvection();
 
     protected:
+        
+        /// Advection velocity
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
 
-        UnsteadyAdvection(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        /// Session reader
+        UnsteadyAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
 
+        /// Compute the RHS
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                      Array<OneD,  Array<OneD, NekDouble> > &outarray,
+                            Array<OneD,         Array<OneD, NekDouble> > &outarray,
                       const NekDouble time);
 
+        /// Compute the projection
         void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                          Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                          const NekDouble time);
+                                   Array<OneD,         Array<OneD, NekDouble> > &outarray,
+                             const NekDouble time);
 
+        /// Initialize the object
         virtual void v_InitObject();
 
-        // DG Advection routines
+        /// Evaluate the flux at each solution point
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
 
+        /// Evaluate the intercell numericall flux using a conditional upwind method
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        // Print Summary
+        /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
     };
 }

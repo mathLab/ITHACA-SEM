@@ -91,24 +91,25 @@ namespace Nektar
          */
         void EquationSystem::v_InitObject()
         {
+            /// Filename of the session file
             m_filename = m_session->GetFilename();
 
-            // Save the basename of input file name for output details.
+            /// Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
 
-            // Read the geometry and the expansion information
+            /// Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_filename);
 
             m_UseContCoeff = false;
 
-            // Also read and store the boundary conditions
+            /// Also read and store the boundary conditions
             m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                 ::AllocateSharedPtr(m_session, m_graph);
 
-            // Set space dimension for use in class
+            /// Set space dimension for use in class
             m_spacedim = m_graph->GetSpaceDimension();
         
-            // Setting parameteres for homogenous problems
+            /// Setting parameteres for homogenous problems
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
@@ -116,8 +117,7 @@ namespace Nektar
 			m_HalfMode			= false;
 			m_MultipleModes		= false;
 
-			
-
+            /// Setting the homogeneous type
             m_HomogeneousType = eNotHomogeneous;
 
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -139,19 +139,16 @@ namespace Nektar
 						m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
 					}
 					
-					
-					//Stability Analysis flags
+					/// Stability Analysis flags
 					if(m_session->DefinesSolverInfo("ModeType"))
 					{
 						if(m_SingleMode)
 						{
 							m_npointsZ=2;
-							
 						}
 						else if(m_HalfMode)
 						{
 							m_npointsZ=1;
-
 						}
 						else if(m_MultipleModes)
 						{
@@ -159,17 +156,13 @@ namespace Nektar
 						}
 						else
 						{
-							ASSERTL0(false, "SolverInfo ModeType not valid");	
-
-							
+							ASSERTL0(false, "SolverInfo ModeType not valid");
 						}
 					}
                     else 
                     {
                         m_npointsZ        = m_session->GetParameter("HomModesZ");
-					
                     }
-
                 }
 
                 if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -209,8 +202,7 @@ namespace Nektar
                 m_npointsZ = 1; // set to default value so can use to identify 2d or 3D (homogeneous) expansions
             }
 
-            // Options to determine type of projection from file or
-            // directly from constructor
+            /// Options to determine type of projection from file or directly from constructor
             if(m_session->DefinesSolverInfo("PROJECTION"))
             {
                 std::string ProjectStr
@@ -237,7 +229,7 @@ namespace Nektar
                 m_projectionType = MultiRegions::eGalerkin;
             }
 
-            // Enforce singularity check for some problems
+            /// Enforce singularity check for some problems
             m_checkIfSystemSingular = v_GetSystemSingularChecks();
 
             int i;
@@ -249,7 +241,7 @@ namespace Nektar
             m_spacedim = m_graph->GetSpaceDimension()+m_HomoDirec;
             m_expdim   = m_graph->GetMeshDimension();
 
-            // Continuous Galerkin projection
+            /// Continuous field
             if(m_projectionType == MultiRegions::eGalerkin)
             {
                 switch(m_expdim)
@@ -266,7 +258,7 @@ namespace Nektar
                             for(i = 0 ; i < m_fields.num_elements(); i++)
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                    ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session, BkeyY, BkeyZ, m_LhomY, m_LhomZ, m_useFFT, m_dealiasing, m_graph, m_session->GetVariable(i));
                             }
                         }
                         else
@@ -274,22 +266,20 @@ namespace Nektar
                             for(i = 0 ; i < m_fields.num_elements(); i++)
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField1D>
-                                    ::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session, m_graph, m_session->GetVariable(i));
                             }
                         }
-
                         break;
                     }
                     case 2:
                     {
                         if(m_HomogeneousType == eHomogeneous1D)
                         {
-                            //FourierSingleMode basis for stability analysis
+                            /// Fourier single mode stability analysis
 							if(m_SingleMode)
-
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-
+                                
                                 const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);
 							
                                 for(i = 0 ; i < m_fields.num_elements(); i++)
@@ -302,33 +292,30 @@ namespace Nektar
 
                                 }
 							}
-								//Half mode stability analysis
+                            /// Half mode stability analysis
 							else if(m_HalfMode)
-								{
-									const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
+                            {
+                                const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
 									
-									const LibUtilities::BasisKey  BkeyZR(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
-									const LibUtilities::BasisKey  BkeyZI(LibUtilities::eFourierHalfModeIm,m_npointsZ,PkeyZ);
+                                const LibUtilities::BasisKey  BkeyZR(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
+                                const LibUtilities::BasisKey  BkeyZI(LibUtilities::eFourierHalfModeIm,m_npointsZ,PkeyZ);
 									
 									
-									for(i = 0 ; i < m_fields.num_elements(); i++)
-									{
-										if(i==m_fields.num_elements()-2)
-										{
-											m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-											::AllocateSharedPtr(m_session,BkeyZI,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
-											
-										}
-										m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-										::AllocateSharedPtr(m_session,BkeyZR,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
+                                for(i = 0 ; i < m_fields.num_elements(); i++)
+                                {
+                                    if(i==m_fields.num_elements()-2)
+                                    {
+                                        m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                            ::AllocateSharedPtr(m_session,BkeyZI,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
+                                    }
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                        ::AllocateSharedPtr(m_session,BkeyZR,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
 										
-										//necessary to perform to HomoBwdTrans for the fields (are complex differently from the base flow)
-										m_fields[i]->SetWaveSpace(false);
-										
-									}
-								}
-                            
-                            //normal homogeneous 1D
+                                    //necessary to perform to HomoBwdTrans for the fields (are complex differently from the base flow)
+                                    m_fields[i]->SetWaveSpace(false);
+                                }
+                            }
+                            /// Normal homogeneous 1D
                             else
                             {	
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
@@ -336,18 +323,14 @@ namespace Nektar
 							
                                 for(i = 0 ; i < m_fields.num_elements(); i++)
                                 {
-
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i),m_checkIfSystemSingular[i]);
-								
-							
+
 									if(m_MultipleModes)
                                     {
                                         m_fields[i]->SetWaveSpace(false);
                                     }
-
                                 }
-							
                             }
                         }
                         else
@@ -393,7 +376,8 @@ namespace Nektar
                         break;
                 }
             }
-            else // Discontinuous Field
+            /// Discontinuous field
+            else
             {
                 switch(m_expdim)
                 {
@@ -470,7 +454,7 @@ namespace Nektar
                         break;
                 }
 
-                // Set up Normals.
+                /// Setting up the normals
                 switch(m_expdim)
                 {
                     case 1:
@@ -516,15 +500,117 @@ namespace Nektar
                         ASSERTL0(false,"Expansion dimension not recognised");
                         break;
                 }
+                
+                /// Check the type of discontinuous approach to be used
+                m_discontinuousApproach = m_session->GetSolverInfo("DiscontinuousApproach");
+                
+                /// Check if the discontinuous approach is set up properly
+                if((m_discontinuousApproach!="StandardDG") && (m_discontinuousApproach!="FR-DG") 
+                   && (m_discontinuousApproach!="FR-SD") && (m_discontinuousApproach!="FR-HU"))
+                {
+                    fprintf(stderr,"\n ERROR: You need to specify the DiscontinuousApproach in SOLVERINFO\n");  
+                    fprintf(stderr," Two valid choices: 'StandardDG' or 'FR-DG, FR-SD, FR-HU'. \n");
+                    exit(1);
+                }
+                
+                /// Computation of the derivatives of the correction functions in case of FR
+                if(m_discontinuousApproach == "FR-DG")
+                {
+                    /// Bases initialisation
+                    LibUtilities::BasisSharedPtr Basis;
+                    LibUtilities::BasisSharedPtr BasisFR_Left;
+                    LibUtilities::BasisSharedPtr BasisFR_Right;
+                    Basis = m_fields[0]->GetExp(0)->GetBasis(0);
+                    
+                    /// Number of modes
+                    int nModes  = Basis->GetNumModes();
+                    
+                    /// Total number of quadrature points
+                    int nQuadraturePts = Basis->GetNumPoints();
+                    
+                    /// Type of points
+                    const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
+                    
+                    /// Construction of the derivatives
+                    const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_DG_Left,  nQuadraturePts, FRpoints);
+                    const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_DG_Right, nQuadraturePts, FRpoints);
+                    
+                    BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
+                    BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
+                    
+                    /// Storing the derivatives into two global variables 
+                    m_dGL = BasisFR_Left ->GetBdata();
+                    m_dGR = BasisFR_Right->GetBdata();
+                }
+                
+                /// Computation of the derivatives of the correction functions in case of FR
+                else if(m_discontinuousApproach == "FR-SD")
+                {
+                    /// Bases initialisation
+                    LibUtilities::BasisSharedPtr Basis;
+                    LibUtilities::BasisSharedPtr BasisFR_Left;
+                    LibUtilities::BasisSharedPtr BasisFR_Right;
+                    Basis = m_fields[0]->GetExp(0)->GetBasis(0);
+                    
+                    /// Number of modes
+                    int nModes  = Basis->GetNumModes();
+                    
+                    /// Total number of quadrature points
+                    int nQuadraturePts = Basis->GetNumPoints();
+                    
+                    /// Type of points
+                    const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
+                    
+                    /// Construction of the derivatives
+                    const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_SD_Left,  nQuadraturePts, FRpoints);
+                    const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_SD_Right, nQuadraturePts, FRpoints);
+                    
+                    BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
+                    BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
+                    
+                    /// Storing the derivatives into two global variables 
+                    m_dGL = BasisFR_Left ->GetBdata();
+                    m_dGR = BasisFR_Right->GetBdata();
+                }
+                
+                /// Computation of the derivatives of the correction functions in case of FR
+                else if(m_discontinuousApproach == "FR-HU")
+                {
+                    /// Bases initialisation
+                    LibUtilities::BasisSharedPtr Basis;
+                    LibUtilities::BasisSharedPtr BasisFR_Left;
+                    LibUtilities::BasisSharedPtr BasisFR_Right;
+                    Basis = m_fields[0]->GetExp(0)->GetBasis(0);
+                    
+                    /// Number of modes
+                    int nModes  = Basis->GetNumModes();
+                    
+                    /// Total number of quadrature points
+                    int nQuadraturePts = Basis->GetNumPoints();
+                    
+                    /// Type of points
+                    const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
+                    
+                    /// Construction of the derivatives
+                    const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_HU_Left,  nQuadraturePts, FRpoints);
+                    const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_HU_Right, nQuadraturePts, FRpoints);
+                    
+                    BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
+                    BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
+                    
+                    /// Storing the derivatives into two global variables 
+                    m_dGL = BasisFR_Left ->GetBdata();
+                    m_dGR = BasisFR_Right->GetBdata();
+                }
             }
 
             // Set Default Parameter
-            m_session->LoadParameter("Time", m_time, 0.0);
-            m_session->LoadParameter("TimeStep", m_timestep, 0.01);
-            m_session->LoadParameter("NumSteps", m_steps, 0);
-            m_session->LoadParameter("IO_CheckSteps", m_checksteps, 0);
-            m_session->LoadParameter("FinTime", m_fintime, 0);
-            m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
+            m_session->LoadParameter("Time",                m_time,                 0.0);
+            m_session->LoadParameter("TimeStep",            m_timestep,             0.01);
+            m_session->LoadParameter("NumSteps",            m_steps,                0);
+            m_session->LoadParameter("IO_CheckSteps",       m_checksteps,           0);
+            m_session->LoadParameter("FinTime",             m_fintime,              0);
+            m_session->LoadParameter("NumQuadPointsError",  m_NumQuadPointsError,   0);
 
             // Read in spatial data
             int nq = m_fields[0]->GetNpoints();
@@ -1362,15 +1448,15 @@ namespace Nektar
          * @brief Calculate weak DG advection in the form \f$ \langle\phi,
          * \hat{F}\cdot n\rangle - (\nabla \phi \cdot F) \f$
          * 
-         * @param   InField         Fields.
-         * @param   OutField        Storage for result.
+         * @param   InField                         Fields.
+         * @param   OutField                        Storage for result.
          * @param   NumericalFluxIncludesNormal     Default: true.
          * @param   InFieldIsPhysSpace              Default: false.
-         * @param   nvariables      Number of fields.
+         * @param   nvariables                      Number of fields.
          */
         void EquationSystem::WeakDGAdvection(
             const Array<OneD, Array<OneD, NekDouble> >& InField,
-            Array<OneD, Array<OneD, NekDouble> >& OutField,
+                  Array<OneD, Array<OneD, NekDouble> >& OutField,
             bool NumericalFluxIncludesNormal,
             bool InFieldIsInPhysSpace,
             int nvariables)
@@ -1480,6 +1566,209 @@ namespace Nektar
             }
         }
 
+        
+        
+        /**
+         * @brief Calculate strong FR advection in the form \f$ \nabla \cdot \hat{F} \f$
+         * 
+         * @param   InField             Fields.
+         * @param   OutField            Storage for result.
+         * @param   InFieldIsPhysSpace  Default: false.
+         */
+        void EquationSystem::StrongFRAdvection(
+            const Array<OneD, Array<OneD, NekDouble> >& InField,
+                  Array<OneD, Array<OneD, NekDouble> >& OutField,
+            bool InFieldIsInPhysSpace)
+        {
+            /// Counter variable
+            int i, j;
+            
+            /// Number of elements
+            int nElements       = m_fields[0]->GetExpSize();
+            
+            /// Number of spatial dimensions
+            int nDimensions     = m_spacedim;
+            
+            /// Number of quadrature points
+            int nQuadraturePts  = GetNpoints();
+            
+            /// Number of coefficients
+            int nCoeffs         = GetNcoeffs();
+            
+            /// Number of trace points
+            int nTracePts       = GetTraceNpoints();
+            
+            /// Number of fields (variables of the problem)
+            int nVariables      = m_fields.num_elements();
+            
+            /// Coordinates of the quadrature points in the real physical space
+            Array<OneD,NekDouble> x(nQuadraturePts);
+            Array<OneD,NekDouble> y(nQuadraturePts);
+            Array<OneD,NekDouble> z(nQuadraturePts);
+            m_fields[0]->GetCoords(x, y, z);
+            
+            /// Vector to store the discontinuos flux
+            Array<OneD, Array<OneD, NekDouble> > fluxvector(nDimensions);
+            
+            /// Vector to store the derivative of the discontinuous flux
+            Array<OneD, Array<OneD, NekDouble> > derfluxvector(nDimensions);
+            
+            /// Vector to store the solution in physical space
+            Array<OneD, Array<OneD, NekDouble> > physfield (nVariables);
+            
+            /// Resize each column of the flux vector to the number of quadrature points
+            for(i = 0; i < nDimensions; ++i)
+            {
+                fluxvector[i]       = Array<OneD, NekDouble>(nQuadraturePts);
+                derfluxvector[i]    = Array<OneD, NekDouble>(nQuadraturePts);
+            }
+            
+            /// Get the solution in physical space already in physical space
+            if(InFieldIsInPhysSpace == true)
+            {
+                for(i = 0; i < nVariables; ++i)
+                {
+                    physfield[i] = InField[i];
+                }
+            }
+            
+            /// otherwise do a backward transformation to get the solution in physical space
+            else
+            {
+                for(i = 0; i < nVariables; ++i)
+                {
+                    physfield[i] = Array<OneD, NekDouble>(nQuadraturePts);
+                    m_fields[i]->BwdTrans(InField[i], physfield[i]);
+                }
+            }
+            
+            /// Get the discontinuous flux FD (is fluxvector in the standard element?)
+            for(i = 0; i < nVariables; ++i)
+            {
+                /// Get the ith component of the  flux vector in (physical space)
+                GetFluxVector(i, physfield, fluxvector);
+            }
+            
+            Array<OneD,NekDouble> tmpFD, tmpDFDx, tmpFDy, tmpFDz;
+            
+            /// Computation of the divergence of the discontinuous flux at each quadrature point
+            switch(nDimensions)
+            {
+                case 1:
+                {
+                    /// Derivative on the standard element of the discontinuous flux at the solution points
+                    LibUtilities::BasisSharedPtr Basis;
+                    Basis = m_fields[0]->GetExp(0)->GetBasis(0);
+                    StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+                    
+                    for(j = 0; j < nVariables; j++)
+                    {
+                        for(i = 0; i < nElements; i++)
+                        {
+                            StdSeg.PhysDeriv(tmpFD = fluxvector[0] + i*nQuadraturePts/nElements, tmpDFDx = derfluxvector[0] + i*nQuadraturePts/nElements);
+                        }
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    ASSERTL0(false,"2D FR case not implemented yet");
+                    break;
+                }
+                case 3:
+                {
+                    ASSERTL0(false,"3D FR case not implemented yet");
+                    break;
+                }
+                    
+            }
+            
+            /// Array to store the intercell numerical fluxes
+            Array<OneD, Array<OneD, NekDouble> > numflux(nVariables);
+            
+            /// The dimension of each column have to be equal to the number of trace points
+            for(i = 0; i < nVariables; ++i)
+            {
+                numflux[i] = Array<OneD, NekDouble>(nTracePts);
+            }
+            
+            /// Computing the Riemann flux at each flux (interface) point
+            NumericalFlux(physfield, numflux);
+            
+            /// Arrays to store the intercell numerical flux jumps
+            Array<OneD, Array<OneD, NekDouble> > numfluxjumpsLeft(nVariables);
+            Array<OneD, Array<OneD, NekDouble> > numfluxjumpsRight(nVariables);
+            
+            int offsetStart, offsetEnd;
+            
+            /// Dimension of each column of the jumps array has to be equal to the number of flux points
+            switch(nDimensions)
+            {
+                case 1:
+                {
+                    /// Temporay array for computing the jumps multiply by the derivatives of the correction functions
+                    Array<OneD,NekDouble> dercorrfluxLeft(nQuadraturePts/nElements,  0.0); 
+                    Array<OneD,NekDouble> dercorrfluxRight(nQuadraturePts/nElements, 0.0);
+                    
+                    Array<OneD,NekDouble> tmp, tmparray;
+                    
+                    /// The dimension of each column of the jumps arrays is equal to number of trace points minus one
+                    for(i = 0; i < nVariables; ++i)
+                    {
+                        numfluxjumpsLeft[i]  = Array<OneD, NekDouble>(nTracePts - 1);
+                        numfluxjumpsRight[i] = Array<OneD, NekDouble>(nTracePts - 1);
+                    }
+                    
+                    /// Loop to compute the left and the right jump of the flux
+                    for(i = 0; i < nElements; i++)
+                    {
+                        offsetStart              = m_fields[0]->GetPhys_Offset(i);
+                        offsetEnd                = offsetStart + nQuadraturePts/nElements - 1;
+                        numfluxjumpsLeft[0][i]   = numflux[0][i] - fluxvector[0][offsetStart];
+                        numfluxjumpsRight[0][i]  = numflux[0][i+1] - fluxvector[0][offsetEnd];
+                    }
+                    
+                    for (i = 0; i < nElements; i++) 
+                    {
+                        Vmath::Smul(nQuadraturePts/nElements, 
+                                    numfluxjumpsLeft[0][i], 
+                                    tmp = m_dGL, 1, 
+                                    dercorrfluxLeft, 1);
+                        
+                        Vmath::Smul(nQuadraturePts/nElements, 
+                                    numfluxjumpsRight[0][i], 
+                                    tmp = m_dGR, 1, 
+                                    dercorrfluxRight, 1);
+                        
+                        Vmath::Vadd(nQuadraturePts/nElements, 
+                                    dercorrfluxLeft, 1, 
+                                    dercorrfluxRight, 1, 
+                                    tmparray = OutField[0] + i*nQuadraturePts/nElements, 1);
+                        
+                        Vmath::Vadd(nQuadraturePts/nElements, 
+                                    tmparray = OutField[0] + i*nQuadraturePts/nElements, 1, 
+                                    tmp = derfluxvector[0] + i*nQuadraturePts/nElements, 1, 
+                                    tmparray = OutField[0] + i*nQuadraturePts/nElements, 1); 
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    // HOW TO GET THE CORRECT DIMENSION OF THE FLUXJUMPS ARRAY IN 2D
+                    ASSERTL0(false,"2D FR case not implemented yet");
+                    break;
+                }
+                case 3:
+                {
+                    // HOW TO GET THE CORRECT DIMENSION OF THE FLUXJUMPS ARRAY IN 3D
+                    ASSERTL0(false,"3D FR case not implemented yet");
+                    break;
+                }
+            }
+        }
+
+        
+        
 
         /**
          * Calculate weak DG Diffusion in the LDG form
@@ -1976,13 +2265,20 @@ namespace Nektar
                 out << "\tSpatial   Dim.  : " << m_spacedim << endl;
                 out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
             }
-            if(m_projectionType == MultiRegions::eGalerkin)
+            if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
             {
-                out << "\tProjection Type : Galerkin" <<endl;
+                if(m_discontinuousApproach == "StandardDG")
+                    out << "\tProjection Type : Standard discontinuous Galerkin"                        <<endl;
+                else if(m_discontinuousApproach == "FR-DG")
+                    out << "\tProjection Type : Flux reconstruction recovering discontinuous Galerkin"  <<endl;
+                else if(m_discontinuousApproach == "FR-SD")
+                    out << "\tProjection Type : Flux reconstruction recovering spectral difference"     <<endl;
+                else if(m_discontinuousApproach == "FR-HU")
+                    out << "\tProjection Type : Flux reconstruction recovering Huynh scheme"            <<endl;
             }
             else
             {
-                out << "\tProjection Type : Discontinuous Galerkin" <<endl;
+                out << "\tProjection Type : Continuous Galerkin" <<endl;
             }
         }
 

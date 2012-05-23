@@ -757,6 +757,7 @@
      <SOLVERINFO>
       <I PROPERTY="EQType" VALUE="APE"/> <!-- Acoustic perturbation equations -->
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
+      <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
       <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
       <I PROPERTY="UpwindType"  VALUE="Upwind"/> <!-- Ignored for Continuous Galerkin projection -->
     </SOLVERINFO> 

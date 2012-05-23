@@ -116,6 +116,7 @@
         <SOLVERINFO>
             <I PROPERTY="EQType" VALUE="LinearSWE" />
             <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
             <I PROPERTY="UpwindType" VALUE="Average" />
         </SOLVERINFO>

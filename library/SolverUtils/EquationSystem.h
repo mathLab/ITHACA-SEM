@@ -103,7 +103,6 @@ namespace Nektar
                 return m_sessionName;
             }
 
-
             /// Get Session name
             SOLVER_UTILS_EXPORT LibUtilities::SessionReaderSharedPtr GetSession()
             {
@@ -207,10 +206,16 @@ namespace Nektar
             /// Calculate the weak discontinuous Galerkin advection.
             SOLVER_UTILS_EXPORT void WeakDGAdvection(
                 const Array<OneD, Array<OneD, NekDouble> >& InField,
-                Array<OneD, Array<OneD, NekDouble> >& OutField,
+                      Array<OneD, Array<OneD, NekDouble> >& OutField,
                 bool NumericalFluxIncludesNormal = true,
                 bool InFieldIsInPhysSpace = false,
                 int nvariables = 0);
+            
+            /// Calculate the strong FR advection term.
+            SOLVER_UTILS_EXPORT void StrongFRAdvection(
+                const Array<OneD, Array<OneD, NekDouble> >& InField,
+                      Array<OneD, Array<OneD, NekDouble> >& OutField,
+                bool InFieldIsInPhysSpace = false);
 
             /// Calculate weak DG Diffusion in the LDG form.
             SOLVER_UTILS_EXPORT void WeakDGDiffusion(
@@ -395,40 +400,39 @@ namespace Nektar
 
             SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
 
-            std::string m_filename;      ///< Filename
-            std::string m_sessionName;   ///< Name of the sessions
-            NekDouble m_time;            ///< Continous time
-            NekDouble m_fintime;         ///< time to be taken during the simulation
-            NekDouble m_timestep;        ///< Time step size
-            NekDouble m_lambda;          ///< Lambda constant in real system if one required
-            int m_steps;                 ///< Number of steps to take
-            int m_checksteps;            ///< Number of steps between checkpoints
-            int m_spacedim;              ///< Spatial dimension (> expansion dim)
-            int m_expdim;                ///< Dimension of the expansion
-			bool m_SingleMode;			 ///< flag to determine if use single mode or not
-			bool m_HalfMode;		     ///< flag to determine if use half mode or not
-			bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not
-
-
-
-            /// Type of projection, i.e. Galerkin or DG.
-            enum MultiRegions::ProjectionType m_projectionType;
-
-            /// Array holding the forward normals.
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            std::string                          m_filename;                 ///< Filename
+            std::string                          m_sessionName;              ///< Name of the sessions
+            NekDouble                            m_time;                     ///< Continous time
+            NekDouble                            m_fintime;                  ///< Time to be taken during the simulation
+            NekDouble                            m_timestep;                 ///< Time step size
+            NekDouble                            m_lambda;                   ///< Lambda constant in real system if one required
+            int                                  m_steps;                    ///< Number of steps to take
+            int                                  m_checksteps;               ///< Number of steps between checkpoints
+            int                                  m_spacedim;                 ///< Spatial dimension (> expansion dim)
+            int                                  m_expdim;                   ///< Dimension of the expansion
+			bool                                 m_SingleMode;               ///< Flag to determine if use single mode or not
+			bool                                 m_HalfMode;                 ///< Flag to determine if use half mode or not
+			bool                                 m_MultipleModes;            ///< Flag to determine if use multiple mode or not
+            std::string                          m_discontinuousApproach;    ///< Type of discontinuous approach used (StandardDG or FR-DG, FR-SD, FR-HU)
+            Array<OneD, NekDouble>               m_dGL;                      ///< Left derivatives of the correction functions
+            Array<OneD, NekDouble>               m_dGR;                      ///< Right derivatives of the correction functions
+            enum MultiRegions::ProjectionType    m_projectionType;           ///< Type of projection, i.e. Continuous or Discontinuous
+            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;             ///< Array holding the forward normals
+            
             /// 1 x nvariable x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
+            
             /// 2 x m_spacedim x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
 
             /// Flag to indicate if the fields should be checked for singularity.
-            Array<OneD, bool>                               m_checkIfSystemSingular;
+            Array<OneD, bool> m_checkIfSystemSingular;
 
             /// Number of Quadrature points used to work out the error
-            int  m_NumQuadPointsError;
+            int m_NumQuadPointsError;
             bool m_UseContCoeff;
 
-            ///Parameter for homogeneous expansions
+            /// Parameter for homogeneous expansions
             enum HomogeneousType
             {
                 eHomogeneous1D,
@@ -437,24 +441,23 @@ namespace Nektar
                 eNotHomogeneous
             };
 
-            bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
-
-            bool m_dealiasing;           ///< flag to determine if use dealising or not
+            bool m_useFFT;      ///< flag to determine if use or not the FFT for transformations
+            bool m_dealiasing;  ///< flag to determine if use dealising or not
 		
 		
             enum HomogeneousType m_HomogeneousType;
 
-            NekDouble m_LhomX; ///< physical length in X direction (if homogeneous)
-            NekDouble m_LhomY; ///< physical length in Y direction (if homogeneous)
-            NekDouble m_LhomZ; ///< physical length in Z direction (if homogeneous)
+            NekDouble m_LhomX;  ///< physical length in X direction (if homogeneous)
+            NekDouble m_LhomY;  ///< physical length in Y direction (if homogeneous)
+            NekDouble m_LhomZ;  ///< physical length in Z direction (if homogeneous)
 
-            int m_npointsX;    ///< number of points in X direction (if homogeneous)
-            int m_npointsY;    ///< number of points in Y direction (if homogeneous)
-            int m_npointsZ;    ///< number of points in Z direction (if homogeneous)
+            int m_npointsX;     ///< number of points in X direction (if homogeneous)
+            int m_npointsY;     ///< number of points in Y direction (if homogeneous)
+            int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
 
-            int m_HomoDirec;   ///< number of homogenous directions
+            int m_HomoDirec;    ///< number of homogenous directions
 		
-            int m_NumMode;     ///< Mode to use in case of single mode analysis
+            int m_NumMode;      ///< Mode to use in case of single mode analysis
 
 
             /// Initialises EquationSystem class members.
@@ -478,10 +481,15 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
 		
             /// Virtual function for the L_inf error computation between fields and a given exact solution.
-            SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+            SOLVER_UTILS_EXPORT virtual NekDouble v_LinfError(
+                unsigned int field,
+                const Array<OneD, NekDouble> &exactsoln = NullNekDouble1DArray);
 		
             /// Virtual function for the L_2 error computation between fields and a given exact solution.
-            SOLVER_UTILS_EXPORT virtual NekDouble v_L2Error(unsigned int field,const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray, bool Normalised = false);
+            SOLVER_UTILS_EXPORT virtual NekDouble v_L2Error(
+                unsigned int field, 
+                const Array<OneD, NekDouble> &exactsoln = NullNekDouble1DArray, 
+                bool Normalised = false);
         
             /// Virtual function for transformation to physical space.
             SOLVER_UTILS_EXPORT virtual void v_TransCoeffToPhys();
@@ -492,19 +500,22 @@ namespace Nektar
             /// Virtual function for printing summary information.
             SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
 
-            SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-                                                bool dumpInitialConditions = true);
+            SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(
+                NekDouble initialtime = 0.0,
+                bool dumpInitialConditions = true);
 
-            SOLVER_UTILS_EXPORT virtual void v_EvaluateExactSolution(unsigned int field,
-                                                 Array<OneD, NekDouble> &outfield,
-                                                 const NekDouble time);
+            SOLVER_UTILS_EXPORT virtual void v_EvaluateExactSolution(
+                unsigned int field,
+                Array<OneD, NekDouble> &outfield,
+                const NekDouble time);
 		
             //Initialise m_base in order to store the base flow from a file 
-            SOLVER_UTILS_EXPORT void SetUpBaseFields( SpatialDomains::MeshGraphSharedPtr &mesh);
+            SOLVER_UTILS_EXPORT void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
         
             // Fill m_base with the values stored in a fld file
-            SOLVER_UTILS_EXPORT void ImportFldBase(std::string pInfile, SpatialDomains::MeshGraphSharedPtr 
-                               pGraph);
+            SOLVER_UTILS_EXPORT void ImportFldBase(
+                std::string pInfile, 
+                SpatialDomains::MeshGraphSharedPtr pGraph);
 
             // Ouptut field information
             SOLVER_UTILS_EXPORT virtual void v_Output(void);
@@ -516,26 +527,35 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
             SOLVER_UTILS_EXPORT virtual int v_GetForceDimension();
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, Array<OneD,
-                                         Array<OneD, NekDouble> >&physfield,
-                                         Array<OneD, Array<OneD, NekDouble> >&flux);
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, const int j,
-                                         Array<OneD, Array<OneD, NekDouble> >&physfield,
-                                         Array<OneD, Array<OneD, NekDouble> >&flux);
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, Array<OneD,
-                                         Array<OneD, NekDouble> >&physfield,
-                                         Array<OneD, Array<OneD, NekDouble> >&fluxX,
-                                         Array<OneD, Array<OneD, NekDouble> > &fluxY);
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
+                const int i, Array<OneD,
+                Array<OneD, NekDouble> >&physfield,
+                Array<OneD, Array<OneD, NekDouble> >&flux);
+            
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
+                const int i, const int j,
+                Array<OneD, Array<OneD, NekDouble> >&physfield,
+                Array<OneD, Array<OneD, NekDouble> >&flux);
+            
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
+                const int i, Array<OneD,
+                Array<OneD, NekDouble> >&physfield,
+                Array<OneD, Array<OneD, NekDouble> >&fluxX,
+                Array<OneD, Array<OneD, NekDouble> > &fluxY);
+            
             SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
+            
             SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                Array<OneD, Array<OneD, NekDouble> > &numfluxY );
+                Array<OneD, Array<OneD, NekDouble> > &numfluxY);
+            
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
                 Array<OneD, Array<OneD, NekDouble> > &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
+            
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
                 Array<OneD, Array<OneD, NekDouble> > &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
@@ -575,7 +595,8 @@ namespace Nektar
         {
             v_TransCoeffToPhys();
         }
-	/**
+        
+        /**
          * Performs the transformation from physical to coefficient space.
          *
          * Public interface routine to virtual function implementation.
@@ -586,7 +607,7 @@ namespace Nektar
         }
 	
 	
-	/**
+        /**
          * Performs the actual solve.
          *
          * Public interface routine to virtual function implementation.
@@ -605,20 +626,20 @@ namespace Nektar
             v_Output();
         }
 	
-	/**
+        /**
          * L_inf Error computation
          * Public interface routine to virtual function implementation.
          */
-	inline NekDouble EquationSystem::LinfError(unsigned int field, const Array<OneD,NekDouble> &exactsoln)
+        inline NekDouble EquationSystem::LinfError(unsigned int field, const Array<OneD,NekDouble> &exactsoln)
         {
             return v_LinfError(field, exactsoln);
         }
 	
-	/**
+        /**
          * L_2 Error computation
          * Public interface routine to virtual function implementation.
          */
-	inline NekDouble EquationSystem::L2Error(unsigned int field, const Array<OneD,NekDouble> &exactsoln, bool Normalised)
+        inline NekDouble EquationSystem::L2Error(unsigned int field, const Array<OneD,NekDouble> &exactsoln, bool Normalised)
         {
             return v_L2Error(field, exactsoln, Normalised);
         }
@@ -693,7 +714,7 @@ namespace Nektar
             return m_fields[0]->GetNcoeffs();
         }
 
-	inline int EquationSystem::GetContNcoeffs(void)
+        inline int EquationSystem::GetContNcoeffs(void)
         {
             return m_fields[0]->GetContNcoeffs();
         }

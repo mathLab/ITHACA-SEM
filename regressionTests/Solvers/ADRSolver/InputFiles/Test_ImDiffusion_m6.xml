@@ -74,6 +74,7 @@
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
             <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="DIRKOrder3" />
         </SOLVERINFO>

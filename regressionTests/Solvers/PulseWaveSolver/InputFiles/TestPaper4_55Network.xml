@@ -580,6 +580,7 @@
         <SOLVERINFO>
             <I PROPERTY="EQTYPE" VALUE="PulseWavePropagation" />
             <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
             <I PROPERTY="UpwindTypePulse"  VALUE="UpwindPulse"/> 
         </SOLVERINFO>

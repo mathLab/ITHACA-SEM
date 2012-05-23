@@ -346,6 +346,7 @@
         <SOLVERINFO>
             <I PROPERTY="EQType" VALUE="EulerCFE" />
             <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
             <I PROPERTY="UpwindType" VALUE="Exact" />
             <I PROPERTY="ProblemType" VALUE="RinglebFlow" />

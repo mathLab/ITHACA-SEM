@@ -58,14 +58,7 @@ namespace Nektar
                 const StdRegions::StdMatrixKey &mkey);
             virtual void v_AddFaceNormBoundaryInt(
                 const int                            face,
-                StdRegions::StdExpansion2DSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>  &Fx,
-                const Array<OneD, const NekDouble>  &Fy,
-                const Array<OneD, const NekDouble>  &Fz,
-                      Array<OneD,       NekDouble>  &outarray);
-            virtual void v_AddFaceNormBoundaryInt(
-                const int                            face,
-                StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                StdRegions::StdExpansionSharedPtr   &FaceExp,
                 const Array<OneD, const NekDouble>  &Fn,
                       Array<OneD,       NekDouble>  &outarray);
             virtual void v_AddRobinMassMatrix(

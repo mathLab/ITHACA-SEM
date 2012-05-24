@@ -157,7 +157,7 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysVals(
                             const int edge,
-                            const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                            const StdRegions::StdExpansionSharedPtr &EdgeExp,
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
@@ -259,8 +259,7 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
-
-
+            
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;

@@ -79,6 +79,7 @@ namespace Nektar
         
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion> ExpansionSharedPtr;
+        typedef boost::weak_ptr<Expansion> ExpansionWeakPtr;
         typedef std::vector< ExpansionSharedPtr > ExpansionVector;
         typedef std::vector< ExpansionSharedPtr >::iterator ExpansionVectorIter;
         

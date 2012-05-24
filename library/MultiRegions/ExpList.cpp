@@ -2103,35 +2103,39 @@ namespace Nektar
             return result;
         }
         
-        boost::shared_ptr<ExpList2D> &ExpList::v_GetTrace3D()
+        void ExpList::v_Upwind(
+            const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+            const Array<OneD,                   const NekDouble>   &Fwd,
+            const Array<OneD,                   const NekDouble>   &Bwd,
+                  Array<OneD,                         NekDouble>   &Upwind)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList2D> returnVal;
+        }
+
+        void ExpList::v_Upwind(
+            const Array<OneD, const NekDouble> &Vn,
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
+                  Array<OneD,       NekDouble> &Upwind)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
+        boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static boost::shared_ptr<ExpList> returnVal;
             return returnVal;
         }
 
-        boost::shared_ptr<ExpList1D> &ExpList::v_GetTrace()
+        boost::shared_ptr<ExpList> &ExpList::v_GetTrace(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList1D> returnVal;
-            return returnVal;
-        }
-        
-        boost::shared_ptr<ExpList0D> &ExpList::v_GetTrace1D()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList0D> returnVal;
-            return returnVal;
-        }
-		
-		boost::shared_ptr<ExpList0D> &ExpList::v_GetTrace1D(int i)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList0D> returnVal;
+            static boost::shared_ptr<ExpList> returnVal;
             return returnVal;
         }
 
@@ -2141,6 +2145,13 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
             static boost::shared_ptr<LocalToGlobalDGMap> result;
             return result;
+        }
+
+        void ExpList::v_GetNormals(
+            Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
         }
 
         void ExpList::v_AddTraceIntegral(

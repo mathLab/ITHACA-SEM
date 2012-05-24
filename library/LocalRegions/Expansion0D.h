@@ -36,42 +36,41 @@
 #ifndef EXPANSION0D_H
 #define EXPANSION0D_H
 
+#include <SpatialDomains/Geometry.h>
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
-//#include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion1D.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
-        class Expansion1D;
-        typedef boost::shared_ptr<Expansion1D> Expansion1DSharedPtr;
-        
         class Expansion0D: virtual public Expansion, virtual public StdRegions::StdExpansion0D
         {
-            public:
-                LOCAL_REGIONS_EXPORT virtual ~Expansion0D() {}
+        public:
+            LOCAL_REGIONS_EXPORT Expansion0D();
             
-                inline Expansion1DSharedPtr GetLeftAdjacentElementExp() const;
-
-                inline Expansion1DSharedPtr GetRightAdjacentElementExp() const;
-
-                inline int GetLeftAdjacentElementVertex() const;
-
-                inline int GetRightAdjacentElementVertex() const;
-
-                inline void SetAdjacentElementExp(
-                        int vertex,
-                        Expansion1DSharedPtr &v);
-
-            protected:
-
-            private:
-                Expansion1DSharedPtr m_elementLeft;
-                Expansion1DSharedPtr m_elementRight;
-                int m_elementVertexLeft;
-                int m_elementVertexRight;
-
+            LOCAL_REGIONS_EXPORT virtual ~Expansion0D() {}
+            
+            inline Expansion1DSharedPtr GetLeftAdjacentElementExp() const;
+            
+            inline Expansion1DSharedPtr GetRightAdjacentElementExp() const;
+            
+            inline int GetLeftAdjacentElementVertex() const;
+            
+            inline int GetRightAdjacentElementVertex() const;
+            
+            inline void SetAdjacentElementExp(
+                int vertex,
+                Expansion1DSharedPtr &v);
+            
+        protected:
+            
+        private:
+            Expansion1DWeakPtr m_elementLeft;
+            Expansion1DWeakPtr m_elementRight;
+            int m_elementVertexLeft;
+            int m_elementVertexRight;
         };
         
         // type defines for use of PrismExp in a boost vector
@@ -81,14 +80,14 @@ namespace Nektar
         
         inline Expansion1DSharedPtr Expansion0D::GetLeftAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.get(), "Left adjacent element not set.");
-            return m_elementLeft;
+            ASSERTL1(m_elementLeft.lock().get(), "Left adjacent element not set.");
+            return m_elementLeft.lock();
         }
 
         inline Expansion1DSharedPtr Expansion0D::GetRightAdjacentElementExp() const
         {
-            ASSERTL1(m_elementLeft.get(), "Right adjacent element not set.");
-            return m_elementRight;
+            ASSERTL1(m_elementLeft.lock().get(), "Right adjacent element not set.");
+            return m_elementRight.lock();
         }
 
         inline int Expansion0D::GetLeftAdjacentElementVertex() const
@@ -103,9 +102,9 @@ namespace Nektar
 
         inline void Expansion0D::SetAdjacentElementExp(int vertex, Expansion1DSharedPtr &v)
         {
-            if (m_elementLeft.get())
+            if (m_elementLeft.lock().get())
             {
-                ASSERTL1(!m_elementRight.get(),
+                ASSERTL1(!m_elementRight.lock().get(),
                          "Both adjacent elements already set.");
                 m_elementRight = v;
                 m_elementVertexRight = vertex;
@@ -116,18 +115,8 @@ namespace Nektar
                 m_elementVertexLeft = vertex;
             }
         }
-
     } //end of namespace
 } //end of namespace
 
 #define EXPANSION0D_H
 #endif
-
-/** 
- *    $Log: Expansion1D.h,v $
- *
- *    Revision 1.1  2011/11/16 22:12:56  croth
- *    Introduced Expansion class 
- *
- *
- **/

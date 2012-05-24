@@ -139,26 +139,28 @@ namespace Nektar
             // direction =  1: Upwind
             // direction = -1: Downwind
 
-            /// Upwind the \a Fwd and \a Bwd states based on the velocity field
-            /// given by \a Vec.
-            MULTI_REGIONS_EXPORT void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
-                        const Array<OneD, const NekDouble> &Fwd,
-                        const Array<OneD, const NekDouble> &Bwd,
-                        Array<OneD, NekDouble> &Upwind,
-                        int direction=1);
+
+            MULTI_REGIONS_EXPORT void ParNormalSign(Array<OneD, NekDouble> &normsign);
+
+        protected:
+            /// Upwind the \a Fwd and \a Bwd states based on the velocity
+            /// field given by \a Vec.
+            void v_Upwind(
+                const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+                const Array<OneD,                   const NekDouble>   &Fwd,
+                const Array<OneD,                   const NekDouble>   &Bwd,
+                      Array<OneD,                         NekDouble>   &Upwind);
 
             /// Upwind the \a Fwd and \a Bwd states based on the one-
             /// dimensional normal velocity field given by \a Vn.
-            MULTI_REGIONS_EXPORT void Upwind(const Array<OneD, const NekDouble> &Vn,
-                        const Array<OneD, const NekDouble> &Fwd,
-                        const Array<OneD, const NekDouble> &Bwd,
-                        Array<OneD, NekDouble> &Upwind,
-                        int direction=1);
+            void v_Upwind(
+                const Array<OneD, const NekDouble> &Vn,
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                      Array<OneD,       NekDouble> &Upwind);
 
             /// Populate \a normals with the normals of all expansions.
-            MULTI_REGIONS_EXPORT void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
-
-        protected:
+            void v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
             /// Definition of the total number of degrees of freedom and
@@ -178,6 +180,9 @@ namespace Nektar
             
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
+            int m_firstIntEl;
+            
+            Array<OneD, NekDouble> m_normSign;
         };
 
         /// Empty ExpList1D object.

@@ -113,7 +113,7 @@ namespace Nektar
 	      Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
 	      
 	      // negate the normal flux
-	      Vmath::Neg(npts,tmp_n,1);		      
+	      Vmath::Neg(npts,tmp_n,1);
 	      
 	      // rotate back to Cartesian
 	      Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1);
@@ -275,8 +275,7 @@ namespace Nektar
   }
   
   void CompressibleFlowSystem::NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+                                               Array<OneD, Array<OneD, NekDouble> > &numflux)
   {
     int i;
     
@@ -324,14 +323,10 @@ namespace Nektar
 		      rhoflux, rhouflux, rhovflux, Eflux );
 	
 	// rotate back to Cartesian
-	numfluxX[0][i] =  rhoflux*m_traceNormals[0][i];
-	numfluxY[0][i] =  rhoflux*m_traceNormals[1][i];
-	numfluxX[1][i] = (rhouflux*m_traceNormals[0][i] - rhovflux*m_traceNormals[1][i]) * m_traceNormals[0][i];
-	numfluxY[1][i] = (rhouflux*m_traceNormals[0][i] - rhovflux*m_traceNormals[1][i]) * m_traceNormals[1][i];
-	numfluxX[2][i] = (rhouflux*m_traceNormals[1][i] + rhovflux*m_traceNormals[0][i]) * m_traceNormals[0][i];
-	numfluxY[2][i] = (rhouflux*m_traceNormals[1][i] + rhovflux*m_traceNormals[0][i]) * m_traceNormals[1][i];
-	numfluxX[3][i] =  Eflux*m_traceNormals[0][i];
-	numfluxY[3][i] =  Eflux*m_traceNormals[1][i];
+        numflux[0][i] = rhoflux;
+        numflux[1][i] = (rhouflux*m_traceNormals[0][i] - rhovflux*m_traceNormals[1][i]);
+        numflux[2][i] = (rhouflux*m_traceNormals[1][i] + rhovflux*m_traceNormals[0][i]);
+        numflux[3][i] = Eflux;
       }
   }
   

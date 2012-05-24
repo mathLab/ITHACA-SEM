@@ -151,7 +151,7 @@ namespace Nektar
             // output: modal space
 
             // straighforward DG
-            WeakDGAdvection(inarray, modarray, false, true);
+            WeakDGAdvection(inarray, modarray, true, true);
             //-------------------------------------------------
 
 

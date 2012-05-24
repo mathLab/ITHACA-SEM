@@ -32,8 +32,10 @@
 // Description: Local to Global DG mapping routines, header file
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef MULTIREGIONS_LOCALTOGLOBALDGMAP_H
 #define MULTIREGIONS_LOCALTOGLOBALDGMAP_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
@@ -41,7 +43,6 @@
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
-
 #include <LocalRegions/PointExp.h>
 
 namespace Nektar
@@ -54,15 +55,19 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT LocalToGlobalDGMap();
+            
             /// Constructor for trace map for one-dimensional expansion.
             MULTI_REGIONS_EXPORT LocalToGlobalDGMap( 
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const ExpList0DSharedPtr &trace,
                 const ExpList &locExp,
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndCond);
+                                                                &bndCond,
+                const map<int,int> &periodicVertices);
+
             /// Constructor for trace map for two-dimensional expansion.
             MULTI_REGIONS_EXPORT LocalToGlobalDGMap(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -93,43 +98,39 @@ namespace Nektar
             /// Return the number of boundary segments on which Dirichlet
             /// boundary conditions are imposed.
             inline int GetNumDirichletBndPhys();
-
-            inline Array<OneD, StdRegions::StdExpansion1DSharedPtr>
-                    GetElmtToTrace(const int i);
-
-            inline Array<OneD,Array<OneD,StdRegions::StdExpansion1DSharedPtr> >
-                    GetElmtToTrace();
             
-			inline Array<OneD, StdRegions::StdExpansion2DSharedPtr>
-                    GetElmtToFace(const int i);
+            inline Array<OneD, StdRegions::StdExpansionSharedPtr>
+                &GetElmtToTrace(const int i);
 
-            inline Array<OneD,Array<OneD,StdRegions::StdExpansion2DSharedPtr> >
-                    GetElmtToFace();
+            inline Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
+                &GetElmtToTrace();
 
-            inline AdjacentTraceOrientation
-                    GetBndExpAdjacentOrient(const int i);
+            inline int GetTraceToUniversalMap(int i);
 
-            inline AdjacentFaceOrientation
-                    GetBndExpAdjacentFaceOrient(const int i);
-
+            inline int GetTraceToUniversalMapUnique(int i);
+            
+            void UniversalTraceAssemble(Array<OneD, NekDouble> &pGlobal) const;
+            
         protected:
 
         private:
             /// Number of physical dirichlet boundary values in trace
             int m_numDirichletBndPhys;
+            
             /// list of edge expansions for a given element
-            Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;
-			/// list of face expansions for a given element
-            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> > m_elmtToFace;
-
-            Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
-			
-			Array<OneD, AdjacentFaceOrientation > m_bndExpAdjacentFaceOrient;
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> > m_elmtToTrace;
+            /// Integer map of process trace space quadrature points to
+            /// universal space.
+            Array<OneD,int> m_traceToUniversalMap;
+            /// Integer map of unique process trace space quadrature points to
+            /// universal space (signed).
+            Array<OneD,int> m_traceToUniversalMapUnique;
 
             void SetUpUniversalDGMap(const ExpList &locExp);
-            
-			void SetUpUniversalDGMap3D(const ExpList &locExp);
 
+            void SetUpUniversalTraceMap(const ExpList &locExp,
+                                        const ExpListSharedPtr trace);
+            
             virtual int v_GetLocalToGlobalMap(const int i) const;
 
             virtual int v_GetGlobalToUniversalMap(const int i) const;
@@ -180,12 +181,22 @@ namespace Nektar
 
         typedef boost::shared_ptr<LocalToGlobalDGMap>  LocalToGlobalDGMapSharedPtr;
 
+        inline int LocalToGlobalDGMap::GetTraceToUniversalMap(int i)
+        {
+            return m_traceToUniversalMap[i];
+        }
+        
+        inline int LocalToGlobalDGMap::GetTraceToUniversalMapUnique(int i)
+        {
+            return m_traceToUniversalMapUnique[i];
+        }
+
         inline int LocalToGlobalDGMap::GetNumDirichletBndPhys()
         {
             return m_numDirichletBndPhys;
         }
 
-        inline Array<OneD, StdRegions::StdExpansion1DSharedPtr>
+        inline Array<OneD, StdRegions::StdExpansionSharedPtr>&
                     LocalToGlobalDGMap::GetElmtToTrace(const int i)
         {
             ASSERTL1(i >= 0 && i < m_elmtToTrace.num_elements(),
@@ -193,70 +204,12 @@ namespace Nektar
             return m_elmtToTrace[i];
         }
 
-        inline Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> >
+        inline Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> >&
                     LocalToGlobalDGMap::GetElmtToTrace()
         {
             return m_elmtToTrace;
-        }
-        
-		inline Array<OneD, StdRegions::StdExpansion2DSharedPtr>
-                    LocalToGlobalDGMap::GetElmtToFace(const int i)
-        {
-            ASSERTL1(i >= 0 && i < m_elmtToFace.num_elements(),
-                     "i is out of range");
-            return m_elmtToFace[i];
-        }
-
-        inline Array<OneD, Array< OneD, StdRegions::StdExpansion2DSharedPtr> >
-                    LocalToGlobalDGMap::GetElmtToFace()
-        {
-            return m_elmtToFace;
-        }
-
-        inline AdjacentTraceOrientation
-                    LocalToGlobalDGMap::GetBndExpAdjacentOrient(const int i)
-        {
-            return m_bndExpAdjacentOrient[i];
-        }
-
-        inline AdjacentFaceOrientation
-                    LocalToGlobalDGMap::GetBndExpAdjacentFaceOrient(const int i)
-        {
-            return m_bndExpAdjacentFaceOrient[i];
         }
     } // end of namespace
 } // end of namespace
 
 #endif //LOCALTOGLOBALDGMAP_H
-
-
-/** $Log: LocalToGlobalDGMap.h,v $
-/** Revision 1.6  2009/11/20 10:47:54  cbiotto
-/** Update for creating boundary to global trace map
-/**
-/** Revision 1.5  2009/11/02 19:15:43  cantwell
-/** Moved ContField1D to inherit from DisContField1D.
-/** Moved ContField3D to inherit from DisContField3D.
-/** Incorporated GenExpList1D functionality into ExpList1D.
-/** Tidied up and added documentation to various classes.
-/** Moved Namespace documentation and introductions to separate files along with
-/** doxygen configuration.
-/** Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-/** Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-/** Updated Linux compiling instructions.
-/** Updated regDemo to use Helmholtz2D-g when built as debug.
-/**
-/** Revision 1.4  2009/10/30 14:02:55  pvos
-/** Multi-level static condensation updates
-/**
-/** Revision 1.3  2009/04/02 13:06:42  sherwin
-/** Modified to take symmetric banded system for HDH solver
-/**
-/** Revision 1.2  2008/09/16 13:36:06  pvos
-/** Restructured the LocalToGlobalMap classes
-/**
-/** Revision 1.1  2008/08/18 08:16:23  sherwin
-/** First version of this new class container for mappings
-/**
- */
-

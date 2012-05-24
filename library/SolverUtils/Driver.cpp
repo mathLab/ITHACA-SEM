@@ -44,7 +44,7 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Direct"         ,eDirect),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Adjoint"        ,eAdjoint),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth),
-            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","SkewSymmetric",eSkewSymmetric)
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","SkewSymmetric"  ,eSkewSymmetric)
         };
         std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
         std::string Driver::driverDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Driver","Standard");

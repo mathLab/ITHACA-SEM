@@ -39,18 +39,11 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        
-        
-
+        Expansion0D::Expansion0D() : StdExpansion0D(), 
+            Expansion(), StdExpansion()
+        {
+            m_elementVertexLeft  = -1;
+            m_elementVertexRight = -1;
+        }
     } //end of namespace
 } //end of namespace
-
-/** 
- *    $Log: Expansion1D.cpp,v $
- *    
- *
- *    Revision 1.1  2011/11/16 22:12:56  croth
- *    created class
- *
- *
- **/

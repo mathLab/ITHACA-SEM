@@ -49,11 +49,9 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-
-		class PointExp: virtual public StdRegions::StdPointExp, virtual public Expansion0D
-    {
-        
-    public:
+        class PointExp: virtual public StdRegions::StdPointExp, virtual public Expansion0D
+        {
+        public:
             LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
             LOCAL_REGIONS_EXPORT ~PointExp(void);
 
@@ -69,14 +67,13 @@ namespace Nektar
                 return m_coeffs[i];
             }
 		
-			inline NekDouble  GetPhys(int i) const
-			{
-				ASSERTL1(i == 0,"index out of range");
-			
-				return m_phys[i];
-			}
-
-
+            inline NekDouble  GetPhys(int i) const
+            {
+                ASSERTL1(i == 0,"index out of range");
+		
+                return m_phys[i];
+            }
+            
             inline NekDouble  GetCoeff(int i) const
             {
                 ASSERTL1(i == 0,"index out of range");
@@ -128,21 +125,24 @@ namespace Nektar
             {
                 return m_geom;
             }
-    protected:
+            
+        protected:
             Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
             Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
             SpatialDomains::VertexComponentSharedPtr m_geom;
-    private:
+            
+            const SpatialDomains::GeometrySharedPtr v_GetGeom() const
+            {
+                return m_geom;
+            }
+        };
         
-    };
-
-    // type defines for use of PointExp in a boost vector
-    typedef boost::shared_ptr<PointExp> PointExpSharedPtr;
-    typedef std::vector<PointExpSharedPtr> PointExpVector;
-    typedef std::vector<PointExpSharedPtr>::iterator PointExpVectorIter;
-
-    const static Array<OneD, PointExpSharedPtr> NullPointExpSharedPtrArray;
-
+        // type defines for use of PointExp in a boost vector
+        typedef boost::shared_ptr<PointExp> PointExpSharedPtr;
+        typedef std::vector<PointExpSharedPtr> PointExpVector;
+        typedef std::vector<PointExpSharedPtr>::iterator PointExpVectorIter;
+        
+        const static Array<OneD, PointExpSharedPtr> NullPointExpSharedPtrArray;
     } //end of namespace
 } //end of namespace
 

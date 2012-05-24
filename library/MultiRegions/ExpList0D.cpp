@@ -252,14 +252,14 @@ namespace Nektar
 			return m_point->GetVertex();
 		}
 		
-		/**
+        /**
          * For each local element, copy the normals stored in the element list
          * into the array \a normals.
          * @param   normals     Multidimensional array in which to copy normals
          *                      to. Must have dimension equal to or larger than
          *                      the spatial dimension of the elements.
          */
-        void ExpList0D::GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals)
+        void ExpList0D::v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals)
         {
 			int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
@@ -276,8 +276,8 @@ namespace Nektar
             {
                 LocalRegions::Expansion0DSharedPtr loc_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion0D>((*m_exp)[i]);
 
-				LocalRegions::Expansion1DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
-
+                LocalRegions::Expansion1DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
+                
                 // Get the number of points and normals for this expansion.
                 e_npoints  = 1;
                 locnormals = loc_elmt->GetVertexNormal(loc_exp->GetLeftAdjacentElementVertex());
@@ -296,57 +296,40 @@ namespace Nektar
                     }
                 }
             }
-			//negate first normal inwards facing into domain
-			for (k=0; k<coordim; k++)
-			{
-				normals[k][0] = locnormals[k][0];
-			}
+            //negate first normal inwards facing into domain
+            for (k=0; k<coordim; k++)
+            {
+                normals[k][0] = locnormals[k][0];
+            }
 	
         }
 		
-
-		
-		
         /**
          * One-dimensional upwind.
-         * \see    ExpList1D::Upwind(
-         *           const Array<OneD, const Array<OneD, NekDouble> >,
-         *           const Array<OneD, const NekDouble>,
-         *           const Array<OneD, const NekDouble>,
-         *                 Array<OneD, NekDouble>, int)
+         * 
          * @param   Vn          Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
          * @param   Upwind      Output vector.
-         * @param   direction   (Unused).
          */
-        void ExpList0D::Upwind(   const Array<OneD, const NekDouble> &Vn,
-							   const Array<OneD, const NekDouble> &Fwd,
-							   const Array<OneD, const NekDouble> &Bwd,
-							   Array<OneD, NekDouble> &Upwind,
-							   int direction)
+        void ExpList0D::v_Upwind(const Array<OneD, const NekDouble> &Vn,
+                                 const Array<OneD, const NekDouble> &Fwd,
+                                 const Array<OneD, const NekDouble> &Bwd,
+                                       Array<OneD,       NekDouble> &Upwind)
         {
-				
-			// Process each point in the expansion.
+            // Process each point in the expansion.
             for(int j = 0; j < Fwd.num_elements(); ++j)
             {
-				// Upwind based on one-dimensional velocity.
+                // Upwind based on one-dimensional velocity.
                 if(Vn[j] > 0.0)
                 {
                     Upwind[j] = Fwd[j];
                 }
                 else
                 {
-					Upwind[j] = Bwd[j];
-				}
+                    Upwind[j] = Bwd[j];
+                }
             }
         }
-		
-		
     } //end of namespace
 } //end of namespace
-
-/**
- * $Log: v $
- *
- **/

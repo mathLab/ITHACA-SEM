@@ -71,24 +71,9 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD,       NekDouble>& outarray);
 
-
-            STD_REGIONS_EXPORT void SetCoeffsToOrientation(
-                    StdRegions::Orientation dir)
-            {
-                v_SetCoeffsToOrientation(dir);
-            }
-
-            STD_REGIONS_EXPORT void SetCoeffsToOrientation(
-                    StdRegions::Orientation dir,
-                    Array<OneD, const NekDouble> &inarray,
-                    Array<OneD, NekDouble> &outarray)
-            {
-                v_SetCoeffsToOrientation(dir,inarray,outarray);
-            }
-
         protected:
-			std::map<int, NormalVector> m_vertexNormals;
-
+            std::map<int, NormalVector> m_vertexNormals;
+            
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords);
 

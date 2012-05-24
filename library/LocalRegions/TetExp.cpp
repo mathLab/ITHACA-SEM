@@ -707,7 +707,7 @@ namespace Nektar
          */
         void TetExp::v_GetFacePhysVals(
                   const int face,
-                  const StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                  const StdRegions::StdExpansionSharedPtr &FaceExp,
                   const Array<OneD,const NekDouble> &inarray,
                   Array<OneD,NekDouble> &outarray)
         {

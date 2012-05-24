@@ -1008,7 +1008,7 @@ namespace Nektar
 	    	v_SetUpPhysTangents(exp2d, edge);
 	    }
             void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fx,
                                                 const Array<OneD, const NekDouble> &Fy,
                                                 Array<OneD, NekDouble> &outarray)
@@ -1017,7 +1017,7 @@ namespace Nektar
             }
 
             void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray)
             {
@@ -1025,7 +1025,7 @@ namespace Nektar
             }
 
             void StdExpansion::AddEdgeNormBoundaryBiInt(const int edge,
-                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fwd,
                                                 const Array<OneD, const NekDouble> &Bwd,
                                                 Array<OneD, NekDouble> &outarray)
@@ -1041,17 +1041,7 @@ namespace Nektar
             }
 
             void StdExpansion::AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
-                                                const Array<OneD, const NekDouble> &Fx,
-                                                const Array<OneD, const NekDouble> &Fy,
-                                                const Array<OneD, const NekDouble> &Fz,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                v_AddFaceNormBoundaryInt(face,FaceExp,Fx,Fy,Fz,outarray);
-            }
-
-            void StdExpansion::AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
+                                                boost::shared_ptr<StdExpansion>    &FaceExp,
                                                 const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray)
             {
@@ -1161,18 +1151,30 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
+        void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
+                                                    Array<OneD, const NekDouble> &inarray,
+                                                    Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
+
+        void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
+        
 
             void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,
-                                                  const Array<OneD, const NekDouble> &Fy,
-                                                  Array<OneD, NekDouble> &outarray)
+                                                        boost::shared_ptr<StdExpansion>    &EdgeExp,
+                                                        const Array<OneD, const NekDouble> &Fx,
+                                                        const Array<OneD, const NekDouble> &Fy,
+                                                        Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
              void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray)
             {
@@ -1180,7 +1182,7 @@ namespace Nektar
             }
 
             void StdExpansion::v_AddEdgeNormBoundaryBiInt(const int edge,
-                                                    boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                    boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                     const Array<OneD, const NekDouble> &Fwd,
                                                     const Array<OneD, const NekDouble> &Bwd,
                                                     Array<OneD, NekDouble> &outarray)
@@ -1195,18 +1197,8 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
         
-            void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
-                                                  const Array<OneD, const NekDouble> &Fx,
-                                                  const Array<OneD, const NekDouble> &Fy,
-                                                  const Array<OneD, const NekDouble> &Fz,
-                                                  Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
-
              void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
+                                                  boost::shared_ptr<StdExpansion>    &FaceExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray)
             {
@@ -1366,7 +1358,7 @@ namespace Nektar
 
             void StdExpansion::v_DGDeriv(const int dir,
                                          const Array<OneD, const NekDouble>& inarray,
-                                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
+                                         Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
                                          Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -1546,12 +1538,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-            void StdExpansion::v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void StdExpansion::v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-            void StdExpansion::v_GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion2D>   &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void StdExpansion::v_GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion>   &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
@@ -1731,6 +1723,11 @@ namespace Nektar
             void StdExpansion::v_ComputeFaceNormal(const int face)
             {
                 ASSERTL0(false, "Cannot compute face normal for this expansion.");
+            }
+
+            void StdExpansion::v_NegateEdgeNormal(const int edge)
+            {
+                ASSERTL0(false, "Not implemented.");
             }
 		
 			void StdExpansion::v_ComputeVertexNormal(const int vertex)

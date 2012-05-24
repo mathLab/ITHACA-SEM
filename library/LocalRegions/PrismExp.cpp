@@ -603,7 +603,7 @@ namespace Nektar
         ///Returns the physical values at the quadrature points of a face
         void PrismExp::v_GetFacePhysVals(
                 const int face,
-                const StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray)
         {

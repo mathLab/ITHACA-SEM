@@ -92,8 +92,7 @@ namespace Nektar
     
     
     virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+				 Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
       switch(m_expdim)
 	{
@@ -101,7 +100,7 @@ namespace Nektar
 	  ASSERTL0(false,"1D not implemented for Compressible Flow Equations");
 	  break;
 	case 2:
-	  NumericalFlux2D(physfield,numfluxX,numfluxY);
+	  NumericalFlux2D(physfield,numflux);
 	  break;
 	case 3:
 	  ASSERTL0(false,"3D not implemented for Compressible Flow Equations");
@@ -145,8 +144,7 @@ namespace Nektar
 			 Array<OneD, Array<OneD, NekDouble> > &flux);
 
     void NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-			 Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
-			 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
+			 Array<OneD, Array<OneD, NekDouble> > &numflux);
     
     void GetPressure(const Array<OneD, const Array<OneD, NekDouble> > &physfield,
  		     Array<OneD, NekDouble> &pressure); 

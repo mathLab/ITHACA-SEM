@@ -63,152 +63,33 @@ namespace Nektar
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
             MULTI_REGIONS_EXPORT DisContField1D(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    const std::string &variable);
-			
-			/// Constructor for a DisContField1D from a List of subdomains
-			/// New Constructor for arterial network 
-            MULTI_REGIONS_EXPORT DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-												const SpatialDomains::CompositeMap& domain,
-												const SpatialDomains::MeshGraphSharedPtr &graph1D,
-												const std::string &variable,
-												int i);
-			
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const std::string &variable);
+            
+            /// Constructor for a DisContField1D from a List of subdomains
+            /// New Constructor for arterial network 
+            MULTI_REGIONS_EXPORT DisContField1D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::CompositeMap& domain,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const std::string &variable,
+                int i);
 
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
-
+            
             /// Constructs a 1D discontinuous field based on an existing field.
 	    /// (needed in order to use ContField( const ExpList1D &In) constructor
             MULTI_REGIONS_EXPORT DisContField1D(const ExpList1D &In);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~DisContField1D();
-			
-			////2D
-			inline ExpList0DSharedPtr &GetTrace1D()
-            {
-				return m_trace;
-            }
-			
-			inline ExpList0DSharedPtr &GetTrace1D(int i)
-            {
-				return m_traces[i];
-            }
-			
-			////2D
-			inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
-            {
-                return m_traceMap;
-            }
-			
+            
             /// For a given key, returns the associated global linear system.
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
-                    const GlobalLinSysKey &mkey);
+                const GlobalLinSysKey &mkey);
 
-			/**
-             * \brief This method extracts the "forward" and
-             * "backward" trace data from the array #m_phys and puts
-             * the data into output vectors \a Fwd and \a Bwd.
-             *
-             * This is a wrapper call.
-             *
-             * \param field is a NekDouble array which contains the 2D
-             * data from which we wish to extract the backward and
-             * forward orientated trace/edge arrays.
-             *
-             * \return Updates  a NekDouble array \a Fwd and \a Bwd
-             */
-			
-            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
-														 Array<OneD,NekDouble> &Bwd);
-			
-			
-            /**
-             * \brief This method extracts the "forward" and
-             * "backward" trace data from the array \a field and puts
-             * the data into output vectors \a Fwd and \a Bwd.
-             *
-             * An element unique edge is defined to be #eForwards if
-             * the edge is oriented in a counter clockwise sense
-             * within the element. Conversley it is defined to be
-             * #eBackwards if the elemet edge is orientated in a
-             * clockwise sense. Therefore along two intersecting edges
-             * one edge is always forwards and the adjacent edge is
-             * backwards. We define a unique normal between two
-             * adjacent edges as running from the #eFowards edge to the
-             * #eBackward edge.
-             *
-             * This method collects/interpolates the edge data from
-             * the 2D array \a field which contains information over a
-             * collection of 2D shapes and puts this edge data into
-             * the arrays of trace data \a Bwd or \a Fwd depending on
-             * the orientation of the local edge within an element.
-             *
-             * If an edge is aligned along a boundary we use the
-             * method GetBndExpAdjacentOrient() method to determine if
-             * an adjacent boundary edge is orientated in a forwards
-             * or backwards sense. This method returns an enum
-             * #AdjacentTraceOrientation which in 2D has entires of
-             * #eAdjacentEdgeIsForwards and #eAdjacentEdgeIsBackwards.
-             *
-             * \param field is a NekDouble array which contains the 2D
-             * data from which we wish to extract the backward and
-             * forward orientated trace/edge arrays.
-             *
-             * \return Updates  a NekDouble array \a Fwd and \a Bwd
-             */
-            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
-														 Array<OneD,NekDouble> &Fwd,
-														 Array<OneD,NekDouble> &Bwd);
-			
-            void ExtractTracePhys()
-            {
-                ExtractTracePhys(m_trace->UpdatePhys());
-            }
-			
-			
-            MULTI_REGIONS_EXPORT void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
-			
-			
-            /**
-             * \brief This method extracts the trace (edges in 2D)
-             * from the field \a inarray and puts the values in \a
-             * outarray.
-			 
-             * It assumes the field is C0 continuous so that
-             * it can overwrite the edge data when visited by the two
-             * adjacent elements.
-             *
-             * \param inarray is a NekDouble array which contains the 2D
-             * data from which we wish to extract the edge data
-             *
-             * \return Updates a NekDouble array \a outarray which
-             * contains the edge information
-             */
-            
-			MULTI_REGIONS_EXPORT void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray,
-													   Array<OneD, NekDouble> &outarray);
-			
-			
-            MULTI_REGIONS_EXPORT void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
-													   Array<OneD, NekDouble> &outarray);
-			
-            /// Retrieve the boundary condition expansions.
-            inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&GetBndCondExpansions();
-			
-			inline MultiRegions::ExpListSharedPtr &UpdateBndCondExpansion(int i);
-			
-			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &UpdateBndConditions();
-
-            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
-
-            /// \brief Set up an stl map containing the information
-            /// for a robin aboundary condition in the location of the
-            /// element id
-            MULTI_REGIONS_EXPORT map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
-			
         protected:
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.
@@ -220,25 +101,36 @@ namespace Nektar
              * and consists of entries of the type LocalRegions#PointExp. Every
              * entry corresponds to a point on a single boundary region.
              */
-            Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>         m_bndCondExpansions;
 
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
+            /// Global boundary matrix.
+            GlobalLinSysMapShPtr                               m_globalBndMat;
+            
+            /// Trace space storage for points between elements.
+            ExpListSharedPtr                                   m_trace;
+            Array<OneD, ExpListSharedPtr>                      m_traces;
+            Array<OneD, NekDouble>                             tmpBndSol;
+
+            /// Local to global DG mapping for trace space.
+            LocalToGlobalDGMapSharedPtr                        m_traceMap;
+
             /// Discretises the boundary conditions.
             void GenerateBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable);
-			
-			// Discretises the boundary conditions in case of multidomain solver.
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable);
+            
+            // Discretises the boundary conditions in case of multidomain solver.
             void GenerateMultiDomainBoundaryConditionExpansion(
-													const SpatialDomains::MeshGraphSharedPtr &graph1D,
-													SpatialDomains::BoundaryConditions &bcs,
-													const std::string variable,
-													int subdomain);
-
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable,
+                int subdomain);
+            
             /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
                                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
@@ -246,131 +138,95 @@ namespace Nektar
                                 const std::string variable,
                                       map<int,int>& periodicVertices);
 
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
-                                                Array<OneD,int> &EdgeID)
+            virtual ExpListSharedPtr &v_GetTrace()
             {
-                GetBoundaryToElmtMap(ElmtID,EdgeID);
+                return m_trace;
             }
-
-        private:
-
-            /// Global boundary matrix.
-            GlobalLinSysMapShPtr                               m_globalBndMat;
-
-            /// Trace space storage for points between elements.
-			ExpList0DSharedPtr                                 m_trace;
-			Array<OneD, ExpList0DSharedPtr>                    m_traces;
-
-			Array<OneD,NekDouble>                              tmpBndSol;
-
-
-            /// Local to global DG mapping for trace space.
-            LocalToGlobalDGMapSharedPtr                        m_traceMap;
-			
-			
-			////2D
-			inline virtual ExpList0DSharedPtr &v_GetTrace1D()
+            
+            virtual ExpListSharedPtr &v_GetTrace(int i)
             {
-                return GetTrace1D();
+                return m_traces[i];
             }
-			
-			inline virtual ExpList0DSharedPtr &v_GetTrace1D(int i)
+            
+            virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap(void)
             {
-                return GetTrace1D(i);
+                return m_traceMap;
             }
-			
-			inline virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap(void)
-			{
-				return GetTraceMap();
-			}
-			 
-			virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
-											Array<OneD, NekDouble> &outarray)
-			{
-				AddTraceIntegral(Fn,outarray);
-			}
-			 
-			/*virtual void v_AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd,
-											  const Array<OneD, const NekDouble> &Bwd,
-											  Array<OneD, NekDouble> &outarray)
-			{
-				AddTraceBiIntegral(Fwd,Bwd,outarray);
-			}*/
-			 
-			virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
-			Array<OneD,NekDouble> &Bwd)
-			{
-				GetFwdBwdTracePhys(Fwd,Bwd);
-			}
-			 
-			virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
-											  Array<OneD,NekDouble> &Fwd,
-											  Array<OneD,NekDouble> &Bwd)
-			{
-				GetFwdBwdTracePhys(field, Fwd,Bwd);
-			}
-			 
-			virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
-			{
-				ExtractTracePhys(outarray);
-			}
-			 
-			virtual void v_ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-			{
-				ExtractTracePhys(inarray,outarray);
-			}
-			 
+            
+            virtual void v_AddTraceIntegral(
+                const Array<OneD, const NekDouble> &Fn,
+                      Array<OneD,       NekDouble> &outarray);
+            virtual void v_GetFwdBwdTracePhys(
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD, const NekDouble> &field,
+                      Array<OneD,       NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_ExtractTracePhys(
+                      Array<OneD,       NekDouble> &outarray);
+            virtual void v_ExtractTracePhys(
+                const Array<OneD, const NekDouble> &inarray, 
+                      Array<OneD,       NekDouble> &outarray);
 
             /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
-                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                const SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                Array<OneD, MultiRegions::ExpListSharedPtr>
-                                                            &bndCondExpansions,
-                                Array<OneD, SpatialDomains
-                                    ::BoundaryConditionShPtr> &bndConditions);
-			
-			/// Populates the list of boundary condition expansions in multidomain case.
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable,
+                Array<OneD, MultiRegions::ExpListSharedPtr>
+                    &bndCondExpansions,
+                Array<OneD, SpatialDomains
+                    ::BoundaryConditionShPtr> &bndConditions);
+            
+            /// Populates the list of boundary condition expansions in multidomain case.
             void SetMultiDomainBoundaryConditionExpansion(
-											   const SpatialDomains::MeshGraphSharedPtr &graph1D,
-											   const SpatialDomains::BoundaryConditions &bcs,
-											   const std::string variable,
-											   Array<OneD, MultiRegions::ExpListSharedPtr>
-											   &bndCondExpansions,
-											   Array<OneD, SpatialDomains
-											   ::BoundaryConditionShPtr> &bndConditions,
-											   int subdomain);
-			
-
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable,
+                Array<OneD, MultiRegions::ExpListSharedPtr>
+                    &bndCondExpansions,
+                Array<OneD, SpatialDomains
+                    ::BoundaryConditionShPtr> &bndConditions,
+                int subdomain);
+            
             void GenerateFieldBnd1D(
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable);
-
-            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+                SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable);
+            
+            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
+            
+            virtual const Array<OneD,const MultiRegions::ExpListSharedPtr>
+                &v_GetBndCondExpansions()
             {
-                return GetRobinBCInfo();
+                return m_bndCondExpansions;
             }
-			
-			
-			/// Retrieve the boundary condition descriptions.
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions();
-			
-			inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
+
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                &v_GetBndConditions()
             {
                 return m_bndConditions;
             }
-			
-			inline MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
+
+            virtual MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];
             }
+
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
+            {
+                return m_bndConditions;
+            }
+
+            virtual void v_GetBoundaryToElmtMap(
+                Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
 			
             /// Evaluate all boundary conditions at a given time..
-            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0,
-													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
-
+            virtual void v_EvaluateBoundaryConditions(
+                const NekDouble time = 0.0,
+                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
+                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+            
             /// Solve the Helmholtz equation.
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -382,24 +238,6 @@ namespace Nektar
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
-
-        inline const Array<OneD,const MultiRegions::ExpListSharedPtr> &DisContField1D::GetBndCondExpansions()
-        {
-            return m_bndCondExpansions;
-        }
-		
-		inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &DisContField1D::UpdateBndConditions()
-		{
-			return m_bndConditions;
-		}
-		
-		inline MultiRegions::ExpListSharedPtr &DisContField1D::UpdateBndCondExpansion(int i)
-		{
-			return m_bndCondExpansions[i];
-		}
-		
-		
-
     } //end of namespace
 } //end of namespace
 

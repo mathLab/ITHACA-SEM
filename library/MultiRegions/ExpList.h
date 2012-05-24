@@ -577,16 +577,30 @@ namespace Nektar
             inline const Array<OneD, const  boost::shared_ptr<ExpList> > &GetBndCondExpansions();
 
             inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
-            
-            inline boost::shared_ptr<ExpList2D> &GetTrace3D();
-            
-            inline boost::shared_ptr<ExpList1D> &GetTrace();
-			
-            inline boost::shared_ptr<ExpList0D> &GetTrace1D();
-            
-            inline boost::shared_ptr<ExpList0D> &GetTrace1D(int i);
 
+            inline void Upwind(
+                const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+                const Array<OneD,                   const NekDouble>   &Fwd,
+                const Array<OneD,                   const NekDouble>   &Bwd,
+                      Array<OneD,                         NekDouble>   &Upwind);
+
+            inline void Upwind(
+                const Array<OneD, const NekDouble> &Vn,
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                      Array<OneD,       NekDouble> &Upwind);
+            
+            /**
+             * Return a reference to the trace space associated with this
+             * expansion list.
+             */
+            inline boost::shared_ptr<ExpList> &GetTrace();
+            
+            inline boost::shared_ptr<ExpList> &GetTrace(int i);
+            
             inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
+            
+            inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
             inline void AddTraceIntegral(
                                          const Array<OneD, const NekDouble> &Fx,
@@ -622,7 +636,10 @@ namespace Nektar
 
             inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
 
-            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble = NekConstants::kNekUnsetDouble, const NekDouble = NekConstants::kNekUnsetDouble);
+            inline void EvaluateBoundaryConditions(
+                const NekDouble time = 0.0, 
+                const NekDouble = NekConstants::kNekUnsetDouble, 
+                const NekDouble = NekConstants::kNekUnsetDouble);
 
 
             // Routines for continous matrix solution
@@ -648,13 +665,14 @@ namespace Nektar
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
 
-            MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
-																  int NumHomoDir = 0, 
-																  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, 
-																  std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector,
-																  std::vector<unsigned int> &HomoZIDs = SpatialDomains::NullUnsignedIntVector,
-																  std::vector<unsigned int> &HomoYIDs = SpatialDomains::NullUnsignedIntVector);
-
+            MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
+                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
+                int NumHomoDir = 0, 
+                Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, 
+                std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector,
+                std::vector<unsigned int> &HomoZIDs = SpatialDomains::NullUnsignedIntVector,
+                std::vector<unsigned int> &HomoYIDs = SpatialDomains::NullUnsignedIntVector);
+            
             const NekOptimize::GlobalOptParamSharedPtr &GetGlobalOptParam(void)
             {
                 return m_globalOptParam;
@@ -943,16 +961,27 @@ namespace Nektar
             virtual const Array<OneD,const boost::shared_ptr<ExpList> > &v_GetBndCondExpansions(void);
 
             virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
-			
-            virtual boost::shared_ptr<ExpList2D> &v_GetTrace3D();
-
-            virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
-			
-            virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D();
             
-            virtual boost::shared_ptr<ExpList0D> &v_GetTrace1D(int i);
+            virtual void v_Upwind(
+                const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+                const Array<OneD,                   const NekDouble>   &Fwd,
+                const Array<OneD,                   const NekDouble>   &Bwd,
+                      Array<OneD,                         NekDouble>   &Upwind);
+
+            virtual void v_Upwind(
+                const Array<OneD, const NekDouble> &Vn,
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                      Array<OneD,       NekDouble> &Upwind);
+
+            virtual boost::shared_ptr<ExpList> &v_GetTrace();
+			
+            virtual boost::shared_ptr<ExpList> &v_GetTrace(int i);
 
             virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap();
+
+            virtual void v_GetNormals(
+                Array<OneD, Array<OneD, NekDouble> > &normals);
 
             virtual void v_AddTraceIntegral(
                                             const Array<OneD, const NekDouble> &Fx,
@@ -1791,29 +1820,42 @@ namespace Nektar
             return v_UpdateBndCondExpansion(i);
         }
         
-        inline boost::shared_ptr<ExpList2D> &ExpList::GetTrace3D()
+        inline void ExpList::Upwind(
+            const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+            const Array<OneD,                   const NekDouble>   &Fwd,
+            const Array<OneD,                   const NekDouble>   &Bwd,
+                  Array<OneD,                         NekDouble>   &Upwind)
         {
-            return v_GetTrace3D();
+            v_Upwind(Vec, Fwd, Bwd, Upwind);
         }
 
-        inline boost::shared_ptr<ExpList1D> &ExpList::GetTrace()
+        inline void ExpList::Upwind(
+            const Array<OneD, const NekDouble> &Vn,
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
+                  Array<OneD,       NekDouble> &Upwind)
+        {
+            v_Upwind(Vn, Fwd, Bwd, Upwind);
+        }
+
+        inline boost::shared_ptr<ExpList> &ExpList::GetTrace()
         {
             return v_GetTrace();
         }
 
-        inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D()
+        inline boost::shared_ptr<ExpList> &ExpList::GetTrace(int i)
         {
-            return v_GetTrace1D();
-        }
-		
-        inline boost::shared_ptr<ExpList0D> &ExpList::GetTrace1D(int i)
-        {
-            return v_GetTrace1D(i);
+            return v_GetTrace(i);
         }
 		
         inline boost::shared_ptr<LocalToGlobalDGMap> &ExpList::GetTraceMap()
         {
             return v_GetTraceMap();
+        }
+
+        inline void ExpList::GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            v_GetNormals(normals);
         }
 
         inline void ExpList::AddTraceIntegral(

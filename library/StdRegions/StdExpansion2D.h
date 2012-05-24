@@ -101,6 +101,7 @@ namespace Nektar
 
         protected:
             std::map<int, NormalVector> m_edgeNormals;
+            std::map<int, bool> m_negatedNormals;
             NormalVector m_surfaceNormal;
 
             /** \brief This function evaluates the expansion at a single
@@ -129,6 +130,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
+            virtual void v_NegateEdgeNormal(const int edge);
+        
         private:
 
             // Virtual Functions ----------------------------------------
@@ -159,118 +162,3 @@ namespace Nektar
 } //end of namespace
 
 #endif //STDEXP2D_H
-
-/**
- * $Log: StdExpansion2D.h,v $
- * Revision 1.25  2008/09/16 13:37:03  pvos
- * Restructured the LocalToGlobalMap classes
- *
- * Revision 1.24  2008/08/14 22:09:50  sherwin
- * Modifications to remove HDG routines from StdRegions and removed StdExpMap
- *
- * Revision 1.23  2008/07/29 22:21:15  sherwin
- * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
- *
- * Revision 1.22  2008/07/04 10:18:40  pvos
- * Some updates
- *
- * Revision 1.21  2008/05/30 00:33:49  delisi
- * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- * Revision 1.20  2008/04/06 06:04:15  bnelson
- * Changed ConstArray to Array<const>
- *
- * Revision 1.19  2008/04/02 22:18:10  pvos
- * Update for 2D local to global mapping
- *
- * Revision 1.18  2007/11/08 16:55:14  pvos
- * Updates towards 2D helmholtz solver
- *
- * Revision 1.17  2007/10/15 20:37:40  ehan
- * Make changes of column major matrix
- *
- * Revision 1.16  2007/07/22 23:04:26  bnelson
- * Backed out Nektar::ptr.
- *
- * Revision 1.15  2007/07/20 02:16:53  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.14  2007/05/30 20:49:13  sherwin
- * Updates to do with LocalRegions and SpatialDomains
- *
- * Revision 1.13  2007/05/15 05:18:23  bnelson
- * Updated to use the new Array object.
- *
- * Revision 1.12  2007/04/10 14:00:45  sherwin
- * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
- *
- * Revision 1.11  2007/04/06 08:44:43  sherwin
- * Update to make 2D regions work at StdRegions level
- *
- * Revision 1.10  2007/04/05 15:20:11  sherwin
- * Updated 2D stuff to comply with SharedArray philosophy
- *
- * Revision 1.9  2007/03/29 19:35:09  bnelson
- * Replaced boost::shared_array with SharedArray
- *
- * Revision 1.8  2007/03/20 16:58:43  sherwin
- * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
- *
- * Revision 1.7  2007/03/14 21:24:09  sherwin
- * Update for working version of MultiRegions up to ExpList1D
- *
- * Revision 1.6  2007/03/05 19:26:56  bcarmo
- * StdExpansion2D.h modified according to StdExpansion1D. Compiles.
- *
- * Revision 1.6  2007/01/17 16:05:39  bcarmo
- * Version with StdExpansion2D compiling
- *
- * Revision 1.5  2007/01/17 16:05:39  pvos
- * updated doxygen documentation
- *
- * Revision 1.4  2006/08/05 19:03:48  sherwin
- * Update to make the multiregions 2D expansion in connected regions work
- *
- * Revision 1.3  2006/07/02 17:16:18  sherwin
- *
- * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
- *
- * Revision 1.2  2006/06/13 18:05:02  sherwin
- * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
- *
- * Revision 1.1  2006/05/04 18:58:31  kirby
- * *** empty log message ***
- *
- * Revision 1.19  2006/05/02 21:21:12  sherwin
- * Corrected libraries to compile new version of spatialdomains and demo Graph1D
- *
- * Revision 1.18  2006/04/25 20:23:33  jfrazier
- * Various fixes to correct bugs, calls to ASSERT, etc.
- *
- * Revision 1.17  2006/03/06 17:12:45  sherwin
- *
- * Updated to properly execute all current StdRegions Demos.
- *
- * Revision 1.16  2006/03/05 22:11:02  sherwin
- *
- * Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
- *
- * Revision 1.15  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.14  2006/03/01 22:59:12  sherwin
- *
- * First working version of Project1D
- *
- * Revision 1.13  2006/03/01 08:25:03  sherwin
- *
- * First compiling version of StdRegions
- *
- * Revision 1.12  2006/02/26 23:37:29  sherwin
- *
- * Updates and compiling checks upto StdExpansions1D
- *
- **/
-
-
-

@@ -247,7 +247,7 @@ namespace Nektar
             m_time += m_timestep;
        		
             // Write out current time step
-            if(m_infosteps && !((n+1)%m_infosteps))
+            if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
             {
                 cout << "Step: " << n+1 << "  Time: " << m_time << endl;
             }

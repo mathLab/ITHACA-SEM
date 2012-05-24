@@ -440,7 +440,7 @@ namespace Nektar
                     }
                 }
             }
-
+            
             // loop over all other edges and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
@@ -816,22 +816,22 @@ namespace Nektar
 	       }
 	    }
 	}
+        
         /**
-         * Upwind the left and right states given by the Arrays Fwd
-         * and Bwd using the vector quantity Vec and ouput the
-         * upwinded value in the array upwind.
+         * Upwind the left and right states given by the Arrays Fwd and Bwd
+         * using the vector quantity Vec and ouput the upwinded value in the
+         * array upwind.
+         * 
          * @param   Vec         Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
          * @param   Upwind      Output vector.
-         * @param   direction   (Unused)
          */
-        void ExpList1D::Upwind(
-                        const Array<OneD, const Array<OneD, NekDouble> > &Vec,
-                        const Array<OneD, const NekDouble> &Fwd,
-                        const Array<OneD, const NekDouble> &Bwd,
-                              Array<OneD, NekDouble> &Upwind,
-                        int direction)
+        void ExpList1D::v_Upwind(
+            const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
+            const Array<OneD,                   const NekDouble>   &Fwd,
+            const Array<OneD,                   const NekDouble>   &Bwd,
+                  Array<OneD,                         NekDouble>   &Upwind)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals;
@@ -877,7 +877,6 @@ namespace Nektar
             }
         }
 
-
         /**
          * One-dimensional upwind.
          * \see    ExpList1D::Upwind(
@@ -885,17 +884,17 @@ namespace Nektar
          *           const Array<OneD, const NekDouble>,
          *           const Array<OneD, const NekDouble>,
          *                 Array<OneD, NekDouble>, int)
+         * 
          * @param   Vn          Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
          * @param   Upwind      Output vector.
-         * @param   direction   (Unused).
          */
-        void ExpList1D::Upwind(   const Array<OneD, const NekDouble> &Vn,
-                                  const Array<OneD, const NekDouble> &Fwd,
-                                  const Array<OneD, const NekDouble> &Bwd,
-                                  Array<OneD, NekDouble> &Upwind,
-                                  int direction)
+        void ExpList1D::v_Upwind(
+            const Array<OneD, const NekDouble> &Vn,
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
+                  Array<OneD,       NekDouble> &Upwind)
         {
             int i,j,e_npoints,offset;
             Array<OneD,NekDouble> normals;
@@ -934,8 +933,8 @@ namespace Nektar
          *                      to. Must have dimension equal to or larger than
          *                      the spatial dimension of the elements.
          */
-        void ExpList1D::GetNormals(
-                                Array<OneD, Array<OneD, NekDouble> > &normals)
+        void ExpList1D::v_GetNormals(
+            Array<OneD, Array<OneD, NekDouble> > &normals)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;

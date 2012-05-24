@@ -144,7 +144,7 @@ namespace Nektar
                 StdRegions::Orientation v_GetFaceOrient(int face);
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int face,
-                const StdRegions::StdExpansion2DSharedPtr &FaceExp,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray);
 

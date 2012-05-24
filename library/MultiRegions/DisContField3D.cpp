@@ -25,13 +25,14 @@ namespace Nektar
         /**
          * 
          */
-        DisContField3D::DisContField3D( const LibUtilities::SessionReaderSharedPtr &pSession,
-                                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                        const std::string &variable,
-                                        const bool SetUpJustDG) :
-            ExpList3D(pSession,graph3D),
-            m_bndCondExpansions(),
-            m_bndConditions()
+        DisContField3D::DisContField3D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr   &graph3D,
+            const std::string                          &variable,
+            const bool                                  SetUpJustDG)
+        : ExpList3D          (pSession,graph3D),
+          m_bndCondExpansions(),
+          m_bndConditions    ()
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
             
@@ -41,6 +42,8 @@ namespace Nektar
             
             if(SetUpJustDG)
             {
+                ExpList2DSharedPtr trace;
+                
                 // Set up matrix map
                 m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
                 map<int,int> periodicEdges;
@@ -49,13 +52,12 @@ namespace Nektar
                 GetPeriodicFaces(graph3D, bcs, variable,
                                  periodicVertices, periodicEdges, periodicFaces);
                 
-                //ASSERTL0(false, "DisContField3D Constructor needs implementation.");
-                
                 // Set up Trace space
                 bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList2D>
+                trace = MemoryManager<ExpList2D>
                     ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
                                         *m_exp,graph3D, periodicFaces, UseGenSegExp);
+                m_trace = trace;
                 
                 // Scatter trace segments to 3D elements. For each element,
                 // we find the trace segment associated to each face. The
@@ -87,7 +89,7 @@ namespace Nektar
                 SetUpPhysNormals();
                 
                 m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(
-                    m_session,graph3D,m_trace,*this,m_bndCondExpansions,
+                    m_session,graph3D,trace,*this,m_bndCondExpansions,
                     m_bndConditions, periodicFaces);
             }
             else
@@ -139,6 +141,8 @@ namespace Nektar
            {
                if(SetUpJustDG)
                {
+                   ExpList2DSharedPtr trace;
+                   
                    // Set up matrix map
                    m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
                    map<int,int> periodicEdges;
@@ -149,9 +153,10 @@ namespace Nektar
                    
                    // Set up Trace space
                    bool UseGenSegExp = true;
-                   m_trace = MemoryManager<ExpList2D>
+                   trace = MemoryManager<ExpList2D>
                        ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
                                            *m_exp,graph3D, periodicFaces, UseGenSegExp);
+                   m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
                    
                    // Scatter trace segments to 3D elements. For each element,
                    // we find the trace segment associated to each face. The
@@ -183,7 +188,7 @@ namespace Nektar
                    SetUpPhysNormals();
                    
                    m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(
-                       m_session,graph3D,m_trace,*this, m_bndCondExpansions,
+                       m_session,graph3D,trace,*this, m_bndCondExpansions,
                        m_bndConditions, periodicFaces);
                }
                else
@@ -257,7 +262,6 @@ namespace Nektar
        }
 
 
-
         /**
          *
          */
@@ -271,15 +275,12 @@ namespace Nektar
         {
         }
 
-
         /**
          *
          */
         DisContField3D::~DisContField3D()
         {
         }
-
-
 
         /**
          * According to their boundary region, the separate segmental boundary
@@ -296,9 +297,9 @@ namespace Nektar
          * the boundary conditions should be discretised.
          */
         void DisContField3D::GenerateBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    const SpatialDomains::BoundaryConditions &bcs,
-                    const std::string &variable)
+            const SpatialDomains::MeshGraphSharedPtr &graph3D,
+            const SpatialDomains::BoundaryConditions &bcs,
+            const std::string &variable)
         {
             int cnt1  = 0;
             const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
@@ -352,7 +353,7 @@ namespace Nektar
 
             // Compare with all other processes. Return true only if all
             // processes report having the same boundary conditions.
-            int vSame = (returnval?1:0);
+            int vSame = returnval ? 1 : 0;
             m_comm->AllReduce(vSame, LibUtilities::ReduceMin);
 
             return (vSame == 1);
@@ -603,7 +604,7 @@ namespace Nektar
          * There is a next member to allow for more than one Robin
          * boundary condition per element
          */
-        map<int, RobinBCInfoSharedPtr> DisContField3D::GetRobinBCInfo(void)
+        map<int, RobinBCInfoSharedPtr> DisContField3D::v_GetRobinBCInfo(void)
         {
             int i,cnt;
             map<int, RobinBCInfoSharedPtr> returnval;
@@ -798,18 +799,13 @@ namespace Nektar
             return m_bndConditions;
         }
 
-        map<int, RobinBCInfoSharedPtr> DisContField3D::v_GetRobinBCInfo()
+        void DisContField3D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
+                                                  Array<OneD, NekDouble> &Bwd)
         {
-            return GetRobinBCInfo();
-        }
-
-        void DisContField3D::GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
-                                                Array<OneD, NekDouble> &Bwd)
-        {
-            GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+            v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
         }
         
-        void DisContField3D::GetFwdBwdTracePhys(
+        void DisContField3D::v_GetFwdBwdTracePhys(
             const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
@@ -819,8 +815,8 @@ namespace Nektar
             int cnt,n,e,npts,offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
-                elmtToTrace = m_traceMap->GetElmtToFace();
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
             
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(),Fwd,1);
@@ -916,20 +912,16 @@ namespace Nektar
             }
         }
 
-        void DisContField3D::ExtractTracePhys()
-        {
-            ExtractTracePhys(m_trace->UpdatePhys());
-        }
-
-        void DisContField3D::ExtractTracePhys(Array<OneD, NekDouble> &outarray)
+        void DisContField3D::v_ExtractTracePhys(
+            Array<OneD, NekDouble> &outarray)
         {
             ASSERTL1(m_physState == true,
                      "Field is not in physical space.");
             
-            ExtractTracePhys(m_phys, outarray);
+            v_ExtractTracePhys(m_phys, outarray);
         }
 
-        void DisContField3D::ExtractTracePhys(
+        void DisContField3D::v_ExtractTracePhys(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
@@ -937,8 +929,8 @@ namespace Nektar
             int nexp = GetExpSize();
             int n,e,offset,phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
-                elmtToTrace = m_traceMap->GetElmtToFace();
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
                      "input array is of insufficient length");
@@ -959,48 +951,21 @@ namespace Nektar
         }
         
         /// Note this routine changes m_trace->m_coeffs space;
-        void DisContField3D::AddTraceIntegral(
-            const Array<OneD, const NekDouble> &Fx,
-            const Array<OneD, const NekDouble> &Fy,
-            const Array<OneD, const NekDouble> &Fz,
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            int e,n,offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
-                elmtToTrace = m_traceMap->GetElmtToFace();
-            
-            for(n = 0; n < GetExpSize(); ++n)
-            {
-                offset = GetCoeff_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
-                {
-                    t_offset = GetTrace3D()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
-                                                        Fx + t_offset,
-                                                        Fy + t_offset,
-                                                        Fz + t_offset,
-                                                        e_outarray = outarray+offset);
-                }
-            }
-        }
-
-        /// Note this routine changes m_trace->m_coeffs space;
-        void DisContField3D::AddTraceIntegral(
+        void DisContField3D::v_AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansion2DSharedPtr> >
-                elmtToTrace = m_traceMap->GetElmtToFace();
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
-                    t_offset = GetTrace3D()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray = outarray+offset);

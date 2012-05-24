@@ -226,9 +226,9 @@ namespace Nektar
 						{
 							for(i = 0; i < m_spacedim; ++i)
 							{						
-								m_traceNormals[j*m_spacedim+i] = Array<OneD, NekDouble> (m_vessels[j*nvariables]->GetTrace1D(j)->GetExpSize());
+								m_traceNormals[j*m_spacedim+i] = Array<OneD, NekDouble> (m_vessels[j*nvariables]->GetTrace(j)->GetExpSize());
 							}
-							//m_vessels[j*nvariables]->GetTrace1D(j)->GetNormals(m_traceNormals);
+							//m_vessels[j*nvariables]->GetTrace(j)->GetNormals(m_traceNormals);
 						}
 					}
 					else
@@ -239,7 +239,7 @@ namespace Nektar
 						{
 							m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
 						}
-						m_fields[0]->GetTrace1D()->GetNormals(m_traceNormals);
+						m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
 					}
 
 					break;
@@ -623,8 +623,8 @@ namespace Nektar
 					
 					m_fields[0] = m_vessels[0+2*omega];
 					m_fields[1] = m_vessels[1+2*omega];
-					m_fields[0]->GetTrace1D() = m_vessels[2*omega]->GetTrace1D(omega);
-					m_fields[1]->GetTrace1D() = m_vessels[2*omega+1]->GetTrace1D(omega);
+					m_fields[0]->GetTrace() = m_vessels[2*omega]->GetTrace(omega);
+					m_fields[1]->GetTrace() = m_vessels[2*omega+1]->GetTrace(omega);
 					
 					// Integrate over timestep.
 					if( n < numMultiSteps-1)
@@ -663,8 +663,8 @@ namespace Nektar
 					{
 						m_fields[0] = m_vessels[0+2*omega];
 						m_fields[1] = m_vessels[1+2*omega];
-						m_fields[0]->GetTrace1D() = m_vessels[2*omega]->GetTrace1D(omega);
-						m_fields[1]->GetTrace1D() = m_vessels[2*omega]->GetTrace1D(omega);
+						m_fields[0]->GetTrace() = m_vessels[2*omega]->GetTrace(omega);
+						m_fields[1]->GetTrace() = m_vessels[2*omega]->GetTrace(omega);
 			 
 						for (i = 0; i < nvariables; ++i)
 						{
@@ -701,8 +701,8 @@ namespace Nektar
 			{
 				m_fields[0] = m_vessels[0+2*omega];
 				m_fields[1] = m_vessels[1+2*omega];
-				m_fields[0]->GetTrace1D() = m_vessels[2*omega]->GetTrace1D(omega);
-				m_fields[1]->GetTrace1D() = m_vessels[2*omega]->GetTrace1D(omega);
+				m_fields[0]->GetTrace() = m_vessels[2*omega]->GetTrace(omega);
+				m_fields[1]->GetTrace() = m_vessels[2*omega]->GetTrace(omega);
 		 
 				for(i = 0; i < nvariables; ++i)
 				{

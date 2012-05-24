@@ -732,13 +732,12 @@ namespace Nektar
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
          * @param   Upwind      Output vector.
-         * @param   direction   (Unused).
          */
-        void ExpList2D::Upwind(   const Array<OneD, const NekDouble> &Vn,
-                                  const Array<OneD, const NekDouble> &Fwd,
-                                  const Array<OneD, const NekDouble> &Bwd,
-                                  Array<OneD, NekDouble> &Upwind,
-                                  int direction)
+        void ExpList2D::v_Upwind(
+            const Array<OneD, const NekDouble> &Vn,
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
+                  Array<OneD,       NekDouble> &Upwind)
         {
             int i,j,f_npoints,offset;
 
@@ -766,7 +765,6 @@ namespace Nektar
             }
         }
 
-
         /**
          * For each local element, copy the normals stored in the element list
          * into the array \a normals.
@@ -774,7 +772,7 @@ namespace Nektar
          *                      to. Must have dimension equal to or larger than
          *                      the spatial dimension of the elements.
          */
-        void ExpList2D::GetNormals(
+        void ExpList2D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
             int i,j,k,offset;

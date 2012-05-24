@@ -63,12 +63,15 @@ namespace Nektar
         /**
          *
          */
-        LocalToGlobalDGMap::LocalToGlobalDGMap( const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                                const ExpList &locExp,
-                                                const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
-                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond):
-                LocalToGlobalBaseMap(pSession)
+        LocalToGlobalDGMap::LocalToGlobalDGMap(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr &graph1D,
+            const ExpList0DSharedPtr &trace,
+            const ExpList &locExp,
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
+            const map<int,int> &periodicVertices)
+        : LocalToGlobalBaseMap(pSession)
         {
             int i,j;
             int cnt, vid, gid;
@@ -160,26 +163,6 @@ namespace Nektar
 
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             CalculateBndSystemBandWidth();
-			
-			
-            // Check to see which way boundary point is
-            // orientated with respect to convention (croth)
-            m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (nbnd);
-            
-            for (int i=0; i<nbnd; i++)
-            {
-                vid = ((bndCondExp[i])->GetVertex())->GetVid();
-                //cout << "VID = "<<vid<<endl;
-		
-                if(vid == 0)
-                {
-                    m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsBackwards;
-                }
-                else
-                {
-                    m_bndExpAdjacentOrient[i] = eAdjacentEdgeIsForwards;
-                }
-            }
         }
 
 
@@ -246,8 +229,8 @@ namespace Nektar
                 cnt += (*exp2D)[i]->GetNedges();
             }
 
-            Array<OneD, StdRegions::StdExpansion1DSharedPtr> edgemap(cnt);
-            m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansion1DSharedPtr> >(nel);
+            Array<OneD, StdRegions::StdExpansionSharedPtr> edgemap(cnt);
+            m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansionSharedPtr> >(nel);
 
             // set up edge expansions links;
             cnt = 0;
@@ -311,7 +294,6 @@ namespace Nektar
 #if OLDMAP
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
 #endif
-            m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
@@ -336,22 +318,6 @@ namespace Nektar
                             ASSERTL0(false,"Failed to find edge map");
                         }
 #endif
-                        // Check to see which way boundary edge is
-                        // orientated with respect to connecting
-                        // element counter-clockwise convention.
-
-                        SpatialDomains::ElementEdgeVectorSharedPtr con_elmt
-                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetElementsFromEdge(SegGeom);
-
-                        if((boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>((*con_elmt)[0]->m_Element))->GetEorient((*con_elmt)[0]->m_EdgeIndx) == StdRegions::eForwards)
-                        {
-                            m_bndExpAdjacentOrient[cnt+j] = eAdjacentEdgeIsForwards;
-                        }
-                        else
-                        {
-                            m_bndExpAdjacentOrient[cnt+j] = eAdjacentEdgeIsBackwards;
-                        }
-
                     }
                     else
                     {
@@ -647,7 +613,9 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-            SetUpUniversalDGMap(locExp);
+            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            SetUpUniversalDGMap   (locExp);
+            SetUpUniversalTraceMap(locExp, tr);
 
             // Initialise GSlib and populate the unique map.
             Nektar::Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
@@ -661,7 +629,6 @@ namespace Nektar
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
-
         }
 
         /**
@@ -736,15 +703,16 @@ namespace Nektar
                 cnt += (*exp3D)[i]->GetNfaces();
             }
 
-            Array<OneD, StdRegions::StdExpansion2DSharedPtr> facemap(cnt);
-            m_elmtToFace = Array<OneD, Array<OneD,StdRegions::StdExpansion2DSharedPtr> >(nel);
+            Array<OneD, StdRegions::StdExpansionSharedPtr> facemap(cnt);
+            m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansionSharedPtr> >(nel);
 
             // set up face expansions links;
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                m_elmtToFace[i] = facemap + cnt;
-				//if Hex expansion
+                m_elmtToTrace[i] = facemap + cnt;
+                
+                //if Hex expansion
                 if(locHexExp = boost::dynamic_pointer_cast<LocalRegions::HexExp>((*exp3D)[i]))
                 {
                     for(j = 0; j < locHexExp->GetNfaces(); ++j)
@@ -757,11 +725,11 @@ namespace Nektar
                         {
                             if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else
                             {
@@ -787,11 +755,11 @@ namespace Nektar
                         {
                             if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else
                             {
@@ -817,11 +785,11 @@ namespace Nektar
                         {
                             if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else
                             {
@@ -847,11 +815,11 @@ namespace Nektar
                         {
                             if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
                             {
-                                m_elmtToFace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
+                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
                             }
                             else
                             {
@@ -881,7 +849,6 @@ namespace Nektar
 #if OLDMAP
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
 #endif
-            m_bndExpAdjacentFaceOrient = Array<OneD, AdjacentFaceOrientation > (cnt);
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
@@ -907,45 +874,6 @@ namespace Nektar
                             ASSERTL0(false,"Failed to find face map");
                         }
 #endif
-                        // Check to see which way boundary face is
-                        // orientated with respect to connecting
-                        // element.
-
-                        SpatialDomains::ElementFaceVectorSharedPtr con_elmt
-                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetElementsFromFace(FaceGeom);
-
-                        StdRegions::Orientation cur_face_orientation
-                            = (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceOrient((*con_elmt)[0]->m_FaceIndx);	
-                        
-                        switch(cur_face_orientation)
-                        {
-                            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir1_Dir2FwdDir2;
-                                break;
-                            case StdRegions::eDir1FwdDir1_Dir2BwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir1_Dir2BwdDir2;
-                                break;
-                            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir1_Dir2FwdDir2;
-                                break;
-                            case StdRegions::eDir1BwdDir1_Dir2BwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir1_Dir2BwdDir2;
-                                break;
-                            case StdRegions::eDir1FwdDir2_Dir2FwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir2_Dir2FwdDir1;
-                                break;
-                            case StdRegions::eDir1FwdDir2_Dir2BwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir2_Dir2BwdDir1;
-                                break;
-                            case StdRegions::eDir1BwdDir2_Dir2FwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir2_Dir2FwdDir1;
-                                break;
-                            case StdRegions::eDir1BwdDir2_Dir2BwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir2_Dir2BwdDir1;
-                                break;
-                            default:
-                                ASSERTL0(false, "Unknown adjacent face orientation");
-                        };
                         
                         if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                         {
@@ -970,45 +898,6 @@ namespace Nektar
                             ASSERTL0(false,"Failed to find face map");
                         }
 #endif
-                        // Check to see which way boundary face is
-                        // orientated with respect to connecting
-                        // element.
-                        
-                        SpatialDomains::ElementFaceVectorSharedPtr con_elmt
-                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetElementsFromFace(FaceGeom);
-                        StdRegions::Orientation cur_face_orientation
-                            = (boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>((*con_elmt)[0]->m_Element))->GetFaceOrient((*con_elmt)[0]->m_FaceIndx);	
-                        
-                        switch(cur_face_orientation)
-                        {
-                            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir1_Dir2FwdDir2;
-                                break;
-                            case StdRegions::eDir1FwdDir1_Dir2BwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir1_Dir2BwdDir2;
-                                break;
-                            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir1_Dir2FwdDir2;
-                                break;
-                            case StdRegions::eDir1BwdDir1_Dir2BwdDir2:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir1_Dir2BwdDir2;
-                                break;
-                            case StdRegions::eDir1FwdDir2_Dir2FwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir2_Dir2FwdDir1;
-                                break;
-                            case StdRegions::eDir1FwdDir2_Dir2BwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1FwdDir2_Dir2BwdDir1;
-                                break;
-                            case StdRegions::eDir1BwdDir2_Dir2FwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir2_Dir2FwdDir1;
-                                break;
-                            case StdRegions::eDir1BwdDir2_Dir2BwdDir1:
-                                m_bndExpAdjacentFaceOrient[cnt+j] = eAdjacentFaceDir1BwdDir2_Dir2BwdDir1;
-                                break;
-                            default:
-                                ASSERTL0(false, "Unknown adjacent face orientation");
-                        };
-			
                         if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                         {
                             m_numLocalDirBndCoeffs  += locTriExp->GetNcoeffs();
@@ -1088,12 +977,12 @@ namespace Nektar
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToFace[eid][j]))
+                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j]))
                     {
                         FaceGeom = locQuadExp->GetGeom2D();
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToFace[eid][j]))
+                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j]))
                     {
                         FaceGeom = locTriExp->GetGeom2D();
                     }
@@ -1110,12 +999,12 @@ namespace Nektar
                         for(k = j+1; k < (*exp3D)[eid]->GetNfaces(); ++k)
                         {
                             //if face is quad
-                            if(locQuadExp1 = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToFace[eid][k]))
+                            if(locQuadExp1 = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][k]))
                             {
                                 FaceGeom = locQuadExp1->GetGeom2D();
                             }
                             //else if face is triangle
-                            else if(locTriExp1 = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToFace[eid][k]))
+                            else if(locTriExp1 = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][k]))
                             {
                                 FaceGeom = locTriExp1->GetGeom2D();
                             }
@@ -1193,12 +1082,12 @@ namespace Nektar
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToFace[eid][j]))
+                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j]))
                     {
                         FaceGeom = locQuadExp->GetGeom2D();
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToFace[eid][j]))
+                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j]))
                     {
                         FaceGeom = locTriExp->GetGeom2D();
                     }
@@ -1362,7 +1251,9 @@ namespace Nektar
             }
             
             // Now set up mapping from global coefficients to universal.
-            SetUpUniversalDGMap3D(locExp);
+            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            SetUpUniversalDGMap   (locExp);
+            SetUpUniversalTraceMap(locExp, tr);
 
             // Initialise GSlib and populate the unique map.
             Nektar::Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
@@ -1383,21 +1274,22 @@ namespace Nektar
          * a universal numbering of the trace space expansion. The universal
          * numbering is defined by the mesh edge IDs to enforce consistency
          * across processes.
+         * 
          * @param       locExp  List of local elemental expansions.
-         * @todo        Update to support 1D and 3D DG expansions.
          */
         void LocalToGlobalDGMap::SetUpUniversalDGMap(const ExpList &locExp)
         {
-            LocalRegions::SegExpSharedPtr locSegExp;
-
+            StdRegions::StdExpansionSharedPtr locExpansion;
             int eid = 0;
             int cnt = 0;
             int i,j,k;
             int id = 0;
             int order_e = 0;
             int vGlobalId = 0;
-            int maxEdgeDof = 0;
+            int maxDof = 0;
             int dof = 0;
+            int nDim = 0;
+            
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
             // Initialise the global to universal maps.
@@ -1408,118 +1300,184 @@ namespace Nektar
             // DOF. Reduce across all processes to get universal maximum.
             for(i = 0; i < locExpVector.size(); ++i)
             {
+                locExpansion = boost::dynamic_pointer_cast<
+                    StdRegions::StdExpansion>(locExpVector[i]);
+                nDim = locExpansion->GetShapeDimension();
+                
                 // Loop over all edges of element i
-                for(j = 0; j < locExpVector[i]->GetNedges(); ++j)
+                if (nDim == 1)
                 {
-                    dof = locExpVector[i]->GetEdgeNcoeffs(j);
-                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
+                    maxDof = (1 > maxDof ? 1 : maxDof);
+                }
+                else if (nDim == 2)
+                {
+                    for (j = 0; j < locExpansion->GetNedges(); ++j)
+                    {
+                        dof    = locExpansion->GetEdgeNcoeffs(j);
+                        maxDof = (dof > maxDof ? dof : maxDof);
+                    }
+                }
+                else if (nDim == 3)
+                {
+                    for (j = 0; j < locExpansion->GetNfaces(); ++j)
+                    {
+                        dof    = locExpansion->GetFaceNcoeffs(j);
+                        maxDof = (dof > maxDof ? dof : maxDof);
+                    }
                 }
             }
-            m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
+            m_comm->AllReduce(maxDof, LibUtilities::ReduceMax);
 
             // Now have trace edges Gid position
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                // order list according to m_offset_elmt_id details in
-                // Exp2D so that triangules are listed first and then
-                // quads
+                locExpansion = boost::dynamic_pointer_cast<
+                    StdRegions::StdExpansion>(locExpVector[i]);
+                nDim = locExpansion->GetShapeDimension();
+                
+                // Order list according to m_offset_elmt_id details in Exp2D
+                // so that triangules are listed first and then quads
                 eid = locExp.GetOffset_Elmt_Id(i);
 
                 // Populate mapping for each edge of the element.
-                for(j = 0; j < locExpVector[eid]->GetNedges(); ++j)
+                if (nDim == 1)
                 {
-                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
-
-                    id  = locSegExp->GetGeom1D()->GetEid();
-                    order_e = locExpVector[eid]->GetEdgeNcoeffs(j);
-
-                    for(k = 0; k < order_e; ++k)
+                    for(j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
                     {
-                        vGlobalId = m_localToGlobalBndMap[k+cnt];
+                        LocalRegions::PointExpSharedPtr locPointExp = 
+                            boost::dynamic_pointer_cast<
+                                LocalRegions::PointExp>(m_elmtToTrace[eid][j]);
+                        id = locPointExp->GetGeom()->GetEid();
+                        vGlobalId = m_localToGlobalBndMap[cnt+j];
                         m_globalToUniversalBndMap[vGlobalId]
-                            = id * maxEdgeDof + k + 1;
+                            = id * maxDof + j + 1;
+                    }                    
+                } 
+                else if (nDim == 2)
+                {
+                    for(j = 0; j < locExpansion->GetNedges(); ++j)
+                    {
+                        LocalRegions::SegExpSharedPtr locSegExp = 
+                            boost::dynamic_pointer_cast<
+                                LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
+
+                        id  = locSegExp->GetGeom1D()->GetEid();
+                        order_e = locExpVector[eid]->GetEdgeNcoeffs(j);
+
+                        for(k = 0; k < order_e; ++k)
+                        {
+                            vGlobalId = m_localToGlobalBndMap[k+cnt];
+                            m_globalToUniversalBndMap[vGlobalId]
+                                = id * maxDof + k + 1;
+                        }
+                        cnt += order_e;
                     }
-                    cnt += order_e;
+                }
+                else if (nDim == 3)
+                {
+                    for(j = 0; j < locExpansion->GetNfaces(); ++j)
+                    {
+                        LocalRegions::Expansion2DSharedPtr locFaceExp = 
+                            boost::dynamic_pointer_cast<
+                                LocalRegions::Expansion2D>(m_elmtToTrace[eid][j]);
+
+                        id  = locFaceExp->GetGeom2D()->GetFid();
+                        order_e = locExpVector[eid]->GetFaceNcoeffs(j);
+
+                        for(k = 0; k < order_e; ++k)
+                        {
+                            vGlobalId = m_localToGlobalBndMap[k+cnt];
+                            m_globalToUniversalBndMap[vGlobalId]
+                                = id * maxDof + k + 1;
+                        }
+                        cnt += order_e;
+                    }
                 }
             }
         }
 
-        /**
-		 * Temporary implementation for 3D trace, will be merged with the
-		 * SetUpUniversalDGMap
-         */
-        void LocalToGlobalDGMap::SetUpUniversalDGMap3D(const ExpList &locExp)
+        void LocalToGlobalDGMap::SetUpUniversalTraceMap(const ExpList         &locExp,
+                                                        const ExpListSharedPtr trace)
         {
-            LocalRegions::QuadExpSharedPtr locQuadExp;
-            LocalRegions::TriExpSharedPtr locTriExp;
-
-            int fid = 0;
-            int cnt = 0;
+            StdRegions::StdExpansionSharedPtr locExpansion;
             int i,j,k;
-            int id = 0;
-            int order_f = 0;
-            int vGlobalId = 0;
-            int maxFaceDof = 0;
-            int dof = 0;
+            int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
+            
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            
+            int nTracePhys = trace->GetTotPoints();
+            
+            // Initialise the trace to universal maps.
+            m_traceToUniversalMap       = 
+                Nektar::Array<OneD, int>(nTracePhys, -1);
+            m_traceToUniversalMapUnique = 
+                Nektar::Array<OneD, int>(nTracePhys, -1);
 
-            // Initialise the global to universal maps.
-            m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
-            m_globalToUniversalBndMapUnique = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
-
-            // Loop over all the elements in the domain and compute max face
-            // DOF. Reduce across all processes to get universal maximum.
-            for(i = 0; i < locExpVector.size(); ++i)
+            // Assume that each element of the expansion is of the same
+            // dimension.
+            nDim = locExpVector[0]->GetShapeDimension();
+            
+            if (nDim == 1)
             {
-                // Loop over all edges of element i
-                for(j = 0; j < locExpVector[i]->GetNfaces(); ++j)
+                maxQuad = (1 > maxQuad ? 1 : maxQuad);
+            }
+            else
+            {
+                for (i = 0; i < trace->GetExpSize(); ++i)
                 {
-                    dof = locExpVector[i]->GetFaceNcoeffs(j);
-                    maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
+                    quad = trace->GetExp(i)->GetTotPoints();
+                    if (quad > maxQuad)
+                    {
+                        maxQuad = quad;
+                    }
                 }
             }
-            m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
-
-            // Now have trace faces Gid position
-            cnt = 0;
-            for(i = 0; i < locExpVector.size(); ++i)
+            m_comm->AllReduce(maxQuad, LibUtilities::ReduceMax);
+            
+            if (nDim == 1)
             {
-                // order list according to m_offset_elmt_id details in
-                // Exp2D so that triangules are listed first and then
-                // quads
-                fid = locExp.GetOffset_Elmt_Id(i);
-
-                // Populate mapping for each edge of the element.
-                for(j = 0; j < locExpVector[fid]->GetNfaces(); ++j)
+                for (int i = 0; i < trace->GetExpSize(); ++i)
                 {
-                    //if face is a quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToFace[fid][j]))
-                    {
-                        id  = locQuadExp->GetGeom2D()->GetFid();
-                    }
-                    //else if face is a triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToFace[fid][j]))
-                    {
-                        id  = locTriExp->GetGeom2D()->GetFid();
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
-                    }
-                    
-                    order_f = locExpVector[fid]->GetFaceNcoeffs(j);
-                    
-                    for(k = 0; k < order_f; ++k)
-                    {
-                        vGlobalId = m_localToGlobalBndMap[k+cnt];
-                        m_globalToUniversalBndMap[vGlobalId]
-                            = id * maxFaceDof + k + 1;
-                    }
-                    cnt += order_f;
+                    eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
+                    offset = trace->GetPhys_Offset(i);
+                    m_traceToUniversalMap[offset] = eid*maxQuad+1;
                 }
+            }
+            else 
+            {
+                for (int i = 0; i < trace->GetExpSize(); ++i)
+                {
+                    eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
+                    offset = trace->GetPhys_Offset(i);
+                    quad   = trace->GetExp(i)->GetTotPoints();
+                    
+                    for(int j = 0; j < quad; ++j)
+                    {
+                        m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
+                    }
+                }
+            }
+            
+            Array<OneD, long> tmp(nTracePhys);
+            for (int i = 0; i < nTracePhys; ++i)
+            {
+                tmp[i] = m_traceToUniversalMap[i];
+            }
+            m_bndGsh = Gs::Init(tmp, m_comm);
+            Gs::Unique(tmp, m_comm);
+            for (int i = 0; i < nTracePhys; ++i)
+            {
+                m_traceToUniversalMapUnique[i] = tmp[i];
             }
         }
+        
+        void LocalToGlobalDGMap::UniversalTraceAssemble(
+            Array<OneD, NekDouble> &pGlobal) const
+        {
+            Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
+        }
+
         int LocalToGlobalDGMap::v_GetLocalToGlobalMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
@@ -1615,6 +1573,4 @@ namespace Nektar
             return GetBndSystemBandWidth();
         }
     }
-
-
 }

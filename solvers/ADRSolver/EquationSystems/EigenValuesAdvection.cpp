@@ -254,20 +254,7 @@ namespace Nektar
         for(i = 0; i < numflux.num_elements(); ++i)
         {
             m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
-            
-            //evaulate upwinded m_fields[i]
-            if (m_expdim == 1)
-            {
-                m_fields[i]->GetTrace1D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            }
-            else if (m_expdim == 2)
-            {
-                m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            }
-            else if (m_expdim == 3)
-            {
-                m_fields[i]->GetTrace3D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            }
+            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
             // calculate m_fields[i]*Vn
             Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
         }

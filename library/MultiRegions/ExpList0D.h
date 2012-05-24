@@ -86,50 +86,44 @@ namespace Nektar
 
 			/// Specialised constructor for trace expansions (croth)
             MULTI_REGIONS_EXPORT ExpList0D(
-										   const Array<OneD,const ExpListSharedPtr> &bndConstraint,
-										   const Array<OneD,const SpatialDomains
-										   ::BoundaryConditionShPtr>  &bndCond,
-										   const StdRegions::StdExpansionVector &locexp,
-										   const SpatialDomains::MeshGraphSharedPtr &graph1D,
-										   const map<int,int> &periodicVertices,
-										   const bool DeclareCoeffPhysArrays = true);
-			
+                const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+                const Array<OneD,const SpatialDomains
+                            ::BoundaryConditionShPtr>  &bndCond,
+                const StdRegions::StdExpansionVector &locexp,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const map<int,int> &periodicVertices,
+                const bool DeclareCoeffPhysArrays = true);
+            
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList0D();
 			
-			LocalRegions::PointExpSharedPtr m_point;
-			
-            /// Upwind the \a Fwd and \a Bwd states based on the one-
-            /// dimensional normal velocity field given by \a Vn.
-            MULTI_REGIONS_EXPORT void Upwind(const Array<OneD, const NekDouble> &Vn,
-											 const Array<OneD, const NekDouble> &Fwd,
-											 const Array<OneD, const NekDouble> &Bwd,
-											 Array<OneD, NekDouble> &Upwind,
-											 int direction=1);
-			
-			/// Populate \a normals with the normals of all expansions.
-            MULTI_REGIONS_EXPORT void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
-
-			
-			            
-        protected:
-
-        private:
-
-			virtual void v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
-			
-			virtual void v_GetCoord(Array<OneD,NekDouble> &coords);
-			
-			virtual void v_SetCoeff(NekDouble val);
-			
-			virtual void v_SetPhys(NekDouble val);
-			
-			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
-			
-			virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
-		
-			void SetCoeffPhysOffsets(void);
+            LocalRegions::PointExpSharedPtr m_point;
             
+            
+        protected:
+            virtual void v_Upwind(
+                const Array<OneD, const NekDouble> &Vn,
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                      Array<OneD,       NekDouble> &Upwind);
+            
+            virtual void v_GetNormals(
+                Array<OneD, Array<OneD, NekDouble> > &normals);
+
+            virtual void v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
+            
+            virtual void v_GetCoord(Array<OneD,NekDouble> &coords);
+            
+            virtual void v_SetCoeff(NekDouble val);
+            
+            virtual void v_SetPhys(NekDouble val);
+            
+            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
+            
+            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
+            
+        private:
+            void SetCoeffPhysOffsets(void);
         };
 
         /// Empty ExpList0D object.

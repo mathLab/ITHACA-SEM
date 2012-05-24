@@ -455,51 +455,13 @@ namespace Nektar
                 }
 
                 /// Setting up the normals
-                switch(m_expdim)
+                m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                for(i = 0; i < m_spacedim; ++i)
                 {
-                    case 1:
-                    {
-                        m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-                    
-                        for(i = 0; i < m_spacedim; ++i)
-                        {
-                            m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
-                        }
-                        m_fields[0]->GetTrace1D()->GetNormals(m_traceNormals);
-                        break;
-                    }
-                    case 2:
-                    {
-                        m_traceNormals
-                            = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-                    
-                        for(i = 0; i < m_spacedim; ++i)
-                        {
-                            m_traceNormals[i] = Array<OneD, NekDouble> (
-                                m_fields[0]->GetTrace()->GetNpoints());
-                        }
-                    
-                        m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
-                        break;
-                    }
-                    case 3:
-                    {
-                        m_traceNormals
-                            = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-                    
-                        for(i = 0; i < m_spacedim; ++i)
-                        {
-                            m_traceNormals[i] = Array<OneD, NekDouble>(
-                                m_fields[0]->GetTrace3D()->GetNpoints());
-                        }
-                    
-                        m_fields[0]->GetTrace3D()->GetNormals(m_traceNormals);
-                        break;
-                    }
-                    default:
-                        ASSERTL0(false,"Expansion dimension not recognised");
-                        break;
+                    m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
                 }
+
+                m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
                 
 				if(m_session->DefinesSolverInfo("DiscontinuousApproach"))
 				{

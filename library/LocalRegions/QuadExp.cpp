@@ -709,7 +709,7 @@ namespace Nektar
         }
 
 
-        void QuadExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+        void QuadExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
                                       const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
@@ -2155,6 +2155,5 @@ namespace Nektar
                 }
             }
         }
-
     }//end of namespace
 }//end of namespace

@@ -228,8 +228,10 @@ namespace Nektar
     }
 
 
-    void UnsteadyAdvection::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
+    void UnsteadyAdvection::v_GetFluxVector(
+        const int i, 
+        Array<OneD, Array<OneD, NekDouble> > &physfield,
+        Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
@@ -240,42 +242,36 @@ namespace Nektar
         }
     }
 
-    void UnsteadyAdvection::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
+    void UnsteadyAdvection::v_NumericalFlux(
+        Array<OneD, Array<OneD, NekDouble> > &physfield, 
+        Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
         int i;
 
         int nTraceNumPoints = GetTraceNpoints();
         int nvel = m_spacedim; //m_velocity.num_elements();
 
-        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);		
+        Array<OneD, NekDouble> Fwd(nTraceNumPoints);
+        Array<OneD, NekDouble> Bwd(nTraceNumPoints);
+        Array<OneD, NekDouble> Vn (nTraceNumPoints,0.0);
         
-        //Get Edge Velocity - Could be stored if time independent
+        // Extract velocity field along the trace space and multiply by
+        // trace normals.
         for(i = 0; i < nvel; ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
             Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
         }
-        
+
         for(i = 0; i < numflux.num_elements(); ++i)
         {
+            // Extract forwards/backwards trace space.
             m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
-            
-            //evaulate upwinded m_fields[i]
-            if (m_expdim == 1)
-            {
-                m_fields[i]->GetTrace1D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            }
-            else if (m_expdim == 2)
-            {
-                m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            }
-            else if (m_expdim == 3)
-            {
-                m_fields[i]->GetTrace3D()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            }
-            // calculate m_fields[i]*Vn
+
+            // Upwind between elements.
+            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+
+            // Calculate m_fields[i]*Vn
             Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
         }
     }

@@ -68,41 +68,7 @@ namespace Nektar
         
         void Expansion3D::v_AddFaceNormBoundaryInt(
             const int                            face,
-            StdRegions::StdExpansion2DSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>  &Fx,
-            const Array<OneD, const NekDouble>  &Fy,
-            const Array<OneD, const NekDouble>  &Fz,
-                  Array<OneD,       NekDouble>  &outarray)
-        {
-            const Array<OneD, const Array<OneD, NekDouble> > normals
-                                    = GetFaceNormal(face);
-            int nquad_f = normals[0].num_elements();
-
-            Vmath::Zero (nquad_f,FaceExp->UpdatePhys(),1);
-            Vmath::Vmul (nquad_f,normals[0],1,Fx,1,FaceExp->UpdatePhys(),1);
-            Vmath::Vvtvp(nquad_f,normals[1],1,Fy,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
-            Vmath::Vvtvp(nquad_f,normals[2],1,Fz,1,FaceExp->GetPhys(),1,FaceExp->UpdatePhys(),1);
-
-            LocalRegions::Expansion2DSharedPtr locExp = 
-                boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion2D>(FaceExp);
-            
-            if (locExp->GetRightAdjacentElementFace() != -1)
-            {
-                if (GetGeom3D()->GetFid(locExp->GetRightAdjacentElementFace()) ==
-                    locExp->GetRightAdjacentElementExp()->GetGeom3D()->
-                    GetFid(locExp->GetRightAdjacentElementFace()))
-                {
-                    Vmath::Neg(nquad_f,FaceExp->UpdatePhys(),1);
-                }
-            }
-            
-            AddFaceNormBoundaryInt(face, FaceExp, FaceExp->GetPhys(), outarray);
-        }
-
-        void Expansion3D::v_AddFaceNormBoundaryInt(
-            const int                            face,
-            StdRegions::StdExpansion2DSharedPtr &FaceExp,
+            StdRegions::StdExpansionSharedPtr   &FaceExp,
             const Array<OneD, const NekDouble>  &Fn,
                   Array<OneD,       NekDouble>  &outarray)
         {

@@ -895,6 +895,19 @@ namespace Nektar
                 v_AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
+            void SetCoeffsToOrientation(
+                StdRegions::Orientation dir)
+            {
+                v_SetCoeffsToOrientation(dir);
+            }
+
+            void SetCoeffsToOrientation(
+                StdRegions::Orientation dir,
+                Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray)
+            {
+                v_SetCoeffsToOrientation(dir,inarray,outarray);
+            }
             
             int CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
             {
@@ -913,18 +926,18 @@ namespace Nektar
             // virtual functions related to LocalRegions
 
             STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fx,
                                                 const Array<OneD, const NekDouble> &Fy,
                                                 Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void AddEdgeNormBoundaryBiInt(const int edge,
-                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                 const Array<OneD, const NekDouble> &Fwd,
                                                 const Array<OneD, const NekDouble> &Bwd,
                                                 Array<OneD, NekDouble> &outarray);
@@ -934,14 +947,7 @@ namespace Nektar
                                          Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
-                                                const Array<OneD, const NekDouble> &Fx,
-                                                const Array<OneD, const NekDouble> &Fy,
-                                                const Array<OneD, const NekDouble> &Fz,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion2D>  &FaceExp,
+                                                boost::shared_ptr<StdExpansion>    &FaceExp,
                                                 const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray);
 
@@ -1001,17 +1007,17 @@ namespace Nektar
              * and point distribution defined by defined in \a EdgeExp.
              */
             
-			void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-			{
-				v_GetEdgePhysVals(edge,inarray,outarray);
-			}
+            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_GetEdgePhysVals(edge,inarray,outarray);
+            }
 
-            void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion1D>   &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
 
-            void GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion2D>   &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion> &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetFacePhysVals(face,FaceExp,inarray,outarray);
             }
@@ -1162,7 +1168,7 @@ namespace Nektar
 
             void DGDeriv(const int dir,
                          const Array<OneD, const NekDouble>& inarray,
-                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
+                         Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
                          Array<OneD, NekDouble> &outarray)
             {
                 v_DGDeriv (dir, inarray, EdgeExp, outarray);
@@ -1371,6 +1377,11 @@ namespace Nektar
                 v_ComputeEdgeNormal(edge);
             }
 
+            void NegateEdgeNormal(const int edge)
+            {
+                v_NegateEdgeNormal(edge);
+            }
+
             void ComputeFaceNormal(const int face)
             {
                 v_ComputeFaceNormal(face);
@@ -1546,19 +1557,25 @@ namespace Nektar
                                                      Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
                                                      Array<OneD,NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir,
+                                                  Array<OneD, const NekDouble> &inarray,
+                                                  Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir);
+			
             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,
                                                   const Array<OneD, const NekDouble> &Fy,
                                                   Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
-                                                    boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                    boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                     const Array<OneD, const NekDouble> &Fwd,
                                                     const Array<OneD, const NekDouble> &Bwd,
                                                     Array<OneD, NekDouble> &outarray);
@@ -1568,14 +1585,7 @@ namespace Nektar
                                            Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
-                                                  const Array<OneD, const NekDouble> &Fx,
-                                                  const Array<OneD, const NekDouble> &Fy,
-                                                  const Array<OneD, const NekDouble> &Fz,
-                                                  Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion2D> &FaceExp,
+                                                  boost::shared_ptr<StdExpansion>    &FaceExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray);
 
@@ -1689,7 +1699,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_DGDeriv(const int dir,
                                    const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, boost::shared_ptr<StdExpansion1D > > &EdgeExp,
+                                   Array<OneD, boost::shared_ptr<StdExpansion> > &EdgeExp,
                                    Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
@@ -1741,9 +1751,9 @@ namespace Nektar
              */
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion2D>  &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion>  &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
@@ -1817,6 +1827,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetEdgeNormal(const int edge) const;
 
             STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
+            
+            STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
 
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 

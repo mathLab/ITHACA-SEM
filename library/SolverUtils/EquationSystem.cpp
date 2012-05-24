@@ -501,17 +501,24 @@ namespace Nektar
                         break;
                 }
                 
-                /// Check the type of discontinuous approach to be used
-                m_discontinuousApproach = m_session->GetSolverInfo("DiscontinuousApproach");
-                
-                /// Check if the discontinuous approach is set up properly
-                if((m_discontinuousApproach!="StandardDG") && (m_discontinuousApproach!="FR-DG") 
-                   && (m_discontinuousApproach!="FR-SD") && (m_discontinuousApproach!="FR-HU"))
-                {
-                    fprintf(stderr,"\n ERROR: You need to specify the DiscontinuousApproach in SOLVERINFO\n");  
-                    fprintf(stderr," Two valid choices: 'StandardDG' or 'FR-DG, FR-SD, FR-HU'. \n");
-                    exit(1);
-                }
+				if(m_session->DefinesSolverInfo("DiscontinuousApproach"))
+				{
+					/// Check the type of discontinuous approach to be used
+					m_discontinuousApproach = m_session->GetSolverInfo("DiscontinuousApproach");
+					
+					/// Check if the discontinuous approach is set up properly
+					if((m_discontinuousApproach!="StandardDG") && (m_discontinuousApproach!="FR-DG") 
+					   && (m_discontinuousApproach!="FR-SD") && (m_discontinuousApproach!="FR-HU"))
+					{
+						fprintf(stderr,"\n ERROR: You need to specify the DiscontinuousApproach in SOLVERINFO\n");  
+						fprintf(stderr," Two valid choices: 'StandardDG' or 'FR-DG, FR-SD, FR-HU'. \n");
+						exit(1);
+					}
+				}
+				else 
+				{
+					m_discontinuousApproach = "StandardDG";
+				}
                 
                 /// Computation of the derivatives of the correction functions in case of FR
                 if(m_discontinuousApproach == "FR-DG")

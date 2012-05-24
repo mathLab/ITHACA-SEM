@@ -194,101 +194,13 @@ namespace Nektar
             m_session->LoadParameter("N_slices",m_slices);
             if(m_slices>1)
             {
-
-				int npoints=m_base[0]->GetTotPoints();
-				Array<OneD, NekDouble> fft_in(npoints*m_slices);
-				Array<OneD, NekDouble> fft_out(npoints*m_slices);
-				
-				Array<OneD, NekDouble> m_tmpIN(m_slices);
-				Array<OneD, NekDouble> m_tmpOUT(m_slices);
-
-				//Convected fields
-				int ConvectedFields=m_base.num_elements()-1;
-				
-				m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
-				for(int i=0; i<ConvectedFields;++i)
-				{
-					m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
-				}
-				
-				//Import the slides into auxiliary vector
-				//The base flow should be stored in the form filename_i.bse
-				for (int i=0; i< m_slices; ++i)
-				{
-					char chkout[16] = "";
-					sprintf(chkout, "%d", i);
-					ImportFldBase(file+"_"+chkout+".bse",m_graph,i);
-				} 
-				
-				m_useFFTW=false;
-				if(m_session->DefinesSolverInfo("USEFFT"))
-				{
-					m_useFFTW = true;
-				}
-				
-				//Factory for FFT transformation
-				if(m_useFFTW)
-				{
-					m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
-				}
-				else 
-				{
-					ASSERTL0(false, "Time interpolation not implemented");
-				}
-				
-				// Discrete Fourier Transform of the fields
-				for(int k=0; k< ConvectedFields;++k)
-				{
-					//Shuffle the data
-					for(int j= 0; j < m_slices; ++j)
-					{
-						Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
-					}
-					
-					//FFT Transform
-					for(int i=0; i<npoints; i++)
-					{
-						m_FFT->FFTFwdTrans(m_tmpIN =fft_in + i*m_slices, m_tmpOUT =fft_out + i*m_slices);
-					}
-					
-					//Reshuffle data
-					for(int s = 0; s < m_slices; ++s)
-					{						
-						Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
-						
-					}
-					
-					for(int r=0; r<fft_in.num_elements();++r)
-					{
-						fft_in[0]=0;
-						fft_out[0]=0;
-					}
-					
-					//scaling of the Fourier coefficients
-					NekDouble j=-1;
-					for (int i = 2; i < m_slices; i += 2) 
-					{
-						Vmath::Smul(2*npoints,j,&m_interp[k][i*npoints],1,&m_interp[k][i*npoints],1);
-						j=-j;
-						
-					}
-					
-				}
-				
-				if(m_session->DefinesParameter("period"))
-				{
-					m_period=m_session->GetParameter("period");
-				}
-				else 
-				{
-					m_period=(m_session->GetParameter("TimeStep")*m_slices)/(m_slices-1.);
-				}
+				DFT(file,m_slices);
 			}
-			else{
-			
-				ASSERTL0(false,"Number of slices must be a positive number");
-			    }
+			else
+			{
+				ASSERTL0(false,"Number of slices must be a positive number greater than 1");
 			}
+		}
 			//Steady base-flow
 			else
 			{
@@ -699,7 +611,7 @@ namespace Nektar
 				}
 				else 
 				{
-					ASSERTL0(false, "Periodic Base flow requires .fld files");	
+					ASSERTL0(false, "Periodic Base flow requires filename_ files");	
 				}
 			}
 		
@@ -793,7 +705,6 @@ namespace Nektar
 						
 			pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
 			
-								
 			switch (pVelocityComponent)
             {
                 //x-equation	
@@ -1007,7 +918,173 @@ namespace Nektar
 			}            
 		}
 		m_graph->Write(outname,FieldDef,FieldData);
-	}		
+	}
+	
+	
+	DNekBlkMatSharedPtr LinearisedAdvection::GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs) const
+	{
+		DNekMatSharedPtr    loc_mat;
+		DNekBlkMatSharedPtr BlkMatrix;
+		int n_exp = 0;
+		int num_trans_per_proc = 0;
+
+		n_exp = m_base[0]->GetTotPoints(); // will operatore on m_phys
+
+		Array<OneD,unsigned int> nrows(n_exp);
+		Array<OneD,unsigned int> ncols(n_exp);
+		
+		nrows = Array<OneD, unsigned int>(n_exp,m_slices);
+		ncols = Array<OneD, unsigned int>(n_exp,m_slices);
+
+		MatrixStorage blkmatStorage = eDIAGONAL;
+		BlkMatrix = MemoryManager<DNekBlkMat>
+		::AllocateSharedPtr(nrows,ncols,blkmatStorage);
+
+				
+		const LibUtilities::PointsKey Pkey(m_slices,LibUtilities::eFourierEvenlySpaced);
+		const LibUtilities::BasisKey  BK(LibUtilities::eFourier,m_slices,Pkey);
+		StdRegions::StdSegExp StdSeg(BK);
+		
+		StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
+										StdSeg.DetExpansionType(),
+										StdSeg);
+		
+		loc_mat = StdSeg.GetStdMatrix(matkey);
+		
+		// set up array of block matrices.
+		for(int i = 0; i < n_exp; ++i)
+		{
+			BlkMatrix->SetBlock(i,i,loc_mat);
+		}
+		
+		return BlkMatrix;
+	}
+	
+	//Discrete Fourier Transform for Floquet analysis
+	void LinearisedAdvection::DFT(const string file, const NekDouble m_slices)
+	{
+		int npoints=m_base[0]->GetTotPoints();
+		
+		//Convected fields
+		int ConvectedFields=m_base.num_elements()-1;
+		
+		m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
+		for(int i=0; i<ConvectedFields;++i)
+		{
+			m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
+		}
+		
+		//Import the slides into auxiliary vector
+		//The base flow should be stored in the form filename_i.bse
+		for (int i=0; i< m_slices; ++i)
+		{
+			char chkout[16] = "";
+			sprintf(chkout, "%d", i);
+			ImportFldBase(file+"_"+chkout+".bse",m_graph,i);
+		} 
+		
+		
+		// Discrete Fourier Transform of the fields
+		for(int k=0; k< ConvectedFields;++k)
+		{
+#ifdef NEKTAR_USING_FFTW
+			
+			//Discrete Fourier Transform using FFTW
+			
+			
+			Array<OneD, NekDouble> fft_in(npoints*m_slices);
+			Array<OneD, NekDouble> fft_out(npoints*m_slices);
+			
+			Array<OneD, NekDouble> m_tmpIN(m_slices);
+			Array<OneD, NekDouble> m_tmpOUT(m_slices);
+			
+			//Shuffle the data
+			for(int j= 0; j < m_slices; ++j)
+			{
+				Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
+			}
+			
+			m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
+			
+			//FFT Transform
+			for(int i=0; i<npoints; i++)
+			{
+				m_FFT->FFTFwdTrans(m_tmpIN =fft_in + i*m_slices, m_tmpOUT =fft_out + i*m_slices);
+				
+			}
+			
+			//Reshuffle data
+			for(int s = 0; s < m_slices; ++s)
+			{						
+				Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
+				
+			}
+			
+			Vmath::Zero(fft_in.num_elements(),&fft_in[0],1);
+			Vmath::Zero(fft_out.num_elements(),&fft_out[0],1);				
+#else
+			//Discrete Fourier Transform using MVM
+			
+			
+			DNekBlkMatSharedPtr blkmat;
+			blkmat = GetFloquetBlockMatrix(eForwardsPhys);
+			
+			int nrows = blkmat->GetRows();
+			int ncols = blkmat->GetColumns();
+			
+			Array<OneD, NekDouble> sortedinarray(ncols);
+			Array<OneD, NekDouble> sortedoutarray(nrows);
+			
+			//Shuffle the data
+			for(int j= 0; j < m_slices; ++j)
+			{
+				Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(sortedinarray[j]),m_slices);
+			}
+			
+			// Create NekVectors from the given data arrays
+			NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
+			NekVector<NekDouble> out(nrows,sortedoutarray,eWrapper);
+			
+			// Perform matrix-vector multiply.
+			out = (*blkmat)*in;
+			
+			//Reshuffle data
+			for(int s = 0; s < m_slices; ++s)
+			{	
+				Vmath::Vcopy(npoints,&sortedoutarray[s],m_slices,&m_interp[k][s*npoints],1);
+			}
+			
+			for(int r=0; r<sortedinarray.num_elements();++r)
+			{
+				sortedinarray[0]=0;
+				sortedoutarray[0]=0;
+			}	
+			
+#endif
+			
+			//scaling of the Fourier coefficients
+			NekDouble j=-1;
+			for (int i = 2; i < m_slices; i += 2) 
+			{
+				Vmath::Smul(2*npoints,j,&m_interp[k][i*npoints],1,&m_interp[k][i*npoints],1);
+				j=-j;
+				
+			}
+			
+		}
+		
+		if(m_session->DefinesParameter("period"))
+		{
+			m_period=m_session->GetParameter("period");
+		}
+		else 
+		{
+			m_period=(m_session->GetParameter("TimeStep")*m_slices)/(m_slices-1.);
+		}	
+		
+		
+	}
+
 	
 	
 } //end of namespace

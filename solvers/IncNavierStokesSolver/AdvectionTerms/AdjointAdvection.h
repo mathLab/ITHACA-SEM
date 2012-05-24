@@ -66,6 +66,18 @@ namespace Nektar
 
     class AdjointAdvection: public AdvectionTerm
     {
+		enum FloquetMatType
+        {
+            eForwardsCoeff,
+            eForwardsPhys
+        };
+		
+		/// A map between  matrix keys and their associated block
+        /// matrices.
+        typedef map< FloquetMatType, DNekBlkMatSharedPtr> FloquetBlockMatrixMap;
+        /// A shared pointer to a BlockMatrixMap.
+        typedef boost::shared_ptr<FloquetBlockMatrixMap> FloquetBlockMatrixMapShPtr;
+		
     public:
         friend class MemoryManager<AdjointAdvection>;
 
@@ -99,7 +111,11 @@ namespace Nektar
 		bool m_HalfMode;		     ///< flag to determine if use half mode or not
 		bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not
 
-        AdjointAdvection(
+		DNekBlkMatSharedPtr GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs = false) const;
+		DNekBlkMatSharedPtr GenFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs = false) const;
+		FloquetBlockMatrixMapShPtr       m_FloquetBlockMat;
+			
+		AdjointAdvection(
                 const LibUtilities::SessionReaderSharedPtr&        pSession,
                 const SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
@@ -113,7 +129,8 @@ namespace Nektar
 						Array<OneD, NekDouble> &outarray,
 						const NekDouble m_time,
 						const NekDouble m_period);
-		
+		void DFT(const string file, const NekDouble m_slices);
+
 
         /// Import Base flow
         void ImportFldBase(std::string pInfile,

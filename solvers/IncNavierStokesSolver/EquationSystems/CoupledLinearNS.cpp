@@ -1258,24 +1258,47 @@ namespace Nektar
             }
             break;
 		case eSteadyNavierStokes:
-			{								
-				Array<OneD, Array<OneD, NekDouble> > InitialNewtonBaseFlow(m_velocity.num_elements());
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    InitialNewtonBaseFlow[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                }
-                ASSERTL0(m_session->DefinesFunction("InitialNewtonBaseFlow"),
-						 "InitialNewtonBaseFlow section must be defined in session file.");
-                std::vector<std::string> fieldStr;
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                }
-                EvaluateFunction(fieldStr,InitialNewtonBaseFlow,"InitialNewtonBaseFlow");
+			{				
+				m_session->LoadParameter("KinvisMin", m_kinvisMin);
+				m_session->LoadParameter("DeltaKinvis", m_DeltaKinvis);
+				m_session->LoadParameter("Tolerence", m_tol);
+				m_session->LoadParameter("MaxIteration", m_maxIt);
+				m_session->LoadParameter("MatrixSetUpStep", m_MatrixSetUpStep);
+				m_session->LoadParameter("Restart", m_Restart);
 				
-				SetUpCoupledMatrix(0.0, InitialNewtonBaseFlow, true);
 				
-				Solve();
+				DefineForcingTerm();
+				
+				if (m_Restart == 1)
+				{
+					ASSERTL0(m_session->DefinesFunction("Restart"),
+							 "Restart section must be defined in session file.");
+					
+					Array<OneD, Array<OneD, NekDouble> > Restart(m_velocity.num_elements());
+					for(int i = 0; i < m_velocity.num_elements(); ++i)
+					{
+						Restart[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+					}
+					std::vector<std::string> fieldStr;
+					for(int i = 0; i < m_velocity.num_elements(); ++i)
+					{
+						fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+					}
+					EvaluateFunction(fieldStr, Restart, "Restart");
+					
+					for(int i = 0; i < m_velocity.num_elements(); ++i)
+					{
+						m_fields[m_velocity[i]]->FwdTrans_IterPerExp(Restart[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+					}
+				}
+				else //We solve the Stokes Problem
+				{
+					SetUpCoupledMatrix(0.0);						
+					m_initialStep = true;
+					m_counter=1;
+					SolveLinearNS(m_ForcingTerm_Coeffs);
+					m_initialStep = false;
+				}
 			}
 			break;
         case eSteadyLinearisedNS:
@@ -1404,8 +1427,37 @@ namespace Nektar
 				break;
 			}
 		case eSteadyNavierStokes:
-			{				
-				SolveSteadyNavierStokes();				
+			{	
+				Timer Generaltimer;
+				Generaltimer.Start();
+				
+				SolveSteadyNavierStokes();
+				
+				int Check(0);
+				while(m_kinvis > m_kinvisMin)
+				{
+					if(Check==0)
+					{
+						cout << "At this step, m_kinvis = "<< m_kinvis <<endl;
+						Checkpoint_Output(Check);
+						Check++;
+					}
+					
+					Continuation();
+					
+					SolveSteadyNavierStokes();
+					
+					cout << "At this step, m_kinvis = "<< m_kinvis <<endl;
+					Checkpoint_Output(Check);
+					Check++;
+				}
+				
+				//The pressure is evaluated at the very end of the process
+				//PressureReconstruction();
+				
+				Generaltimer.Stop();
+				cout<<"The general calculation time is : " << Generaltimer.TimePerTest(1)/60 << " minute(s). \n\n";
+				
 				break;
 			}
         case eNoEquationType:
@@ -1446,30 +1498,65 @@ namespace Nektar
         SolveLinearNS(forcing);
     }
 	
+	void CoupledLinearNS::DefineForcingTerm(void)
+	{
+		m_ForcingTerm = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
+		m_ForcingTerm_Coeffs = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
+				
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			m_ForcingTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			m_ForcingTerm_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
+		}
+		
+		if(m_session->DefinesFunction("ForcingTerm"))
+		{
+			std::vector<std::string> fieldStr;
+			for(int i = 0; i < m_velocity.num_elements(); ++i)
+			{
+				fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+			}
+			EvaluateFunction(fieldStr, m_ForcingTerm, "ForcingTerm");
+			for(int i = 0; i < m_velocity.num_elements(); ++i)
+			{
+				m_fields[m_velocity[i]]->FwdTrans_IterPerExp(m_ForcingTerm[i], m_ForcingTerm_Coeffs[i]);
+			}
+		}
+		else
+		{
+			cout << "'ForcingTerm' section has not been defined in the input file => forcing=0" << endl;
+		}
+	}
+	
 	void CoupledLinearNS::SolveSteadyNavierStokes(void)
 	{
+		Timer Newtontimer;
+		Newtontimer.Start();
+		
 		Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());
 		Array<OneD, Array<OneD, NekDouble> > RHS_Phys(m_velocity.num_elements());
 		Array<OneD, Array<OneD, NekDouble> > delta_velocity_Phys(m_velocity.num_elements());
 		Array<OneD, Array<OneD, NekDouble> >Velocity_Phys(m_velocity.num_elements());
 		Array<OneD, NekDouble > L2_norm(m_velocity.num_elements(), 1.0);
+		Array<OneD, NekDouble > Inf_norm(m_velocity.num_elements(), 1.0);
 		
 		for(int i = 0; i < m_velocity.num_elements(); ++i)
 		{				
-			delta_velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			delta_velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),1.0); 
 			Velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 		}
 		
-		Array<OneD, NekDouble > Pressure(m_pressure->GetTotPoints(),0.0);
-		Array<OneD, NekDouble > delta_Pressure(m_pressure->GetTotPoints(),0.0);
-		
 		m_counter=1;
+		
+		InfNorm(delta_velocity_Phys, Inf_norm);
+		//L2Norm(delta_velocity_Phys, L2_norm);		
 
-		while(m_counter < 10)
-		//while(max(L2_norm[0], L2_norm[1]) > 1E-3)
+		while(max(Inf_norm[0], Inf_norm[1]) > m_tol) //&& m_counter <= m_maxIt)
+		//while(max(L2_norm[0], L2_norm[1]) > m_tol && m_counter <= m_maxIt)
 		{
-			if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem
-			{
+			if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
+				               //Or the solution of the .rst file (if Restart=1 in input file) 
+			{				
 				for(int i = 0; i < m_velocity.num_elements(); ++i)
 				{
 					RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
@@ -1480,18 +1567,20 @@ namespace Nektar
 				{
 					m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
 				}
-				m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(), Pressure);
-				//EvaluateNonLinearNS(Velocity_Phys, Pressure, LECTURE, RHS_Coeffs);
-				EvaluateNonLinearNS(Velocity_Phys, Pressure, RHS_Coeffs, RHS_Coeffs);
 				
+				EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
 				SetUpCoupledMatrix(0.0, Velocity_Phys, true);
 			}
 			if(m_counter > 1)
 			{
-				EvaluateNonLinearNS(Velocity_Phys, Pressure, RHS_Coeffs, RHS_Coeffs);
-				SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+				EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+				
+				if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
+				{
+					SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+				}
 			}
-						
+				
 			SolveLinearNS(RHS_Coeffs);
 			
 			for(int i = 0; i < m_velocity.num_elements(); ++i)
@@ -1499,28 +1588,22 @@ namespace Nektar
 				m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
 				m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
 			}
-			m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(), delta_Pressure);
-
 			
 			for(int i = 0; i < m_velocity.num_elements(); ++i)
 			{
 				Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
 							Velocity_Phys[i], 1);
-			}
-			Vmath::Vadd(Pressure.num_elements(), Pressure, 1, delta_Pressure, 1, 
-						Pressure, 1);
+			}	
 			
-			
-			for(int i = 0; i < L2_norm.num_elements(); ++i)
+			InfNorm(delta_velocity_Phys, Inf_norm);
+			//L2Norm(delta_velocity_Phys, L2_norm);
+				
+			if(max(Inf_norm[0], Inf_norm[1]) > 100)
 			{
-				L2_norm[i] = 0.0;
-				for(int j = 0; j < RHS_Phys[i].num_elements(); ++j)
-				{
-					L2_norm[i] += RHS_Phys[i][j]*RHS_Phys[i][j];
-				}
-				L2_norm[i]=sqrt(L2_norm[i]);
-				cout << "L2_norm["<<i<<"] = "<< L2_norm[i] <<endl;
+				cout << "\nEt pour rappel, m_kinvis = " << m_kinvis << endl;
+				ASSERTL0(0, " The Newton method has failed... \n");
 			}
+			
 			cout << "\n";
 			m_counter++;
 		}	
@@ -1531,57 +1614,150 @@ namespace Nektar
 			{			
 				m_fields[m_velocity[i]]->FwdTrans(Velocity_Phys[i], m_fields[m_velocity[i]]->UpdateCoeffs());
 			}
-			m_pressure->FwdTrans(Pressure, m_pressure->UpdateCoeffs());
 		}
+					
+		Newtontimer.Stop();
+		cout<<"We have done "<< m_counter-1 << " iteration(s) in " << Newtontimer.TimePerTest(1)/60 << " minute(s). \n\n";
+	}
+	
+	
+	void CoupledLinearNS::Continuation(void)
+	{
+		Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > u_star(m_velocity.num_elements());
+		
+		cout << "On fait la procédure de continuation : " <<endl;
+		
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			u_N[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_N[i]);
+		
+			RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+			tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
 			
-		cout<<"We have done "<< m_counter << " iteration(s).\n\n";
-	}
-	
-	void CoupledLinearNS::EvaluateNonLinearNS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-											  Array<OneD, NekDouble> &Pressure,
-											  Array<OneD, Array<OneD, NekDouble> > &PreviousForcing_Coeffs,
-											  Array<OneD, Array<OneD, NekDouble> > &outarray)
-	{
-		Array<OneD,  MultiRegions::ExpListSharedPtr> velocity_fields(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > PreviousForcing(m_velocity.num_elements());
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			PreviousForcing[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
+			Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
+		
+			m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
 		}
 		
+		SetUpCoupledMatrix(0.0, u_N, true);
+		SolveLinearNS(RHS);
+		
 		for(int i = 0; i < m_velocity.num_elements(); ++i)
 		{
-			velocity_fields[i] = m_fields[m_velocity[i]];
-			m_fields[m_velocity[i]]->BwdTrans(PreviousForcing_Coeffs[i], PreviousForcing[i]);
-		}		
+			u_star[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_star[i]);
 		
-		EvaluateNonLinearNS(Velocity, Pressure, PreviousForcing, velocity_fields, m_pressure, outarray);
+			//u_star(k+1) = u_N(k) + m_DeltaKinvis *  u_star(k)
+			Vmath::Smul(u_star[i].num_elements(), m_DeltaKinvis, u_star[i], 1, u_star[i], 1);
+			Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1, u_N[i], 1, u_star[i], 1);
+					
+			m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+		}
+		
+		m_kinvis -= m_DeltaKinvis;
+	}		
+	
+	
+	void  CoupledLinearNS::InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+				 Array<OneD, NekDouble> &outarray)
+	{
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			outarray[i] = 0.0;
+			for(int j = 0; j < inarray[i].num_elements(); ++j)
+			{
+				if(inarray[i][j] > outarray[i]) 
+				{
+					outarray[i] = inarray[i][j];
+				}
+			}
+			cout << "InfNorm["<<i<<"] = "<< outarray[i] <<endl;
+		}
 	}
 	
-	void CoupledLinearNS::EvaluateNonLinearNS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-											  Array<OneD, NekDouble> &Pressure,
-											  Array<OneD, Array<OneD, NekDouble> > &Forcing,
-											  Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-											  MultiRegions::ExpListSharedPtr &pressure_PIPO,
+	void  CoupledLinearNS::L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+								   Array<OneD, NekDouble> &outarray)
+	{
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			outarray[i] = 0.0;
+			for(int j = 0; j < inarray[i].num_elements(); ++j)
+			{
+				outarray[i] += inarray[i][j]*inarray[i][j];
+			}
+			outarray[i]=sqrt(outarray[i]);
+			cout << "L2Norm["<<i<<"] = "<< outarray[i] <<endl;
+		}
+	}
+	
+	
+	void CoupledLinearNS::PressureReconstruction(void)
+	{
+		//We solve the Poisson equation for the pressure with div((u.grad)u) as forcing term
+		Array<OneD, Array<OneD, NekDouble> > Velocity_Phys(m_velocity.num_elements());
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{	
+			Velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
+		}
+		
+		Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > tmp_Div_Eval_Adv(m_velocity.num_elements());
+		
+		Array<OneD, NekDouble > Div_Eval_Adv(m_fields[m_velocity[0]]->GetTotPoints(), 0.0);
+		Array<OneD, NekDouble > Div_Eval_Adv_Coeffs(m_fields[m_velocity[0]]->GetNcoeffs(), 0.0);
+		
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			tmp_Div_Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+		}
+		
+		//We evaluate the nonlinear term (u.grad)u
+		EvaluateAdvectionTerms(Velocity_Phys, Eval_Adv);
+		
+		//And we calculate the divergence of this nonlinear tern
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			m_fields[m_velocity[i]]->PhysDeriv(i, Eval_Adv[i], tmp_Div_Eval_Adv[i]);
+		}
+		Vmath::Vadd(Div_Eval_Adv.num_elements(), tmp_Div_Eval_Adv[0], 1, tmp_Div_Eval_Adv[1], 1, Div_Eval_Adv, 1);				
+		
+						
+		//-------------------------------------------------------------------------------------------------	
+		StdRegions::ConstFactorMap factors;
+		factors[StdRegions::eFactorLambda] = 0;
+		
+        // Solver Pressure Poisson Equation 
+		//m_pressure->HelmSolve(Div_Eval_Adv, m_pressure->UpdateCoeffs(), NullFlagList, factors);
+		//m_fields[1]->HelmSolve(Div_Eval_Adv, m_pressure->UpdateCoeffs(), NullFlagList, factors);
+		//-------------------------------------------------------------------------------------------------	
+		
+		cout<<"Reconstruction of the pressure \n";
+	}	
+	
+	void CoupledLinearNS::EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
 											  Array<OneD, Array<OneD, NekDouble> > &outarray)
 	{
-
 		Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
 		Array<OneD, Array<OneD, NekDouble> > tmp_DerVel(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > out1(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > out2(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > out3(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > out4(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > ViscTerm(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > Forc(m_velocity.num_elements());
 		
 		for(int i = 0; i < m_velocity.num_elements(); ++i)
 		{
 			Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 			tmp_DerVel[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 			
-			out1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			out2[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			out3[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			out4[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			AdvTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			ViscTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			Forc[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 			outarray[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 			
 			m_fields[m_velocity[i]]->PhysDeriv(i, Velocity[i], tmp_DerVel[i]);
@@ -1593,16 +1769,14 @@ namespace Nektar
 		
 		for(int i = 0; i < m_velocity.num_elements(); ++i)
 		{
-			m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], out1[i]);
-			m_fields[m_velocity[i]]->IProductWRTDerivBase(i, Pressure, out2[i]);
-			m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], out3[i]);
-			m_fields[m_velocity[i]]->IProductWRTBase(Forcing[i], out4[i]);
+			m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
+			m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], ViscTerm[i]); //(grad w, grad u)
+			m_fields[m_velocity[i]]->IProductWRTBase(m_ForcingTerm[i], Forc[i]); //(w, f)
 			
-			Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, out1[i], 1, outarray[i], 1);
-			Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, out2[i], 1, outarray[i], 1);
-			Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, out3[i], 1, outarray[i], 1);
+			Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, AdvTerm[i], 1, outarray[i], 1);
+			Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, ViscTerm[i], 1, outarray[i], 1);
 			
-			//Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, out4[i], 1, outarray[i], 1);
+			Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, Forc[i], 1, outarray[i], 1);
 		}
 	}
 	
@@ -1907,7 +2081,7 @@ namespace Nektar
                     {
                         for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
                         {
-							if (m_equationType == eSteadyNavierStokes && m_counter > 0)
+							if (m_equationType == eSteadyNavierStokes && m_initialStep == false)
 							{
 								//This condition set all the Dirichlet BC at 0 after
 								//the initial step of the Newton method

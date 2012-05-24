@@ -134,17 +134,26 @@ namespace Nektar
 		
 		void SolveSteadyNavierStokes(void);
 		
-		void EvaluateNonLinearNS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-								 Array<OneD, NekDouble> &Pressure,
+		void Continuation(void);
+		
+		/*void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
 								 Array<OneD, Array<OneD, NekDouble> > &PreviousForcing,
+								 Array<OneD, Array<OneD, NekDouble> > &outarray);*/
+		
+		void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
 								 Array<OneD, Array<OneD, NekDouble> > &outarray);
 		
-		void EvaluateNonLinearNS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-								 Array<OneD, NekDouble> &Pressure, 
-								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
-								 Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-								 MultiRegions::ExpListSharedPtr &pressure,
-								 Array<OneD, Array<OneD, NekDouble> > &outarray);
+		void PressureReconstruction(void);
+		
+		void InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+					 Array<OneD, NekDouble> &outarray);
+		
+		void L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+					 Array<OneD, NekDouble> &outarray);
+		
+		void DefineForcingTerm(void);
+		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
+		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
 
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         
@@ -160,6 +169,16 @@ namespace Nektar
         bool m_zeroMode;
 		
 		int m_counter;
+		bool m_initialStep;
+		NekDouble   m_tol;        // Tolerence
+		int m_maxIt;           // Max number of iteration
+		int m_Restart;    // 0=Stokes solution as init guess; 1=Restart.cont as init guess
+		int m_MatrixSetUpStep; 
+		NekDouble m_kinvisMin;
+		NekDouble m_kinvisStep;
+		NekDouble m_DeltaKinvis;
+		
+		
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

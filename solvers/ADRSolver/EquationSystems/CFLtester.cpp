@@ -71,8 +71,6 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit unsteady Advection not set up.");
         }
-		
-		//m_max_time_step = CalculateMaximumTimeStep();
     }
 
     CFLtester::~CFLtester()
@@ -249,246 +247,56 @@ namespace Nektar
 		return TimeStep;
 	}
 	
-	NekDouble CFLtester::v_GetTimeStep(NekDouble CFL)
+	NekDouble CFLtester::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
 	{
-		return CFL*m_max_time_step;
+		//================================================================
+		// This function has been created just to test specific problems, hence is not general
+		// and it has been implemented in a rude fashion, as the full CFLtester class.
+		// For real CFL calculations refer to the general implementation above. (A.Bolis)
+		//================================================================
+		
+		NekDouble TimeStep;
+		NekDouble SpatialStability;
+		int n_elements = m_fields[0]->GetExpSize();
+		
+		//solve ambiguity in windows
+		NekDouble n_elem = n_elements;
+		NekDouble DH   = sqrt(n_elem);
+		
+		int H = (int)DH;
+		int P = ExpOrder-1;
+		
+		//================================================================
+		// Regular meshes
+		
+		SpatialStability = EigenvaluesRegMeshes[H-1][P-1];
+		
+		//================================================================
+		// Anisotropic meshes
+		
+		//if (TimeStability == 1.0) 
+		//{
+		//	SpatialStability = EigenvaluesAnaMeshesAB2[H/2][P-1];
+		//}
+		//else if (TimeStability == 2.0) 
+		//{
+		//	SpatialStability = EigenvaluesAnaMeshesRK2[H/2][P-1];
+		//}
+		//else if (TimeStability == 2.784) 
+		//{
+		//	SpatialStability = EigenvaluesAnaMeshesRK4[H/2][P-1];
+		//}
+		//else 
+		//{
+		//	ASSERTL0(false,"error in time-scheme")
+		//}
+		
+		//================================================================
+		
+		TimeStep = (TimeStability/SpatialStability)*CFL;
+		
+		//================================================================
+		
+		return TimeStep;
 	}
-	
-	NekDouble CFLtester::CalculateMaximumTimeStep()
-	{
-		NekDouble max_time_step;
-		int j;
-		Array<OneD, Array<OneD, NekDouble> > inarray(1);
-		Array<OneD, Array<OneD, NekDouble> > tmp(1);
-		Array<OneD, Array<OneD, NekDouble> > outarray(1);
-		Array<OneD, Array<OneD, NekDouble> > WeakAdv(1);
-		int npoints = GetNpoints();
-		int ncoeffs = GetNcoeffs();
-		inarray[0]  = Array<OneD, NekDouble>(npoints,0.0);
-		outarray[0] = Array<OneD, NekDouble>(npoints,0.0);
-		tmp[0] = Array<OneD, NekDouble>(npoints,0.0);		
-		WeakAdv[0]  = Array<OneD, NekDouble>(ncoeffs,0.0);
-		Array<OneD, NekDouble> MATRIX(npoints*npoints,0.0);
-		
-		for (j = 0; j < npoints; j++)
-		{
-			inarray[0][j] = 1.0;
-			switch (m_projectionType)
-			{
-				case MultiRegions::eDiscontinuousGalerkin:
-				{
-					WeakDGAdvection(inarray, WeakAdv,true,true,1);
-					m_fields[0]->MultiplyByElmtInvMass(WeakAdv[0],WeakAdv[0]);
-					m_fields[0]->BwdTrans(WeakAdv[0],outarray[0]);
-					Vmath::Neg(npoints,outarray[0],1);
-					break;
-				}
-				case MultiRegions::eGalerkin:
-				{
-					m_fields[0]->FwdTrans(inarray[0],WeakAdv[0]);
-					m_fields[0]->BwdTrans_IterPerExp(WeakAdv[0],tmp[0]);
-					AdvectionNonConservativeForm(m_velocity,tmp[0],outarray[0]);
-					Vmath::Neg(npoints,outarray[0],1);
-					m_fields[0]->FwdTrans(outarray[0],WeakAdv[0]);
-					m_fields[0]->BwdTrans_IterPerExp(WeakAdv[0],outarray[0]);
-				    break;
-				}
-			}
-
-			Vmath::Vcopy(npoints,&(outarray[0][0]),1,&(MATRIX[j]),npoints);
-			inarray[0][j] = 0.0;
-		}
-		
-		char jobvl = 'N';
-		char jobvr = 'N';
-		int info = 0, lwork = 3*npoints;
-		NekDouble dum;
-		Array<OneD, NekDouble> EIG_R(npoints);
-		Array<OneD, NekDouble> EIG_I(npoints);
-		Array<OneD, NekDouble> work(lwork);
-		Lapack::Dgeev(jobvl,jobvr,npoints,MATRIX.get(),npoints,EIG_R.get(),EIG_I.get(),&dum,1,&dum,1,&work[0],lwork,info);
-				
-		LibUtilities::TimeIntegrationMethod  timeIntMethod;
-		
-		// Determine TimeIntegrationMethod to use.
-        ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
-				 "No TIMEINTEGRATIONMETHOD defined in session.");
-        for (j = 0; j < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++j)
-        {
-            bool match;
-            m_session->MatchSolverInfo("TIMEINTEGRATIONMETHOD",
-									   LibUtilities::TimeIntegrationMethodMap[j], match, false);
-            if (match)
-            {
-                timeIntMethod = (LibUtilities::TimeIntegrationMethod) j;
-                break;
-            }
-        }
-        ASSERTL0(j != (int) LibUtilities::SIZE_TimeIntegrationMethod,
-				 "Invalid time integration type.");
-		
-		NekDouble phase,module;
-		NekDouble tol = 0.00001;
-		int nteta = 10000;
-		NekDouble dteta = 2*M_PI/(nteta-1);
-		Array<OneD, NekDouble> time_steps(npoints,1.0);
-		Array<OneD, NekDouble> teta(nteta,0.0);
-		
-		for(j = 1; j < nteta; j++)
-		{
-			teta[j] = teta[j-1] + dteta;
-		}
-		
-		Array<OneD, complex<NekDouble> > z (nteta);
-		Array<OneD, complex<NekDouble> > r (nteta);
-		Array<OneD, complex<NekDouble> > s (nteta);
-		Array<OneD, complex<NekDouble> > w (nteta);
-		
-		for(j = 0; j < nteta; j++)
-		{
-			complex<NekDouble> iteta(0.0,teta[j]);
-			z[j] = exp(iteta);
-		}
-		
-		switch(m_timeIntMethod)
-        {
-			case LibUtilities::eAdamsBashforthOrder2:
-			{
-				if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
-				{
-					for(j = 0; j < nteta; j++)
-					{
-						r[j] = z[j]-1.0;
-						s[j] = 1.5-0.5/z[j];
-						w[j] = r[j]/s[j];
-					}
-					
-					for(j = 0; j < npoints; j++)
-					{
-						phase  = atan2(EIG_I[j],EIG_R[j]);
-						module = sqrt(EIG_R[j]*EIG_R[j] + EIG_I[j]*EIG_I[j]);
-						
-						for(int k = 0; k < nteta; k++)
-						{
-							if(abs((arg(w[k])-phase))<=tol)
-							{
-								time_steps[j] = abs(w[k])/module;
-								k = nteta+1;
-							}
-							if(k == nteta-1)
-							{
-								tol = 10*tol;
-								k = 0;
-							}
-						}
-					}
-				}
-				else 
-				{
-					ASSERTL0(false,"AB2 is theoretically unstable using a CG projection");
-				}
-				break;
-			}
-			case LibUtilities::eRungeKutta2_ImprovedEuler:
-			{
-				if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
-				{
-					for(j = 0; j < nteta; j++)
-					{
-						w[j] = z[j]-1.0;
-						for(int k = 0; k < 3; k++)
-						{
-							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 - z[j]*z[j])/(1.0+w[j]);
-						}
-					}
-					for(j = 0; j < npoints; j++)
-					{
-						phase  = atan2(EIG_I[j],EIG_R[j]);
-						module = sqrt(EIG_R[j]*EIG_R[j] + EIG_I[j]*EIG_I[j]);
-						
-						for(int k = 0; k < nteta; k++)
-						{
-							if(abs((arg(w[k])-phase))<=tol)
-							{
-								time_steps[j] = abs(w[k])/module;
-								k = nteta+1;
-							}
-							if(k == nteta-1)
-							{
-								tol = 10*tol;
-								k = 0;
-							}
-						}
-						
-					}
-				}
-				else 
-				{
-					ASSERTL0(false,"RK2 is theoretically unstable using a CG projection");
-				}
-				break;
-			}
-			case LibUtilities::eClassicalRungeKutta4:
-			{
-				if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
-				{
-					for(j = 0; j < nteta; j++)
-					{
-						w[j] = z[j]-1.0;
-						for(int k = 0; k < 3; k++)
-						{
-							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 - z[j]*z[j])/(1.0+w[j]);
-						}
-						for(int k = 0; k < 4; k++)
-						{
-							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 + (w[j]*w[j]*w[j])/6.0 - z[j]*z[j]*z[j])/(1.0 + w[j] + (w[j]*w[j])/2.0);
-						}
-						
-						for(int k = 0; k < 4; k++)
-						{
-							w[j] = w[j] - (1.0 + w[j] + (w[j]*w[j])/2.0 + (w[j]*w[j]*w[j])/6.0 + (w[j]*w[j]*w[j]*w[j])/24.0 - z[j]*z[j]*z[j]*z[j])/(1.0 + w[j] + (w[j]*w[j])/2.0 + (w[j]*w[j]*w[j])/6.0);
-						}
-					}
-					for(j = 0; j < npoints; j++)
-					{
-						phase  = atan2(EIG_I[j],EIG_R[j]);
-						module = sqrt(EIG_R[j]*EIG_R[j] + EIG_I[j]*EIG_I[j]);
-						
-						for(int k = 0; k < nteta; k++)
-						{
-							if(abs((arg(w[k])-phase))<=tol)
-							{
-								time_steps[j] = abs(w[k])/module;
-								k = nteta+1;
-							}
-							if(k == nteta-1)
-							{
-								tol = 10*tol;
-								k = 0;
-							}
-						}
-					}
-				}
-				else 
-				{
-					NekDouble max_imag = Vmath::Vmax(npoints,EIG_I,1);
-					
-					time_steps[0] = 2.828/max_imag;
-				}
-				break;
-			}
-			default:
-            {
-                ASSERTL0(false,"Exact CFL limit not implemented for this time-integration scheme");
-            }
-		}
-		
-		max_time_step = Vmath::Vmin(npoints,time_steps,1);
-		
-		cout << "max_time_step = " <<  max_time_step << endl;
-		
-		return max_time_step;
-	}
-	
-	
 }

@@ -181,9 +181,9 @@ namespace Nektar
                 case LibUtilities::eBackwardEuler:
                 case LibUtilities::eForwardEuler:
                 case LibUtilities::eClassicalRungeKutta4:
-		case LibUtilities::eRungeKutta2_ModifiedEuler:
-		case LibUtilities::eRungeKutta2_ImprovedEuler:
-		case LibUtilities::eAdamsBashforthOrder1:
+		        case LibUtilities::eRungeKutta2_ModifiedEuler:
+		        case LibUtilities::eRungeKutta2_ImprovedEuler:
+		        case LibUtilities::eAdamsBashforthOrder1:
                 case LibUtilities::eIMEXOrder1:
                 {
                     numMultiSteps = 1;
@@ -265,19 +265,53 @@ namespace Nektar
                 (*x)->Initialise(m_fields, m_time);
             }
 
+			//===========================================================================================
             // TIME LOOP ================================================================================
+			//===========================================================================================
 		
+			//===========================================================================================
             // WITH CFL CONTROLL
-            /// CFL control has been implemented so far just for profiling reasons (just for CFLTester)
-            /// It has to be generalised
-            if(m_cfl>0.0)
+            // CFL control has been implemented so far just for profiling reasons (just for CFLTester)
+            // It has to be generalised
+			//===========================================================================================
+           
+			if(m_cfl>0.0)
             {
-			
+				const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
+				
+				NekDouble TimeStability;
+				
+				switch(m_timeIntMethod)
+				{
+					case LibUtilities::eForwardEuler:
+					case LibUtilities::eClassicalRungeKutta4:
+					{
+						TimeStability = 2.784;
+					break;
+					}
+					case LibUtilities::eAdamsBashforthOrder1:
+					case LibUtilities::eRungeKutta2_ModifiedEuler:
+					case LibUtilities::eRungeKutta2_ImprovedEuler:
+					{
+						TimeStability = 2.0;
+					break;
+					}
+					case LibUtilities::eAdamsBashforthOrder2:
+					{
+						TimeStability = 1.0;
+					break;
+					}
+					default:
+					{
+						ASSERTL0(false,"No CFL control implementation for this time integration scheme");
+					}
+				} 
+		
                 NekDouble CheckpointTime = 0.0;
-                NekDouble QuarterOfLoop = 0.25;
+                NekDouble QuarterOfLoop  = 0.25;
                 NekDouble CFLtimestep;
 			
-                int number_of_checkpoints = ceil(m_fintime/QuarterOfLoop);
+                int number_of_checkpoints = ceil(m_fintime/QuarterOfLoop)+1;
 			
                 Array<OneD, NekDouble>   L2errors(number_of_checkpoints);
                 Array<OneD, NekDouble>   LIerrors(number_of_checkpoints);
@@ -287,16 +321,15 @@ namespace Nektar
 			
                 L2errors[checkpoints_cnt]         = L2Error(0);
                 LIerrors[checkpoints_cnt]         = LinfError(0);
-                TimeLevels[number_of_checkpoints] = m_time;
-                CheckpointTime += QuarterOfLoop;
+                TimeLevels[checkpoints_cnt]       = m_time;
+                
+				CheckpointTime += QuarterOfLoop;
                 checkpoints_cnt++;
 			
                 // This function is implemented for the CFLTester only
-                m_timestep = GetTimeStep(m_cfl);
+                m_timestep = GetTimeStep(ExpOrder[0],m_cfl,TimeStability);
 			
                 CFLtimestep = m_timestep;
-			
-                cout <<"\nCFL time-step  : " << CFLtimestep << endl;
 			
                 Timer timer;
 			
@@ -331,49 +364,16 @@ namespace Nektar
 				
                     IntegrationTime += timer.TimePerTest(1);
 				
-
-				
                     if(m_time <= CheckpointTime && (m_time + m_timestep) > CheckpointTime)
                     {
-                        cout << endl << "====================" << endl;
-                        cout << "Storing values at time " << CheckpointTime << endl;
-                        cout << "m_time = " << m_time << endl;
-                        cout << "cnt " << checkpoints_cnt << endl;
                         m_fields[0]->FwdTrans(fields[0],m_fields[0]->UpdateCoeffs());
                         m_fields[0]->UpdatePhys() = fields[0];
                         L2errors[checkpoints_cnt] = L2Error(0);
                         LIerrors[checkpoints_cnt] = LinfError(0);
-                        cout << "L2 = " << L2errors[checkpoints_cnt] << endl;
-                        cout << "LI = " << LIerrors[checkpoints_cnt] << endl;
-                        TimeLevels[checkpoints_cnt] = m_time;
+                        TimeLevels[checkpoints_cnt] = CheckpointTime;
                         CheckpointTime += QuarterOfLoop;
                         checkpoints_cnt++;
-                        cout << "cnt " << checkpoints_cnt << endl;
-					
-                    }
-
-                    // Write out status information.
-                    //if(m_session->GetComm()->GetRank() == 0
-                    //        && !((step)%m_infosteps) || m_time==m_fintime)
-                    //{
-                    //	cout << "Step: " << step
-                    //	     << "\t Time: " << m_time
-                    //	     << "\t Time-step: " << m_timestep << "\t" << endl;
-                    //}
-			
-                    // Write out checkpoint files.
-                    //if(m_time >= m_fintime && m_fintime>0.0)
-                    //{
-                    //	for(i = 0; i < nvariables; ++i)
-                    //	{
-                    //		m_fields[i]->FwdTrans(fields[i],
-                    //		                      m_fields[i]->UpdateCoeffs());
-                    //		m_fields[i]->SetPhysState(false);
-                    //	}
-                    //	Checkpoint_Output(nchk++);
-                    //}
-				
-				
+                    }				
                     // step advance
                     step++;
                 }
@@ -384,16 +384,20 @@ namespace Nektar
                     m_fields[i]->UpdatePhys() = fields[i];
                 }
 			
-                cout <<"\nCFL number     : " << m_cfl  << endl;
-                cout <<"\nCFL time-step  : " << CFLtimestep << endl;
-                cout <<"Time-integration : " << IntegrationTime << " s" << endl;
+                cout <<"\nCFL number       : " << m_cfl  << endl;
+                cout <<"\nCFL time-step    : " << CFLtimestep << endl;
+                cout <<"\nTime-integration : " << IntegrationTime << " s" << endl;
                 for(int i = 0; i < number_of_checkpoints; i++)
                 {
-                    cout <<"Time : "<< TimeLevels[i] << " L2 error : " << L2errors[i] << " LI error : "  << LIerrors[i] << endl;
+                    cout <<"Time : "<< TimeLevels[i] << "\tL2 error : " << L2errors[i] << "\tLI error : "  << LIerrors[i] << endl;
                 }
             }
+			
+			//===========================================================================================
             //WITHOUT CFL CONTROLL
-            else
+			//===========================================================================================
+            
+			else
             {
                 for(n = 0; n < m_steps; ++n)
                 {
@@ -466,8 +470,9 @@ namespace Nektar
                     (*x)->Finalise(m_fields, m_time);
                 }
             }
-            // END OF TIME LOOP ================================================================================
-
+			//===========================================================================================
+			// END OF TIME LOOP =========================================================================
+			//===========================================================================================
         }
 
 
@@ -806,18 +811,20 @@ namespace Nektar
 	}
 	
 	/**
-	 *  This function calculate the proper time-step to keep the problem stable.
-	 *  It has been implemented to deal with an explict treatment of the advection term.
-	 *  In case of an explicit treatment of the diffusion term a re-implementation is required.
-	 *  The actual implementation can be found inside each equation class.
-	 *
-	 * @param CFL               the CFL number we want to impose (<1)
-	 */
-	NekDouble UnsteadySystem::GetTimeStep(NekDouble CFL)
+	*  This function calculate the proper time-step to keep the problem stable.
+	*  It has been implemented to deal with an explict treatment of the advection term.
+	*  In case of an explicit treatment of the diffusion term a re-implementation is required.
+	*  The actual implementation can be found inside each equation class.
+	*
+	* @param ExpOrder          the expansion order we are using (P)
+	* @param CFL               the CFL number we want to impose (<1)
+	@ @param timeCFL           the stability coefficient of the time-integration scheme
+	*/
+	NekDouble UnsteadySystem::GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
 	{
-            NekDouble TimeStep = v_GetTimeStep(CFL);
+		NekDouble TimeStep = v_GetTimeStep(ExpOrder,CFL,TimeStability);
 		
-            return TimeStep;
+		return TimeStep;
 	}
 	
 	/**
@@ -828,18 +835,20 @@ namespace Nektar
                                                 const Array<OneD,NekDouble> CFL, NekDouble timeCFL)
         {
             ASSERTL0(false, "v_GetTimeStep is not implemented in the base class (UnsteadySystem). Check if your equation class has its own implementation");
-            return 0.0;
+            
+			return 0.0;
         }
 	
 	/**
 	 * See GetTimeStep. 
 	 * This is the virtual fuction to redirect the implementation to the proper class.
 	 */
-	NekDouble UnsteadySystem::v_GetTimeStep(NekDouble CFL)
-        {
-            ASSERTL0(false, "v_GetTimeStep is not implemented in the base class (UnsteadySystem). Check if your equation class has its own implementation");
-            return 0.0;
-        }
+	NekDouble UnsteadySystem::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
+	{
+		ASSERTL0(false, "v_GetTimeStep is not implemented in the base class (UnsteadySystem). Check if your equation class has its own implementation");
+	
+		return 0.0;
+	}
 	
 	/**
 	 *

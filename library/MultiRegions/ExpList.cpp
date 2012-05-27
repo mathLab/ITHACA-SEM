@@ -1733,6 +1733,37 @@ namespace Nektar
         }
 
         /**
+         * Given a spectral/hp approximation
+         * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points (which should be contained in #m_phys),
+         * this function calculates the \f$L_\infty\f$ error of this
+         * approximation. The local distribution of the quadrature
+         * points allows an elemental evaluation of this operation
+         * through the functions StdRegions#StdExpansion#Linf.
+         *s
+         * The exact solution, also evaluated at the quadrature
+         * points, should be contained in the variable #m_phys of
+         * the ExpList object \a Sol.
+         *
+         * @return  The \f$L_\infty\f$ error of the approximation.
+         */
+        NekDouble  ExpList::Linf(void)
+        {
+            NekDouble err = 0.0;
+            int       i;
+
+            for(i= 0; i < (*m_exp).size(); ++i)
+            {
+                // set up physical solution in local element
+                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
+                err  = std::max(err,(*m_exp)[i]->Linf());
+            }
+            m_comm->AllReduce(err, LibUtilities::ReduceMax);
+            return err;
+        }
+
+
+        /**
          * Given a spectral/hp approximation \f$u^{\delta}(\boldsymbol{x})\f$
          * evaluated at the quadrature points (which should be contained in
          * #m_phys), this function calculates the \f$L_2\f$ error of this

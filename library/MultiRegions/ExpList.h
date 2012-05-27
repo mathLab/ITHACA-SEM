@@ -457,6 +457,10 @@ namespace Nektar
             /// spectral/hp element approximation.
             MULTI_REGIONS_EXPORT NekDouble Linf (const Array<OneD, const NekDouble> &soln);
 
+            /// This function calculates the \f$L_\infty\f$ error of the global
+            /// spectral/hp element approximation.
+            MULTI_REGIONS_EXPORT NekDouble Linf (void);
+
             /// This function calculates the \f$L_2\f$ error with
             /// respect to soln of the global
             /// spectral/hp element approximation.

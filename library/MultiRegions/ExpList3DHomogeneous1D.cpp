@@ -385,21 +385,21 @@ namespace Nektar
             int cnt = 0;
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
-			Array<OneD, NekDouble> local_w(m_planes.num_elements());
-			
-			for(int n = 0; n < m_planes.num_elements(); n++)
-			{
-				local_w[n] = w[m_transposition->GetPlaneID(n)];
-			}
-
+            Array<OneD, NekDouble> local_w(m_planes.num_elements());
+            
+            for(int n = 0; n < m_planes.num_elements(); n++)
+            {
+                local_w[n] = w[m_transposition->GetPlaneID(n)];
+            }
+            
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
                 errL2 = m_planes[n]->L2(soln + cnt);
                 cnt += m_planes[n]->GetTotPoints();
                 err += errL2*errL2*local_w[n]*m_lhom*0.5;
             }
-			
-			m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
+            
+            m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
 
             return sqrt(err);
         }

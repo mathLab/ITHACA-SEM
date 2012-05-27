@@ -787,10 +787,39 @@ namespace Nektar
             outfile << "        </DataArray>" << endl;
         }
 		
-		void ExpListHomogeneous1D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-											   Array<OneD, NekDouble> &out_d0,
-											   Array<OneD, NekDouble> &out_d1, 
-											   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+        void ExpListHomogeneous1D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                               Array<OneD, NekDouble> &out_d0,
+                                               Array<OneD, NekDouble> &out_d1, 
+                                               Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+            
+        {
+            int nT_pts = inarray.num_elements();          //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
+            int nP_pts = nT_pts/m_planes.num_elements();    //number of points per plane = n of Fourier transform required (nP_pts)
+            
+            Array<OneD, NekDouble> temparray(nT_pts);
+            Array<OneD, NekDouble> outarray(nT_pts);
+            Array<OneD, NekDouble> tmp1;
+            Array<OneD, NekDouble> tmp2;
+            Array<OneD, NekDouble> tmp3;            
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+                m_planes[i]->PhysDeriv(tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
+            }
+            
+            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+            {
+                if(m_WaveSpace)
+                {
+                    temparray = inarray;
+                }
+                else 
+                { 
+                    HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+                }
+                
+                NekDouble sign = -1.0;
+                NekDouble beta;
 		
 		{
 			int nT_pts = inarray.num_elements();          //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
@@ -881,15 +910,118 @@ namespace Nektar
 			}
 		}
 		
-		void ExpListHomogeneous1D::v_PhysDeriv(Direction edir,
-											   const Array<OneD, const NekDouble> &inarray,
-											   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+                if(m_WaveSpace)
+                {
+                    out_d2 = outarray;
+                }
+                else 
+                {
+                    HomogeneousBwdTrans(outarray,out_d2,UseContCoeffs);
+                }
+            }
+            else 
+            {
+                ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
 		
-		{
-			int nT_pts = inarray.num_elements();        //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
-			int nP_pts = nT_pts/m_planes.num_elements();  //number of points per plane = n of Fourier transform required (nP_pts)
+                if(m_WaveSpace)
+                {
+                    
+                    ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis");
+                }
+                else 
+                {
+                    StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
+                    
+                    m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
+                    
+                    for(int i = 0; i < nP_pts; i++)
+                    {
+                        StdSeg.PhysDeriv(tmp1 = temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+                    }
+                    
+                    m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
+                    
+                    Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);
+                    
+                }
+            }
+        }
+	
+        void ExpListHomogeneous1D::v_PhysDeriv(Direction edir,
+                                               const Array<OneD, const NekDouble> &inarray,
+                                               Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+            
+        {
+            int nT_pts = inarray.num_elements();        //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
+            int nP_pts = nT_pts/m_planes.num_elements();  //number of points per plane = n of Fourier transform required (nP_pts)
+            
+            int dir= (int)edir;
+            
+            Array<OneD, NekDouble> temparray(nT_pts);
+            Array<OneD, NekDouble> outarray(nT_pts);
+            Array<OneD, NekDouble> tmp1;
+            Array<OneD, NekDouble> tmp2;
+            
+            if (dir < 2)
+            {
+                for(int i=0; i < m_planes.num_elements(); i++)
+                {
+                    m_planes[i]->PhysDeriv(edir, tmp1 = inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
+                }
+            }
+            else
+            {
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode)
+                {
+                    if(m_WaveSpace)
+                    {
+                        temparray = inarray;
+                    }
+                    else 
+                    { 
+                        HomogeneousFwdTrans(inarray,temparray,UseContCoeffs);
+                    }
+                    
+                    NekDouble sign = -1.0;
+                    NekDouble beta;
+                    int nlocplanes = (m_planes.num_elements()/2)*2;  // ensure no odd modes are evaluated 
+                    Vmath::Zero(nT_pts,outarray,1);
+
+                    for(int i = 0; i < nlocplanes; i++)
+                    {
+                        beta = sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+                        
+                        Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
 			
-			int dir= (int)edir;
+                        sign = -1.0*sign;
+                    }
+                    if(m_WaveSpace)
+                    {
+                        out_d = outarray;
+                    }
+                    else 
+                    {
+                        HomogeneousBwdTrans(outarray,out_d,UseContCoeffs);
+                    }
+                }
+                else 
+                {
+                    ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                    
+                    if(m_WaveSpace)
+                    {
+                        ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis");
+                    }
+                    else 
+                    {
+                        StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
+                        
+                        m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
+                        
+                        for(int i = 0; i < nP_pts; i++)
+                        {
+                            StdSeg.PhysDeriv(tmp1 = temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+                        }
 			
 			Array<OneD, NekDouble> temparray(nT_pts);
 			Array<OneD, NekDouble> outarray(nT_pts);

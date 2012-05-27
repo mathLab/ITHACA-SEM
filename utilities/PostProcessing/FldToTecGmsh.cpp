@@ -72,13 +72,11 @@ int main(int argc, char *argv[])
         fielddef[0]->m_basis.push_back(LibUtilities::eFourier);
     }
 
-	
-
-	if(SingleModePlot) // Set Up printing of perturbation
-	{
+    if(SingleModePlot) // Set Up printing of perturbation
+    {
         fielddef[0]->m_numModes.push_back(4); // Have to set this to 4 as default
         fielddef[0]->m_basis.push_back(LibUtilities::eFourier); //Initialisation of a standard Fourier Expansion
-	}
+    }
 	
 	if(HalfModePlot)
 	{

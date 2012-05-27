@@ -247,9 +247,9 @@ int main(int argc, char *argv[])
                                   Exp[ifield]->GetPhys(),Dy);
                 Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                   Exp[ifield]->GetPhys(),Dz);
-                Exp[4]->FwdTrans(Dx,Exp[4]->UpdateCoeffs());
-                Exp[5]->FwdTrans(Dy,Exp[5]->UpdateCoeffs());
-                Exp[6]->FwdTrans(Dz,Exp[6]->UpdateCoeffs());
+                Exp[nfields  ]->FwdTrans(Dx,Exp[nfields  ]->UpdateCoeffs());
+                Exp[nfields+1]->FwdTrans(Dy,Exp[nfields+1]->UpdateCoeffs());
+                Exp[nfields+2]->FwdTrans(Dz,Exp[nfields+2]->UpdateCoeffs());
 
             }
             else 
@@ -265,16 +265,16 @@ int main(int argc, char *argv[])
                 Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[ifield]->GetPhys(),Dx);
                 Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[ifield]->GetPhys(),Dy);
                 Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[ifield]->GetPhys(),Dz);
-                Exp[4]->FwdTrans(Dx,Exp[4]->UpdateCoeffs());
-                Exp[5]->FwdTrans(Dy,Exp[5]->UpdateCoeffs());
-                Exp[6]->FwdTrans(Dz,Exp[6]->UpdateCoeffs());
+                Exp[nfields  ]->FwdTrans(Dx,Exp[nfields  ]->UpdateCoeffs());
+                Exp[nfields+1]->FwdTrans(Dy,Exp[nfields+1]->UpdateCoeffs());
+                Exp[nfields+2]->FwdTrans(Dz,Exp[nfields+2]->UpdateCoeffs());
             }
             else 
             {
                 Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[ifield]->GetPhys(),Dx);
                 Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[ifield]->GetPhys(),Dy);
-                Exp[3]->FwdTrans(Dx,Exp[3]->UpdateCoeffs());
-                Exp[4]->FwdTrans(Dy,Exp[4]->UpdateCoeffs());
+                Exp[nfields  ]->FwdTrans(Dx,Exp[nfields  ]->UpdateCoeffs());
+                Exp[nfields+1]->FwdTrans(Dy,Exp[nfields+1]->UpdateCoeffs());
             }
         }
         break;
@@ -283,9 +283,9 @@ int main(int argc, char *argv[])
             Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],Exp[ifield]->GetPhys(),Dx);
             Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],Exp[ifield]->GetPhys(),Dy);
             Exp[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],Exp[ifield]->GetPhys(),Dz);
-            Exp[4]->FwdTrans(Dx,Exp[4]->UpdateCoeffs());
-            Exp[5]->FwdTrans(Dy,Exp[5]->UpdateCoeffs());
-            Exp[6]->FwdTrans(Dz,Exp[6]->UpdateCoeffs());
+            Exp[nfields  ]->FwdTrans(Dx,Exp[nfields  ]->UpdateCoeffs());
+            Exp[nfields+1]->FwdTrans(Dy,Exp[nfields+1]->UpdateCoeffs());
+            Exp[nfields+2]->FwdTrans(Dz,Exp[nfields+2]->UpdateCoeffs());
         }
         break;
     default:
@@ -311,12 +311,12 @@ int main(int argc, char *argv[])
         {
             if (j >= nfields)
             {
-                if(j == 4)
+                if(j == nfields)
                 {
                     std::string val = FieldDef[i]->m_fields[ifield] + "_x";
                     FieldDef[i]->m_fields.push_back(val.c_str());
                 }
-                else if(j == 5)
+                else if(j == nfields+1)
                 {
                     std::string val = FieldDef[i]->m_fields[ifield] + "_y";
                     FieldDef[i]->m_fields.push_back(val.c_str());

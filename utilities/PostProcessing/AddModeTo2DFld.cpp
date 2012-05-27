@@ -122,7 +122,8 @@ int main(int argc, char *argv[])
                 for(int n = 0; n < fielddef2[i]->m_elementIDs.size(); ++n)
                 {
                     // Real zero component 
-                    newdata.insert(newdata.end(),&(fielddata1[i][offset+n*ncoeffs]),&(fielddata1[i][offset+n*ncoeffs]) + ncoeffs);
+                    newdata.insert(newdata.end(),&(fielddata1[i][offset+n*ncoeffs]),
+&(fielddata1[i][offset+n*ncoeffs]) + ncoeffs);
                     // Imaginary zero component; 
                     newdata.insert(newdata.end(),&Zero[0],&Zero[0] + ncoeffs);
                     

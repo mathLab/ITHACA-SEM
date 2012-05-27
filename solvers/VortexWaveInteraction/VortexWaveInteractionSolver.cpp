@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
             vwi.AppendEvlToFile("ConvergedSolns",WaveForce);            
 
             vwi.SetWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
+            vwi.SetPrevAlpha(vwi.GetAlpha());
             vwi.SetAlpha(vwi.GetAlpha() + vwi.GetDAlphaDWaveForceMag()*vwi.GetWaveForceMagStep());
             
             // Save data directories. 
@@ -175,7 +176,6 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             int i;
             int nouter_iter = vwi.GetNOuterIterations();
             bool exit_iteration = false;
-            NekDouble alpha_init = vwi.GetAlpha();
 	    NekDouble saveEigRelTol = vwi.GetEigRelTol();
 	    int saveMinIters = vwi.GetMinInnerIterations();
 	    int init_search = 1;
@@ -195,11 +195,12 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                     vwi.ExecuteLoop();
                     vwi.SaveLoopDetails("Save", i);
                     vwi.AppendEvlToFile("conv.his",i);                    
+
 		    if(vwi.CheckEigIsStationary())
-		      {
+                    {
                         vwi.SaveLoopDetails("Save_Outer", nouter_iter);
                         break;
-		      }
+                    }
                 }
                 
                 // check to see if growth was converged. 
@@ -214,6 +215,8 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 vwi.AppendEvlToFile("OuterIter.his",nouter_iter++);            
                 
 		exit_iteration = vwi.CheckIfAtNeutralPoint();
+
+                cout << "m_alpha[0] is " << vwi.GetAlpha() << endl;
 
                 if(exit_iteration == false)
                 {
@@ -237,7 +240,7 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 }
             }
             
-            vwi.UpdateDAlphaDWaveForceMag(alpha_init);
+            vwi.UpdateDAlphaDWaveForceMag(vwi.GetPrevAlpha());
 
         }
         break;

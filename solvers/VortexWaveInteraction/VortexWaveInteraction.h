@@ -157,20 +157,26 @@ namespace Nektar
         
         
 	NekDouble GetEigRelTol(void)
-
+            
 	{
-	  return m_eigRelTol;
+            return m_eigRelTol;
 	}
 	
 	int GetMinInnerIterations(void)
 	{
-	  return  m_minInnerIterations;
+            return  m_minInnerIterations;
 	}
+
+        NekDouble GetPrevAlpha(void)
+        {
+            return m_prevAlpha;
+        }
 
         void SetAlpha(NekDouble alpha)
         {
             m_alpha[0] = alpha; 
         }
+
 
         void SetWaveForceMag(NekDouble mag)
         {
@@ -191,6 +197,11 @@ namespace Nektar
 	{
 	  m_minInnerIterations = niter;
 	}
+
+        void SetPrevAlpha(NekDouble alpha)
+        {
+            m_prevAlpha = alpha; 
+        }
 
         bool IfIterInterface(void)
         {
@@ -232,6 +243,7 @@ namespace Nektar
         NekDouble m_eigRelTol; 
         NekDouble m_vwiRelaxation; 
         NekDouble m_dAlphaDWaveForceMag;
+        NekDouble m_prevAlpha;
 
         bool m_iterinterface;
 

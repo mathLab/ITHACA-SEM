@@ -205,6 +205,8 @@ namespace Nektar
             m_VWIIterationType = eFixedAlphaWaveForcing;
         }
 
+
+
         // Check for restart
         bool restart;
         m_sessionVWI->MatchSolverInfo("RestartIteration","True",restart,false);
@@ -270,6 +272,58 @@ namespace Nektar
                 break;
             default:
                 ASSERTL0(false,"Unknown VWIITerationType in restart");
+            }
+        }
+
+        // Check for ConveredSoln to update DAlphaDWaveForce
+        {
+            FILE *fp;
+            if(fp = fopen("ConvergedSolns","r"))
+            {
+                char buf[BUFSIZ];
+                std::vector<NekDouble> WaveForce, Alpha;
+                NekDouble waveforce,alpha;
+                while(fgets(buf,BUFSIZ,fp))
+                {
+                    sscanf(buf,"%*d:%lf%lf",&waveforce,&alpha);
+                    WaveForce.push_back(waveforce);
+                    Alpha.push_back(alpha);
+                }
+
+                if(Alpha.size() > 1)
+                {
+                    int min_i = 0;
+                    NekDouble min_alph = fabs(m_alpha[0]-Alpha[min_i]);
+                    // find nearest point 
+                    for(int i = 1; i < Alpha.size(); ++i)
+                    {
+                        if(fabs(m_alpha[0]-Alpha[min_i]) < min_alph)
+                        {
+                            min_i = i;
+                            min_alph = fabs(m_alpha[0]-Alpha[min_i]);
+                        }
+                    }
+
+                    // find next nearest point 
+                    int min_j = (min_i == 0)? 1:0;
+                    min_alph = fabs(m_alpha[0]-Alpha[min_j]);
+                    for(int i = 0; i < Alpha.size(); ++i)
+                    {
+                        if(i != min_i)
+                        {
+                            if(fabs(m_alpha[0]-Alpha[min_j]) < min_alph)
+                            {
+                                min_j = i;
+                                min_alph = fabs(m_alpha[0]-Alpha[min_j]);
+                            }
+                        }
+                    }
+                    
+                    if(fabs(Alpha[min_i] - Alpha[min_j]) > 1e-4)
+                    {
+                        m_dAlphaDWaveForceMag = (Alpha[min_i]-Alpha[min_j])/(WaveForce[min_i]-WaveForce[min_j]);
+                    }
+                }
             }
         }
     }
@@ -624,6 +678,16 @@ namespace Nektar
                 invnorm += l2*l2;
                 Vmath::Fill(2*npts,1.0,der1,1);
                 NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+                cout << "Area: " << area << endl;
+                /** 
+                cout << "L2(Pr): " << m_wavePressure->GetPlane(0)->L2() << endl;
+                cout << "L2(Pi): " << m_wavePressure->GetPlane(1)->L2() << endl;
+                Vmath::Vcopy(npts,der1,1,m_wavePressure->GetPlane(0)->UpdatePhys(),1);
+                Vmath::Vcopy(npts,der1,1,m_wavePressure->GetPlane(1)->UpdatePhys(),1);
+                cout << "L2(1): " << m_wavePressure->GetPlane(0)->L2() << endl;
+                cout << "L2(1): " << m_wavePressure->GetPlane(1)->L2() << endl;
+                exit(1);
+                **/
                 invnorm = sqrt(area/invnorm);
             }
         
@@ -640,7 +704,43 @@ namespace Nektar
             m_waveVelocities[1]->GetPlane(1)->BwdTrans(m_waveVelocities[1]->GetPlane(1)->GetCoeffs(),m_waveVelocities[1]->GetPlane(1)->UpdatePhys());
             Array<OneD, NekDouble> v_imag = m_waveVelocities[1]->GetPlane(1)->UpdatePhys();
             Vmath::Smul(npts,invnorm,v_imag,1,v_imag,1);
-        
+
+            // normalise wave for output
+            Vmath::Smul(2*ncoeffs,invnorm,m_waveVelocities[0]->UpdateCoeffs(),1,m_waveVelocities[0]->UpdateCoeffs(),1);
+            Vmath::Smul(2*ncoeffs,invnorm,m_waveVelocities[1]->UpdateCoeffs(),1,m_waveVelocities[1]->UpdateCoeffs(),1);
+            Vmath::Smul(2*ncoeffs,invnorm,m_waveVelocities[2]->UpdateCoeffs(),1,m_waveVelocities[2]->UpdateCoeffs(),1);
+
+            // dump field
+            {
+                Array<OneD, std::string> variables(3);
+                Array<OneD, Array<OneD, NekDouble> > outfield(3);
+                variables[0] = "u_w"; 
+                variables[1] = "v_w"; 
+                variables[2] = "w_w"; 
+                outfield[0] = m_waveVelocities[0]->UpdateCoeffs();
+                outfield[1] = m_waveVelocities[1]->UpdateCoeffs();
+                outfield[2] = m_waveVelocities[2]->UpdateCoeffs();
+                std::string outname = m_sessionName  + "_wave.fld";
+                m_solverRoll->WriteFld(outname, m_waveVelocities[0], outfield, variables);
+            }
+
+#if 1
+            int ncoeffs_p = m_wavePressure->GetPlane(0)->GetNcoeffs();
+            Vmath::Smul(ncoeffs_p,invnorm,m_wavePressure->GetPlane(0)->UpdateCoeffs(),1,m_wavePressure->GetPlane(0)->UpdateCoeffs(),1);
+            Vmath::Smul(ncoeffs_p,invnorm,m_wavePressure->GetPlane(1)->UpdateCoeffs(),1,m_wavePressure->GetPlane(1)->UpdateCoeffs(),1);
+
+
+
+#else
+            m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),m_wavePressure->GetPlane(0)->UpdatePhys());
+            Vmath::Smul(npts,invnorm,m_wavePressure->GetPlane(0)->UpdatePhys(),1,m_wavePressure->GetPlane(0)->UpdatePhys(),1);
+            m_wavePressure->GetPlane(0)->FwdTrans(m_wavePressure->GetPlane(0)->UpdatePhys(),m_wavePressure->GetPlane(0)->UpdateCoeffs());
+            
+            m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),m_wavePressure->GetPlane(1)->UpdatePhys());
+            Vmath::Smul(npts,invnorm,m_wavePressure->GetPlane(1)->UpdatePhys(),1,m_wavePressure->GetPlane(1)->UpdatePhys(),1);
+            m_wavePressure->GetPlane(1)->FwdTrans(m_wavePressure->GetPlane(1)->UpdatePhys(),m_wavePressure->GetPlane(1)->UpdateCoeffs());
+#endif
+       
             // Calculate non-linear terms for x and y directions
             // d/dx(u u* + u* u)
             Vmath::Vmul (npts,u_real,1,u_real,1,val,1);
@@ -757,17 +857,20 @@ namespace Nektar
                    val[i] = 0.5*(der1[i] - der1[index[i]]);
                }
 
-               m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
-
-
-               m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der1);
-               for(i = 0; i < npts; ++i)
-               {
-                   val[i] = 0.5*(der1[i] - der1[index[i]]);
-               }        
-            
+            m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der2);
+            for(i = 0; i < npts; ++i)
+            {
+                 val[i] = 0.5*(der2[i] - der2[index[i]]);
+            }        
                m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
             }
+
+
+            Vmath::Vmul(npts,der1,1,der1,1,val,1);
+            Vmath::Vvtvp(npts,der2,1,der2,1,val,1,val,1);
+            Vmath::Vsqrt(npts,val,1,val,1);
+            cout << "F_Linf: " <<  Vmath::Vmax(npts,val,1) << endl;
+
 #endif
 
 
@@ -797,20 +900,37 @@ namespace Nektar
                       m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(der1,m_vwiForcing[j]);
                  }
             }
+            
+            
+            // dump output
+            Array<OneD, std::string> variables(4);
+            Array<OneD, Array<OneD, NekDouble> > outfield(4);
+            variables[0] = "u";  variables[1] = "v"; 
+            variables[2] = "pr"; variables[3] = "pi";
+            outfield[0]  = m_vwiForcing[0];
+            outfield[1]  = m_vwiForcing[1];
+            Array<OneD,NekDouble> soln(npts,0.0);
+            m_wavePressure->GetPlane(0)->BwdTrans(m_wavePressure->GetPlane(0)->GetCoeffs(),m_wavePressure->GetPlane(0)->UpdatePhys());
+            outfield[2] = Array<OneD,NekDouble>(ncoeffs);
+            m_waveVelocities[0]->GetPlane(0)->FwdTrans_IterPerExp(m_wavePressure->GetPlane(0)->GetPhys(),outfield[2]);
+            m_wavePressure->GetPlane(1)->BwdTrans(m_wavePressure->GetPlane(1)->GetCoeffs(),m_wavePressure->GetPlane(1)->UpdatePhys());
+            
+            Vmath::Vmul(npts,m_wavePressure->GetPlane(0)->UpdatePhys(),1,
+                        m_wavePressure->GetPlane(0)->UpdatePhys(),1,val,1);
+            Vmath::Vvtvp(npts,m_wavePressure->GetPlane(1)->UpdatePhys(),1,
+                         m_wavePressure->GetPlane(1)->UpdatePhys(),1,val,1,val,1);
+            cout << "int P^2: " << m_wavePressure->GetPlane(0)->PhysIntegral(val) << endl;
+            Vmath::Vsqrt(npts,val,1,val,1);
+            cout << "PLinf: " <<  Vmath::Vmax(npts,val,1) << endl;
 
+            outfield[3] = Array<OneD,NekDouble>(ncoeffs);
+            m_waveVelocities[1]->GetPlane(0)->FwdTrans_IterPerExp(m_wavePressure->GetPlane(1)->GetPhys(),outfield[3]);
+            
+            std::string outname = m_sessionName  + ".vwi";
+            
+            m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
 
-      
-             // dump output
-             Array<OneD, std::string> variables(2);
-             Array<OneD, Array<OneD, NekDouble> > outfield(2);
-             variables[0] = "u";   variables[1] = "v";
-             outfield[0]  = m_vwiForcing[0];
-             outfield[1]  = m_vwiForcing[1];
-        
-             std::string outname = m_sessionName  + ".vwi";
-        
-             m_solverRoll->WriteFld(outname, m_waveVelocities[0]->GetPlane(0), outfield, variables);
-         }
+        }
     }
     
     void VortexWaveInteraction::CalcL2ToLinfPressure(void)
@@ -829,6 +949,7 @@ namespace Nektar
         
         Vmath::Vmul(npts,m_wavePressure->GetPlane(0)->UpdatePhys(),1,m_wavePressure->GetPlane(0)->UpdatePhys(),1,val,1);
         Vmath::Vvtvp(npts,m_wavePressure->GetPlane(1)->UpdatePhys(),1,m_wavePressure->GetPlane(1)->UpdatePhys(),1,val,1,val,1);
+        cout << "int P^2 " << m_wavePressure->GetPlane(0)->PhysIntegral(val) << endl;
         Vmath::Vsqrt(npts,val,1,val,1);
         
                
@@ -1793,7 +1914,6 @@ cout<<"cr="<<cr_str<<endl;
           }
           Vmath::Vcopy(nq,Ilayer->UpdatePhys(),1,m_bcsForcing[0],1);
 
-          
           //case relaxation==0 an additional array is needed
           Array<OneD, NekDouble> tmp_forcing(nq, 0.0);
 

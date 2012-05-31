@@ -1058,7 +1058,6 @@ namespace Nektar
                 }
                 else
                 {
-                    cout << "Boundary size: " << bndCondExp.num_elements() << endl;
                     //last region i and j=0 edge
                     bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
                     

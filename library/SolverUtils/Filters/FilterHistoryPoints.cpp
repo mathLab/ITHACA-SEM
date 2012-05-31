@@ -186,6 +186,7 @@ namespace Nektar
                 m_outputStream << gloCoord[2];
                 m_outputStream << endl;
             }
+            v_Update(pFields, time);
         }
 
 
@@ -194,6 +195,12 @@ namespace Nektar
          */
         void FilterHistoryPoints::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
+            // Only output every m_outputFrequency.
+            if ((m_index++) % m_outputFrequency)
+            {
+                return;
+            }
+
             int j         = 0;
             int k         = 0;
             int numPoints = m_historyPoints.size();

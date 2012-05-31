@@ -44,11 +44,6 @@ SET(CalcVWIplusPressureSource
        ./VortexWaveInteraction.cpp 
        )
 
-IF (NEKTAR_USE_ARPACK)
-    SET(VortexWaveInteractionSolverSource ${VortexWaveInteractionSolverSource}
-        ../Auxiliary/DriverArpack.cpp)
-ENDIF (NEKTAR_USE_ARPACK)
-
 ADD_SOLVER_EXECUTABLE(VortexWaveInteractionSolver solvers 
 		     ${VortexWaveInteractionSolverSource})
 

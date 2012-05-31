@@ -269,27 +269,27 @@ namespace Nektar
 		//================================================================
 		// Regular meshes
 		
-		SpatialStability = EigenvaluesRegMeshes[H-1][P-1];
+		//SpatialStability = EigenvaluesRegMeshes[H-1][P-1];
 		
 		//================================================================
 		// Anisotropic meshes
 		
-		//if (TimeStability == 1.0) 
-		//{
-		//	SpatialStability = EigenvaluesAnaMeshesAB2[H/2][P-1];
-		//}
-		//else if (TimeStability == 2.0) 
-		//{
-		//	SpatialStability = EigenvaluesAnaMeshesRK2[H/2][P-1];
-		//}
-		//else if (TimeStability == 2.784) 
-		//{
-		//	SpatialStability = EigenvaluesAnaMeshesRK4[H/2][P-1];
-		//}
-		//else 
-		//{
-		//	ASSERTL0(false,"error in time-scheme")
-		//}
+		if (TimeStability == 1.0) 
+		{
+			SpatialStability = EigenvaluesAnaMeshesAB2[H/2][P-1];
+		}
+		else if (TimeStability == 2.0) 
+		{
+			SpatialStability = EigenvaluesAnaMeshesRK2[H/2][P-1];
+		}
+		else if (TimeStability == 2.784) 
+		{
+			SpatialStability = EigenvaluesAnaMeshesRK4[H/2][P-1];
+		}
+		else 
+		{
+			ASSERTL0(false,"Dominant eigenvalues database not present for this time-stepping scheme")
+		}
 		
 		//================================================================
 		

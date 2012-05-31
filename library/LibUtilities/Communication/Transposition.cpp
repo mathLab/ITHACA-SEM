@@ -256,11 +256,14 @@ namespace Nektar
 						copy_len = num_pencil_per_proc - ((num_pencil_per_proc*m_num_processes[0]) - num_points_per_plane);
 					}
 					
-					for(j = 0; j < m_num_points_per_proc[0];j++)
+					if (copy_len > 0)
 					{
-						Vmath::Vcopy(copy_len,
-								 &(inarray[i*num_pencil_per_proc+j*num_points_per_plane]),1,
-								 &(outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1);
+						for(j = 0; j < m_num_points_per_proc[0];j++)
+						{
+							Vmath::Vcopy(copy_len,
+										 &(inarray[i*num_pencil_per_proc+j*num_points_per_plane]),1,
+										 &(outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1);
+						}
 					}
 				
 					m_SizeMap[i]   = num_pencil_per_proc*m_num_points_per_proc[0];
@@ -365,11 +368,15 @@ namespace Nektar
 					{
 						copy_len = num_pencil_per_proc - ((num_pencil_per_proc*m_num_processes[0])-num_points_per_plane);
 					}
-					for(j = 0; j < m_num_points_per_proc[0];j++)
+					
+					if(copy_len > 0)
 					{
-						Vmath::Vcopy(copy_len,
+						for(j = 0; j < m_num_points_per_proc[0];j++)
+						{
+							Vmath::Vcopy(copy_len,
 								 &(tmp_outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1,
 								 &(outarray[i*num_pencil_per_proc+j*num_points_per_plane]),1);
+						}
 					}
 				}
 			}

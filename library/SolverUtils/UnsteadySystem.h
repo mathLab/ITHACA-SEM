@@ -59,7 +59,10 @@ namespace Nektar
                 NekDouble timeCFL);
             
 			/// Calculate the larger time-step mantaining the problem stable, just for CFLTester equation
-			NekDouble GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability);
+			SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
+                int ExpOrder, 
+                NekDouble CFL, 
+                NekDouble TimeStability);
 		
             /// CFL number
             NekDouble m_cfl;
@@ -74,8 +77,8 @@ namespace Nektar
             /// Function to calculate the stability limit for DG/CG
             SOLVER_UTILS_EXPORT NekDouble GetStabilityLimit(int n);
             
-	    /// Function to calculate the stability limit for DG/CG (a vector
-	    /// of them)
+	        /// Function to calculate the stability limit for DG/CG (a vector
+	        /// of them)
             SOLVER_UTILS_EXPORT Array<OneD,NekDouble> 
                 GetStabilityLimitVector(
                     const Array<OneD,int> &ExpOrder);
@@ -138,26 +141,33 @@ namespace Nektar
 
             /// Evaulate flux = m_fields*ivel for i th component of Vu for
             /// direction j
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(const int i, const int j,
-                                         Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                         Array<OneD, Array<OneD, NekDouble> > &flux);
+            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
+                const int i, 
+                const int j,
+                      Array<OneD, Array<OneD, NekDouble> > &physfield,
+                      Array<OneD, Array<OneD, NekDouble> > &flux);
 		
             /// Virtual function to get the time step
-            SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
-                                            const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
+            SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
+                const Array<OneD,int> ExpOrder, 
+                const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
 		
             /// Virtual function to get the time step
-			virtual NekDouble v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability);
+			SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
+                int ExpOrder, 
+                NekDouble CFL, 
+                NekDouble TimeStability);
 
         private:
             ///
-            SOLVER_UTILS_EXPORT void WeakPenaltyforScalar(const int var,
-                                      const Array<OneD, const NekDouble> &physfield,
-                                      Array<OneD,       NekDouble> &penaltyflux,
-                                      NekDouble time=0.0);
+            void WeakPenaltyforScalar(
+                const int var,
+                const Array<OneD, const NekDouble> &physfield,
+                      Array<OneD,       NekDouble> &penaltyflux,
+                      NekDouble time=0.0);
 
             ///
-            SOLVER_UTILS_EXPORT void WeakPenaltyforVector(
+            void WeakPenaltyforVector(
                 const int var,
                 const int dir,
                 const Array<OneD, const NekDouble> &physfield,

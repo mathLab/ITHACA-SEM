@@ -804,7 +804,7 @@ namespace Nektar
 			
 			for(int i = 0; i < m_planes.num_elements(); i++)
 			{
-				m_planes[i]->PhysDeriv(tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
+				m_planes[i]->PhysDeriv(inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
 			}
 			
 			if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
@@ -870,7 +870,7 @@ namespace Nektar
 					
 					for(int i = 0; i < nP_pts; i++)
 					{
-						StdSeg.PhysDeriv(tmp1 = temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+						StdSeg.PhysDeriv(temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
 					}
 					
 					m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
@@ -900,7 +900,7 @@ namespace Nektar
 			{
 				for(int i=0; i < m_planes.num_elements(); i++)
 				{
-					m_planes[i]->PhysDeriv(edir, tmp1 = inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
+					m_planes[i]->PhysDeriv(edir, inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
 				}
 			}
 			else
@@ -965,7 +965,7 @@ namespace Nektar
 						
 						for(int i = 0; i < nP_pts; i++)
 						{
-							StdSeg.PhysDeriv(tmp1 = temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+							StdSeg.PhysDeriv(temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
 						}
 						
 						m_transposition->Transpose(outarray,out_d,false,LibUtilities::eZtoXY);

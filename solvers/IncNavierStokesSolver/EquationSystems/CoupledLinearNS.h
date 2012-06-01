@@ -177,6 +177,8 @@ namespace Nektar
 		NekDouble m_kinvisMin;
 		NekDouble m_kinvisStep;
 		NekDouble m_DeltaKinvis;
+		NekDouble m_KinvisPercentage;
+		
 		
 		
 

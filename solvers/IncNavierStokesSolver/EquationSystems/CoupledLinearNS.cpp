@@ -91,6 +91,7 @@ namespace Nektar
             }
             else
             {
+				//m_pressure2 = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(m_session, pressure_exp);
                 m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session, pressure_exp);
                 nz = 1;
             }
@@ -1261,6 +1262,7 @@ namespace Nektar
 			{				
 				m_session->LoadParameter("KinvisMin", m_kinvisMin);
 				m_session->LoadParameter("DeltaKinvis", m_DeltaKinvis);
+				m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
 				m_session->LoadParameter("Tolerence", m_tol);
 				m_session->LoadParameter("MaxIteration", m_maxIt);
 				m_session->LoadParameter("MatrixSetUpStep", m_MatrixSetUpStep);
@@ -1659,7 +1661,8 @@ namespace Nektar
 			m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
 		}
 		
-		m_kinvis -= m_DeltaKinvis;
+		//m_kinvis -= m_DeltaKinvis;
+		m_kinvis -= m_kinvis*m_KinvisPercentage/100;
 	}		
 	
 	

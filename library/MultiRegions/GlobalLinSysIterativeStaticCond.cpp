@@ -160,7 +160,7 @@ namespace Nektar
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
 
-            Array<OneD, NekDouble> F(nGlobDofs);
+            Array<OneD, NekDouble> F = m_wsp + nLocBndDofs;
             if(nDirBndDofs && dirForcCalculated)
             {
                 Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,F.get(),1);
@@ -178,7 +178,7 @@ namespace Nektar
             NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,out+nDirBndDofs,
                                               eWrapper);
             NekVector<NekDouble> V_Int(nIntDofs,out+nGlobBndDofs,eWrapper);
-            NekVector<NekDouble> V_LocBnd(nLocBndDofs,0.0);
+            NekVector<NekDouble> V_LocBnd(nLocBndDofs,m_wsp,eWrapper);
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
@@ -270,6 +270,10 @@ namespace Nektar
         {
             if(pLocToGloMap->AtLastLevel())
             {
+                int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
+                int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
+                m_wsp = Array<OneD, NekDouble>(nLocalBnd + nGlobal);
+
                 AssembleSchurComplement(pLocToGloMap);
             }
             else
@@ -714,15 +718,10 @@ namespace Nektar
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDir = nGlobal - nDir;
 
-            //NekVector<NekDouble> in (nNonDir, pInput + nDir,  eWrapper);
-            //NekVector<NekDouble> out(nNonDir, pOutput + nDir, eWrapper);
-            //out = (*m_gmat)*in;
-            //m_locToGloMap->UniversalAssembleBnd(pOutput);
-            Array<OneD, NekDouble> vloc(nLocal, 0.0);
-            NekVector<NekDouble> loc(nLocal, vloc, eWrapper);
-            m_locToGloMap->GlobalToLocalBnd(pInput, vloc);
+            NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
+            m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
             loc = (*m_schurCompl)*loc;
-            m_locToGloMap->AssembleBnd(vloc, pOutput);
+            m_locToGloMap->AssembleBnd(m_wsp, pOutput);
         }
 
 

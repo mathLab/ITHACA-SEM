@@ -86,9 +86,12 @@ namespace Nektar
 		protected:
 			
 			Array<OneD,NekDouble> m_FFTW_w;  // weights to convert arrays form Nektar++ to FFTW format
-			
+			Array<OneD,NekDouble> m_FFTW_w_inv; // weights to convert arrays from FFTW to Nektar++ format
+
 			Array<OneD,NekDouble> phys;
 			Array<OneD,NekDouble> coef;
+
+			Array<OneD,NekDouble> m_wsp;     // Workspace area for transforms
 
 			fftw_plan plan_backward;         // plan to execute a backward FFT in FFTW
 			fftw_plan plan_forward;          // plan to execute a forward FFT in FFTW

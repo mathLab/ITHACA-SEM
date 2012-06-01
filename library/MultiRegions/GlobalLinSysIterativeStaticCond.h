@@ -105,6 +105,9 @@ namespace Nektar
             // Local to global map.
             boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
 
+            // Workspace array for matrix multiplication
+            Array<OneD, NekDouble> m_wsp;
+
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             virtual void v_Solve(

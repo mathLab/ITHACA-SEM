@@ -87,7 +87,10 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalMat()
+            m_globalMat(),
+            m_globalLinSysManager(
+                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
         }
 
@@ -120,7 +123,9 @@ namespace Nektar
                                  const bool CheckIfSingularSystem):
             DisContField2D(pSession,graph2D,variable,false),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSysManager(
+                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             map<int,int> periodicEdges;
@@ -171,7 +176,9 @@ namespace Nektar
                                  const bool CheckIfSingularSystem):
             DisContField2D(In,graph2D,variable,false,DeclareCoeffPhysArrays),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSysManager(
+                    boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
@@ -210,7 +217,7 @@ namespace Nektar
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
             m_globalMat(In.m_globalMat),
-            m_globalLinSys(In.m_globalLinSys)
+            m_globalLinSysManager(In.m_globalLinSysManager)
         {
             if(DeclareCoeffPhysArrays)
             {
@@ -597,24 +604,16 @@ namespace Nektar
         GlobalLinSysSharedPtr ContField2D::GetGlobalLinSys(
                                 const GlobalLinSysKey &mkey)
         {
+            return m_globalLinSysManager[mkey];
+        }
+
+        GlobalLinSysSharedPtr ContField2D::GenGlobalLinSys(
+                                const GlobalLinSysKey &mkey)
+        {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
                      "To use method must have a LocalToGlobalBaseMap "
                      "attached to key");
-
-            GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(mkey);
-
-            if(matrixIter == m_globalLinSys->end())
-            {
-                glo_matrix = GenGlobalLinSys(mkey,m_locToGloMap);
-                (*m_globalLinSys)[mkey] = glo_matrix;
-            }
-            else
-            {
-                glo_matrix = matrixIter->second;
-            }
-
-            return glo_matrix;
+            return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
         }
 
 

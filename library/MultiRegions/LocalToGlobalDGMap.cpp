@@ -163,6 +163,8 @@ namespace Nektar
 
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             CalculateBndSystemBandWidth();
+
+            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(), m_localToGlobalBndMap.end());
         }
 
 
@@ -629,6 +631,8 @@ namespace Nektar
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
+
+            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(), m_localToGlobalBndMap.end());
         }
 
         /**
@@ -1267,6 +1271,8 @@ namespace Nektar
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
+
+            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(), m_localToGlobalBndMap.end());
         }
 
         /**

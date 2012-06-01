@@ -149,8 +149,15 @@ namespace Nektar
 //                }
 //            }
 
-
-            if(lhs.m_locToGloMap.get() < rhs.m_locToGloMap.get())
+            if(!rhs.m_locToGloMap.get())
+            {
+                return false;
+            }
+            else if(!lhs.m_locToGloMap.get() && rhs.m_locToGloMap.get() )
+            {
+                return true;
+            }
+            if(lhs.m_locToGloMap->GetHash() < rhs.m_locToGloMap->GetHash())
             {
                 return true;
             }

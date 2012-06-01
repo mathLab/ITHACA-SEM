@@ -80,6 +80,7 @@ namespace Nektar
         LocalToGlobalBaseMap::LocalToGlobalBaseMap():
             m_session(),
             m_comm(),
+            m_hash(0),
             m_solnType(eNoSolnType),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
@@ -94,6 +95,7 @@ namespace Nektar
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(const LibUtilities::SessionReaderSharedPtr &pSession):
             m_session(pSession),
             m_comm(pSession->GetComm()),
+            m_hash(0),
             m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
             m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
             m_numLocalBndCoeffs(0),
@@ -116,6 +118,7 @@ namespace Nektar
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph):
             m_session(oldLevelMap->m_session),
             m_comm(oldLevelMap->GetComm()),
+            m_hash(0),
             m_solnType(oldLevelMap->m_solnType),
             m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),

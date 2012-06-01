@@ -45,7 +45,10 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalMat()
+            m_globalMat(),
+            m_globalLinSysManager(
+                    boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
         }
 
@@ -75,7 +78,9 @@ namespace Nektar
                                  const std::string &variable):
                 DisContField3D(pSession,graph3D,variable,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-                m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+                m_globalLinSysManager(
+                        boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
+                        std::string("GlobalLinSys"))
         {
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
@@ -122,7 +127,10 @@ namespace Nektar
                                  const std::string &variable):
 	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSysManager(
+                    boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
+
         {
             if(!SameTypeOfBoundaryConditions(In))
             {
@@ -157,7 +165,7 @@ namespace Nektar
                 m_contNcoeffs(In.m_contNcoeffs),
                 m_contCoeffs(m_contNcoeffs,0.0),
                 m_globalMat(In.m_globalMat),
-                m_globalLinSys(In.m_globalLinSys)
+                m_globalLinSysManager(In.m_globalLinSysManager)
         {
         }
 
@@ -392,21 +400,19 @@ namespace Nektar
 
         GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)
         {
-            GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(mkey);
-
-            if(matrixIter == m_globalLinSys->end())
-            {
-                glo_matrix = GenGlobalLinSys(mkey,m_locToGloMap);
-                (*m_globalLinSys)[mkey] = glo_matrix;
-            }
-            else
-            {
-                glo_matrix = matrixIter->second;
-            }
-
-            return glo_matrix;
+            return m_globalLinSysManager[mkey];
         }
+
+
+        GlobalLinSysSharedPtr ContField3D::GenGlobalLinSys(
+                                const GlobalLinSysKey &mkey)
+        {
+            ASSERTL1(mkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+            return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
+        }
+
 
         /**
          * Returns the global matrix associated with the given GlobalMatrixKey.

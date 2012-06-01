@@ -135,7 +135,7 @@ namespace Nektar
             /// (A shared pointer to) a list which collects all the global
             /// linear system being assembled, such that they should be
             /// constructed only once.
-            GlobalLinSysMapShPtr            m_globalLinSys;
+            LibUtilities::NekManager<GlobalLinSysKey, GlobalLinSys> m_globalLinSysManager;
 
             /// Performs the backward transformation of the spectral/hp
             /// element expansion.
@@ -159,6 +159,8 @@ namespace Nektar
 
         private:
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+
+            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
             /// Returns the global matrix specified by \a mkey.
             GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);

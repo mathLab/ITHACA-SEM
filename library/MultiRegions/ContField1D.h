@@ -188,19 +188,20 @@ namespace Nektar
             /// only once.
             GlobalMatrixMapShPtr            m_globalMat;
 
-            /// (A shared pointer to) a list which collects all the global
-            /// matrices being assembled, such that they should be constructed
-            /// only once.
-            GlobalLinSysMapShPtr            m_globalLinSys;
+            /// A manager which collects all the global
+            /// linear systems being assembled, such that they should be
+            /// constructed only once.
+            LibUtilities::NekManager<GlobalLinSysKey, GlobalLinSys> m_globalLinSysManager;
 
         private:
-			
 			MULTI_REGIONS_EXPORT virtual int v_GetContNcoeffs() const;
 			
 			MULTI_REGIONS_EXPORT virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 			
             /// Returns the linear system specified by \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+
+            GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
             /// Solve the linear system specified by the key \a key.
             void GlobalSolve(   const GlobalLinSysKey &key,

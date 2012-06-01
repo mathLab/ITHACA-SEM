@@ -71,6 +71,9 @@ namespace Nektar
             /// Retrieves the communicator
             inline LibUtilities::CommSharedPtr GetComm();
 
+            /// Retrieves the hash of this map
+            inline size_t GetHash() const;
+
             inline int GetLocalToGlobalMap(const int i) const;
 
             inline int GetGlobalToUniversalMap(const int i) const;
@@ -244,6 +247,9 @@ namespace Nektar
             /// Communicator
             LibUtilities::CommSharedPtr m_comm;
 
+            /// Hash for map
+            size_t m_hash;
+
             /// Number of local boundary coefficients
             int m_numLocalBndCoeffs;
             /// Total number of global boundary coefficients
@@ -387,6 +393,11 @@ namespace Nektar
         inline LibUtilities::CommSharedPtr LocalToGlobalBaseMap::GetComm()
         {
             return m_comm;
+        }
+
+        inline size_t LocalToGlobalBaseMap::GetHash() const
+        {
+            return m_hash;
         }
 
         inline int LocalToGlobalBaseMap::GetLocalToGlobalMap(const int i) const

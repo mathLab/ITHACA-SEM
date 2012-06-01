@@ -86,7 +86,10 @@ namespace Nektar
             DisContField1D(),
             m_locToGloMap(),
             m_contNcoeffs(0),
-            m_contCoeffs()
+            m_contCoeffs(),
+            m_globalLinSysManager(
+                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
         }
 
@@ -119,7 +122,9 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSysManager(
+                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
             map<int,int> periodicVertices;
@@ -146,7 +151,9 @@ namespace Nektar
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
             m_contCoeffs(m_contNcoeffs,0.0),
-            m_globalLinSys(In.m_globalLinSys)
+            m_globalLinSysManager(
+                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
         }
 
@@ -160,14 +167,16 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSysManager(
+                    boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
+                    std::string("GlobalLinSys"))
         {
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(pSession,m_ncoeffs, In);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-	}           
+        }
             
         /**
          *
@@ -379,21 +388,18 @@ namespace Nektar
         GlobalLinSysSharedPtr ContField1D::GetGlobalLinSys(
                                 const GlobalLinSysKey &mkey)
         {
-            GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(mkey);
-
-            if(matrixIter == m_globalLinSys->end())
-            {
-                glo_matrix = GenGlobalLinSys(mkey,m_locToGloMap);
-                (*m_globalLinSys)[mkey] = glo_matrix;
-            }
-            else
-            {
-                glo_matrix = matrixIter->second;
-            }
-
-            return glo_matrix;
+            return m_globalLinSysManager[mkey];
         }
+
+        GlobalLinSysSharedPtr ContField1D::GenGlobalLinSys(
+                                const GlobalLinSysKey &mkey)
+        {
+            ASSERTL1(mkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+            return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
+        }
+
 
         /**
          * The operation is evaluated locally (i.e. with respect to all local

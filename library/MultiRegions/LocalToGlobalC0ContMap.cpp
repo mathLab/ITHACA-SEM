@@ -357,6 +357,8 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;
 
             SetUpUniversalC0ContMap(locExp);
+
+            m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
         }
 
 
@@ -699,6 +701,7 @@ namespace Nektar
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
+            m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
         }
 
 
@@ -2375,6 +2378,8 @@ namespace Nektar
                     m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
+
+            m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
         }
 
         /**

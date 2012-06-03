@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     cout << "# x_c y_c" << endl;
     for(i = 0; i < npts; ++i)
     {
-        fprintf(stdout,"%lf %lf \n",x_c[i],y_c[i]);
+        fprintf(stdout,"%12.10lf %12.10lf \n",x_c[i],y_c[i]);
         //cout << x_c[i] << " " << y_c[i] << endl;
     }
 }

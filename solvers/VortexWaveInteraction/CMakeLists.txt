@@ -44,6 +44,15 @@ SET(CalcVWIplusPressureSource
        ./VortexWaveInteraction.cpp 
        )
 
+SET(ExtractCriticalLayerSource
+       ./ExtractCriticalLayer.cpp
+       )
+
+IF (NEKTAR_USE_ARPACK)
+    SET(VortexWaveInteractionSolverSource ${VortexWaveInteractionSolverSource}
+        ../Auxiliary/DriverArpack.cpp)
+ENDIF (NEKTAR_USE_ARPACK)
+
 ADD_SOLVER_EXECUTABLE(VortexWaveInteractionSolver solvers 
 		     ${VortexWaveInteractionSolverSource})
 
@@ -52,4 +61,7 @@ ADD_SOLVER_EXECUTABLE(CalcL2ToLinfPressure solvers
                         
 ADD_SOLVER_EXECUTABLE(CalcVWIplusPressure solvers 
 		     ${CalcVWIplusPressureSource})
+                        
+ADD_SOLVER_EXECUTABLE(ExtractCriticalLayer solvers 
+		     ${ExtractCriticalLayerSource})
                         

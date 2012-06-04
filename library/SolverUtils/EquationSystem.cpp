@@ -1580,7 +1580,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDimensions);
             
             /// Vector to store the derivative of the discontinuous flux
-            Array<OneD, Array<OneD, NekDouble> > derfluxvector(nDimensions);
+            Array<OneD, Array<OneD, NekDouble> > divfluxvector(nDimensions);
             
             /// Vector to store the solution in physical space
             Array<OneD, Array<OneD, NekDouble> > physfield (nVariables);
@@ -1589,7 +1589,7 @@ namespace Nektar
             for(i = 0; i < nDimensions; ++i)
             {
                 fluxvector[i]       = Array<OneD, NekDouble>(nQuadraturePts);
-                derfluxvector[i]    = Array<OneD, NekDouble>(nQuadraturePts);
+                divfluxvector[i]    = Array<OneD, NekDouble>(nQuadraturePts);
             }
             
             /// Get the solution in physical space already in physical space
@@ -1618,39 +1618,25 @@ namespace Nektar
                 GetFluxVector(i, physfield, fluxvector);
             }
             
-            Array<OneD,NekDouble> tmpFD, tmpDFDx, tmpFDy, tmpFDz;
+            Array<OneD,NekDouble> tmpFD, tmpDFD;
             
             /// Computation of the divergence of the discontinuous flux at each quadrature point
-            switch(nDimensions)
+            LibUtilities::BasisSharedPtr Basis;
+            Basis = m_fields[0]->GetExp(0)->GetBasis(0);
+            //StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+                    
+            for(j = 0; j < nVariables; j++)
             {
-                case 1:
+                for(i = 0; i < nElements; i++)
                 {
-                    /// Derivative on the standard element of the discontinuous flux at the solution points
-                    LibUtilities::BasisSharedPtr Basis;
-                    Basis = m_fields[0]->GetExp(0)->GetBasis(0);
-                    StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+                    int phys_offset = m_fields[j]->GetPhys_Offset(i);
+                    m_fields[j]->GetExp(i)->StdPhysDeriv(j, tmpFD   = fluxvector[j] + phys_offset, 
+                                                            tmpDFD  = divfluxvector[j] + phys_offset);
                     
-                    for(j = 0; j < nVariables; j++)
-                    {
-                        for(i = 0; i < nElements; i++)
-                        {
-                            StdSeg.PhysDeriv(tmpFD = fluxvector[0] + i*nQuadraturePts/nElements, tmpDFDx = derfluxvector[0] + i*nQuadraturePts/nElements);
-                        }
-                    }
-                    break;
+                    //StdSeg.PhysDeriv(tmpFD = fluxvector[0] + i*nQuadraturePts/nElements, tmpDFDx = divfluxvector[0] + i*nQuadraturePts/nElements);
                 }
-                case 2:
-                {
-                    ASSERTL0(false,"2D FR case not implemented yet");
-                    break;
-                }
-                case 3:
-                {
-                    ASSERTL0(false,"3D FR case not implemented yet");
-                    break;
-                }
-                    
             }
+
             
             /// Array to store the intercell numerical fluxes
             Array<OneD, Array<OneD, NekDouble> > numflux(nVariables);
@@ -1716,7 +1702,7 @@ namespace Nektar
                         
                         Vmath::Vadd(nQuadraturePts/nElements, 
                                     tmparray = OutField[0] + i*nQuadraturePts/nElements, 1, 
-                                    tmp = derfluxvector[0] + i*nQuadraturePts/nElements, 1, 
+                                    tmp = divfluxvector[0] + i*nQuadraturePts/nElements, 1, 
                                     tmparray = OutField[0] + i*nQuadraturePts/nElements, 1); 
                     }
                     break;

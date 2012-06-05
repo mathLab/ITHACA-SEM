@@ -203,7 +203,7 @@ namespace Nektar
                 z = z_new;
                 k++;
 
-                ASSERTL1(k < 20000,
+                ASSERTL0(k < 20000,
                          "Exceeded maximum number of iterations (20000)");
             }
         }

@@ -1232,11 +1232,12 @@ namespace Nektar
          */
         void EquationSystem::v_Output(void)
         {
-            std::string outname = m_sessionName + ".fld";
+            std::string outname = m_sessionName;
             if (m_comm->GetSize() > 1)
             {
-                outname += "." + boost::lexical_cast<std::string>(m_comm->GetRank());
+                outname += "_P"+boost::lexical_cast<std::string>(m_comm->GetRank());
             }
+            outname += ".fld";
             WriteFld(outname);                 
         }
 

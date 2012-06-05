@@ -1318,14 +1318,13 @@ namespace Nektar
                     solverInfo = solverInfo->NextSiblingElement("I");
                 }
             }
-
-            if (m_comm && m_comm->GetSize() > 1)
+            if (m_comm && m_comm->GetRowComm()->GetSize() > 1)
             {
                 ASSERTL0 (m_solverInfo["GLOBALSYSSOLN"] == "IterativeFull"
                     || m_solverInfo["GLOBALSYSSOLN"] == "IterativeStaticCond",
                     "An iterative solver must be used when run in parallel.");
             }
-
+            
             if (m_verbose && m_solverInfo.size() > 0 && m_comm)
             {
                 cout << "Solver Info:" << endl;

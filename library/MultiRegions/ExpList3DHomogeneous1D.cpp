@@ -420,30 +420,56 @@ namespace Nektar
                 errL2 = m_planes[n]->L2();
                 err += errL2*errL2*local_w[n]*m_lhom*0.5;
             }
-			
-			m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
-			
+            
+            m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
+                        
             return sqrt(err);
         }
 		
-		Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
+        Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
-            int cnt = 0;
-			int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-			
-			Array<OneD, NekDouble> Energy(m_planes.num_elements(),0.0);
-			
-			for(int n = 0; n < m_planes.num_elements(); ++n)
+            int cnt = 0, cnt1 = 0;
+            int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
+
+            Array<OneD, NekDouble> energy(m_planes.num_elements()/2);
+            double area = 0.0;
+
+            // Calculate total area of elements.
+            for (int n = 0; n < m_planes[0]->GetExpSize(); ++n)
             {
-				for(int i = 0; i < ncoeffs_per_plane; i++)
-				{
-					Energy[n] += (m_coeffs[i+n*ncoeffs_per_plane]*m_coeffs[i+n*ncoeffs_per_plane])/ncoeffs_per_plane;
-				}
-				
-				m_comm->GetRowComm()->AllReduce(Energy[n], LibUtilities::ReduceSum);
-			}
-			
-            return Energy;
+                Array<OneD, NekDouble> inarray(m_planes[0]->GetExp(n)->GetTotPoints(), 1.0);
+                area += m_planes[0]->GetExp(n)->Integral(inarray);
+            }
+            
+            m_comm->GetRowComm()->AllReduce(area, LibUtilities::ReduceSum);
+            
+            // Calculate L2 norm of real/imaginary planes.
+            for (int n = 0; n < m_planes.num_elements(); n += 2)
+            {
+                double err;
+                
+                energy[n/2] = 0;
+                
+                for(int i = 0; i < m_planes[n]->GetExpSize(); ++i)
+                {
+                    StdRegions::StdExpansionSharedPtr exp = m_planes[n]->GetExp(i);
+                    exp->BwdTrans(m_planes[n]->GetCoeffs()+m_planes[n]->GetCoeff_Offset(i),
+                                  exp->UpdatePhys());
+                    err = exp->L2();
+                    energy[n/2] += err*err;
+                    
+                    exp = m_planes[n+1]->GetExp(i);
+                    exp->BwdTrans(m_planes[n+1]->GetCoeffs()+m_planes[n+1]->GetCoeff_Offset(i),
+                                  exp->UpdatePhys());
+                    err = exp->L2();
+                    energy[n/2] += err*err;
+                }
+                
+                m_comm->GetRowComm()->AllReduce(energy[n/2], LibUtilities::ReduceSum);
+                energy[n/2] /= 2.0*area;
+            }
+            
+            return energy;
         }
     } //end of namespace
 } //end of namespace

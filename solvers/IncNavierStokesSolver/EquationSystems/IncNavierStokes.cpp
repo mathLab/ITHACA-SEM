@@ -37,6 +37,7 @@
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -233,11 +234,11 @@ namespace Nektar
         std::string   mdlname = m_session->GetSessionName() + ".mdl";
         std::ofstream mdlFile;
 
-        if (m_energysteps)
+        if (m_energysteps && m_comm->GetRank() == 0)
         {
             mdlFile.open(mdlname.c_str());
         }
-
+        
         //Time advance
         for(n = 0; n < nsteps; ++n)
         {
@@ -245,7 +246,7 @@ namespace Nektar
             fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, IntegrationSoln, m_integrationOps);
             
             m_time += m_timestep;
-       		
+            
             // Write out current time step
             if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
             {
@@ -259,20 +260,49 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-                        Array<OneD, NekDouble> Energy(m_npointsZ,0.0);
-                        Array<OneD, NekDouble> Energy_tmp(m_npointsZ,0.0);
+                        int colrank = m_comm->GetColumnComm()->GetRank();
+                        int nproc   = m_comm->GetColumnComm()->GetSize();
+                        int locsize = m_npointsZ/nproc/2;
+                        int ensize  = m_npointsZ/nproc/2;
+                        
+                        Array<OneD, NekDouble> energy    (locsize,0.0);
+                        Array<OneD, NekDouble> energy_tmp(locsize,0.0);
+                        Array<OneD, NekDouble> tmp;
 			
+                        // Calculate modal energies.
                         for(i = 0; i < m_nConvectiveFields; ++i)
                         {
-                            Energy_tmp = m_fields[i]->HomogeneousEnergy();
-                            Vmath::Vadd(m_npointsZ,Energy_tmp,1,Energy,1,Energy,1);
+                            energy_tmp = m_fields[i]->HomogeneousEnergy();
+                            Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
                         }
-                        mdlFile << m_time << "\t";
-                        for(i = 0; i < m_npointsZ; i++)
+                        
+                        // Send to root process.
+                        if (colrank == 0)
                         {
-                            mdlFile << Energy[i] << "\t";
+                            int j, m = 0;
+                            
+                            for (j = 0; j < energy.num_elements(); ++j, ++m)
+                            {
+                                mdlFile << setw(10) << m_time 
+                                        << setw(5)  << m
+                                        << setw(18) << energy[j] << endl;
+                            }
+                            
+                            for (i = 1; i < nproc; ++i)
+                            {
+                                m_comm->GetColumnComm()->Recv(i, energy);
+                                for (j = 0; j < energy.num_elements(); ++j, ++m)
+                                {
+                                    mdlFile << setw(10) << m_time 
+                                            << setw(5)  << m
+                                            << setw(18) << energy[j] << endl;
+                                }
+                            }
                         }
-                        mdlFile << endl;
+                        else
+                        {
+                            m_comm->GetColumnComm()->Send(0, energy);
+                        }
                     }
                     else
                     {

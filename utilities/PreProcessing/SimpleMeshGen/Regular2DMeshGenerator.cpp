@@ -318,19 +318,19 @@ void  PrintConditions(ofstream& output)
 
     output << "<BOUNDARYCONDITIONS>" << endl;
     output << "  <REGION REF=\"0\"> // South border " << endl;
-    output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
+    output << "     <N VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
 
     output << "  <REGION REF=\"1\"> // West border " << endl;
-    output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
+    output << "     <N VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
 
     output << "  <REGION REF=\"2\"> // North border " << endl;
-    output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
+    output << "     <N VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
 
     output << "  <REGION REF=\"3\"> // East border " << endl;
-    output << "     <D VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
+    output << "     <N VAR=\"u\" VALUE=\"sin(PI/2*x)*sin(PI/2*y)\" />"  << endl;
     output << "  </REGION>" << endl;
     output << "</BOUNDARYCONDITIONS>" << endl;
 

@@ -1261,7 +1261,6 @@ namespace Nektar
 		case eSteadyNavierStokes:
 			{				
 				m_session->LoadParameter("KinvisMin", m_kinvisMin);
-				m_session->LoadParameter("DeltaKinvis", m_DeltaKinvis);
 				m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
 				m_session->LoadParameter("Tolerence", m_tol);
 				m_session->LoadParameter("MaxIteration", m_maxIt);
@@ -1433,23 +1432,26 @@ namespace Nektar
 				Timer Generaltimer;
 				Generaltimer.Start();
 				
-				SolveSteadyNavierStokes();
-				
 				int Check(0);
+				
+				cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
+				Checkpoint_Output(Check);
+				Check++;
+				
 				while(m_kinvis > m_kinvisMin)
-				{
-					if(Check==0)
+				{		
+					if (Check == 1)
 					{
-						cout << "At this step, m_kinvis = "<< m_kinvis <<endl;
+						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
+						SolveSteadyNavierStokes();
 						Checkpoint_Output(Check);
 						Check++;
 					}
 					
 					Continuation();
 					
+					cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
 					SolveSteadyNavierStokes();
-					
-					cout << "At this step, m_kinvis = "<< m_kinvis <<endl;
 					Checkpoint_Output(Check);
 					Check++;
 				}
@@ -1458,7 +1460,7 @@ namespace Nektar
 				//PressureReconstruction();
 				
 				Generaltimer.Stop();
-				cout<<"The general calculation time is : " << Generaltimer.TimePerTest(1)/60 << " minute(s). \n\n";
+				cout<<"\nThe total calculation time is : " << Generaltimer.TimePerTest(1)/60 << " minute(s). \n\n";
 				
 				break;
 			}
@@ -1602,8 +1604,8 @@ namespace Nektar
 				
 			if(max(Inf_norm[0], Inf_norm[1]) > 100)
 			{
-				cout << "\nEt pour rappel, m_kinvis = " << m_kinvis << endl;
-				ASSERTL0(0, " The Newton method has failed... \n");
+				cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
+				ASSERTL0(0, "The Newton method has failed... \n");
 			}
 			
 			cout << "\n";
@@ -1654,14 +1656,13 @@ namespace Nektar
 			u_star[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
 			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_star[i]);
 		
-			//u_star(k+1) = u_N(k) + m_DeltaKinvis *  u_star(k)
-			Vmath::Smul(u_star[i].num_elements(), m_DeltaKinvis, u_star[i], 1, u_star[i], 1);
+			//u_star(k+1) = u_N(k) + DeltaKinvis *  u_star(k)
+			Vmath::Smul(u_star[i].num_elements(), m_kinvis*m_KinvisPercentage/100, u_star[i], 1, u_star[i], 1);
 			Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1, u_N[i], 1, u_star[i], 1);
 					
 			m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
 		}
 		
-		//m_kinvis -= m_DeltaKinvis;
 		m_kinvis -= m_kinvis*m_KinvisPercentage/100;
 	}		
 	

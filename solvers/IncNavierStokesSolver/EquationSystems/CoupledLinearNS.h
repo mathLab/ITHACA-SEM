@@ -176,7 +176,6 @@ namespace Nektar
 		int m_MatrixSetUpStep; 
 		NekDouble m_kinvisMin;
 		NekDouble m_kinvisStep;
-		NekDouble m_DeltaKinvis;
 		NekDouble m_KinvisPercentage;
 		
 		

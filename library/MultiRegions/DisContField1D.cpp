@@ -895,16 +895,11 @@ namespace Nektar
                     
                     t_offset = GetTrace()->GetPhys_Offset(n+p);
                     
-                    
                     if(vertnorm >= 0.0) 
                     {
                         outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
                     }
                     
-                    //if(vertnorm >= 0.0) 
-                    //{
-                    //    outarray[offset+1] += Fn[t_offset];
-                    //}	
                     if(vertnorm < 0.0) 
                     {
                         outarray[offset] -= Fn[t_offset];

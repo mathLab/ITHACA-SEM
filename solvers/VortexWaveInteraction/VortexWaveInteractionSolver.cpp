@@ -221,6 +221,10 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
                 if(exit_iteration == false)
                 {
                     vwi.UpdateAlpha(nouter_iter);
+                    if(vwi.IfIterInterface()==true)
+                    {
+                          vwi.CalcNonLinearWaveForce();
+                    }
                 }
 
 		// Redo iteration if at first coarse search 

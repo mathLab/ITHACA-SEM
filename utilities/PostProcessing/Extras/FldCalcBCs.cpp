@@ -67,7 +67,7 @@ decomment the lines which follow '//decomment'
 
 
     
-    int i,j;
+
     if(argc >= 6  || argc <4)
     {
         fprintf(stderr,"Usage: ./FldCalcBCs  meshfile fieldfile  streakfile (optional)alpha\n");
@@ -205,21 +205,42 @@ cout<<"set ppp"<<endl;
     // Copy data from file:fill fields with the fielddata
     if(lastfield==1)
     {
+
         for(int i = 0; i < fielddata.size(); ++i)
         {        	
-            fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
-        }             
-        fields[0]->BwdTrans(fields[0]->GetCoeffs(),fields[0]->UpdatePhys());
-cout<<"field:"<<fielddef[i]->m_fields[0]<<endl;
+            fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[0]->m_fields[0]);
+        }        
+   
+        fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(),fields[0]->UpdatePhys());
+cout<<"field:"<<fielddef[0]->m_fields[0]<<endl;
+/*
+        //bwd plane 0
+        fields[0]->GetPlane(0)->BwdTrans_IterPerExp(fields[0]->GetPlane(0)->GetCoeffs(),  
+                          fields[0]->GetPlane(0)->UpdatePhys() );
+cout<<"hjhj"<<endl;
+        //bwd plane 1
+        fields[0]->GetPlane(1)->BwdTrans_IterPerExp(fields[0]->GetPlane(1)->GetCoeffs(), 
+                          fields[0]->GetPlane(1)->UpdatePhys() );
+*/
+
         for(int i = 0; i < fielddata.size(); ++i)
         {        	
             fields[lastfield]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
         }             
-        fields[lastfield]->BwdTrans_IterPerExp(fields[lastfield]->GetCoeffs(),fields[lastfield]->UpdatePhys());        
+        fields[lastfield]->BwdTrans_IterPerExp(fields[lastfield]->GetCoeffs(),fields[lastfield]->UpdatePhys());       
+/*
+        //bwd plane 0
+        fields[lastfield]->GetPlane(0)->BwdTrans_IterPerExp(fields[lastfield]->GetPlane(0)->GetCoeffs(),  
+                          fields[lastfield]->GetPlane(0)->UpdatePhys() );
+
+        //bwd plane 1
+        fields[lastfield]->GetPlane(1)->BwdTrans_IterPerExp(fields[lastfield]->GetPlane(1)->GetCoeffs(), 
+                          fields[lastfield]->GetPlane(1)->UpdatePhys() ); 
+*/
     }
     else
     {
-        for(j = 0; j < nfields; ++j)
+        for(int j = 0; j < nfields; ++j)
         {  	       	    
             for(int i = 0; i < fielddata.size(); ++i)
             {
@@ -632,7 +653,7 @@ cout<<"layer region="<<Ireg<<endl;
             {
                 pfield =3;
             }
-cout<<"uouo"<<pfield<<endl;
+
             MultiRegions::ExpListSharedPtr pressure =infields[pfield];
 
             Array<OneD, MultiRegions::ExpListSharedPtr> Iexp =infields[0]->GetBndCondExpansions();
@@ -839,7 +860,7 @@ cout<<"uouo"<<pfield<<endl;
 		     int Imoffsetreg = pressure->GetPlane(1)->GetCoeff_Offset(elmtidreg);
 		     int stoffsetreg = streak->GetCoeff_Offset(elmtidreg);
 		     
-cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
+//cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;		     
 		     
 
 
@@ -1129,7 +1150,7 @@ cout<<" Re offsetdown="<<Reoffsetreg<<"   Im offset="<<Imoffsetreg<<endl;
              Array<OneD, NekDouble>  I_int(np,1.0);
              NekDouble Area1 = pressure->GetPlane(0)->PhysIntegral(I_int);
              NekDouble normint2D = sqrt(Area1/intP2_2D);
-cout<<"norm2D="<<norm2D<<"    area="<<Area<<"    intP2_2D="<<intP2_2D<<"   normint2D="<<normint2D<<endl;
+cout<<"norm2D="<<norm2D<<"    area="<<Area1<<"    intP2_2D="<<intP2_2D<<"   normint2D="<<normint2D<<endl;
 
 ///////////////////////////////////////////////////////////1D norm
              NekDouble norm;
@@ -1142,7 +1163,10 @@ cout<<"norm2D="<<norm2D<<"    area="<<Area<<"    intP2_2D="<<intP2_2D<<"   normi
              NekDouble  length = Ilayer->GetPlane(0)->PhysIntegral(sqrtlen);
              NekDouble  int1D = Ilayer->GetPlane(0)->PhysIntegral(P2reg);
              norm = sqrt(length/int1D);
-cout<<"norm1D="<<norm<<endl;             
+ 
+             NekDouble scal = Area/length;
+cout<<"norm1D="<<norm<<"   norm2D/norm1D="<<norm2D/norm<<endl;     
+cout<<"scal="<<scal<<endl;        
              //norm*pressure
              Vmath::Smul(nq1D,norm,Rephysreg,1,Rephysreg,1);                       
              Vmath::Smul(nq1D,norm,Imphysreg,1,Imphysreg,1);      
@@ -1362,6 +1386,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
  	       alpha = session->GetParameter("ALPHA");
            }
 cout<<"alpha="<<alpha<<endl;
+
            ASSERTL0(alpha!=0, "alpha cannot be 0");
            NekDouble alpha53;
            //alpha53=1;
@@ -1527,9 +1552,7 @@ cout<<"length layer="<<length<<endl;
             NekDouble basetest;
 	    for(int g=0; g<nq1D; g++)
 	    {
-                //pjump[g] = n0*curv[g]*mu53[g]*dP_square[g] ;       
-                //pjump[g] = n0*mu53[g]*dP_square[g] ;
-                //vjump[g] = n0*d2v[g];
+
                 
 //NBBB dPre is the stdDERIV!!! 
                 invjac2D = (gmat0[g]*tx[g] +gmat2[g]*ty[g]);

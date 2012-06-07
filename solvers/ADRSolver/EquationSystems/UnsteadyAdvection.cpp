@@ -84,6 +84,8 @@ namespace Nektar
 
     }
 
+    
+    
     void UnsteadyAdvection::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
                                      const NekDouble time)
@@ -185,10 +187,7 @@ namespace Nektar
     }
 
 
-
-    /**
-     *
-     */
+    
     void UnsteadyAdvection::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                                   Array<OneD,       Array<OneD, NekDouble> >&outarray,
                                             const NekDouble time)
@@ -199,18 +198,22 @@ namespace Nektar
 
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+            /// Discontinuous projection
+            case MultiRegions::eDiscontinuousGalerkin:
             {
-                // Just copy over array
+                /// Number of quadrature points
                 int nQuadraturePts = GetNpoints();
 
+                /// Just copy over array
                 for(i = 0; i < nVariables; ++i)
                 {
                     Vmath::Vcopy(nQuadraturePts,inarray[i],1,outarray[i],1);
                 }
+                break;
             }
-            break;
-        case MultiRegions::eGalerkin:
+                
+            /// Continuous projection
+            case MultiRegions::eGalerkin:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
@@ -221,60 +224,72 @@ namespace Nektar
                 }
                 break;
             }
-        default:
-            ASSERTL0(false,"Unknown projection scheme");
-            break;
+                
+            default:
+                ASSERTL0(false,"Unknown projection scheme");
+                break;
         }
     }
 
+    
 
-    void UnsteadyAdvection::v_GetFluxVector(
-        const int i, 
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &flux)
+    void UnsteadyAdvection::v_GetFluxVector(const int i, 
+                                            Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                            Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
         {
-            Vmath::Vmul(GetNpoints(),physfield[i],1,
-                m_velocity[j],1,flux[j],1);
+            Vmath::Vmul(GetNpoints(), physfield[i], 1, m_velocity[j], 1, flux[j], 1);
         }
     }
 
-    void UnsteadyAdvection::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield, 
-        Array<OneD, Array<OneD, NekDouble> > &numflux)
+    
+    
+    void UnsteadyAdvection::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                                            Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
+        /// Counter variable
         int i;
 
-        int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_spacedim; //m_velocity.num_elements();
-
-        Array<OneD, NekDouble> Fwd(nTraceNumPoints);
-        Array<OneD, NekDouble> Bwd(nTraceNumPoints);
-        Array<OneD, NekDouble> Vn (nTraceNumPoints,0.0);
+        /// Number of trace points
+        int nTracePts   = GetTraceNpoints();
         
-        // Extract velocity field along the trace space and multiply by
-        // trace normals.
-        for(i = 0; i < nvel; ++i)
+        /// Number of spatial dimensions
+        int nDimensions = m_spacedim;
+
+        /// Forward state array
+        Array<OneD, NekDouble> Fwd(nTracePts);
+        
+        /// Backward state array
+        Array<OneD, NekDouble> Bwd(nTracePts);
+        
+        /// Normal velocity array
+        Array<OneD, NekDouble> Vn (nTracePts, 0.0);
+        
+        // Extract velocity field along the trace space and multiply by trace normals
+        for(i = 0; i < nDimensions; ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-            Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
         }
 
+        /// Compute the numerical fluxes at the trace points
         for(i = 0; i < numflux.num_elements(); ++i)
         {
-            // Extract forwards/backwards trace space.
-            m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
+            /// Extract forwards/backwards trace spaces
+            m_fields[i]->GetFwdBwdTracePhys(physfield[i], Fwd, Bwd);
 
-            // Upwind between elements.
-            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+            /// Upwind between elements
+            m_fields[i]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux[i]);
 
-            // Calculate m_fields[i]*Vn
-            Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
+            /// Calculate the numerical fluxes multipling Fwd or Bwd by the normal advection velocity
+            Vmath::Vmul(nTracePts, numflux[i], 1, Vn, 1, numflux[i], 1);
         }
     }
+    
+    
     
     void UnsteadyAdvection::v_PrintSummary(std::ostream &out)
     {

@@ -76,13 +76,13 @@ int main(int argc, char *argv[])
             out = out +  "_mode_" + num  + "_imag.fld"; 
         }
         
-        vector<NekDouble> newdata;
-        
         for(int i = 0; i < fielddata.size(); ++i)
         {
             int j;
             int datalen = fielddata[i].size()/fielddef[i]->m_fields.size()/nmodes;
 
+            vector<NekDouble> newdata;
+        
             // Determine the number of coefficients per element
             int ncoeffs;
             switch(fielddef[i]->m_shapeType)

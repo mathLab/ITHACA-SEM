@@ -365,6 +365,45 @@ namespace Nektar
 		
                 m_transposition->Transpose(inarray,fft_in,false,LibUtilities::eXYtoZ);
 				
+				/*
+				//=====================================================================
+				Array<OneD, NekDouble> in(10*m_planes.num_elements());
+				Array<OneD, NekDouble> out(10*m_planes.num_elements());
+				
+				for(int i = 0; i < m_planes.num_elements(); i++)
+				{
+					NekDouble fill = double(m_transposition->GetPlaneID(i));
+					Vmath::Fill(10,fill,&(in[i*10]),1);
+				}
+				
+				m_transposition->Transpose(in,out,false,LibUtilities::eXYtoZ);
+				
+				cout << "\n=======================================" << endl;
+				cout << "RANK = " << m_comm->GetColumnComm()->GetRank() << endl;
+				cout << "=======================================" << endl;
+				for(int i = 0; i < m_planes.num_elements(); i++)
+				{
+					for(int j = 0; j < 10; j++)
+					{
+						cout << in[j+10*i] << "\t";
+					}
+					cout << endl;
+				}
+				cout << "=======================================" << endl;
+				for(int i = 0; i < 5; i++)
+				{
+					for(int j = 0; j < m_homogeneousBasis->GetNumPoints(); j++)
+					{
+						cout  << out[j+i*m_homogeneousBasis->GetNumPoints()] << "\t";
+					}
+					cout << endl;
+				}
+				cout << "=======================================" << endl;
+				
+				//=====================================================================
+				*/
+				
+				
                 if(IsForwards)
                 {
                     for(int i = 0 ; i < num_dfts_per_proc ; i++)

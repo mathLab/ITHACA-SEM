@@ -135,13 +135,13 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
-    template<class T>  void FillWhiteNoise( int n, const T eps, T *x, const int incx)
+    template<class T>  void FillWhiteNoise( int n, const T eps, T *x, const int incx, int outseed)
     {
         while( n-- )
         {
             static int     iset = 0;
             static T       gset;
-            static long    seed;
+            long    seed = long(outseed);
             T              fac, rsq, v1, v2;
 
             if (iset == 0) {
@@ -161,7 +161,7 @@ namespace Vmath
             x += incx;
         }
     }
-    template  LIB_UTILITIES_EXPORT void FillWhiteNoise( int n, const Nektar::NekDouble eps, Nektar::NekDouble *x, const int incx);
+    template  LIB_UTILITIES_EXPORT void FillWhiteNoise( int n, const Nektar::NekDouble eps, Nektar::NekDouble *x, const int incx, int outseed);
 
     /// \brief Multiply vector z = x*y
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,

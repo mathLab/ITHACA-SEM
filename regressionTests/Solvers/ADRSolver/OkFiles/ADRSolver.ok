@@ -156,3 +156,36 @@ Test_Advection3D_m12_DG_prism.xml
 L 2 error (variable u) : 6.72764e-08
 L inf error (variable u) : 1.01404e-05
 ----------------------------------------
+Test_InviscidBurger1D_StandardDG_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.49996
+----------------------------------------
+Test_InviscidBurger1D_StandardDG_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.49996
+----------------------------------------
+Test_InviscidBurger1D_FR-DG_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.49999
+----------------------------------------
+Test_InviscidBurger1D_FR-DG_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FR-SD_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FR-SD_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FR-HU_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.49999
+----------------------------------------
+Test_InviscidBurger1D_FR-HU_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+./ru    

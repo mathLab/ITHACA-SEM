@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         quiet = true;
     }
 
-    // //Test Steady Diffusion Advection
+    // Test Steady Diffusion Advection
     Execute("ADRSolver","Test_Helmholtz1D_8modes.xml","1D Helmholtz/Steady Diffusion Reaction P=8");
 
     Execute("ADRSolver","Test_Helmholtz1D_8modes_DG.xml","1D Helmholtz/Steady Diffusion Reaction (DG) P=8");
@@ -153,6 +153,23 @@ int main(int argc, char* argv[])
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_MVM.xml","3D-Homogeneous-1D unsteady advection-diffusion (MVM)");
 	
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml","3D-Homogeneous-2D unsteady advection-diffusion (MVM)");
+    
+    // Test inviscid Burger equation in 1D for DG and FR
+    Execute("ADRSolver","Test_InviscidBurger1D_StandardDG_GLL_LAGRANGE.xml","1D unsteady StandardDG inviscidBurger GLL_LAGRANGE, P=11");
+
+    Execute("ADRSolver","Test_InviscidBurger1D_StandardDG_MODIFIED.xml","1D unsteady StandardDG inviscidBurger MODIFIED, P=11");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FR-DG_GLL_LAGRANGE.xml","1D unsteady FR-DG inviscidBurger GLL_LAGRANGE, P=11");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FR-DG_MODIFIED.xml","1D unsteady FR-DG inviscidBurger MODIFIED, P=11");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FR-SD_GLL_LAGRANGE.xml","1D unsteady FR-SD inviscidBurger GLL_LAGRANGE, P=11");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FR-SD_MODIFIED.xml","1D unsteady FR-SD inviscidBurger MODIFIED, P=11");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FR-HU_GLL_LAGRANGE.xml","1D unsteady FR-HU inviscidBurger GLL_LAGRANGE, P=11");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FR-HU_MODIFIED.xml","1D unsteady FR-HU inviscidBurger MODIFIED, P=11");
 	
 #ifdef NEKTAR_USING_FFTW
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml","3D-Homogeneous-1D unsteady advection-diffusion (FFT)");

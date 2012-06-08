@@ -710,137 +710,148 @@ namespace Nektar
 
 
         /**
-         * Construct the two trace vectors of the inner and outer trace
-         * solution from the field contained in m_phys, where the Weak
-         * dirichlet boundary conditions are listed in the outer part of the
-	 * vector.
+         * Generate the forward or backward state for each trace point.
+         * @param   Fwd     Forward state.
+         * @param   Bwd     Backward state.
          */
-        void DisContField1D::v_GetFwdBwdTracePhys(
-            Array<OneD, NekDouble> &Fwd,
-            Array<OneD, NekDouble> &Bwd)
+        void DisContField1D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
+                                                  Array<OneD, NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
         }
-	
-        void DisContField1D::v_GetFwdBwdTracePhys(
-            const Array<OneD, const NekDouble> &field,
-                  Array<OneD,       NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
+        
+        
+        /**
+         * Generate the forward or backward state for each trace point.
+         * @param   field   field.
+         * @param   Fwd     Forward state.
+         * @param   Bwd     Backward state.
+         */
+        void DisContField1D::v_GetFwdBwdTracePhys(const Array<OneD, const NekDouble> &field,
+                                                        Array<OneD,       NekDouble> &Fwd,
+                                                        Array<OneD,       NekDouble> &Bwd)
         {
-            // Loop over elements and collect forward expansion
-            int nexp = GetExpSize();
-            int n_quad=0;
-            int cnt =0;
-            int n=0;
-            int p=0;
-            int offset=0;
-            int subdomain_offset = 0;
-            int phys_offset=0;
-            double vertnorm =0.0;
-            Array<OneD,NekDouble> e_tmp;
+            /// Counter variables
+            int  n, p, i;
             
-            // zero vectors;
-            Vmath::Zero(Fwd.num_elements(),Fwd,1);
-            Vmath::Zero(Bwd.num_elements(),Bwd,1);
+            /// Number of elements
+            int nElements = GetExpSize();
             
-            for(n  = 0; n < nexp; ++n)
+            /// Number of quadrature points of each element
+            int nLocalQuadraturePts;
+            
+            /// Initial index of each element
+            int phys_offset;
+            
+            /// Index of each interface between adjacent elements
+            int interface_offset;
+            
+            /// Index in case of subdomains
+            int subdomain_offset;
+            
+            /// Coordinate of each standard element (-1, 1)
+            NekDouble vertex_coord;
+            
+            /// Set forward and backard state to zero
+            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
+            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
+			
+            /// Loop on the elements
+            for(n = 0; n < nElements; ++n)
             {
+                /// Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
-                n_quad = (*m_exp)[n]->GetNumPoints(0);
+                
+                /// Set the number of quadrature points of each element
+                nLocalQuadraturePts = (*m_exp)[n]->GetNumPoints(0);
                 
                 for(p = 0; p < 2; ++p)
                 {
-                    vertnorm = 0.0;
-                    offset = (*m_exp)[n]->GetGeom1D()->GetVid(p);
-                    subdomain_offset = (*m_exp)[0]->GetGeom1D()->GetVid(0);
+                    vertex_coord       = 0.0;
+                    interface_offset   = (*m_exp)[n]->GetGeom1D()->GetVid(p);
+                    subdomain_offset   = (*m_exp)[0]->GetGeom1D()->GetVid(0);
+                    interface_offset  -= subdomain_offset;
                     
-                    //cout << "here 4 offset = "<<offset<<"subdomain_offset = "<<subdomain_offset<< endl;
-                    offset -=subdomain_offset;
-                    //cout << "new offset = "<<offset<<endl;
-                    
-                    for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                    for (i = 0; i < ((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
                     {
-                        vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                        vertex_coord += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                     }
-                    //cout << "((*m_exp)["<<n<<"]->GetVertexNormal("<<p<<")) = "<<vertnorm<<"\t\t";
                     
-                    if(vertnorm >= 0.0)
+                    if(vertex_coord >= 0.0)
                     {
-                        Fwd[offset] = field[phys_offset+n_quad-1];
+                        Fwd[interface_offset] = field[phys_offset+nLocalQuadraturePts-1];
                     }					 
-                    if(vertnorm < 0.0) 
+                    if(vertex_coord < 0.0) 
                     {
-                        Bwd[offset] = field[phys_offset];
+                        Bwd[interface_offset] = field[phys_offset];
                     }
                 }
             }
             
-            // fill boundary conditions into missing elements
-            int id1 = 0;
-            int id2 = 0;
+            /// Fill boundary conditions into the missing elements
+            int id1         = 0;
+            int id2         = 0;
             int firstVertex = (*m_exp)[0]->GetGeom1D()->GetVid(0);
-            int lastVertex = (*m_exp)[nexp-1]->GetGeom1D()->GetVid(1);
-            Array<OneD, NekDouble>  processed(m_bndCondExpansions.num_elements()+1,-1.0);
+            int lastVertex  = (*m_exp)[nElements-1]->GetGeom1D()->GetVid(1);
+            Array<OneD, NekDouble>  processed(m_bndCondExpansions.num_elements()+1, -1.0);
             
-            /*cout << "What is actually in BCs"<<endl;
-              for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-              {
-              cout << "m_bndCondExpansions["<<n<<"] = "<<m_bndCondExpansions[n]->GetCoeff(0)<<endl;
-              }*/
+            /// Bug temporary fixed for Periodic boundary conditions
+            if(SpatialDomains::ePeriodic)
+            {
+                int nTracePts      = Fwd.num_elements();
+                Fwd[0]             = Fwd[nTracePts-1];
+                Bwd[nTracePts-1]   = Bwd[0];
+            }
             
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {		
-                //check if the current boundary condition belongs to the current subdomain
-                if((m_bndCondExpansions[n]->GetVertex()->GetVid() >= firstVertex) && 
-                   (m_bndCondExpansions[n]->GetVertex()->GetVid() <= lastVertex) && 
-                   (processed[n] != m_bndCondExpansions[n]->GetVertex()->GetVid()))
+                /// Check if the current boundary condition belongs to the current subdomain
+                if((m_bndCondExpansions[n]->GetVertex()->GetVid() >= firstVertex) 
+                   && (m_bndCondExpansions[n]->GetVertex()->GetVid() <= lastVertex) 
+                   && (processed[n] != m_bndCondExpansions[n]->GetVertex()->GetVid()))
                 {
-                    // cout << "currently processed vertices: "<<firstVertex<<"\t"<<lastVertex<<endl;
                     if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                        || (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eJunction)
                        || (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
                        || (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eMerging))
                     {
-                        //cout << "current boundary vertex: " <<m_bndCondExpansions[n]->GetVertex()->GetVid()<<endl;
-                        //cout << "subdomain_offset = "<<subdomain_offset<< endl;
                         if(m_bndCondExpansions[n]->GetVertex()->GetVid() == lastVertex)
                         {
-                            id1 = 0; //GetCoeff_Offset(n)+1;
-                            id2 = m_bndCondExpansions[n]->GetVertex()->GetVid()-subdomain_offset;
-                            Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+                            id1            = 0; //GetCoeff_Offset(n)+1;
+                            id2            = m_bndCondExpansions[n]->GetVertex()->GetVid() - subdomain_offset;
+                            Bwd[id2]       = m_bndCondExpansions[n]->GetCoeff(id1);
                             processed[n+1] = m_bndCondExpansions[n]->GetVertex()->GetVid();
                         }
                         else
                         {
-                            id1 = 0; //GetCoeff_Offset(n);
-                            id2 = m_bndCondExpansions[n]->GetVertex()->GetVid()-subdomain_offset;
-                            Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
-                            
+                            id1        = 0; //GetCoeff_Offset(n);
+                            id2        = m_bndCondExpansions[n]->GetVertex()->GetVid() - subdomain_offset;
+                            Fwd[id2]   = m_bndCondExpansions[n]->GetCoeff(id1);
                         }
-			
-			
+                        
                         //Previous working version
                         /*if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
-                          {
-                          id1 = 0; //GetCoeff_Offset(n)+1;
-                          id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
-                          Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
-                          }
-                          else
-                          {
-                          id1 = 0; //GetCoeff_Offset(n);
-                          id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
-                          Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
-                          }*/
+						 {
+                         id1 = 0; //GetCoeff_Offset(n)+1;
+                         id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+                         Bwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+						 }
+						 else
+						 {
+                         id1 = 0; //GetCoeff_Offset(n);
+                         id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
+                         Fwd[id2] = m_bndCondExpansions[n]->GetCoeff(id1);
+						 }*/
                     }
                     else
                     {
-                        ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+                        ASSERTL0(false, "Method not set up for non-Dirichlet conditions");
                     }
-                    
                 }	 
             }			 
-        }
+		}
+        
+        
 	
         void DisContField1D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)

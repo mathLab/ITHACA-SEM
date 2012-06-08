@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
         fprintf(stdout,"%12.10lf %12.10lf \n",x_c[i],y_c[i]);
         //cout << x_c[i] << " " << y_c[i] << endl;
     }
+    
 }
 
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
@@ -180,4 +181,69 @@ void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
         yc[e] = coord[1];
     }
     cerr << "]" << endl;
+
+    // output to interface file
+    FILE *fp = fopen("interfacedat.geo","w");
+    
+    NekDouble y_max = Vmath::Vmax(nq,y,1);
+    NekDouble y_min = Vmath::Vmin(nq,y,1);
+
+    cnt = 1;
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0}; \n",
+            cnt++,x_min,y_min);
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0}; \n",
+            cnt++,x_max,y_min);
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0}; \n",
+            cnt++,x_max,y_max);
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0}; \n",
+            cnt++,x_min,y_max);
+    
+    for(i = 0; i < npts; ++i)
+    {
+        fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",
+                cnt++,xc[i],yc[i]);
+    }
+
+    fclose(fp);
+
+    // output to interface_up file as bend of vertical shift and 45 degrees shift
+    fp = fopen("interfacedat_up.geo","w");
+    
+    NekDouble trans = 0.1;
+    NekDouble nx,ny,norm;
+    
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[0],yc[0]+trans);
+
+    for(i = 1; i < npts-1; ++i)
+    {
+        norm = sqrt((xc[i+1]-xc[i-1])*(xc[i+1]-xc[i-1])+(yc[i+1]-yc[i-1])*(yc[i+1]-yc[i-1]));
+        nx = (yc[i-1]-yc[i+1])/norm;
+        ny = (xc[i+1]-xc[i-1])/norm;
+        
+        fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",
+                cnt++,xc[i]+nx*trans,yc[i]+ny*trans);
+    }
+
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[npts-1],yc[npts-1]+trans);
+
+
+    // output to interface_up file as bend of vertical shift and 45 degrees shift
+    fp = fopen("interfacedat_dn.geo","w");
+    
+    trans = -trans;
+
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[0],yc[0]+trans);
+
+    for(i = 1; i < npts-1; ++i)
+    {
+        norm = sqrt((xc[i+1]-xc[i-1])*(xc[i+1]-xc[i-1])+(yc[i+1]-yc[i-1])*(yc[i+1]-yc[i-1]));
+        nx = (yc[i-1]-yc[i+1])/norm;
+        ny = (xc[i+1]-xc[i-1])/norm;
+        
+        fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",
+                cnt++,xc[i]+nx*trans,yc[i]+ny*trans);
+    }
+
+    fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[npts-1],yc[npts-1]+trans);
+
 }

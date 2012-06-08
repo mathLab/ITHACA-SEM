@@ -1,4 +1,7 @@
 SET(SOLVER_UTILS_SOURCES
+  Advection.cpp
+  AdvectionNonConservative.cpp
+  AdvectionWeakDG.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -8,10 +11,15 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterCheckpoint.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterThresholdMax.cpp
+  RiemannSolvers/RiemannSolver.cpp
+  RiemannSolvers/UpwindSolver.cpp
   UnsteadySystem.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Advection.h
+  AdvectionNonConservative.h
+  AdvectionWeakDG.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h
@@ -21,6 +29,8 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterCheckpoint.h
   Filters/FilterHistoryPoints.h
   Filters/FilterThresholdMax.h
+  RiemannSolvers/RiemannSolver.h
+  RiemannSolvers/UpwindSolver.h
   SolverUtils.hpp
   UnsteadySystem.h
 )

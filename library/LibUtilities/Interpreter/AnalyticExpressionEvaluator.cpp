@@ -118,6 +118,21 @@ namespace Nektar
             return (arg > 0.0) - (arg < 0.0);
         }
 
+        // Additive white Gaussian noise function.
+        // Arg: sigma of the zero-mean gaussian distribution
+        // Attention: this function is not actually used for
+        // evaluation purposes.
+        double awgn(double sigma)
+        {
+            AnalyticExpressionEvaluator::RandomGeneratorType rng;
+            boost::variate_generator<
+                    AnalyticExpressionEvaluator::RandomGeneratorType&,
+                    boost::normal_distribution<>
+                >  _normal(rng, boost::normal_distribution<>(0, sigma) );
+            return _normal();
+        }
+
+
         /** This struct creates a parser that matches the function
         definitions from math.h. All of the functions accept one
         of more doubles as arguments and returns a double. **/
@@ -146,6 +161,7 @@ namespace Nektar
                     ("tanh",	tanh)
                 // and one more
                     ("sign",	sign)
+                    ("awgn",	awgn)
                     ;
             }
         } functions_p;
@@ -220,7 +236,8 @@ namespace Nektar
         // \brief Initializes the evaluator. Call DefineFunction(...) next.
         AnalyticExpressionEvaluator::AnalyticExpressionEvaluator():
               m_total_eval_time(0),
-              m_timer()
+              m_timer(),
+              m_normal(m_generator, boost::normal_distribution<>(0, 1) )
         {
             m_state_size = 1;
 
@@ -260,6 +277,7 @@ namespace Nektar
             m_functionMapNameToInstanceType["tan"]   =  E_TAN;
             m_functionMapNameToInstanceType["tanh"]  =  E_TANH;
             m_functionMapNameToInstanceType["sign"]  =  E_SIGN;
+            m_functionMapNameToInstanceType["awgn"]  =  E_AWGN;
 
             m_function[ E_ABS  ] = std::abs;
             m_function[ E_ASIN ] = asin;
@@ -279,7 +297,10 @@ namespace Nektar
             m_function[ E_TAN  ] = tan;
             m_function[ E_TANH ] = tanh;
             m_function[ E_SIGN ] = sign;
+            // there is no entry to m_function that correspond to awgn function.
+            // this is made in purpose. This function need not be pre-evaluated once!
         }
+
 
         AnalyticExpressionEvaluator::~AnalyticExpressionEvaluator(void)
         {
@@ -292,6 +313,12 @@ namespace Nektar
                 (*it_es).clear();
             }
             m_executionStack.clear();
+        }
+
+
+        void AnalyticExpressionEvaluator::SetRandomSeed(unsigned int seed = 123u)
+        {
+            m_generator.seed(seed);
         }
 
 
@@ -712,11 +739,21 @@ namespace Nektar
 
                 PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
 
+                // additive white gaussian noise function
+                if (it->second == E_AWGN)
+                {
+                    int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), v.second);
+                    stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
+                    stack.push_back ( makeStep<EvalAWGN>( stateIndex, stateIndex ) );
+                    return std::make_pair(false,0);
+                }
+
                 // if precomputed value is valid, return function(value).
                 if (true == v.first)
                 {
                     return std::make_pair( true, m_function[it->second](v.second) );
                 }
+
 
                 // if somewhere down the parse tree there is a variable or parameter, set up an
                 // evaluation sequence.
@@ -737,7 +774,7 @@ namespace Nektar
                     case E_CEIL:
                         stack.push_back ( makeStep<EvalCeil>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_COS: 
+                    case E_COS:
                         stack.push_back ( makeStep<EvalCos>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_COSH:

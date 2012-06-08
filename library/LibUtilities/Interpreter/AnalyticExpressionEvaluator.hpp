@@ -44,9 +44,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <boost/random.hpp>
-#include <boost/random/normal_distribution.hpp>
-
 
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 #include <boost/spirit/include/classic_core.hpp>
@@ -83,10 +80,6 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-
-//        class AnalyticExpressionEvaluator;
-//        typedef boost::shared_ptr<AnalyticExpressionEvaluator> AnalyticExpressionEvaluatorSharedPtr;
-
 
         ///  This class defines evaluator of analytic (symbolic)
         ///  mathematical expressions. Expressions are allowed to
@@ -133,8 +126,6 @@ namespace Nektar
                     >::tree_iterator ParsedTreeIterator;
 
             typedef std::vector<const Array<OneD, const NekDouble>* > VariableArray;
-
-            typedef boost::random::mt19937  RandomGeneratorType;
 
 
             // ======================================
@@ -425,11 +416,6 @@ namespace Nektar
             double       m_total_eval_time;
 
 
-            RandomGeneratorType  m_generator;
-            boost::variate_generator<RandomGeneratorType&, boost::normal_distribution<> >
-                                 m_normal;
-
-
 
             // ======================================================
             //  A map of (external) mathematical functions
@@ -448,13 +434,12 @@ namespace Nektar
             typedef std::vector<double>& vr;
             typedef const std::vector<double>& cvr;
             typedef const int  ci;
-            typedef RandomGeneratorType& rgt;
 
             ///  Factory method which makes code little less messy
             template<typename StepType>
             EvaluationStep* makeStep(ci dest, ci src_left = 0, ci src_right = 0)
             {
-                return ( new StepType ( m_generator,m_state,m_constant,m_parameter,m_variable,dest,src_left,src_right ) );
+                return ( new StepType ( m_state,m_constant,m_parameter,m_variable,dest,src_left,src_right ) );
             }
 
             enum EvaluationStepType
@@ -462,8 +447,7 @@ namespace Nektar
                     E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2,
                     E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,
                     E_FLOOR,  E_LOG,   E_LOG10, E_POW,   E_SIN,
-                    E_SINH,   E_SQRT,  E_TAN,   E_TANH,  E_SIGN,
-                    E_AWGN
+                    E_SINH,   E_SQRT,  E_TAN,   E_TANH,  E_SIGN
             };
 
 
@@ -471,9 +455,6 @@ namespace Nektar
             ///  Function objects (functors)
             struct EvaluationStep
             {
-                ///  reference to random number generator
-                rgt     rng;
-
                 ///  references to arrays holding the common state
                 vr      state;
                 cvr     consts;
@@ -485,8 +466,8 @@ namespace Nektar
                 ci      argIdx1;
                 ci      argIdx2;
 
-                EvaluationStep(rgt rn, ci i, ci l, ci r, vr s, cvr c, cvr p, cvr v):
-                    rng(rn), storeIdx(i), argIdx1(l), argIdx2(r), state(s), consts(c), params(p), vars(v) {};
+                EvaluationStep(ci i, ci l, ci r, vr s, cvr c, cvr p, cvr v):
+                    storeIdx(i), argIdx1(l), argIdx2(r), state(s), consts(c), params(p), vars(v) {};
 
                 ///  declaring this guy pure virtual shortens virtual table. It saves some execution time.
                 virtual void run_many(ci n) = 0;
@@ -494,218 +475,201 @@ namespace Nektar
             };
             struct CopyState: public EvaluationStep
             {
-                CopyState(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                CopyState(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = state[argIdx1]; }
                 virtual void run_once() { state[storeIdx] = state[argIdx1]; }
             };
             struct StoreConst: public EvaluationStep
             {
-                StoreConst(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                StoreConst(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = consts[argIdx1]; }
                 virtual void run_once() { state[storeIdx] = consts[argIdx1]; }
             };
             struct StoreVar: public EvaluationStep
             {
-                StoreVar(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                StoreVar(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = vars[argIdx1*n+i]; }
                 virtual void run_once() { state[storeIdx] = vars[argIdx1]; }
             };
             struct StorePrm: public EvaluationStep
             {
-                StorePrm(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                StorePrm(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = params[argIdx1]; }
                 virtual void run_once() { state[storeIdx] = params[argIdx1]; }
             };
             struct EvalSum: public EvaluationStep
             {
-                EvalSum(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalSum(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = state[argIdx1*n+i] + state[argIdx2*n+i]; }
                 virtual void run_once() { state[storeIdx] = state[argIdx1] + state[argIdx2]; }
             };
             struct EvalSub: public EvaluationStep
             {
-                EvalSub(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalSub(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = state[argIdx1*n+i] - state[argIdx2*n+i]; }
                 virtual void run_once() { state[storeIdx] = state[argIdx1] - state[argIdx2]; }
             };
             struct EvalMul: public EvaluationStep
             {
-                EvalMul(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalMul(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = state[argIdx1*n+i] * state[argIdx2*n+i]; }
                 virtual void run_once() { state[storeIdx] = state[argIdx1] * state[argIdx2]; }
             };
             struct EvalDiv: public EvaluationStep
             {
-                EvalDiv(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalDiv(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = state[argIdx1*n+i] / state[argIdx2*n+i]; }
                 virtual void run_once() { state[storeIdx] = state[argIdx1] / state[argIdx2]; }
             };
             struct EvalPow: public EvaluationStep
             {
-                EvalPow(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalPow(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::pow( state[argIdx1*n+i], state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::pow( state[argIdx1], state[argIdx2] ); }
             };
             struct EvalNeg: public EvaluationStep
             {
-                EvalNeg(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalNeg(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = - state[argIdx1*n+i]; }
                 virtual void run_once() { state[storeIdx] = - state[argIdx1]; }
             };
             struct EvalLogicalEqual: public EvaluationStep
             {
-                EvalLogicalEqual(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLogicalEqual(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ( state[argIdx1*n+i] == state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = ( state[argIdx1] == state[argIdx2] ); }
             };
             struct EvalLogicalLeq: public EvaluationStep
             {
-                EvalLogicalLeq(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLogicalLeq(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ( state[argIdx1*n+i] <= state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = ( state[argIdx1] <= state[argIdx2] ); }
             };
             struct EvalLogicalLess: public EvaluationStep
             {
-                EvalLogicalLess(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLogicalLess(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ( state[argIdx1*n+i] < state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = ( state[argIdx1] < state[argIdx2] ); }
             };
             struct EvalLogicalGeq: public EvaluationStep
             {
-                EvalLogicalGeq(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLogicalGeq(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ( state[argIdx1*n+i] >= state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = ( state[argIdx1] >= state[argIdx2] ); }
             };
             struct EvalLogicalGreater: public EvaluationStep
             {
-                EvalLogicalGreater(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLogicalGreater(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ( state[argIdx1*n+i] > state[argIdx2*n+i] ); }
                 virtual void run_once() { state[storeIdx] = ( state[argIdx1] > state[argIdx2] ); }
             };
             struct EvalAbs: public EvaluationStep
             {
-                EvalAbs(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalAbs(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::abs( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::abs( state[argIdx1] ); }
             };
             struct EvalSign: public EvaluationStep
             {
-                EvalSign(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalSign(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ((state[argIdx1*n+i] > 0.0) - (state[argIdx1*n+i] < 0.0)); }
                 virtual void run_once() { state[storeIdx] = ((state[argIdx1] > 0.0) - (state[argIdx1] < 0.0)); }
             };
             struct EvalAsin: public EvaluationStep
             {
-                EvalAsin(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalAsin(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::asin( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::asin( state[argIdx1] ); }
             };
             struct EvalAcos: public EvaluationStep
             {
-                EvalAcos(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalAcos(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::acos( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::acos( state[argIdx1] ); }
             };
             struct EvalAtan: public EvaluationStep
             {
-                EvalAtan(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalAtan(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::atan( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::atan( state[argIdx1] ); }
             };
             struct EvalCeil: public EvaluationStep
             {
-                EvalCeil(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalCeil(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::ceil( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::ceil( state[argIdx1] ); }
             };
             struct EvalCos: public EvaluationStep
             {
-                EvalCos(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalCos(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::cos( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::cos( state[argIdx1] ); }
             };
             struct EvalCosh: public EvaluationStep
             {
-                EvalCosh(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalCosh(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::cosh( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::cosh( state[argIdx1] ); }
             };
             struct EvalExp: public EvaluationStep
             {
-                EvalExp(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalExp(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::exp( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::exp( state[argIdx1] ); }
             };
             struct EvalFabs: public EvaluationStep
             {
-                EvalFabs(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalFabs(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::fabs( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::fabs( state[argIdx1] ); }
             };
             struct EvalFloor: public EvaluationStep
             {
-                EvalFloor(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalFloor(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::floor( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::floor( state[argIdx1] ); }
             };
             struct EvalLog: public EvaluationStep
             {
-                EvalLog(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLog(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::log( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::log( state[argIdx1] ); }
             };
             struct EvalLog10: public EvaluationStep
             {
-                EvalLog10(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalLog10(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::log10( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::log10( state[argIdx1] ); }
             };
             struct EvalSin: public EvaluationStep
             {
-                EvalSin(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalSin(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::sin( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::sin( state[argIdx1] ); }
             };
             struct EvalSinh: public EvaluationStep
             {
-                EvalSinh(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalSinh(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::sinh( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::sinh( state[argIdx1] ); }
             };
             struct EvalSqrt: public EvaluationStep
             {
-                EvalSqrt(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalSqrt(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::sqrt( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::sqrt( state[argIdx1] ); }
             };
             struct EvalTan: public EvaluationStep
             {
-                EvalTan(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalTan(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::tan( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::tan( state[argIdx1] ); }
             };
             struct EvalTanh: public EvaluationStep
             {
-                EvalTanh(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                EvalTanh(vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::tanh( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::tanh( state[argIdx1] ); }
-            };
-            struct EvalAWGN: public EvaluationStep
-            {
-                EvalAWGN(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
-                virtual void run_many(ci n)
-                {
-                    // assuming the argument to AWGN does not depend on spatial variables =>
-                    boost::variate_generator<RandomGeneratorType&, boost::normal_distribution<> >
-                                       _normal(rng, boost::normal_distribution<>(0, state[storeIdx*n]) );
-                    for(int i=0;i<n;i++) { state[storeIdx*n+i] = _normal(); }
-                }
-                virtual void run_once()
-                {
-                    boost::variate_generator<RandomGeneratorType&, boost::normal_distribution<> >
-                                       _normal(rng, boost::normal_distribution<>(0, state[storeIdx]) );
-                    state[storeIdx] = _normal();
-                }
             };
 
         };

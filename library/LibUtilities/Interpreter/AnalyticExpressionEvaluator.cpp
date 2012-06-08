@@ -236,8 +236,7 @@ namespace Nektar
         // \brief Initializes the evaluator. Call DefineFunction(...) next.
         AnalyticExpressionEvaluator::AnalyticExpressionEvaluator():
               m_total_eval_time(0),
-              m_timer(),
-              m_normal(m_generator, boost::normal_distribution<>(0, 1) )
+              m_timer()
         {
             m_state_size = 1;
 
@@ -316,7 +315,7 @@ namespace Nektar
         }
 
 
-        void AnalyticExpressionEvaluator::SetRandomSeed(unsigned int seed = 123u)
+        void AnalyticExpressionEvaluator::SetRandomSeed(unsigned int seed)
         {
             m_generator.seed(seed);
         }

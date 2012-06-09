@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     if(argc != 4)
     {
-        fprintf(stderr,"Usage: Ling nfield meshfile fld \n");
+        fprintf(stderr,"Usage: Linf nfield meshfile fld \n");
         exit(1);
     }
     
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
     //----------------------------------------------
 
     //----------------------------------------------

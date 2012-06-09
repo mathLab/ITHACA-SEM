@@ -187,11 +187,12 @@ namespace Nektar
         {
 
              DirichletBoundaryCondition(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
                     const std::string& eqn,
                     const std::string& userDefined = std::string("NoUserDefined"),
                     const std::string& filename=std::string("")):
                 BoundaryConditionBase(eDirichlet, userDefined),
-                m_dirichletCondition(eqn),
+                m_dirichletCondition(pSession, eqn),
                 m_filename(filename)
                 {
                 }
@@ -203,11 +204,12 @@ namespace Nektar
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
             NeumannBoundaryCondition(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
                     const std::string& eqn,
                     const std::string& userDefined = std::string("NoUserDefined"),
                     const std::string& filename=std::string("")):
                 BoundaryConditionBase(eNeumann, userDefined),
-                m_neumannCondition(eqn),
+                m_neumannCondition(pSession, eqn),
                 m_filename(filename)
             {
             }
@@ -219,13 +221,14 @@ namespace Nektar
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
             RobinBoundaryCondition(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
                     const std::string &a,
                     const std::string &b,
                     const std::string &userDefined = std::string("NoUserDefined"),
                     const std::string& filename=std::string("")):
                 BoundaryConditionBase(eRobin, userDefined),
-                m_robinFunction(a),
-                m_robinPrimitiveCoeff(b),
+                m_robinFunction(pSession, a),
+                m_robinPrimitiveCoeff(pSession, b),
                 m_filename(filename)
             {
             }

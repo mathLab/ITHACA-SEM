@@ -200,7 +200,7 @@ namespace Nektar
                             for (std::vector<std::string>::iterator varIter = vars.begin();
                                 varIter != vars.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("00.0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session,"00.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
                         }                       
@@ -254,13 +254,13 @@ namespace Nektar
                                       }
                                       attr = attr->Next();
                                 }
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(equation, userDefined, filename));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                         }
@@ -273,7 +273,7 @@ namespace Nektar
                             for (std::vector<std::string>::iterator varIter = vars.begin();
                                 varIter != vars.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
                                 (*boundaryConditions)[*varIter] = dirichletCondition;
                             }
                         }
@@ -325,13 +325,13 @@ namespace Nektar
                                    attr = attr->Next();
                                 }
 
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(equation, userDefined, filename));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, equation, userDefined, filename));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                         }
@@ -344,7 +344,7 @@ namespace Nektar
                             for (std::vector<std::string>::iterator varIter = vars.begin();
                                 varIter != vars.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, "0", "0"));
                                 (*boundaryConditions)[*varIter] = robinCondition;
                             }
                         }
@@ -417,13 +417,13 @@ namespace Nektar
 
                                 }
 
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(equation1, equation2, userDefined, filename));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, equation1, equation2, userDefined, filename));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(m_session, "0", "0"));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                         }

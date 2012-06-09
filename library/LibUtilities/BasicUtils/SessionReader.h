@@ -40,7 +40,8 @@
 #include <string>
 
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/BasicUtils/Equation.h>
+//#include <LibUtilities/BasicUtils/Equation.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -86,6 +87,10 @@ namespace Nektar
             "Expression",
             "File"
         };
+
+        class Equation;
+        typedef boost::shared_ptr<Equation> EquationSharedPtr;
+
         struct FunctionVariableDefinition
         {
             enum FunctionType m_type;
@@ -240,6 +245,9 @@ namespace Nektar
             /// Returns the filename to be loaded for a given variable index.
             LIB_UTILITIES_EXPORT std::string GetFunctionFilename(const std::string& name, const unsigned int &var) const;
 
+            /// Returns the instance of AnalyticExpressionEvaluator specific to this instance of Session.
+            LIB_UTILITIES_EXPORT AnalyticExpressionEvaluator& GetExpressionEvaluator();
+
             /* ------ TAGS ------ */
             /// Checks if a specified tag is defined.
             LIB_UTILITIES_EXPORT bool DefinesTag(const std::string& pName) const;
@@ -282,6 +290,9 @@ namespace Nektar
             GeometricInfoMap            m_geometricInfo;
             /// Expressions.
             ExpressionMap               m_expressions;
+
+            AnalyticExpressionEvaluator m_exprEvaluator;
+
             /// Functions.
             FunctionMap                 m_functions;
             /// Variables.

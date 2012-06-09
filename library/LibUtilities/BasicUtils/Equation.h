@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <boost/algorithm/string/trim.hpp>
 
 namespace Nektar
@@ -53,14 +54,16 @@ namespace Nektar
 
         public: 
             Equation(const Equation &src):
-              m_expr     (src.m_expr),
-              m_expr_id  (src.m_expr_id)
+              m_expr      (src.m_expr),
+              m_expr_id   (src.m_expr_id),
+              m_evaluator (src.m_evaluator)
             {
             }
 
-            Equation(const std::string& expr = ""):
-              m_expr(expr),
-              m_expr_id(-1)
+            Equation(const SessionReaderSharedPtr& session, const std::string& expr = ""):
+              m_expr      (expr),
+              m_expr_id   (-1),
+              m_evaluator (session->GetExpressionEvaluator())
             {
                 boost::algorithm::trim(m_expr);
 
@@ -198,7 +201,7 @@ namespace Nektar
 
             std::string GetExpression(void) const
             {
-              return m_expr;
+                return m_expr;
             }
 
             /// Returns time spend on expression evaluation at
@@ -211,10 +214,8 @@ namespace Nektar
         private:
             std::string  m_expr;
             int          m_expr_id;
-            LIB_UTILITIES_EXPORT static LibUtilities::AnalyticExpressionEvaluator m_evaluator;
+            AnalyticExpressionEvaluator&  m_evaluator;
         };
-
-        typedef boost::shared_ptr<Equation> EquationSharedPtr;
     }
 }
 

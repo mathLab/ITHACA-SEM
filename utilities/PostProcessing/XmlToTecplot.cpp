@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-1]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
     //----------------------------------------------
 
     //----------------------------------------------        

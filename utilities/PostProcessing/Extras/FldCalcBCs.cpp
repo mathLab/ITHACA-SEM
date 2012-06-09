@@ -84,7 +84,7 @@ cout<<"argc="<<argc<<endl;
             = LibUtilities::SessionReader::CreateInstance(2, argv);
 
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
     //----------------------------------------------
   
     // Also read and store the boundary conditions

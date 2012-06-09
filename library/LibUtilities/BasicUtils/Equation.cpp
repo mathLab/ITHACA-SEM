@@ -64,7 +64,11 @@ namespace Nektar
         *    pre-processed expressions.
         *
         */
-        LibUtilities::AnalyticExpressionEvaluator Equation::m_evaluator;
+
+        /// \todo refactor this class: change its name and move implementation
+        /// to this file
+
+        //  LibUtilities::AnalyticExpressionEvaluator Equation::m_evaluator;
     }
 }
 

@@ -862,6 +862,18 @@ namespace Nektar
         /**
          *
          */
+        AnalyticExpressionEvaluator& SessionReader::GetExpressionEvaluator()
+        {
+            return m_exprEvaluator;
+        }
+
+
+
+
+
+        /**
+         *
+         */
         bool SessionReader::DefinesTag(const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
@@ -1216,15 +1228,14 @@ namespace Nektar
                             NekDouble value=0.0;
                             try
                             {
-                                LibUtilities::Equation expEvaluator(rhs);
-                                value = expEvaluator.Evaluate();
+                                LibUtilities::Equation expession(GetSharedThisPtr(), rhs);
+                                value = expession.Evaluate();
                             }
                             catch (const std::runtime_error &)
                             {
                                 ASSERTL0(false, "Error evaluating parameter expression '" + rhs + "'." );
                             }
-                            LibUtilities::Equation expEvaluator;
-                            expEvaluator.SetParameter(lhs, value);
+                            m_exprEvaluator.SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
@@ -1233,7 +1244,7 @@ namespace Nektar
 
                     parameter = parameter->NextSiblingElement();
                 }
-
+/*
                 try
                 {
                     // Set ourselves up for evaluation later.
@@ -1246,6 +1257,7 @@ namespace Nektar
                     // Attempted to set parameters more than once, but we let
                     // this go.
                 }
+*/
             }
 
             if (m_verbose && m_parameters.size() > 0)
@@ -1589,7 +1601,7 @@ namespace Nektar
                         SubstituteExpressions(fcnStr);
 
                         // set expression
-                        funcDef.m_expression = MemoryManager<Equation>::AllocateSharedPtr(fcnStr);
+                        funcDef.m_expression = MemoryManager<Equation>::AllocateSharedPtr(GetSharedThisPtr(),fcnStr);
                     }
 
                     // Files are denoted by F

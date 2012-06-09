@@ -1896,8 +1896,14 @@ cout<<"cr="<<cr_str<<endl;
           }
 
           // Read in mesh from input file
+
+          /// ====================================================
+          /// \todo Please update to use MeshGraph::Read(vSession)
+          /// ====================================================
           SpatialDomains::MeshGraphSharedPtr graphShPt = 
                                      SpatialDomains::MeshGraph::Read(m_sessionName+".xml");
+
+
           std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_u;
           std::vector<std::vector<NekDouble> > FieldData_u;
           string file = m_sessionName;
@@ -2000,5 +2006,5 @@ cout<<"cr="<<cr_str<<endl;
 
 
            cnt++;
-    }    
+    }
 }

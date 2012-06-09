@@ -93,7 +93,7 @@ namespace Nektar
         {
             public:
                 /// Define a new set of spatially-dependent parameters.
-                SPATIAL_DOMAINS_EXPORT SpatialParameters(const int nq);
+                SPATIAL_DOMAINS_EXPORT SpatialParameters(const LibUtilities::SessionReaderSharedPtr&  pSession, const int nq);
                 /// Copies an existing set of spatially-dependent parameters.
                 SPATIAL_DOMAINS_EXPORT SpatialParameters(const SpatialParameters& src);
 
@@ -126,6 +126,10 @@ namespace Nektar
 
                 /// List of analytic parameter definitions.
                 std::map<std::string, std::string>  m_analyticMap;
+
+                /// Shared pointer to the current session
+                const LibUtilities::SessionReaderSharedPtr&  m_session;
+
 
                 /// Default constructor.
                 SpatialParameters();

@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession->GetFilename(), false);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//->GetFilename(), false);
     //----------------------------------------------
 
     for (int n = 2; n < argc; ++n)

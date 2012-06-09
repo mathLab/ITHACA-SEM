@@ -101,6 +101,7 @@ namespace Nektar
         }
 
 
+
         /**
          *
          */
@@ -112,6 +113,67 @@ namespace Nektar
         /**
          *
          */
+        boost::shared_ptr<MeshGraph> MeshGraph::Read(
+                const LibUtilities::SessionReaderSharedPtr &pSession)
+        {
+            boost::shared_ptr<MeshGraph> returnval;
+
+            // read the geometry tag to get the dimension
+
+            TiXmlElement* geometry_tag = pSession->GetElement("NEKTAR/GEOMETRY");
+            TiXmlAttribute *attr = geometry_tag->FirstAttribute();
+            int meshDim = 0;
+            int err = 0;
+            while (attr)
+            {
+                std::string attrName(attr->Name());
+                if (attrName == "DIM")
+                {
+                    err = attr->QueryIntValue(&meshDim);
+                    ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
+                    break;
+                }
+                else
+                {
+                    std::string errstr("Unknown attribute: ");
+                    errstr += attrName;
+                    ASSERTL1(false, errstr.c_str());
+                }
+
+                // Get the next attribute.
+                attr = attr->Next();
+            }
+
+            // instantiate the dimension-specific meshgraph classes
+
+            switch(meshDim)
+            {
+            case 1:
+                returnval = MemoryManager<MeshGraph1D>::AllocateSharedPtr(pSession);
+                break;
+
+            case 2:
+                returnval = MemoryManager<MeshGraph2D>::AllocateSharedPtr(pSession);
+                break;
+
+            case 3:
+                returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr(pSession);
+                break;
+
+            default:
+                std::string err = "Invalid mesh dimension: ";
+                std::stringstream strstrm;
+                strstrm << meshDim;
+                err += strstrm.str();
+                NEKERROR(ErrorUtil::efatal, err.c_str());
+            }
+
+            return returnval;
+        }
+
+
+
+        /*  ====  OUTDATED ROUTINE, PLEASE NOT USE  ==== */
         boost::shared_ptr<MeshGraph> MeshGraph::Read(
                 const std::string& infilename,
                 bool pReadExpansions)
@@ -156,6 +218,7 @@ namespace Nektar
             }
             return returnval;
         }
+
 
 
         /**
@@ -564,9 +627,16 @@ namespace Nektar
                             ASSERTL0(nStr,"NUMMODES was not defined in EXPANSION section of input");
                             std::string nummodesStr = nStr;
 
-                            LibUtilities::Equation nummodesEqn(nummodesStr);
-
-                            num_modes = (int) nummodesEqn.Evaluate();
+                            // ASSERTL0(m_session,"Session should be defined to evaluate nummodes ");
+                            if (m_session)
+                            {
+                                LibUtilities::Equation nummodesEqn(m_session, nummodesStr);
+                                num_modes = (int) nummodesEqn.Evaluate();
+                            }
+                            else
+                            {
+                                num_modes = boost::lexical_cast<int>(nummodesStr);
+                            }
 
                             useExpansionType = true;
                         }
@@ -772,9 +842,18 @@ namespace Nektar
                             ASSERTL0(nStr,"NUMMODES-X was not defined in EXPANSION section of input");
                             std::string nummodesStr = nStr;
 
-                            LibUtilities::Equation nummodesEqn(nummodesStr);
+                            // ASSERTL0(m_session,"Session should be defined to evaluate nummodes ");
 
-                            num_modes_x = (int) nummodesEqn.Evaluate();
+                            if (m_session)
+                            {
+                                LibUtilities::Equation nummodesEqn(m_session, nummodesStr);
+                                num_modes_x = (int) nummodesEqn.Evaluate();
+                            }
+                            else
+                            {
+                                num_modes_x = boost::lexical_cast<int>(nummodesStr);
+                            }
+
                         }
 
                         const char * tStr_y = expansion->Attribute("TYPE-Y");
@@ -793,9 +872,17 @@ namespace Nektar
                             ASSERTL0(nStr,"NUMMODES-Y was not defined in EXPANSION section of input");
                             std::string nummodesStr = nStr;
 
-                            LibUtilities::Equation nummodesEqn(nummodesStr);
+                            // ASSERTL0(m_session,"Session should be defined to evaluate nummodes ");
+                            if (m_session)
+                            {
+                                LibUtilities::Equation nummodesEqn(m_session, nummodesStr);
+                                num_modes_y = (int) nummodesEqn.Evaluate();
+                            }
+                            else
+                            {
+                                num_modes_y = boost::lexical_cast<int>(nummodesStr);
+                            }
 
-                            num_modes_y = (int) nummodesEqn.Evaluate();
                         }
 
                         const char * tStr_z = expansion->Attribute("TYPE-Z");
@@ -814,9 +901,17 @@ namespace Nektar
                             ASSERTL0(nStr,"NUMMODES-Z was not defined in EXPANSION section of input");
                             std::string nummodesStr = nStr;
 
-                            LibUtilities::Equation nummodesEqn(nummodesStr);
+                            // ASSERTL0(m_session,"Session should be defined to evaluate nummodes ");
+                            if (m_session)
+                            {
+                                LibUtilities::Equation nummodesEqn(m_session, nummodesStr);
+                                num_modes_z = (int) nummodesEqn.Evaluate();
+                            }
+                            else
+                            {
+                                num_modes_z = boost::lexical_cast<int>(nummodesStr);
+                            }
 
-                            num_modes_z = (int) nummodesEqn.Evaluate();
                         }
 
                         CompositeMapIter compVecIter;

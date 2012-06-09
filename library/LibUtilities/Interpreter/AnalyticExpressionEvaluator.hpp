@@ -84,9 +84,6 @@ namespace Nektar
     namespace LibUtilities
     {
 
-//        class AnalyticExpressionEvaluator;
-//        typedef boost::shared_ptr<AnalyticExpressionEvaluator> AnalyticExpressionEvaluatorSharedPtr;
-
 
         ///  This class defines evaluator of analytic (symbolic)
         ///  mathematical expressions. Expressions are allowed to

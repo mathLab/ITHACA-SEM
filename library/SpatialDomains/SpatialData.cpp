@@ -46,7 +46,8 @@ namespace Nektar
         /**
          * Private default constructor.
          */
-        SpatialParameters::SpatialParameters()
+        SpatialParameters::SpatialParameters():
+                m_session()
         {
 
         }
@@ -57,11 +58,12 @@ namespace Nektar
          * points.
          * @param   nq          Number of data points in the domain.
          */
-        SpatialParameters::SpatialParameters(const int nq) :
+        SpatialParameters::SpatialParameters(const LibUtilities::SessionReaderSharedPtr&  pSession, const int nq) :
                 m_nq(nq),
                 m_spatialMap(),
                 m_constMap(),
-                m_analyticMap()
+                m_analyticMap(),
+                m_session(pSession)
         {
         }
 
@@ -75,7 +77,8 @@ namespace Nektar
                 m_nq(src.m_nq),
                 m_spatialMap(),
                 m_constMap(src.m_constMap),
-                m_analyticMap(src.m_analyticMap)
+                m_analyticMap(src.m_analyticMap),
+                m_session(src.m_session)
         {
             SpatialDataMap::const_iterator x;
             for (x = src.m_spatialMap.begin(); x != src.m_spatialMap.end(); ++x)
@@ -227,7 +230,7 @@ namespace Nektar
             {
                 SpatialDataSharedPtr fn(MemoryManager<SpatialData>
                                                     ::AllocateSharedPtr(m_nq));
-                LibUtilities::Equation E(q->second);
+                LibUtilities::Equation E(m_session, q->second);
                 E.Evaluate(x, y, z, fn->UpdatePhys());
 
                 m_spatialMap[q->first] = fn;

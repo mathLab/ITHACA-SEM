@@ -83,6 +83,12 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv, filenames0);
             //= LibUtilities::SessionReader::CreateInstance(2, argv);
     // Read in mesh from input file0
+
+    /// ===================================================
+    /// \todo Please update using MeshGraph::Read(vSession)
+    /// (it's now possible having multiple sessions)
+    /// ===================================================
+
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile0);
     //----------------------------------------------          
     // Import fieldfile0.
@@ -189,7 +195,12 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
     //remark: homo cases malloc() error or  segmentation fault..
     //remember: there is static cnt in stfields function to define 
     // the homo quantities only for the mesh0 case
-  	    
+
+    /// ===================================================
+    /// \todo Please update using MeshGraph::Read(vSession)
+    /// (it's now possible having multiple sessions)
+    /// ===================================================
+
     graphShPt1 = SpatialDomains::MeshGraph::Read(meshfile1);  
 
 

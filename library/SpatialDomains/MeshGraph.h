@@ -236,8 +236,13 @@ namespace Nektar
 
                 /* ---- Mesh Reading routines ---- */
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
+                        const LibUtilities::SessionReaderSharedPtr &pSession);
+
+                /// \todo Remove updated routine
+                SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
                         const std::string& infilename,
                         bool pReadExpansions = true);
+
 
                 /// Read will read the meshgraph vertices given a filename.
                 SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(

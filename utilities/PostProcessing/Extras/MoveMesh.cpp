@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
     // Read in mesh from input file
     string meshfile(argv[argc-4]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
     //---------------------------------------------- 
 
     // Also read and store the boundary conditions

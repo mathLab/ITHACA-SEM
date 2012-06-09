@@ -49,8 +49,6 @@ int main(int argc, char *argv[])
     string vDriverModule;
     DriverSharedPtr drv;
 
-    LibUtilities::Equation eq("");
-
     try
     {
         // Create session reader.
@@ -74,8 +72,6 @@ int main(int argc, char *argv[])
     {
         cout << "Error: " << eStr << endl;
     }
-
-    std::cout << "Time spend evaluating: " << eq.GetTime() << std::endl;
 
     return 0;
 }

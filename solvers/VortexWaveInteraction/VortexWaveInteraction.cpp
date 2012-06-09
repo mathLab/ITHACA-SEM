@@ -65,7 +65,7 @@ namespace Nektar
         //set a low tol for interfaceVWI
 	m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-3);
        
-
+        
         m_sessionVWI->LoadParameter("NeutralPointTolerance",  m_neutralPointTol,1e-4);
         m_sessionVWI->LoadParameter("MaxOuterIterations",     m_maxOuterIterations,100);
         
@@ -381,19 +381,23 @@ namespace Nektar
                     std::string forcefile
                         = m_sessionRoll->GetFunctionFilename("BodyForce", 0);
                     
+                    m_solverRoll->DoInitialise();
+                    
                     if(forcefile != "")
                     {
                         m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
+                        int ncoeffs = m_solverRoll->UpdateForces()[0]->GetNcoeffs();
                         
                         // Scale forcing
                         int npoints = m_solverRoll->UpdateForces()[0]->GetNpoints();
                         for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
                         {
                             Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+                            
+                            Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[i]->GetCoeffs(),1,m_vwiForcing[2+i],1);
+
                         }
                     }
-                    
-                    m_solverRoll->DoInitialise();
                     
                     init = 0;
                 }

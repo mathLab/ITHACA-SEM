@@ -46,12 +46,13 @@ namespace Nektar
         /**
          * Private default constructor.
          */
+/*
         SpatialParameters::SpatialParameters():
                 m_session()
         {
 
         }
-
+*/
 
         /**
          * Define a set of spatially dependent parameters with \a nq data

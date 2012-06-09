@@ -132,7 +132,7 @@ namespace Nektar
 
 
                 /// Default constructor.
-                SpatialParameters();
+                // SpatialParameters();
 
                 /// Reads constant-valued parameters from XML object.
                 void ReadConstantFunctions(TiXmlElement *spatialData);

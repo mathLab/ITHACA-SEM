@@ -48,6 +48,11 @@ SET(ExtractCriticalLayerSource
        ./ExtractCriticalLayer.cpp
        )
 
+
+SET(MoveMeshToCriticalLayerSource
+       ./MoveMeshToCriticalLayer.cpp
+       )
+
 #IF (NEKTAR_USE_ARPACK)
 #    SET(VortexWaveInteractionSolverSource ${VortexWaveInteractionSolverSource}
 #        ../Auxiliary/DriverArpack.cpp)
@@ -64,4 +69,7 @@ ADD_SOLVER_EXECUTABLE(CalcVWIplusPressure solvers
                         
 ADD_SOLVER_EXECUTABLE(ExtractCriticalLayer solvers 
 		     ${ExtractCriticalLayerSource})
+
+ADD_SOLVER_EXECUTABLE(MoveMeshToCriticalLayer solvers 
+		     ${MoveMeshToCriticalLayerSource})
                         

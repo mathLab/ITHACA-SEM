@@ -226,6 +226,8 @@ namespace Nektar
         bool m_deltaFcnApprox;  // Activate delta function approximation around wave 
         bool m_useLinfPressureNorm; // Activate if use Pressure Linf Normalisation
 
+        bool m_moveMeshToCriticalLayer; // move mesh to critical layer 
+
         NekDouble m_deltaFcnDecay;   // Delta function decay level 
 
         Array<OneD, NekDouble>  m_waveForceMag;

@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     try
     { 
         VortexWaveInteraction vwi(argc,argv);
-
+        
         vwi.CalcL2ToLinfPressure();
         return 1;
     }

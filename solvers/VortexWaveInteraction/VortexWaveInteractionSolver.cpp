@@ -65,7 +65,8 @@ int main(int argc, char *argv[])
 
             vwi.SetWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
             vwi.SetPrevAlpha(vwi.GetAlpha());
-            vwi.SetAlpha(vwi.GetAlpha() + vwi.GetDAlphaDWaveForceMag()*vwi.GetWaveForceMagStep());
+            //vwi.SetAlpha(vwi.GetAlpha() + vwi.GetDAlphaDWaveForceMag()*vwi.GetWaveForceMagStep());
+            vwi.SetAlpha(vwi.GetAlpha() + (vwi.GetWaveForceMagStep() > 0)?vwi.GetAlphaStep():(-vwi.GetAlphaStep()));
             
             // Save data directories. 
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)
@@ -178,12 +179,16 @@ void DoFixedForcingIteration(VortexWaveInteraction &vwi)
             bool exit_iteration = false;
 	    NekDouble saveEigRelTol = vwi.GetEigRelTol();
 	    int saveMinIters = vwi.GetMinInnerIterations();
-	    int init_search = 1;
-	    
-	    // initial set m_eigelTol to 1e-1 and inner iterations to 1 for 
-	    // quick search 
-	    vwi.SetEigRelTol(1e-1);
-	    vwi.SetMinInnerIterations(2);
+	    int init_search = 0;
+            
+            
+            if(init_search)
+            {
+                // initial set m_eigelTol to 1e-1 and inner iterations to 1 for 
+                // quick search 
+                vwi.SetEigRelTol(1e-1);
+                vwi.SetMinInnerIterations(2);
+            }
 
             while(exit_iteration == false)
             {

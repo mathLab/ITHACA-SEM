@@ -6,6 +6,11 @@ ENDMACRO()
 
 MACRO(SET_LAPACK_LINK_LIBRARIES name)
     IF( NEKTAR_USE_BLAS_LAPACK )
+        # Link FFTW before MKL to ensure FFTW original implementation used.
+        IF( NEKTAR_USE_FFTW )    
+            TARGET_LINK_LIBRARIES(${name} optimized ${FFTW_LIB} debug ${FFTW_LIB})
+        ENDIF( NEKTAR_USE_FFTW )
+
         IF( NEKTAR_USE_MKL AND MKL_FOUND )
             TARGET_LINK_LIBRARIES(${name} ${MKL} )
         ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
@@ -40,10 +45,6 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
             TARGET_LINK_LIBRARIES(${name} optimized ${METIS_LIB} debug ${METIS_LIB} )
         ENDIF( NEKTAR_USE_METIS )
         
-        IF( NEKTAR_USE_FFTW )    
-            TARGET_LINK_LIBRARIES(${name} optimized ${FFTW_LIB} debug ${FFTW_LIB})
-        ENDIF( NEKTAR_USE_FFTW )
-
         IF( NEKTAR_USE_ARPACK )
             TARGET_LINK_LIBRARIES(${name} optimized ${ARPACK_LIB} debug
                 ${ARPACK_LIB} )

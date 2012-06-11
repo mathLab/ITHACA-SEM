@@ -260,15 +260,15 @@ L inf error (variable w) : 3.33067e-16
 L 2 error (variable p) : 1.99185e-15
 L inf error (variable p) : 1.55431e-14
 ----------------------------------------
-Test_Tet_channel_m8.xml
-L 2 error (variable u) : 0
-L inf error (variable u) : 8.77353e-16
-L 2 error (variable v) : 0
-L inf error (variable v) : 8.70958e-16
-L 2 error (variable w) : 6.69004e-16
-L inf error (variable w) : 1.52933e-14
-L 2 error (variable p) : 3.03347e-14
-L inf error (variable p) : 4.06786e-13
+Test_Tet_equitri.xml
+L 2 error (variable u) : 3.63062e-11
+L inf error (variable u) : 6.57701e-10
+L 2 error (variable v) : 1.02359e-10
+L inf error (variable v) : 1.53667e-09
+L 2 error (variable w) : 7.74756e-09
+L inf error (variable w) : 2.59194e-08
+L 2 error (variable p) : 8.08707e-08
+L inf error (variable p) : 3.42443e-07
 ----------------------------------------
 Test_Prism_channel_m6.xml
 L 2 error (variable u) : 0

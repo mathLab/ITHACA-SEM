@@ -1758,7 +1758,7 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 err  = std::max(err,(*m_exp)[i]->Linf());
             }
-            m_comm->AllReduce(err, LibUtilities::ReduceMax);
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
             return err;
         }
 
@@ -1826,35 +1826,36 @@ namespace Nektar
                 errl2 = (*m_exp)[i]->L2();
                 err += errl2*errl2;
             }
-            m_comm->AllReduce(err, LibUtilities::ReduceSum);
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+            
             return sqrt(err);
         }
 		
-		Array<OneD, NekDouble> ExpList::v_HomogeneousEnergy (void)
+        Array<OneD, NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
-			ASSERTL0(false,
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-			Array<OneD, NekDouble> NoEnergy(1,0.0);
+            Array<OneD, NekDouble> NoEnergy(1,0.0);
             return NoEnergy;
         }
 		
-		Array<OneD, unsigned int> ExpList::v_GetZIDs(void)
-		{
-			ASSERTL0(false,
+        Array<OneD, unsigned int> ExpList::v_GetZIDs(void)
+        {
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-			Array<OneD, unsigned int> NoModes(1);
+            Array<OneD, unsigned int> NoModes(1);
 			
-			return NoModes;
-		}
+            return NoModes;
+        }
 		
-		Array<OneD, unsigned int> ExpList::v_GetYIDs(void)
-		{
-			ASSERTL0(false,
+        Array<OneD, unsigned int> ExpList::v_GetYIDs(void)
+        {
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-			Array<OneD, unsigned int> NoModes(1);
+            Array<OneD, unsigned int> NoModes(1);
 			
-			return NoModes;
-		}
+            return NoModes;
+        }
 		
 
         /**
@@ -2050,11 +2051,11 @@ namespace Nektar
             v_ExtractDataToCoeffs(fielddef,fielddata,field,m_coeffs);
         }
 		
-		//3D-Base Flow (implementation in the homogeneous classes)
-		void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
-		{
-			ASSERTL0(false, "This method is not defined or valid for this class type");
-		}
+        //3D-Base Flow (implementation in the homogeneous classes)
+        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
+        {
+            ASSERTL0(false, "This method is not defined or valid for this class type");
+        }
         
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	

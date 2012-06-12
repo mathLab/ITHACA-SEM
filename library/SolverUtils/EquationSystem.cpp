@@ -778,13 +778,24 @@ namespace Nektar
                 LibUtilities::EquationSharedPtr ffunc
                     = m_session->GetFunction(pFunctionName, pFieldName);
 
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << "- Field " << pFieldName << ": " 
+                         << ffunc->GetExpression() << endl;
+                }
+
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
-                cout << pFunctionName << " from file: " << filename << endl;
+                
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << "- Field " << pFieldName << ": " 
+                         << "from file " << filename << endl;
+                }
 
                 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;

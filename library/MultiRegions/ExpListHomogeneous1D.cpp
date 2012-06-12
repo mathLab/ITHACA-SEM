@@ -634,7 +634,7 @@ namespace Nektar
         {
             int i,n;
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-
+            
             // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
@@ -655,21 +655,31 @@ namespace Nektar
             }
         }
 		
-		void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
            v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
 
         //Extract the data in fielddata into the m_coeff list
-        void ExpListHomogeneous1D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
+        void ExpListHomogeneous1D::v_ExtractDataToCoeffs(
+            SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+            std::vector<NekDouble>                    &fielddata,
+            std::string                               &field,
+            Array<OneD, NekDouble>                    &coeffs)
         {
             int i,n;
             int offset = 0;
-            int nzmodes; 
+            int nzmodes;
             int datalen = fielddata.size()/fielddef->m_fields.size();
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
             
-
+            // Build map of plane IDs lying on this process.
+            std::map<int,int> homoZids;
+            for (i = 0; i < m_planes.num_elements(); ++i)
+            {
+                homoZids[m_transposition->GetPlaneID(i)] = i;
+            }
+            
             for(i = 0; i < fielddef->m_basis.size(); ++i)
             {
                 if(fielddef->m_basis[i] == m_homogeneousBasis->GetBasisType())
@@ -678,7 +688,7 @@ namespace Nektar
                     break;
                 }
             }
-            ASSERTL1(i != fielddef->m_basis.size()," Failed to determine number of modes");
+            ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of modes");
             
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)
@@ -689,11 +699,10 @@ namespace Nektar
                 }
                 offset += datalen;
             }
+            ASSERTL0(i != fielddef->m_fields.size(),
+                     "Field " + field + " not found in data file");
             
-            ASSERTL0(i!= fielddef->m_fields.size(),"Field not found in data file");
-            
-            // Determine mapping from element ids to location in
-            // expansion list
+            // Determine mapping from element ids to location in expansion list.
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
             {
@@ -701,35 +710,43 @@ namespace Nektar
             }
 
             int modes_offset = 0;
-			int planes_offset = 0;
-            Array<OneD, NekDouble> coeff_tmp;             
+            int planes_offset = 0;
+            Array<OneD, NekDouble> coeff_tmp;
+            
             for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
                 int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
-                int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_numModes,modes_offset);
+                int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(
+                    fielddef->m_numModes,modes_offset);
+                
                 if(fielddef->m_uniOrder == true) // reset modes_offset to zero
                 {
                     modes_offset = 0;
                 }
-
-                for(n = 0; n < nzmodes; ++n)
+                
+                for(n = 0; n < nzmodes; ++n, offset += datalen)
                 {
-					planes_offset = fielddef->m_homogeneousZIDs[n];
+                    std::map<int,int>::iterator it = homoZids.find(
+                        fielddef->m_homogeneousZIDs[n]);
+                    
+                    // Check to make sure this mode number lies in this field.
+                    if (it == homoZids.end())
+                    {
+                        continue;
+                    }
+                    
+                    planes_offset = it->second;
                     if(datalen == (*m_exp)[eid]->GetNcoeffs())
                     {
-                        Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid]+ planes_offset*ncoeffs_per_plane],1);
+                        Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]+planes_offset*ncoeffs_per_plane],1);
                     }
                     else // unpack data to new order
                     {
-                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane);
+                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane);
                     }
-                    
-                    offset += datalen;
                 }
             }
         }
-		
-		
 		
         //Extract the data in fielddata into the m_coeff list (for 2D files into 3D cases)
         void ExpListHomogeneous1D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
@@ -739,7 +756,6 @@ namespace Nektar
             int nzmodes = m_homogeneousBasis->GetNumModes();
             int datalen = fielddata.size()/fielddef->m_fields.size();
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-		
 			
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)

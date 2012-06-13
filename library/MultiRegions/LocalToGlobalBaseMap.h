@@ -187,6 +187,16 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const;
 
+            inline void LocalBndToGlobal(
+                    const NekVector<NekDouble>& loc,
+                    NekVector<NekDouble>& global,
+                    int offset) const;
+
+            inline void LocalBndToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD,NekDouble>& global,
+                    int offset) const;
+
             inline void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const;
 
@@ -208,6 +218,10 @@ namespace Nektar
             inline const int GetFullSystemBandWidth() const;
 
             inline int GetNumNonDirVertexModes() const;
+
+            inline int GetNumNonDirEdgeModes() const;
+
+            inline int GetNumNonDirFaceModes() const;
 
             /// Returns the bandwidth of the boundary system.
             inline int GetBndSystemBandWidth() const;
@@ -387,6 +401,10 @@ namespace Nektar
 
             virtual int v_GetNumNonDirVertexModes() const;
 
+            virtual int v_GetNumNonDirEdgeModes() const;
+
+            virtual int v_GetNumNonDirFaceModes() const;
+
         };
 
 
@@ -502,6 +520,16 @@ namespace Nektar
         inline int LocalToGlobalBaseMap::GetNumNonDirVertexModes() const
         {
             return v_GetNumNonDirVertexModes();
+        }
+
+        inline int LocalToGlobalBaseMap::GetNumNonDirEdgeModes() const
+        {
+            return v_GetNumNonDirEdgeModes();
+        }
+
+        inline int LocalToGlobalBaseMap::GetNumNonDirFaceModes() const
+        {
+            return v_GetNumNonDirFaceModes();
         }
 
         inline int LocalToGlobalBaseMap::GetLocalToGlobalBndMap(const int i)
@@ -680,6 +708,36 @@ namespace Nektar
             }
         }
 
+        inline void LocalToGlobalBaseMap::LocalBndToGlobal(
+                    const NekVector<NekDouble>& loc,
+                    NekVector<NekDouble>& global,
+                    int offset) const
+        {
+            LocalBndToGlobal(loc.GetPtr(), global.GetPtr(), offset);
+        }
+
+
+        inline void LocalToGlobalBaseMap::LocalBndToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD,NekDouble>& global,
+                    int offset) const
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+
+            // offset input data by length "offset" for Dirichlet boundary conditions.
+            Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
+
+	    if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), tmp.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
+            }
+            Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
+        }
 
         inline void LocalToGlobalBaseMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,

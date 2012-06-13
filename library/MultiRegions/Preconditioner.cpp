@@ -102,8 +102,9 @@ namespace Nektar
                  break;
              case MultiRegions::eLowEnergy:
                  {
-                     ASSERTL0(0,"Not yet implemented");
-                     //LowEnergyPreconditioner();
+		   //ASSERTL0(0,"Not yet implemented");
+                     StaticCondLinearInversePreconditioner();
+                     LowEnergyPreconditioner();
                  }
                  break;
              default:
@@ -486,6 +487,16 @@ namespace Nektar
                 cnt   += offset;
             }
 
+            for(int i = 0; i < S.GetRows(); ++i)
+            {
+                for(int j = 0; j < S.GetColumns(); ++j)
+                {
+                    MatrixValue=S.GetValue(i,j);
+		    cout<<MatrixValue<<" ";
+                }
+		cout<<endl;
+            }
+
             //Invert linear finite element space
             S.Invert();
 
@@ -594,22 +605,11 @@ namespace Nektar
 
             //map from full system to statically condensed system
             //i.e reverse GetBoundaryMap
-            Array<OneD,unsigned int> invmap(nCoeffs, -1);
 
-            for(j=i=n=0; i< nCoeffs; ++i)
+	    map<int,int> invmap;
+            for(j = 0; j < bmap.num_elements(); ++j)
             {
-                if (j >=nint)
-                {
-                    invmap[i]=n++;
-                }
-                else if(i==imap[j])
-                {
-                    invmap[i]=j++;
-                }
-                else
-                {
-                    invmap[i]=n++;
-                }
+                invmap[bmap[j]] = j;
             }
 
             //Get geometric information about this element
@@ -1003,17 +1003,31 @@ namespace Nektar
 	 */
         void Preconditioner::BuildPreconditioner()
         {
+            boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
+             const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
+             StdRegions::StdExpansionSharedPtr locExpansion;
+
             int nRow, i, j, nmodes, ntotaledgemodes, ntotalfacemodes;
-            int nVerts, nEdges,nFaces, eid, fid;
+            int nVerts, nEdges,nFaces, eid, fid, n, cnt, nedgemodes, nfacemodes;
+	    int nEdgeCoeffs, nFaceCoeffs;
             NekDouble zero = 0.0;
             NekDouble MatrixValue;
 
+            int vMap1, vMap2, sign1, sign2, gid1, gid2, m, v, eMap1, eMap2, fMap1, fMap2;
+            int offset, globalrow, globalcol;
+            NekDouble globalMatrixValue, globalRValue;
+
             MatrixStorage storage = eFULL;
+            MatrixStorage vertstorage = eDIAGONAL;
             DNekMat &R = (*m_transformationmatrix);
             DNekScalMat &S=(*bndry_mat);
 
             DNekMatSharedPtr    m_SR;
             DNekMatSharedPtr    m_RSRT;
+
+            DNekMatSharedPtr m_VertBlk;
+            DNekMatSharedPtr m_EdgeBlk;
+            DNekMatSharedPtr m_FaceBlk;
 
             nRow=R.GetRows();
 
@@ -1033,68 +1047,204 @@ namespace Nektar
             //Calculate R*S*trans(R)
             RSRT=R*SR;
 
+            /*for (i=0; i<R.GetRows(); ++i)
+            {
+                for (int j=0; j<R.GetColumns(); ++j)
+                {
+                    cout<<RSRT(i,j)<<" ";
+                }
+                cout<<endl;
+            }
+
+	    cout<<endl;
+	    cout<<endl;
+
+            for (i=0; i<S.GetRows(); ++i)
+            {
+                for (int j=0; j<S.GetColumns(); ++j)
+                {
+                    cout<<S(i,j)<<" ";
+                }
+                cout<<endl;
+		}*/
+
             nVerts=vExp->GetGeom()->GetNumVerts();
-
-            //Build up components of Diag(S2)_{vv}
-            for(i=0; i<nVerts; ++i)
-            {
-                SP.SetValue(vertModeLocation[i],vertModeLocation[i],RSRT(vertModeLocation[i],
-                            vertModeLocation[i]));
-            }
-            
-            ntotaledgemodes=vExp->GetTotalEdgeIntNcoeffs();
             nEdges=vExp->GetGeom()->GetNumEdges();
-            Array<OneD, unsigned int> edgemodearray(ntotaledgemodes);
-
-            //create array of edge modes
-            for(eid=0; eid < nEdges; ++eid)
-            {
-                nmodes=edgeModeLocation[eid].num_elements();
-                Vmath::Vcopy(nmodes, &edgeModeLocation[eid][0], 1, &edgemodearray[eid*nmodes], 1);
-            }
-
-            //Build up edge block
-            for(i=0; i<ntotaledgemodes; ++i)
-            {
-                for(j=0; j<ntotaledgemodes; ++j)
-                {
-                    SP.SetValue(edgemodearray[i],edgemodearray[j],RSRT(edgemodearray[i],
-                                edgemodearray[j]));
-                }
-            }
-
-            ntotalfacemodes=vExp->GetTotalFaceIntNcoeffs();
             nFaces=vExp->GetGeom()->GetNumFaces();
-            Array<OneD, unsigned int> facemodearray(ntotalfacemodes);
 
-            //create array of face modes
-            for(fid=0; fid < nFaces; ++fid)
-            {
-                nmodes=faceModeLocation[fid].num_elements();
-                Vmath::Vcopy(nmodes, &faceModeLocation[fid][0], 1, &facemodearray[fid*nmodes], 1);
-            }
+            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBnd    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nNonDir = nGlobal-nDirBnd;
+            int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
+            int nNonDirEdges  = m_locToGloMap->GetNumNonDirEdgeModes();
+            int nNonDirFaces  = m_locToGloMap->GetNumNonDirFaceModes();
 
-            //Build up face block
-            for(i=0; i<ntotalfacemodes; ++i)
+            // set up block matrix system
+            int nblks = 3;
+            Array<OneD,unsigned int> exp_size(nblks);
+
+	    exp_size[0]=nNonDirVerts;
+	    exp_size[1]=nNonDirEdges;
+	    exp_size[2]=nNonDirFaces;
+
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            GloBlkMat = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size,blkmatStorage);
+
+	    //Vertex, edge and face preconditioner matrices
+            DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
+            DNekMatSharedPtr EdgeBlk = MemoryManager<DNekMat>::AllocateSharedPtr(nNonDirEdges,nNonDirEdges,zero,storage);
+            DNekMatSharedPtr FaceBlk = MemoryManager<DNekMat>::AllocateSharedPtr(nNonDirFaces,nNonDirFaces,zero,storage);
+
+
+            DNekScalBlkMatSharedPtr loc_mat;
+            DNekScalMatSharedPtr    bnd_mat;
+
+	    // Set vertex block
+            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
             {
-                for(j=0; j<ntotalfacemodes; ++j)
+		offset=vExp->NumBndryCoeffs();
+
+                //loop over vertices of the element and return the vertex map for each vertex
+                for (v=0; v<nVerts; ++v)
                 {
-                    SP.SetValue(facemodearray[i],facemodearray[j],RSRT(facemodearray[i],
-                                facemodearray[j]));
+                    vMap1=vertModeLocation[v];
+                    
+                    //Get vertex map
+                    globalrow = m_locToGloMap->GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
+
+                    if(globalrow >= 0)
+                    {
+                        for (m=0; m<nVerts; ++m)
+                        {
+                            vMap2=vertModeLocation[m];
+
+                            //global matrix location (without offset due to dirichlet values)
+                            globalcol = m_locToGloMap->GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
+
+                            //offset for dirichlet conditions
+                            if (globalcol == globalrow)
+                            {
+                                //modal connectivity between elements
+                                sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + vMap1);
+                                sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + vMap2);
+
+                                //Global matrix value
+                                globalMatrixValue = VertBlk->GetValue(globalrow,globalcol)
+				  + sign1*sign2*RSRT(vMap1,vMap2);
+
+                                //build matrix containing the linear finite element space
+                                VertBlk->SetValue(globalrow,globalcol,globalMatrixValue);
+                            }
+                        }
+                    }
                 }
+                cnt   += offset;
             }
 
-	    //SP.Invert();
+ 	    //set edge block
+            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
+            {
+		offset=vExp->NumBndryCoeffs();	
 
-            //inv(SP)*RSRT;
-            SP=SP*RSRT;
+                //loop over edges of the element and return the edge map
+                for (eid=0; eid<nEdges; ++eid)
+                {
+                    nedgemodes=edgeModeLocation[eid].num_elements();
+            
+                    for (v=0; v<nedgemodes; ++v)
+                    {
+                    
+		        eMap1=edgeModeLocation[eid][v];
 
-            //transpose RSRT
-            RSRT.Transpose();
+                        globalrow = m_locToGloMap->GetLocalToGlobalBndMap(cnt+eMap1)-nDirBnd-nNonDirVerts;
 
-            //trans(RSRT)*inv(SP)
-            SP=RSRT*SP;
+                        if(globalrow >= 0)
+                        {
+                            for (m=0; m<nedgemodes; ++m)
+                            {
+			        eMap2=edgeModeLocation[eid][m];
 
+                                //global matrix location (without offset due to dirichlet values)
+                                globalcol = m_locToGloMap->GetLocalToGlobalBndMap(cnt+eMap2)-nDirBnd-nNonDirVerts;
+
+                                //offset for dirichlet conditions
+                                if (globalcol >= 0)
+                                {
+                                    //modal connectivity between elements
+				    sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + eMap1);
+				    sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + eMap2);
+
+                                    //Global matrix value
+                                    globalMatrixValue = EdgeBlk->GetValue(globalrow,globalcol)
+				      + sign1*sign2*RSRT(eMap1,eMap2);
+
+                                    //build matrix containing the linear finite element space
+                                    EdgeBlk->SetValue(globalrow,globalcol,globalMatrixValue);
+                                }
+                            }
+                        }
+		    }
+                }
+                cnt   += offset;
+            }
+
+	    //set face block
+            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
+            {
+		offset=vExp->NumBndryCoeffs();	
+
+                //loop over edges of the element and return the edge map
+                for (fid=0; fid<nFaces; ++fid)
+                {
+                    nfacemodes=faceModeLocation[fid].num_elements();
+            
+                    for (v=0; v<nfacemodes; ++v)
+                    {
+                    
+		        fMap1=faceModeLocation[fid][v];
+
+                        globalrow = m_locToGloMap->GetLocalToGlobalBndMap(cnt+fMap1)-nDirBnd-nNonDirVerts-nNonDirEdges;
+
+                        if(globalrow >= 0)
+                        {
+                            for (m=0; m<nfacemodes; ++m)
+                            {
+			        fMap2=faceModeLocation[fid][m];
+
+                                //global matrix location (without offset due to dirichlet values)
+                                globalcol = m_locToGloMap->GetLocalToGlobalBndMap(cnt+fMap2)-nDirBnd-nNonDirVerts-nNonDirEdges;
+
+                                //offset for dirichlet conditions
+                                if (globalcol >= 0)
+                                {
+                                    //modal connectivity between elements
+				    sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + fMap1);
+				    sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + fMap2);
+
+                                    //Global matrix value
+                                    globalMatrixValue = FaceBlk->GetValue(globalrow,globalcol)
+				      + sign1*sign2*RSRT(fMap1,fMap2);
+
+                                    //build matrix containing the linear finite element space
+                                    FaceBlk->SetValue(globalrow,globalcol,globalMatrixValue);
+                                }
+                            }
+                        }
+		    }
+                }
+                cnt   += offset;
+            }
+
+	    VertBlk->Invert();
+	    EdgeBlk->Invert();
+	    FaceBlk->Invert();
+
+            DNekScalMatSharedPtr     Blktmp;
+            NekDouble                one = 1.0;
+
+            GloBlkMat->SetBlock(0,0,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,VertBlk));
+            GloBlkMat->SetBlock(1,1,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,EdgeBlk));
+            GloBlkMat->SetBlock(2,2,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,FaceBlk));
         }
 
 
@@ -1134,101 +1284,6 @@ namespace Nektar
             //Calculate R*S*trans(R)
             RSRT=R*SR;
 
-            //vertex, edge and face matrices
-            nVerts=vExp->GetGeom()->GetNumVerts();
-            m_SPV = MemoryManager<DNekMat>::AllocateSharedPtr(nVerts, nVerts, zero, storage);
-            DNekMat &SPV = (*m_SPV);
-
-            ntotaledgemodes=vExp->GetTotalEdgeIntNcoeffs();
-            m_SPE = MemoryManager<DNekMat>::AllocateSharedPtr(ntotaledgemodes, ntotaledgemodes, zero, storage);
-            DNekMat &SPE = (*m_SPE);
-
-            ntotalfacemodes=vExp->GetTotalFaceIntNcoeffs();
-            m_SPF = MemoryManager<DNekMat>::AllocateSharedPtr(ntotalfacemodes, ntotalfacemodes, zero, storage);
-            DNekMat &SPF = (*m_SPF);
-
-	    /*
-	    for(i=0; i<nVerts; ++i)
-	    {
-	        SPV.SetValue(i,i,RSRT(i,i));
-	    }
-
-            for(i=0; i<ntotaledgemodes; ++i)
-	    {
-	      for(j=0; j<ntotaledgemodes; ++j)
-	        {
-		    SPE.SetValue(nVerts+i,nVerts+j,RSRT(nVerts+i,nVerts+j));
-	        }
-	    }
-
-            for(i=0; i<ntotalfacemodes; ++i)
-	    {
-	      for(j=0; j<ntotalfacemodes; ++j)
-	        {
-	            SPF.SetValue(nVerts+ntotaledgemodes+i,nVerts+ntotaledgemodes+j,RSRT(nVerts+ntotaledgemodes+i,
-			        nVerts+ntotaledgemodes+j));
-	        }
-	    }
-	    */
-
-            //Build up components of Diag(S2)_{vv}
-            nVerts=vExp->GetGeom()->GetNumVerts();
-            for(i=0; i<nVerts; ++i)
-            {
-                SPV.SetValue(i,i,RSRT(i,i));
-            }
-
-            for(i=0; i<ntotaledgemodes; ++i)
-            {
-                for(j=0; j<ntotaledgemodes; ++j)
-                {
-                    SPE.SetValue(i,j,RSRT(i,j));
-                }
-            }
-
-            for(i=0; i<ntotalfacemodes; ++i)
-            {
-                for(j=0; j<ntotalfacemodes; ++j)
-                {
-                    SPF.SetValue(i,j,RSRT(i,j));
-                }
-            }
-
-            //Invert SP
-            SPV.Invert();
-            SPE.Invert();
-            SPF.Invert();
-
-
-            for(i=0; i<nVerts; ++i)
-            {
-                SP.SetValue(i,i,SPV(i,i));
-            }
-
-            for(i=0; i<ntotaledgemodes; ++i)
-            {
-                for(j=0; j<ntotaledgemodes; ++j)
-                {
-                    SP.SetValue(nVerts+i,nVerts+j,SPE(i,j));
-                }
-            }
-
-            for(i=0; i<ntotalfacemodes; ++i)
-            {
-                for(j=0; j<ntotalfacemodes; ++j)
-                {
-                    SP.SetValue(nVerts+ntotaledgemodes+i,nVerts+ntotaledgemodes+j,SPF(i,j));
-                }
-            }
-
-            //inv(SP)*RSRT;
-            SP=SP*RSRT;
-
-            //transpose RSRT
-            RSRT.Transpose();
-
-            //trans(RSRT)*inv(SP)
-            SP=RSRT*SP;
         }
 
         /**
@@ -1719,55 +1774,60 @@ namespace Nektar
 		break;
  	    case MultiRegions::eLowEnergy:
                 {
+		    int i;
+                    DNekScalMatSharedPtr     Blktmp;
+                    NekDouble                one = 1.0;
 		    boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-	            int n, nel, offset, ncoeffs;
-
-		    DNekScalBlkMatSharedPtr loc_mat;
-		    DNekScalMatSharedPtr    bnd_mat;
-
-                    int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
-                    int nLocal  = m_locToGloMap->GetNumLocalBndCoeffs();
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                    int nNonDir = nGlobal - nDir;
-                    Array<OneD, NekDouble> vGlo(nGlobal, 0.0);
-                    Array<OneD, NekDouble> vloc(nLocal,  0.0);
-                    NekVector<NekDouble> loc(nLocal,vloc, eWrapper);
+                    int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+		    int nLocal  = m_locToGloMap->GetNumLocalBndCoeffs();
+                    int nNonDir = nGlobal-nDir;
+                    DNekScalBlkMat &M = (*GloBlkMat);
+		    DNekMat &R = (*m_transformationmatrix);
 
-                    DNekMat &SP = (*m_SP);
+		    int nblks = expList->GetExpSize();
+		    Array<OneD,unsigned int> exp_size(nblks);
+		    
+		    for(i=0; i<expList->GetExpSize(); ++i)
+		    {
+		        exp_size[i]=R.GetRows();
+		    }
 
-                    m_locToGloMap->GlobalToLocalBnd(pInput,vloc, nDir);
+                    MatrixStorage blkmatStorage = eDIAGONAL;
+                    DNekScalBlkMatSharedPtr RBlkMat = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size,blkmatStorage);
 
-                    for (n = 0; n < expList->GetNumElmts(); ++n)
-                    {
+		    for(i=0; i<expList->GetExpSize(); ++i)
+		    {
+		      RBlkMat->SetBlock(i,i,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_transformationmatrix));
+		    }
 
-	                //Get statically condensed matrix
-		        loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
-		
-                        //Extract boundary block
-		        bnd_mat=loc_mat->GetBlock(0,0);
-		
-                        //number of boundary block rows
-                        ncoeffs = bnd_mat->GetRows();
+                    DNekScalBlkMat &RL = (*RBlkMat);
 
-			offset=expList->GetOffset_Elmt_Id(n);
+		    NekVector<NekDouble> r1(nLocal,0.0);
+		    NekVector<NekDouble> z1(nLocal,0.0);
+                    NekVector<NekDouble> Globalin(nNonDir,pInput,eWrapper);
 
-		        //Copy values to from local vector
-                        Array<OneD, NekDouble> tmp(ncoeffs,  0.0);
-                        NekVector<NekDouble> loc_tmp(ncoeffs,tmp, eWrapper);
-                        Vmath::Vcopy(ncoeffs, &vloc[offset*ncoeffs], 1, &tmp[0], 1);
+		    m_locToGloMap->GlobalToLocalBnd(Globalin,r1,nDir);
 
-		        //storage for matrix vector multiply
-                        Array<OneD, NekDouble> tmp2(ncoeffs,  0.0);
-                        NekVector<NekDouble> mvloc(ncoeffs,tmp2, eWrapper);
+		    r1 = RL * r1;
 
-			//matrix vector multiply
-		        mvloc = SP * loc_tmp;
+		    NekVector<NekDouble> z1glo(nNonDir,0.0);
+		    m_locToGloMap->AssembleBnd(r1,z1glo,nDir);
 
-			//copy values to correct location in the local vector
-                        Vmath::Vcopy(ncoeffs, &tmp2[0], 1, &vloc[offset*ncoeffs], 1);
-	            }
+                    NekVector<NekDouble> z2glo(nNonDir,0.0);
 
-		    m_locToGloMap->AssembleBnd(vloc, pOutput);
+		    z2glo = M * z1glo;
+
+		    NekVector<NekDouble> z2(nLocal,0.0);
+		    m_locToGloMap->GlobalToLocalBnd(z2glo,z2,nDir);
+		    RL.Transpose();
+
+		    z2 = RL * z2;
+
+                    NekVector<NekDouble> Globalout(nNonDir,pOutput,eWrapper);
+
+		    m_locToGloMap->AssembleBnd(z2,Globalout,nDir);
+
 		}
 		break;
             default:

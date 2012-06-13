@@ -141,6 +141,10 @@ namespace Nektar
             Array<OneD,int> m_globalToUniversalMapUnique;
 	    /// Number of non Dirichlet vertex modes
 	    int m_numNonDirVertexModes;
+	    /// Number of non Dirichlet edge modes
+	    int m_numNonDirEdgeModes;
+	    /// Number of non Dirichlet face modes
+	    int m_numNonDirFaceModes;
 
         private:
             int m_maxStaticCondLevel;
@@ -229,6 +233,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirVertexModes() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirEdgeModes() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaceModes() const;
 
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;

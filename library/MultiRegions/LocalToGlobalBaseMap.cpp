@@ -530,5 +530,17 @@ namespace Nektar
             return 0;
         }
 
+        int LocalToGlobalBaseMap::v_GetNumNonDirEdgeModes() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int LocalToGlobalBaseMap::v_GetNumNonDirFaceModes() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
     }
 }

@@ -63,6 +63,7 @@ namespace Nektar
 	    StdRegions::StdExpansionSharedPtr           vExp;
 
             DNekMatSharedPtr                            m_preconditioner;
+	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 
             DNekScalMatSharedPtr                        bndry_mat;
             DNekScalMatSharedPtr                        full_mat;

@@ -1836,6 +1836,7 @@ namespace Nektar
                             {
                                 boost::add_vertex(boostGraphObj);
                                 vertTempGraphVertId[meshVertId] = tempGraphVertId++;
+                                m_numNonDirVertexModes+=1;
                             }
                             localVerts[localVertOffset+vertCnt++] = vertTempGraphVertId[meshVertId];
                             vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
@@ -1849,7 +1850,7 @@ namespace Nektar
                 localVertOffset+=nVerts;
             }
 
-            m_numNonDirVertexModes=tempGraphVertId;
+
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
@@ -1869,6 +1870,7 @@ namespace Nektar
                             {
                                 boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
+				m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
                             }
                             localEdges[localEdgeOffset+edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
                             vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
@@ -1881,7 +1883,7 @@ namespace Nektar
                 }
                 localEdgeOffset+=nEdges;
             }
-            
+
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
@@ -1899,6 +1901,7 @@ namespace Nektar
                             {
                                 boost::add_vertex(boostGraphObj);
                                 faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
+                                m_numNonDirFaceModes+=nFaceInteriorCoeffs;
                             }
                             localFaces[localFaceOffset+faceCnt++] = faceTempGraphVertId[meshFaceId];
                             vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;
@@ -2176,6 +2179,7 @@ namespace Nektar
                     graphVertOffset[faceReorderedGraphVertId[meshFaceId]+1] = nFaceInteriorCoeffs;
                 }
             }
+
             for(i = 1; i < graphVertOffset.num_elements(); i++)
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
@@ -2253,7 +2257,7 @@ namespace Nektar
                             m_localToGlobalSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
                         }
                     }
-                }
+		}
 
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
@@ -2278,7 +2282,7 @@ namespace Nektar
                         }
                     }
                 }
-            }
+	    }
 
             // Set up the mapping for the boundary conditions
             cnt = 0;
@@ -2358,6 +2362,7 @@ namespace Nektar
                     m_localToGlobalBndMap[cnt++]=m_localToGlobalMap[i];
                 }
             }
+
             m_numGlobalCoeffs = globalId;
 
             SetUpUniversalC0ContMap(locExp);
@@ -2571,6 +2576,16 @@ namespace Nektar
         int LocalToGlobalC0ContMap::v_GetNumNonDirVertexModes() const
         {
             return m_numNonDirVertexModes;
+        }
+
+        int LocalToGlobalC0ContMap::v_GetNumNonDirEdgeModes() const
+        {
+            return m_numNonDirEdgeModes;
+        }
+
+        int LocalToGlobalC0ContMap::v_GetNumNonDirFaceModes() const
+        {
+            return m_numNonDirFaceModes;
         }
 
     }

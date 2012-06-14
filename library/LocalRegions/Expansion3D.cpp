@@ -42,10 +42,438 @@ namespace Nektar
     {
         Expansion3D::Expansion3D(){}
 		
+        /**
+         * Computes matrices needed for the HDG formulation. References to
+         * equations relate to the following paper (with a suitable changes in formulation to adapt to 3D):
+         *   R. M. Kirby, S. J. Sherwin, B. Cockburn, To CG or to HDG: A
+         *   Comparative Study, J. Sci. Comp P1-30
+         *   DOI 10.1007/s10915-011-9501-7
+		 *   NOTE: VARIABLE COEFFICIENTS CASE IS NOT IMPLEMENTED
+         */
         DNekMatSharedPtr Expansion3D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
+			//Variable coefficients are not implemented/////////
+			ASSERTL1(!mkey.HasVarCoeff(StdRegions::eVarCoeffD00),
+					"Matrix construction is not implemented for variable coefficients at the moment");
+			////////////////////////////////////////////////////
             DNekMatSharedPtr returnval;
-            ASSERTL0(false,"This matrix type is not set up");
+            
+            switch(mkey.GetMatrixType())
+            {
+            // (Z^e)^{-1} (Eqn. 33, P22)
+            case StdRegions::eHybridDGHelmholtz:
+                {
+                    ASSERTL1(IsBoundaryInteriorExpansion(),
+                             "HybridDGHelmholtz matrix not set up "
+                             "for non boundary-interior expansions");
+                    
+                    int       i,j,k;
+                    NekDouble lambdaval = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
+                    int       ncoeffs   = GetNcoeffs();
+                    int       nfaces    = GetNfaces();
+
+                    Array<OneD,unsigned int> fmap;
+                    Array<OneD,int> sign;
+                    ExpansionSharedPtr FaceExp;
+                    StdRegions::StdExpansionSharedPtr FaceExp2;
+
+                    int order_f, coordim = GetCoordim();
+                    DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
+                    StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                                           StdRegions::eWeakDeriv1,
+                                                           StdRegions::eWeakDeriv2};
+                    DNekMat LocMat(ncoeffs,ncoeffs); 
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,ncoeffs);
+                    DNekMat &Mat = *returnval;
+                    Vmath::Zero(ncoeffs*ncoeffs,Mat.GetPtr(),1);
+
+                    StdRegions::VarCoeffType Coeffs[3] = {StdRegions::eVarCoeffD00,
+                                                            StdRegions::eVarCoeffD11,
+                                                            StdRegions::eVarCoeffD22};
+
+                    for(i=0;  i < coordim; ++i)
+                    {
+//                        if(mkey.HasVarCoeff(Coeffs[i]))
+//                        {
+//                            MatrixKey DmatkeyL(DerivType[i], DetExpansionType(), *this, StdRegions::NullConstFactorMap, mkey.GetVarCoeffAsMap(Coeffs[i]));
+//                            MatrixKey DmatkeyR(DerivType[i], DetExpansionType(), *this);
+//
+//                            DNekScalMat &DmatL = *GetLocMatrix(DmatkeyL);
+//                            DNekScalMat &DmatR = *GetLocMatrix(DmatkeyR);
+//                            Mat = Mat + DmatL*invMass*Transpose(DmatR);
+//                        }
+//                        else
+//                        {
+						DNekScalMat &Dmat = *GetLocMatrix(DerivType[i]);
+						Mat = Mat + Dmat*invMass*Transpose(Dmat);
+//                        }
+
+                    }
+
+                    // Add Mass Matrix Contribution for Helmholtz problem
+                    DNekScalMat  &Mass = *GetLocMatrix(StdRegions::eMass);
+                    Mat = Mat + lambdaval*Mass;                    
+
+                    // Add tau*E_l using elemental mass matrices on each edge
+                    for(i = 0; i < nfaces; ++i)
+                    {
+						StdRegions::Orientation facedir = GetFaceOrient(i);
+                        FaceExp = GetFaceExp(i);
+                        FaceExp2 = GetFaceExp(i);
+                        order_f = FaceExp->GetNcoeffs();  
+                        int nq = FaceExp->GetNumPoints(0);
+                        GetFaceToElementMap(i,facedir,fmap,sign);
+
+//                        // @TODO: Document
+//                        StdRegions::VarCoeffMap edgeVarCoeffs;
+//                        if (mkey.HasVarCoeff(StdRegions::eVarCoeffD00))
+//                        {
+//                            Array<OneD, NekDouble> mu(nq);
+//                            GetPhysEdgeVarCoeffsFromElement(i, EdgeExp2, mkey.GetVarCoeff(StdRegions::eVarCoeffD00), mu);
+//                            edgeVarCoeffs[StdRegions::eVarCoeffMass] = mu;
+//                        }
+//                        DNekScalMat &eMass = *EdgeExp->GetLocMatrix(StdRegions::eMass, StdRegions::NullConstFactorMap, edgeVarCoeffs);
+                        DNekScalMat &eMass = *FaceExp->GetLocMatrix(StdRegions::eMass);
+
+                        for(j = 0; j < order_f; ++j)
+                        {
+                            for(k = 0; k < order_f; ++k)
+                            {
+                                Mat(fmap[j],fmap[k]) = Mat(fmap[j],fmap[k]) + tau*sign[j]*sign[k]*eMass(j,k);
+                            }
+                        }
+                    }
+                }
+                break;
+            // U^e (P22)
+            case StdRegions::eHybridDGLamToU:
+                {
+                    int i,j,k;
+                    int nbndry = NumDGBndryCoeffs();
+                    int ncoeffs = GetNcoeffs();
+                    int nfaces  = GetNedges();
+                    NekDouble lambdaval = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
+                    
+                    Array<OneD,NekDouble> lambda(nbndry);
+                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    Array<OneD,NekDouble> ulam(ncoeffs);
+                    DNekVec Ulam(ncoeffs,ulam,eWrapper);
+                    Array<OneD,NekDouble> f(ncoeffs);
+                    DNekVec F(ncoeffs,f,eWrapper);
+                    
+                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
+                    // declare matrix space
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
+                    DNekMat &Umat = *returnval;
+                    
+                    // Z^e matrix
+                    MatrixKey newkey(StdRegions::eInvHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat  &invHmat = *GetLocMatrix(newkey);
+
+                    Array<OneD,unsigned int> fmap;
+                    Array<OneD,int> sign;
+                    
+                    for(i = 0; i < nfaces; ++i)
+                    {
+                      FaceExp[i] = GetFaceExp(i);
+                    }
+
+                    // for each degree of freedom of the lambda space
+                    // calculate Umat entry 
+                    // Generate Lambda to U_lambda matrix 
+//                    for(j = 0; j < nbndry; ++j)
+//                    {
+//                        // standard basis vectors e_j
+//                        Vmath::Zero(nbndry,&lambda[0],1);
+//                        Vmath::Zero(ncoeffs,&f[0],1);
+//                        lambda[j] = 1.0;
+//                        
+//						//not implemented for faces...!
+//                        SetTraceToGeomOrientation(FaceExp,lambda);
+//                        
+//                        // Compute F = [I   D_1 M^{-1}   D_2 M^{-1}] C e_j
+//                        AddHDGHelmholtzTraceTerms(tau, lambda, EdgeExp, mkey.GetVarCoeffs(), f);
+//                        
+//                        // Compute U^e_j
+//                        Ulam = invHmat*F; // generate Ulam from lambda
+//                        
+//                        // fill column of matrix
+//                        for(k = 0; k < ncoeffs; ++k)
+//                        {
+//                            Umat(k,j) = Ulam[k]; 
+//                        }
+//                    }
+                }
+                break;
+            // Q_0, Q_1, Q_2 matrices (P23)
+            // Each are a product of a row of Eqn 32 with the C matrix.
+            // Rather than explicitly computing all of Eqn 32, we note each
+            // row is almost a multiple of U^e, so use that as our starting
+            // point.
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+                {
+                    int i,j,k,dir;
+                    int nbndry = NumDGBndryCoeffs();
+                    int nquad  = GetNumPoints(0);
+                    int ncoeffs = GetNcoeffs();
+                    int nfaces  = GetNfaces();
+
+                    Array<OneD,NekDouble> lambda(nbndry);
+                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
+                    
+                    Array<OneD,NekDouble> ulam(ncoeffs);
+                    DNekVec Ulam(ncoeffs,ulam,eWrapper);
+                    Array<OneD,NekDouble> f(ncoeffs);
+                    DNekVec F(ncoeffs,f,eWrapper);
+                    
+                    // declare matrix space
+                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
+                    DNekMat &Qmat = *returnval;
+                    
+                    // Lambda to U matrix
+                    MatrixKey lamToUkey(StdRegions::eHybridDGLamToU, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat &lamToU = *GetLocMatrix(lamToUkey);
+
+                    // Inverse mass matrix 
+                    DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
+                    
+                    for(i = 0; i < nfaces; ++i)
+                    {
+                        FaceExp[i] = GetFaceExp(i);
+                    }
+
+                    //Weak Derivative matrix 
+                    DNekScalMatSharedPtr Dmat;
+                    switch(mkey.GetMatrixType())
+                    {
+                    case StdRegions::eHybridDGLamToQ0:
+                        dir = 0;
+                        Dmat = GetLocMatrix(StdRegions::eWeakDeriv0);
+                        break;
+                    case StdRegions::eHybridDGLamToQ1:
+                        dir = 1;
+                        Dmat = GetLocMatrix(StdRegions::eWeakDeriv1);
+                        break;
+                    case StdRegions::eHybridDGLamToQ2:
+                        dir = 2;
+                        Dmat = GetLocMatrix(StdRegions::eWeakDeriv2);
+                        break;
+                    default:
+                        ASSERTL0(false,"Direction not known");
+                        break;
+                    }
+                
+                    // for each degree of freedom of the lambda space
+                    // calculate Qmat entry 
+                    // Generate Lambda to Q_lambda matrix 
+                    for(j = 0; j < nbndry; ++j)
+                    {
+                        Vmath::Zero(nbndry,&lambda[0],1);
+                        lambda[j] = 1.0;
+                        
+                        // for lambda[j] = 1 this is the solution to ulam
+                        for(k = 0; k < ncoeffs; ++k)
+                        {
+                            Ulam[k] = lamToU(k,j);
+                        }
+                        
+                        // -D^T ulam
+                        Vmath::Neg(ncoeffs,&ulam[0],1);
+                        F = Transpose(*Dmat)*Ulam; 
+                        
+//                        SetTraceToGeomOrientation(EdgeExp,lambda);
+//                        
+//                        // Add the C terms resulting from the I's on the
+//                        // diagonals of Eqn 32
+//                        AddNormTraceInt(dir,lambda,EdgeExp,f,mkey.GetVarCoeffs());
+                        
+                        // finally multiply by inverse mass matrix
+                        Ulam = invMass*F; 
+                        
+                        // fill column of matrix (Qmat is in column major format)
+                        Vmath::Vcopy(ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*ncoeffs,1);
+                    }
+                }
+                break;            
+            // Matrix K (P23)
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    int i,j,f,cnt;
+                    int order_f, nquad_f;
+                    int nbndry  = NumDGBndryCoeffs();
+                    int coordim = GetCoordim();
+                    int nfaces  = GetNfaces();
+                    NekDouble tau = mkey.GetConstFactor(StdRegions::eFactorTau);
+
+                    Array<OneD,NekDouble>       work, varcoeff_work;
+                    Array<OneD,const Array<OneD, NekDouble> > normals; 
+                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
+                    Array<OneD, NekDouble> lam(nbndry); 
+                    
+                    Array<OneD,unsigned int>    fmap;
+                    Array<OneD, int>            sign;
+                    StdRegions::Orientation facedir;
+                    
+                    // declare matrix space
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry, nbndry);
+                    DNekMat &BndMat = *returnval;
+                    
+                    DNekScalMatSharedPtr LamToQ[3];
+                    
+                    // Matrix to map Lambda to U
+                    MatrixKey LamToUkey(StdRegions::eHybridDGLamToU, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat &LamToU = *GetLocMatrix(LamToUkey);
+
+                    // Matrix to map Lambda to Q0
+                    MatrixKey LamToQ0key(StdRegions::eHybridDGLamToQ0, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    LamToQ[0] = GetLocMatrix(LamToQ0key);
+ 
+                    // Matrix to map Lambda to Q1
+                    MatrixKey LamToQ1key(StdRegions::eHybridDGLamToQ1, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    LamToQ[1] = GetLocMatrix(LamToQ1key);
+
+					// Matrix to map Lambda to Q2
+					MatrixKey LamToQ2key(StdRegions::eHybridDGLamToQ2, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+					LamToQ[2] = GetLocMatrix(LamToQ2key);
+
+                    // Set up edge segment expansions from local geom info
+                    for(i = 0; i < nfaces; ++i)
+                    {
+                        FaceExp[i] = GetFaceExp(i);
+                    }
+
+                    // Set up matrix derived from <mu, Q_lam.n - \tau (U_lam - Lam) > 
+                    for(i = 0; i < nbndry; ++i)
+                    {
+                        cnt = 0;
+                        
+                        Vmath::Zero(nbndry,lam,1);
+                        lam[i] = 1.0;
+//                        SetTraceToGeomOrientation(FaceExp,lam);
+
+                        for(f = 0; f < nfaces; ++f)
+                        {
+                            order_f = FaceExp[f]->GetNcoeffs();  
+                            nquad_f = FaceExp[f]->GetNumPoints(0);    
+
+                            normals = GetFaceNormal(f);
+                            facedir = GetFaceOrient(f);
+                            
+                            work = Array<OneD,NekDouble>(nquad_f);
+                            varcoeff_work = Array<OneD, NekDouble>(nquad_f);
+
+                            GetFaceToElementMap(f,facedir,fmap,sign);
+
+
+                            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
+                                                                    StdRegions::eVarCoeffD11,
+                                                                    StdRegions::eVarCoeffD22};
+                            const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
+                            StdRegions::VarCoeffMap::const_iterator x;
+
+                            // Q0 * n0 (BQ_0 terms)
+                            for(j = 0; j < order_f; ++j)
+                            {
+                                FaceExp[f]->SetCoeff(j,sign[j]*(*LamToQ[0])(fmap[j],i));
+                            }
+                            
+                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
+                                                 FaceExp[f]->UpdatePhys());
+// @TODO Var coeffs
+                            // Multiply by variable coefficient
+//                            if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
+//                            {
+//                                GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
+//                                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
+//                            }
+          
+                            Vmath::Vmul(nquad_f,normals[0],1,FaceExp[f]->GetPhys(),1,work,1);
+                            
+                            // Q1 * n1 (BQ_1 terms)
+                            for(j = 0; j < order_f; ++j)
+                            {
+                                FaceExp[f]->SetCoeff(j,sign[j]*(*LamToQ[1])(fmap[j],i));
+                            }
+                            
+                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
+                                                 FaceExp[f]->UpdatePhys());
+
+// @TODO var coeffs
+                            // Multiply by variable coefficients
+//                            if ((x = varcoeffs.find(VarCoeff[1])) != varcoeffs.end())
+//                            {
+//                                GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
+//                                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
+//                            }
+
+							Vmath::Vvtvp(nquad_f,normals[1],1,
+									FaceExp[f]->GetPhys(),1,
+									work,1,work,1);
+
+                            // Q2 * n2 (BQ_2 terms)
+							for(j = 0; j < order_f; ++j)
+							{
+								FaceExp[f]->SetCoeff(j,sign[j]*(*LamToQ[2])(fmap[j],i));
+							}
+
+							FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
+									FaceExp[f]->UpdatePhys());
+// @TODO var coeffs
+                                // Multiply by variable coefficients
+//                                if ((x = varcoeffs.find(VarCoeff[2])) != varcoeffs.end())
+//                                {
+//                                    GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
+//                                    Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
+//                                }
+
+							Vmath::Vvtvp(nquad_f,normals[2],1,
+									FaceExp[f]->GetPhys(),1,
+									work,1,work,1);
+                            
+                            // - tau (ulam - lam)
+                            // Corresponds to the G and BU terms.
+                            for(j = 0; j < order_f; ++j)
+                            {
+                                FaceExp[f]->SetCoeff(j,sign[j]*LamToU(fmap[j],i) - lam[cnt+j]);
+                            }
+                            
+                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
+                                                 FaceExp[f]->UpdatePhys());
+
+//                            // Multiply by variable coefficients
+//                            if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
+//                            {
+//                                GetPhysEdgeVarCoeffsFromElement(e,FaceExp[f],x->second,varcoeff_work);
+//                                Vmath::Vmul(nquad_f,varcoeff_work,1,FaceExp[f]->GetPhys(),1,FaceExp[f]->UpdatePhys(),1);
+//                            }
+
+                            Vmath::Svtvp(nquad_f,-tau,FaceExp[f]->GetPhys(),1,
+                                         work,1,work,1);
+/// TODO: Add variable coeffs
+                            FaceExp[f]->IProductWRTBase(work,FaceExp[f]->UpdateCoeffs());
+                            
+//                            FaceExp[f]->SetCoeffsToOrientation(facedir);
+                            
+                            for(j = 0; j < order_f; ++j)
+                            {
+                                BndMat(cnt+j,i) = FaceExp[f]->GetCoeff(j);
+                            }
+                            
+                            cnt += order_f;
+                        }
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"This matrix type cannot be generated from this class");
+                break;
+            }
             
             return returnval;
         }

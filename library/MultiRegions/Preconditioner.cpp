@@ -37,6 +37,7 @@
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/GlobalMatrixKey.h>
+#include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <math.h>
 
 
@@ -206,6 +207,62 @@ namespace Nektar
          }
 
 
+        /**
+         *  Performs global assembly of diagonal entries
+         *  to global schur complement matrix.
+         */
+        Array<OneD, NekDouble> Preconditioner::AssembleStaticCondGlobalDiagonals()
+        {
+            int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int rows = nGlobalBnd - nDirBnd;
+
+            DNekScalBlkMatSharedPtr loc_mat;
+            DNekScalMatSharedPtr    bnd_mat;
+            int sign1, sign2, gid1, gid2, i, j, n, cnt;
+            Array<OneD, NekDouble> diagonals(rows,0.0);
+
+            boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
+
+            // Extract diagonal contributions of globally assembled
+            // schur complement matrix
+            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
+            {
+                //Get statically condensed local matrix
+                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
+
+                //Extract boundary block
+                bnd_mat=loc_mat->GetBlock(0,0);
+
+                //offset by number of rows
+                int bnd_lda = bnd_mat->GetRows();
+
+                for(i = 0; i < bnd_lda; ++i)
+                {
+                    gid1  = m_locToGloMap->GetLocalToGlobalBndMap (cnt + i) - nDirBnd;
+                    sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + i);
+
+                    if(gid1 >= 0)
+                    {
+                        for(j = 0; j < bnd_lda; ++j)
+                        {
+                            gid2  = m_locToGloMap->GetLocalToGlobalBndMap(cnt+j) - nDirBnd;
+                            sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt+j);
+
+                            if(gid2 == gid1)
+                            {
+                                //vOutput[gid1 + nDirBnd] += sign1*sign2*(*bnd_mat)(i,j);
+                                diagonals[gid1] += sign1*sign2*(*bnd_mat)(i,j);
+                            }
+                        }
+                   }
+                }
+                cnt += bnd_lda;
+            }
+            return diagonals;
+        }
+
+
 
         /**
          * Diagonal preconditioner defined as the inverse of the main
@@ -217,31 +274,29 @@ namespace Nektar
         {
             int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int rows = nGlobalBnd - nDirBnd;
 
-            //Get m_gmat from StaticCond
-            DNekMatSharedPtr m_gmat=(m_linsys.lock())->GetGmat();
-            int n = m_gmat->GetRows();
-            Array<OneD, int> m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
             MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(n, n, storage);
+            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(rows, rows, storage);
             DNekMat &M = (*m_preconditioner);
 
-            // Extract diagonal contributions
             Array<OneD, NekDouble> vOutput(nGlobalBnd,0.0);
-            for (unsigned int i = 0; i < n; ++i)
+
+            // Extract diagonal contributions
+            Array<OneD, NekDouble> diagonals = AssembleStaticCondGlobalDiagonals();
+            for (unsigned int i = 0; i < rows; ++i)
             {
-                vOutput[nDirBnd + i] = (*m_gmat)(i,i);
+                vOutput[nDirBnd + i] = diagonals[i];
             }
 
             // Assemble diagonal contributions across processes
             m_locToGloMap->UniversalAssembleBnd(vOutput);
 
             // Populate preconditioner matrix
-            for (unsigned int i = 0; i < n; ++i)
+            for (unsigned int i = 0; i < rows; ++i)
             {
                 M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
             }
-
         }
 
 
@@ -416,9 +471,9 @@ namespace Nektar
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
             
             //Get Global statically condensed matrix
-            DNekMatSharedPtr m_gmat=(m_linsys.lock())->GetGmat();
-            //same as nGlobalBnd-nDirBnd
-            int gRow = m_gmat->GetRows();
+            //DNekMatSharedPtr m_gmat=(m_linsys.lock())->GetGmat();
+            int gRow = nGlobalBnd - nDirBnd; //m_gmat->GetRows();
+            
             
             //Allocate preconditioner matrix
             MatrixStorage storage = eFULL;
@@ -510,10 +565,13 @@ namespace Nektar
                 }
             }
 
+            Array<OneD, NekDouble> diagonals = AssembleStaticCondGlobalDiagonals();
+
             // Populate preconditioner matrix
             for (unsigned int i = nNonDirVerts; i < M.GetRows(); ++i)
             {
-                M.SetValue(i,i,1.0/(*m_gmat)(i,i));
+//                M.SetValue(i,i,1.0/(*m_gmat)(i,i));
+                  M.SetValue(i,i,1.0/diagonals[i]);
             }
         }
 

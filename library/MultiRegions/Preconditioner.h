@@ -123,6 +123,8 @@ namespace Nektar
 
 	    void SetLowEnergyModes_Ref_Reordered(void);
 
+        Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
+
             static std::string lookupIds[];
             static std::string def;
 	};

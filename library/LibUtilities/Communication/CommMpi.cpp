@@ -437,10 +437,10 @@ namespace Nektar
 		void CommMpi::v_AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)
 		{
 			int retval = MPI_Alltoall(pSendData.get(),
-									  (int) pSendData.num_elements(),
+									  (int) pSendData.num_elements()/GetSize(),
 									  MPI_DOUBLE,
 									  pRecvData.get(),
-									  (int) pRecvData.num_elements(),
+									  (int) pRecvData.num_elements()/GetSize(),
 									  MPI_DOUBLE,
 									  m_comm);
 									  
@@ -455,10 +455,10 @@ namespace Nektar
 		void CommMpi::v_AlltoAll(Array<OneD, int>& pSendData,Array<OneD, int>& pRecvData)
 		{
 			int retval = MPI_Alltoall(pSendData.get(),
-									  (int) pSendData.num_elements(),
+									  (int) pSendData.num_elements()/GetSize(),
 									  MPI_INT,
 									  pRecvData.get(),
-									  (int) pRecvData.num_elements(),
+									  (int) pRecvData.num_elements()/GetSize(),
 									  MPI_INT,
 									  m_comm);
 			

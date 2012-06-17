@@ -35,6 +35,7 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVESTATICCOND_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVESTATICCOND_H
 
+#include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
 
@@ -99,8 +100,8 @@ namespace Nektar
             DNekScalBlkMatSharedPtr m_C;
             DNekScalBlkMatSharedPtr m_invD;
 
-            /// Global matrix on which the iterative solver acts.
-            DNekMatSharedPtr m_gmat;
+            /// Globally assembled Schur complement matrix at this level
+            GlobalMatrixSharedPtr m_globalSchurCompl;
 
             // Local to global map.
             boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
@@ -147,8 +148,6 @@ namespace Nektar
             virtual void v_ComputePreconditioner();
 
             virtual void v_UniqueMap();
-
-            virtual const DNekMatSharedPtr& v_GetGmat(void) const;
 
          };
     }

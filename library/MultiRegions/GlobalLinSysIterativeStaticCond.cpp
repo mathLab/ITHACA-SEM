@@ -36,6 +36,7 @@
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
 {
@@ -221,7 +222,14 @@ namespace Nektar
                     Array<OneD, NekDouble> offsetarray;
                     //Solve(F_HomBnd,V_GlobHomBnd);
                     //SolveLinearSystem(nGlobHomBndDofs, F+nDirBndDofs,offsetarray=out+nDirBndDofs);
+
+                    Timer t;
+                    t.Start();
+
                     SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
+
+                    t.Stop();
+                    // std::cout << "time per solveLinearSystem = " << t.TimePerTest(1) << std::endl;
                 }
                 else
                 {
@@ -274,7 +282,17 @@ namespace Nektar
                 int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
                 m_wsp = Array<OneD, NekDouble>(nLocalBnd + nGlobal);
 
-                AssembleSchurComplement(pLocToGloMap);
+
+                // decide whether to assemble schur complement globally
+                // based on global optimisation parameter to the
+                // full system matrix (current operator)
+                bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->DoGlobalMatOp(
+                                                        m_linSysKey.GetMatrixType());
+
+                if(doGlobalOp)
+                {
+                    AssembleSchurComplement(pLocToGloMap);
+                }
             }
             else
             {
@@ -342,80 +360,22 @@ namespace Nektar
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap)
         {
             int i,j,n,cnt,gid1,gid2;
-            NekDouble sign1,sign2,value;
+            NekDouble sign1,sign2;
 
             int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
             int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-
-            DNekScalBlkMatSharedPtr SchurCompl = m_schurCompl;
-            DNekScalBlkMatSharedPtr BinvD      = m_BinvD;
-            DNekScalBlkMatSharedPtr C          = m_C;
-            DNekScalBlkMatSharedPtr invD       = m_invD;
-
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
-            NekDouble zero = 0.0;
 
+            // COO sparse storage to assist in assembly
+            NekSparseMatrix<double>::COOMatType  gmat_coo;
 
-            int bwidth = pLocToGloMap->GetBndSystemBandWidth();
-            MatrixStorage matStorage;
-
-            switch(m_linSysKey.GetMatrixType())
-            {
-                // case for all symmetric matices
-            case StdRegions::eMass:
-            case StdRegions::eLaplacian:
-            case StdRegions::eHelmholtz:
-            case StdRegions::eHybridDGHelmBndLam:
-                {
-                    if( (2*(bwidth+1)) < rows)
-                    {
-                        try {
-                            matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
-                            m_gmat = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(rows, cols, zero,
-                                                    matStorage,
-                                                    bwidth, bwidth);
-                        }
-                        catch (...) {
-                            NEKERROR(ErrorUtil::efatal,
-                                     "Insufficient memory for GlobalLinSys.");
-                        }
-                    }
-                    else
-                    {
-                        matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
-                        m_gmat = MemoryManager<DNekMat>
-                                        ::AllocateSharedPtr(rows, cols, zero,
-                                                            matStorage);
-                    }
-                }
-                break;
-            case StdRegions::eLinearAdvectionReaction:
-            case StdRegions::eLinearAdvectionDiffusionReaction:
-                {
-                    // Current inversion techniques do not seem to
-                    // allow banded matrices to be used as a linear
-                    // system
-                    matStorage = eFULL;
-                    m_gmat = MemoryManager<DNekMat>
-                            ::AllocateSharedPtr(rows, cols, zero, matStorage);
-
-                }
-                break;
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Add MatrixType to switch "
-                             "statement");
-                }
-            }
-
-            // fill global matrix
+            // assemble globally
             DNekScalMatSharedPtr loc_mat;
             int loc_lda;
-            for(n = cnt = 0; n < SchurCompl->GetNumberOfBlockRows(); ++n)
+            for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
-                loc_mat = SchurCompl->GetBlock(n,n);
+                loc_mat = m_schurCompl->GetBlock(n,n);
                 loc_lda = loc_mat->GetRows();
 
                 // Set up  Matrix;
@@ -435,23 +395,14 @@ namespace Nektar
 
                             if(gid2 >= 0)
                             {
-                                // As the global matrix should be
-                                // symmetric, only add the value for
-                                // the upper triangular part in order
-                                // to avoid entries to be entered
-                                // twice
-                                if((matStorage == eFULL)||(gid2 >= gid1))
-                                {
-                                    value = m_gmat->GetValue(gid1,gid2)
-                                                + sign1*sign2*(*loc_mat)(i,j);
-                                    m_gmat->SetValue(gid1,gid2,value);
-                                }
+                                gmat_coo[std::make_pair(gid1,gid2)] += sign1*sign2*(*loc_mat)(i,j);
                             }
                         }
                     }
                 }
                 cnt += loc_lda;
             }
+            m_globalSchurCompl = MemoryManager<GlobalMatrix>::AllocateSharedPtr(rows,cols,gmat_coo);
         }
 
 
@@ -718,10 +669,24 @@ namespace Nektar
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDir = nGlobal - nDir;
 
-            NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
-            m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
-            loc = (*m_schurCompl)*loc;
-            m_locToGloMap->AssembleBnd(m_wsp, pOutput);
+            if (m_globalSchurCompl)
+            {
+                // Do matrix multiply globally
+
+                Array<OneD, NekDouble> in  = pInput + nDir;
+                Array<OneD, NekDouble> out = pOutput+ nDir;
+
+                m_globalSchurCompl->Multiply(in,out);
+            }
+            else
+            {
+                // Do matrix multiply locally
+
+                NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
+                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                loc = (*m_schurCompl)*loc;
+                m_locToGloMap->AssembleBnd(m_wsp, pOutput);
+            }
         }
 
 
@@ -732,6 +697,7 @@ namespace Nektar
          */
         void GlobalLinSysIterativeStaticCond::v_ComputePreconditioner()
         {
+        /*
             ASSERTL1(m_gmat.get(),
                      "Matrix must be defined to compute preconditioner.");
             ASSERTL1(!m_preconditioner.get(),
@@ -760,18 +726,13 @@ namespace Nektar
             {
                 M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
             }
-
+        */
         }
 
         void GlobalLinSysIterativeStaticCond::v_UniqueMap()
         {
             m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
-	}
-
-        const DNekMatSharedPtr& GlobalLinSysIterativeStaticCond::v_GetGmat() const
-	{
-            return m_gmat;
-	}
+        }
 
     }
 }

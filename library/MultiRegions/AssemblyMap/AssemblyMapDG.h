@@ -43,7 +43,6 @@
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
-//#include <LocalRegions/PointExp.h>
 
 namespace Nektar
 {
@@ -53,7 +52,6 @@ namespace Nektar
 
         class AssemblyMapDG;
         typedef boost::shared_ptr<AssemblyMapDG>  AssemblyMapDGSharedPtr;
-
 
 
         ///
@@ -104,17 +102,17 @@ namespace Nektar
 
             /// Return the number of boundary segments on which Dirichlet
             /// boundary conditions are imposed.
-            inline int GetNumDirichletBndPhys();
+            int GetNumDirichletBndPhys();
 
-            inline Array<OneD, StdRegions::StdExpansionSharedPtr>
+            Array<OneD, StdRegions::StdExpansionSharedPtr>
                 &GetElmtToTrace(const int i);
 
-            inline Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
+            Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
                 &GetElmtToTrace();
 
-            inline int GetTraceToUniversalMap(int i);
+            int GetTraceToUniversalMap(int i);
 
-            inline int GetTraceToUniversalMapUnique(int i);
+            int GetTraceToUniversalMapUnique(int i);
 
             void UniversalTraceAssemble(Array<OneD, NekDouble> &pGlobal) const;
 

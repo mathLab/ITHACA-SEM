@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: C0-continuous Local to Global mapping routines, header file
+// Description: C0-continuous Local to Global mapping routines, base class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -38,12 +38,6 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapBase.h>
-#include <MultiRegions/ExpList0D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
-
-//#include <LocalRegions/PointExp.h>
-//#include <LocalRegions/SegExp.h>
 
 namespace Nektar
 {
@@ -53,80 +47,32 @@ namespace Nektar
         static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
+        class ExpList;
+        class AssemblyMapCG;
+        typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
+
+
+
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMapBase
         {
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession);
+                                    const LibUtilities::SessionReaderSharedPtr &pSession);
+
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp);
-
-            /// Constructor for the 1D expansion mappings with boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp,
-                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const map<int,int>& periodicVerticesId);
-
-
-            /// Constructor for the 2D expansion mappings with boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp,
-                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const vector<map<int,int> >& periodicVerticesId,
-                                   const map<int,int>& periodicEdgesId,
-                                   const bool checkIfSystemSingular);
-
-
-
-            /// Constructor for the 3D expansion mappings with boundary
-            /// conditions.
-            MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp,
-                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const map<int,int>& periodicVerticesId,
-                                   const map<int,int>& periodicEdgesId,
-                                   const map<int,int>& periodicFacesId);
+                                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                                    const int numLocalCoeffs,
+                                    const ExpList &locExp);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
 
-            /** Construct optimal ordering a two-dimensional expansion
-            /*  given a vector of boundary condition information
-            */
-            MULTI_REGIONS_EXPORT int SetUp2DGraphC0ContMap(
-                                       const ExpList  &locExp,
-                                       const Array<OneD, const MultiRegions::ExpListSharedPtr>  &bndCondExp,
-                                       const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
-                                       &bndConditions,
-                                       const vector<map<int,int> >& periodicVerticesId,
-                                       const map<int,int>& periodicEdgesId,
-                                       Array<OneD, map<int,int> > &Dofs,
-                                       Array<OneD, map<int,int> > &ReorderedGraphVertId,
-                                       int          &firstNonDirGraphVertID,
-                                       int          &nExtraDirichlet,
-                                       BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
-                                       const bool checkIfSystemSingular = false,
-                                       int mdswitch = 1,
-                                       bool doInteriorMap = false);
 
         protected:
             /// Integer map of local coeffs to global space
@@ -139,45 +85,19 @@ namespace Nektar
             Array<OneD,int> m_globalToUniversalMap;
             /// Integer map of unique process coeffs to universal space (signed)
             Array<OneD,int> m_globalToUniversalMapUnique;
-	    /// Number of non Dirichlet vertex modes
-	    int m_numNonDirVertexModes;
-	    /// Number of non Dirichlet edge modes
-	    int m_numNonDirEdgeModes;
-	    /// Number of non Dirichlet face modes
-	    int m_numNonDirFaceModes;
+            /// Number of non Dirichlet vertex modes
+            int m_numNonDirVertexModes;
+            /// Number of non Dirichlet edge modes
+            int m_numNonDirEdgeModes;
+            /// Number of non Dirichlet face modes
+            int m_numNonDirFaceModes;
 
-        private:
             int m_maxStaticCondLevel;
-            /// Construct mappings for a one-dimensional scalar expansion.
-            void SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
-                                           const ExpList &locExp,
-                                           const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
-                                           NullExpListSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
-                                           SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const map<int,int>& periodicVerticesId = NullIntIntMap);
 
-            /// Construct mappings for a two-dimensional scalar expansion.
-            void SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
-                                           const ExpList &locExp,
-                                           const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
-                                               NullExpListSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
-                                               SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
-                                           const map<int,int>& periodicEdgesId = NullIntIntMap,
-                                           const bool checkIfSystemSingular = false);
 
-            /// Construct mappings for a three-dimensional scalar expansion.
-            void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
-                                           const ExpList &locExp,
-                                           const Array<OneD, const ExpListSharedPtr> &bndCondExp =
-                                               NullExpListSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
-                                               SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const map<int,int>& periodicVerticesId = NullIntIntMap,
-                                           const map<int,int>& periodicEdgesId = NullIntIntMap,
-                                           const map<int,int>& periodicFacesId = NullIntIntMap);
+
+
+
 
             void SetUpUniversalC0ContMap(const ExpList &locExp);
 
@@ -239,7 +159,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaceModes() const;
 
         };
-        typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
 
 
     } // end of namespace

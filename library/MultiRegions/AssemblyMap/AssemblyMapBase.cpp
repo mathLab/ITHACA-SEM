@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapBase.h>
 
 namespace Nektar
@@ -50,9 +49,6 @@ namespace Nektar
          * AssemblyMapDG. These perform the actual construction of the
          * maps within their specific contexts.
          *
-         * =========================================
-         * \todo this comment is outdated
-         * =========================================
          */
 
 
@@ -184,7 +180,7 @@ namespace Nektar
              *  the new level. We need this information to set up the
              *  mapping between different levels.
              */
-            
+
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;

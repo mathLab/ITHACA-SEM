@@ -52,6 +52,8 @@ namespace Nektar
         typedef boost::shared_ptr<AssemblyMapBase>  AssemblyMapBaseSharedPtr;
         static AssemblyMapBaseSharedPtr NullAssemblyMapBaseSharedPtr;
 
+
+
         /// Base class for constructing local to global mapping of degrees of
         /// freedom.
         class AssemblyMapBase
@@ -69,191 +71,191 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapBase();
 
             /// Retrieves the communicator
-            inline LibUtilities::CommSharedPtr GetComm();
+            LibUtilities::CommSharedPtr GetComm();
 
             /// Retrieves the hash of this map
-            inline size_t GetHash() const;
+            size_t GetHash() const;
 
-            inline int GetLocalToGlobalMap(const int i) const;
+            int GetLocalToGlobalMap(const int i) const;
 
-            inline int GetGlobalToUniversalMap(const int i) const;
+            int GetGlobalToUniversalMap(const int i) const;
 
-            inline int GetGlobalToUniversalMapUnique(const int i) const;
+            int GetGlobalToUniversalMapUnique(const int i) const;
 
-            inline const Array<OneD,const int>&  GetLocalToGlobalMap();
+            const Array<OneD,const int>&  GetLocalToGlobalMap();
 
-            inline const Array<OneD, const int>& GetGlobalToUniversalMap();
+            const Array<OneD, const int>& GetGlobalToUniversalMap();
 
-            inline const Array<OneD, const int>& GetGlobalToUniversalMapUnique();
+            const Array<OneD, const int>& GetGlobalToUniversalMapUnique();
 
-            inline NekDouble GetLocalToGlobalSign(const int i) const;
+            NekDouble GetLocalToGlobalSign(const int i) const;
 
-            inline const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
+            const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
 
-            inline const void LocalToGlobal(
+            const void LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            inline const void LocalToGlobal(
+            const void LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            inline const void GlobalToLocal(
+            const void GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            inline const void GlobalToLocal(
+            const void GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            inline const void Assemble(
+            const void Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            inline const void Assemble(
+            const void Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            inline const void UniversalAssemble(
+            const void UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            inline const void UniversalAssemble(
+            const void UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
 
             /// Retrieve the global index of a given local boundary mode.
-            inline int GetLocalToGlobalBndMap(const int i) const;
+            int GetLocalToGlobalBndMap(const int i) const;
             /// Retrieve the global indices of the local boundary modes.
-            inline const Array<OneD,const int>&  GetLocalToGlobalBndMap();
+            const Array<OneD,const int>&  GetLocalToGlobalBndMap();
 
-            inline const Array<OneD, const int>& GetGlobalToUniversalBndMap();
+            const Array<OneD, const int>& GetGlobalToUniversalBndMap();
 
-            inline const Array<OneD, const int>& GetGlobalToUniversalBndMapUnique();
+            const Array<OneD, const int>& GetGlobalToUniversalBndMapUnique();
 
             /// Returns true if using a modal expansion requiring a change of
             /// sign of some modes.
-            inline bool GetSignChange();            
+            bool GetSignChange();
 
             /// Retrieve the sign change of a given local boundary mode.
-            inline NekDouble GetLocalToGlobalBndSign(const int i) const;
+            NekDouble GetLocalToGlobalBndSign(const int i) const;
             /// Retrieve the sign change for all local boundary modes.
-            inline Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
+            Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
             /// Retrieves the global index corresponding to a boundary expansion
             /// mode.
-            inline int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
+            int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
             /// Retrieves the global indices corresponding to the boundary
             /// expansion modes.
-            inline const Array<OneD,const int>&
+            const Array<OneD,const int>&
                     GetBndCondCoeffsToGlobalCoeffsMap();
             /// Returns the modal sign associated with a given boundary
             /// expansion mode.
-            inline NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
+            NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
             /// Returns the global index of the boundary trace giving the
             /// index on the boundary  expansion
-            inline int GetBndCondTraceToGlobalTraceMap(const int i);
+            int GetBndCondTraceToGlobalTraceMap(const int i);
  
             /// Returns the number of global Dirichlet boundary coefficients.
-            inline int GetNumGlobalDirBndCoeffs() const;
+            int GetNumGlobalDirBndCoeffs() const;
             /// Returns the number of local Dirichlet boundary coefficients.
-            inline int GetNumLocalDirBndCoeffs() const;
+            int GetNumLocalDirBndCoeffs() const;
             /// Returns the total number of global boundary coefficients.
-            inline int GetNumGlobalBndCoeffs() const;
+            int GetNumGlobalBndCoeffs() const;
             /// Returns the total number of local boundary coefficients.
-            inline int GetNumLocalBndCoeffs() const;
+            int GetNumLocalBndCoeffs() const;
             /// Returns the total number of local coefficients.
-            inline int GetNumLocalCoeffs() const;
+            int GetNumLocalCoeffs() const;
             /// Returns the total number of global coefficients.
-            inline int GetNumGlobalCoeffs() const;
+            int GetNumGlobalCoeffs() const;
             /// Retrieves if the system is singular (true) or not (false)
-            inline bool GetSingularSystem() const;
+            bool GetSingularSystem() const;
 
             ///
-            inline void GlobalToLocalBnd(
+            void GlobalToLocalBnd(
                     const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc,
                     int offset) const;
 
-            inline void GlobalToLocalBnd(
+            void GlobalToLocalBnd(
                     const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc) const;
 
-            inline void GlobalToLocalBnd(
+            void GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc,
                     int offset) const;
 
-            inline void GlobalToLocalBnd(
+            void GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const;
 
-            inline void LocalBndToGlobal(
+            void LocalBndToGlobal(
                     const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global,
                     int offset) const;
 
-            inline void LocalBndToGlobal(
+            void LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
                     int offset) const;
 
-            inline void AssembleBnd(const NekVector<NekDouble>& loc,
+            void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const;
 
-            inline void AssembleBnd(const NekVector<NekDouble>& loc,
+            void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global) const;
 
-            inline void AssembleBnd(const Array<OneD,const NekDouble>& loc,
+            void AssembleBnd(const Array<OneD,const NekDouble>& loc,
                     Array<OneD, NekDouble>& global, int offset) const;
 
-            inline void AssembleBnd(const Array<OneD, const NekDouble>& loc,
+            void AssembleBnd(const Array<OneD, const NekDouble>& loc,
                     Array<OneD, NekDouble>& global) const;
 
-            inline const void UniversalAssembleBnd(
+            const void UniversalAssembleBnd(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            inline const void UniversalAssembleBnd(
+            const void UniversalAssembleBnd(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            inline const int GetFullSystemBandWidth() const;
+            const int GetFullSystemBandWidth() const;
 
-            inline int GetNumNonDirVertexModes() const;
+            int GetNumNonDirVertexModes() const;
 
-            inline int GetNumNonDirEdgeModes() const;
+            int GetNumNonDirEdgeModes() const;
 
-            inline int GetNumNonDirFaceModes() const;
+            int GetNumNonDirFaceModes() const;
 
             /// Returns the bandwidth of the boundary system.
-            inline int GetBndSystemBandWidth() const;
+            int GetBndSystemBandWidth() const;
             /// Returns the level of static condensation for this map.
-            inline int GetStaticCondLevel() const;
+            int GetStaticCondLevel() const;
             /// Returns the number of patches in this static condensation level.
-            inline int GetNumPatches() const;
+            int GetNumPatches() const;
             /// Returns the number of local boundary coefficients in each patch.
-            inline const Array<OneD,const unsigned int>&
+            const Array<OneD,const unsigned int>&
                     GetNumLocalBndCoeffsPerPatch();
             /// Returns the number of local interior coefficients in each patch.
-            inline const Array<OneD,const unsigned int>&
+            const Array<OneD,const unsigned int>&
                     GetNumLocalIntCoeffsPerPatch();
             /// Returns the local to global mapping for the next level in the
             /// multi-level static condensation.
-            inline const AssemblyMapBaseSharedPtr
+            const AssemblyMapBaseSharedPtr
                     GetNextLevelLocalToGlobalMap() const;
 
-            inline void SetNextLevelLocalToGlobalMap( AssemblyMapBaseSharedPtr  pNextLevelLocalToGlobalMap);
+            void SetNextLevelLocalToGlobalMap( AssemblyMapBaseSharedPtr  pNextLevelLocalToGlobalMap);
 
             /// Returns the patch map from the previous level 
             /// of the multi-level static condensation.
-            inline const PatchMapSharedPtr&
+            const PatchMapSharedPtr&
                 GetPatchMapFromPrevLevel(void) const;
 
             /// Returns true if this is the last level in the multi-level
             /// static condensation.
-            inline bool AtLastLevel() const;
+            bool AtLastLevel() const;
             /// Returns the method of solving global systems.
-            inline const GlobalSysSolnType  GetGlobalSysSolnType() const;
-            inline const PreconditionerType  GetPreconType() const;
-            
+            const GlobalSysSolnType  GetGlobalSysSolnType() const;
+            const PreconditionerType  GetPreconType() const;
+
         protected:
             /// Session object
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -343,7 +345,7 @@ namespace Nektar
             /// Calculates the bandwidth of the boundary system.
             void CalculateBndSystemBandWidth();
 
-            inline void GlobalToLocalBndWithoutSign(
+            void GlobalToLocalBndWithoutSign(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc);
 

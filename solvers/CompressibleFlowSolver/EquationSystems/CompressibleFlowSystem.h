@@ -37,153 +37,154 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
 #include <CompressibleFlowSolver/EquationSystems/UnsteadySystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Advection.h>
+
+#define EPSILON 0.000001
+
+#define CROSS(dest, v1, v2){                 \
+          dest[0] = v1[1] * v2[2] - v1[2] * v2[1]; \
+          dest[1] = v1[2] * v2[0] - v1[0] * v2[2]; \
+          dest[2] = v1[0] * v2[1] - v1[1] * v2[0];}
+
+#define DOT(v1, v2) (v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2])
+
+#define SUB(dest, v1, v2){       \
+          dest[0] = v1[0] - v2[0]; \
+          dest[1] = v1[1] - v2[1]; \
+          dest[2] = v1[2] - v2[2];}
 
 namespace Nektar
 {  
   /**
    * 
-   * 
-   **/
+   */
   class CompressibleFlowSystem: public UnsteadySystem
   {
   public:
 
       friend class MemoryManager<CompressibleFlowSystem>;
 
-    /// Creates an instance of this class
-    static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-    {
-      return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);
-    }
-    /// Name of class
-    static std::string className;
-    
-    virtual ~CompressibleFlowSystem();
-
+      /// Creates an instance of this class
+      static SolverUtils::EquationSystemSharedPtr create(
+          const LibUtilities::SessionReaderSharedPtr& pSession)
+      {
+          return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);
+      }
+      /// Name of class
+      static std::string className;
+      
+      virtual ~CompressibleFlowSystem();
+      
   protected:
+      SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
+      SolverUtils::AdvectionSharedPtr     m_advection;
+      Array<OneD, NekDouble>              m_velLoc;
+      
+      CompressibleFlowSystem(
+          const LibUtilities::SessionReaderSharedPtr& pSession);
 
-    CompressibleFlowSystem(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+      virtual void v_InitObject();
+      
+      /// Print a summary of time stepping parameters.
+      virtual void v_PrintSummary(std::ostream &out);
 
-    virtual void v_InitObject();
-    
-    /// Print a summary of time stepping parameters.
-    virtual void v_PrintSummary(std::ostream &out);
+      void GetFluxVector(
+          const int                                   i, 
+          const Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                Array<OneD, Array<OneD, NekDouble> > &flux);
+      void WallBoundary(
+          int                                   bcRegion,
+          int                                   cnt,
+          Array<OneD, Array<OneD, NekDouble> > &physarray);
+      void SymmetryBoundary(
+          int                                   bcRegion,
+          int                                   cnt,
+          Array<OneD, Array<OneD, NekDouble> > &physarray);
+      void GetVelocityVector(
+          const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                Array<OneD, Array<OneD, NekDouble> > &velocity);
+      void GetSoundSpeed(
+          const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                Array<OneD,             NekDouble>   &pressure,
+                Array<OneD,             NekDouble>   &soundspeed);
+      void GetMach(
+          Array<OneD, Array<OneD, NekDouble> > &physfield,
+          Array<OneD,             NekDouble>   &soundspeed,
+          Array<OneD,             NekDouble>   &mach);
+      void GetTemperature(
+          Array<OneD, Array<OneD, NekDouble> > &physfield,
+          Array<OneD,             NekDouble>   &pressure,
+          Array<OneD,             NekDouble>   &temperature);
+      
+      virtual NekDouble v_GetTimeStep(
+          const Array<OneD, Array<OneD,NekDouble> > physarray, 
+          const Array<OneD, int>                    ExpOrder, 
+          const Array<OneD, NekDouble>              CFLDG, 
+          NekDouble                                 timeCFL);
 
-    virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-				 Array<OneD, Array<OneD, NekDouble> > &flux) 
-    {
-      switch(m_expdim)
-	{
-	case 1:
-	  ASSERTL0(false,"1D not implemented for Compressible Flow Equations");
-	  break;
-	case 2:
-	  GetFluxVector2D(i,physfield,flux);
-	  break;
-	case 3:
-	  ASSERTL0(false,"3D not implemented for Compressible Flow Equations");
-	  break;
-	default:
-	  ASSERTL0(false,"Illegal dimension");
-	}
-    }
-    
-    
-    virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-				 Array<OneD, Array<OneD, NekDouble> > &numflux)
-    {
-      switch(m_expdim)
-	{
-	case 1:
-	  ASSERTL0(false,"1D not implemented for Compressible Flow Equations");
-	  break;
-	case 2:
-	  NumericalFlux2D(physfield,numflux);
-	  break;
-	case 3:
-	  ASSERTL0(false,"3D not implemented for Compressible Flow Equations");
-	  break;
-	default:
-	  ASSERTL0(false,"Illegal dimension");
-	}      
-    }
+      virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
+                                          bool dumpInitialConditions = true)
+      {
+      }
 
-    void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
+      NekDouble GetGamma()
+      {
+          return m_gamma;
+      }
+      
+      const Array<OneD, NekDouble> &GetVelLoc()
+      {
+          return m_velLoc;
+      }
+      
+      const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
+      {
+          return m_traceNormals;
+      }
+      
+  private:
+      void GetPressure(const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                       Array<OneD, NekDouble> &pressure); 
+      Array<OneD,NekDouble> GetStdVelocity(
+          const Array<OneD, Array<OneD,NekDouble> > inarray);
 
-    void SymmetryBoundary(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-    virtual NekDouble v_GetTimeStep(const Array<OneD, Array<OneD,NekDouble> > physarray, 
-			       const Array<OneD,int> ExpOrder, 
-			       const Array<OneD,NekDouble> CFLDG, NekDouble timeCFL);
-
-    virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-					bool dumpInitialConditions = true)
-    {
-    }
-
-    void GetVelocityVector(const Array<OneD, Array<OneD, NekDouble> > &physfield,
-			   Array<OneD, Array<OneD, NekDouble> > &velocity);
-    
-    void GetSoundSpeed(const Array<OneD, Array<OneD, NekDouble> > &physfield,
-		       Array<OneD, NekDouble> &pressure,
-		       Array<OneD, NekDouble> &soundspeed);
-    
-    void GetMach(Array<OneD, Array<OneD, NekDouble> > &physfield,
-		 Array<OneD, NekDouble> &soundspeed,
-		 Array<OneD, NekDouble> &mach);
-
-    void GetTemperature(Array<OneD, Array<OneD, NekDouble> > &physfield,
-			Array<OneD, NekDouble> &pressure,
-			Array<OneD, NekDouble> &temperature);
-    
-    private:
-    
-    void GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
-			 Array<OneD, Array<OneD, NekDouble> > &flux);
-
-    void NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-			 Array<OneD, Array<OneD, NekDouble> > &numflux);
-    
-    void GetPressure(const Array<OneD, const Array<OneD, NekDouble> > &physfield,
- 		     Array<OneD, NekDouble> &pressure); 
-    
-    void RiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-		       NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-		       NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-    
-    void HLLRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-			  NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-			  NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-    
-    void HLLCRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-			   NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-			   NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-    
-    void LFRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-			 NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-			 NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-	    
-    void AverageRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-			      NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-			      NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-    
-    void ExactRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-			    NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-			    NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-
-    void AUSMRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-			   NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-			   NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-    
-    NekDouble M1Function(int A, NekDouble M);
-    NekDouble M2Function(int A, NekDouble M);
-    NekDouble M4Function(int A, NekDouble beta, NekDouble M);
-    NekDouble P5Function(int A, NekDouble alpha, NekDouble M);
-
-    Array<OneD,NekDouble> GetStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray);
-    
+      /*
+      void RiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                         NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                         NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      void HLLRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                            NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                            NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      void HLLCRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                             NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                             NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      void LFRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                           NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                           NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      void AverageRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                                NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                                NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      void ExactRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                              NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                              NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      void AUSMRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+                             NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+                             NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+      
+      
+      NekDouble M1Function(int A, NekDouble M);
+      NekDouble M2Function(int A, NekDouble M);
+      NekDouble M4Function(int A, NekDouble beta, NekDouble M);
+      NekDouble P5Function(int A, NekDouble alpha, NekDouble M);
+      */
+      
   };
 }
 #endif

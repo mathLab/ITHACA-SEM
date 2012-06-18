@@ -212,7 +212,7 @@ namespace Nektar
             {
                 if (m_expdim == 2)
                 {
-                    WallBoundary2D(n,cnt,inarray);
+                    WallBoundary(n,cnt,inarray);
                 }
                 else
                 {

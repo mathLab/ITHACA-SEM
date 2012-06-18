@@ -48,40 +48,12 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        typedef boost::function<Array<OneD, const NekDouble>& ()> RSScalarFuncType;
-        typedef boost::function<Array<OneD, Array<OneD, const NekDouble> >& ()> RSVectorFuncType;
-        typedef boost::function<NekDouble ()> RSParamFuncType;
-        
-        /*
-        class RiemannSolverKey
-        {
-        public:
-            template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddScalar(std::string name, FuncPointerT func, ObjectPointerT obj)
-            {
-                scalars[name] = boost::bind(func, obj);
-            }
-            
-            template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddVector(std::string name, FuncPointerT func, ObjectPointerT obj)
-            {
-                vectors[name] = boost::bind(func, obj);
-            }
-            
-            template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddParam(std::string name, FuncPointerT func, ObjectPointerT obj)
-            {
-                params[name] = boost::bind(func, obj);
-            }
-            
-            /// Map of scalar function types.
-            std::map<std::string, RSScalarFuncType> scalars;
-            /// Map of vector function types.
-            std::map<std::string, RSVectorFuncType> vectors;
-            /// Map of parameter function types.
-            std::map<std::string, RSParamFuncType > params;
-        };
-        */
+        typedef boost::function<
+            const Array<OneD, const NekDouble>& ()> RSScalarFuncType;
+        typedef boost::function<
+            const Array<OneD, const Array<OneD, NekDouble> >& ()> RSVecFuncType;
+        typedef boost::function<
+            NekDouble ()> RSParamFuncType;
         
         class RiemannSolver
         {
@@ -92,39 +64,54 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddScalar(std::string name, FuncPointerT func, ObjectPointerT obj)
+            inline void AddScalar(std::string    name, 
+                                  FuncPointerT   func, 
+                                  ObjectPointerT obj)
             {
                 m_scalars[name] = boost::bind(func, obj);
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddVector(std::string name, FuncPointerT func, ObjectPointerT obj)
+            inline void AddVector(std::string    name, 
+                                  FuncPointerT   func, 
+                                  ObjectPointerT obj)
             {
                 m_vectors[name] = boost::bind(func, obj);
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddParam(std::string name, FuncPointerT func, ObjectPointerT obj)
+            inline void AddParam(std::string    name, 
+                                 FuncPointerT   func, 
+                                 ObjectPointerT obj)
             {
                 m_params[name] = boost::bind(func, obj);
             }
 
 
         protected:
-            RiemannSolver();
-            
+            /// Indicates whether the Riemann solver requires a rotation to be
+            /// applied to the velocity fields.
+            bool m_requiresRotation;
             /// Map of scalar function types.
             std::map<std::string, RSScalarFuncType> m_scalars;
             /// Map of vector function types.
-            std::map<std::string, RSVectorFuncType> m_vectors;
+            std::map<std::string, RSVecFuncType>    m_vectors;
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
+
+            RiemannSolver();
             
             virtual void v_Solve(
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
 
+            void rotateToNormal  (
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray);
+            void rotateFromNormal(
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray);
             bool CheckScalars(std::string name);
             bool CheckVectors(std::string name);
             bool CheckParams (std::string name);

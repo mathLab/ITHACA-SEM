@@ -161,6 +161,13 @@ namespace Nektar
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
 		
+        // Set up filters
+        LibUtilities::FilterMap::const_iterator x;
+        LibUtilities::FilterMap f = m_session->GetFilters();
+        for (x = f.begin(); x != f.end(); ++x)
+        {
+            m_filters.push_back(SolverUtils::GetFilterFactory().CreateInstance(x->first, m_session, x->second));
+        }
     }
 
     IncNavierStokes::~IncNavierStokes(void)
@@ -239,6 +246,12 @@ namespace Nektar
             mdlFile.open(mdlname.c_str());
         }
         
+        std::vector<SolverUtils::FilterSharedPtr>::iterator x;
+        for (x = m_filters.begin(); x != m_filters.end(); ++x)
+        {
+            (*x)->Initialise(m_fields, m_time);
+        }
+
         //Time advance
         for(n = 0; n < nsteps; ++n)
         {
@@ -365,6 +378,23 @@ namespace Nektar
                     break;
                 }
             }
+
+            // Transform data into coefficient space
+            if (m_filters.size() > 0)
+            {
+                for (i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[i]->FwdTrans_IterPerExp(fields[i],
+                                                     m_fields[i]->UpdateCoeffs());
+                    m_fields[i]->SetPhysState(false);
+                }
+            }
+
+            std::vector<SolverUtils::FilterSharedPtr>::iterator x;
+            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            {
+                (*x)->Update(m_fields, m_time);
+            }
         }
 		
 		if(integrate_in_wave_space)
@@ -390,6 +420,12 @@ namespace Nektar
         {
             mdlFile.close();
         }
+
+        for (x = m_filters.begin(); x != m_filters.end(); ++x)
+        {
+            (*x)->Finalise(m_fields, m_time);
+        }
+
     }
     
 

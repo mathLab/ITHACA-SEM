@@ -43,6 +43,7 @@
 #include <IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {     
@@ -137,6 +138,7 @@ namespace Nektar
         Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
         int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
 
+        std::vector<SolverUtils::FilterSharedPtr>                    m_filters;
 
         /**
          * Constructor.

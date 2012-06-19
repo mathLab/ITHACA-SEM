@@ -95,7 +95,7 @@ namespace Nektar
                 m_bndCondExpansions,m_bndConditions,*m_exp,graph1D,periodicVertices);
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
-            m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+            m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(pSession,graph1D,trace,*this,
                                   m_bndCondExpansions,m_bndConditions,periodicVertices);
             
@@ -174,7 +174,7 @@ namespace Nektar
             m_traces = Array<OneD,MultiRegions::ExpListSharedPtr> (domain.size());
             m_traces[i] = boost::dynamic_pointer_cast<ExpList>(traces);
 
-            m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+            m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(pSession,graph1D,traces,*this,
                                   m_bndCondExpansions,m_bndConditions,periodicVertices);
             
@@ -947,7 +947,7 @@ namespace Nektar
             int NumDirBCs  = m_traceMap->GetNumLocalDirBndCoeffs();
             int e_ncoeffs,id;
 
-            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullLocalToGlobalBaseMapSharedPtr,factors,varcoeff);
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullAssemblyMapSharedPtr,factors,varcoeff);
 
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
@@ -1017,7 +1017,7 @@ namespace Nektar
             // Internal element solves
             //----------------------------------
             GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,
-                                            NullLocalToGlobalBaseMapSharedPtr,
+                                            NullAssemblyMapSharedPtr,
                                             factors);
 
             const DNekScalBlkMatSharedPtr& InvHDGHelm

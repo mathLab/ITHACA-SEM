@@ -36,6 +36,8 @@
 #define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+
 
 namespace Nektar
 {
@@ -46,7 +48,7 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT Preconditioner(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
-                         const LocalToGlobalBaseMapSharedPtr &pLocToGloMap);
+                         const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~Preconditioner() {}
@@ -78,7 +80,7 @@ namespace Nektar
 	    DNekMatSharedPtr                            m_om;
 	    DNekMatSharedPtr                            m_SP;
 
-            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
+            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
 
             Array<OneD, int>                            vertModeLocation;
             Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
@@ -91,7 +93,7 @@ namespace Nektar
 
             void NullPreconditioner(
                 const boost::weak_ptr<GlobalLinSys> &plinsys,
-                const LocalToGlobalBaseMapSharedPtr &pLocToGloMap);
+                const AssemblyMapSharedPtr &pLocToGloMap);
 
             void DiagonalPreconditionerSum(void);
 

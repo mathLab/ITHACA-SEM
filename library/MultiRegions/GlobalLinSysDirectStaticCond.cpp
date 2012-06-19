@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+//#include <MultiRegions/AssemblyMapCG.h>
 
 namespace Nektar
 {
@@ -84,7 +84,7 @@ namespace Nektar
         GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
                      const GlobalLinSysKey &pKey,
                      const boost::weak_ptr<ExpList> &pExpList,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
+                     const boost::shared_ptr<AssemblyMap>
                      &pLocToGloMap)
                 : GlobalLinSysDirect(pKey, pExpList, pLocToGloMap)
         {
@@ -110,7 +110,7 @@ namespace Nektar
 //                     const DNekScalBlkMatSharedPtr pBinvD,
 //                     const DNekScalBlkMatSharedPtr pC,
 //                     const DNekScalBlkMatSharedPtr pInvD,
-//                     const boost::shared_ptr<LocalToGlobalBaseMap>
+//                     const boost::shared_ptr<AssemblyMap>
 //                     &pLocToGloMap)
 //        {
 //            m_schurCompl = pSchurCompl;
@@ -133,7 +133,7 @@ namespace Nektar
                      const DNekScalBlkMatSharedPtr pBinvD,
                      const DNekScalBlkMatSharedPtr pC,
                      const DNekScalBlkMatSharedPtr pInvD,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
+                     const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
                 : GlobalLinSysDirect(pKey, pExpList, pLocToGloMap),
                   m_schurCompl ( pSchurCompl ),
@@ -161,7 +161,7 @@ namespace Nektar
         void GlobalLinSysDirectStaticCond::v_Solve(
                     const Array<OneD, const NekDouble>  &in,
                           Array<OneD,       NekDouble>  &out,
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &dirForcing)
         {
             bool dirForcCalculated = (bool) dirForcing.num_elements();
@@ -280,7 +280,7 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysDirectStaticCond::Initialise(
-           const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap,
+           const boost::shared_ptr<AssemblyMap>& pLocToGloMap,
            const MatrixStorage matStorage)
         {
             if(pLocToGloMap->AtLastLevel())
@@ -303,7 +303,7 @@ namespace Nektar
          * @param
          */
         void GlobalLinSysDirectStaticCond::SetupTopLevel(
-                const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap)
+                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
@@ -343,7 +343,7 @@ namespace Nektar
             }
         }
 
-        MatrixStorage GlobalLinSysDirectStaticCond::DetermineMatrixStorage(const LocalToGlobalBaseMapSharedPtr &pLocToGloMap)
+        MatrixStorage GlobalLinSysDirectStaticCond::DetermineMatrixStorage(const AssemblyMapSharedPtr &pLocToGloMap)
         {
             int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
             int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -391,7 +391,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysDirectStaticCond::AssembleSchurComplement(
-                      const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                      const AssemblyMapSharedPtr &pLocToGloMap,
                       MatrixStorage matStorage )
         {
             int i,j,n,cnt,gid1,gid2;
@@ -497,7 +497,7 @@ namespace Nektar
          *
          */
         void GlobalLinSysDirectStaticCond::ConstructNextLevelCondensedSystem(
-                        const LocalToGlobalBaseMapSharedPtr& pLocToGloMap)
+                        const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt;
             NekDouble one  = 1.0;

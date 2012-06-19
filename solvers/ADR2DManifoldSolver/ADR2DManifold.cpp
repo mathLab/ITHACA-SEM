@@ -451,7 +451,7 @@ namespace Nektar
                         StdRegions::VarCoeffMap varcoeffs;
                         varcoeffs[StdRegions::eVarCoeffMass] = m_vellc[0];
                         MultiRegions::GlobalMatrixKey wkey(StdRegions::eMass,
-                                MultiRegions::NullLocalToGlobalBaseMapSharedPtr,
+                                MultiRegions::NullAssemblyMapSharedPtr,
                                 StdRegions::NullConstFactorMap,
                                 varcoeffs);
                         m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(wkey, inarray[i], temp[i]);
@@ -471,7 +471,7 @@ namespace Nektar
                         StdRegions::VarCoeffMap varcoeffs;
                         varcoeffs[StdRegions::eVarCoeffMass] = m_velmagnitude[0];
                         MultiRegions::GlobalMatrixKey key(StdRegions::eMass,
-                                MultiRegions::NullLocalToGlobalBaseMapSharedPtr,
+                                MultiRegions::NullAssemblyMapSharedPtr,
                                 StdRegions::NullConstFactorMap,
                                 varcoeffs);
                         m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(key, outarray[i], outarray[i]);

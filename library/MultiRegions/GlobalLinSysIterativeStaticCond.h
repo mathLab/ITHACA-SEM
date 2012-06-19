@@ -38,13 +38,14 @@
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class LocalToGlobalC0ContMap;
+        class AssemblyMapCG;
         class ExpList;
         class GlobalLinSysIterativeStaticCond;
 
@@ -59,7 +60,7 @@ namespace Nektar
             static GlobalLinSysSharedPtr create(
                         const GlobalLinSysKey &pLinSysKey,
                         const boost::weak_ptr<ExpList> &pExpList,
-                        const boost::shared_ptr<LocalToGlobalBaseMap>
+                        const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysIterativeStaticCond>
@@ -74,7 +75,7 @@ namespace Nektar
             GlobalLinSysIterativeStaticCond(
                         const GlobalLinSysKey &mkey,
                         const boost::weak_ptr<ExpList> &pExpList,
-                        const boost::shared_ptr<LocalToGlobalBaseMap>
+                        const boost::shared_ptr<AssemblyMap>
                                                                 &locToGloMap);
 
             /// Constructor for full direct matrix solve.
@@ -85,7 +86,7 @@ namespace Nektar
                         const DNekScalBlkMatSharedPtr pBinvD,
                         const DNekScalBlkMatSharedPtr pC,
                         const DNekScalBlkMatSharedPtr pInvD,
-                        const boost::shared_ptr<LocalToGlobalBaseMap>
+                        const boost::shared_ptr<AssemblyMap>
                                                                 &locToGloMap);
 
             virtual ~GlobalLinSysIterativeStaticCond();
@@ -104,7 +105,7 @@ namespace Nektar
             GlobalMatrixSharedPtr m_globalSchurCompl;
 
             // Local to global map.
-            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
+            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
 
             // Workspace array for matrix multiplication
             Array<OneD, NekDouble> m_wsp;
@@ -114,30 +115,30 @@ namespace Nektar
             virtual void v_Solve(
                         const Array<OneD, const NekDouble>  &in,
                               Array<OneD,       NekDouble>  &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble>  &dirForcing
                                                         = NullNekDouble1DArray);
 
             /// Initialise this object
             void Initialise(
-                    const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Set up the storage for the Schur complement or the top level
             /// of the multi-level Schur complement.
             void SetupTopLevel(
-                    const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Assemble the Schur complement matrix.
             void AssembleSchurComplement(
-                    const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             ///
             void ConstructNextLevelCondensedSystem(
-                    const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Compute a diagonal preconditioner of the Shur-complement matrix.
             void ComputeDiagonalPreconditioner(
-                    const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             /// Perform a Shur-complement matrix multiply operation.
             virtual void v_DoMatrixMultiply(

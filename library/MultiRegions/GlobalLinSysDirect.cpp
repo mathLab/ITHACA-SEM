@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysDirect.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+//#include <MultiRegions/AssemblyMapCG.h>
 
 namespace Nektar
 {
@@ -55,7 +55,7 @@ namespace Nektar
         GlobalLinSysDirect::GlobalLinSysDirect(
                 const GlobalLinSysKey &pKey,
                 const boost::weak_ptr<ExpList> &pExp,
-                const boost::shared_ptr<LocalToGlobalBaseMap>
+                const boost::shared_ptr<AssemblyMap>
                                                         &pLocToGloMap)
                 : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
@@ -70,7 +70,7 @@ namespace Nektar
                 const int pNumRows,
                 const Array<OneD,const NekDouble> &pInput,
                       Array<OneD,      NekDouble> &pOutput,
-                const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                const AssemblyMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
             DNekVec Vin(pInput.num_elements(),pInput);
@@ -82,7 +82,7 @@ namespace Nektar
         /// using a specified local to global map.
         void GlobalLinSysDirect::v_Solve( const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble> &pDirForcing)
         {
             ASSERTL0(false, "Not implemented for this GlobalLinSys type.");

@@ -88,7 +88,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
             GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
+            m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                                                                      m_bndCondExpansions,
                                                                                      m_bndConditions,
                                                                                      periodicVertices,
@@ -140,7 +140,7 @@ namespace Nektar
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
+                m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                                                                          m_bndCondExpansions,
                                                                                          m_bndConditions,
                                                                                          periodicVertices,
@@ -408,7 +408,7 @@ namespace Nektar
                                 const GlobalLinSysKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
             return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
         }
@@ -425,7 +425,7 @@ namespace Nektar
                                 const GlobalMatrixKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
 
             GlobalMatrixSharedPtr glo_matrix;
@@ -535,7 +535,7 @@ namespace Nektar
         int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
         {
             ASSERTL1(gkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
 
             GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);

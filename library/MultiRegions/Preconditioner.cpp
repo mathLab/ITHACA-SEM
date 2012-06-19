@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
@@ -61,7 +60,7 @@ namespace Nektar
 
          Preconditioner::Preconditioner(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
-                         const LocalToGlobalBaseMapSharedPtr &pLocToGloMap):
+                         const AssemblyMapSharedPtr &pLocToGloMap):
 	   m_linsys(plinsys),
            m_locToGloMap(pLocToGloMap),
            m_preconType(pLocToGloMap->GetPreconType())
@@ -121,7 +120,7 @@ namespace Nektar
          */
          void Preconditioner::NullPreconditioner(
                         const boost::weak_ptr<GlobalLinSys> &plinsys,
-                        const LocalToGlobalBaseMapSharedPtr &pLocToGloMap)
+                        const AssemblyMapSharedPtr &pLocToGloMap)
         {
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
             int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();

@@ -36,14 +36,16 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSIterativeCG_H
 
 #include <MultiRegions/GlobalLinSysIterative.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class LocalToGlobalC0ContMap;
-        class LocalToGlobalDGMap;
+        class AssemblyMapCG;
+        class AssemblyMapDG;
         class ExpList;
 
         /// A global linear system.
@@ -54,7 +56,7 @@ namespace Nektar
             static GlobalLinSysSharedPtr create(
                     const GlobalLinSysKey &pLinSysKey,
                     const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                    const boost::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysIterativeFull>
@@ -68,37 +70,37 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pLinSysKey,
                     const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                    const boost::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeFull();
 
         private:
             // Local to global map.
-            boost::shared_ptr<LocalToGlobalBaseMap>     m_locToGloMap;
+            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             virtual void v_Solve(
                     const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
             // Populates the preconditioner with the identity matrix.
             void ComputeNullPreconditioner(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             // Populates the preconditioner with the diagonal of the operator
             // matrix by applying the operator to the standard basis.
             void ComputeDiagonalPreconditioner(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             // Populates the preconditioner with the diagonal of the operator
             // matrix using a more efficient summation of local matrix entries.
             void ComputeDiagonalPreconditionerSum(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap);
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,

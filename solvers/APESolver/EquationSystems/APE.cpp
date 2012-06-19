@@ -38,7 +38,7 @@
 #include <cstdlib>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <MultiRegions/LocalToGlobalDGMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <APESolver/EquationSystems/APE.h>
 
 namespace Nektar

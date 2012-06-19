@@ -38,13 +38,13 @@
 #define NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <SpatialDomains/MeshGraph.h>
 
 namespace Nektar
 {
-    class CoupledLocalToGlobalC0ContMap: public MultiRegions::LocalToGlobalC0ContMap
+    class CoupledLocalToGlobalC0ContMap: public MultiRegions::AssemblyMapCG2D
     {
     public:
         CoupledLocalToGlobalC0ContMap(const LibUtilities::SessionReaderSharedPtr &pSession,

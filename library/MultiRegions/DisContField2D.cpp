@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField2D.h>
-#include <LocalRegions/SegExp.h>
+//#include <LocalRegions/SegExp.h>
 
 namespace Nektar
 {
@@ -135,7 +135,7 @@ namespace Nektar
 
                 SetUpPhysNormals();
 
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                m_traceMap = MemoryManager<AssemblyMapDG>::
                     AllocateSharedPtr(m_session, graph2D, trace, *this,
                                       m_bndCondExpansions,m_bndConditions,periodicEdges);
                 
@@ -286,7 +286,7 @@ namespace Nektar
 
                     // Finally set up the trace map between element edges and
                     // trace segment expansions.
-                    m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                    m_traceMap = MemoryManager<AssemblyMapDG>::
                         AllocateSharedPtr(m_session,graph2D,trace,*this,
                                           m_bndCondExpansions,m_bndConditions,
                                           periodicEdges);
@@ -1034,7 +1034,7 @@ namespace Nektar
             int e_ncoeffs,id;
 
             // Retrieve block matrix of U^e
-            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullLocalToGlobalBaseMapSharedPtr,factors,varcoeff);
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullAssemblyMapSharedPtr,factors,varcoeff);
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
             // Retrieve global trace space storage, \Lambda, from trace expansion
@@ -1118,7 +1118,7 @@ namespace Nektar
             //----------------------------------
             // Internal element solves
             //----------------------------------
-            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,NullLocalToGlobalBaseMapSharedPtr,factors,varcoeff);
+            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,NullAssemblyMapSharedPtr,factors,varcoeff);
             const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
             Vmath::Zero(m_ncoeffs,outarray,1);

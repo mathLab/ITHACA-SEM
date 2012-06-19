@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <MultiRegions/LocalToGlobalDGMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/LinearSWE.h>
 
 namespace Nektar

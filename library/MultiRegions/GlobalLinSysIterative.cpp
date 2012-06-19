@@ -35,7 +35,6 @@
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterative.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
 
 namespace Nektar
 {
@@ -51,7 +50,7 @@ namespace Nektar
         GlobalLinSysIterative::GlobalLinSysIterative(
                 const GlobalLinSysKey &pKey,
                 const boost::weak_ptr<ExpList> &pExpList,
-                const boost::shared_ptr<LocalToGlobalBaseMap>
+                const boost::shared_ptr<AssemblyMap>
                                                        &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap)
         {
@@ -79,7 +78,7 @@ namespace Nektar
                     const int nGlobal,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
-                    const LocalToGlobalBaseMapSharedPtr &plocToGloMap,
+                    const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
             // Check if preconditioner has been computed and compute if needed.

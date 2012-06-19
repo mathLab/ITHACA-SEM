@@ -197,7 +197,7 @@ namespace Nektar
 * Updates for working ProjectContField3D demo
 *
 * Revision 1.15  2008/09/17 13:46:40  pvos
-* Added LocalToGlobalC0ContMap for 3D expansions
+* Added AssemblyMapCG for 3D expansions
 *
 * Revision 1.14  2008/08/14 22:15:51  sherwin
 * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats

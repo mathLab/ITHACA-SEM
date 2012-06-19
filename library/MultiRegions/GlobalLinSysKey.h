@@ -48,8 +48,8 @@ namespace Nektar
         {
         public:
             MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-                                        = NullLocalToGlobalBaseMapSharedPtr,
+                            const AssemblyMapSharedPtr &locToGloMap
+                                        = NullAssemblyMapSharedPtr,
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
                             const StdRegions::VarCoeffMap &varCoeffs = StdRegions::NullVarCoeffMap);
 

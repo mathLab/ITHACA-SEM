@@ -42,7 +42,7 @@
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalToGlobalDGMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
@@ -122,7 +122,7 @@ namespace Nektar
 
             GlobalLinSysMapShPtr        m_globalBndMat;
             ExpListSharedPtr            m_trace;
-            LocalToGlobalDGMapSharedPtr m_traceMap;
+            AssemblyMapDGSharedPtr      m_traceMap;
 			
             Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
             Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
@@ -159,7 +159,7 @@ namespace Nektar
                 return m_trace;
             }
 
-            virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap()
+            virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
             }

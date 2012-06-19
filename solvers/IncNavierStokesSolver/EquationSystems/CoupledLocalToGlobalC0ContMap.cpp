@@ -51,7 +51,7 @@ namespace Nektar
                                       const MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
                                       const bool CheckforSingularSys):
-        LocalToGlobalC0ContMap(pSession)
+        AssemblyMapCG2D(pSession)
     {
 
         int i,j,k,n;
@@ -894,7 +894,7 @@ namespace Nektar
                 bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
                 //bottomUpGraph->Dump();
 
-                m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
+                m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                     AllocateSharedPtr(this,bottomUpGraph);
             }
         }

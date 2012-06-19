@@ -37,8 +37,8 @@
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
-#include <MultiRegions/LocalToGlobalDGMap.h>
+//#include <MultiRegions/AssemblyMapCG.h>
+//#include <MultiRegions/AssemblyMapDG.h>
 
 namespace Nektar
 {
@@ -72,7 +72,7 @@ namespace Nektar
         GlobalLinSysIterativeFull::GlobalLinSysIterativeFull(
                     const GlobalLinSysKey &pKey,
                     const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
                 : GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
         {
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eIterativeFull,
@@ -111,19 +111,19 @@ namespace Nektar
         void GlobalLinSysIterativeFull::v_Solve(
                     const Array<OneD, const NekDouble>  &pInput,
                           Array<OneD,       NekDouble>  &pOutput,
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
             if (m_locToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
+                = boost::dynamic_pointer_cast<AssemblyMapCG>(
                                                                 pLocToGloMap))
             {
                 vCG = true;
             }
             else if (m_locToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalDGMap>(pLocToGloMap))
+                = boost::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
             {
                 vCG = false;
             }
@@ -182,7 +182,7 @@ namespace Nektar
          * @param   pLocToGloMap    Local to Global mapping.
          */
         void GlobalLinSysIterativeFull::ComputeNullPreconditioner(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
             int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -204,7 +204,7 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysIterativeFull::ComputeDiagonalPreconditioner(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
@@ -235,7 +235,7 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysIterativeFull::ComputeDiagonalPreconditionerSum(
-                const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int i,j,n,cnt,gid1,gid2;

@@ -39,7 +39,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
-#include <MultiRegions/LocalToGlobalBaseMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
@@ -59,14 +59,13 @@ namespace Nektar
     {
         // Forward declarations
         class GlobalLinSys;
-        class LocalToGlobalC0ContMap;
-        class LocalToGlobalBaseMap;
-        class LocalToGlobalDGMap;
+        class AssemblyMapDG;
+
         class ExpList0D;
         class ExpList1D;
-	class ExpList2D;
-	
-	enum Direction
+        class ExpList2D;
+
+    enum Direction
 	{
 	    eX,
 	    eY,
@@ -602,7 +601,7 @@ namespace Nektar
             
             inline boost::shared_ptr<ExpList> &GetTrace(int i);
             
-            inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
+            inline boost::shared_ptr<AssemblyMapDG> &GetTraceMap(void);
             
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
@@ -799,7 +798,7 @@ namespace Nektar
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
-                                                           const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+                                                           const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
 
             /// Communicator
             LibUtilities::CommSharedPtr m_comm;
@@ -928,7 +927,7 @@ namespace Nektar
             /// Generates a global matrix from the given key and map.
             boost::shared_ptr<GlobalMatrix>  GenGlobalMatrix(
                                                              const GlobalMatrixKey &mkey,
-                                                             const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+                                                             const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
 
 
             void GlobalEigenSystem(const boost::shared_ptr<DNekMat> &Gmat,
@@ -942,13 +941,13 @@ namespace Nektar
             /// mkey.
             boost::shared_ptr<GlobalLinSys>  GenGlobalLinSys(
                                                              const GlobalLinSysKey &mkey,
-                                                             const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+                                                             const boost::shared_ptr<AssemblyMapCG> &locToGloMap);
 
             /// Generate a GlobalLinSys from information provided by the key
             /// "mkey" and the mapping provided in LocToGloBaseMap.
             boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(
                                                                const GlobalLinSysKey     &mkey,
-                                                               const LocalToGlobalBaseMapSharedPtr &locToGloMap);
+                                                               const AssemblyMapSharedPtr &locToGloMap);
 
             void ReadGlobalOptimizationParameters()
             {
@@ -982,7 +981,7 @@ namespace Nektar
 			
             virtual boost::shared_ptr<ExpList> &v_GetTrace(int i);
 
-            virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap();
+            virtual boost::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
@@ -1852,7 +1851,7 @@ namespace Nektar
             return v_GetTrace(i);
         }
 		
-        inline boost::shared_ptr<LocalToGlobalDGMap> &ExpList::GetTraceMap()
+        inline boost::shared_ptr<AssemblyMapDG> &ExpList::GetTraceMap()
         {
             return v_GetTraceMap();
         }

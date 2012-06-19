@@ -42,7 +42,7 @@
 #include <MultiRegions/DisContField3D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG3D.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <SpatialDomains/MeshGraph3D.h>
@@ -116,14 +116,14 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray);
 
-            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap()
+            inline const AssemblyMapCGSharedPtr& GetLocalToGlobalMap()
                                                                         const;
 
             MULTI_REGIONS_EXPORT int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
 
 
         protected:
-            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+            AssemblyMapCGSharedPtr m_locToGloMap;
             int                             m_contNcoeffs;
             Array<OneD, NekDouble>          m_contCoeffs;
 
@@ -265,7 +265,7 @@ namespace Nektar
             m_locToGloMap->Assemble(inarray, outarray);
         }
 
-        inline const LocalToGlobalC0ContMapSharedPtr&
+        inline const AssemblyMapCGSharedPtr&
                 ContField3D::GetLocalToGlobalMap() const
         {
             return  m_locToGloMap;

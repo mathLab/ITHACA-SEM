@@ -45,7 +45,9 @@
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalToGlobalDGMap.h>
+//#include <MultiRegions/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+
 
 namespace Nektar
 {
@@ -116,7 +118,7 @@ namespace Nektar
             Array<OneD, NekDouble>                             tmpBndSol;
 
             /// Local to global DG mapping for trace space.
-            LocalToGlobalDGMapSharedPtr                        m_traceMap;
+            AssemblyMapDGSharedPtr                        m_traceMap;
 
             /// Discretises the boundary conditions.
             void GenerateBoundaryConditionExpansion(
@@ -148,7 +150,7 @@ namespace Nektar
                 return m_traces[i];
             }
             
-            virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap(void)
+            virtual AssemblyMapDGSharedPtr &v_GetTraceMap(void)
             {
                 return m_traceMap;
             }

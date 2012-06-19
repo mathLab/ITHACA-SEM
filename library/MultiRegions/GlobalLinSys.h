@@ -38,6 +38,8 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <boost/enable_shared_from_this.hpp>
+#include <MultiRegions/ExpList.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
@@ -59,7 +61,7 @@ namespace Nektar
         typedef LibUtilities::NekFactory< std::string, GlobalLinSys, 
             const GlobalLinSysKey&,
             const boost::weak_ptr<ExpList>&,
-            const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
+            const boost::shared_ptr<AssemblyMap>& > GlobalLinSysFactory;
         GlobalLinSysFactory& GetGlobalLinSysFactory();
 
 
@@ -71,7 +73,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT
             GlobalLinSys(const GlobalLinSysKey &pKey,
                     const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                    const boost::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
@@ -91,7 +93,7 @@ namespace Nektar
             inline void Solve(
                     const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const Array<OneD, const NekDouble> &dirForcing
                                                 = NullNekDouble1DArray);
 
@@ -117,7 +119,7 @@ namespace Nektar
                     const int pNumRows,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const int pNumDir = 0);
 
         private:
@@ -125,7 +127,7 @@ namespace Nektar
             virtual void v_Solve(
                         const Array<OneD, const NekDouble> &in,
                               Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
                                                 = NullNekDouble1DArray) = 0;
 
@@ -134,7 +136,7 @@ namespace Nektar
                     const int pNumRows,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const int pNumDir)=0;
 
             virtual const DNekMatSharedPtr& v_GetGmat(void) const;
@@ -167,7 +169,7 @@ namespace Nektar
         inline void GlobalLinSys::Solve(
                     const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const Array<OneD, const NekDouble> &dirForcing)
         {
             v_Solve(in,out,locToGloMap,dirForcing);
@@ -181,7 +183,7 @@ namespace Nektar
                 const int pNumRows,
                 const Array<OneD,const NekDouble> &pInput,
                       Array<OneD,      NekDouble> &pOutput,
-                const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                const AssemblyMapSharedPtr &locToGloMap,
                 const int pNumDir)
         {
 	  v_SolveLinearSystem(pNumRows, pInput, pOutput, locToGloMap, pNumDir);

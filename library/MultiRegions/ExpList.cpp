@@ -35,7 +35,6 @@
 
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
@@ -894,7 +893,7 @@ namespace Nektar
          */
         GlobalMatrixSharedPtr ExpList::GenGlobalMatrix(
                                                        const GlobalMatrixKey &mkey,
-                                                       const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+                                                       const AssemblyMapCGSharedPtr &locToGloMap)
         {
             int i,j,n,gid1,gid2,cntdim1,cntdim2;
             NekDouble sign1,sign2;
@@ -1029,7 +1028,7 @@ namespace Nektar
         }
 
 
-        DNekMatSharedPtr ExpList::GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+        DNekMatSharedPtr ExpList::GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const AssemblyMapCGSharedPtr &locToGloMap)
         {
             int i,j,n,gid1,gid2,loc_lda,eid;
             NekDouble sign1,sign2,value;
@@ -1172,7 +1171,7 @@ namespace Nektar
          */
         GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(
                     const GlobalLinSysKey &mkey,
-                    const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+                    const AssemblyMapCGSharedPtr &locToGloMap)
         {
             GlobalLinSysSharedPtr returnlinsys;
             boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
@@ -1191,7 +1190,7 @@ namespace Nektar
 
         GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(
                     const GlobalLinSysKey     &mkey,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap)
+                    const AssemblyMapSharedPtr &locToGloMap)
         {
             boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
             const map<int,RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
@@ -2171,11 +2170,11 @@ namespace Nektar
             return returnVal;
         }
 
-        boost::shared_ptr<LocalToGlobalDGMap> &ExpList::v_GetTraceMap()
+        boost::shared_ptr<AssemblyMapDG> &ExpList::v_GetTraceMap()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static boost::shared_ptr<LocalToGlobalDGMap> result;
+            static boost::shared_ptr<AssemblyMapDG> result;
             return result;
         }
 

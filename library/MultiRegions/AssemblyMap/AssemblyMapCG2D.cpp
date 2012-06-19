@@ -460,7 +460,7 @@ namespace Nektar
 
                     bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
                     
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMapBase>::
+                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }

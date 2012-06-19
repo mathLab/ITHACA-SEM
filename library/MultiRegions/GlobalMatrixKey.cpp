@@ -41,7 +41,7 @@ namespace Nektar
     namespace MultiRegions
     {
         GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varCoeffs) :
             m_matrixType(matrixType),

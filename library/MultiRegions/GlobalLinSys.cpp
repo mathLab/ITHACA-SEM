@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+//#include <MultiRegions/AssemblyMapCG.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 namespace Nektar
 {
@@ -150,7 +150,7 @@ namespace Nektar
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
                 const boost::weak_ptr<ExpList> &pExpList,
-                const boost::shared_ptr<LocalToGlobalBaseMap>
+                const boost::shared_ptr<AssemblyMap>
                                    &pLocToGloMap):
             m_linSysKey(pKey),
             m_expList(pExpList),

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AssemblyMapBase.h
+// File AssemblyMap.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MULTIREGIONS_ASSEMBLY_MAP_BASE_H
-#define MULTIREGIONS_ASSEMBLY_MAP_BASE_H
+#ifndef MULTIREGIONS_ASSEMBLY_MAP_H
+#define MULTIREGIONS_ASSEMBLY_MAP_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/SubStructuredGraph.h>
@@ -48,27 +48,27 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class AssemblyMapBase;
-        typedef boost::shared_ptr<AssemblyMapBase>  AssemblyMapBaseSharedPtr;
-        static AssemblyMapBaseSharedPtr NullAssemblyMapBaseSharedPtr;
+        class AssemblyMap;
+        typedef boost::shared_ptr<AssemblyMap>  AssemblyMapSharedPtr;
+        static AssemblyMapSharedPtr NullAssemblyMapSharedPtr;
 
 
 
         /// Base class for constructing local to global mapping of degrees of
         /// freedom.
-        class AssemblyMapBase
+        class AssemblyMap
         {
         public:
         	/// Default constructor.
-            MULTI_REGIONS_EXPORT AssemblyMapBase();
+            MULTI_REGIONS_EXPORT AssemblyMap();
             /// Constructor with a communicator
-            MULTI_REGIONS_EXPORT AssemblyMapBase(const LibUtilities::SessionReaderSharedPtr &pSession);
+            MULTI_REGIONS_EXPORT AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession);
 
             /// Constructor for next level in multi-level static condensation.
-            MULTI_REGIONS_EXPORT AssemblyMapBase(AssemblyMapBase* oldLevelMap,
+            MULTI_REGIONS_EXPORT AssemblyMap(AssemblyMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
             /// Destructor.
-            MULTI_REGIONS_EXPORT virtual ~AssemblyMapBase();
+            MULTI_REGIONS_EXPORT virtual ~AssemblyMap();
 
             /// Retrieves the communicator
             LibUtilities::CommSharedPtr GetComm();
@@ -239,10 +239,10 @@ namespace Nektar
                     GetNumLocalIntCoeffsPerPatch();
             /// Returns the local to global mapping for the next level in the
             /// multi-level static condensation.
-            const AssemblyMapBaseSharedPtr
+            const AssemblyMapSharedPtr
                     GetNextLevelLocalToGlobalMap() const;
 
-            void SetNextLevelLocalToGlobalMap( AssemblyMapBaseSharedPtr  pNextLevelLocalToGlobalMap);
+            void SetNextLevelLocalToGlobalMap( AssemblyMapSharedPtr  pNextLevelLocalToGlobalMap);
 
             /// Returns the patch map from the previous level 
             /// of the multi-level static condensation.
@@ -340,7 +340,7 @@ namespace Nektar
             /// the current level
 
             /// The local to global mapping of the next level of recursion
-            AssemblyMapBaseSharedPtr m_nextLevelLocalToGlobalMap;
+            AssemblyMapSharedPtr m_nextLevelLocalToGlobalMap;
 
             /// Calculates the bandwidth of the boundary system.
             void CalculateBndSystemBandWidth();
@@ -413,6 +413,6 @@ namespace Nektar
     } // end of namespace
 } // end of namespace
 
-#endif //MULTIREGIONS_ASSEMBLY_MAP_BASE_H
+#endif //MULTIREGIONS_ASSEMBLY_MAP_H
 
 

@@ -37,13 +37,13 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class LocalToGlobalC0ContMap;
         class ExpList;
 
         /// A global linear system.
@@ -57,7 +57,7 @@ namespace Nektar
                 MULTI_REGIONS_EXPORT GlobalLinSysDirect(
                         const GlobalLinSysKey &pKey,
                         const boost::weak_ptr<ExpList> &pExp,
-                        const boost::shared_ptr<LocalToGlobalBaseMap>
+                        const boost::shared_ptr<AssemblyMap>
                                                                 &pLocToGloMap);
                 
                 MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
@@ -72,7 +72,7 @@ namespace Nektar
                 virtual void v_Solve(
                         const Array<OneD, const NekDouble> &in,
                         Array<OneD, NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
                 /// Solve the linear system for given input and output vectors.
@@ -80,7 +80,7 @@ namespace Nektar
                         const int pNumRows,
                         const Array<OneD,const NekDouble> &pInput,
                               Array<OneD,      NekDouble> &pOutput,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const AssemblyMapSharedPtr &locToGloMap,
                         const int pNumDir = 0);
 
 		    private:

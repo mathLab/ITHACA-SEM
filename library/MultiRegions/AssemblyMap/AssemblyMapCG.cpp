@@ -67,7 +67,7 @@ namespace Nektar
          */
         AssemblyMapCG::AssemblyMapCG(
                 const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapBase(pSession)
+            AssemblyMap(pSession)
         {
             pSession->LoadParameter("MaxStaticCondLevel",m_maxStaticCondLevel,100);
         }
@@ -80,7 +80,7 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
                 const ExpList &locExp):
-            AssemblyMapBase(pSession)
+            AssemblyMap(pSession)
         {
             ASSERTL0(false,"AssemblyMapCG: you need to instantiate dimension-specific derived class.");
         }

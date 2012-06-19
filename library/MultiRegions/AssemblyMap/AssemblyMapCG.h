@@ -37,7 +37,7 @@
 #define MULTIREGIONS_ASSEMBLYMAPCG_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/AssemblyMap/AssemblyMapBase.h>
+#include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
 namespace Nektar
 {
@@ -54,7 +54,7 @@ namespace Nektar
 
 
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
-        class AssemblyMapCG: public AssemblyMapBase
+        class AssemblyMapCG: public AssemblyMap
         {
         public:
             /// Default constructor.

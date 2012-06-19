@@ -47,7 +47,7 @@ namespace Nektar
          * wrapper around a global matrix key, augmenting it with a specific
          * solution type from GlobalSysSolnType. Each constructor accepts a
          * MatrixType, describing the matrix to be constructed, a
-         * LocalToGlobalBaseMap, defining the mapping from the local elemental
+         * AssemblyMap, defining the mapping from the local elemental
          * expansions to a global system, and a GlobalSysSolnType, defining the
          * type of solution (e.g. full matrix, static condenstation). Some
          * constructors include additional parameters for customising the 
@@ -55,7 +55,7 @@ namespace Nektar
          */
 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const AssemblyMapSharedPtr &locToGloMap,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varCoeffs) :
             GlobalMatrixKey(matrixType, locToGloMap, factors, varCoeffs),

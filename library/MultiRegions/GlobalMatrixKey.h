@@ -37,7 +37,8 @@
 #define NEKTAR_LIBS_MULTIREGIONS_GLOBALMATRIXKEY_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/LocalToGlobalBaseMap.h>
+//#include <MultiRegions/AssemblyMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <StdRegions/StdRegions.hpp>
 
 namespace Nektar
@@ -50,8 +51,8 @@ namespace Nektar
         {
         public:
             MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
-                                    = NullLocalToGlobalBaseMapSharedPtr,
+                            const AssemblyMapSharedPtr &locToGloMap
+                                    = NullAssemblyMapSharedPtr,
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
                             const StdRegions::VarCoeffMap &varCoeffs = StdRegions::NullVarCoeffMap);
 
@@ -101,7 +102,7 @@ namespace Nektar
             StdRegions::VarCoeffMap     m_varCoeffs;
 
             /// Pointer to the local to global mapping.
-            LocalToGlobalBaseMapSharedPtr m_locToGloMap;
+            AssemblyMapSharedPtr m_locToGloMap;
 
         private:
 
@@ -127,7 +128,7 @@ namespace Nektar
 
         inline const bool GlobalMatrixKey::LocToGloMapIsDefined(void) const
         {
-            if( m_locToGloMap.get() == 0) //NullLocalToGlobalBaseMapSharedPtr)
+            if( m_locToGloMap.get() == 0) //NullAssemblyMapSharedPtr)
             {
                 return false;
             }

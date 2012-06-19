@@ -45,7 +45,9 @@
 #include <MultiRegions/DisContField2D.h>
 #include <MultiRegions/ExpList1D.h>
 
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+//#include <MultiRegions/AssemblyMapCG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
+
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSys.h>
 
@@ -134,7 +136,7 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray) const;
 
             /// Returns the map from local to global level.
-            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap()
+            inline const AssemblyMapCGSharedPtr& GetLocalToGlobalMap()
                                                                         const;
 
 
@@ -202,7 +204,7 @@ namespace Nektar
             /// (A shared pointer to) the object which contains all the
             /// required information for the transformation from local to
             /// global degrees of freedom.
-            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+            AssemblyMapCGSharedPtr m_locToGloMap;
 
             /// The total number of global degrees of freedom.
             /// #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
@@ -539,7 +541,7 @@ namespace Nektar
         }
 
 
-        inline const LocalToGlobalC0ContMapSharedPtr&
+        inline const AssemblyMapCGSharedPtr&
                                         ContField2D::GetLocalToGlobalMap() const
         {
             return  m_locToGloMap;
@@ -649,7 +651,7 @@ namespace Nektar
         inline int ContField2D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
         {
             ASSERTL1(gkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
 
             GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);

@@ -42,7 +42,7 @@
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalToGlobalDGMap.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/Conditions.h>
@@ -105,7 +105,7 @@ namespace Nektar
 
             GlobalLinSysMapShPtr        m_globalBndMat;
             ExpListSharedPtr            m_trace;
-            LocalToGlobalDGMapSharedPtr m_traceMap;
+            AssemblyMapDGSharedPtr      m_traceMap;
 
             /// This function discretises the boundary conditions by setting up
             /// a list of one-dimensional boundary expansions.
@@ -194,7 +194,7 @@ namespace Nektar
                 return m_trace;
             }
             
-            virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap()
+            virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
             }

@@ -35,7 +35,6 @@
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
@@ -86,7 +85,7 @@ namespace Nektar
         GlobalLinSysIterativeStaticCond::GlobalLinSysIterativeStaticCond(
                      const GlobalLinSysKey &pKey,
                      const boost::weak_ptr<ExpList> &pExpList,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
+                     const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
                 : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap),
                   m_locToGloMap (pLocToGloMap)
@@ -118,7 +117,7 @@ namespace Nektar
                      const DNekScalBlkMatSharedPtr pBinvD,
                      const DNekScalBlkMatSharedPtr pC,
                      const DNekScalBlkMatSharedPtr pInvD,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
+                     const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
                 : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap),
                   m_schurCompl ( pSchurCompl ),
@@ -147,7 +146,7 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_Solve(
                     const Array<OneD, const NekDouble>  &in,
                           Array<OneD,       NekDouble>  &out,
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &dirForcing)
         {
             bool dirForcCalculated = (bool) dirForcing.num_elements();
@@ -274,7 +273,7 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysIterativeStaticCond::Initialise(
-                const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap)
+                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             if(pLocToGloMap->AtLastLevel())
             {
@@ -310,7 +309,7 @@ namespace Nektar
          * @param
          */
         void GlobalLinSysIterativeStaticCond::SetupTopLevel(
-                const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap)
+                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
@@ -357,7 +356,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysIterativeStaticCond::AssembleSchurComplement(
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap)
+                    const AssemblyMapSharedPtr &pLocToGloMap)
         {
             int i,j,n,cnt,gid1,gid2;
             NekDouble sign1,sign2;
@@ -410,7 +409,7 @@ namespace Nektar
          *
          */
         void GlobalLinSysIterativeStaticCond::ConstructNextLevelCondensedSystem(
-                        const LocalToGlobalBaseMapSharedPtr& pLocToGloMap)
+                        const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt;
             NekDouble one  = 1.0;

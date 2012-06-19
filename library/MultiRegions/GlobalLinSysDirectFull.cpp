@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysDirectFull.h>
-#include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/ExpList.h>
 
 namespace Nektar
@@ -80,7 +79,7 @@ namespace Nektar
         GlobalLinSysDirectFull::GlobalLinSysDirectFull(
                     const GlobalLinSysKey &pLinSysKey,
                     const boost::weak_ptr<ExpList> &pExp,
-                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                    const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
                 : GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {
@@ -107,7 +106,7 @@ namespace Nektar
         void GlobalLinSysDirectFull::v_Solve(
                     const Array<OneD, const NekDouble>  &pInput,
                           Array<OneD,       NekDouble>  &pOutput,
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
@@ -156,7 +155,7 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysDirectFull::AssembleFullMatrix(
-                        const LocalToGlobalBaseMapSharedPtr& pLocToGloMap)
+                        const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt,gid1,gid2;
             NekDouble sign1,sign2,value;

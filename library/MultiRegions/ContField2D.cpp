@@ -133,7 +133,7 @@ namespace Nektar
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
                              periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+            m_locToGloMap = MemoryManager<AssemblyMapCG2D>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
@@ -188,7 +188,7 @@ namespace Nektar
                 GetPeriodicEdges(graph2D,bcs,variable,
                                  periodicVertices,periodicEdges);
 
-                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                m_locToGloMap = MemoryManager<AssemblyMapCG2D>
                     ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
@@ -573,7 +573,7 @@ namespace Nektar
                                 const GlobalMatrixKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
 
             GlobalMatrixSharedPtr glo_matrix;
@@ -611,7 +611,7 @@ namespace Nektar
                                 const GlobalLinSysKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
             return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
         }

@@ -130,7 +130,7 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+            m_locToGloMap = MemoryManager<AssemblyMapCG1D>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
@@ -171,13 +171,13 @@ namespace Nektar
                     boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+            m_locToGloMap = MemoryManager<AssemblyMapCG1D>
                 ::AllocateSharedPtr(pSession,m_ncoeffs, In);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
-            
+
         /**
          *
          */
@@ -395,7 +395,7 @@ namespace Nektar
                                 const GlobalLinSysKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a LocalToGlobalBaseMap "
+                     "To use method must have a AssemblyMap "
                      "attached to key");
             return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
         }

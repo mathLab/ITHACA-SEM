@@ -38,7 +38,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/AssemblyMap/AssemblyMapBase.h>
+#include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -55,7 +55,7 @@ namespace Nektar
 
 
         ///
-        class AssemblyMapDG: public AssemblyMapBase
+        class AssemblyMapDG: public AssemblyMap
         {
         public:
             /// Default constructor.

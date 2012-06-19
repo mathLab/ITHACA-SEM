@@ -36,14 +36,15 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTFULL_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysDirect.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class LocalToGlobalC0ContMap;
-        class LocalToGlobalDGMap;
+
+        //class AssemblyMapDG;
         class ExpList;
 
         /// A global linear system.
@@ -54,7 +55,7 @@ namespace Nektar
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(const GlobalLinSysKey &pLinSysKey,
                     const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                    const boost::shared_ptr<AssemblyMap>
                                                            &pLocToGloMap)
             {
                 return MemoryManager<GlobalLinSysDirectFull>::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
@@ -66,7 +67,7 @@ namespace Nektar
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
                          const boost::weak_ptr<ExpList> &pExpList,
-                         const boost::shared_ptr<LocalToGlobalBaseMap>
+                         const boost::shared_ptr<AssemblyMap>
                                                                 &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectFull();
@@ -76,12 +77,12 @@ namespace Nektar
             /// using a specified local to global map.
             virtual void v_Solve( const Array<OneD, const NekDouble> &in,
                               Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                        const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
-            void AssembleFullMatrix(const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
-            //void AssembleFullMatrixDG(const boost::shared_ptr<LocalToGlobalDGMap>& locToGloMap);
+            void AssembleFullMatrix(const boost::shared_ptr<AssemblyMap>& locToGloMap);
+            //void AssembleFullMatrixDG(const boost::shared_ptr<AssemblyMapDG>& locToGloMap);
         };
     }
 }

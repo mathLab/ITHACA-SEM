@@ -40,7 +40,10 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/LocalToGlobalC0ContMap.h>
+//#include <MultiRegions/AssemblyMapCG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG1D.h>
+
+
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>
@@ -153,7 +156,7 @@ namespace Nektar
 
             /// Returns the map from local to global level.
             // inline
-            MULTI_REGIONS_EXPORT const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const;
+            MULTI_REGIONS_EXPORT const AssemblyMapCGSharedPtr& GetLocalToGlobalMap() const;
 
             /// Calculates the inner product of a function \f$f(x)\f$ with
             /// respect to all <em>global</em> expansion modes
@@ -173,7 +176,7 @@ namespace Nektar
             /// (A shared pointer to) the object which contains all the required
             /// information for the transformation from local to global degrees
             /// of freedom.
-            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+            AssemblyMapCGSharedPtr m_locToGloMap;
 
             /// The total number of global degrees of freedom.
             /// #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
@@ -459,7 +462,7 @@ namespace Nektar
             m_locToGloMap->Assemble(inarray,outarray);
         }
 
-        inline const LocalToGlobalC0ContMapSharedPtr&
+        inline const AssemblyMapCGSharedPtr&
                                     ContField1D::GetLocalToGlobalMap() const
         {
             return  m_locToGloMap;

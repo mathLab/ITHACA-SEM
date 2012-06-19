@@ -72,7 +72,7 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
             const map<int,int> &periodicVertices)
-        : AssemblyMapBase(pSession)
+        : AssemblyMap(pSession)
         {
             int i,j;
             int cnt, vid, gid;
@@ -179,7 +179,7 @@ namespace Nektar
                                                const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
                                                const map<int,int> &periodicEdges) :
-                AssemblyMapBase(pSession)
+                AssemblyMap(pSession)
         {
 
 
@@ -594,7 +594,7 @@ namespace Nektar
 
                     bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
 
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMapBase>::
+                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
@@ -646,7 +646,7 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
                 const map<int,int> &periodicFaces):
-                AssemblyMapBase(pSession)
+                AssemblyMap(pSession)
         {
 
 
@@ -1223,7 +1223,7 @@ namespace Nektar
 
                     bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
 
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMapBase>::
+                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }

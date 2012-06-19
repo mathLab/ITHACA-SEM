@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File AssemblyMapBase.cpp
+// File AssemblyMap.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,14 +33,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/AssemblyMap/AssemblyMapBase.h>
+#include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         /**
-         * @class AssemblyMapBase
+         * @class AssemblyMap
          * This class acts as a base class for constructing mappings between
          * local, global and boundary degrees of freedom. It holds the storage
          * for the maps and provides the accessors needed to retrieve them.
@@ -77,7 +77,7 @@ namespace Nektar
         /**
          * Initialises an empty mapping.
          */
-        AssemblyMapBase::AssemblyMapBase():
+        AssemblyMap::AssemblyMap():
             m_session(),
             m_comm(),
             m_hash(0),
@@ -92,7 +92,7 @@ namespace Nektar
         {
         }
 
-        AssemblyMapBase::AssemblyMapBase(const LibUtilities::SessionReaderSharedPtr &pSession):
+        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
@@ -113,8 +113,8 @@ namespace Nektar
          *  multiLevelGraph and performing the following steps:
          *
          */
-        AssemblyMapBase::AssemblyMapBase(
-                    AssemblyMapBase* oldLevelMap,
+        AssemblyMap::AssemblyMap(
+                    AssemblyMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph):
             m_session(oldLevelMap->m_session),
             m_comm(oldLevelMap->GetComm()),
@@ -349,12 +349,12 @@ namespace Nektar
             // - Construct the next level mapping object
             if(m_staticCondLevel < (multiLevelGraph->GetNlevels()-1))
             {
-                m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMapBase>::AllocateSharedPtr(this,multiLevelGraph);
+                m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::AllocateSharedPtr(this,multiLevelGraph);
             }
         }
 
 
-        AssemblyMapBase::~AssemblyMapBase(void)
+        AssemblyMap::~AssemblyMap(void)
         {
         }
 
@@ -373,7 +373,7 @@ namespace Nektar
          * We here calculate the bandwith of the global boundary system (as
          * used for static condensation).
          */
-        void AssemblyMapBase::CalculateBndSystemBandWidth()
+        void AssemblyMap::CalculateBndSystemBandWidth()
         {
             int i,j;
             int cnt = 0;
@@ -410,133 +410,133 @@ namespace Nektar
         }
 
 
-        int AssemblyMapBase::v_GetLocalToGlobalMap(const int i) const
+        int AssemblyMap::v_GetLocalToGlobalMap(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
 
-        int AssemblyMapBase::v_GetGlobalToUniversalMap(const int i) const
+        int AssemblyMap::v_GetGlobalToUniversalMap(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
 
-        int AssemblyMapBase::v_GetGlobalToUniversalMapUnique(const int i) const
+        int AssemblyMap::v_GetGlobalToUniversalMapUnique(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
 
-        const Array<OneD,const int>&  AssemblyMapBase::v_GetLocalToGlobalMap()
+        const Array<OneD,const int>&  AssemblyMap::v_GetLocalToGlobalMap()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             static Array<OneD,const int> result;
             return result;
         }
 
-        const Array<OneD, const int>& AssemblyMapBase::v_GetGlobalToUniversalMap()
+        const Array<OneD, const int>& AssemblyMap::v_GetGlobalToUniversalMap()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
 
-        const Array<OneD, const int>& AssemblyMapBase::v_GetGlobalToUniversalMapUnique()
+        const Array<OneD, const int>& AssemblyMap::v_GetGlobalToUniversalMapUnique()
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             static Array<OneD, const int> result;
             return result;
         }
 
-        NekDouble AssemblyMapBase::v_GetLocalToGlobalSign(const int i) const
+        NekDouble AssemblyMap::v_GetLocalToGlobalSign(const int i) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0.0;
         }
 
-        const Array<OneD, NekDouble>& AssemblyMapBase::v_GetLocalToGlobalSign() const
+        const Array<OneD, NekDouble>& AssemblyMap::v_GetLocalToGlobalSign() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             static Array<OneD, NekDouble> result;
             return result;
         }
 
-        const void AssemblyMapBase::v_LocalToGlobal(
+        const void AssemblyMap::v_LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
                       Array<OneD,       NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMapBase::v_LocalToGlobal(
+        const void AssemblyMap::v_LocalToGlobal(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMapBase::v_GlobalToLocal(
+        const void AssemblyMap::v_GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMapBase::v_GlobalToLocal(
+        const void AssemblyMap::v_GlobalToLocal(
                 const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMapBase::v_Assemble(
+        const void AssemblyMap::v_Assemble(
                 const Array<OneD, const NekDouble> &loc,
                       Array<OneD,       NekDouble> &global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMapBase::v_Assemble(
+        const void AssemblyMap::v_Assemble(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
         }
 
-        const void AssemblyMapBase::v_UniversalAssemble(
+        const void AssemblyMap::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             // Do nothing here since multi-level static condensation uses a
-            // AssemblyMapBase and thus will call this routine in serial.
+            // AssemblyMap and thus will call this routine in serial.
         }
 
-        const void AssemblyMapBase::v_UniversalAssemble(
+        const void AssemblyMap::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             // Do nothing here since multi-level static condensation uses a
-            // AssemblyMapBase and thus will call this routine in serial.
+            // AssemblyMap and thus will call this routine in serial.
         }
 
-        const int AssemblyMapBase::v_GetFullSystemBandWidth() const
+        const int AssemblyMap::v_GetFullSystemBandWidth() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
 
-        int AssemblyMapBase::v_GetNumNonDirVertexModes() const
+        int AssemblyMap::v_GetNumNonDirVertexModes() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
 
-        int AssemblyMapBase::v_GetNumNonDirEdgeModes() const
+        int AssemblyMap::v_GetNumNonDirEdgeModes() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
         }
 
-        int AssemblyMapBase::v_GetNumNonDirFaceModes() const
+        int AssemblyMap::v_GetNumNonDirFaceModes() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
             return 0;
@@ -544,165 +544,165 @@ namespace Nektar
 
 
 
-        LibUtilities::CommSharedPtr AssemblyMapBase::GetComm()
+        LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
             return m_comm;
         }
 
-        size_t AssemblyMapBase::GetHash() const
+        size_t AssemblyMap::GetHash() const
         {
             return m_hash;
         }
 
-        int AssemblyMapBase::GetLocalToGlobalMap(const int i) const
+        int AssemblyMap::GetLocalToGlobalMap(const int i) const
         {
             return v_GetLocalToGlobalMap(i);
         }
 
-        int AssemblyMapBase::GetGlobalToUniversalMap(const int i) const
+        int AssemblyMap::GetGlobalToUniversalMap(const int i) const
         {
             return v_GetGlobalToUniversalMap(i);
         }
 
-        int AssemblyMapBase::GetGlobalToUniversalMapUnique(const int i) const
+        int AssemblyMap::GetGlobalToUniversalMapUnique(const int i) const
         {
             return v_GetGlobalToUniversalMapUnique(i);
         }
 
-        const Array<OneD,const int>&  AssemblyMapBase::GetLocalToGlobalMap()
+        const Array<OneD,const int>&  AssemblyMap::GetLocalToGlobalMap()
         {
             return v_GetLocalToGlobalMap();
         }
 
-        const Array<OneD, const int>& AssemblyMapBase::GetGlobalToUniversalMap()
+        const Array<OneD, const int>& AssemblyMap::GetGlobalToUniversalMap()
         {
             return v_GetGlobalToUniversalMap();
         }
 
-        const Array<OneD, const int>& AssemblyMapBase::GetGlobalToUniversalMapUnique()
+        const Array<OneD, const int>& AssemblyMap::GetGlobalToUniversalMapUnique()
         {
             return v_GetGlobalToUniversalMapUnique();
         }
 
-        NekDouble AssemblyMapBase::GetLocalToGlobalSign(const int i) const
+        NekDouble AssemblyMap::GetLocalToGlobalSign(const int i) const
         {
             return v_GetLocalToGlobalSign(i);
         }
 
-        const Array<OneD, NekDouble>& AssemblyMapBase::GetLocalToGlobalSign() const
+        const Array<OneD, NekDouble>& AssemblyMap::GetLocalToGlobalSign() const
         {
             return v_GetLocalToGlobalSign();
         }
 
-        const void AssemblyMapBase::LocalToGlobal(
+        const void AssemblyMap::LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
                       Array<OneD,       NekDouble>& global) const
         {
             v_LocalToGlobal(loc,global);
         }
 
-        const void AssemblyMapBase::LocalToGlobal(
+        const void AssemblyMap::LocalToGlobal(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             v_LocalToGlobal(loc,global);
         }
 
-        const void AssemblyMapBase::GlobalToLocal(
+        const void AssemblyMap::GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
         {
             v_GlobalToLocal(global,loc);
         }
 
-        const void AssemblyMapBase::GlobalToLocal(
+        const void AssemblyMap::GlobalToLocal(
                 const NekVector<NekDouble>& global,
                       NekVector<      NekDouble>& loc) const
         {
             v_GlobalToLocal(global,loc);
         }
 
-        const void AssemblyMapBase::Assemble(
+        const void AssemblyMap::Assemble(
                 const Array<OneD, const NekDouble> &loc,
                       Array<OneD,       NekDouble> &global) const
         {
             v_Assemble(loc,global);
         }
 
-        const void AssemblyMapBase::Assemble(
+        const void AssemblyMap::Assemble(
                 const NekVector<NekDouble>& loc,
                       NekVector<      NekDouble>& global) const
         {
             v_Assemble(loc,global);
         }
 
-        const void AssemblyMapBase::UniversalAssemble(
+        const void AssemblyMap::UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             v_UniversalAssemble(pGlobal);
         }
 
-        const void AssemblyMapBase::UniversalAssemble(
+        const void AssemblyMap::UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             v_UniversalAssemble(pGlobal);
         }
 
-        const int AssemblyMapBase::GetFullSystemBandWidth() const
+        const int AssemblyMap::GetFullSystemBandWidth() const
         {
             return v_GetFullSystemBandWidth();
         }
 
-        int AssemblyMapBase::GetNumNonDirVertexModes() const
+        int AssemblyMap::GetNumNonDirVertexModes() const
         {
             return v_GetNumNonDirVertexModes();
         }
 
-        int AssemblyMapBase::GetNumNonDirEdgeModes() const
+        int AssemblyMap::GetNumNonDirEdgeModes() const
         {
             return v_GetNumNonDirEdgeModes();
         }
 
-        int AssemblyMapBase::GetNumNonDirFaceModes() const
+        int AssemblyMap::GetNumNonDirFaceModes() const
         {
             return v_GetNumNonDirFaceModes();
         }
 
-        int AssemblyMapBase::GetLocalToGlobalBndMap(const int i) const
+        int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
         }
 
 
         const Array<OneD,const int>&
-                    AssemblyMapBase::GetLocalToGlobalBndMap(void)
+                    AssemblyMap::GetLocalToGlobalBndMap(void)
         {
             return m_localToGlobalBndMap;
         }
 
-        bool AssemblyMapBase::GetSignChange()
+        bool AssemblyMap::GetSignChange()
         {
             return m_signChange;
         }
 
 
         Array<OneD, const NekDouble>
-                    AssemblyMapBase::GetLocalToGlobalBndSign(void) const
+                    AssemblyMap::GetLocalToGlobalBndSign(void) const
         {
             return m_localToGlobalBndSign;
         }
 
-        const Array<OneD, const int>& AssemblyMapBase::GetGlobalToUniversalBndMap()
+        const Array<OneD, const int>& AssemblyMap::GetGlobalToUniversalBndMap()
         {
             return m_globalToUniversalBndMap;
         }
 
-        const Array<OneD, const int>& AssemblyMapBase::GetGlobalToUniversalBndMapUnique()
+        const Array<OneD, const int>& AssemblyMap::GetGlobalToUniversalBndMapUnique()
         {
             return m_globalToUniversalBndMapUnique;
         }
 
-        NekDouble AssemblyMapBase::GetLocalToGlobalBndSign(const int i) const
+        NekDouble AssemblyMap::GetLocalToGlobalBndSign(const int i) const
         {
             if(m_signChange)
             {
@@ -715,21 +715,21 @@ namespace Nektar
         }
 
 
-        int AssemblyMapBase::GetBndCondCoeffsToGlobalCoeffsMap(
+        int AssemblyMap::GetBndCondCoeffsToGlobalCoeffsMap(
                     const int i)
         {
             return m_bndCondCoeffsToGlobalCoeffsMap[i];
         }
 
 
-        int AssemblyMapBase::GetBndCondTraceToGlobalTraceMap(
+        int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
                     const int i)
         {
             return m_bndCondTraceToGlobalTraceMap[i];
         }
 
 
-        NekDouble AssemblyMapBase::GetBndCondCoeffsToGlobalCoeffsSign(const int i)
+        NekDouble AssemblyMap::GetBndCondCoeffsToGlobalCoeffsSign(const int i)
         {
             if(m_signChange)
             {
@@ -742,49 +742,49 @@ namespace Nektar
         }
 
         const Array<OneD,const int>&
-                    AssemblyMapBase::GetBndCondCoeffsToGlobalCoeffsMap()
+                    AssemblyMap::GetBndCondCoeffsToGlobalCoeffsMap()
         {
             return m_bndCondCoeffsToGlobalCoeffsMap;
         }
 
 
-        int AssemblyMapBase::GetNumGlobalDirBndCoeffs() const
+        int AssemblyMap::GetNumGlobalDirBndCoeffs() const
         {
             return m_numGlobalDirBndCoeffs;
         }
 
 
-        int AssemblyMapBase::GetNumLocalDirBndCoeffs() const
+        int AssemblyMap::GetNumLocalDirBndCoeffs() const
         {
             return m_numLocalDirBndCoeffs;
         }
 
-        int AssemblyMapBase::GetNumLocalBndCoeffs() const
+        int AssemblyMap::GetNumLocalBndCoeffs() const
         {
             return m_numLocalBndCoeffs;
         }
 
-        int AssemblyMapBase::GetNumGlobalBndCoeffs() const
+        int AssemblyMap::GetNumGlobalBndCoeffs() const
         {
             return m_numGlobalBndCoeffs;
         }
 
-        int AssemblyMapBase::GetNumLocalCoeffs() const
+        int AssemblyMap::GetNumLocalCoeffs() const
         {
             return m_numLocalCoeffs;
         }
 
-        int AssemblyMapBase::GetNumGlobalCoeffs() const
+        int AssemblyMap::GetNumGlobalCoeffs() const
         {
             return m_numGlobalCoeffs;
         }
 
-        bool AssemblyMapBase::GetSingularSystem() const
+        bool AssemblyMap::GetSingularSystem() const
         {
             return m_systemSingular;
         }
 
-        void AssemblyMapBase::GlobalToLocalBnd(
+        void AssemblyMap::GlobalToLocalBnd(
                     const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc,
                     int offset) const
@@ -793,7 +793,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::GlobalToLocalBnd(
+        void AssemblyMap::GlobalToLocalBnd(
                     const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc) const
         {
@@ -801,7 +801,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::GlobalToLocalBnd(
+        void AssemblyMap::GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc, int offset) const
         {
@@ -823,7 +823,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::GlobalToLocalBnd(
+        void AssemblyMap::GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const
         {
@@ -840,7 +840,7 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapBase::LocalBndToGlobal(
+        void AssemblyMap::LocalBndToGlobal(
                     const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global,
                     int offset) const
@@ -849,7 +849,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::LocalBndToGlobal(
+        void AssemblyMap::LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
                     int offset) const
@@ -871,7 +871,7 @@ namespace Nektar
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
 
-        void AssemblyMapBase::AssembleBnd(
+        void AssemblyMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const
         {
@@ -879,7 +879,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::AssembleBnd(
+        void AssemblyMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global) const
         {
@@ -887,7 +887,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::AssembleBnd(
+        void AssemblyMap::AssembleBnd(
                     const Array<OneD,const NekDouble>& loc,
                     Array<OneD, NekDouble>& global, int offset) const
         {
@@ -908,7 +908,7 @@ namespace Nektar
         }
 
 
-        void AssemblyMapBase::AssembleBnd(
+        void AssemblyMap::AssembleBnd(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD, NekDouble>& global) const
         {
@@ -929,7 +929,7 @@ namespace Nektar
             UniversalAssembleBnd(global);
         }
 
-        const void AssemblyMapBase::UniversalAssembleBnd(
+        const void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
@@ -937,72 +937,72 @@ namespace Nektar
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
         }
 
-        const void AssemblyMapBase::UniversalAssembleBnd(
+        const void AssemblyMap::UniversalAssembleBnd(
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssembleBnd(pGlobal.GetPtr());
         }
 
-        int AssemblyMapBase::GetBndSystemBandWidth() const
+        int AssemblyMap::GetBndSystemBandWidth() const
         {
             return m_bndSystemBandWidth;
         }
 
-        int AssemblyMapBase::GetStaticCondLevel() const
+        int AssemblyMap::GetStaticCondLevel() const
         {
             return m_staticCondLevel;
         }
         
-        int AssemblyMapBase::GetNumPatches() const
+        int AssemblyMap::GetNumPatches() const
         {
             return m_numPatches;
         }
 
         const Array<OneD,const unsigned int>&
-                    AssemblyMapBase::GetNumLocalBndCoeffsPerPatch()
+                    AssemblyMap::GetNumLocalBndCoeffsPerPatch()
         {
             return m_numLocalBndCoeffsPerPatch;
         }
 
 
         const Array<OneD,const unsigned int>&
-            AssemblyMapBase::GetNumLocalIntCoeffsPerPatch()
+            AssemblyMap::GetNumLocalIntCoeffsPerPatch()
         {
             return m_numLocalIntCoeffsPerPatch;
         }
 
-        const AssemblyMapBaseSharedPtr
-                    AssemblyMapBase::GetNextLevelLocalToGlobalMap() const
+        const AssemblyMapSharedPtr
+                    AssemblyMap::GetNextLevelLocalToGlobalMap() const
         {
             return  m_nextLevelLocalToGlobalMap;
         }
 
         const PatchMapSharedPtr&
-                    AssemblyMapBase::GetPatchMapFromPrevLevel(void)
+                    AssemblyMap::GetPatchMapFromPrevLevel(void)
                                                                         const
         {
             return m_patchMapFromPrevLevel;
         }
 
-        bool AssemblyMapBase::AtLastLevel() const
+        bool AssemblyMap::AtLastLevel() const
         {
             return !( m_nextLevelLocalToGlobalMap.get() );
         }
 
 
         const GlobalSysSolnType
-                    AssemblyMapBase::GetGlobalSysSolnType() const
+                    AssemblyMap::GetGlobalSysSolnType() const
         {
             return m_solnType;
         }
 
         const PreconditionerType
-                    AssemblyMapBase::GetPreconType() const
+                    AssemblyMap::GetPreconType() const
         {
             return m_preconType;
         }
 
-        void AssemblyMapBase::GlobalToLocalBndWithoutSign(
+        void AssemblyMap::GlobalToLocalBndWithoutSign(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc)
         {

@@ -1291,6 +1291,7 @@ namespace Nektar
 					{
 						m_fields[m_velocity[i]]->FwdTrans_IterPerExp(Restart[i], m_fields[m_velocity[i]]->UpdateCoeffs());
 					}
+					cout << "Saving the RESTART file for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
 				}
 				else //We solve the Stokes Problem
 				{
@@ -1299,6 +1300,7 @@ namespace Nektar
 					m_counter=1;
 					SolveLinearNS(m_ForcingTerm_Coeffs);
 					m_initialStep = false;
+					cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
 				}
 			}
 			break;
@@ -1434,26 +1436,32 @@ namespace Nektar
 				
 				int Check(0);
 				
-				cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
-				Checkpoint_Output(Check);
+				//Saving the init datas
+				//Checkpoint_Output(Check);
+				//TmpOutput(Check);
 				Check++;
 				
-				while(m_kinvis > m_kinvisMin)
+				while(m_kinvis >= m_kinvisMin)
 				{		
 					if (Check == 1)
 					{
 						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
 						SolveSteadyNavierStokes();
-						Checkpoint_Output(Check);
+						//Checkpoint_Output(Check);
+						//TmpOutput(Check);
 						Check++;
 					}
 					
 					Continuation();
 					
-					cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
-					SolveSteadyNavierStokes();
-					Checkpoint_Output(Check);
-					Check++;
+					if (m_kinvis >= m_kinvisMin)
+					{
+						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
+						SolveSteadyNavierStokes();
+						//Checkpoint_Output(Check);
+						//TmpOutput(Check);
+						Check++;
+					}
 				}
 				
 				//The pressure is evaluated at the very end of the process
@@ -1632,7 +1640,7 @@ namespace Nektar
 		Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
 		Array<OneD, Array<OneD, NekDouble> > u_star(m_velocity.num_elements());
 		
-		cout << "On fait la procédure de continuation : " <<endl;
+		cout << "We apply the continuation method: " <<endl;
 		
 		for(int i = 0; i < m_velocity.num_elements(); ++i)
 		{
@@ -2238,9 +2246,52 @@ namespace Nektar
         std::string outname = m_sessionName + ".fld";
 		
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
-		
     }
 
+	void CoupledLinearNS::TmpOutput(int &Check)
+    {    
+        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
+        Array<OneD, std::string> variables(m_fields.num_elements()+1);
+        int i;
+        
+        for(i = 0; i < m_fields.num_elements(); ++i)
+        {
+            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+            variables[i]   = m_boundaryConditions->GetVariable(i);
+        }
+		
+        fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
+        // project pressure field to velocity space        
+        if(m_singleMode==true)
+        {
+			Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
+			m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
+			m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
+			m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
+			m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
+			for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
+			{
+				fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
+			}          
+		}
+		else
+		{
+			m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
+		}
+        variables[i] = "p"; 
+		
+		// créer un flux de sortie
+		std::ostringstream oss;
+		// écrire un nombre dans le flux
+		oss << Check;
+		// récupérer une chaîne de caractères
+		std::string step = oss.str();
+		
+        std::string outname = m_sessionName + "_" + step + ".fld";
+		
+        WriteFld(outname,m_fields[0],fieldcoeffs,variables);
+    }
 
     int CoupledLinearNS::v_GetForceDimension()
     {

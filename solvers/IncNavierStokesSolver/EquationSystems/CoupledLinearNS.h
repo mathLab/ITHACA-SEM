@@ -154,6 +154,8 @@ namespace Nektar
 		void DefineForcingTerm(void);
 		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
 		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
+		
+		void TmpOutput(int &Check);
 
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         

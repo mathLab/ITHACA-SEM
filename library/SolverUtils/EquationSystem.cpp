@@ -799,6 +799,9 @@ namespace Nektar
                          << "from file " << filename << endl;
                 }
 
+				ImportFld(filename,m_fields);
+
+				/*
                 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
@@ -822,8 +825,7 @@ namespace Nektar
                                                      FieldDef[i]->m_fields[idx],
                                                      vCoeffs);
                 }
-                m_fields[0]->BwdTrans(vCoeffs, pArray);
-            }
+                m_fields[0]->BwdTrans(vCoeffs, pArray);*/            }
         }
 
 

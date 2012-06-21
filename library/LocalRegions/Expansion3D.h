@@ -52,6 +52,31 @@ namespace Nektar
             
             LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                
             LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
+            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
+            LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
+            
+			inline void AddHDGHelmholtzFaceTerms(const NekDouble tau,
+                                          const int edge,
+                                          Array <OneD, StdRegions::StdExpansionSharedPtr > &EdgeExp,
+                                          const StdRegions::VarCoeffMap &dirForcing,
+                                          Array <OneD,NekDouble > &outarray);
+
+            inline void AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
+                                           const StdRegions::VarCoeffMap &dirForcing,
+                                           Array<OneD,NekDouble> &outarray);
+            
+			inline void AddNormTraceInt(const int dir,
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                                 Array<OneD,NekDouble> &outarray,
+                                 const StdRegions::VarCoeffMap &varcoeffs);
+
+            inline void AddFaceBoundaryInt(const int face,
+                                    StdRegions::StdExpansionSharedPtr &FaceExp,
+                                    Array <OneD,NekDouble > &outarray,
+                                    const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
             
         protected:
             virtual DNekMatSharedPtr v_GenMatrix(
@@ -65,7 +90,30 @@ namespace Nektar
                 const int                           face, 
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
+            
+			virtual void v_AddHDGHelmholtzFaceTerms(const NekDouble tau,
+                                          const int face,
+                                          Array <OneD, StdRegions::StdExpansionSharedPtr > &FaceExp,
+                                          const StdRegions::VarCoeffMap &dirForcing,
+                                          Array <OneD,NekDouble > &outarray);
                 
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                                           const StdRegions::VarCoeffMap &dirForcing,
+                                           Array<OneD,NekDouble> &outarray);
+
+            virtual void v_AddNormTraceInt(const int dir,
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                                 Array<OneD,NekDouble> &outarray,
+                                 const StdRegions::VarCoeffMap &varcoeffs);
+
+            virtual void v_AddFaceBoundaryInt(const int face,
+                                    StdRegions::StdExpansionSharedPtr &FaceExp,
+                                    Array <OneD,NekDouble > &outarray,
+                                    const StdRegions::VarCoeffMap &varcoeffs);
+
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
@@ -78,6 +126,41 @@ namespace Nektar
         typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
         typedef std::vector< Expansion3DSharedPtr > Expansion3DVector;
         typedef std::vector< Expansion3DSharedPtr >::iterator Expansion3DVectorIter;
+        
+		inline void Expansion3D::AddHDGHelmholtzFaceTerms(const NekDouble tau,
+                                      const int face,
+                                      Array <OneD, StdRegions::StdExpansionSharedPtr > &FaceExp,
+                                      const StdRegions::VarCoeffMap &dirForcing,
+                                      Array <OneD,NekDouble > &outarray)
+        {
+            v_AddHDGHelmholtzFaceTerms(tau, face, FaceExp, dirForcing, outarray);
+        }
+
+        inline void Expansion3D::AddHDGHelmholtzTraceTerms(const NekDouble tau,
+                                       const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                                       const StdRegions::VarCoeffMap &dirForcing,
+                                       Array<OneD,NekDouble> &outarray)
+        {
+            v_AddHDGHelmholtzTraceTerms(tau, inarray, FaceExp, dirForcing, outarray);
+        }
+        
+		inline void Expansion3D::AddNormTraceInt(const int dir,
+                             Array<OneD, const NekDouble> &inarray,
+                             Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                             Array<OneD,NekDouble> &outarray,
+                             const StdRegions::VarCoeffMap &varcoeffs)
+        {
+            v_AddNormTraceInt(dir, inarray, FaceExp, outarray, varcoeffs);
+        }
+
+        inline void Expansion3D::AddFaceBoundaryInt(const int face,
+                                StdRegions::StdExpansionSharedPtr &FaceExp,
+                                Array <OneD,NekDouble > &outarray,
+                                const StdRegions::VarCoeffMap &varcoeffs)
+        {
+            v_AddFaceBoundaryInt(face, FaceExp, outarray, varcoeffs);
+        }
     } //end of namespace
 } //end of namespace
 

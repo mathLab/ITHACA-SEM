@@ -59,7 +59,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         SET(Boost_THREAD_LIBRARY_RELEASE boost_thread)
         SET(Boost_INCLUDE_DIRS ${TPSRC}/dist/include 
                                ${TPSRC}/dist/include/boost-1_49)
-        LINK_DIRECTORIES(${TPSRC}/dist/lib)
+        SET(Boost_LIBRARY_DIRS ${TPSRC}/dist/lib)
+        LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
     ELSE ()
         EXTERNALPROJECT_ADD(
             boost

@@ -458,7 +458,7 @@ namespace Nektar
         // StdExpansion.
         map<StdRegions::ExpansionType,double> minLengths;
         
-        minLengths[StdRegions::eTriangle     ] = 0.5 / sqrt(2);
+        minLengths[StdRegions::eTriangle     ] = 0.5 / sqrt(2.0);
         minLengths[StdRegions::eQuadrilateral] = 0.5;
         minLengths[StdRegions::eHexahedron   ] = 0.25;
         

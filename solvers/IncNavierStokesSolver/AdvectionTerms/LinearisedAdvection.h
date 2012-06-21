@@ -111,9 +111,9 @@ namespace Nektar
 		LibUtilities::NektarFFTSharedPtr				m_FFT;
 		Array<OneD,NekDouble>							m_tmpIN;
 		Array<OneD,NekDouble>							m_tmpOUT;
-		bool											m_useFFTW;
+		bool											    m_useFFTW;
 		bool m_SingleMode;			 ///< flag to determine if use single mode or not
-		bool m_HalfMode;		     ///< flag to determine if use half mode or not
+		bool m_HalfMode;		         ///< flag to determine if use half mode or not
 		bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not
 		
 		DNekBlkMatSharedPtr GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs = false) const;
@@ -121,9 +121,8 @@ namespace Nektar
 		FloquetBlockMatrixMapShPtr       m_FloquetBlockMat;
 
 		
-        LinearisedAdvection(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
+        LinearisedAdvection(const LibUtilities::SessionReaderSharedPtr&        pSession,
+							const SpatialDomains::MeshGraphSharedPtr&          pGraph);
 
         virtual ~LinearisedAdvection();
 
@@ -137,7 +136,6 @@ namespace Nektar
 						const NekDouble m_period);
 		void DFT(const string file, const NekDouble m_slices);
 		
-
         /// Import Base flow
 		void ImportFldBase(std::string pInfile,
 						   SpatialDomains::MeshGraphSharedPtr pGraph, int cnt);
@@ -176,7 +174,6 @@ namespace Nektar
 		
         bool m_useFFT;               ///< flag to determine if use or not the FFT for transformations
 
-		
         enum HomogeneousType m_HomogeneousType;
 		
         NekDouble m_LhomX; ///< physical length in X direction (if homogeneous)
@@ -191,13 +188,8 @@ namespace Nektar
 		
 		int m_NumMode;     ///< Mode to use in case of single mode analysis
 
-		
-
 		SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
-
     };
-    
-    
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H

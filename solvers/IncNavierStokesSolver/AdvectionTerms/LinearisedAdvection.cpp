@@ -576,8 +576,6 @@ namespace Nektar
 
         Array<OneD, NekDouble> grad0,grad1,grad2;
 
-	
-
         //Evaluation of the gradiend of each component of the base flow
         //\nabla U
         Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
@@ -588,17 +586,13 @@ namespace Nektar
         // \nabla W
         Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
 
-	
-
-			grad0 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
-			grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);	
-		
+		grad0 = Array<OneD, NekDouble> (nPointsTot);
+		grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
+		grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
+		grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);	
 		
 		//Evaluation of the base flow for periodic cases
 		//(it requires fld files)
-			
 			if(m_slices>1)
 			{				
 				if (m_session->GetFunctionType("BaseFlow", 0)
@@ -615,15 +609,12 @@ namespace Nektar
 				}
 			}
 		
-
-		
-				
 		//Evaluate the linearised advection term
         switch(ndim) 
         {
             // 1D
         case 1:
-            pFields[0]->PhysDeriv(pVelocity[pVelocityComponent],grad0);
+            pFields[0]->PhysDeriv(pU,grad0);
             pFields[0]->PhysDeriv(m_base[0]->GetPhys(),grad_base_u0);
             //Evaluate  U du'/dx
             Vmath::Vmul(nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
@@ -633,12 +624,11 @@ namespace Nektar
             
             //2D
         case 2:
-            
 			grad1 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
 			grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
 				
-            pFields[0]->PhysDeriv(pVelocity[pVelocityComponent],grad0,grad1);
+            pFields[0]->PhysDeriv(pU,grad0,grad1);
 
             //Derivates of the base flow
             pFields[0]-> PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1);
@@ -676,20 +666,19 @@ namespace Nektar
             
             //3D
         case 3:
-				
-					grad1 = Array<OneD, NekDouble> (nPointsTot);
-					grad2 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
+				grad1 = Array<OneD, NekDouble> (nPointsTot);
+				grad2 = Array<OneD, NekDouble> (nPointsTot);
+				grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
+				grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
+				grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
 					
-					grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
+				grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
+				grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
+				grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
 					
-					m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
-					m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
-					m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);	
+				m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
+				m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
+				m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);	
 		
 				//HalfMode has W(x,y,t)=0
 				if(m_HalfMode)
@@ -699,19 +688,16 @@ namespace Nektar
 						grad_base_u2[i]=0;
 						grad_base_v2[i]=0;
 						grad_base_w2[i]=0;
-
 					}
 				}
 						
-			pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
+			pFields[0]->PhysDeriv(pU, grad0, grad1, grad2);
 			
 			switch (pVelocityComponent)
             {
                 //x-equation	
             case 0:
-					
 				if(m_dealiasing)
-
 				{
 					//U du'/dx
 					pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
@@ -734,9 +720,8 @@ namespace Nektar
 					Vmath::Vadd(nPointsTot,grad_base_u0,1,pOutarray,1,pOutarray,1);
 					Vmath::Vadd(nPointsTot,grad_base_u1,1,pOutarray,1,pOutarray,1);
 					Vmath::Vadd(nPointsTot,grad_base_u2,1,pOutarray,1,pOutarray,1);
-
 				}
-				else 
+				else
 				{
 					//Evaluate U du'/dx
 					Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
@@ -755,9 +740,7 @@ namespace Nektar
                 //y-equation	
             case 1:
 					if(m_dealiasing)
-
 					{
-
 						//U dv'/dx
 						pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
 						//V dv'/dy
@@ -779,7 +762,6 @@ namespace Nektar
 					}
 					else 
 					{
-				
 						//Evaluate U dv'/dx
 						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
 						//Evaluate U dv'/dx+ V dv'/dy
@@ -792,16 +774,13 @@ namespace Nektar
 						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
 						//Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy + W dv'/dz)+ w' dV/dz
 						Vmath::Vvtvp(nPointsTot,grad_base_v2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
-
-						
-						}
+					}
 					break;
                 
                 //z-equation	
             case 2:
 					if(m_dealiasing)
 					{
-
 						//U dw'/dx
 						pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
 						//V dw'/dy
@@ -820,12 +799,9 @@ namespace Nektar
 						Vmath::Vadd(nPointsTot,grad_base_w0,1,pOutarray,1,pOutarray,1);
 						Vmath::Vadd(nPointsTot,grad_base_w1,1,pOutarray,1,pOutarray,1);
 						Vmath::Vadd(nPointsTot,grad_base_w2,1,pOutarray,1,pOutarray,1);
-						
-						
 					}
-					else 
+					else
 					{
-
 						//Evaluate U dw'/dx
 						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
 						//Evaluate U dw'/dx+ V dw'/dx
@@ -838,14 +814,10 @@ namespace Nektar
 						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
 						//Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy + W dw'/dz)+ w' dW/dz
 						Vmath::Vvtvp(nPointsTot,grad_base_w2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
-
-					}					
+					}
                 break;
-					
-					
             }
             break;
-            
         default:
             ASSERTL0(false,"dimension unknown");
         }

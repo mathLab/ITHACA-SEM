@@ -117,7 +117,6 @@ namespace Nektar
 			m_HalfMode			= false;
 			m_MultipleModes		= false;
 
-            /// Setting the homogeneous type
             m_HomogeneousType = eNotHomogeneous;
 
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -278,6 +277,7 @@ namespace Nektar
                             /// Fourier single mode stability analysis
 							if(m_SingleMode)
                             {
+								
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
                                 
                                 const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierSingleMode,m_npointsZ,PkeyZ);

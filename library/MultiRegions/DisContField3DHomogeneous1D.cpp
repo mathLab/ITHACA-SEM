@@ -155,7 +155,6 @@ namespace Nektar
                 }              
             }
 
-
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions = m_planes[0]->UpdateBndConditions();
 
@@ -183,8 +182,7 @@ namespace Nektar
                 
                     m_bndCondExpansions[cnt++] = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(m_session,HomoBasis,lhom,m_useFFT,false,exp,PlanesBndCondExp);
                 }
-            }
-            
+            }            
             EvaluateBoundaryConditions();
         }
 
@@ -192,7 +190,6 @@ namespace Nektar
         {
             int n;
             const Array<OneD, const NekDouble> z = m_homogeneousBasis->GetZ();
-			
 			Array<OneD, NekDouble> local_z(m_planes.num_elements());
 			
 			for(n = 0; n < m_planes.num_elements(); n++)
@@ -209,7 +206,7 @@ namespace Nektar
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
-            }    
+            }
         }
         
         void DisContField3DHomogeneous1D::v_HelmSolve(

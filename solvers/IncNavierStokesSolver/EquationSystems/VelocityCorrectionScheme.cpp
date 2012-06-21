@@ -272,7 +272,6 @@ namespace Nektar
                                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                                     const NekDouble time)
     {
-
         // evaluate convection terms
 		m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
 
@@ -323,7 +322,6 @@ namespace Nektar
 				
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
-
 		
         // Solver Pressure Poisson Equation 
 #ifdef UseContCoeffs

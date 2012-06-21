@@ -103,7 +103,7 @@ namespace Nektar
 			grad2 = Array<OneD, NekDouble> (nPointsTot);
 			pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
 			
-			if(m_dealiasing || pFields[0]->GetWaveSpace())
+			if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false)
 			{
 				pFields[0]->DealiasedProd(pV[0],grad0,grad0,m_UseContCoeff);
 				pFields[0]->DealiasedProd(pV[1],grad1,grad1,m_UseContCoeff);
@@ -111,11 +111,30 @@ namespace Nektar
 				Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
 				Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
 			}
-			else 
+			else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
+			{
+				//vector reused to avoid even more memory requirements
+				//names may be misleading
+				pFields[0]->HomogeneousBwdTrans(grad0,pOutarray);
+				Vmath::Vmul(nPointsTot,pOutarray,1,pV[0],1,pOutarray,1);
+				
+				pFields[0]->HomogeneousBwdTrans(grad1,grad0);
+				Vmath::Vvtvp(nPointsTot,grad0,1,pV[1],1,pOutarray,1,pOutarray,1);
+				
+				pFields[0]->HomogeneousBwdTrans(grad2,grad1);
+				Vmath::Vvtvp(nPointsTot,grad1,1,pV[2],1,pOutarray,1,grad0,1);
+				
+				pFields[0]->HomogeneousFwdTrans(grad0,pOutarray);
+			}
+			else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
 			{
 				Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
 				Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
 				Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
+			}
+			else 
+			{
+				ASSERTL0(false,"Dealiasing can't be used in combination with Wave-Space time-integration ");	
 			}
             break;
         default:

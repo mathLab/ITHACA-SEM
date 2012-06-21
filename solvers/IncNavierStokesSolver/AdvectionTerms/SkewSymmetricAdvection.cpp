@@ -81,7 +81,7 @@ namespace Nektar
         // ToDo: here we should add a check that V has right dimension
 	
         int nPointsTot = pFields[0]->GetNpoints();
-        Array<OneD, NekDouble> gradV0,gradV1,gradV2, gradVV0, gradVV1, gradVV2;
+        Array<OneD, NekDouble> gradV0,gradV1,gradV2, gradVV0, gradVV1, gradVV2, Up;
 		
         gradV0   = Array<OneD, NekDouble> (nPointsTot);
 		gradVV0 = Array<OneD, NekDouble> (nPointsTot);
@@ -119,7 +119,9 @@ namespace Nektar
 			
 			pFields[0]->PhysDeriv(pU,gradV0,gradV1,gradV2);
 			
-			if (m_dealiasing || pFields[0]->GetWaveSpace()) 
+			//pOutarray = 1/2(u*du/dx + v*du/dy + w*du/dz + duu/dx + duv/dy + duw/dz)
+				
+			if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false) 
 			{
 				pFields[0]->DealiasedProd(pV[0],gradV0,gradV0,m_UseContCoeff);
 				pFields[0]->DealiasedProd(pV[1],gradV1,gradV1,m_UseContCoeff);
@@ -129,8 +131,48 @@ namespace Nektar
 				pFields[0]->DealiasedProd(pU,pV[0],gradV0,m_UseContCoeff);
 				pFields[0]->DealiasedProd(pU,pV[1],gradV1,m_UseContCoeff);
 				pFields[0]->DealiasedProd(pU,pV[2],gradV2,m_UseContCoeff);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);
+				Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
+				Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
 			}
-			else 
+			else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
+			{
+				Up = Array<OneD, NekDouble> (nPointsTot);
+				//vector reused to avoid even more memory requirements
+				//names may be misleading
+				pFields[0]->HomogeneousBwdTrans(gradV0,pOutarray);
+				Vmath::Vmul(nPointsTot,pOutarray,1,pV[0],1,pOutarray,1); //u*du/dx
+				
+				pFields[0]->HomogeneousBwdTrans(gradV1,gradV0);
+				Vmath::Vvtvp(nPointsTot,gradV0,1,pV[1],1,pOutarray,1,pOutarray,1);//v*du/dy
+				
+				pFields[0]->HomogeneousBwdTrans(gradV2,gradV1);
+				Vmath::Vvtvp(nPointsTot,gradV1,1,pV[2],1,pOutarray,1,pOutarray,1);//w*du/dz
+				
+				pFields[0]->HomogeneousBwdTrans(pU,Up);
+				
+				Vmath::Vmul(nPointsTot,Up,1,pV[0],1,gradV0,1);
+				Vmath::Vmul(nPointsTot,Up,1,pV[1],1,gradV1,1);
+				Vmath::Vmul(nPointsTot,Up,1,pV[2],1,gradV2,1);
+				
+				pFields[0]->SetWaveSpace(false);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);//duu/dx
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);//duv/dy
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);//duw/dz
+				pFields[0]->SetWaveSpace(true);
+				
+				Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
+				Vmath::Smul(nPointsTot,0.5,pOutarray,1,gradVV0,1);
+				
+				pFields[0]->HomogeneousFwdTrans(gradVV0,pOutarray);
+			}
+			else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
 			{
 				Vmath::Vmul(nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
 				Vmath::Vvtvp(nPointsTot,gradV1,1,pV[1],1,pOutarray,1,pOutarray,1);
@@ -138,15 +180,18 @@ namespace Nektar
 				Vmath::Vmul(nPointsTot,pU,1,pV[0],1,gradV0,1);
 				Vmath::Vmul(nPointsTot,pU,1,pV[1],1,gradV1,1);
 				Vmath::Vmul(nPointsTot,pU,1,pV[2],1,gradV2,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);
+				Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
+				Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
+				Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
 			}
-
-			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
-			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
-			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);
-			Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
-			Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
-			Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
-			Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
+			else 
+			{
+				ASSERTL0(false,"Dealiasing can't be used in combination with Wave-Space time-integration ");	
+			}
             break;
         default:
             ASSERTL0(false,"dimension unknown");

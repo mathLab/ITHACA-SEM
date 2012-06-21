@@ -87,8 +87,6 @@ namespace Nektar
                          Array<OneD, Array<OneD, NekDouble> > &pOutarray,
 						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
-        
-
 	protected:
         LibUtilities::SessionReaderSharedPtr        m_session;
         /// Name of the session
@@ -98,6 +96,8 @@ namespace Nektar
 		
 		bool m_dealiasing;           ///< flag to determine if use dealising or not
 		bool m_UseContCoeff;
+		bool                         m_SingleMode;               ///< Flag to determine if use single mode or not
+		bool                         m_HalfMode;                 ///< Flag to determine if use half mode or not
         
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
@@ -118,9 +118,8 @@ namespace Nektar
 		LibUtilities::NektarFFTSharedPtr				m_FFT;
 		Array<OneD,NekDouble>							m_tmpIN;
 		Array<OneD,NekDouble>							m_tmpOUT;
-		bool											m_useFFTW;
+		bool											    m_useFFTW;
 		
-        
         /// Constructor
         AdvectionTerm(
                 const LibUtilities::SessionReaderSharedPtr&        pSession,
@@ -140,14 +139,12 @@ namespace Nektar
         };
 		
         int NoCaseStringCompare(const string & s1, const string& s2);
-        
     };
     
     inline void AdvectionTerm::InitObject()
     {
         v_InitObject();
     }
-
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H

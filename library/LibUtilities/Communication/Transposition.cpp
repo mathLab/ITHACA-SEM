@@ -243,8 +243,8 @@ namespace Nektar
 			    int num_pencil_per_proc  = num_points_per_plane/m_num_processes[0] + (num_points_per_plane%m_num_processes[0] > 0);
 			    int copy_len             = num_pencil_per_proc;
 				int packed_len;
-			
-			    m_SizeMap = Array<OneD,int> (m_num_processes[0],0);
+				
+				m_SizeMap = Array<OneD,int> (m_num_processes[0],0);
 			    m_OffsetMap = Array<OneD,int> (m_num_processes[0],0);
 			
 			    Array< OneD, NekDouble> tmp_outarray(num_pencil_per_proc*m_num_homogeneous_points[0],0.0);
@@ -267,11 +267,11 @@ namespace Nektar
 					}
 				
 					m_SizeMap[i]   = num_pencil_per_proc*m_num_points_per_proc[0];
-					m_OffsetMap[i] = i*num_pencil_per_proc*m_num_points_per_proc[0];				
+					m_OffsetMap[i] = i*num_pencil_per_proc*m_num_points_per_proc[0];		
 				}
-			
+							
 				m_hcomm->AlltoAllv(outarray,m_SizeMap,m_OffsetMap,tmp_outarray,m_SizeMap,m_OffsetMap);
-				
+			    
 				if(UseNumMode)
 				{
 					packed_len = m_num_homogeneous_coeffs[0];

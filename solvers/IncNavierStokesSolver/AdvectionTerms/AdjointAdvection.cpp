@@ -611,7 +611,7 @@ namespace Nektar
         {
 					// 1D
 				case 1:
-					pFields[0]->PhysDeriv(pVelocity[pVelocityComponent],grad0);
+					pFields[0]->PhysDeriv(pU,grad0);
 					pFields[0]->PhysDeriv(m_base[0]->GetPhys(),grad_base_u0);
 					//Evaluate  U du'/dx
 					Vmath::Vmul(nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
@@ -626,7 +626,7 @@ namespace Nektar
 					grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
 					grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
 				
-					pFields[0]->PhysDeriv(pVelocity[pVelocityComponent],grad0,grad1);
+					pFields[0]->PhysDeriv(pU,grad0,grad1);
 				
 					//Derivates of the base flow
 					pFields[0]-> PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1);
@@ -696,9 +696,9 @@ namespace Nektar
 						}
 					}
 				
-				pFields[0]->PhysDeriv(pVelocity[pVelocityComponent], grad0, grad1, grad2);
+				pFields[0]->PhysDeriv(pU, grad0, grad1, grad2);
 					
-					switch (pVelocityComponent)
+				switch (pVelocityComponent)
 				{
 						//x-equation	
 					case 0:

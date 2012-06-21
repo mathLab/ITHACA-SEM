@@ -51,7 +51,6 @@ namespace Nektar
         return Type::Instance();
     }
 
-
     /**
      * Constructor. Creates ...
      *
@@ -109,6 +108,9 @@ namespace Nektar
 		{
 			m_dealiasing = true;
 		}
+		
+		m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+		m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
     }
     
     AdvectionTerm::~AdvectionTerm()
@@ -123,7 +125,7 @@ namespace Nektar
 									NekDouble m_time,
 									Array<OneD, NekDouble> &pWk)
     {
-        int i;
+        int i,j;
         int VelDim           = vel_loc.num_elements();        
         int nqtot            = pFields[0]->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
@@ -133,7 +135,16 @@ namespace Nektar
 
         for(i = 0; i < VelDim; ++i)
         {
-            velocity[i] = pInarray[vel_loc[i]];
+			if(pFields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+			{
+				j = vel_loc[i];
+				velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+				pFields[i]->HomogeneousBwdTrans(pInarray[j],velocity[i]);
+			}
+			else 
+			{
+				velocity[i] = pInarray[vel_loc[i]];
+			}
         }
         
         // Set up Derivative work space;
@@ -146,11 +157,12 @@ namespace Nektar
         {
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
+		
+		
         for(i=0; i< m_nConvectiveFields; ++i)
         {
             v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,m_time,Deriv);
             Vmath::Neg(nqtot,pOutarray[i],1);
-
         }
     }
     

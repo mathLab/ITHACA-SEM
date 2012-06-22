@@ -71,70 +71,70 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~AssemblyMap();
 
             /// Retrieves the communicator
-            LibUtilities::CommSharedPtr GetComm();
+            MULTI_REGIONS_EXPORT LibUtilities::CommSharedPtr GetComm();
 
             /// Retrieves the hash of this map
-            size_t GetHash() const;
+            MULTI_REGIONS_EXPORT size_t GetHash() const;
 
-            int GetLocalToGlobalMap(const int i) const;
+            MULTI_REGIONS_EXPORT int GetLocalToGlobalMap(const int i) const;
 
-            int GetGlobalToUniversalMap(const int i) const;
+            MULTI_REGIONS_EXPORT int GetGlobalToUniversalMap(const int i) const;
 
-            int GetGlobalToUniversalMapUnique(const int i) const;
+            MULTI_REGIONS_EXPORT int GetGlobalToUniversalMapUnique(const int i) const;
 
-            const Array<OneD,const int>&  GetLocalToGlobalMap();
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>&  GetLocalToGlobalMap();
 
-            const Array<OneD, const int>& GetGlobalToUniversalMap();
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& GetGlobalToUniversalMap();
 
-            const Array<OneD, const int>& GetGlobalToUniversalMapUnique();
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& GetGlobalToUniversalMapUnique();
 
-            NekDouble GetLocalToGlobalSign(const int i) const;
+            MULTI_REGIONS_EXPORT NekDouble GetLocalToGlobalSign(const int i) const;
 
-            const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
+            MULTI_REGIONS_EXPORT const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
 
-            const void LocalToGlobal(
+            MULTI_REGIONS_EXPORT const void LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            const void LocalToGlobal(
+            MULTI_REGIONS_EXPORT const void LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            const void GlobalToLocal(
+            MULTI_REGIONS_EXPORT const void GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            const void GlobalToLocal(
+            MULTI_REGIONS_EXPORT const void GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            const void Assemble(
+            MULTI_REGIONS_EXPORT const void Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            const void Assemble(
+            MULTI_REGIONS_EXPORT const void Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            const void UniversalAssemble(
+            MULTI_REGIONS_EXPORT const void UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            const void UniversalAssemble(
+            MULTI_REGIONS_EXPORT const void UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
 
             /// Retrieve the global index of a given local boundary mode.
-            int GetLocalToGlobalBndMap(const int i) const;
+            MULTI_REGIONS_EXPORT int GetLocalToGlobalBndMap(const int i) const;
             /// Retrieve the global indices of the local boundary modes.
-            const Array<OneD,const int>&  GetLocalToGlobalBndMap();
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>&  GetLocalToGlobalBndMap();
 
-            const Array<OneD, const int>& GetGlobalToUniversalBndMap();
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& GetGlobalToUniversalBndMap();
 
-            const Array<OneD, const int>& GetGlobalToUniversalBndMapUnique();
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& GetGlobalToUniversalBndMapUnique();
 
             /// Returns true if using a modal expansion requiring a change of
             /// sign of some modes.
-            bool GetSignChange();
+            MULTI_REGIONS_EXPORT bool GetSignChange();
 
             /// Retrieve the sign change of a given local boundary mode.
             NekDouble GetLocalToGlobalBndSign(const int i) const;
@@ -142,119 +142,119 @@ namespace Nektar
             Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
             /// Retrieves the global index corresponding to a boundary expansion
             /// mode.
-            int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
+            MULTI_REGIONS_EXPORT int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
             /// Retrieves the global indices corresponding to the boundary
             /// expansion modes.
-            const Array<OneD,const int>&
+            MULTI_REGIONS_EXPORT const Array<OneD,const int>&
                     GetBndCondCoeffsToGlobalCoeffsMap();
             /// Returns the modal sign associated with a given boundary
             /// expansion mode.
-            NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
+            MULTI_REGIONS_EXPORT NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
             /// Returns the global index of the boundary trace giving the
             /// index on the boundary  expansion
-            int GetBndCondTraceToGlobalTraceMap(const int i);
+            MULTI_REGIONS_EXPORT int GetBndCondTraceToGlobalTraceMap(const int i);
  
             /// Returns the number of global Dirichlet boundary coefficients.
-            int GetNumGlobalDirBndCoeffs() const;
+            MULTI_REGIONS_EXPORT int GetNumGlobalDirBndCoeffs() const;
             /// Returns the number of local Dirichlet boundary coefficients.
-            int GetNumLocalDirBndCoeffs() const;
+            MULTI_REGIONS_EXPORT int GetNumLocalDirBndCoeffs() const;
             /// Returns the total number of global boundary coefficients.
-            int GetNumGlobalBndCoeffs() const;
+            MULTI_REGIONS_EXPORT int GetNumGlobalBndCoeffs() const;
             /// Returns the total number of local boundary coefficients.
-            int GetNumLocalBndCoeffs() const;
+            MULTI_REGIONS_EXPORT int GetNumLocalBndCoeffs() const;
             /// Returns the total number of local coefficients.
-            int GetNumLocalCoeffs() const;
+            MULTI_REGIONS_EXPORT int GetNumLocalCoeffs() const;
             /// Returns the total number of global coefficients.
-            int GetNumGlobalCoeffs() const;
+            MULTI_REGIONS_EXPORT int GetNumGlobalCoeffs() const;
             /// Retrieves if the system is singular (true) or not (false)
-            bool GetSingularSystem() const;
+            MULTI_REGIONS_EXPORT bool GetSingularSystem() const;
 
             ///
-            void GlobalToLocalBnd(
+            MULTI_REGIONS_EXPORT void GlobalToLocalBnd(
                     const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc,
                     int offset) const;
 
-            void GlobalToLocalBnd(
+            MULTI_REGIONS_EXPORT void GlobalToLocalBnd(
                     const NekVector<NekDouble>& global,
                     NekVector<NekDouble>& loc) const;
 
-            void GlobalToLocalBnd(
+            MULTI_REGIONS_EXPORT void GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc,
                     int offset) const;
 
-            void GlobalToLocalBnd(
+            MULTI_REGIONS_EXPORT void GlobalToLocalBnd(
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const;
 
-            void LocalBndToGlobal(
+            MULTI_REGIONS_EXPORT void LocalBndToGlobal(
                     const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global,
                     int offset) const;
 
-            void LocalBndToGlobal(
+            MULTI_REGIONS_EXPORT void LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
                     int offset) const;
 
-            void AssembleBnd(const NekVector<NekDouble>& loc,
+            MULTI_REGIONS_EXPORT void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global, int offset) const;
 
-            void AssembleBnd(const NekVector<NekDouble>& loc,
+            MULTI_REGIONS_EXPORT void AssembleBnd(const NekVector<NekDouble>& loc,
                     NekVector<NekDouble>& global) const;
 
-            void AssembleBnd(const Array<OneD,const NekDouble>& loc,
+            MULTI_REGIONS_EXPORT void AssembleBnd(const Array<OneD,const NekDouble>& loc,
                     Array<OneD, NekDouble>& global, int offset) const;
 
-            void AssembleBnd(const Array<OneD, const NekDouble>& loc,
+            MULTI_REGIONS_EXPORT void AssembleBnd(const Array<OneD, const NekDouble>& loc,
                     Array<OneD, NekDouble>& global) const;
 
-            const void UniversalAssembleBnd(
+            MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            const void UniversalAssembleBnd(
+            MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            const int GetFullSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT const int GetFullSystemBandWidth() const;
 
-            int GetNumNonDirVertexModes() const;
+            MULTI_REGIONS_EXPORT int GetNumNonDirVertexModes() const;
 
-            int GetNumNonDirEdgeModes() const;
+            MULTI_REGIONS_EXPORT int GetNumNonDirEdgeModes() const;
 
-            int GetNumNonDirFaceModes() const;
+            MULTI_REGIONS_EXPORT int GetNumNonDirFaceModes() const;
 
             /// Returns the bandwidth of the boundary system.
-            int GetBndSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
             /// Returns the level of static condensation for this map.
-            int GetStaticCondLevel() const;
+            MULTI_REGIONS_EXPORT int GetStaticCondLevel() const;
             /// Returns the number of patches in this static condensation level.
-            int GetNumPatches() const;
+            MULTI_REGIONS_EXPORT int GetNumPatches() const;
             /// Returns the number of local boundary coefficients in each patch.
-            const Array<OneD,const unsigned int>&
+            MULTI_REGIONS_EXPORT const Array<OneD,const unsigned int>&
                     GetNumLocalBndCoeffsPerPatch();
             /// Returns the number of local interior coefficients in each patch.
-            const Array<OneD,const unsigned int>&
+            MULTI_REGIONS_EXPORT const Array<OneD,const unsigned int>&
                     GetNumLocalIntCoeffsPerPatch();
             /// Returns the local to global mapping for the next level in the
             /// multi-level static condensation.
-            const AssemblyMapSharedPtr
+            MULTI_REGIONS_EXPORT const AssemblyMapSharedPtr
                     GetNextLevelLocalToGlobalMap() const;
 
-            void SetNextLevelLocalToGlobalMap( AssemblyMapSharedPtr  pNextLevelLocalToGlobalMap);
+            MULTI_REGIONS_EXPORT void SetNextLevelLocalToGlobalMap( AssemblyMapSharedPtr  pNextLevelLocalToGlobalMap);
 
             /// Returns the patch map from the previous level 
             /// of the multi-level static condensation.
-            const PatchMapSharedPtr&
+            MULTI_REGIONS_EXPORT const PatchMapSharedPtr&
                 GetPatchMapFromPrevLevel(void) const;
 
             /// Returns true if this is the last level in the multi-level
             /// static condensation.
-            bool AtLastLevel() const;
+            MULTI_REGIONS_EXPORT bool AtLastLevel() const;
             /// Returns the method of solving global systems.
-            const GlobalSysSolnType  GetGlobalSysSolnType() const;
-            const PreconditionerType  GetPreconType() const;
+            MULTI_REGIONS_EXPORT const GlobalSysSolnType  GetGlobalSysSolnType() const;
+            MULTI_REGIONS_EXPORT const PreconditionerType  GetPreconType() const;
 
         protected:
             /// Session object

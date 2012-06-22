@@ -43,7 +43,8 @@
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
                             Array<OneD, NekDouble> &xc,  
                             Array<OneD, NekDouble> &yc, 
-                            NekDouble cr); 
+                            NekDouble cr,
+                            NekDouble trans); 
 
 int main(int argc, char *argv[])
 {
@@ -97,12 +98,15 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     
     int npts;
-    vSession->LoadParameter("NoCriticalLayerPts",npts,30);
+    vSession->LoadParameter("NumCriticalLayerPts",npts,30);
     Array<OneD, NekDouble> x_c(npts);
     Array<OneD, NekDouble> y_c(npts);       
     NekDouble xc, yc;
+    
+    NekDouble trans;
+    vSession->LoadParameter("WidthOfLayers",trans,0.1);
 
-    Computestreakpositions(streak,x_c, y_c,cr);    
+    Computestreakpositions(streak,x_c, y_c,cr,trans);    
 
     cout << "# x_c y_c" << endl;
     for(i = 0; i < npts; ++i)
@@ -116,7 +120,8 @@ int main(int argc, char *argv[])
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
                             Array<OneD, NekDouble> &xc,  
                             Array<OneD, NekDouble> &yc,
-                            NekDouble cr)
+                            NekDouble cr,
+                            NekDouble trans)
 {
     int i;
     int npts = xc.num_elements();
@@ -209,7 +214,7 @@ void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
     // output to interface_up file as bend of vertical shift and 45 degrees shift
     fp = fopen("interfacedat_up.geo","w");
     
-    NekDouble trans = 0.1;
+
     NekDouble nx,ny,norm;
     
     fprintf(fp,"Point(%d)={%12.10lf,%12.10lf,0,1.0};  \n",cnt++,xc[0],yc[0]+trans);

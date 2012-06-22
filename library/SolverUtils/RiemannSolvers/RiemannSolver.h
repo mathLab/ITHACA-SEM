@@ -40,6 +40,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <SolverUtils/SolverUtilsDeclspec.h>
 
 #include <boost/function.hpp>
 #include <boost/call_traits.hpp>

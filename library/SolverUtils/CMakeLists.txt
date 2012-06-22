@@ -32,6 +32,7 @@ SET(SOLVER_UTILS_HEADERS
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   SolverUtils.hpp
+  SolverUtilsDeclspec.h
   UnsteadySystem.h
 )
 

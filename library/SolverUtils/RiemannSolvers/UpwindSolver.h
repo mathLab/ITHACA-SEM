@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_UPWINDSOLVER
 #define NEKTAR_SOLVERUTILS_UPWINDSOLVER
 
+#include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 namespace Nektar

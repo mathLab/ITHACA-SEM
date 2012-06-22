@@ -45,7 +45,7 @@ namespace Nektar
         class UpwindSolver : public RiemannSolver
         {
         public:
-            static RiemannSolverSharedPtr create()
+            SOLVER_UTILS_EXPORT static RiemannSolverSharedPtr create()
             {
                 return RiemannSolverSharedPtr(
                     new UpwindSolver());

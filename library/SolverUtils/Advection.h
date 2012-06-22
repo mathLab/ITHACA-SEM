@@ -56,7 +56,7 @@ namespace Nektar
         class Advection
         {
         public:
-            void Advect(
+            SOLVER_UTILS_EXPORT void Advect(
                 const int                                          nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
@@ -64,12 +64,12 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
+            SOLVER_UTILS_EXPORT inline void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVector = boost::bind(func, obj, _1, _2, _3);
             }
             
-            inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
+            SOLVER_UTILS_EXPORT inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
             {
                 m_riemann = riemann;
             }
@@ -92,7 +92,7 @@ namespace Nektar
         /// from the Advection class.
         typedef LibUtilities::NekFactory<std::string, Advection> 
             AdvectionFactory;
-        AdvectionFactory& GetAdvectionFactory();
+        SOLVER_UTILS_EXPORT AdvectionFactory& GetAdvectionFactory();
     }
 }
 

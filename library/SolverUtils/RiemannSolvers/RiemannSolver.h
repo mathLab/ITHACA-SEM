@@ -58,13 +58,13 @@ namespace Nektar
         class RiemannSolver
         {
         public:
-            void Solve(
+            SOLVER_UTILS_EXPORT void Solve(
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddScalar(std::string    name, 
+            SOLVER_UTILS_EXPORT inline void AddScalar(std::string    name, 
                                   FuncPointerT   func, 
                                   ObjectPointerT obj)
             {
@@ -72,7 +72,7 @@ namespace Nektar
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddVector(std::string    name, 
+            SOLVER_UTILS_EXPORT inline void AddVector(std::string    name, 
                                   FuncPointerT   func, 
                                   ObjectPointerT obj)
             {
@@ -80,7 +80,7 @@ namespace Nektar
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            inline void AddParam(std::string    name, 
+            SOLVER_UTILS_EXPORT inline void AddParam(std::string    name, 
                                  FuncPointerT   func, 
                                  ObjectPointerT obj)
             {
@@ -99,8 +99,8 @@ namespace Nektar
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
 
-            RiemannSolver();
-            
+            SOLVER_UTILS_EXPORT RiemannSolver();
+
             virtual void v_Solve(
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
@@ -123,7 +123,7 @@ namespace Nektar
         /// from the RiemannSolver class.
         typedef LibUtilities::NekFactory<std::string, RiemannSolver>
             RiemannSolverFactory;
-        RiemannSolverFactory& GetRiemannSolverFactory();
+        SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
     }
 }
 

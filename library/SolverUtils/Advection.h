@@ -65,12 +65,12 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            SOLVER_UTILS_EXPORT inline void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
+            void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVector = boost::bind(func, obj, _1, _2, _3);
             }
             
-            SOLVER_UTILS_EXPORT inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
+            inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
             {
                 m_riemann = riemann;
             }

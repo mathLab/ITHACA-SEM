@@ -65,25 +65,25 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            SOLVER_UTILS_EXPORT inline void AddScalar(std::string    name, 
-                                  FuncPointerT   func, 
-                                  ObjectPointerT obj)
+            void AddScalar(std::string    name, 
+                           FuncPointerT   func, 
+                           ObjectPointerT obj)
             {
                 m_scalars[name] = boost::bind(func, obj);
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            SOLVER_UTILS_EXPORT inline void AddVector(std::string    name, 
-                                  FuncPointerT   func, 
-                                  ObjectPointerT obj)
+            void AddVector(std::string    name, 
+                           FuncPointerT   func, 
+                           ObjectPointerT obj)
             {
                 m_vectors[name] = boost::bind(func, obj);
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
-            SOLVER_UTILS_EXPORT inline void AddParam(std::string    name, 
-                                 FuncPointerT   func, 
-                                 ObjectPointerT obj)
+            void AddParam(std::string    name, 
+                          FuncPointerT   func, 
+                          ObjectPointerT obj)
             {
                 m_params[name] = boost::bind(func, obj);
             }

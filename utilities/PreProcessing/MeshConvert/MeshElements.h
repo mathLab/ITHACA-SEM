@@ -660,22 +660,72 @@ namespace Nektar
                 m_taglist = tags;
             }
             /// Generate a list of vertices (1D), edges (2D), or faces (3D).
-            virtual std::string GetXmlString() const {
+            virtual std::string GetXmlString() const 
+            {
                 std::stringstream s;
                 switch (m_dim)
                 {
                 case 1:
-                    for(int j=0; j< vertex.size(); ++j){
+                    for(int j=0; j< vertex.size(); ++j)
+                    {
                         s << std::setw(5) << vertex[j]->id << " ";
                     }
                     break;
                 case 2:
-                    for(int j=0; j< edge.size(); ++j){
-                        s << std::setw(5) << edge[j]->id << " ";
+                    {
+                        NekDouble cross;
+                        
+                        // caclulate sign based on cross product of vertices
+                        if(edge[0]->n1 == edge[1]->n1)
+                        {
+                            cross  = (edge[0]->n2->x - edge[0]->n1->x)*
+                                (edge[1]->n2->y - edge[1]->n1->y) - 
+                                (edge[0]->n2->y - edge[0]->n1->y)*
+                                (edge[1]->n2->x - edge[1]->n1->x); 
+                        }
+                        else if(edge[0]->n1 == edge[1]->n2)
+                        {
+                            cross  = (edge[0]->n2->x - edge[0]->n1->x)*
+                                (edge[1]->n1->y - edge[1]->n2->y) - 
+                                (edge[0]->n2->y - edge[0]->n1->y)*
+                                (edge[1]->n1->x - edge[1]->n2->x); 
+                        }
+                        else if(edge[0]->n2 == edge[1]->n1)
+                        {
+                            cross  = (edge[0]->n1->x - edge[0]->n2->x)*
+                                (edge[1]->n2->y - edge[1]->n1->y) - 
+                                (edge[0]->n1->y - edge[0]->n2->y)*
+                                (edge[1]->n2->x - edge[1]->n1->x); 
+
+                        }
+                        else if(edge[0]->n2 == edge[1]->n2)
+                        {
+                            cross  = (edge[0]->n1->x - edge[0]->n2->x)*
+                                (edge[1]->n1->y - edge[1]->n2->y) - 
+                                (edge[0]->n1->y - edge[0]->n2->y)*
+                                (edge[1]->n1->x - edge[1]->n2->x); 
+                        }
+                        
+                        // provide edges in anticlockwise sense
+                        if(cross  < 0.0)
+                        {
+                            for(int j=0; j< edge.size(); ++j)
+                            {
+                                s << std::setw(5) << edge[j]->id << " ";
+                            }
+                        }
+                        else
+                        {
+                            for(int j=edge.size()-1; j>=0; --j)
+                            {
+                                s << std::setw(5) << edge[j]->id << " ";
+                            }
+                        }
                     }
                     break;
                 case 3:
-                    for(int j=0; j< face.size(); ++j){
+                    for(int j=0; j< face.size(); ++j)
+                    {
                         s << std::setw(5) << face[j]->id << " ";
                     }
                     break;

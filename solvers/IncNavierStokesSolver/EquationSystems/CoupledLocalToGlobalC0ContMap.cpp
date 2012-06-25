@@ -277,192 +277,21 @@ namespace Nektar
          * STEP 2a: Set the mean pressure modes to edges depending on
          * type of direct solver technique;
          */
-        
+		
         // determine which edge to add mean pressure dof based on
         // ensuring that at least one pressure dof from an internal
         // patch is associated with its boundary system
         if(m_session->MatchSolverInfoAsEnum("GlobalSysSoln", MultiRegions::eDirectMultiLevelStaticCond))
         {
-            // Should put this in a separate function!!
 
-            // Make list of homogeneous graph edges to elmt mappings
-            Array<TwoD, int> EdgeIdToElmts(ReorderedGraphVertId[1].size(),2,-1);
-            map<int,int> HomGraphEdgeIdToEdgeId;
-            
-            for(i = 0; i < nel; ++i)
-            {
-                for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
-                {
-                    edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
-                    
-                    // note second condition stops us using mixed boundary condition 
-                    if((ReorderedGraphVertId[1][edgeId] >= firstNonDirGraphVertId)
-                       && (IsDirEdgeDof.count(edgeId) == 0))
-                    {
-                        HomGraphEdgeIdToEdgeId[ReorderedGraphVertId[1][edgeId]-firstNonDirGraphVertId] = edgeId;
-                        if(EdgeIdToElmts[edgeId][0] == -1)
-                        {
-                            EdgeIdToElmts[edgeId][0] = i;
-                        }
-                        else
-                        {
-                            EdgeIdToElmts[edgeId][1] = i;
-                        }
-                    }
-                }
-            }
-        
-            map<int,int>::iterator mapIt;
-            
-            // Start at second to last level and find edge on boundary
-            // to attach element
-            int nlevels = bottomUpGraph->GetNlevels();
-
-            // determine a default edge to attach pressure modes to
-            // which is part of the inner solve;
-            int defedge = -1;
-
-            vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(nlevels);
-            for(i = 0; i < bndgraphs.size(); ++i)
-            {
-                int GlobIdOffset = bndgraphs[i]->GetIdOffset();
-                
-                for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
-                {
-                    // find edge in graph vert list
-                    if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
-                    {
-                        edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
-                        if(defedge == -1)
-                        {
-                            defedge = edgeId;
-                            break;
-                        }
-                    }
-                }
-                if(defedge != -1)
-                {
-                    break;
-                }
-            }
-
-            for(int n = 1; n < nlevels; ++n)
-            {
-                // produce a map with a key that is the element id
-                // that contains which next level patch it belongs to
-                vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(n+1);
-
-                // Fill next level graph  of adjacent elements and their level
-                map<int,int> ElmtInBndry;
-
-                for(i = 0; i < bndgraphs.size(); ++i)
-                {
-                    int GlobIdOffset = bndgraphs[i]->GetIdOffset();
-                    
-                    for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
-                    {
-                        // find edge in graph vert list
-                        if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
-                        {
-                            edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];   
-
-                            if(EdgeIdToElmts[edgeId][0] != -1)
-                            {
-                                ElmtInBndry[EdgeIdToElmts[edgeId][0]] = i;
-                            }
-                            if(EdgeIdToElmts[edgeId][1] != -1)
-                            {
-                                ElmtInBndry[EdgeIdToElmts[edgeId][1]] = i;
-                            }
-                        }
-                    }
-                }
-
-                // Now search interior patches in this level for edges
-                // that share the same element as a boundary edge and
-                // assign this elmt that boundary edge
-                vector<MultiRegions::SubGraphSharedPtr> intgraphs = bottomUpGraph->GetInteriorBlocks(n);
-                for(i = 0; i < intgraphs.size(); ++i)
-                {
-                    int GlobIdOffset = intgraphs[i]->GetIdOffset();
-                    bool SetEdge = false; 
-                    int elmtid;
-                    for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
-                    {
-                        // Check to see if graph vert is an edge 
-                        if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
-                        {
-                            edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
-
-                            for(k = 0; k < 2; ++k)
-                            {
-                                // relevant edge id
-                                elmtid = EdgeIdToElmts[edgeId][k];
-
-                                if(elmtid != -1)
-                                {
-                                    mapIt = ElmtInBndry.find(elmtid);
-                                    
-                                    if(mapIt != ElmtInBndry.end())
-                                    {
-                                        // now find a edge in the next level boundary graph 
-                                        int GlobIdOffset1 = bndgraphs[mapIt->second]->GetIdOffset();
-                                        for(int l = 0; l < bndgraphs[mapIt->second]->GetNverts(); ++l)
-                                        {
-                                            // find edge in graph vert list
-                                            if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset1+l) != 0)
-                                            {
-                                                if(AddMeanPressureToEdgeId[elmtid] == -1)
-                                                {
-                                                    AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
-                                                }
-                                                SetEdge = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // if we have failed to find matching edge in next
-                    // level patch boundary then set last found elmt
-                    // associated to this interior patch to the
-                    // default edget value
-                    if(SetEdge == false)
-                    {
-                        if(elmtid == -1) // find an elmtid in patch 
-                        {
-                            for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
-                            {
-                                if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
-                                {
-                                    edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
-                                    for(k = 0; k < 2; ++k)
-                                    {
-                                        // relevant edge id
-                                        elmtid = EdgeIdToElmts[edgeId][k];
-                                        if(elmtid != -1)
-                                        {
-                                            break;
-                                        }
-                                    }
-                                }
-                                if(elmtid != -1)
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        if(AddMeanPressureToEdgeId[elmtid] == -1)
-                        {
-                            AddMeanPressureToEdgeId[elmtid] = defedge;
-                        }
-                    }
-                }
-            }
-        }
-
+			
+			FindEdgeIdToAddMeanPressure(ReorderedGraphVertId,
+				 nel, locExpVector,
+				 edgeId, vertId, firstNonDirGraphVertId, IsDirEdgeDof,
+				 bottomUpGraph,
+				 AddMeanPressureToEdgeId);
+		}	
+		
         // Set unset elmts to non-Dirichlet edges. 
         // special case of singular problem - need to fix one
         // pressure dof to a dirichlet edge 
@@ -900,3 +729,206 @@ namespace Nektar
         }
     }
 }
+
+
+void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<int,int> > &ReorderedGraphVertId,
+										 int &nel, const StdRegions::StdExpansionVector &locExpVector,
+										 int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
+										 MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+										 Array<OneD, int> &AddMeanPressureToEdgeId)
+{
+	
+	int i,j,k;
+		
+	// Make list of homogeneous graph edges to elmt mappings
+	Array<TwoD, int> EdgeIdToElmts(ReorderedGraphVertId[1].size(),2,-1);
+	map<int,int> HomGraphEdgeIdToEdgeId;
+	
+	for(i = 0; i < nel; ++i)
+	{
+		for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+		{
+			edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
+			
+			// note second condition stops us using mixed boundary condition 
+			if((ReorderedGraphVertId[1][edgeId] >= firstNonDirGraphVertId)
+			   && (IsDirEdgeDof.count(edgeId) == 0))
+			{
+				HomGraphEdgeIdToEdgeId[ReorderedGraphVertId[1][edgeId]-firstNonDirGraphVertId] = edgeId;
+				
+				if(EdgeIdToElmts[edgeId][0] == -1)
+				{
+					EdgeIdToElmts[edgeId][0] = i;
+				}
+				else
+				{
+					EdgeIdToElmts[edgeId][1] = i;
+				}
+			}
+		}
+	}
+	
+	
+	map<int,int>::iterator mapIt;
+	
+	// Start at second to last level and find edge on boundary
+	// to attach element
+	int nlevels = bottomUpGraph->GetNlevels();
+	
+	// determine a default edge to attach pressure modes to
+	// which is part of the inner solve;
+	int defedge = -1;
+	
+	vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(nlevels);
+	for(i = 0; i < bndgraphs.size(); ++i)
+	{
+		int GlobIdOffset = bndgraphs[i]->GetIdOffset();
+		
+		for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
+		{
+			// find edge in graph vert list
+			if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+			{
+				edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+
+				if(defedge == -1)
+				{
+					defedge = edgeId;
+					break;
+				}
+			}
+		}
+		if(defedge != -1)
+		{
+			break;
+		}
+	}
+	
+	for(int n = 1; n < nlevels; ++n)
+	{
+		// produce a map with a key that is the element id
+		// that contains which next level patch it belongs to
+		vector<MultiRegions::SubGraphSharedPtr> bndgraphs = bottomUpGraph->GetInteriorBlocks(n+1);
+		
+		// Fill next level graph  of adjacent elements and their level
+		map<int,int> ElmtInBndry;
+		
+		for(i = 0; i < bndgraphs.size(); ++i)
+		{
+			int GlobIdOffset = bndgraphs[i]->GetIdOffset();
+			
+			for(j = 0; j < bndgraphs[i]->GetNverts(); ++j)
+			{
+				// find edge in graph vert list
+				if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+				{
+					edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];  
+					
+					if(EdgeIdToElmts[edgeId][0] != -1)
+					{
+						ElmtInBndry[EdgeIdToElmts[edgeId][0]] = i;
+					}
+					if(EdgeIdToElmts[edgeId][1] != -1)
+					{
+						ElmtInBndry[EdgeIdToElmts[edgeId][1]] = i;
+					}
+				}
+			}
+		}
+		
+		// Now search interior patches in this level for edges
+		// that share the same element as a boundary edge and
+		// assign this elmt that boundary edge
+		vector<MultiRegions::SubGraphSharedPtr> intgraphs = bottomUpGraph->GetInteriorBlocks(n);
+		for(i = 0; i < intgraphs.size(); ++i)
+		{
+			int GlobIdOffset = intgraphs[i]->GetIdOffset();
+			bool SetEdge = false; 
+			int elmtid;
+			for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
+			{
+				// Check to see if graph vert is an edge 
+				if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+				{
+					edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+					
+					for(k = 0; k < 2; ++k)
+					{
+						// relevant edge id
+						elmtid = EdgeIdToElmts[edgeId][k];
+						
+						if(elmtid != -1)
+						{
+							mapIt = ElmtInBndry.find(elmtid);
+							
+							if(mapIt != ElmtInBndry.end())
+							{
+								// now find a edge in the next level boundary graph 
+								int GlobIdOffset1 = bndgraphs[mapIt->second]->GetIdOffset();
+								for(int l = 0; l < bndgraphs[mapIt->second]->GetNverts(); ++l)
+								{
+									// find edge in graph vert list
+									if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset1+l) != 0)
+									{
+										//June 2012: commenting this condition apparently 
+										//solved the bug caused by the edge reordering procedure
+										
+										//if(AddMeanPressureToEdgeId[elmtid] == -1)
+										//{
+										AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
+										//}
+										SetEdge = true;
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			
+			// if we have failed to find matching edge in next
+			// level patch boundary then set last found elmt
+			// associated to this interior patch to the
+			// default edget value
+			if(SetEdge == false)
+			{
+				if(elmtid == -1) // find an elmtid in patch 
+				{
+					for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
+					{
+						if(HomGraphEdgeIdToEdgeId.count(GlobIdOffset+j) != 0)
+						{
+							edgeId = HomGraphEdgeIdToEdgeId[GlobIdOffset+j];
+							for(k = 0; k < 2; ++k)
+							{
+								// relevant edge id
+								elmtid = EdgeIdToElmts[edgeId][k];
+								if(elmtid != -1)
+								{
+									break;
+								}
+							}
+						}
+						if(elmtid != -1)
+						{
+							break;
+						}
+					}
+				}
+				if(AddMeanPressureToEdgeId[elmtid] == -1)
+				{
+					AddMeanPressureToEdgeId[elmtid] = defedge;
+				}
+			}
+		}
+	}
+	
+}
+
+
+
+
+
+

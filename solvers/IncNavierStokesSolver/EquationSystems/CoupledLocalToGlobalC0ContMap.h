@@ -54,6 +54,14 @@ namespace Nektar
                                       const MultiRegions::ExpListSharedPtr &pressure,
                                       const int nz_loc,
                                       const bool CheeckForSingularSys=true);
+		
+		void FindEdgeIdToAddMeanPressure(Array<OneD, map<int,int> > &ReorderedGraphVertId,
+				  int &nel, const StdRegions::StdExpansionVector &locExpVector,
+				  int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
+				  MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+				  Array<OneD, int> &AddMeanPressureToEdgeId);
+		
+		
     };
 
     typedef boost::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;

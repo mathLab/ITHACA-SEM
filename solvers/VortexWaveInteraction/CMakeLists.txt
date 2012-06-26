@@ -1,6 +1,6 @@
 SET(VortexWaveInteractionSolverSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
-       ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
@@ -44,14 +44,9 @@ SET(CalcVWIplusPressureSource
        ./VortexWaveInteraction.cpp 
        )
 
-SET(ExtractCriticalLayerSource
-       ./ExtractCriticalLayer.cpp
-       )
 
+SUBDIRS(utilities)
 
-SET(MoveMeshToCriticalLayerSource
-       ./MoveMeshToCriticalLayer.cpp
-       )
 
 #IF (NEKTAR_USE_ARPACK)
 #    SET(VortexWaveInteractionSolverSource ${VortexWaveInteractionSolverSource}
@@ -66,10 +61,4 @@ ADD_SOLVER_EXECUTABLE(CalcL2ToLinfPressure solvers
                         
 ADD_SOLVER_EXECUTABLE(CalcVWIplusPressure solvers 
 		     ${CalcVWIplusPressureSource})
-                        
-ADD_SOLVER_EXECUTABLE(ExtractCriticalLayer solvers 
-		     ${ExtractCriticalLayerSource})
-
-ADD_SOLVER_EXECUTABLE(MoveMeshToCriticalLayer solvers 
-		     ${MoveMeshToCriticalLayerSource})
                         

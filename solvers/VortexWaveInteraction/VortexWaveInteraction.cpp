@@ -99,11 +99,11 @@ namespace Nektar
 
         if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
         {
-              m_iterinterface = true;
+            m_iterinterface = true;
         }
         else
         {
-              m_iterinterface = false;
+            m_iterinterface = false;
         }
 
         if(m_sessionVWI->DefinesSolverInfo("MoveMeshToCriticalLayer"))
@@ -154,7 +154,7 @@ namespace Nektar
 
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
 	{
-	  m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-2);
+            m_sessionVWI->LoadParameter("EigenvalueRelativeTol",  m_eigRelTol,1e-2);
 	}
 
         int ncoeffs = m_solverRoll->UpdateFields()[0]->GetNcoeffs();
@@ -345,25 +345,25 @@ namespace Nektar
     
     void VortexWaveInteraction::ExecuteRoll(void)
     {
-       //set up the equation system to update the mesh
+        //set up the equation system to update the mesh
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE"))
         {
             string vEquation = m_sessionRoll->GetSolverInfo("solvertype");
             EquationSystemSharedPtr solverRoll = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionRoll);
             // The forcing terms are inserted as N bcs
             // Execute Roll 
-             cout << "Executing Roll solver" << endl;
-             solverRoll->DoInitialise();
-             solverRoll->DoSolve();
-             solverRoll->Output();
-             m_rollField = solverRoll->UpdateFields();
-             for(int g=0; g< solverRoll->GetNvariables(); ++g)
-             {
-                  NekDouble vL2Error = solverRoll->L2Error(g,false);
-                  NekDouble vLinfError = solverRoll->LinfError(g);
-                  cout << "L 2 error (variable " << solverRoll->GetVariable(g) << ") : " << vL2Error << endl;
-                  cout << "L inf error (variable " << solverRoll->GetVariable(g) << ") : " << vLinfError << endl;
-             }  
+            cout << "Executing Roll solver" << endl;
+            solverRoll->DoInitialise();
+            solverRoll->DoSolve();
+            solverRoll->Output();
+            m_rollField = solverRoll->UpdateFields();
+            for(int g=0; g< solverRoll->GetNvariables(); ++g)
+            {
+                NekDouble vL2Error = solverRoll->L2Error(g,false);
+                NekDouble vLinfError = solverRoll->LinfError(g);
+                cout << "L 2 error (variable " << solverRoll->GetVariable(g) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << solverRoll->GetVariable(g) << ") : " << vLinfError << endl;
+            }  
         }
         else
         {
@@ -399,7 +399,7 @@ namespace Nektar
                         }
                     }
                     
-                    init = 0;
+                    //init = 0;
                 }
                 else // use internal definition of forcing in m_vwiForcing
                 {
@@ -447,6 +447,15 @@ namespace Nektar
     void VortexWaveInteraction::ExecuteStreak(void)
     {
         // Create driver
+#if 1
+        std::string vDriverModule;
+        m_sessionStreak->LoadSolverInfo("Driver", vDriverModule, "Standard");
+        
+        DriverSharedPtr solverStreak = GetDriverFactory().CreateInstance(vDriverModule, m_sessionStreak); 
+        solverStreak->Execute();
+
+        m_streakField = solverStreak->GetEqu()[0]->UpdateFields();
+#else        
         // Setup and execute Advection Diffusion solver 
         string vEquation = m_sessionStreak->GetSolverInfo("EqType");
         EquationSystemSharedPtr solverStreak = GetEquationSystemFactory().CreateInstance(vEquation,m_sessionStreak);
@@ -457,19 +466,21 @@ namespace Nektar
         solverStreak->Output();
 
         m_streakField = solverStreak->UpdateFields();
-        cout << "Executing cp -f session.fld session_streak.fld" << endl;
-        CopyFile(".fld","_streak.fld");
 
         if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
         {
             for(int g=0; g< solverStreak->GetNvariables(); ++g)
             {
-               NekDouble vL2Error = solverStreak->L2Error(g,false);
-               NekDouble vLinfError = solverStreak->LinfError(g);
-               cout << "L 2 error (variable " << solverStreak->GetVariable(g) << ") : " << vL2Error << endl;
-               cout << "L inf error (variable " << solverStreak->GetVariable(g) << ") : " << vLinfError << endl;
+                NekDouble vL2Error = solverStreak->L2Error(g,false);
+                NekDouble vLinfError = solverStreak->LinfError(g);
+                cout << "L 2 error (variable " << solverStreak->GetVariable(g) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << solverStreak->GetVariable(g) << ") : " << vLinfError << endl;
             }
         }
+#endif
+
+        cout << "Executing cp -f session.fld session_streak.fld" << endl;
+        CopyFile(".fld","_streak.fld");
     }
 
     void VortexWaveInteraction::ExecuteWave(void)
@@ -538,66 +549,66 @@ namespace Nektar
     {
         if(m_sessionRoll->DefinesSolverInfo("INTERFACE") )
         {
-             static int cnt=0;
-             string wavefile  = m_sessionName +".fld"; 
-             string movedmesh = m_sessionName + "_advPost_moved.xml";
-             string filestreak   = m_sessionName + "_streak.fld";
-             char c[16]="";
-    	     sprintf(c,"%d",cnt);               
-             char c_alpha[16]="";
-    	     sprintf(c_alpha,"%f",m_alpha[0]);    
-             string syscall;
-             if( m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
-             {
-                  string filePost = m_sessionName + "_advPost.xml";
-                  syscall = "../../utilities/PostProcessing/Extras/FldCalcBCs  "
-                       + filePost +"     "+
-                       "meshhalf_pos_Spen_stability_moved.fld  meshhalf_pos_Spen_advPost_moved.fld "
-                       +c_alpha +"  > data_alpha0";
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
+            static int cnt=0;
+            string wavefile  = m_sessionName +".fld"; 
+            string movedmesh = m_sessionName + "_advPost_moved.xml";
+            string filestreak   = m_sessionName + "_streak.fld";
+            char c[16]="";
+            sprintf(c,"%d",cnt);               
+            char c_alpha[16]="";
+            sprintf(c_alpha,"%f",m_alpha[0]);    
+            string syscall;
+            if( m_sessionVWI->GetSolverInfo("INTERFACE")=="phase" )
+            {
+                string filePost = m_sessionName + "_advPost.xml";
+                syscall = "../../utilities/PostProcessing/Extras/FldCalcBCs  "
+                    + filePost +"     "+
+                    "meshhalf_pos_Spen_stability_moved.fld  meshhalf_pos_Spen_advPost_moved.fld "
+                    +c_alpha +"  > data_alpha0";
+                cout<<syscall.c_str()<<endl;
+                if(system(syscall.c_str()))
+                {
+                    ASSERTL0(false,syscall.c_str());
+                }
              
-                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_u_5.bc  "+m_sessionName+"_u_5.bc";  
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-                  syscall = "cp -f meshhalf_pos_Spen_stability_moved_v_5.bc  "+m_sessionName+"_v_5.bc";  
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-             }
-             else
-             {
-                  syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs  "
-                     + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
-                  cout<<syscall.c_str()<<endl;
-                  if(system(syscall.c_str()))
-                  {
-                       ASSERTL0(false,syscall.c_str());
-                  }
-             }
+                syscall = "cp -f meshhalf_pos_Spen_stability_moved_u_5.bc  "+m_sessionName+"_u_5.bc";  
+                cout<<syscall.c_str()<<endl;
+                if(system(syscall.c_str()))
+                {
+                    ASSERTL0(false,syscall.c_str());
+                }
+                syscall = "cp -f meshhalf_pos_Spen_stability_moved_v_5.bc  "+m_sessionName+"_v_5.bc";  
+                cout<<syscall.c_str()<<endl;
+                if(system(syscall.c_str()))
+                {
+                    ASSERTL0(false,syscall.c_str());
+                }
+            }
+            else
+            {
+                syscall =  "../../utilities/PostProcessing/Extras/FldCalcBCs  "
+                    + movedmesh + "  " + wavefile + "  " + filestreak + "   "+c_alpha +"  >  datasub_"+c;
+                cout<<syscall.c_str()<<endl;
+                if(system(syscall.c_str()))
+                {
+                    ASSERTL0(false,syscall.c_str());
+                }
+            }
 
              
              
-             //relaxation for different alpha values? does it make sense?
+            //relaxation for different alpha values? does it make sense?
 
-             //save the wave
-             string wave_subalp = m_sessionName + "_wave_subalp_"+c+".fld";
-	     syscall = "cp -f " + wavefile + "  " + wave_subalp;
-             cout<<syscall.c_str()<<endl;
-             if(system(syscall.c_str()))
-             {
-                  ASSERTL0(false,syscall.c_str());
-             }
-             //FileRelaxation(3);
-             cnt++;
+            //save the wave
+            string wave_subalp = m_sessionName + "_wave_subalp_"+c+".fld";
+            syscall = "cp -f " + wavefile + "  " + wave_subalp;
+            cout<<syscall.c_str()<<endl;
+            if(system(syscall.c_str()))
+            {
+                ASSERTL0(false,syscall.c_str());
+            }
+            //FileRelaxation(3);
+            cnt++;
      
         }
         else
@@ -620,31 +631,31 @@ namespace Nektar
             // Othersise set to zero. 
             if(projectfield == -1)
             {
-                 Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+                Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
                  
-                 for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
-                 {
-                     BndConds = m_waveVelocities[i]->GetBndConditions();
-                     for(int j = 0; j < BndConds.num_elements(); ++j)
-                     {
-                         if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                         {
-                             projectfield = i;
-                             break;
-                         }
-                     }
-                     if(projectfield != -1)
-                     {
-                         break;
-                     }
-                 }
-                 if(projectfield == -1)
-                 {
-                       cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
-                       projectfield = 0;
-                 }
+                for(int i = 0; i < m_waveVelocities.num_elements(); ++i)
+                {
+                    BndConds = m_waveVelocities[i]->GetBndConditions();
+                    for(int j = 0; j < BndConds.num_elements(); ++j)
+                    {
+                        if(BndConds[j]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                        {
+                            projectfield = i;
+                            break;
+                        }
+                    }
+                    if(projectfield != -1)
+                    {
+                        break;
+                    }
+                }
+                if(projectfield == -1)
+                {
+                    cout << "using first field to project non-linear forcing which imposes a Dirichlet condition" << endl;
+                    projectfield = 0;
+                }
             }
-
+        
             // Shift m_vwiForcing in case of relaxation 
             Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
             Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
@@ -768,7 +779,7 @@ namespace Nektar
             //by default the symmetrization is on
             bool symm=true;
             m_sessionVWI->MatchSolverInfo("Symmetrization","True",symm,true);
-#if 1
+#if 0
             if(symm== true )
             {
                 
@@ -851,7 +862,8 @@ namespace Nektar
                         val[i] = 0.5*(der1[i] - der1[index[i]]);
                     }
                 }
-                
+                m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
+
                 m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der2);
                 for(i = 0; i < npts; ++i)
                 {

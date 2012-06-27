@@ -649,7 +649,7 @@ namespace Nektar
                     break;
                 }
             }
-            ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of modes");
+            ASSERTL1(i != fielddef->m_basis.size(),"Failed to determine number of Homogeneous modes");
             
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)

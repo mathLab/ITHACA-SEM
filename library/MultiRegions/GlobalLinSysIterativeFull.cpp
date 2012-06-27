@@ -257,7 +257,7 @@ namespace Nektar
             for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
             {
                 //loc_mat = vBlkMat->GetBlock(n,n);
-                loc_mat = GetBlock(n);
+                loc_mat = GetBlock(expList->GetOffset_Elmt_Id(n));
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)

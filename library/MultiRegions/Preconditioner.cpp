@@ -165,7 +165,7 @@ namespace Nektar
              int loc_lda;
              for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
              {
-                 loc_mat = (m_linsys.lock())->GetBlock(n);
+                 loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
                  loc_lda = loc_mat->GetRows();
 
                  for(i = 0; i < loc_lda; ++i)
@@ -333,7 +333,7 @@ namespace Nektar
             for(cnt=n=0; n < expList->GetNumElmts(); ++n)
             {
                 //element matrix
-                loc_mat = (m_linsys.lock())->GetBlock(n);
+                loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
                 loc_rows = loc_mat->GetRows();
 
                 //element expansion
@@ -385,7 +385,7 @@ namespace Nektar
             int loc_lda;
             for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
             {
-                loc_mat = (m_linsys.lock())->GetBlock(n);
+                loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)

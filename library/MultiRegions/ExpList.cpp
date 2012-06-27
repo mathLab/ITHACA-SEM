@@ -1280,6 +1280,7 @@ namespace Nektar
             return (*m_exp)[0]; // avoid warnings
         }
 
+
         /** @todo need a smarter search here that first just looks at bounding 
         /* vertices - suggest first seeing if point is within 10% of
         /* region defined by vertices. The do point search. 
@@ -2057,6 +2058,11 @@ namespace Nektar
         }
         
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
+        {
+            ExtractElmtDataToCoeffs(fielddef,fielddata,field,coeffs);
+        }
+        
+        void ExpList::ExtractElmtDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	
             int i;
             int offset = 0;

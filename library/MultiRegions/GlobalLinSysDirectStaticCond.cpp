@@ -328,12 +328,12 @@ namespace Nektar
             {
                 if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
                 {
-                    DNekScalMatSharedPtr loc_mat = GetBlock(n);
+                    DNekScalMatSharedPtr loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                     m_schurCompl->SetBlock(n,n,loc_mat);
                 }
                 else
                 {
-                    DNekScalBlkMatSharedPtr loc_mat = GetStaticCondBlock(n);
+                    DNekScalBlkMatSharedPtr loc_mat = GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                     DNekScalMatSharedPtr    tmp_mat;
                     m_schurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));

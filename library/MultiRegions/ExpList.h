@@ -748,6 +748,18 @@ namespace Nektar
             {
                 v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
             }
+
+
+            /** \brief Extract the data in fielddata into the coeffs
+             * using the basic ExpList Elemental expansions rather
+             * than planes in homogeneous case
+             */ 
+            void ExtractElmtDataToCoeffs(
+                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                     std::vector<NekDouble> &fielddata,
+                                     std::string &field,
+                                     Array<OneD, NekDouble> &coeffs);
+
 			
 			
 			//Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
@@ -1161,9 +1173,9 @@ namespace Nektar
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
                                                Array<OneD, NekDouble> &coeffs);
 			
-			virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D);
-
-
+            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D);
+            
+            
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                             std::string var = "v");
             virtual void v_WriteTecplotZone(std::ofstream &outfile,

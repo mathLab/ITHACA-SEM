@@ -172,7 +172,7 @@ namespace Nektar
 
 
         /**
-         * Retrieves a the block matrix from n'th expansion using the matrix
+         * Retrieves  the block matrix from n'th expansion using the matrix
          * key provided by the #m_linSysKey.
          * @param   n           Number of the expansion.
          * @returns             Block matrix for the specified expansion.
@@ -181,10 +181,9 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
-            int nel = expList->GetOffset_Elmt_Id(n);
             DNekScalMatSharedPtr loc_mat;
 
-            LocalRegions::ExpansionSharedPtr vExp = boost::dynamic_pointer_cast<LocalRegions::Expansion>(expList->GetExp(nel));
+            LocalRegions::ExpansionSharedPtr vExp = boost::dynamic_pointer_cast<LocalRegions::Expansion>(expList->GetExp(n));
 
             // need to be initialised with zero size for non variable
             // coefficient case
@@ -195,7 +194,9 @@ namespace Nektar
             {
                 StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(n);
-                for (x = m_linSysKey.GetVarCoeffs().begin(); x != m_linSysKey.GetVarCoeffs().end(); ++x)
+                
+                for (x = m_linSysKey.GetVarCoeffs().begin(); 
+                     x != m_linSysKey.GetVarCoeffs().end(); ++x)
                 {
                     vVarCoeffMap[x->first] = x->second + cnt;
                 }
@@ -208,7 +209,7 @@ namespace Nektar
             loc_mat = vExp->GetLocMatrix(matkey);
 
             // apply robin boundary conditions to the matrix.
-            if(m_robinBCInfo.count(nel) != 0) // add robin mass matrix
+            if(m_robinBCInfo.count(n) != 0) // add robin mass matrix
             {
                 RobinBCInfoSharedPtr rBC;
 
@@ -220,7 +221,7 @@ namespace Nektar
                 Blas::Dscal(rows*cols,loc_mat->Scale(),new_mat->GetRawPtr(),1);
 
                 // add local matrix contribution
-                for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                for(rBC = m_robinBCInfo.find(n)->second;rBC; rBC = rBC->next)
                 {
                     vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                 }
@@ -246,11 +247,10 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
-            int nel = expList->GetOffset_Elmt_Id(n);
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    tmp_mat;
 
-            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(nel);
+            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
 
             // need to be initialised with zero size for non variable
             // coefficient case
@@ -265,6 +265,7 @@ namespace Nektar
                 {
                     vVarCoeffMap[x->first] = x->second + cnt;
                 }
+                cnt += vExp->GetTotPoints();
             }
 
             LocalRegions::MatrixKey matkey( m_linSysKey.GetMatrixType(),
@@ -275,7 +276,7 @@ namespace Nektar
 
             loc_mat = vExp->GetLocStaticCondMatrix(matkey);
 
-            if(m_robinBCInfo.count(nel) != 0) // add robin mass matrix
+            if(m_robinBCInfo.count(n) != 0) // add robin mass matrix
             {
                 RobinBCInfoSharedPtr rBC;
 
@@ -289,7 +290,7 @@ namespace Nektar
                 Blas::Dscal(rows*cols,tmp_mat->Scale(),new_mat->GetRawPtr(),1);
 
                 // add local matrix contribution
-                for(rBC = m_robinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                for(rBC = m_robinBCInfo.find(n)->second;rBC; rBC = rBC->next)
                 {
                     vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                 }

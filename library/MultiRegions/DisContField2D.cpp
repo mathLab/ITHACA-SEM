@@ -1353,13 +1353,6 @@ cout<<" bound="<<i<<endl;
                                                                    SpatialDomains::DirichletBoundaryCondition
                                                                 >(m_bndConditions[i])->m_dirichletCondition;
                             condition.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
-Array<OneD, NekDouble> x(locExpList->GetTotPoints(),0.0);
-Array<OneD, NekDouble> y(locExpList->GetTotPoints(),0.0);
-locExpList->GetCoords(x,y);
-for(int i=0; i< locExpList->GetTotPoints(); i++)
-{
-cout<<i<<"     "<<x[i]<<"    "<<y[i]<<"   "<<locExpList->GetPhys()[i]<<endl;     
-} 
 
                             locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                         locExpList->UpdateCoeffs());
@@ -1387,6 +1380,15 @@ cout<<i<<"     "<<x[i]<<"    "<<y[i]<<"   "<<locExpList->GetPhys()[i]<<endl;
                              locExpList->ExtractDataToCoeffs(FieldDef[0], FieldData[0],
                                              FieldDef[0]->m_fields[0]);
                              locExpList->BwdTrans_IterPerExp(locExpList->GetCoeffs(), locExpList->UpdatePhys());
+/*
+Array<OneD, NekDouble> x(locExpList->GetTotPoints(),0.0);
+Array<OneD, NekDouble> y(locExpList->GetTotPoints(),0.0);
+locExpList->GetCoords(x,y);
+for(int i=0; i< locExpList->GetTotPoints(); i++)
+{
+cout<<i<<"     "<<x[i]<<"    "<<y[i]<<"   "<<locExpList->GetPhys()[i]<<endl;     
+} 
+*/
                              locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
                         }

@@ -95,7 +95,6 @@ namespace Nektar
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
 	  Vmath::Vmul(nq,h,1,tmp,1,tmp,1);
 	  m_fields[0]->IProductWRTBase(tmp,tmp);
-	  m_fields[0]->IProductWRTBase(tmp,tmp);
 	  Vmath::Vadd(ncoeffs,tmp,1,outarray[1],1,outarray[1],1);
 	  
 	  // add to hv equation

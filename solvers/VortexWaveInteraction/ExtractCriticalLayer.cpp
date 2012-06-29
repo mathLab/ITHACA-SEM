@@ -152,14 +152,14 @@ void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
     NekDouble CoordTol = 1e-5;
     int maxiter = 100;
     Array<OneD, NekDouble> coord(2);
-
+    NekDouble ytmp;
     // Do Newton iteration on y direction
     cerr << "[";
     for(int e=0; e<npts; e++)
     {
         coord[0] = xc[e];
         coord[1] = yc[e];
-
+cout<<e<<endl;
         if(!(e%10))
         {
             cerr << ".";
@@ -167,20 +167,53 @@ void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,
 
         F = 1000;
         cnt = 0;
-        while((abs(F)> ConvTol)&&(cnt < maxiter))
-        {
-            elmtid = streak->GetExpIndex(coord,CoordTol);
-            offset = streak->GetPhys_Offset(elmtid);
+           	  int its=0;
+                  int  attempt=0;                 
+//cout<<"start guess:  x="<<xc[e]<<"    y="<<yc[e]<<endl;
+		   while( abs(F)> 0.000000001)
+		   {
+                	ytmp = coord[1];
+              	        elmtid = streak->GetExpIndex(coord,0.00001);
+           	        offset = streak->GetPhys_Offset(elmtid);
+		   	U = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() + offset);
+		   	dU  = streak->GetExp(elmtid)->PhysEvaluate(coord, derstreak + offset);
+		   	coord[1] = coord[1] - (U-cr)/dU;   
+		   	F = U-cr;   
+		   	ASSERTL0( coord[0]==xc[e], " x coordinate must remain the same");
+              	        //stvalues[e] = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() +offset );
+//cout<<"elmtid="<<elmtid<<"  x="<<coord[0]<<"   y="<<coord[1]<<"    stvalue="<<U<<"   dU="<<dU<<endl;
+                        if(abs(coord[1])>1 )
+                        {
+                             coord[1] = ytmp +0.01;
+                             elmtid = streak->GetExpIndex(coord,0.00001);
+             	             offset = streak->GetPhys_Offset(elmtid);
+		   	     NekDouble Utmp = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() + offset);
+                             NekDouble dUtmp = streak->GetExp(elmtid)->PhysEvaluate(coord, derstreak + offset);
+   		   	     coord[1] = coord[1] - (Utmp-cr)/dUtmp;
 
-            U  = streak->GetExp(elmtid)->PhysEvaluate(coord, streak->GetPhys() + offset);
-            dU = streak->GetExp(elmtid)->PhysEvaluate(coord, derstreak + offset);
+                             if( (abs(Utmp-cr)>abs(F))||(abs(coord[1])>1)  )
+                             {
+                                  coord[1] = ytmp -0.01;
+                             }
+                             
+                             attempt++;
+                        }
+                        else
+                        {
+                             ASSERTL0(abs(coord[1])<= 1, " y value out of bound +/-1");
+                        }
 
-            coord[1] = coord[1] - (U-cr)/dU;   
-            
-            F = U-cr;   
-            cnt++;
-        }
-        ASSERTL0(cnt < maxiter, "Failed to converge Newton iteration");
+                        its++;
+                        if(its>1000 && abs(F)< 0.0001)
+                        {
+                        	cout<<"warning streak position obtained with precision:"<<F<<endl;
+                        	break;
+                        }
+                        else if(its>1000)
+                        {
+                               ASSERTL0(false, "no convergence after 1000 iterations");
+                        }
+                  }
 
         yc[e] = coord[1];
     }

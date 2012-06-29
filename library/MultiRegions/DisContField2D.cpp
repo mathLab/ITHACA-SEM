@@ -1302,6 +1302,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
+cout<<" bound="<<i<<endl;
                 if(time == 0.0 || m_bndConditions[i]->GetUserDefined()==SpatialDomains::eTimeDependent)
                 {
                     locExpList = m_bndCondExpansions[i];
@@ -1352,6 +1353,13 @@ namespace Nektar
                                                                    SpatialDomains::DirichletBoundaryCondition
                                                                 >(m_bndConditions[i])->m_dirichletCondition;
                             condition.Evaluate(x0,x1,x2,time, locExpList->UpdatePhys());
+Array<OneD, NekDouble> x(locExpList->GetTotPoints(),0.0);
+Array<OneD, NekDouble> y(locExpList->GetTotPoints(),0.0);
+locExpList->GetCoords(x,y);
+for(int i=0; i< locExpList->GetTotPoints(); i++)
+{
+cout<<i<<"     "<<x[i]<<"    "<<y[i]<<"   "<<locExpList->GetPhys()[i]<<endl;     
+} 
 
                             locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                         locExpList->UpdateCoeffs());

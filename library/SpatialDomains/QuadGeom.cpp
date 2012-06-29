@@ -652,7 +652,7 @@ namespace Nektar
                     F1 = coords[0] - xmap;
                     F2 = coords[1] - ymap;
                     cnt++;
-                    if( cnt >= 21)
+                    if( cnt >= 40)
                     {
                     	Lcoords[0] = Lcoords[1] = 2.0;    
                         break;

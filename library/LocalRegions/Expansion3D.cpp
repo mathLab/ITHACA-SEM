@@ -82,7 +82,7 @@ namespace Nektar
                                                    Array <OneD,NekDouble > &outarray)
         {            
             int i,j,n;
-            int nquad_f = FaceExp[face]->GetNumPoints(0); 
+            int nquad_f = FaceExp[face]->GetNumPoints(0)*FaceExp[face]->GetNumPoints(1); 
             int order_f = FaceExp[face]->GetNcoeffs();            
             int coordim = GetCoordim();
             int ncoeffs  = GetNcoeffs();
@@ -194,48 +194,48 @@ namespace Nektar
                                           Array<OneD,NekDouble> &outarray,
                                           const StdRegions::VarCoeffMap &varcoeffs)
         {
-//            int i,e,cnt;
-//            int order_e,nquad_e;
-//            int nedges = GetNedges();
-//            int coordim = GetCoordim();
-//
-//            cnt = 0;
-//            for(e = 0; e < nedges; ++e)
-//            {
-//                order_e = EdgeExp[e]->GetNcoeffs();
-//                nquad_e = EdgeExp[e]->GetNumPoints(0);
-//
-//                const Array<OneD, const Array<OneD, NekDouble> > normals = GetEdgeNormal(e);
-//                
-//                for(i = 0; i < order_e; ++i)
-//                {
-//                    EdgeExp[e]->SetCoeff(i,inarray[i+cnt]);
-//                }
-//                cnt += order_e;
-//                
-//                EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
-//                                     EdgeExp[e]->UpdatePhys());
-//                
-//                // Multiply by variable coefficient
-//                /// @TODO: Document this
+            int i,f,cnt;
+            int order_f,nquad_f;
+            int nfaces = GetNfaces();
+            int coordim = GetCoordim();
+
+            cnt = 0;
+            for(f = 0; f < nfaces; ++f)
+            {
+                order_f = FaceExp[f]->GetNcoeffs();
+                nquad_f = FaceExp[f]->GetNumPoints(0);
+
+                const Array<OneD, const Array<OneD, NekDouble> > normals = GetFaceNormal(f);
+                
+                for(i = 0; i < order_f; ++i)
+                {
+                    FaceExp[f]->SetCoeff(i,inarray[i+cnt]);
+                }
+                cnt += order_f;
+                
+                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
+                                     FaceExp[f]->UpdatePhys());
+                
+                // Multiply by variable coefficient
+                /// @TODO: Document this
 //                StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
 //                                                        StdRegions::eVarCoeffD11,
 //                                                        StdRegions::eVarCoeffD22};
 //                StdRegions::VarCoeffMap::const_iterator x;
 //                Array<OneD, NekDouble> varcoeff_work(nquad_e);
-//
-////                if ((x = varcoeffs.find(VarCoeff[dir])) != varcoeffs.end())
-////                {
-////                    GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
-////                    Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
-////                }
-//
-//                Vmath::Vmul(nquad_e,normals[dir],1,
-//                            EdgeExp[e]->GetPhys(),1,
-//                            EdgeExp[e]->UpdatePhys(),1);
-//                
-//                AddEdgeBoundaryInt(e,EdgeExp[e],outarray,varcoeffs);
-//            }
+
+//                if ((x = varcoeffs.find(VarCoeff[dir])) != varcoeffs.end())
+//                {
+//                    GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
+//                    Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
+//                }
+
+                Vmath::Vmul(nquad_f,normals[dir],1,
+                            FaceExp[f]->GetPhys(),1,
+                            FaceExp[f]->UpdatePhys(),1);
+                
+                AddFaceBoundaryInt(f,FaceExp[f],outarray,varcoeffs);
+            }
         }
 
 
@@ -247,15 +247,15 @@ namespace Nektar
                                               Array <OneD,NekDouble > &outarray,
                                               const StdRegions::VarCoeffMap &varcoeffs)
         {
-//            int i;
-//            int order_e = EdgeExp->GetNcoeffs();
-//            int nquad_e = EdgeExp->GetNumPoints(0);
-//            Array<OneD,unsigned int> map;
-//            Array<OneD,int> sign;
-//            Array<OneD, NekDouble> coeff(order_e);
-//
-//            GetEdgeToElementMap(edge,v_GetEorient(edge),map,sign);
-//
+            int i;
+            int order_f = FaceExp->GetNcoeffs();
+            int nquad_f = FaceExp->GetNumPoints(0);
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
+            Array<OneD, NekDouble> coeff(order_f);
+
+            GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+
 //            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
 //                                                    StdRegions::eVarCoeffD11,
 //                                                    StdRegions::eVarCoeffD22};
@@ -268,14 +268,14 @@ namespace Nektar
 //                GetPhysEdgeVarCoeffsFromElement(edge,EdgeExp,x->second,varcoeff_work);
 //                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp->GetPhys(),1,EdgeExp->UpdatePhys(),1);
 //            }
-//
-//            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),coeff);
-//
-//            // add data to out array
-//            for(i = 0; i < order_e; ++i)
-//            {
-//                outarray[map[i]] += sign[i]*coeff[i];
-//            }
+
+            FaceExp->IProductWRTBase(FaceExp->GetPhys(),coeff);
+
+            // add data to out array
+            for(i = 0; i < order_f; ++i)
+            {
+                outarray[map[i]] += sign[i]*coeff[i];
+            }
         }
 
 		/**
@@ -442,7 +442,7 @@ namespace Nektar
                     int i,j,k;
                     int nbndry = NumDGBndryCoeffs();
                     int ncoeffs = GetNcoeffs();
-                    int nfaces  = GetNedges();
+                    int nfaces  = GetNfaces();
                     NekDouble lambdaval = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
                     
@@ -464,6 +464,12 @@ namespace Nektar
 
                     Array<OneD,unsigned int> fmap;
                     Array<OneD,int> sign;
+                    
+					// Set up face segment expansions from local geom info
+                    for(i = 0; i < nfaces; ++i)
+                    {
+                        FaceExp[i] = GetFaceExp(i);
+                    }
                     
                     // for each degree of freedom of the lambda space
                     // calculate Umat entry 
@@ -547,7 +553,7 @@ namespace Nektar
                         break;
                     }
                 
-                    // Set up edge segment expansions from local geom info
+                    // Set up face segment expansions from local geom info
                     for(i = 0; i < nfaces; ++i)
                     {
                         FaceExp[i] = GetFaceExp(i);
@@ -644,7 +650,7 @@ namespace Nektar
                         for(f = 0; f < nfaces; ++f)
                         {
                             order_f = FaceExp[f]->GetNcoeffs();  
-                            nquad_f = FaceExp[f]->GetNumPoints(0);    
+                            nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);    
 
                             normals = GetFaceNormal(f);
                             facedir = GetFaceOrient(f);

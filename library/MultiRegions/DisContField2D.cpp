@@ -1302,7 +1302,6 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-cout<<" bound="<<i<<endl;
                 if(time == 0.0 || m_bndConditions[i]->GetUserDefined()==SpatialDomains::eTimeDependent)
                 {
                     locExpList = m_bndCondExpansions[i];

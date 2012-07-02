@@ -167,23 +167,25 @@ void Replacevertices(string filename, Array<OneD, NekDouble> newx,
 
 int main(int argc, char *argv[])
 {
-    //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
-    LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(2, argv);
-    //----------------------------------------------
     NekDouble cr;
     //set cr =0
     cr=0;
     //change argc from 6 to 5 allow the loading of cr to be optional
-    if(argc > 6 || argc <5 )
+    if(argc > 6 || argc < 5)
     {
         fprintf(stderr,
             "Usage: ./MoveMesh  meshfile fieldfile  changefile   alpha  cr(optional)\n");
         exit(1);
     }
-    else if( argc == 6 &&
-               vSession->DefinesSolverInfo("INTERFACE")
-               && vSession->GetSolverInfo("INTERFACE")=="phase" )
+    
+    //ATTEnTION !!! with argc=2 you impose that vSession refers to is argv[1]=meshfile!!!!! 
+    LibUtilities::SessionReaderSharedPtr vSession
+            = LibUtilities::SessionReader::CreateInstance(2, argv);
+    //----------------------------------------------
+        
+    if( argc == 6 &&
+        vSession->DefinesSolverInfo("INTERFACE")
+        && vSession->GetSolverInfo("INTERFACE")=="phase" )
     {
         cr = boost::lexical_cast<double>(argv[argc-1]);
         argc=5;
@@ -214,7 +216,9 @@ int main(int argc, char *argv[])
     //store the value of alpha
     string charalp (argv[argc-1]);
     //NekDouble alpha = boost::lexical_cast<double>(charalp);
-cout<<"read alpha="<<charalp<<endl;
+    cout<<"read alpha="<<charalp<<endl;
+
+    //---------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-3]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
@@ -233,9 +237,8 @@ cout<<"read alpha="<<charalp<<endl;
     streak->BwdTrans_IterPerExp(streak->GetCoeffs(), streak->UpdatePhys());
  
     //------------------------------------------------   
-
     // determine the I regions (3 region expected)
-    //hypothesys: the layes have the same number of points
+    // hypothesys: the layes have the same number of points
 
     int nIregions, lastIregion; 
     const Array<OneD, SpatialDomains::BoundaryConditionShPtr> bndConditions  = streak->GetBndConditions();    
@@ -343,26 +346,22 @@ cout<<"WARNING x0="<<x0<<endl;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2 ], 
         	Vids_up, v1, v2 , x_connect ,lastedge, xold_up, yold_up);    
     SpatialDomains::VertexComponentSharedPtr vertexU = graphShPt->GetVertex(Vids_up[v2]);    
-//cout<<"VIdup="<<Vids_up[v2]<<endl;
-    //update x_connect    
     vertexU->GetCoords(x_connect,yt,zt);
 
     i=2;
     while(i<nvertl)
     { 
-         v1=i;
-         OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2], 
-         	Vids_up, v1, v2 , x_connect, lastedge, xold_up, yold_up );          
-         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_up[v1]);  
-//cout<<"VIdup="<<Vids_up[v1]<<endl;   
-         //update x_connect  (lastedge is updated on the OrderVertices function) 
-         vertex->GetCoords(x_connect,yt,zt);
-         i++;           
+        v1=i;
+        OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2], 
+                      Vids_up, v1, v2 , x_connect, lastedge, xold_up, yold_up );          
+        SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_up[v1]);  
+        //cout<<"VIdup="<<Vids_up[v1]<<endl;   
+        //update x_connect  (lastedge is updated on the OrderVertices function) 
+        vertex->GetCoords(x_connect,yt,zt);
+        i++;           
      }   
    
     //-----------------------------------------------------------------------------------
-    
-    
     //order in the same way the id of the layer curve lastIregion starting from x=0:
     Array<OneD, int> Vids_c(nvertl,-10);   
     Array<OneD,NekDouble> xold_c(nvertl);
@@ -370,18 +369,13 @@ cout<<"WARNING x0="<<x0<<endl;
     //first point for x_connect=0(or-1.6)
     x_connect=0;
     vertex0 =
-       graphShPt->GetVertex
-       (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
-       )
-       ->GetVid(0)
-       );
+        graphShPt->GetVertex(((boost::dynamic_pointer_cast<LocalRegions
+                               ::SegExp>(bndfieldx[lastIregion]->GetExp(0)))->GetGeom1D()
+                              )->GetVid(0));
     vertex0->GetCoords(x0,y0,z0);
     if( x0 != 0.0)
     {
-cout<<"WARNING x0="<<x0<<endl;
+        cout<<"WARNING x0="<<x0<<endl;
        x_connect=x0;       
     }
     lastedge=-1;
@@ -477,9 +471,9 @@ cout<<"WARNING x0="<<x0<<endl;
          Delta_c[q] = abs(yold_c[q]-y_c[q]);
          //check the shifting of the layer:
          shift+= Delta_c[q];         
-cout<<x_c[q]<<"    "<<y_c[q]<<endl;
+         cout<<x_c[q]<<"    "<<y_c[q]<<endl;
     }
-//cout<<"shift="<<shift<<endl;
+    //cout<<"shift="<<shift<<endl;
     if(shift<0.001)
     {
          cout<<"Warning: the critical layer is stationary"<<endl;
@@ -516,21 +510,21 @@ cout<<x_c[q]<<"    "<<y_c[q]<<endl;
 	 vertex2 = graphShPt->GetVertex(id2);     
 	 vertex1->GetCoords(x1,y1,z1);
 	 vertex2->GetCoords(x2,y2,z2);	
-//cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<endl;
-//cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
-cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
+         //cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<endl;
+         //cout<<"edge="<<r<<"  y1="<<y1<<"  y2="<<y2<<endl;
+         cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	 if(x2>x1)
 	 {
 	     Cpointsx[r] = x1 +(x2-x1)/2;             
-//cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<"   Cx="<<Cpointsx[r]<<endl;
-//cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
+             //cout<<"edge="<<r<<"  x1="<<x1<<"  x2="<<x2<<"   Cx="<<Cpointsx[r]<<endl;
+             //cout<<"edge="<<r<<"  x1="<<x1<<"  y1="<<y1<<"   x2="<<x2<<"  y2="<<y2<<endl;
 	     if( Cpointsx[r]>x2 || Cpointsx[r]< x1)
 	     {
-	     	  Cpointsx[r] = -Cpointsx[r];		  
+                 Cpointsx[r] = -Cpointsx[r];		  
 	     }    
              for(int w=0; w< npedge-2; w++)
              {    
-
+                 
                  Addpointsx[r*(npedge-2) +w] = x1 +((x2-x1)/(npedge - 1))*(w+1);   
                  if( Addpointsx[r*(npedge-2) +w] > x2 || Addpointsx[r*(npedge-2) +w] < x1)
 	         {

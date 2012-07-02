@@ -121,6 +121,7 @@ void ExpandVertices(TiXmlElement* mesh, map<int,int> jointVerts, map<int,int> &n
     vector<NekDouble> xpts,ypts,zpts;
     NekDouble xval, yval, zval;
         
+    NekDouble yoffset = 0.0;
     while (vertex)
     {
         nextVertexNumber++;
@@ -162,7 +163,7 @@ void ExpandVertices(TiXmlElement* mesh, map<int,int> jointVerts, map<int,int> &n
                 vertexDataStrm >> xval >> yval >> zval;                
             }
             xpts.push_back(xval);
-            ypts.push_back(yval);
+            ypts.push_back(yval +yoffset);
             zpts.push_back(zval);
         }
         catch(...)
@@ -531,14 +532,26 @@ void  ExpandComposites(TiXmlElement * mesh, map<int,int> newEdges, int nOrigElmt
                 {
                     int seqlen = seqVector.size();
                     int nedges = newEdges.size();
+                    
+                    map<unsigned int, unsigned int> seqMap;
+                    
+                    for(int i =0; i < seqlen; ++i) // set up a map of defined edges
+                    {
+                        seqMap[seqVector[i]] = 1;
+                    }
+                         
+                    // if edge does not exist in composite add it to the list 
                     for(int i =0; i < seqlen; ++i)
                     {
-                        seqVector.push_back(newEdges[seqVector[i]+nedges]);
-                    }                        
+                        if(seqMap.count(newEdges[seqVector[i]+nedges]) == 0)
+                        {
+                            seqVector.push_back(newEdges[seqVector[i]+nedges]);
+                        }                        
+                    }
                 }
                 break;
-                    
-            case 'T':  case 'Q':  // Expand Triangles & Quads with new elements
+                
+                case 'T':  case 'Q':  // Expand Triangles & Quads with new elements
                 {
                     int seqlen = seqVector.size();
                     

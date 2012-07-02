@@ -1,10 +1,12 @@
 
 SET(ExtractCriticalLayerSource
+       ./ExtractCriticalLayerFunctions.cpp
        ./ExtractCriticalLayer.cpp
        )
 
 
 SET(MoveMeshToCriticalLayerSource
+       ./ExtractCriticalLayerFunctions.cpp
        ./MoveMeshToCriticalLayer.cpp
        )
 

@@ -296,6 +296,8 @@ namespace Nektar
 							{								
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
 								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								m_base[i]->SetWaveSpace(true);
+
 								
 							} 
 						}
@@ -309,6 +311,8 @@ namespace Nektar
 							{																
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
 								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								m_base[i]->SetWaveSpace(true);
+
 							} 
 						
 						}
@@ -475,9 +479,11 @@ namespace Nektar
             {
 
 					
-				if(m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"||
-				m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))
+				if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"||
+																	m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))&
+				   nvar==3)
 				{
+					
 					// w-component must be ignored and set to zero.
 					if(j!=nvar-2)
 					{
@@ -494,7 +500,8 @@ namespace Nektar
 						//extraction of the 2D
 						m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
 													   FieldDef[i]->m_fields[s],true);
-						
+					
+					}
 						//Put zero on higher modes
 						int ncplane=(m_base[0]->GetNcoeffs())/m_npointsZ;
 						if(m_npointsZ>2)
@@ -502,11 +509,8 @@ namespace Nektar
 							Vmath::Zero(ncplane*(m_npointsZ-2),&m_base[j]->UpdateCoeffs()[2*ncplane],1);
 						}
 						
-							
-						
-					}
 				}
-				//2D cases
+				//2D cases and Homogeneous1D Base Flows
 				else
 				{
 					bool flag = FieldDef[i]->m_fields[j]
@@ -590,6 +594,8 @@ namespace Nektar
 		grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
 		grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
 		grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);	
+
+		
 		
 		//Evaluation of the base flow for periodic cases
 		//(it requires fld files)
@@ -608,6 +614,7 @@ namespace Nektar
 					ASSERTL0(false, "Periodic Base flow requires filename_ files");	
 				}
 			}
+		
 		
 		//Evaluate the linearised advection term
         switch(ndim) 
@@ -690,7 +697,7 @@ namespace Nektar
 						grad_base_w2[i]=0;
 					}
 				}
-						
+
 			pFields[0]->PhysDeriv(pU, grad0, grad1, grad2);
 			
 			switch (pVelocityComponent)

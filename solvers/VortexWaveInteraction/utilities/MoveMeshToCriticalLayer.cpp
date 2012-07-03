@@ -35,6 +35,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 
 #include <tinyxml/tinyxml.h>
 #include <SpatialDomains/MeshGraph.h>

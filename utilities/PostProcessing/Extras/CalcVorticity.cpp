@@ -44,8 +44,8 @@ int main(int argc, char *argv[])
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     graphShPt->Import(fieldfile,fielddef,fielddata);
-	bool useFFT = false;
-	bool dealiasing = false;
+    bool useFFT = false;
+    bool dealiasing = false;
     //----------------------------------------------
 
     //----------------------------------------------

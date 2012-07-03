@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
                     Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
                 }
             }
-			else if(fielddef[0]->m_numHomogeneousDir == 2)
+            else if(fielddef[0]->m_numHomogeneousDir == 2)
             {
                 MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
 				
@@ -226,10 +226,11 @@ int main(int argc, char *argv[])
         gloCoord[2] = z0 + i*dz;
         cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
 
+        int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
         for (int j = 0; j < nfields; ++j)
         {
             Exp[j]->PutPhysInToElmtExp();
-            cout << "   " << Exp[j]->GetExp(gloCoord)->PhysEvaluate(gloCoord);
+            cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord);
         }
         cout << endl;
     }

@@ -6,8 +6,10 @@ ADD_UTILITIES_EXECUTABLE(FldAddVort        util FldAddVort.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToTecplot      util FldToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToGmsh         util FldToGmsh.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToVtk          util FldToVtk.cpp)
+ADD_UTILITIES_EXECUTABLE(InterpFld         util-extra InterpFld.cpp)
 ADD_UTILITIES_EXECUTABLE(ProbeFld          util-extra ProbeFld.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplot      util XmlToTecplot.cpp)
+ADD_UTILITIES_EXECUTABLE(XmlToTecplotWireFrame      util XmlToTecplotWireFrame.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToVtk          util XmlToVtk.cpp)
 
 # Generate list of available solvers

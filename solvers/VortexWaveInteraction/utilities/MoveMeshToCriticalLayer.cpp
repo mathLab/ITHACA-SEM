@@ -75,7 +75,8 @@ void GetNewVertexLocation(TiXmlElement *doc,
                           Array<OneD, NekDouble> &xstreak,
                           Array<OneD, NekDouble> &ystreak,
                           Array<OneD,NekDouble> &vertx,
-                          Array<OneD,NekDouble> &verty);
+                          Array<OneD,NekDouble> &verty,
+                          int maxiter);
 
 void  TurnOffEdges(TiXmlElement *doc, 
                    SpatialDomains::SegGeomMap &meshedges, 
@@ -131,9 +132,10 @@ int main(int argc, char *argv[])
     // Move internal mesh using critical layer info and under string analogy 
     //------------------------------------------------------------
     Array<OneD,NekDouble>  dvertx(mesh->GetNvertices(),0.0), dverty(mesh->GetNvertices(),0.0); 
-    GetNewVertexLocation(doc, mesh,InterfaceVerts,xstreak,ystreak,dvertx,dverty);
+    int maxiter;
+    vSession->LoadParameter("MoveMeshMaxIterations",maxiter,100);
 
-
+    GetNewVertexLocation(doc, mesh,InterfaceVerts,xstreak,ystreak,dvertx,dverty,maxiter);
 
     //------------------------------------------------------------
     // Enforce rotational symmetry on mesh 
@@ -142,14 +144,11 @@ int main(int argc, char *argv[])
     {
         EnforceRotationalSymmetry(mesh,dvertx,dverty);
     }
-    
 
-    
     //------------------------------------------------------------
     // Redfine vertices in doc 
     //------------------------------------------------------------
     RedefineVertices(doc,dvertx,dverty);
-    
 
     //------------------------------------------------------------
     // Write out moved mesh file 
@@ -225,7 +224,8 @@ void GetNewVertexLocation(TiXmlElement *doc,
                           Array<OneD, NekDouble> &xstreak,
                           Array<OneD, NekDouble> &ystreak,
                           Array<OneD,NekDouble> &dvertx,
-                          Array<OneD,NekDouble> &dverty)
+                          Array<OneD,NekDouble> &dverty,
+                          int maxiter)
 {
     int i,j,k;
     int nverts = mesh->GetNvertices(); 
@@ -242,7 +242,9 @@ void GetNewVertexLocation(TiXmlElement *doc,
 
     int vid0,vid1;
     NekDouble kspring;
+    NekDouble x,y,x1,y1,z1,x2,y2,z2;
 
+    // Setup intiial spring and verts
     for(segIter = meshedges.begin(); segIter != meshedges.end(); ++segIter)
     {
         vid0 = (segIter->second)->GetVid(0);
@@ -251,7 +253,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
         v0 = (segIter->second)->GetVertex(0);
         v1 = (segIter->second)->GetVertex(1);
         
-        kspring = 1.0/v0->dist(*v1);
+        kspring = 1.0/v0->dist(*v1); 
         
         Verts[vid0].kspring.push_back(kspring);
         Verts[vid0].springVid.push_back(vid1);
@@ -281,7 +283,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
     // Turn off all edges defined by composite lists of correct dimension
     TurnOffEdges(doc,meshedges,Verts);
     
-    NekDouble x,y,z,h0,h1,h2;
+    NekDouble z,h0,h1,h2;
     // Set interface vertices to lie on critical layer
     for(i = 0; i < InterfaceVerts.size(); ++i)
     {
@@ -307,23 +309,87 @@ void GetNewVertexLocation(TiXmlElement *doc,
             ((xstreak[k]-xstreak[k-1])*(xstreak[k]-xstreak[k+1]));
         h2 = (x-xstreak[k-1])*(x-xstreak[k])/
             ((xstreak[k+1]-xstreak[k-1])*(xstreak[k+1]-xstreak[k]));
-
+        
         dvertx[InterfaceVerts[i]] =  (xstreak[k-1]*h0 + xstreak[k]*h1 + xstreak[k+1]*h2) - x; 
         dverty[InterfaceVerts[i]] =  (ystreak[k-1]*h0 + ystreak[k]*h1 + ystreak[k+1]*h2) - y; 
     }
+
+    // shift quads in critical layer to move more or less rigidly
+    SpatialDomains::QuadGeomMap quadgeom = mesh->GetAllQuadGeoms();
+    std::map<int,SpatialDomains::QuadGeomSharedPtr>::iterator quadIter;
+    for(quadIter = quadgeom.begin(); quadIter != quadgeom.end(); ++quadIter)
+    {
+        for(i = 0; i < 4; ++i)
+        {
+            vid0 = (quadIter->second)->GetVid(i);
+            
+            switch(Verts[vid0].solve)
+            {
+            case eSolveXY:
+                {
+                    mesh->GetVertex(vid0)->GetCoords(x,y,z);
+
+                    // find nearest interface vert
+                    mesh->GetVertex(InterfaceVerts[0])->GetCoords(x1,y1,z1);
+                    for(j = 0; j < InterfaceVerts.size()-1; ++j)
+                    {
+                        mesh->GetVertex(InterfaceVerts[j+1])->GetCoords(x2,y2,z2);
+                        if((x >= x1)&&(x < x2))
+                        {
+                            break;
+                        }
+                        x1 = x2;
+                        y1 = y2;
+                    }
+                    
+                    // currently just shift vert as average of two sides
+                    dvertx[vid0] = (x2-x)/(x2-x1)*dvertx[InterfaceVerts[j]]+
+                        (x-x1)/(x2-x1)*dvertx[InterfaceVerts[j+1]];
+                    dverty[vid0] = (x2-x)/(x2-x1)*dverty[InterfaceVerts[j]]+
+                        (x-x1)/(x2-x1)*dverty[InterfaceVerts[j+1]];
+                }
+                break;
+            case eSolveY:
+                {
+                    mesh->GetVertex(vid0)->GetCoords(x,y,z);
+                    mesh->GetVertex(InterfaceVerts[0])->GetCoords(x1,y1,z1);
+                    
+                    if(fabs(x-x1) < 1e-6)
+                    {
+                        dverty[vid0] = dverty[InterfaceVerts[0]];
+                    }
+                    else
+                    {
+                        dverty[vid0] = dverty[InterfaceVerts[InterfaceVerts.size()-1]];
+                    }
+                }
+                break;
+            }
+            Verts[vid0].solve = eNoSolve;
+        }
+    }
+
     
+
+
+            
     // Iterate internal vertices 
     bool ContinueToIterate = true;
     int cnt  = 0;
     int nsum = 0;
     NekDouble dsum,dx,dy,sum,prev_sum = 0.0;
-    NekDouble tol = 1e-3;
+    NekDouble tol = 1e-3,fac;
+    int blend = 50;
 
     while (ContinueToIterate)
     {
         
         sum = 0.0;
         nsum = 0;
+
+        // use a ramping function to help move interior slowly 
+        fac = (cnt < blend)? 1.0/(blend+1.0)*(cnt+1): 1.0;
+        
         for(i = 0; i < nverts; ++i)
         {
             if(Verts[i].solve != eNoSolve)
@@ -334,7 +400,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
                 {
                     for(j = 0; j < Verts[i].kspring.size(); ++j)
                     {
-                        dx += Verts[i].kspring[j]*dvertx[Verts[i].springVid[j]];
+                        dx += fac*Verts[i].kspring[j]*dvertx[Verts[i].springVid[j]];
                     }
                 }
 
@@ -342,14 +408,14 @@ void GetNewVertexLocation(TiXmlElement *doc,
                 {
                     for(j = 0; j < Verts[i].kspring.size(); ++j)
                     {
-                        dy += Verts[i].kspring[j]*dverty[Verts[i].springVid[j]];
+                        dy += fac*Verts[i].kspring[j]*dverty[Verts[i].springVid[j]];
                     }
                 }
                 
                 dsum = (dx*dx + dy*dy);
                 
-                dvertx[i] += dx;
-                dverty[i] += dy;
+                dvertx[i] = dx;
+                dverty[i] = dy;
                 
                 if(dsum > 1e-16)
                 {
@@ -359,6 +425,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
                 }
             }
         }
+
         if(nsum)
         {
             sum = sqrt(sum/(NekDouble)nsum);
@@ -368,19 +435,19 @@ void GetNewVertexLocation(TiXmlElement *doc,
 
             cerr << "Iteration " << cnt << " : " << chg << endl;
 
-            if(chg < tol)
+            if((chg < tol)&&(cnt > blend))
             {
                 ContinueToIterate = false;
             }
             
         }
-        else
+        else if(cnt > blend)
         {
             ContinueToIterate = false;
 
         }            
 
-        if(cnt++ > 100)
+        if(cnt++ > maxiter)
         {
             ContinueToIterate = false;
         }
@@ -461,7 +528,7 @@ void  TurnOffEdges(TiXmlElement *doc,
                     for(int i = 0; i < seqlen; ++i)
                     {
                         meshedges[seqVector[i]]->GetVertex(0)->GetCoords(x0,y0,z0);
-                        meshedges[seqVector[i]]->GetVertex(0)->GetCoords(x1,y1,z1);
+                        meshedges[seqVector[i]]->GetVertex(1)->GetCoords(x1,y1,z1);
                         vid0 = meshedges[seqVector[i]]->GetVid(0);
                         vid1 = meshedges[seqVector[i]]->GetVid(1);
 

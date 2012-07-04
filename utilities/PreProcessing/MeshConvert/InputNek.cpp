@@ -48,7 +48,8 @@ namespace Nektar
     {
         ModuleKey InputNek::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("rea", eInputModule), InputNek::create);
+                ModuleKey(eInputModule, "rea"), InputNek::create,
+                "Reads Nektar rea file.");
 
         InputNek::InputNek(MeshSharedPtr m) : InputModule(m)
         {
@@ -72,6 +73,9 @@ namespace Nektar
          */
         void InputNek::Process()
         {
+            // Open the file stream.
+            OpenStream();
+            
             string      line, word;
             int         nParam, nModes, nElements, nCurves;
             int         i, j, k, nodeCounter = 0;
@@ -670,7 +674,7 @@ namespace Nektar
                     nodeList.insert(nodeList.begin(), 
                                     f->vertexList.begin(), 
                                     f->vertexList.end());
-                    
+                                        
                     vector<int> tags;
                     
                     ElementType seg = tri ? eTriangle : eQuadrilateral;
@@ -678,6 +682,15 @@ namespace Nektar
                                     LibUtilities::eGaussLobattoLegendre);
                     surfEl = GetElementFactory().
                         CreateInstance(seg,conf,nodeList,tags);
+                    
+                    // Copy high-order surface information from edges.
+                    for (int i = 0; i < f->vertexList.size(); ++i)
+                    {
+                        surfEl->GetEdge(i)->edgeNodes = 
+                            f->edgeList[i]->edgeNodes;
+                        surfEl->GetEdge(i)->curveType = 
+                            f->edgeList[i]->curveType;
+                    }
                 }
                 else
                 {

@@ -47,16 +47,42 @@ namespace Nektar
     {
         ModuleKey InputSem::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("sem",eInputModule), InputSem::create);
+                ModuleKey(eInputModule, "sem"), InputSem::create,
+                "Reads Semtex session files.");
 
         /**
          * @brief Initialises the InputSem class.
-         * 
-         * This function populated the #sectionMap map, which stores the
-         * position of sections in the input file.
          */
         InputSem::InputSem(MeshSharedPtr m) : InputModule(m)
         {
+            
+        }
+
+        InputSem::~InputSem()
+        {
+            
+        }
+
+        /**
+         * @brief Process a Semtex session file.
+         * 
+         * Semtex files are defined by a tokenized markup format. We first
+         * populate #sectionMap which stores the location of the various tags in
+         * the session file so that they can be jumped to, since no ordering is
+         * defined. The converter only requires the NODES and ELEMENTS sections
+         * to exist, but can also read CURVES and SURFACES. High-order curves
+         * rely on the meshfile session.msh to be created with the Semtex
+         * utility meshpr first.
+         * 
+         * @param pFilename Filename of Semtex session to read.
+         */
+        void InputSem::Process()
+        {
+            cerr << "Start reading InputSem..." << endl;
+            
+            // Open the file stream.
+            OpenStream();
+
             // Read through input file and populate the section map.
             map<string,streampos>::iterator it;
             string                          line, word;
@@ -97,13 +123,15 @@ namespace Nektar
             // Check that required sections exist in the file.
             if (sectionMap["NODES"] == std::streampos(-1))
             {
-                cerr << "Unable to locate NODES section in session file." << endl;
+                cerr << "Unable to locate NODES section in session file." 
+                     << endl;
                 abort();
             }
             
             if (sectionMap["ELEMENTS"] == std::streampos(-1))
             {
-                cerr << "Unable to locate ELEMENTS section in session file." << endl;
+                cerr << "Unable to locate ELEMENTS section in session file." 
+                     << endl;
                 abort();
             }
 
@@ -111,55 +139,34 @@ namespace Nektar
             {
                 if (sectionMap["BCS"] == std::streampos(-1))
                 {
-                    cerr << "SURFACES section defined but BCS section not found." << endl;
+                    cerr << "SURFACES section defined but BCS section not "
+                         << "found." << endl;
                     abort();
                 }
                 
                 if (sectionMap["GROUPS"] == std::streampos(-1))
                 {
-                    cerr << "SURFACES section defined but GROUPS section not found." << endl;
+                    cerr << "SURFACES section defined but GROUPS section not "
+                         << "found." << endl;
                     abort();
                 }
 
                 if (sectionMap["FIELDS"] == std::streampos(-1))
                 {
-                    cerr << "SURFACES section defined but FIELDS section not found." << endl;
+                    cerr << "SURFACES section defined but FIELDS section not "
+                         << "found." << endl;
                     abort();
                 }
             }
-        }
 
-        InputSem::~InputSem()
-        {
-
-        }
-
-
-        /**
-         * @brief Process a Semtex session file.
-         * 
-         * Semtex files are defined by a tokenized markup format. These
-         * sections have already been located in the file by the constructor
-         * and their positions are stored in #sectionMap. The converter only
-         * requires the NODES and ELEMENTS sections to exist, but can also
-         * read CURVES and SURFACES. High-order curves rely on the meshfile
-         * session.msh to be created with the Semtex utility meshpr first.
-         * 
-         * @param pFilename Filename of Semtex session to read.
-         */
-        void InputSem::Process()
-        {
             m->expDim = 0;
-            string line, word, tag;
-            int start, end, nVertices, nEntities, nCurves, nSurfaces, nGroups, nBCs;
+            string tag;
+            int start, end, nVertices, nEntities, nCurves, nSurf, nGroups, nBCs;
             int id, i, j, k;
             vector<double> hoXData, hoYData;
             ElementType elType = eQuadrilateral;
             ifstream homeshFile;
-            stringstream ss;
 
-            cerr << "Start reading InputSem..." << endl;
-            
             // Begin by reading in list of nodes which define the linear
             // elements.
             mshFile.seekg(sectionMap["NODES"]);
@@ -262,8 +269,9 @@ namespace Nektar
                 // is 0, no nead to load high order mesh file.
                 if (nCurves > 0)
                 {
-                    int    ext      = m->inFilename.find_last_of('.');
-                    string meshfile = m->inFilename.substr(0,ext) + ".msh";
+                    string fname    = config["infile"].as<string>();
+                    int    ext      = fname.find_last_of('.');
+                    string meshfile = fname.substr(0,ext) + ".msh";
                     
                     homeshFile.open(meshfile.c_str());
                     if (!homeshFile.is_open())
@@ -538,16 +546,16 @@ namespace Nektar
                 ss.clear(); ss.str(line);
                 ss >> word;
                 
-                tag       = ss.str();
-                start     = tag.find_first_of('=');
-                end       = tag.find_first_of('>');
-                nSurfaces = atoi(tag.substr(start+1,end).c_str());
+                tag   = ss.str();
+                start = tag.find_first_of('=');
+                end   = tag.find_first_of('>');
+                nSurf = atoi(tag.substr(start+1,end).c_str());
                 
                 i = id = 0;
                 int elmt, side;
                 int periodicTagId = -1;
                 
-                while (i < nSurfaces)
+                while (i < nSurf)
                 {
                     getline(mshFile, line);
                     ss.clear(); ss.str(line);
@@ -563,21 +571,25 @@ namespace Nektar
                         if (periodicTagId == -1)
                         {
                             periodicTagId = maxTag+1;
-                            ConditionSharedPtr in  = ConditionSharedPtr(new Condition());
-                            ConditionSharedPtr out = ConditionSharedPtr(new Condition());
+                            ConditionSharedPtr in  = 
+                                ConditionSharedPtr(new Condition());
+                            ConditionSharedPtr out = 
+                                ConditionSharedPtr(new Condition());
                             for (j = 0; j < m->fields.size(); ++j)
                             {
                                 in-> type.push_back(ePeriodic);
                                 out->type.push_back(ePeriodic);
                                 in-> field.push_back(m->fields[j]);
                                 out->field.push_back(m->fields[j]);
-                                in-> value.push_back("["+boost::lexical_cast<string>(periodicTagId+1)+"]");
-                                out->value.push_back("["+boost::lexical_cast<string>(periodicTagId)+"]");
+                                in-> value.push_back("["+boost::lexical_cast<
+                                    string>(periodicTagId+1)+"]");
+                                out->value.push_back("["+boost::lexical_cast<
+                                    string>(periodicTagId)+"]");
                             }
                             in-> composite.push_back(periodicTagId);
                             out->composite.push_back(periodicTagId+1);
-                            m->condition[periodicTagId]   = in;
-                            m->condition[periodicTagId+1] = out;
+                            m->  condition[periodicTagId]   = in;
+                            m->  condition[periodicTagId+1] = out;
                         }
                         
                         int elmtB, sideB;

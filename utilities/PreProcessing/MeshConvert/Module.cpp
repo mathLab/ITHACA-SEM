@@ -58,39 +58,37 @@ namespace Nektar
          */
         std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs)
         {
-            return os << rhs.first << ',' << rhs.second;
+            return os << ModuleTypeMap[rhs.first] << ": " << rhs.second;
         }
 
-        /**
-         * Set up an input module by opening input file.
-         */
         InputModule::InputModule(MeshSharedPtr m) : Module(m)
         {
-            mshFile.open(m->inFilename.c_str());
-            if (mshFile.bad())
+            config["infile"] = ConfigOption(false, "", "Input filename.");
+        }
+        
+        OutputModule::OutputModule(MeshSharedPtr m) : Module(m)
+        {
+            config["outfile"] = ConfigOption(false, "", "Output filename.");
+        }
+
+        void InputModule::OpenStream()
+        {
+            string fname = config["infile"].as<string>();
+            mshFile.open(fname.c_str());
+            if (!mshFile.good())
             {
-                cerr << "Cannot open file: " << m->inFilename << endl;
+                cerr << "Error opening file: " << fname << endl;
                 abort();
             }
         }
 
-        /**
-         * Set up a processing module.
-         */
-        ProcessModule::ProcessModule(MeshSharedPtr m) : Module(m)
+        void OutputModule::OpenStream()
         {
-            
-        }
-
-        /**
-         * Set up an output module by opening output file.
-         */
-        OutputModule::OutputModule(MeshSharedPtr m) : Module(m)
-        {
-            mshFile.open(m->outFilename.c_str());
-            if (mshFile.bad())
+            string fname = config["outfile"].as<string>();
+            mshFile.open(fname.c_str());
+            if (!mshFile.good())
             {
-                cerr << "Cannot open file: " << m->outFilename << endl;
+                cerr << "Error opening file: " << fname << endl;
                 abort();
             }
         }
@@ -183,7 +181,8 @@ namespace Nektar
                 EdgeSet::iterator it = m->edgeSet.find(E);
                 if (it == m->edgeSet.end())
                 {
-                    cerr << "Cannot find corresponding element face for 1D element " << i << endl;
+                    cerr << "Cannot find corresponding element face for "
+                         << "1D element " << i << endl;
                     abort();
                 }
                 m->element[1][i]->SetEdgeLink(*it);
@@ -245,8 +244,8 @@ namespace Nektar
                 FaceSet::iterator it = m->faceSet.find(F);
                 if (it == m->faceSet.end())
                 {
-                    cout << "Cannot find corresponding element face for 2D element " 
-                         << i << endl;
+                    cout << "Cannot find corresponding element face for 2D "
+                         << "element " << i << endl;
                     abort();
                 }
                 m->element[2][i]->SetFaceLink(*it);
@@ -304,7 +303,8 @@ namespace Nektar
                     
                     if (it == m->composite.end())
                     {
-                        CompositeSharedPtr tmp = boost::shared_ptr<Composite>(new Composite);
+                        CompositeSharedPtr tmp = boost::shared_ptr<Composite>(
+                            new Composite);
                         pair<CompositeMap::iterator, bool> testIns;
                         tmp->id  = tagid;
                         tmp->tag = elmt[i]->GetTag();
@@ -325,6 +325,67 @@ namespace Nektar
             }
         }
         
+        /**
+         * @brief Register a configuration option with a module.
+         */
+        void Module::RegisterConfig(string key, string val)
+        {
+            map<string, ConfigOption>::iterator it = config.find(key);
+            if (it == config.end())
+            {
+                cerr << "WARNING: Unrecognised config option " << key
+                     << ", proceeding anyway." << endl;
+            }
+
+            it->second.beenSet = true;
+            
+            if (it->second.isBool)
+            {
+                it->second.value = "1";
+            }
+            else
+            {
+                it->second.value = val;
+            }
+        }
+        
+        /**
+         * @brief Print out all configuration options for a module.
+         */
+        void Module::PrintConfig()
+        {
+            map<string, ConfigOption>::iterator it;
+            
+            if (config.size() == 0)
+            {
+                cerr << "No configuration options for this module." << endl;
+                return;
+            }
+            
+            for (it = config.begin(); it != config.end(); ++it)
+            {
+                cerr << setw(10) << it->first << ": " << it->second.desc 
+                     << endl;
+            }
+        }
+        
+        /**
+         * @brief Sets default configuration options for those which have not
+         * been set.
+         */
+        void Module::SetDefaults()
+        {
+            map<string, ConfigOption>::iterator it;
+            
+            for (it = config.begin(); it != config.end(); ++it)
+            {
+                if (!it->second.beenSet)
+                {
+                    it->second.value = it->second.defValue;
+                }
+            }
+        }
+
         void InputModule::PrintSummary()
         {
             // Compute the number of full-dimensional elements and boundary

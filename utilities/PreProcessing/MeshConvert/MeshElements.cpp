@@ -40,8 +40,11 @@
 #include <sstream>
 #include <loki/Singleton.h>
 
+#include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdNodalTetExp.h>
 #include <StdRegions/StdNodalPrismExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
 
@@ -74,12 +77,6 @@ namespace Nektar
             }
         }
 
-        Mesh::Mesh(const string pInFilename, const string pOutFilename) :
-            inFilename(pInFilename), outFilename(pOutFilename)
-        {
-            
-        }
-
         /**
          * @brief Return the number of elements of the expansion dimension.
          */
@@ -87,7 +84,7 @@ namespace Nektar
         {
             return element[expDim].size();
         }
-
+        
         /**
          * @brief Return the number of boundary elements (i.e. one below the
          * expansion dimension).
@@ -555,6 +552,91 @@ namespace Nektar
                 return (n+1)*(n+2)/2;
         }
 
+        void Triangle::Complete(int order)
+        {
+            int i, j;
+            
+            // Create basis key for a nodal tetrahedron.
+            LibUtilities::BasisKey B0(
+                LibUtilities::eOrtho_A, order+1,
+                LibUtilities::PointsKey(
+                    order+1,LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::BasisKey B1(
+                LibUtilities::eOrtho_B, order+1,
+                LibUtilities::PointsKey(
+                    order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
+            
+            // Create a standard nodal triangle in order to get the
+            // Vandermonde matrix to perform interpolation to nodal points.
+            StdRegions::StdNodalTriExpSharedPtr nodalTri = 
+                MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
+                    B0, B1, LibUtilities::eNodalTriEvenlySpaced);
+            
+            SpatialDomains::TriGeomSharedPtr geom = 
+                boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                    this->GetGeom(3));
+            
+            // Create basis key for a triangle.
+            LibUtilities::BasisKey C0(
+                LibUtilities::eOrtho_A, order+1,
+                LibUtilities::PointsKey(
+                    order+1,LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::BasisKey C1(
+                LibUtilities::eOrtho_B, order+1,
+                LibUtilities::PointsKey(
+                    order+1,LibUtilities::eGaussRadauMAlpha1Beta0));
+            
+            // Create a triangle.
+            LocalRegions::TriExpSharedPtr tri = 
+                MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(
+                    C0, C1, geom);
+            
+            // Get coordinate array for tetrahedron.
+            int nqtot = tri->GetTotPoints();
+            Array<OneD, NekDouble> alloc(6*nqtot);
+            Array<OneD, NekDouble> xi(alloc);
+            Array<OneD, NekDouble> yi(alloc+  nqtot);
+            Array<OneD, NekDouble> zi(alloc+2*nqtot);
+            Array<OneD, NekDouble> xo(alloc+3*nqtot);
+            Array<OneD, NekDouble> yo(alloc+4*nqtot);
+            Array<OneD, NekDouble> zo(alloc+5*nqtot);
+            Array<OneD, NekDouble> tmp;
+            
+            tri->GetCoords(xi, yi, zi);
+            
+            for (i = 0; i < 3; ++i)
+            {
+                tri->FwdTrans(alloc+i*nqtot, nodalTri->UpdateCoeffs());
+                // Apply Vandermonde matrix to project onto nodal space.
+                nodalTri->ModalToNodal(nodalTri->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+            }
+            
+            // Now extract points from the co-ordinate arrays into the
+            // edge/face/volume nodes. First, extract edge-interior nodes.
+            for (i = 0; i < 3; ++i)
+            {
+                int pos = 3 + i*(order-1);
+                edge[i]->edgeNodes.clear();
+                for (j = 0; j < order-1; ++j)
+                {
+                    edge[i]->edgeNodes.push_back(
+                        NodeSharedPtr(new Node(0, xo[pos+j], yo[pos+j], zo[pos+j])));
+                }
+            }
+
+            // Extract face-interior nodes.
+            int pos = 3 + 3*(order-1);
+            for (i = pos; i < (order+1)*(order+2)/2; ++i)
+            {
+                volumeNodes.push_back(
+                    NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
+            }
+            
+            m_conf.order       = order;
+            m_conf.faceNodes   = true;
+            m_conf.volumeNodes = true;
+        }
+
 
         ElementType Quadrilateral::type = GetElementFactory().
             RegisterCreatorFunction(eQuadrilateral, Quadrilateral::create, 
@@ -584,7 +666,8 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(4,1)] = 5 + 3*n;
 
             // Add vertices
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < 4; ++i) 
+            {
                 vertex.push_back(pNodeList[i]);
             }
 
@@ -609,6 +692,71 @@ namespace Nektar
                                    pNodeList.begin()+4*m_conf.order,
                                    pNodeList.end());
             }
+        }
+
+        void Quadrilateral::Complete(int order)
+        {
+            LibUtilities::BasisKey C0(
+                LibUtilities::eOrtho_A, order+1,
+                LibUtilities::PointsKey(
+                    order+1,LibUtilities::eGaussLobattoLegendre));
+            
+            SpatialDomains::QuadGeomSharedPtr geom = 
+                boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                    this->GetGeom(3));
+            
+            // Create a quad.
+            LocalRegions::QuadExpSharedPtr quad = 
+                MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
+                    C0, C0, geom);
+            
+            // Get coordinate array for quadrilateral.
+            int nqtot = quad->GetTotPoints();
+            Array<OneD, NekDouble> alloc(3*nqtot);
+            Array<OneD, NekDouble> x    (alloc        );
+            Array<OneD, NekDouble> y    (alloc+1*nqtot);
+            Array<OneD, NekDouble> z    (alloc+2*nqtot);
+            
+            quad->GetCoords(x, y, z);
+            
+            // Now extract points from the co-ordinate arrays into the edge
+            // and face nodes. First, extract edge-interior nodes.
+            int edgeMap[4][2] = {{0,1},{order,order+1},
+                                 {nqtot-1,-1},{order*(order+1),-order-1}};
+            
+            for (int i = 0; i < 4; ++i)
+            {
+                int pos = edgeMap[i][0] + edgeMap[i][1];
+                edge[i]->edgeNodes.clear();
+                /*
+                cout << "EDGE " << i << " = " 
+                     << edge[i]->n1->x << "," << edge[i]->n1->y << " "
+                     << edge[i]->n2->x << "," << edge[i]->n2->y << endl;
+                */
+                for (int j = 1; j < order; ++j, pos += edgeMap[i][1])
+                {
+                    //cout << "INSERTING: " << x[pos] << " " << y[pos] << endl;
+                    edge[i]->edgeNodes.push_back(
+                        NodeSharedPtr(new Node(0, x[pos], y[pos], z[pos])));
+                }
+            }
+
+            // Extract face-interior nodes.
+            volumeNodes.clear();
+            for (int i = 1; i < order; ++i)
+            {
+                int pos = i*(order+1);
+                for (int j = 1; j < order; ++j)
+                {
+                    volumeNodes.push_back(
+                        NodeSharedPtr(new Node(0, x[pos+j], y[pos+j], z[pos+j])));
+                    //cout << "here" << endl;
+                }                
+            }
+            
+            m_conf.order       = order;
+            m_conf.faceNodes   = true;
+            m_conf.volumeNodes = true;
         }
 
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
@@ -872,7 +1020,6 @@ namespace Nektar
             for (i = 0; i < 6; ++i)
             {
                 int pos = 4 + i*(order-1);
-                //int ed = m_test[i];
                 edge[i]->edgeNodes.clear();
                 for (j = 0; j < order-1; ++j)
                 {

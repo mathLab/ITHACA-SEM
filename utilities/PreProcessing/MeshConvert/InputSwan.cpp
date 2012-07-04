@@ -47,7 +47,8 @@ namespace Nektar
     {
         ModuleKey InputSwan::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("plt",eInputModule), InputSwan::create);
+                ModuleKey(eInputModule, "plt"), InputSwan::create,
+                "Reads Swansea plt format for third-order tetrahedra.");
         
         InputSwan::InputSwan(MeshSharedPtr m) : InputModule(m)
         {
@@ -61,6 +62,9 @@ namespace Nektar
 
         void InputSwan::Process()
         {
+            // Open the file stream.
+            OpenStream();
+
             vector<vector<NodeSharedPtr> > elementList;
             vector<int> tmp, tets;
             vector<double> pts;

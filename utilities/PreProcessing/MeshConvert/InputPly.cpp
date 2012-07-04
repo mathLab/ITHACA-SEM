@@ -47,7 +47,8 @@ namespace Nektar
     {
         ModuleKey InputPly::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("ply",eInputModule), InputPly::create);
+                ModuleKey(eInputModule, "ply"), InputPly::create,
+                "Reads ply triangulation format.");
 
         InputPly::InputPly(MeshSharedPtr m) : InputModule(m)
         {
@@ -72,6 +73,9 @@ namespace Nektar
          */
         void InputPly::Process()
         {
+            // Open the file stream.
+            OpenStream();
+            
             m->expDim = 0;
             string line;
             int nVertices = 0;

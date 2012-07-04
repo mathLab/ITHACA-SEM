@@ -46,7 +46,8 @@ namespace Nektar
     {
         ModuleKey OutputGmsh::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("msh", eOutputModule), OutputGmsh::create);
+                ModuleKey(eOutputModule, "msh"), OutputGmsh::create,
+                "Writes Gmsh msh file.");
 
         OutputGmsh::OutputGmsh(MeshSharedPtr m) : OutputModule(m)
         {
@@ -77,6 +78,9 @@ namespace Nektar
          */
         void OutputGmsh::Process()
         {
+            // Open the file stream.
+            OpenStream();
+            
             // Write MSH header
             mshFile << "$MeshFormat" << endl
                     << "2.2 0 8" << endl
@@ -84,11 +88,6 @@ namespace Nektar
             
             int id = m->vertexSet.size();
             vector<ElementSharedPtr> toComplete;
-
-            // Keep track of faces and edges to ensure that high-order nodes
-            // are only added once on common faces/edges.
-            boost::unordered_set<int> edgesDone;
-            boost::unordered_set<int> facesDone;
             
             int maxOrder = -1;
             
@@ -103,20 +102,23 @@ namespace Nektar
                 }
             }
             
-            //maxOrder = 4;
+            //maxOrder = 2;
             
-            for (int i = 0; i < m->element[m->expDim].size(); ++i)
+            for (int d = 1; d <= 3; ++d)
             {
-                ElementSharedPtr e = m->element[m->expDim][i];
-                if (e->GetConf().order <= 1        && maxOrder > 1 ||
-                    e->GetConf().order == maxOrder && e->GetConf().faceNodes == false)
+                for (int i = 0; i < m->element[d].size(); ++i)
                 {
-                    toComplete.push_back(e);
+                    ElementSharedPtr e = m->element[d][i];
+                    if (e->GetConf().order <= 1        && maxOrder > 1 ||
+                        e->GetConf().order == maxOrder && e->GetConf().faceNodes == false)
+                    {
+                        toComplete.push_back(e);
+                    }
+                    // Generate geometry information for this element. This will
+                    // be stored locally inside each element.
+                    SpatialDomains::GeometrySharedPtr geom =
+                        m->element[d][i]->GetGeom(m->spaceDim);
                 }
-                // Generate geometry information for this element. This will
-                // be stored locally inside each element.
-                SpatialDomains::GeometrySharedPtr geom =
-                    m->element[m->expDim][i]->GetGeom(m->spaceDim);
             }
             
             // Complete these elements.
@@ -128,9 +130,16 @@ namespace Nektar
             // Do second pass over elements to enumerate high-order vertices.
             for (int d = 1; d <= 3; ++d)
             {
+                //cout << "D = " << d << endl;
                 for (int i = 0; i < m->element[d].size(); ++i)
                 {
+                    // Keep track of faces and edges to ensure that high-order
+                    // nodes are only added once on common faces/edges.
+                    boost::unordered_set<int> edgesDone;
+                    boost::unordered_set<int> facesDone;
                     ElementSharedPtr e = m->element[d][i];
+                    
+                    //cout << "Element " << i << ": ";
                     
                     if (e->GetConf().order > 1)
                     {
@@ -139,11 +148,17 @@ namespace Nektar
                         vector<FaceSharedPtr> faceList = e->GetFaceList();
                         vector<NodeSharedPtr> volList  = e->GetVolumeNodes();
                         
+                        /*
+                        cout << " edge = " << edgeList.size() << " "
+                             << " face = " << faceList.size() << " "
+                             << " vol  = " << volList.size()  << endl;
+                        */
+                        
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
                             boost::unordered_set<int>::iterator it = 
                                 edgesDone.find(edgeList[j]->id);
-                            if (it == edgesDone.end())
+                            if (it == edgesDone.end() || d != 3)
                             {
                                 tmp.insert(tmp.end(), 
                                            edgeList[j]->edgeNodes.begin(),
@@ -156,7 +171,7 @@ namespace Nektar
                         {
                             boost::unordered_set<int>::iterator it = 
                                 facesDone.find(faceList[j]->id);
-                            if (it == facesDone.end())
+                            if (it == facesDone.end() || d != 3)
                             {
                                 tmp.insert(tmp.end(), 
                                            faceList[j]->faceNodes.begin(),
@@ -169,9 +184,9 @@ namespace Nektar
                         
                         // Even though faces/edges are at this point unique
                         // across the mesh, still need to test inserts since
-                        // high-order nodes may already have been inserted
-                        // into the list from an adjoining element or a
-                        // boundary element.
+                        // high-order nodes may already have been inserted into
+                        // the list from an adjoining element or a boundary
+                        // element.
                         for (int j = 0; j < tmp.size(); ++j)
                         {
                             pair<NodeSet::iterator, bool> testIns =
@@ -264,6 +279,7 @@ namespace Nektar
                             for (int k = 0; k < nodeList.size(); ++k)
                             {
                                 tags.push_back(nodeList[k]->id);
+                                //cout << "EDGENODE" << endl;
                             }
                         }
                         
@@ -272,12 +288,14 @@ namespace Nektar
                             nodeList = faceList[j]->faceNodes;
                             for (int k = 0; k < nodeList.size(); ++k)
                             {
+                                //cout << "FACENODE" << endl;
                                 tags.push_back(nodeList[k]->id);
                             }
                         }
                         
                         for (int j = 0; j < volList.size(); ++j)
                         {
+                            //cout << "VOLNODE" << endl;
                             tags.push_back(volList[j]->id);
                         }
                     }
@@ -288,7 +306,8 @@ namespace Nektar
                         int order = e->GetConf().order;
                         if (order > 4)
                         {
-                            cerr << "Temporary error: Gmsh tets only supported up to 4th order - will fix soon!" << endl;
+                            cerr << "Temporary error: Gmsh tets only supported "
+                                 << "up to 4th order - will fix soon!" << endl;
                             abort();
                         }
                         int pos = 4;
@@ -374,7 +393,8 @@ namespace Nektar
                         int order = e->GetConf().order;
                         if (order > 2)
                         {
-                            cerr << "Temporary error: Gmsh prisms only supported up to 2nd order!" << endl;
+                            cerr << "Temporary error: Gmsh prisms only "
+                                 << "supported up to 2nd order!" << endl;
                             abort();
                         }
                         

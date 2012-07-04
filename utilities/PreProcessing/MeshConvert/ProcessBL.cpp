@@ -51,11 +51,23 @@ namespace Nektar
     {
         ModuleKey ProcessBL::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("bl", eProcessModule), ProcessBL::create);
+                ModuleKey(eProcessModule, "bl"), ProcessBL::create,
+                "Refines a prismatic boundary layer.");
         
         ProcessBL::ProcessBL(MeshSharedPtr m) : ProcessModule(m)
         {
-            
+            config["layers"] = ConfigOption(false, "5",       
+                "Number of layers to refine.");
+            config["Re"]     = ConfigOption(false, "11e6",
+                "Reynolds number to adapt to.");
+            config["yplus"]  = ConfigOption(false, "1",
+                "y^+ value (i.e. height of first element).");
+            config["delta"]  = ConfigOption(false, "0.4",
+                "Power law value.");
+            config["rho"]    = ConfigOption(false, "1.2",
+                "Density (kg/m^3).");
+            config["nu"]     = ConfigOption(false, "15.68e-6",
+                "Kinematic viscosity (m^2/s).");
         }
       
         ProcessBL::~ProcessBL()
@@ -65,9 +77,38 @@ namespace Nektar
         
         void ProcessBL::Process()
         {
+	    int iLayers = 1;
+	    int npoints = 0;
+	    if (iLayers)
+            {
+		double Reynolds = config["Re"].as<double>();
+		double y_plus = config["yplus"].as<double>();
+		double delta_int = config["delta"].as<double>();
+		//
+		const double cord = 0.8059; //m
+		const double visc_nu = 15.68e-6; //m2\s
+		const double dens_rho = 1.2; //kg\m3
+		//	   
+		double U = visc_nu*Reynolds/cord;
+		double Cf = pow(2*log10(Reynolds)-0.65,-2.3);
+		double tau_w = Cf*0.5*dens_rho*pow(U,2);
+		double delta_y = visc_nu*y_plus/sqrt(tau_w/dens_rho)*10;
+		double delta_star = delta_y*2/delta_int;
+		double rr = 2; // TODO: Make variable.
+		npoints = int(ceil(log10(2/delta_star)/log10(rr)))+2;
+		double rn = powf(2.0/delta_star,1/double(npoints-2));
+		cerr << "Reynolds no. : " << Reynolds << ", y plus : " << y_plus << endl;
+		cerr << "U :  " << U << ", Cf :  " << Cf << ", tau_w :  " << tau_w << endl;
+		cerr << "delta :  " << delta_y << ", delta_star :  " << delta_star << endl;
+		cerr << "factor :  " << rn << " no. of layers :  " << npoints-1 << endl;
+            }
+      
+            // Create a duplicate of the element list.
+            //vector<ElementSharedPtr> el = m->element[m->expDim];
+	    const int nLayers = npoints-1;     
+
             // Create a duplicate of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
-            const int nLayers = 3;
             const int layerWidth = 3;
             // Set to 0 for prismatic boundary layer and 1 for tetrahedral
             // boundary layer mesh.

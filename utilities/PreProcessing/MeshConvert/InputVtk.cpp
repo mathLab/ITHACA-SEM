@@ -52,7 +52,8 @@ namespace Nektar
     {
         ModuleKey InputVtk::className =
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("vtk",eInputModule), InputVtk::create);
+                ModuleKey(eInputModule, "vtk"), InputVtk::create,
+                "Reads VTK format.");
 
         InputVtk::InputVtk(MeshSharedPtr m) : InputModule(m)
         {
@@ -77,6 +78,9 @@ namespace Nektar
          */
         void InputVtk::Process()
         {
+            // Open the file stream.
+            OpenStream();
+
             vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
             vtkMeshReader->SetFileName(m->inFilename.c_str());
             vtkMeshReader->Update();

@@ -46,7 +46,8 @@ namespace Nektar
     {
         ModuleKey OutputNekpp::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("xml", eOutputModule), OutputNekpp::create);
+                ModuleKey(eOutputModule, "xml"), OutputNekpp::create,
+                "Writes a Nektar++ xml file.");
 
         OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
         {
@@ -84,9 +85,8 @@ namespace Nektar
             WriteXmlConditions(root);
             
             // Save the XML file.
-            mshFile.close();
-            doc.SaveFile(m->outFilename);
-        }        
+            doc.SaveFile(config["outfile"].as<string>());
+        }
 
         void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
         {

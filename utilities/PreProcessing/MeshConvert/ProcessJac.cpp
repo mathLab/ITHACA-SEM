@@ -47,7 +47,8 @@ namespace Nektar
     {
         ModuleKey ProcessJac::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("jac", eProcessModule), ProcessJac::create);
+                ModuleKey(eProcessModule, "jac"), ProcessJac::create,
+                "Process elements based on values of Jacobian.");
 
         ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
         {

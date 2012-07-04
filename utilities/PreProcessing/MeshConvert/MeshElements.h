@@ -797,8 +797,6 @@ namespace Nektar
             std::map<int,int> m_boundaryLinks;
             /// Nektar++ geometry object for this element.
             SpatialDomains::GeometrySharedPtr m_geom;
-            std::map<int,int> m_test;
-            
         };
         /// Container for elements; key is expansion dimension, value is
         /// vector of elements of that dimension.
@@ -893,9 +891,8 @@ namespace Nektar
         class Mesh
         {
         public:
-            Mesh(const std::string inFilename, 
-                 const std::string outFilename);
-
+            Mesh() {}
+            
             /// Dimension of the expansion.
             unsigned int               expDim;
             /// Dimension of the space in which the mesh is defined.
@@ -916,10 +913,6 @@ namespace Nektar
             ConditionMap               condition;
             /// List of fields names.
             std::vector<std::string>   fields;
-            /// Original filename.
-            std::string                inFilename;
-            /// Intended target.
-            std::string                outFilename;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
             unsigned int               GetNumElements();
@@ -1013,7 +1006,8 @@ namespace Nektar
             virtual ~Triangle() {}
             
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
-
+            virtual void Complete(int order);
+            
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
@@ -1042,6 +1036,7 @@ namespace Nektar
             virtual ~Quadrilateral() {}
 
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+            virtual void Complete(int order);
 
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };

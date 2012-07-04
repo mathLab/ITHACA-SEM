@@ -60,6 +60,42 @@ namespace Nektar
             SIZE_ModuleType
         };
         
+        const char* const ModuleTypeMap[] =
+        {
+            "Input",
+            "Process",
+            "Output"
+        };
+
+        struct ConfigOption
+        {
+            ConfigOption(bool isBool, string defValue, string desc) :
+                isBool(isBool), beenSet(false), defValue(defValue), 
+                desc(desc), value() {}
+            ConfigOption() :
+                isBool(false), beenSet(false), defValue(), desc(), value() {}
+            
+            template<typename T>
+            T as()
+            {
+                try
+                {
+                    return boost::lexical_cast<T>(value);
+                }
+                catch(const std::exception &e)
+                {
+                    std::cerr << e.what() << std::endl;
+                    abort();
+                }
+            }
+            
+            bool   isBool;
+            bool   beenSet;
+            string value;
+            string defValue;
+            string desc;
+        };
+        
         /**
          * Abstract base class for mesh converter modules. Each subclass
          * implements the Process() function, which in some way alters the
@@ -71,9 +107,16 @@ namespace Nektar
             Module(MeshSharedPtr p_m) : m(p_m) {}
             virtual void Process() = 0;
             
+            void RegisterConfig(string key, string value);
+            void PrintConfig();
+            void SetDefaults();
+            
         protected:
             /// Mesh object
             MeshSharedPtr m;
+            /// List of configuration values.
+            map<string, ConfigOption> config;
+            
             /// Extract element vertices
             virtual void ProcessVertices();
             /// Extract element edges
@@ -99,6 +142,7 @@ namespace Nektar
         {
         public:
             InputModule(MeshSharedPtr p_m);
+            void OpenStream();
             
         protected:
             /// Print summary of elements.
@@ -118,7 +162,7 @@ namespace Nektar
         class ProcessModule : public Module
         {
         public:
-            ProcessModule(MeshSharedPtr p_m);
+            ProcessModule(MeshSharedPtr p_m) : Module(p_m) {}
         };
         
         /**
@@ -131,13 +175,14 @@ namespace Nektar
         {
         public:
             OutputModule(MeshSharedPtr p_m);
+            void OpenStream();
             
         protected:
             /// Output stream
             std::ofstream mshFile;
         };
         
-        typedef std::pair<std::string,ModuleType> ModuleKey;
+        typedef std::pair<ModuleType,std::string> ModuleKey;
         std::ostream& operator<<(std::ostream& os, const ModuleKey& rhs);
 
         typedef boost::shared_ptr<Module> ModuleSharedPtr;

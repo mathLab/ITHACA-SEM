@@ -47,7 +47,8 @@ namespace Nektar
     {
         ModuleKey InputGmsh::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("msh", eInputModule), InputGmsh::create);
+                ModuleKey(eInputModule, "msh"), InputGmsh::create,
+                "Reads Gmsh msh file.");
 
         std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = 
             InputGmsh::GenElmMap();
@@ -79,6 +80,9 @@ namespace Nektar
          */
         void InputGmsh::Process()
         {
+            // Open the file stream.
+            OpenStream();
+            
             m->expDim = 0;
             m->spaceDim = 0;
             string line;
@@ -321,9 +325,9 @@ namespace Nektar
             tmp[  4] = ElmtConfig(eTetrahedron,    1,  true,  true);
             tmp[  5] = ElmtConfig(eHexahedron,     1,  true,  true);
             tmp[  6] = ElmtConfig(ePrism,          1,  true,  true);
-            tmp[  8] = ElmtConfig(eLine,           2,  true, false);
-            tmp[  9] = ElmtConfig(eTriangle,       2,  true, false);
-            tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true, false);
+            tmp[  8] = ElmtConfig(eLine,           2,  true,  true);
+            tmp[  9] = ElmtConfig(eTriangle,       2,  true,  true);
+            tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true,  true);
             tmp[ 11] = ElmtConfig(eTetrahedron,    2,  true,  true);
             tmp[ 12] = ElmtConfig(eHexahedron,     2,  true,  true);
             tmp[ 13] = ElmtConfig(ePrism,          2,  true,  true);

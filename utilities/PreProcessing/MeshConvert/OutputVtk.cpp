@@ -51,7 +51,8 @@ namespace Nektar
     {
         ModuleKey OutputVtk::className =
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey("vtk", eOutputModule), OutputVtk::create);
+                ModuleKey(eOutputModule, "vtk"), OutputVtk::create,
+                "Writes a VTK file.");
 
         OutputVtk::OutputVtk(MeshSharedPtr m) : OutputModule(m)
         {
@@ -65,6 +66,9 @@ namespace Nektar
         
         void OutputVtk::Process()
         {
+            // Open the file stream.
+            OpenStream();
+
             vtkPolyData *vtkMesh = vtkPolyData::New();
             vtkPoints *vtkPoints = vtkPoints::New();
             vtkCellArray *vtkPolys = vtkCellArray::New();

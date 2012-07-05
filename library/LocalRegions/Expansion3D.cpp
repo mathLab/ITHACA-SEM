@@ -126,7 +126,7 @@ namespace Nektar
 //
             //================================================================
             // Add F = \tau <phi_i,in_phys>
-            // Fill edge and take inner product
+            // Fill face and take inner product
             FaceExp[face]->IProductWRTBase(FaceExp[face]->GetPhys(),
                                            FaceExp[face]->UpdateCoeffs());
             // add data to out array
@@ -203,7 +203,7 @@ namespace Nektar
             for(f = 0; f < nfaces; ++f)
             {
                 order_f = FaceExp[f]->GetNcoeffs();
-                nquad_f = FaceExp[f]->GetNumPoints(0);
+                nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
 
                 const Array<OneD, const Array<OneD, NekDouble> > normals = GetFaceNormal(f);
                 
@@ -249,7 +249,7 @@ namespace Nektar
         {
             int i;
             int order_f = FaceExp->GetNcoeffs();
-            int nquad_f = FaceExp->GetNumPoints(0);
+            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
             Array<OneD,unsigned int> map;
             Array<OneD,int> sign;
             Array<OneD, NekDouble> coeff(order_f);
@@ -285,22 +285,26 @@ namespace Nektar
 		{
 			int j,k;
 			StdRegions::Orientation dir2, dir1 = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+			dir2 = GetFaceOrient(face);
 
-			Array<OneD, NekDouble> f_in(inout);
 			Array<OneD, unsigned int> map1, map2;
 			Array<OneD, int> sign1, sign2;
 
-			dir2 = GetFaceOrient(face);
+			int nface = GetFaceNcoeffs(face);
+			Array<OneD, NekDouble> f_in(nface);
+			Vmath::Vcopy(nface,&inout[0],1,&f_in[0],1);
+			
 			//retreiving face to element map for standard face orientation and for actual face orientation
 			GetFaceToElementMap(face, dir1, map1, sign1); 
 			GetFaceToElementMap(face, dir2, map2, sign2); 
 
 			ASSERTL1(map1.num_elements() == map2.num_elements(), "There is an error with the GetFaceToElementMap");
 
+			//if(dir1 != dir2) cout << "face " << face << endl;
 			for(j = 0; j < map1.num_elements(); ++j)//index in the standard orientation
 				for(k = 0; k < map2.num_elements(); ++k)//index in the actual orientation
 				{
-					if(map1[j] == map2[k])
+					if(map1[j] == map2[k] && k != j)
 					{
 						inout[k] = f_in[j];
 						//checking if sign is changing
@@ -369,7 +373,6 @@ namespace Nektar
                     StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                            StdRegions::eWeakDeriv1,
                                                            StdRegions::eWeakDeriv2};
-                    DNekMat LocMat(ncoeffs,ncoeffs); 
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,ncoeffs);
                     DNekMat &Mat = *returnval;
@@ -408,11 +411,12 @@ namespace Nektar
                     // Add tau*E_l using elemental mass matrices on each edge
                     for(i = 0; i < nfaces; ++i)
                     {
+						//StdRegions::Orientation facedir = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
 						StdRegions::Orientation facedir = GetFaceOrient(i);
                         FaceExp = GetFaceExp(i);
-                        FaceExp2 = GetFaceExp(i);
+                        //FaceExp2 = GetFaceExp(i);
                         order_f = FaceExp->GetNcoeffs();  
-                        int nq = FaceExp->GetNumPoints(0);
+                        //int nq = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
                         GetFaceToElementMap(i,facedir,fmap,sign);
 
 //                        // @TODO: Document
@@ -481,7 +485,9 @@ namespace Nektar
                         Vmath::Zero(ncoeffs,&f[0],1);
                         lambda[j] = 1.0;
                         
+						//cout << Lambda;
                         SetTraceToGeomOrientation(lambda);
+						//cout << Lambda << endl;
                         
                         // Compute F = [I   D_1 M^{-1}   D_2 M^{-1}] C e_j
                         AddHDGHelmholtzTraceTerms(tau, lambda, FaceExp, mkey.GetVarCoeffs(), f);
@@ -508,18 +514,18 @@ namespace Nektar
                 {
                     int i,j,k,dir;
                     int nbndry = NumDGBndryCoeffs();
-                    int nquad  = GetNumPoints(0);
+                    //int nquad  = GetNumPoints(0);
                     int ncoeffs = GetNcoeffs();
                     int nfaces  = GetNfaces();
 
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
                     
                     Array<OneD,NekDouble> ulam(ncoeffs);
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(ncoeffs);
                     DNekVec F(ncoeffs,f,eWrapper);
-                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
                     
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
@@ -532,6 +538,11 @@ namespace Nektar
                     // Inverse mass matrix 
                     DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
                     
+                    for(i = 0; i < nfaces; ++i)
+                    {
+                        FaceExp[i] = GetFaceExp(i);
+                    }
+
                     //Weak Derivative matrix 
                     DNekScalMatSharedPtr Dmat;
                     switch(mkey.GetMatrixType())
@@ -553,12 +564,6 @@ namespace Nektar
                         break;
                     }
                 
-                    // Set up face segment expansions from local geom info
-                    for(i = 0; i < nfaces; ++i)
-                    {
-                        FaceExp[i] = GetFaceExp(i);
-                    }
-
                     // for each degree of freedom of the lambda space
                     // calculate Qmat entry 
                     // Generate Lambda to Q_lambda matrix 
@@ -654,6 +659,7 @@ namespace Nektar
 
                             normals = GetFaceNormal(f);
                             facedir = GetFaceOrient(f);
+							//facedir = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
                             
                             work = Array<OneD,NekDouble>(nquad_f);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
@@ -661,11 +667,11 @@ namespace Nektar
                             GetFaceToElementMap(f,facedir,fmap,sign);
 
 
-                            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
-                                                                    StdRegions::eVarCoeffD11,
-                                                                    StdRegions::eVarCoeffD22};
-                            const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
-                            StdRegions::VarCoeffMap::const_iterator x;
+//                            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
+//                                                                    StdRegions::eVarCoeffD11,
+//                                                                    StdRegions::eVarCoeffD22};
+//                            const StdRegions::VarCoeffMap &varcoeffs = mkey.GetVarCoeffs();
+//                            StdRegions::VarCoeffMap::const_iterator x;
 
                             // Q0 * n0 (BQ_0 terms)
                             for(j = 0; j < order_f; ++j)
@@ -748,7 +754,6 @@ namespace Nektar
 /// TODO: Add variable coeffs
                             FaceExp[f]->IProductWRTBase(work,FaceExp[f]->UpdateCoeffs());
                             
-//                            FaceExp[f]->SetCoeffsToOrientation(facedir);
                             SetFaceToGeomOrientation(f, FaceExp[f]->UpdateCoeffs());
 
                             for(j = 0; j < order_f; ++j)

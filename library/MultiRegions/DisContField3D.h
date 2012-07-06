@@ -88,6 +88,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~DisContField3D();
 
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
         protected:
             /**
              * An array of size equal to the number of boundary regions and
@@ -133,6 +134,14 @@ namespace Nektar
                                   map<int,int>& periodicEdges,
                                   map<int,int>& periodicFaces);
 
+            virtual void v_HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                    const FlagList &flags,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeff,
+                    const Array<OneD, const NekDouble> &dirForcing);
+			
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble time = 0.0,
                 const NekDouble x2_in = NekConstants::kNekUnsetDouble,

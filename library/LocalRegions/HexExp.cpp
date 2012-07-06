@@ -1953,7 +1953,7 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
-                returnval = Expansion3D::GenMatrix(mkey);
+                returnval = Expansion3D::v_GenMatrix(mkey);
                 break;
             default:
                 returnval = StdHexExp::v_GenMatrix(mkey);

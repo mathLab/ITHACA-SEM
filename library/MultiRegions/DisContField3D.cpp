@@ -318,6 +318,28 @@ namespace Nektar
         {
         }
 
+        GlobalLinSysSharedPtr DisContField3D::GetGlobalBndLinSys(const GlobalLinSysKey &mkey)
+        {
+            ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
+                     "Routine currently only tested for HybridDGHelmholtz");
+            ASSERTL1(mkey.GetGlobalSysSolnType()==m_traceMap->GetGlobalSysSolnType(),
+                     "The local to global map is not set up for the requested solution type");
+
+            GlobalLinSysSharedPtr glo_matrix;
+            GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
+
+            if(matrixIter == m_globalBndMat->end())
+            {
+                glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
+                (*m_globalBndMat)[mkey] = glo_matrix;
+            }
+            else
+            {
+                glo_matrix = matrixIter->second;
+            }
+
+            return glo_matrix;
+        }
         /**
          * According to their boundary region, the separate segmental boundary
          * expansions are bundled together in an object of the class
@@ -676,6 +698,134 @@ namespace Nektar
             return returnval;
         }
 
+		/**
+		 * Solving Helmholtz Equation in 3D
+		 */
+        void DisContField3D::v_HelmSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap &factors,
+                const StdRegions::VarCoeffMap &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing)
+        {
+            int i,j,n,cnt,cnt1,nbndry;
+            int nexp = GetExpSize();
+            StdRegions::StdExpansionSharedPtr BndExp;
+
+            Array<OneD,NekDouble> f(m_ncoeffs);
+            DNekVec F(m_ncoeffs,f,eWrapper);
+            Array<OneD,NekDouble> e_f, e_l;
+
+            //----------------------------------
+            //  Setup RHS Inner product
+            //----------------------------------
+            IProductWRTBase(inarray,f);
+            Vmath::Neg(m_ncoeffs,f,1);
+
+            //----------------------------------
+            //  Solve continuous flux System
+            //----------------------------------
+            int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
+            int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
+            int e_ncoeffs,id;
+
+            // Retrieve block matrix of U^e
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullAssemblyMapSharedPtr,factors,varcoeff);
+            const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
+
+            // Retrieve global trace space storage, \Lambda, from trace expansion
+            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs();
+
+            // Create trace space forcing, F
+            Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0);
+
+            // Zero \Lambda
+            Vmath::Zero(GloBndDofs,BndSol,1);
+
+            // Retrieve number of local trace space coefficients N_{\lambda},
+            // and set up local elemental trace solution \lambda^e.
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
+            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
+
+            //----------------------------------
+            // Evaluate Trace Forcing vector F
+            // Kirby et al, 2010, P23, Step 5.
+            //----------------------------------
+            // Loop over all expansions in the domain
+            for(cnt = cnt1 = n = 0; n < nexp; ++n)
+            {
+                nbndry = (*m_exp)[m_offset_elmt_id[n]]->NumDGBndryCoeffs();
+
+                e_ncoeffs = (*m_exp)[m_offset_elmt_id[n]]->GetNcoeffs();
+                e_f       = f + cnt;
+                e_l       = loc_lambda + cnt1;
+
+                // Local trace space \lambda^e
+                DNekVec     Floc    (nbndry, e_l, eWrapper);
+                // Local forcing f^e
+                DNekVec     ElmtFce (e_ncoeffs, e_f, eWrapper);
+                // Compute local (U^e)^{\top} f^e
+                Floc = Transpose(*(HDGLamToU->GetBlock(n,n)))*ElmtFce;
+
+                cnt   += e_ncoeffs;
+                cnt1  += nbndry;
+            }
+
+            // Assemble local \lambda_e into global \Lambda
+            m_traceMap->AssembleBnd(loc_lambda,BndRhs);
+
+            // Copy Dirichlet boundary conditions and weak forcing into trace
+            // space
+            cnt = 0;
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                        BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                    }
+                }
+                else
+                {
+                    //Add weak boundary condition to trace forcing
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                        BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                    }
+                }
+            }
+
+            //----------------------------------
+            // Solve trace problem: \Lambda = K^{-1} F
+            // K is the HybridDGHelmBndLam matrix.
+            //----------------------------------
+            if(GloBndDofs - NumDirichlet > 0)
+            {
+                GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
+                                          m_traceMap,factors,varcoeff);
+                GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
+                LinSys->Solve(BndRhs,BndSol,m_traceMap);
+            }
+
+            //----------------------------------
+            // Internal element solves
+            //----------------------------------
+            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,NullAssemblyMapSharedPtr,factors,varcoeff);
+            const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);
+            Vmath::Zero(m_ncoeffs,outarray,1);
+
+            // get local trace solution from BndSol
+            m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
+
+            //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
+            out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
+        }
 
         void DisContField3D::v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                     Array<OneD,int> &FaceID)

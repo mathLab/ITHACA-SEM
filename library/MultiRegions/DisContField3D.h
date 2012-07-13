@@ -51,7 +51,7 @@
 namespace Nektar
 {
     namespace MultiRegions
-    {
+    {        
         /**
          * Abstraction of a global discontinuous three-dimensional spectral/hp
          * element expansion which approximates the solution of a set of
@@ -108,6 +108,19 @@ namespace Nektar
             ExpListSharedPtr            m_trace;
             AssemblyMapDGSharedPtr      m_traceMap;
 
+            /**
+             * @brief A map which identifies pairs of periodic faces.
+             */
+            map<int, PeriodicFace> m_periodicFaces;
+	    
+            /**
+             * @brief Auxiliary map for periodic boundary conditions.
+             * 
+             * Takes geometry IDs of periodic edges to a pair (n,e), where n
+             * is the expansion containing the edge and e the local edge number.
+             */
+            boost::unordered_map<int,pair<int,int> > m_perFaceToExpMap;
+
             /// This function discretises the boundary conditions by setting up
             /// a list of one-dimensional boundary expansions.
             void GenerateBoundaryConditionExpansion(
@@ -127,12 +140,13 @@ namespace Nektar
                     &bndConditions);
 
             /// Generates a map of periodic faces in the mesh.
-            void GetPeriodicFaces(const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                  const SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string &variable,
-                                  map<int,int>& periodicVertices,
-                                  map<int,int>& periodicEdges,
-                                  map<int,int>& periodicFaces);
+            void GetPeriodicFaces(
+                const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                const SpatialDomains::BoundaryConditions &bcs,
+                const std::string                        &variable,
+                map<int,int>                             &periodicVertices,
+                map<int,int>                             &periodicEdges,
+                map<int,PeriodicFace>                    &periodicFaces);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,

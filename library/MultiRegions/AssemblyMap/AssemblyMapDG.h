@@ -95,7 +95,7 @@ namespace Nektar
                                                                 &bndConstraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicFaces);
+                const map<int,PeriodicFace> &periodicFaces);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapDG();

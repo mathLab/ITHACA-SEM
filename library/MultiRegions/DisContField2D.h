@@ -128,9 +128,24 @@ namespace Nektar
             Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
             Array<OneD,StdRegions::Orientation>    m_edgedir;
 
+            /**
+             * @brief A set storing the global IDs of any boundary edges.
+             */
             std::set<int> m_boundaryEdges;
+            
+            /**
+             * @brief A map which identifies pairs of periodic edges.
+             */
             map<int,int> m_periodicEdges;
 	    
+            /**
+             * @brief Auxiliary map for periodic boundary conditions.
+             * 
+             * Takes geometry IDs of periodic edges to a pair (n,e), where n
+             * is the expansion containing the edge and e the local edge number.
+             */
+            boost::unordered_map<int,pair<int,int> > m_perEdgeToExpMap;
+
             /**
              * \brief This function discretises the boundary conditions by setting up
              * a list of one-dimensional boundary expansions.

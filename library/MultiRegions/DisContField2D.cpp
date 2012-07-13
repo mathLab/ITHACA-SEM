@@ -101,6 +101,13 @@ namespace Nektar
                 
                 m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
                 
+                m_traceMap = MemoryManager<AssemblyMapDG>::
+                    AllocateSharedPtr(m_session, graph2D, trace, *this,
+                                      m_bndCondExpansions,m_bndConditions,periodicEdges);
+                
+                Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+                
                 // Scatter trace segments to 2D elements. For each element,
                 // we find the trace segment associated to each edge. The
                 // element then retains a pointer to the trace space segments,
@@ -112,35 +119,24 @@ namespace Nektar
                 {
                     for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
                     {
-                        ElmtSegGeom  = ((*m_exp)[i]->GetGeom2D())->GetEdge(j);
-                        for (int k = 0; k < m_trace->GetExpSize(); ++k)
-                        {
-                            TraceSegGeom = m_trace->GetExp(k)->GetGeom1D();
-                            if (TraceSegGeom == ElmtSegGeom)
-                            {
-                                LocalRegions::Expansion2DSharedPtr exp2d
-                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[i]);
-                                LocalRegions::Expansion1DSharedPtr exp1d
-                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(m_trace->GetExp(k));
-                                LocalRegions::ExpansionSharedPtr   exp
-                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion>  (m_trace->GetExp(k));
-
-                                exp2d->SetEdgeExp(j,exp);
-                                exp1d->SetAdjacentElementExp(j,exp2d);
-                                break;
-                            }
-                        }
+                        LocalRegions::Expansion2DSharedPtr exp2d =
+                            boost::dynamic_pointer_cast<
+                                LocalRegions::Expansion2D>((*m_exp)[i]);
+                        LocalRegions::Expansion1DSharedPtr exp1d =
+                            boost::dynamic_pointer_cast<
+                                LocalRegions::Expansion1D>(elmtToTrace[i][j]);
+                        LocalRegions::ExpansionSharedPtr exp =
+                            boost::dynamic_pointer_cast<
+                                LocalRegions::Expansion>(elmtToTrace[i][j]);
+                        exp2d->SetEdgeExp           (j, exp  );
+                        exp1d->SetAdjacentElementExp(j, exp2d);
                     }
                 }
 
+                // Set up physical normals
                 SetUpPhysNormals();
-
-                m_traceMap = MemoryManager<AssemblyMapDG>::
-                    AllocateSharedPtr(m_session, graph2D, trace, *this,
-                                      m_bndCondExpansions,m_bndConditions,periodicEdges);
                 
-                // -- Set up information for parallel jobs.
-                
+                // Set up information for parallel jobs.
                 for (int i = 0; i < m_trace->GetExpSize(); ++i)
                 {
                     LocalRegions::Expansion1DSharedPtr traceEl = 
@@ -171,6 +167,21 @@ namespace Nektar
                         }
                     }
                     cnt += m_bndCondExpansions[n]->GetExpSize();
+                }
+
+                // Set up information for periodic boundary conditions.
+                for (n = 0; n < m_exp->size(); ++n)
+                {
+                    for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                    {
+                        map<int,int>::iterator it = m_periodicEdges.find(
+                            (*m_exp)[n]->GetGeom2D()->GetEid(e));
+                        
+                        if (it != m_periodicEdges.end())
+                        {
+                            m_perEdgeToExpMap[it->first] = make_pair(n, e);
+                        }
+                    }
                 }
             }
             else
@@ -674,14 +685,16 @@ namespace Nektar
             StdRegions::Orientation edgedir;
             int nquad_e,cnt,n,e,npts,offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            set<int>::iterator it;
-
+            set<int>::iterator     it;
+            map<int,int>::iterator it2;
+            boost::unordered_map<int,pair<int,int> >::iterator it3;
+            
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
             
-            // zero vectors;
-            Vmath::Zero(Fwd.num_elements(),Fwd,1);
-            Vmath::Zero(Bwd.num_elements(),Bwd,1);
+            // Zero forward/backward vectors.
+            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
+            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
             for(n = 0; n < nexp; ++n)
             {
@@ -693,7 +706,7 @@ namespace Nektar
                         boost::dynamic_pointer_cast<
                             LocalRegions::Expansion1D>(elmtToTrace[n][e]);
                     
-                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
                     
                     bool fwd = true;
                     if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
@@ -701,6 +714,9 @@ namespace Nektar
                     {
                         // Boundary edge (1 connected element) - do nothing.
                         it = m_boundaryEdges.find(elmtToTrace[n][e]->GetElmtId());
+                        
+                        // If the edge does not have a boundary condition set on
+                        // it, then assume it is a partition edge.
                         if (it == m_boundaryEdges.end())
                         {
                             fwd = m_traceMap->GetTraceToUniversalMapUnique(offset) > 0;
@@ -711,8 +727,8 @@ namespace Nektar
                     {
                         // Non-boundary edge (2 connected elements).
                         fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                                    (traceEl->GetLeftAdjacentElementExp().get()) ==
-                              (*m_exp)[n].get();
+                            (traceEl->GetLeftAdjacentElementExp().get()) ==
+                            (*m_exp)[n].get();
                     }
                     else
                     {
@@ -730,6 +746,39 @@ namespace Nektar
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
+                    }
+                    
+                    // Check to see if this edge is periodic.
+                    it2 = m_periodicEdges.find(
+                        (*m_exp)[n]->GetGeom2D()->GetEid(e));
+                    
+                    if (it2 != m_periodicEdges.end())
+                    {
+                        it3 = m_perEdgeToExpMap.find(abs(it2->second));
+
+                        ASSERTL2(fwd, "Periodic edge in non-forward space?");
+                        ASSERTL2(it3 != m_perEdgeToExpMap.end(),
+                                 "Periodic edge not found!");
+                        
+                        int offset2 = m_trace->GetPhys_Offset(
+                            elmtToTrace[it3->second.first][it3->second.second]->
+                                GetElmtId());
+                        
+                        /*
+                         * Copy fwd -> bwd space, reverse if necessary. Note
+                         * that for varying polynomial order this condition will
+                         * not work (needs some kind of interpolation here).
+                         */
+                        if (it2->second < 0 || m_periodicEdges[abs(it2->second)] < 0)
+                        {
+                            Vmath::Reverse(elmtToTrace[n][e]->GetTotPoints(),
+                                           &Fwd[offset], 1, &Bwd[offset2], 1);
+                        }
+                        else
+                        {
+                            Vmath::Vcopy  (elmtToTrace[n][e]->GetTotPoints(),
+                                           &Fwd[offset], 1, &Bwd[offset2], 1);
+                        }
                     }
                 }
             }
@@ -809,11 +858,12 @@ namespace Nektar
             for(n  = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
-				
+                
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
-                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    offset = m_trace->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e],
                                                  inarray + phys_offset,
                                                  e_tmp = outarray + offset);
@@ -862,10 +912,11 @@ namespace Nektar
                 offset = GetCoeff_Offset(n);
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddEdgeNormBoundaryInt(e,elmtToTrace[n][e],
-                                                        Fn + t_offset,
-                                                        e_outarray = outarray+offset);
+                    t_offset = GetTrace()->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
+                    (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                        e, elmtToTrace[n][e], Fn+t_offset,
+                        e_outarray = outarray+offset);
                 }
             }
         }

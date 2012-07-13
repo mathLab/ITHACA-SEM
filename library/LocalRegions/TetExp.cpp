@@ -706,20 +706,25 @@ namespace Nektar
          * \brief Returns the physical values at the quadrature points of a face
          */
         void TetExp::v_GetFacePhysVals(
-                  const int face,
-                  const StdRegions::StdExpansionSharedPtr &FaceExp,
-                  const Array<OneD,const NekDouble> &inarray,
-                  Array<OneD,NekDouble> &outarray)
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
 
-            Array<OneD,NekDouble>       o_tmp (GetFaceNumPoints(face));
-            Array<OneD,NekDouble>       o_tmp2(FaceExp->GetTotPoints());
-            Array<OneD,NekDouble>       o_tmp3;
-            StdRegions::Orientation facedir = GetFaceOrient(face);
-
+            Array<OneD,NekDouble> o_tmp (GetFaceNumPoints(face));
+            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
+            Array<OneD,NekDouble> o_tmp3;
+            
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetFaceOrient(face);
+            }
+            
             switch(face)
             {
                 case 0:
@@ -769,7 +774,7 @@ namespace Nektar
             int nq1 = FaceExp->GetNumPoints(0);
             int nq2 = FaceExp->GetNumPoints(1);
             
-            if ((int)facedir == 7)
+            if ((int)orient == 7)
             {
                 for (int j = 0; j < nq2; ++j)
                 {

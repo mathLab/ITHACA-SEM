@@ -382,20 +382,93 @@ namespace Nektar
                 const TriGeom &face1,
                 const TriGeom &face2)
         {
-            StdRegions::Orientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-            ASSERTL0(false,"this function is not yet implemented.");
-            // TODO : implement
-            //             eDir1FwdDir1_Dir2BwdDir2
-            //             eDir1BwdDir1_Dir2FwdDir2
-            //             eDir1BwdDir1_Dir2BwdDir2
-            //             eDir1FwdDir2_Dir2FwdDir1
-            //             eDir1FwdDir2_Dir2BwdDir1
-            //             eDir1BwdDir2_Dir2FwdDir1
-            //             eDir1BwdDir2_Dir2BwdDir1
+            StdRegions::Orientation returnval;
+            
+            int i, j, map[3] = {-1,-1,-1};
+            double x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+           
+            // For periodic faces, we calculate the vector between the centre
+            // points of the two faces. (For connected faces this will be
+            // zero). We can then use this to determine alignment later in the
+            // algorithm.
+            for (i = 0; i < 3; ++i)
+            {
+                cx += (*face2.m_verts[i])(0) - (*face1.m_verts[i])(0);
+                cy += (*face2.m_verts[i])(1) - (*face1.m_verts[i])(1);
+                cz += (*face2.m_verts[i])(2) - (*face1.m_verts[i])(2);
+            }
+            cx /= 3;
+            cy /= 3;
+            cz /= 3;
+           
+            /*
+            cout << "From face " << face1.GetGlobalID() << " -> " 
+                 << face2.GetGlobalID() << endl;
+            cout << "Vector c = " << cx << " " << cy << " " << cz << endl;
+            */
+            
+            // Now construct a mapping which takes us from the vertices of one
+            // face to the other. That is, vertex j of face2 corresponds to
+            // vertex map[j] of face1.
+            for (i = 0; i < 3; ++i)
+            {
+                x = (*face1.m_verts[i])(0);
+                y = (*face1.m_verts[i])(1);
+                z = (*face1.m_verts[i])(2);
+                for (j = 0; j < 3; ++j)
+                {
+                    x1 = (*face2.m_verts[j])(0)-cx;
+                    y1 = (*face2.m_verts[j])(1)-cy;
+                    z1 = (*face2.m_verts[j])(2)-cz;
+                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
+                    {
+                        map[j] = i;
+                        break;
+                    }
+                }
+            }
 
+            for (i = 0; i < 3; ++i)
+            {
+                ASSERTL0(map[i] != -1, "Unable to determine face mapping.");
+            }
+            
+            // Use the mapping to determine the eight alignment options between
+            // faces.
+            if (map[1] == (map[0]+1) % 3)
+            {
+                switch (map[0])
+                {
+                    case 0:
+                        returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+                        break;
+                    case 1:
+                        returnval = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+                        break;
+                    case 2:
+                        returnval = StdRegions::eDir1BwdDir1_Dir2BwdDir2;
+                        break;
+                }
+            }
+            else 
+            {
+                switch (map[0])
+                {
+                    case 0:
+                        returnval = StdRegions::eDir1FwdDir2_Dir2FwdDir1;
+                        break;
+                    case 1:
+                        returnval = StdRegions::eDir1BwdDir1_Dir2FwdDir2;
+                        break;
+                    case 2:
+                        returnval = StdRegions::eDir1BwdDir2_Dir2BwdDir1;
+                        break;
+                }
+            }
+            
             return returnval;
         }
-
+        
 
         /**
          *

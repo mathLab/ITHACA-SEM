@@ -205,6 +205,7 @@ namespace Nektar
                 {
                     id = (locSegExp->GetGeom1D())->GetEid();
 
+                    /*
                     if(periodicEdges.count(id) > 0)
                     {
                         if(MeshEdgeId.count(id) == 0)
@@ -216,8 +217,11 @@ namespace Nektar
                     }
                     else
                     {
-                        MeshEdgeId[id] = i;
+                    */
+                    MeshEdgeId[id] = i;
+                    /*
                     }
+                    */
                 }
                 else
                 {
@@ -639,14 +643,15 @@ namespace Nektar
         /**
          * Constructor for trace map for three-dimensional expansion.
          */
-        AssemblyMapDG::AssemblyMapDG(const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                const ExpList2DSharedPtr &trace,
-                const ExpList &locExp,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
-                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-                const map<int,int> &periodicFaces):
-                AssemblyMap(pSession)
+        AssemblyMapDG::AssemblyMapDG(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr &graph3D,
+            const ExpList2DSharedPtr &trace,
+            const ExpList &locExp,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
+            const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
+            const map<int,PeriodicFace> &periodicFaces):
+            AssemblyMap(pSession)
         {
 
 
@@ -685,20 +690,24 @@ namespace Nektar
                 {
                     ASSERTL0(false,"Dynamic cast to face expansion failed");
                 }
-				
+                
+                /*
                 if(periodicFaces.count(id) > 0)
                 {
                     if(MeshFaceId.count(id) == 0)
                     {
-                        id1 = periodicFaces.find(id)->second;
+                        id1 = periodicFaces.find(id)->second.first;
                         MeshFaceId[id] = i;
                         MeshFaceId[id1] = i;
                     }
                 }
                 else
                 {
-                    MeshFaceId[id] = i;
+                */
+                MeshFaceId[id] = i;
+                /*
                 }
+                */
             }
 
             // Count total number of faces

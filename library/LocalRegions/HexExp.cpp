@@ -847,26 +847,30 @@ namespace Nektar
 
         ///Returns the physical values at the quadrature points of a face
         void HexExp::v_GetFacePhysVals(
-                const int face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD,const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-
-            StdRegions::Orientation facedir = GetFaceOrient(face);
+            
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetFaceOrient(face);
+            }
 
             switch(face)
             {
             case 0:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     Vmath::Vcopy(nquad0*nquad1,&(inarray[0]),1,&(outarray[0]),1);
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
                     //Direction A negative and B positive
                     for (int j=0; j<nquad1; j++)
@@ -874,7 +878,7 @@ namespace Nektar
                         Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1)+j*nquad0,-1,&(outarray[0])+(j*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
                 {
                     //Direction A positive and B negative
                     for (int j=0; j<nquad1; j++)
@@ -882,7 +886,7 @@ namespace Nektar
                         Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1-j),1,&(outarray[0])+(j*nquad0),1);
                     }
                 } 
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
                     //Direction A negative and B negative
                     for(int j=0; j<nquad1; j++)
@@ -890,7 +894,7 @@ namespace Nektar
                         Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0*nquad1-1-j*nquad0),-1,&(outarray[0])+(j*nquad0),1);
                     }
                 }
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -898,7 +902,7 @@ namespace Nektar
                         Vmath::Vcopy(nquad1,&(inarray[0])+i,nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		}
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A positive and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -906,7 +910,7 @@ namespace Nektar
 		        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1-i),nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -914,7 +918,7 @@ namespace Nektar
 		        Vmath::Vcopy(nquad1,&(inarray[0])+i+nquad0*(nquad1-1),-nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -924,7 +928,7 @@ namespace Nektar
 		} 
                 break;
             case 1:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Direction A and B positive
                     for (int k=0; k<nquad2; k++)
@@ -933,7 +937,7 @@ namespace Nektar
 				     1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
                     //Direction A negative and B positive
                     for (int k=0; k<nquad2; k++)
@@ -942,7 +946,7 @@ namespace Nektar
                                      -1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
                 {
                     //Direction A positive and B negative
                     for (int k=0; k<nquad2; k++)
@@ -951,7 +955,7 @@ namespace Nektar
                                      1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
                     //Direction A negative and B negative
                     for(int k=0; k<nquad2; k++)
@@ -960,7 +964,7 @@ namespace Nektar
                                      -1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -969,7 +973,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		}
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A positive and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -978,7 +982,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -987,7 +991,7 @@ namespace Nektar
                                      -nquad0*nquad1,&(outarray[0])+(i*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -998,13 +1002,13 @@ namespace Nektar
 		} 
                 break;
             case 2:
-	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+	        if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     Vmath::Vcopy(nquad0*nquad1,&(inarray[0])+(nquad0-1),
                                  nquad0,&(outarray[0]),1);
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
                     //Direction A negative and B positive
                     for (int k=0; k<nquad2; k++)
@@ -1013,7 +1017,7 @@ namespace Nektar
                                      -nquad0,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
                 {
                     //Direction A positive and B negative
                     for (int k=0; k<nquad2; k++)
@@ -1022,7 +1026,7 @@ namespace Nektar
                                      nquad0,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
                     //Direction A negative and B negative
                     for (int k=0; k<nquad2; k++)
@@ -1031,7 +1035,7 @@ namespace Nektar
                                      -nquad0,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A and B positive
 		    for (int j=0; j<nquad1; j++)
@@ -1040,7 +1044,7 @@ namespace Nektar
                                      nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		}
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A positive and B negative
 		    for (int j=0; j<nquad0; j++)
@@ -1049,7 +1053,7 @@ namespace Nektar
                                      nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A negative and B positive
 		    for (int j=0; j<nquad0; j++)
@@ -1058,7 +1062,7 @@ namespace Nektar
                                      -nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A and B negative
 		    for (int j=0; j<nquad0; j++)
@@ -1069,7 +1073,7 @@ namespace Nektar
 		} 
                 break;
             case 3:
-	        if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+	        if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     for (int k=0; k<nquad2; k++)
@@ -1078,7 +1082,7 @@ namespace Nektar
                                      1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
                     //Direction A negative and B positive
                     for (int k=0; k<nquad2; k++)
@@ -1087,7 +1091,7 @@ namespace Nektar
                                      -1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
                 {
                     //Direction A positive and B negative
                     for (int k=0; k<nquad2; k++)
@@ -1096,7 +1100,7 @@ namespace Nektar
                                      1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
                     //Direction A negative and B negative
                     for (int k=0; k<nquad2; k++)
@@ -1105,7 +1109,7 @@ namespace Nektar
                                      -1,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -1114,7 +1118,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		}
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A positive and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -1123,7 +1127,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -1132,7 +1136,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -1143,12 +1147,12 @@ namespace Nektar
 		} 
                 break;
             case 4:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     Vmath::Vcopy(nquad0*nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
                     //Direction A negative and B positive
                     for (int k=0; k<nquad2; k++)
@@ -1157,7 +1161,7 @@ namespace Nektar
                                      -nquad0,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
                 {
                     //Direction A positive and B negative
                     for (int k=0; k<nquad2; k++)
@@ -1166,7 +1170,7 @@ namespace Nektar
                                      nquad0,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
                     //Direction A negative and B negative
                     for (int k=0; k<nquad2; k++)
@@ -1175,7 +1179,7 @@ namespace Nektar
                                      -nquad0,&(outarray[0])+(k*nquad0),1);
                     }
                 }
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A and B positive
 		    for (int j=0; j<nquad0; j++)
@@ -1184,7 +1188,7 @@ namespace Nektar
                                      &(outarray[0])+(j*nquad2),1);
                     }
 		}
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A positive and B negative
 		    for (int j=0; j<nquad0; j++)
@@ -1193,7 +1197,7 @@ namespace Nektar
                                      nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A negative and B positive
 		    for (int j=0; j<nquad0; j++)
@@ -1202,7 +1206,7 @@ namespace Nektar
                                      -nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A and B negative
 		    for (int j=0; j<nquad0; j++)
@@ -1213,12 +1217,12 @@ namespace Nektar
 		} 
                 break;
             case 5:
-                if(facedir == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
                     //Directions A and B positive
                     Vmath::Vcopy(nquad0*nquad1,&(inarray[0])+nquad0*nquad1*(nquad2-1),1,&(outarray[0]),1);
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
                     //Direction A negative and B positive
                     for (int j=0; j<nquad1; j++)
@@ -1227,7 +1231,7 @@ namespace Nektar
                                      -1,&(outarray[0])+(j*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
                 {
                     //Direction A positive and B negative
                     for (int j=0; j<nquad1; j++)
@@ -1236,7 +1240,7 @@ namespace Nektar
                                      1,&(outarray[0])+(j*nquad0),1);
                     }
                 }
-                else if(facedir == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
                 {
                     //Direction A negative and B negative
                     for (int j=0; j<nquad1; j++)
@@ -1245,7 +1249,7 @@ namespace Nektar
                                      -1,&(outarray[0])+(j*nquad0),1);
                     }
                 }
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -1254,7 +1258,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad1),1);
                     }
 		}
-		else if(facedir == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A positive and B negative
 		    for (int i=0; i<nquad0; i++)
@@ -1263,7 +1267,7 @@ namespace Nektar
                                      nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
@@ -1272,7 +1276,7 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad1),1);
                     }
 		} 
-		else if(facedir == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
 		{
 		    //Transposed, Direction A and B negative
 		    for (int i=0; i<nquad0; i++)

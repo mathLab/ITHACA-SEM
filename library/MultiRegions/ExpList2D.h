@@ -59,6 +59,8 @@ namespace Nektar
         /// Iterator for the vector of ExpList2D pointers.
         typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
 
+        typedef pair<int, StdRegions::Orientation> PeriodicFace;
+        
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
         class ExpList2D: public ExpList
@@ -102,7 +104,7 @@ namespace Nektar
                       const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
                       const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                      const map<int,int> &periodicFaces,
+                      const map<int,PeriodicFace> &periodicFaces,
                       const bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in

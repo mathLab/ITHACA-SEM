@@ -1017,9 +1017,14 @@ namespace Nektar
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
 
-            void GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion> &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetFacePhysVals(
+                const int                                face,
+                const boost::shared_ptr<StdExpansion>   &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient = eNoOrientation)
             {
-                v_GetFacePhysVals(face,FaceExp,inarray,outarray);
+                v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
             }
 
             // Matrix Routines
@@ -1753,7 +1758,12 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(const int face, const boost::shared_ptr<StdExpansion>  &FaceExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(
+                const int                                face,
+                const boost::shared_ptr<StdExpansion>   &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
 
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 

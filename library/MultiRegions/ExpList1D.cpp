@@ -459,10 +459,12 @@ namespace Nektar
                                         ::AllocateSharedPtr(EdgeBkey, SegGeom);
                         EdgeDone[id] = elmtid;
 
+                        /*
                         if (periodicEdges.count(id) > 0)
                         {
-                            EdgeDone[periodicEdges.find(id)->second] = elmtid;
+                            EdgeDone[abs(periodicEdges.find(id)->second)] = elmtid;
                         }
+                        */
 
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);
@@ -496,17 +498,6 @@ namespace Nektar
                                 "num of points is not set with max order)");
                         }
                     }
-
-//                    if (NormalSet.count(id) == 0)
-//                    {
-//                        Seg = boost::dynamic_pointer_cast
-//                                    <LocalRegions::SegExp>(
-//                                        (*m_exp)[EdgeDone.find(id)->second]);
-//
-//                        // Set up normals at all Segment Quadrature points
-//                        Seg->SetUpPhysNormals(locexp[i],j);
-//                        NormalSet[id] = 1;
-//                    }
                 }
             }
 
@@ -908,7 +899,7 @@ namespace Nektar
                 // Get the number of points and the data offset.
                 e_npoints = (*m_exp)[i]->GetNumPoints(0);
                 offset = m_phys_offset[i];
-
+                
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {

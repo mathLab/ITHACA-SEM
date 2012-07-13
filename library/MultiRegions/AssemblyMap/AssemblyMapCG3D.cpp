@@ -84,7 +84,7 @@ namespace Nektar
                                                                 &bndConditions,
                 const map<int,int>& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
-                const map<int,int>& periodicFacesId):
+                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId):
             AssemblyMapCG(pSession)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
@@ -164,13 +164,14 @@ namespace Nektar
          *
          * Therefore, the algorithm proceeds as follows:
          */
-        void AssemblyMapCG3D::SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
-                                                               const ExpList &locExp,
-                                                               const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-                                                               const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                                               const map<int,int>& periodicVerticesId,
-                                                               const map<int,int>& periodicEdgesId,
-                                                               const map<int,int>& periodicFacesId)
+        void AssemblyMapCG3D::SetUp3DExpansionC0ContMap(
+            const int numLocalCoeffs,
+            const ExpList &locExp,
+            const Array<OneD, const ExpListSharedPtr> &bndCondExp,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
+            const map<int,int>& periodicVerticesId,
+            const map<int,int>& periodicEdgesId,
+            const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId)
         {
             int i,j,k,l;
             int cnt = 0,cnt1=0;
@@ -191,8 +192,8 @@ namespace Nektar
             StdRegions::StdExpansion3DSharedPtr locExpansion;
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
             LibUtilities::BasisType             bType;
-            StdRegions::Orientation         edgeOrient;
-            StdRegions::Orientation         faceOrient;
+            StdRegions::Orientation             edgeOrient;
+            StdRegions::Orientation             faceOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
@@ -201,12 +202,16 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
             m_signChange = false;
+            //m_systemSingular = false;
 
             map<int,int> vertReorderedGraphVertId;
             map<int,int> edgeReorderedGraphVertId;
             map<int,int> faceReorderedGraphVertId;
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
+            map<int,pair<int, StdRegions::Orientation> >::const_iterator mapFaceIt;
+
+            bool systemSingular = true;
 
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -238,6 +243,10 @@ namespace Nektar
                             }
                         }
                         nLocDirBndCondDofs += bndCondFaceExp->GetNcoeffs();
+                    }
+                    if (bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eNeumann)
+                    {
+                        systemSingular = false;
                     }
                     nLocBndCondDofs += bndCondFaceExp->GetNcoeffs();
                 }
@@ -354,7 +363,9 @@ namespace Nektar
             }
 
             /// - Periodic edges
-            for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
+            for(mapConstIt  = periodicEdgesId.begin(); 
+                mapConstIt != periodicEdgesId.end(); 
+                mapConstIt++)
             {
                 meshEdgeId  = mapConstIt->first;
                 meshEdgeId2 = mapConstIt->second;
@@ -422,19 +433,23 @@ namespace Nektar
                     {
                         edgeReorderedGraphVertId[meshEdgeId2] = edgeReorderedGraphVertId[meshEdgeId];
                     }
+                    /*
                     else
                     {
                         ASSERTL0(edgeReorderedGraphVertId[meshEdgeId2] == edgeReorderedGraphVertId[meshEdgeId],
                                  "These values should be equal");
                     }
+                    */
                 }
             }
 
             /// - Periodic faces
-            for(mapConstIt = periodicFacesId.begin(); mapConstIt != periodicFacesId.end(); mapConstIt++)
+            for(mapFaceIt  = periodicFacesId.begin(); 
+                mapFaceIt != periodicFacesId.end(); 
+                mapFaceIt++)
             {
-                meshFaceId  = mapConstIt->first;
-                meshFaceId2 = mapConstIt->second;
+                meshFaceId  = mapFaceIt->first;
+                meshFaceId2 = mapFaceIt->second.first;
 
                 if(meshFaceId < meshFaceId2)
                 {
@@ -909,10 +924,20 @@ namespace Nektar
 
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
+                    map<int, pair<int, StdRegions::Orientation> >::const_iterator it;
+                    
                     nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
                     faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
                     meshFaceId          = (locExpansion->GetGeom3D())->GetFid(j);
-
+                    
+                    /*
+                    it = periodicFaces.find(meshFaceId);
+                    if (it == periodicFaces.begin())
+                    {
+                        
+                    }
+                    */
+                    
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
 
                     // Set the global DOF's for the interior modes of face j
@@ -1017,7 +1042,8 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if( (m_solnType == eDirectMultiLevelStaticCond || m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
+            if (m_solnType == eDirectMultiLevelStaticCond || 
+                m_solnType == eIterativeMultiLevelStaticCond && nGraphVerts )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
@@ -1028,14 +1054,13 @@ namespace Nektar
                     }
 
                     bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                    m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::AllocateSharedPtr(this,bottomUpGraph);
+                    m_nextLevelLocalToGlobalMap = MemoryManager<
+                        AssemblyMap>::AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
 
-            m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+            m_hash = boost::hash_range(m_localToGlobalMap.begin(), 
+                                       m_localToGlobalMap.end());
         }
-
-
-
     } // namespace
 } // namespace

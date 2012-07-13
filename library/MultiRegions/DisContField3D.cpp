@@ -82,9 +82,9 @@ namespace Nektar
                 
                 // Set up matrix map
                 m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-                map<int,int> periodicEdges;
-                map<int,int> periodicVertices;
-                map<int,int> periodicFaces;
+                map<int,int>          periodicEdges;
+                map<int,int>          periodicVertices;
+                map<int,PeriodicFace> periodicFaces;
                 GetPeriodicFaces(graph3D, bcs, variable,
                                  periodicVertices, periodicEdges, periodicFaces);
                 
@@ -93,7 +93,8 @@ namespace Nektar
                 trace = MemoryManager<ExpList2D>
                     ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
                                         *m_exp,graph3D, periodicFaces, UseGenSegExp);
-                m_trace = trace;
+                m_trace         = trace;
+                m_periodicFaces = periodicFaces;
                 
                 // Scatter trace segments to 3D elements. For each element,
                 // we find the trace segment associated to each face. The
@@ -127,6 +128,21 @@ namespace Nektar
                 m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
                     m_session,graph3D,trace,*this,m_bndCondExpansions,
                     m_bndConditions, periodicFaces);
+
+                // Set up information for periodic boundary conditions.
+                for (int n = 0; n < m_exp->size(); ++n)
+                {
+                    for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                    {
+                        map<int,PeriodicFace>::iterator it = m_periodicFaces.find(
+                            (*m_exp)[n]->GetGeom3D()->GetFid(e));
+                        
+                        if (it != m_periodicFaces.end())
+                        {
+                            m_perFaceToExpMap[it->first] = make_pair(n, e);
+                        }
+                    }
+                }
             }
             else
             {
@@ -181,9 +197,9 @@ namespace Nektar
                    
                    // Set up matrix map
                    m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-                   map<int,int> periodicEdges;
-                   map<int,int> periodicVertices;
-                   map<int,int> periodicFaces;
+                   map<int,int>          periodicEdges;
+                   map<int,int>          periodicVertices;
+                   map<int,PeriodicFace> periodicFaces;
                    GetPeriodicFaces(graph3D, bcs, variable,
                                     periodicVertices, periodicEdges, periodicFaces);
                    
@@ -340,6 +356,7 @@ namespace Nektar
 
             return glo_matrix;
         }
+        
         /**
          * According to their boundary region, the separate segmental boundary
          * expansions are bundled together in an object of the class
@@ -360,16 +377,20 @@ namespace Nektar
             const std::string &variable)
         {
             int cnt1  = 0;
-            const SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+            const SpatialDomains::BoundaryRegionCollection    &bregions = 
+                bcs.GetBoundaryRegions();
+            const SpatialDomains::BoundaryConditionCollection &bconditions = 
+                bcs.GetBoundaryConditions();
 
             int nbnd = bregions.size();
 
             // count the number of non-periodic boundary regions
             for(int i = 0; i < nbnd; ++i)
             {
-                SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
-                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                SpatialDomains::BoundaryConditionShPtr boundaryCondition = 
+                    GetBoundaryCondition(bconditions, i, variable);
+                if (boundaryCondition->GetBoundaryConditionType() != 
+                        SpatialDomains::ePeriodic)
                 {
                     cnt1++;
                 }
@@ -495,9 +516,7 @@ namespace Nektar
                 }
             }
         }
-
-
-
+        
         /**
          * @param   graph3D     A mesh containing information about the domain
          *                      and the spectral/hp element expansion.
@@ -510,143 +529,218 @@ namespace Nektar
          * @param   periodicFaces   Map into which the list of periodic faces
          *                      is placed.
          */
-        //TODO: implement
         void DisContField3D::GetPeriodicFaces(
-                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    const SpatialDomains::BoundaryConditions &bcs,
-                    const std::string &variable,
-                    map<int,int>& periodicVertices,
-                    map<int,int>& periodicEdges,
-                    map<int,int>& periodicFaces)
+            const SpatialDomains::MeshGraphSharedPtr &graph3D,
+            const SpatialDomains::BoundaryConditions &bcs,
+            const std::string                        &variable,
+            map<int,int>                             &periodicVertices,
+            map<int,int>                             &periodicEdges,
+            map<int,PeriodicFace>                    &periodicFaces)
         {
-            int i,k;
+            int i,k,l;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                         = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                                         = bcs.GetBoundaryConditions();
 
-            int region1ID;
-            int region2ID;
+            int                                        region1ID;
+            int                                        region2ID;
+            StdRegions::Orientation                    orient1;
+            StdRegions::Orientation                    orient2;
+            SpatialDomains::Composite                  comp1;
+            SpatialDomains::Composite                  comp2;
+            SpatialDomains::Geometry2DSharedPtr        faceGeom1;
+            SpatialDomains::Geometry2DSharedPtr        faceGeom2;
+            SpatialDomains::ElementFaceVectorSharedPtr element1;
+            SpatialDomains::ElementFaceVectorSharedPtr element2;
+            SpatialDomains::BoundaryConditionShPtr     locBCond;
 
-            SpatialDomains::Composite comp1;
-            SpatialDomains::Composite comp2;
-
-            SpatialDomains::SegGeomSharedPtr segmentGeom1;
-            SpatialDomains::SegGeomSharedPtr segmentGeom2;
-
-            SpatialDomains::ElementEdgeVectorSharedPtr element1;
-            SpatialDomains::ElementEdgeVectorSharedPtr element2;
-
-            StdRegions::Orientation orient1;
-            StdRegions::Orientation orient2;
-
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-            // This std::map is a check so that the periodic pairs
-            // are not treated twice
+            // This std::map is a check so that the periodic pairs are not
+            // treated twice
             map<int, int> doneBndRegions;
-
+            
             int nbnd = bregions.size();
 
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = GetBoundaryCondition(bconditions, i, variable);
+                
                 if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::ePeriodic)
+                                        != SpatialDomains::ePeriodic)
                 {
-                    ASSERTL0(false,"this method needs sorting");
-                   region1ID = i;
-                   region2ID = (boost::static_pointer_cast<SpatialDomains
-                                        ::PeriodicBoundaryCondition>(locBCond))
-                                            ->m_connectedBoundaryRegion;
-
-                    if(doneBndRegions.count(region1ID)==0)
+                    continue;
+                }
+                
+                region1ID = i;
+                region2ID = (boost::static_pointer_cast<SpatialDomains
+                             ::PeriodicBoundaryCondition>(locBCond))
+                             ->m_connectedBoundaryRegion;
+                
+                if(doneBndRegions.count(region1ID)==0)
+                {
+                    ASSERTL0(bregions[region1ID]->size()
+                             == bregions[region2ID]->size(),
+                             "Size of the 2 periodic boundary regions "
+                             "should be equal");
+                    
+                    SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
+                    for(bnd1It =  bregions[region1ID]->begin(),
+                        bnd2It =  bregions[region2ID]->begin();
+                        bnd1It != bregions[region1ID]->end();
+                        ++bnd1It, ++bnd2It)
                     {
-                        ASSERTL0(bregions[region1ID]->size()
-                                        == bregions[region2ID]->size(),
-                                 "Size of the 2 periodic boundary regions "
-                                 "should be equal");
-
-                        SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
-                        for(bnd1It =  bregions[region1ID]->begin(),
-                            bnd2It =  bregions[region2ID]->begin();
-                            bnd1It != bregions[region1ID]->end();
-                            ++bnd1It, ++bnd2It)
+                        comp1 = bnd1It->second;
+                        comp2 = bnd2It->second;
+                        
+                        ASSERTL0(comp1->size() == comp2->size(),
+                                 "Size of the 2 periodic composites should "
+                                 "be equal");
+                        
+                        for(k = 0; k < comp1->size(); k++)
                         {
-                            comp1 = bnd1It->second;
-                            comp2 = bnd2It->second;
-
-                            ASSERTL0(comp1->size() == comp2->size(),
-                                     "Size of the 2 periodic composites should "
-                                     "be equal");
-
-                            for(k = 0; k < comp1->size(); k++)
+                            if(!(faceGeom1 = boost::dynamic_pointer_cast<
+                                 SpatialDomains::Geometry2D>((*comp1)[k]))||
+                               !(faceGeom2 = boost::dynamic_pointer_cast<
+                                 SpatialDomains::Geometry2D>((*comp2)[k])))
                             {
-                                if(!(segmentGeom1 = boost::dynamic_pointer_cast<
-                                        SpatialDomains::SegGeom>((*comp1)[k]))||
-                                   !(segmentGeom2 = boost::dynamic_pointer_cast<
-                                        SpatialDomains::SegGeom>((*comp2)[k])))
+                                ASSERTL0(false,"dynamic cast to a "
+                                               "Geometry2D failed");
+                            }
+                            
+                            element1 = boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)
+                                ->GetElementsFromFace(faceGeom1);
+                            element2 = boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)
+                                ->GetElementsFromFace(faceGeom2);
+                            
+                            ASSERTL0(element1->size() == 1,
+                                     "The periodic boundaries belong to "
+                                     "more than one element of the mesh");
+                            ASSERTL0(element2->size() == 1,
+                                     "The periodic boundaries belong to "
+                                     "more than one element of the mesh");
+                            
+                            // Obtain face orientation.
+                            SpatialDomains::QuadGeomSharedPtr q1, q2;
+                            SpatialDomains::TriGeomSharedPtr  t1, t2;
+                            StdRegions::Orientation           forient;
+                            
+                            if ((q1 = boost::dynamic_pointer_cast<
+                                 SpatialDomains::QuadGeom>(faceGeom1)) &&
+                                (q2 = boost::dynamic_pointer_cast<
+                                 SpatialDomains::QuadGeom>(faceGeom2)))
+                            {
+                                forient = SpatialDomains::QuadGeom::
+                                    GetFaceOrientation(*q1, *q2);
+                            }
+                            else if ((t1 = boost::dynamic_pointer_cast<
+                                      SpatialDomains::TriGeom>(faceGeom1)) &&
+                                     (t2 = boost::dynamic_pointer_cast<
+                                      SpatialDomains::TriGeom>(faceGeom2)))
+                            {
+                                forient = SpatialDomains::TriGeom::
+                                    GetFaceOrientation(*t1, *t2);
+                            }
+                            else
+                            {
+                                ASSERTL0(false, "Failed to cast face.");
+                            }
+                            
+                            // Set periodic faces, along with their
+                            // orientation to one another.
+                            periodicFaces[faceGeom1->GetFid()] = 
+                                pair<int, StdRegions::Orientation>(
+                                    faceGeom2->GetFid(), forient);
+                            periodicFaces[faceGeom2->GetFid()] =
+                                pair<int, StdRegions::Orientation>(
+                                    faceGeom1->GetFid(), forient);
+                            
+                            int nVert = faceGeom1->GetNumVerts();
+
+                            // From face orientation, determine periodic
+                            // edges and vertices.
+                            if (nVert == 3)
+                            {
+                                ASSERTL0(forient == 
+                                         StdRegions::eDir1FwdDir1_Dir2FwdDir2 ||
+                                         forient == 
+                                         StdRegions::eDir1BwdDir1_Dir2FwdDir2,
+                                         "Unrecognised face orientation for "
+                                         "triangular face "+
+                                         boost::lexical_cast<string>(
+                                             faceGeom1->GetGlobalID())+": "+
+                                         boost::lexical_cast<string>(
+                                             StdRegions::OrientationMap[forient]));
+                                
+                                int f1 = (*element1)[0]->m_FaceIndx;
+                                int f2 = (*element2)[0]->m_FaceIndx;
+                                
+                                // Vertex/edge maps for fwd/bwd orientation in
+                                // a-direction.
+                                int vmap[2][3] = {{0,1,2}, {1,0,2}};
+                                int emap[2][3] = {{0,1,2}, {0,2,1}};
+                                
+                                for (l = 0; l < nVert; ++l)
                                 {
-                                    ASSERTL0(false,"dynamic cast to a SegGeom "
-                                                   "failed");
+                                    int fo   = ((int)forient - 5)/2;
+                                    int vid1 = faceGeom1->GetVid(l);
+                                    int vid2 = faceGeom2->GetVid(vmap[fo][l]);
+                                    periodicVertices[vid1] = vid2;
+                                    periodicVertices[vid2] = vid1;
+                                    
+                                    int eid1 = faceGeom1->GetEid(l);
+                                    int eid2 = faceGeom2->GetEid(emap[fo][l]);
+                                    periodicEdges[eid1] = eid2;
+                                    periodicEdges[eid2] = eid1;
                                 }
-
-                                // Extract the periodic edges
-                                periodicEdges[segmentGeom1->GetEid()]
-                                        = segmentGeom2->GetEid();
-                                periodicEdges[segmentGeom2->GetEid()]
-                                        = segmentGeom1->GetEid();
-
-                                // Extract the periodic vertices
-//                                 element1 = graph3D.GetElementsFromEdge(segmentGeom1);
-//                                 element2 = graph3D.GetElementsFromEdge(segmentGeom2);
-
-                                ASSERTL0(element1->size()==1,
-                                         "The periodic boundaries belong to "
-                                         "more than one element of the mesh");
-                                ASSERTL0(element2->size()==1,
-                                         "The periodic boundaries belong to "
-                                         "more than one element of the mesh");
-
-                                orient1 = (boost::dynamic_pointer_cast<
-                                            SpatialDomains::Geometry2D>(
-                                                (*element1)[0]->m_Element))
-                                            ->GetEorient(
-                                                (*element1)[0]->m_EdgeIndx);
-                                orient2 = (boost::dynamic_pointer_cast<
-                                            SpatialDomains::Geometry2D>(
-                                                (*element2)[0]->m_Element))
-                                            ->GetEorient(
-                                                (*element2)[0]->m_EdgeIndx);
-
-                                if(orient1!=orient2)
+                            }
+                            else if (nVert == 4)
+                            {
+                                // Vertex mapping for all possible face
+                                // orientations.
+                                int vmap[8][4] = {
+                                    {0,1,2,3},{3,2,1,0},{1,0,3,2},{2,3,0,1},
+                                    {0,3,2,1},{3,0,1,2},{1,2,3,0},{2,1,0,3}
+                                };
+                                
+                                // Edge mapping for all possible face
+                                // orientations.
+                                int emap[8][4] = {
+                                    {0,1,2,3},{2,1,0,3},{0,3,2,1},{2,3,0,1},
+                                    {3,2,1,0},{3,0,1,2},{1,2,3,0},{1,0,3,2}
+                                };
+                                
+                                for (l = 0; l < nVert; ++l)
                                 {
-                                    periodicVertices[segmentGeom1->GetVid(0)]
-                                        = segmentGeom2->GetVid(0);
-                                    periodicVertices[segmentGeom1->GetVid(1)]
-                                        = segmentGeom2->GetVid(1);
+                                    int fo   = (int)forient - 5;
+                                    int vid1 = faceGeom1->GetVid(l);
+                                    int vid2 = faceGeom2->GetVid(vmap[fo][l]);
+                                    periodicVertices[vid1] = vid2;
+                                    periodicVertices[vid2] = vid1;
+                                    
+                                    int eid1 = faceGeom1->GetEid(l);
+                                    int eid2 = faceGeom2->GetEid(emap[fo][l]);
+                                    periodicEdges[eid1] = eid2;
+                                    periodicEdges[eid2] = eid1;
                                 }
-                                else
-                                {
-                                    periodicVertices[segmentGeom1->GetVid(0)]
-                                        = segmentGeom2->GetVid(1);
-                                    periodicVertices[segmentGeom1->GetVid(1)]
-                                        = segmentGeom2->GetVid(0);
-                                }
+                            }
+                            else
+                            {
+                                ASSERTL0(false, "Unknown number of edges!");
                             }
                         }
                     }
-                    else
-                    {
-                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
-                                 "Boundary regions are not mutually periodic");
-                    }
-                    doneBndRegions[region2ID] = region1ID;
                 }
+                else
+                {
+                    ASSERTL0(doneBndRegions[region1ID] == region2ID,
+                             "Boundary regions are not mutually periodic");
+                }
+                doneBndRegions[region2ID] = region1ID;
             }
         }
-
 
         /**
          * Search through the edge expansions and identify which ones
@@ -1003,12 +1097,15 @@ namespace Nektar
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            set<int>::iterator     it;
+            map<int,PeriodicFace>::iterator it2;
+            boost::unordered_map<int,pair<int,int> >::iterator it3;
             
             // Zero vectors.
-            Vmath::Zero(Fwd.num_elements(),Fwd,1);
-            Vmath::Zero(Bwd.num_elements(),Bwd,1);
+            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
+            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
             
-            Array<OneD, const NekDouble> a_tmp;
             for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
@@ -1051,6 +1148,31 @@ namespace Nektar
                         (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
+                    }
+                    
+                    // Check to see if this face is periodic.
+                    it2 = m_periodicFaces.find(
+                        (*m_exp)[n]->GetGeom3D()->GetFid(e));
+                    
+                    if (it2 != m_periodicFaces.end())
+                    {
+                        it3 = m_perFaceToExpMap.find(abs(it2->second.first));
+
+                        ASSERTL2(fwd, "Periodic face in non-forward space?");
+                        ASSERTL2(it3 != m_perFaceToExpMap.end(),
+                                 "Periodic face not found!");
+                        
+                        int offset2 = m_trace->GetPhys_Offset(
+                            elmtToTrace[it3->second.first][it3->second.second]->
+                                GetElmtId());
+                        
+                        // Extract from 3D element to 2D space. We use the
+                        // GetFacePhysVals function since the data will need
+                        // reordering depending on relative face orientations.
+                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[e][n],
+                                                     field + phys_offset,
+                                                     e_tmp = Bwd + offset2,
+                                                     it2->second.second);
                     }
                 }
             }

@@ -82,9 +82,9 @@ namespace Nektar
                         boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
                         std::string("GlobalLinSys"))
         {
-            map<int,int> periodicFaces;
-            map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            map<int,PeriodicFace> periodicFaces;
+            map<int,int>          periodicEdges;
+            map<int,int>          periodicVertices;
             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
             GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
@@ -134,9 +134,9 @@ namespace Nektar
         {
             if(!SameTypeOfBoundaryConditions(In))
             {
-                map<int,int> periodicFaces;
-                map<int,int> periodicEdges;
-                map<int,int> periodicVertices;
+                map<int,PeriodicFace> periodicFaces;
+                map<int,int>          periodicEdges;
+                map<int,int>          periodicVertices;
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 

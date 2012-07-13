@@ -433,7 +433,7 @@ namespace Nektar
             const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
             const StdRegions::StdExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const map<int,int> &periodicFaces,
+            const map<int,PeriodicFace> &periodicFaces,
             const bool DeclareCoeffPhysArrays):
             ExpList()
         {
@@ -508,10 +508,12 @@ namespace Nektar
                             FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
                             
                             FaceDone[id] = elmtid;
+                            /*
                             if (periodicFaces.count(id) > 0)
                             {
-                                FaceDone[periodicFaces.find(id)->second] = elmtid;
+                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
                             }
+                            */
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
@@ -521,10 +523,12 @@ namespace Nektar
                             FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
                             
                             FaceDone[id] = elmtid;
+                            /*
                             if (periodicFaces.count(id) > 0)
                             {
-                                FaceDone[periodicFaces.find(id)->second] = elmtid;
+                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
                             }
+                            */
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }

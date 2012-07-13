@@ -736,16 +736,16 @@ namespace Nektar
                 break;
             }
 
-			// Interpolate if required
-			if(m_base[edge%2]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
-			{
-				Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
+            // Interpolate if required
+            if(m_base[edge%2]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
+            {
+                Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
 				
-				outtmp = outarray;
+                outtmp = outarray;
 				
-				LibUtilities::Interp1D(m_base[edge%2]->GetPointsKey(),outtmp,
-                                   EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
-			}
+                LibUtilities::Interp1D(m_base[edge%2]->GetPointsKey(),outtmp,
+                                       EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+            }
 
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)

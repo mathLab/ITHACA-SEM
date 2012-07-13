@@ -47,6 +47,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        const static map<int,pair<int, StdRegions::Orientation> > NullIntPairMap;
 
         class AssemblyMapCG3D;
         typedef boost::shared_ptr<AssemblyMapCG3D>  AssemblyMapCG3DSharedPtr;
@@ -57,50 +58,43 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG3D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession);
-
+                const LibUtilities::SessionReaderSharedPtr &pSession);
 
             /// Constructor for the 3D expansion mappings with boundary
             /// conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG3D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp,
-                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const map<int,int>& periodicVerticesId,
-                                   const map<int,int>& periodicEdgesId,
-                                   const map<int,int>& periodicFacesId);
-
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const Array<OneD, const ExpListSharedPtr> &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
+                const map<int,int>& periodicVerticesId,
+                const map<int,int>& periodicEdgesId,
+                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId);
+            
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG3D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp);
-
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const int numLocalCoeffs,
+                const ExpList &locExp);
+            
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG3D();
-
-
+            
         private:
-
             /// Construct mappings for a three-dimensional scalar expansion.
-            void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
-                                           const ExpList &locExp,
-                                           const Array<OneD, const ExpListSharedPtr> &bndCondExp =
-                                               NullExpListSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
-                                               SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const map<int,int>& periodicVerticesId = NullIntIntMap,
-                                           const map<int,int>& periodicEdgesId = NullIntIntMap,
-                                           const map<int,int>& periodicFacesId = NullIntIntMap);
-
-
+            void SetUp3DExpansionC0ContMap(
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const Array<OneD, const ExpListSharedPtr> &bndCondExp = NullExpListSharedPtrArray,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
+                SpatialDomains::NullBoundaryConditionShPtrArray,
+                const map<int,int>& periodicVerticesId = NullIntIntMap,
+                const map<int,int>& periodicEdgesId = NullIntIntMap,
+                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId = NullIntPairMap);
         }; // class
-
-
     } // end of namespace
 } // end of namespace
 

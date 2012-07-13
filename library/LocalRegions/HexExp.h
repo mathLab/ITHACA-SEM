@@ -178,10 +178,11 @@ namespace Nektar
                 bool v_GetFaceDGForwards(const int i) const;
 
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
-                const int face,
+                const int                                face,
                 const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD,const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray);
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
 
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);      
 

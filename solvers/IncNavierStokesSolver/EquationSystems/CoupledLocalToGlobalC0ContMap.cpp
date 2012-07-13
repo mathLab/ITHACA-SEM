@@ -101,10 +101,7 @@ namespace Nektar
          */
 
         // Obtain any periodic information and allocate default mapping array
-        fields[0]->GetPeriodicEdges(graph,
-                                    *boundaryConditions,
-                                    boundaryConditions->GetVariable(0),
-                                    periodicVertices,periodicEdges);
+        fields[0]->GetPeriodicEdges(periodicVertices,periodicEdges);
 
 
         const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = fields[0]->GetBndCondExpansions();

@@ -128,17 +128,13 @@ namespace Nektar
                     std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-            map<int,int> periodicEdges;
-            vector<map<int,int> >periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
-                             periodicEdges);
 
             m_locToGloMap = MemoryManager<AssemblyMapCG2D>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    periodicVertices,
-                                    periodicEdges,
+                                    m_periodicVertices,
+                                    m_periodicEdges,
                                     CheckIfSingularSystem);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -183,17 +179,12 @@ namespace Nektar
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
-                map<int,int> periodicEdges;
-                vector<map<int,int> >periodicVertices;
-                GetPeriodicEdges(graph2D,bcs,variable,
-                                 periodicVertices,periodicEdges);
-
                 m_locToGloMap = MemoryManager<AssemblyMapCG2D>
                     ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
-                                        periodicVertices,
-                                        periodicEdges,
+                                        m_periodicVertices,
+                                        m_periodicEdges,
                                         CheckIfSingularSystem);
             }
             else

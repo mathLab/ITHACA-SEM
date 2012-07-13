@@ -686,13 +686,11 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
-            void GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                  const SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string &variable,
-                                  vector<map<int,int> > & periodicVertices,
-                                  map<int,int>& periodicEdges)
+            void GetPeriodicEdges(
+                vector<map<int,int> > &periodicVertices,
+                map<int,int>          &periodicEdges)
             {
-                v_GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
+                v_GetPeriodicEdges(periodicVertices, periodicEdges);
             }
 
             std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
@@ -1217,11 +1215,9 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
 
 
-            virtual void v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                            const SpatialDomains::BoundaryConditions &bcs,
-                                            const std::string &variable,
-                                            vector<map<int,int> > & periodicVertices,
-                                            map<int,int>& periodicEdges);
+            virtual void v_GetPeriodicEdges(
+                vector<map<int,int> > &periodicVertices,
+                map<int,int>          &periodicEdges);
 
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)

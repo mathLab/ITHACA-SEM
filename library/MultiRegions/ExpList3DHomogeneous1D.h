@@ -134,15 +134,13 @@ namespace Nektar
 			
 			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
 
-            virtual void v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                            const SpatialDomains::BoundaryConditions &bcs,
-                                            const std::string &variable,
-                                            vector<map<int,int> > & periodicVertices,
-                                            map<int,int>& periodicEdges)
+            virtual void v_GetPeriodicEdges(
+                vector<map<int,int> > &periodicVertices,
+                map<int,int>          &periodicEdges)
                                             
             {
-                //ASSERTL1(nplane < m_planes.num_elements(),"Cannot specify nplanes larger than size of m_planes");
-                m_planes[0]->GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
+                m_planes[0]->GetPeriodicEdges(
+                    periodicVertices,periodicEdges);
             }
 
         private:

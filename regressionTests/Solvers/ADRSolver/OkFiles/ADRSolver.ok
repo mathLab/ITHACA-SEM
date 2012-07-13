@@ -76,6 +76,10 @@ Test_Advection_m12_Order2.xml
 L 2 error (variable u) : 9.55749e-05
 L inf error (variable u) : 9.27095e-05
 ----------------------------------------
+Test_Advection_m12_DG_periodic.xml
+L 2 error (variable u) : 1.39014e-10
+L inf error (variable u) : 1.32385e-10
+----------------------------------------
 Test_Advection_m14_Order4.xml
 L 2 error (variable u) : 8.38713e-09
 L inf error (variable u) : 5.32497e-08
@@ -147,6 +151,10 @@ L inf error (variable u) : 1.39886e-08
 Test_Advection3D_m12_DG_hex.xml
 L 2 error (variable u) : 3.1094e-08
 L inf error (variable u) : 1.3031e-06
+----------------------------------------
+Test_Advection3D_m12_DG_hex_periodic.xml
+L 2 error (variable u) : 7.03905e-07
+L inf error (variable u) : 1.10475e-05
 ----------------------------------------
 Test_Advection3D_m12_DG_tet.xml
 L 2 error (variable u) : 4.00034e-08

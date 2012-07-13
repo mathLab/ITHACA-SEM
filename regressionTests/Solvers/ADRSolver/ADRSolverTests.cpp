@@ -106,9 +106,9 @@ int main(int argc, char* argv[])
     // Test Steady Advection Diffusion Reaction
     Execute("ADRSolver","Test_SteadyAdvDiffReact2D_modal.xml","2D Steady Advection Diffusion Reaction P=9");
 
-	Execute("ADRSolver","Test_Advection1D_m7_DG.xml","1D unsteady DG advection, P=7");
+    Execute("ADRSolver","Test_Advection1D_m7_DG.xml","1D unsteady DG advection, P=7");
 
-	Execute("ADRSolver","Test_Advection1D_m8_Order1.xml","1D unsteady advection, order 1, P=8");
+    Execute("ADRSolver","Test_Advection1D_m8_Order1.xml","1D unsteady advection, order 1, P=8");
 
     Execute("ADRSolver","Test_Advection1D_m12_Order2.xml","1D unsteady advection, order 2, P=12");
 
@@ -125,6 +125,10 @@ int main(int argc, char* argv[])
     Execute("ADRSolver","Test_Advection_m12_DG_Order2.xml","2D unsteady DG advection, order 2, P=12");
 
     Execute("ADRSolver","Test_Advection_m14_DG_Order4.xml","2D unsteady DG advection, order 4, P=14");
+
+    Execute("ADRSolver","Test_Advection_m12_DG_periodic.xml","2D unsteady DG advection, order 1, P=12, periodic bcs");
+
+    Execute("ADRSolver","Test_Advection3D_m12_DG_hex_periodic.xml","3D unsteady DG advection, hexahedra, order 1, P=12, periodic bcs");
 
     Execute("ADRSolver","Test_Advection3D_m12_DG_hex.xml","3D unsteady DG advection, hexahedra, order 4, P=12");
 

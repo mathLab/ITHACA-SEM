@@ -1169,7 +1169,7 @@ namespace Nektar
                         // Extract from 3D element to 2D space. We use the
                         // GetFacePhysVals function since the data will need
                         // reordering depending on relative face orientations.
-                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[e][n],
+                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset2,
                                                      it2->second.second);

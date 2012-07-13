@@ -2584,11 +2584,9 @@ namespace Nektar
 
 		/**
          */
-        void ExpList::v_GetPeriodicEdges(const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                         const SpatialDomains::BoundaryConditions &bcs,
-                                         const std::string &variable,
-                                         vector<map<int,int> > & periodicVertices,
-                                         map<int,int>& periodicEdges)
+        void ExpList::v_GetPeriodicEdges(
+            vector<map<int,int> > &periodicVertices,
+            map<int,int>          &periodicEdges)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

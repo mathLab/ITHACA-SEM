@@ -1127,6 +1127,7 @@ namespace Nektar
             // point. Place second highest global vertex at base degenerate
             // point.
             sort(vertex.begin(), vertex.end());
+            //reverse(vertex.begin(), vertex.end());
             
             // Calculate a.(b x c) to determine tet volume; if negative,
             // reverse order of non-degenerate points to correctly orientate

@@ -66,9 +66,6 @@ namespace Nektar
         
         void OutputVtk::Process()
         {
-            // Open the file stream.
-            OpenStream();
-
             vtkPolyData *vtkMesh = vtkPolyData::New();
             vtkPoints *vtkPoints = vtkPoints::New();
             vtkCellArray *vtkPolys = vtkCellArray::New();
@@ -102,7 +99,7 @@ namespace Nektar
 
             // Write out the new mesh
             vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();
-            vtkMeshWriter->SetFileName(m->outFilename.c_str());
+            vtkMeshWriter->SetFileName(config["outfile"].as<string>().c_str());
             vtkMeshWriter->SetInput(vtkMesh);
             vtkMeshWriter->Update();
         }        

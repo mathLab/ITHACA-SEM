@@ -78,11 +78,8 @@ namespace Nektar
          */
         void InputVtk::Process()
         {
-            // Open the file stream.
-            OpenStream();
-
             vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
-            vtkMeshReader->SetFileName(m->inFilename.c_str());
+            vtkMeshReader->SetFileName(config["infile"].as<string>().c_str());
             vtkMeshReader->Update();
             vtkPolyData *vtkMesh = vtkMeshReader->GetOutput();
 

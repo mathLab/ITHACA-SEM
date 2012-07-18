@@ -73,6 +73,8 @@ namespace Nektar
                 typedef boost::shared_ptr<ValueContainer> ValueContainerShPtr;
                 typedef std::map<KeyType, CreateFuncType, opLessCreator> CreateFuncContainer;
                 typedef std::map<std::string, boost::shared_ptr<ValueContainer> > ValueContainerPool;
+                typedef boost::shared_ptr<bool> BoolSharedPtr;
+                typedef std::map<std::string, BoolSharedPtr> FlagContainerPool;
 
                 NekManager(std::string whichPool="") :
                     m_values(), 
@@ -85,16 +87,21 @@ namespace Nektar
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
+                            m_managementEnabled = m_managementEnabledContainerPool[whichPool];
                         }
                         else
                         {
                             m_values = ValueContainerShPtr(new ValueContainer);
+                            m_managementEnabled = BoolSharedPtr(new bool(true));
                             m_ValueContainerPool[whichPool] = m_values;
+                            m_managementEnabledContainerPool[whichPool] = m_managementEnabled;
+
                         }
                     }
                     else
                     {
                         m_values = ValueContainerShPtr(new ValueContainer);
+                        m_managementEnabled = BoolSharedPtr(new bool(true));
                     }
                 };
 
@@ -110,17 +117,21 @@ namespace Nektar
                         if (iter != m_ValueContainerPool.end())
                         {
                             m_values = iter->second;
+                            m_managementEnabled = m_managementEnabledContainerPool[whichPool];
                         }
                         else
                         {
                             m_values = ValueContainerShPtr(new ValueContainer);
+                            m_managementEnabled = BoolSharedPtr(new bool(true));
                             m_ValueContainerPool[whichPool] = m_values;
+                            m_managementEnabledContainerPool[whichPool] = m_managementEnabled;
                         }
 
                     }
                     else
                     {
                         m_values = ValueContainerShPtr(new ValueContainer);
+                        m_managementEnabled = BoolSharedPtr(new bool(true));
                     }
                 }
                 
@@ -180,7 +191,10 @@ namespace Nektar
                         if( f )
                         {
                             ValueType v = f(key);
-                            (*m_values)[key] = v;
+                            if (*m_managementEnabled)
+                            {
+                                (*m_values)[key] = v;
+                            }
                             return (*m_values)[key];
                         }
                         else
@@ -213,16 +227,53 @@ namespace Nektar
                     }
                 }
 
+                static void EnableManagement(std::string whichPool = "")
+                {
+                    typename FlagContainerPool::iterator x;
+                    if (!whichPool.empty())
+                    {
+                        x = m_managementEnabledContainerPool.find(whichPool);
+                        if (x != m_managementEnabledContainerPool.end())
+                        {
+                            (*x->second) = true;
+                        }
+                        else
+                        {
+                            m_managementEnabledContainerPool[whichPool] = boost::shared_ptr<bool>(new bool(true));
+                        }
+                    }
+                }
+
+                static void DisableManagement(std::string whichPool = "")
+                {
+                    typename FlagContainerPool::iterator x;
+                    if (!whichPool.empty())
+                    {
+                        x = m_managementEnabledContainerPool.find(whichPool);
+                        if (x != m_managementEnabledContainerPool.end())
+                        {
+                            (*x->second) = false;
+                        }
+                        else
+                        {
+                            m_managementEnabledContainerPool[whichPool] = boost::shared_ptr<bool>(false);
+                        }
+                    }
+                }
+
             private:
                 NekManager(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
                 NekManager<KeyType, ValueType, opLessCreator>& operator=(const NekManager<KeyType, ValueType, opLessCreator>& rhs);
 
                 ValueContainerShPtr m_values;
+                BoolSharedPtr m_managementEnabled;
                 static ValueContainerPool m_ValueContainerPool;
+                static FlagContainerPool m_managementEnabledContainerPool;
                 CreateFuncType m_globalCreateFunc;
                 CreateFuncContainer m_keySpecificCreateFuncs;
         };
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::ValueContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_ValueContainerPool;
+        template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::FlagContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_managementEnabledContainerPool;
     }
 }
 

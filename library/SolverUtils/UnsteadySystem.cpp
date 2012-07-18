@@ -384,9 +384,9 @@ namespace Nektar
                     m_fields[i]->UpdatePhys() = fields[i];
                 }
 			
-                cout <<"\nCFL number       : " << m_cfl  << endl;
-                cout <<"\nCFL time-step    : " << CFLtimestep << endl;
-                cout <<"\nTime-integration : " << IntegrationTime << " s" << endl;
+                cout <<"\nCFL number       : " << m_cfl                     << endl;
+                cout <<"\nCFL time-step    : " << CFLtimestep               << endl;
+                cout <<"\nTime-integration : " << IntegrationTime << " s"   << endl;
                 for(int i = 0; i < number_of_checkpoints; i++)
                 {
                     cout <<"Time : "<< TimeLevels[i] << "\tL2 error : " << L2errors[i] << "\tLI error : "  << LIerrors[i] << endl;
@@ -394,20 +394,20 @@ namespace Nektar
             }
 			
 			//===========================================================================================
-            //WITHOUT CFL CONTROLL
+            //WITHOUT CFL CONTROL
 			//===========================================================================================
-            
 			else
             {
                 for(n = 0; n < m_steps; ++n)
                 {
                     Timer timer;
                     timer.Start();
-                    // Integrate over timestep.
+                    
+                    /// Integrate over timestep
                     if( n < numMultiSteps-1)
                     {
-                        // Use initialisation schemes if time step is less than the
-                        // number of steps in the scheme.
+                        /// Use initialisation schemes if time step is 
+                        /// less than the number of steps in the scheme
                         fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
                     }
                     else
@@ -420,20 +420,21 @@ namespace Nektar
                     timer.Stop();
                     IntegrationTime += timer.TimePerTest(1);
 				
-                    // Write out status information.
+                    /// Write out status information
                     if(m_session->GetComm()->GetRank() == 0
                        && !((n+1)%m_infosteps))
                     {
-                        cout << "Steps: " << n+1
-                             << "\t Time: " << m_time
-                             << "\t Time-step: " << m_timestep << "\t" << endl;
+                        cout << "Steps: "           << n+1
+                             << "\t Time: "         << m_time
+                             << "\t Time-step: "    << m_timestep << "\t" << endl;
                     }
 
-                    // Transform data into coefficient space
+                    /// Transform data into coefficient space
                     for (i = 0; i < m_intVariables.size(); ++i)
                     {
                         m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(fields[i],
                                                                          m_fields[m_intVariables[i]]->UpdateCoeffs());
+                        //###### Vmath::Vcopy(npoints, fields[i], 1, m_fields[m_intVariables[i]]->UpdatePhys(), 1);
                         m_fields[m_intVariables[i]]->SetPhysState(false);
                     }
 
@@ -443,12 +444,12 @@ namespace Nektar
                         (*x)->Update(m_fields, m_time);
                     }
 
-                    // Write out checkpoint files.
+                    /// Write out checkpoint files.
                     if(m_checksteps&&n&&(!((n+1)%m_checksteps)))
                     {
                         Checkpoint_Output(nchk++);
                     }
-                    // step advance
+                    /// Step advance
                 }
 			
                 cout <<"\nCFL number              : " << m_cfl << endl;
@@ -473,21 +474,23 @@ namespace Nektar
 			//===========================================================================================
 			// END OF TIME LOOP =========================================================================
 			//===========================================================================================
+            
+            /// Print for 1D problems
+            if(m_spacedim == 1)
+            {
+                v_AppendOutput1D(fields);   
+            }
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::v_DoInitialise()
         {
             SetInitialConditions();
         }
+        
 
-
-        /**
-         *
-         */
+        
         void UnsteadySystem::v_PrintSummary(std::ostream &out)
         {
             EquationSystem::v_PrintSummary(out);
@@ -497,16 +500,41 @@ namespace Nektar
             {
                 out << "\tReaction        : " << (m_explicitReaction  ? "explicit" : "implicit") << endl;
             }
-            out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-            out << "\tTime Step       : " << m_timestep << endl;
-            out << "\tNo. of Steps    : " << m_steps << endl;
-            out << "\tCheckpoints     : " << m_checksteps << " steps" << endl;
+            out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]<< endl;
+            out << "\tTime Step       : " << m_timestep                                             << endl;
+            out << "\tNo. of Steps    : " << m_steps                                                << endl;
+            out << "\tCheckpoints     : " << m_checksteps << " steps"                               << endl;
+        }
+        
+        
+        
+        void UnsteadySystem::v_AppendOutput1D(Array<OneD, Array<OneD, NekDouble> > &solution1D)
+        {
+            /// Coordinates of the quadrature points in the real physical space
+            Array<OneD,NekDouble> x(GetNpoints());
+            Array<OneD,NekDouble> y(GetNpoints());
+            Array<OneD,NekDouble> z(GetNpoints());
+            m_fields[0]->GetCoords(x, y, z);
+            
+            /// Print out the solution in a txt file
+            ofstream outfile;
+            outfile.open("solution1D.txt");
+            for(int i = 0; i < GetNpoints(); i++)
+            {
+                outfile << scientific 
+                << setw (17) 
+                << setprecision(16) 
+                << x[i]
+                << "  " 
+                << solution1D[0][i] 
+                << endl;
+            }
+            outfile << endl << endl;
+            outfile.close();
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::v_NumericalFlux(
             Array<OneD, Array<OneD, NekDouble> > &physfield,
             Array<OneD, Array<OneD, NekDouble> > &numflux)
@@ -515,9 +543,7 @@ namespace Nektar
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::v_NumericalFlux(
             Array<OneD, Array<OneD, NekDouble> > &physfield,
             Array<OneD, Array<OneD, NekDouble> > &numfluxX,
@@ -527,9 +553,7 @@ namespace Nektar
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::v_NumFluxforScalar(
             Array<OneD, Array<OneD, NekDouble>  > &ufield,
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > &uflux)
@@ -594,9 +618,7 @@ namespace Nektar
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::v_NumFluxforVector(
             Array<OneD, Array<OneD, NekDouble> > &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
@@ -660,9 +682,7 @@ namespace Nektar
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::v_GetFluxVector(const int i, const int j,
                                              Array<OneD, Array<OneD, NekDouble> > &physfield,
                                              Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -675,9 +695,7 @@ namespace Nektar
         }
 
 
-        /**
-         *
-         */
+
         void UnsteadySystem::WeakPenaltyforScalar(const int var,
                                                   const Array<OneD, const NekDouble> &physfield,
                                                   Array<OneD, NekDouble> &penaltyflux,
@@ -850,9 +868,7 @@ namespace Nektar
 		return 0.0;
 	}
 	
-	/**
-	 *
-	 */
+
 	Array<OneD,NekDouble> UnsteadySystem::GetStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray)
 	{
             // Checking if the problem is 2D

@@ -116,6 +116,9 @@ namespace Nektar
 
             /// Print a summary of time stepping parameters.
             SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
+            
+            /// Print the solution at each solution point in a txt file
+            SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(Array<OneD, Array<OneD, NekDouble> > &solution1D);
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(

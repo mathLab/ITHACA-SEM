@@ -1,5 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
   Advection.cpp
+  AdvectionFR.cpp
   AdvectionNonConservative.cpp
   AdvectionWeakDG.cpp
   Driver.cpp
@@ -18,6 +19,7 @@ SET(SOLVER_UTILS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Advection.h
+  AdvectionFR.h
   AdvectionNonConservative.h
   AdvectionWeakDG.h
   Driver.h

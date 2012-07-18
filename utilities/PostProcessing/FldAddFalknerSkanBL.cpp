@@ -110,11 +110,11 @@ int main(int argc, char *argv[])
     std::cout<<"=========================================================================\n";
     std::cout<<"*************************************************************************\n";
     std::cout<<"DATA FROM THE SESSION FILE:\n";
-    std::cout << "Reynolds number                          = " << Re               << "\t[-]"    << std::endl;
-    std::cout << "Characteristic length                    = " << L                << "\t\t[m]"   << std::endl;
+    std::cout << "Reynolds number                          = " << Re               << "\t[-]"   << std::endl;
+    std::cout << "Characteristic length                    = " << L                << "\t\t[m]" << std::endl;
     std::cout << "U_infinity                               = " << U_inf            << "\t[m/s]" << std::endl;
-    std::cout << "Position x (parallel case only)          = " << x                << "\t\t[m]"   << std::endl;
-    std::cout << "Position x_0 to start the BL [m]         = " << x_0              << "\t\t[m]"   << std::endl;
+    std::cout << "Position x (parallel case only)          = " << x                << "\t\t[m]" << std::endl;
+    std::cout << "Position x_0 to start the BL [m]         = " << x_0              << "\t\t[m]" << std::endl;
     std::cout << "Number of lines of the .txt file         = " << numLines         << "\t[-]"   << std::endl;
     std::cout << "BL type                                  = " << BL_type          << std::endl;
     std::cout << ".txt file read                           = " << txt_file         << std::endl;

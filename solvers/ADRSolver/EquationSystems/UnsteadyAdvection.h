@@ -37,6 +37,8 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTION_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Advection.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -61,13 +63,23 @@ namespace Nektar
         virtual ~UnsteadyAdvection();
 
     protected:
-        
+        std::string                             m_riemannType;
+        std::string                             m_advectionType;
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+        SolverUtils::AdvectionSharedPtr         m_advection;
+
         /// Advection velocity
-        Array<OneD, Array<OneD, NekDouble> > m_velocity;
+        Array<OneD, Array<OneD, NekDouble> >    m_velocity;
+        Array<OneD, NekDouble>                  m_traceVn;
 
         /// Session reader
         UnsteadyAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
 
+        /// Evaluate the flux at each solution point
+        void GetFluxVector(const int i, 
+                           const Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                                 Array<OneD, Array<OneD, NekDouble> > &flux);
+        
         /// Compute the RHS
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                             Array<OneD,         Array<OneD, NekDouble> > &outarray,
@@ -78,15 +90,12 @@ namespace Nektar
                                    Array<OneD,         Array<OneD, NekDouble> > &outarray,
                              const NekDouble time);
 
-        /// Initialize the object
+        /// Get the normal velocity
+        Array<OneD, NekDouble> &GetNormalVelocity();
+        
+        /// Initialise the object
         virtual void v_InitObject();
-
-        /// Evaluate the flux at each solution point
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        /// Evaluate the intercell numericall flux using a conditional upwind method
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
-
+        
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
     };

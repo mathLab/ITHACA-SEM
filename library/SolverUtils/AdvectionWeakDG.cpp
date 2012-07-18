@@ -63,8 +63,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
             Array<OneD, Array<OneD, NekDouble> > tmp       (nConvectiveFields);
 
-            ASSERTL1(m_riemann, 
-                     "Riemann solver must be provided for AdvectionWeakDG.");
+            ASSERTL1(m_riemann, "Riemann solver must be provided for AdvectionWeakDG.");
 
             for(i = 0; i < nVelDim; ++i)
             {

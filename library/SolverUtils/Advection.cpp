@@ -47,6 +47,13 @@ namespace Nektar
             return Type::Instance();
         }
 
+        void Advection::InitObject(
+            const LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+        {
+            v_InitObject(pSession, pFields);
+        }
+        
         void Advection::Advect(
             const int                                          nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

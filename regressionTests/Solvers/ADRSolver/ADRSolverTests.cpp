@@ -159,9 +159,9 @@ int main(int argc, char* argv[])
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml","3D-Homogeneous-2D unsteady advection-diffusion (MVM)");
     
     // Test inviscid Burger equation in 1D for DG and FR
-    Execute("ADRSolver","Test_InviscidBurger1D_StandardDG_GLL_LAGRANGE.xml","1D unsteady StandardDG inviscidBurger GLL_LAGRANGE, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_StandardDG_GLL_LAGRANGE.xml","1D unsteady WeakDG inviscidBurger GLL_LAGRANGE, P=11");
 
-    Execute("ADRSolver","Test_InviscidBurger1D_StandardDG_MODIFIED.xml","1D unsteady StandardDG inviscidBurger MODIFIED, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_StandardDG_MODIFIED.xml","1D unsteady WeakDG inviscidBurger MODIFIED, P=11");
     
     Execute("ADRSolver","Test_InviscidBurger1D_FR-DG_GLL_LAGRANGE.xml","1D unsteady FR-DG inviscidBurger GLL_LAGRANGE, P=11");
     

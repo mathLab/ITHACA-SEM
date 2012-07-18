@@ -349,7 +349,7 @@ namespace Nektar
 					       Array<OneD, Array<OneD, NekDouble> > &physfield,
 					       Array<OneD, Array<OneD, NekDouble> > &numflux)
   {
-    ASSERTL0(false, "This function is not implemented for this equation.");
+      ASSERTL0(false, "This function is not implemented for this equation.");
   }
   
   
@@ -361,7 +361,7 @@ namespace Nektar
 					       Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 					       Array<OneD, Array<OneD, NekDouble> > &numfluxY )
   {
-    ASSERTL0(false, "This function is not implemented for this equation.");
+      ASSERTL0(false, "This function is not implemented for this equation.");
   }
   
   
@@ -372,11 +372,11 @@ namespace Nektar
 					       Array<OneD, Array<OneD, NekDouble> > &physfield,
 					       Array<OneD, Array<OneD, NekDouble> > &flux)
   {
-    for(int k = 0; k < flux.num_elements(); ++k)
-        {
-	  Vmath::Zero(GetNpoints(),flux[k],1);
-        }
-    Vmath::Vcopy(GetNpoints(),physfield[i],1,flux[j],1);
+      for(int k = 0; k < flux.num_elements(); ++k)
+      {
+          Vmath::Zero(GetNpoints(), flux[k], 1);
+      }
+      Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
   }
   
 }

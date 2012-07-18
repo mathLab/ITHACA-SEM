@@ -173,27 +173,27 @@ L 2 error (variable u) : 2.28218
 L inf error (variable u) : 2.49996
 ----------------------------------------
 Test_InviscidBurger1D_FR-DG_GLL_LAGRANGE.xml
-L 2 error (variable u) : 2.28218
-L inf error (variable u) : 2.49999
+L 2 error (variable u) : 2.28376
+L inf error (variable u) : 2.50003
 ----------------------------------------
 Test_InviscidBurger1D_FR-DG_MODIFIED.xml
-L 2 error (variable u) : 2.28218
-L inf error (variable u) : 2.5
+L 2 error (variable u) : 2.28376
+L inf error (variable u) : 2.50003
 ----------------------------------------
 Test_InviscidBurger1D_FR-SD_GLL_LAGRANGE.xml
-L 2 error (variable u) : 2.28218
+L 2 error (variable u) : 2.28219
 L inf error (variable u) : 2.5
 ----------------------------------------
 Test_InviscidBurger1D_FR-SD_MODIFIED.xml
-L 2 error (variable u) : 2.28218
+L 2 error (variable u) : 2.28219
 L inf error (variable u) : 2.5
 ----------------------------------------
 Test_InviscidBurger1D_FR-HU_GLL_LAGRANGE.xml
-L 2 error (variable u) : 2.28218
-L inf error (variable u) : 2.49999
+L 2 error (variable u) : 2.28219
+L inf error (variable u) : 2.5
 ----------------------------------------
 Test_InviscidBurger1D_FR-HU_MODIFIED.xml
-L 2 error (variable u) : 2.28218
+L 2 error (variable u) : 2.28219
 L inf error (variable u) : 2.5
 ----------------------------------------
 ./ru    

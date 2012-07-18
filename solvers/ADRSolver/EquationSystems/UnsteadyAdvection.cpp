@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Unsteady advection solve routines
+// Description: Unsteady linear advection solve routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,12 +47,30 @@ namespace Nektar
     {
     }
 
+    /**
+     * @brief Initialisation object for the unsteady linear advection equation.
+     */
     void UnsteadyAdvection::v_InitObject()
     {
+        /// Call to the initialisation object of UnsteadySystem
         UnsteadySystem::v_InitObject();
-
-        /// Define a global variable to store the advection velocities
-        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        
+        /// Check the AdvectionType to be used
+        m_advectionType = m_session->GetSolverInfo("AdvectionType");
+            
+        /// Check if the AdvectionType is set up properly
+        if((m_advectionType!="NonConservative")&&(m_advectionType!="WeakDG")&&(m_advectionType!="FR"))
+        {
+            fprintf(stderr,"\n ERROR: You need to specify the AdvectionType in SOLVERINFO\n");  
+            fprintf(stderr," Three valid choices: NonConservative', WeakDG, FR. \n");
+            exit(1);
+        }
+                
+        /// Define the normal velocity fields
+        if (m_fields[0]->GetTrace())
+        {
+            m_traceVn  = Array<OneD, NekDouble>(GetTraceNpoints());
+        }
         
         /// Read the advection velocities from session file 
         std::vector<std::string> vel;
@@ -64,8 +82,26 @@ namespace Nektar
         vel.resize(m_spacedim);
 
         /// Store in the global variable m_velocity the advection velocities
+        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
 
+        /// Create Riemann solver instance, depending on the UPWINDTYPE specified in the session file 
+        if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
+        {
+            m_riemannType   = m_session->GetSolverInfo("UpwindType");
+            m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(m_riemannType);
+            m_riemannSolver->AddScalar("Vn", &UnsteadyAdvection::GetNormalVelocity, this);
+        }
+        
+        /// Create an advection object 
+        m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(m_advectionType);
+        m_advection->SetFluxVector   (&UnsteadyAdvection::GetFluxVector, this);
+        if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
+        {
+            m_advection->SetRiemannSolver(m_riemannSolver);
+            m_advection->InitObject      (m_session, m_fields);
+        }
+        
         /// If explicit it computes the RHS and the PROJECTION for the time integration
         if (m_explicitAdvection)
         {
@@ -79,123 +115,88 @@ namespace Nektar
         }
     }
 
+    /**
+     * @brief Unsteady linear advection equation destructor.
+     */
     UnsteadyAdvection::~UnsteadyAdvection()
     {
-
     }
 
+    /**
+     * @brief Get the normal velocity for the linear advection equation.
+     */
+    Array<OneD, NekDouble> &UnsteadyAdvection::GetNormalVelocity()
+    {
+        /// Number of trace (interface) points
+        int nTracePts = GetTraceNpoints();
+        
+        /// Auxiliary variable to compute the normal velocity
+        Array<OneD, NekDouble> tmp(nTracePts);
+        
+        /// Reset the normal velocity
+        Vmath::Zero(nTracePts, m_traceVn, 1);
+        
+        /// Compute the normal velocity
+        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, m_traceVn, 1, m_traceVn, 1);
+        }
+        
+        return m_traceVn;
+    }
     
-    
+    /**
+     * @brief Compute the right-hand side for the linear advection equation.
+     * 
+     * @param inarray    Given fields.
+     * @param outarray   Calculated solution.
+     * @param time       Time.
+     */
     void UnsteadyAdvection::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
                                      const NekDouble time)
     {
-        /// Counter variables
-        int i, j;
+        /// Counter variable
+        int i;
         
-        /// Always equal to one because there is only the field u for the linear advection equation 
+        /// Number of fields (variables of the problem)
         int nVariables      = inarray.num_elements();
         
-        /// Number of quadrature points
-        int nQuadraturePts  = GetNpoints();
+        /// Number of solution points
+        int nSolutionPts    = GetNpoints();
         
-        /// Number of elements
-        int nElements       = m_fields[0]->GetExpSize();
-
-        /// Switch on the projection type (Discontinuous or Continuous)
-        switch (m_projectionType)
+        /// RHS computation using the new advection base class
+        m_advection->Advect(nVariables, m_fields, m_velocity, inarray, outarray);
+        
+        /// Negate the RHS
+        for (i = 0; i < nVariables; ++i)
         {
-            /// Discontinuous approach
-            case MultiRegions::eDiscontinuousGalerkin:
-            {
-                /// Discontinuous Galerkin approach standard
-                if(m_discontinuousApproach == "StandardDG")
-                {
-                    /// Get the number of coefficients
-                    int ncoeffs    = inarray[0].num_elements();
-                    
-                    /// Define an auxiliary variable to compute the RHS 
-                    Array<OneD, Array<OneD, NekDouble> > WeakAdv(nVariables);
-                    WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nVariables);
-                    for(i = 1; i < nVariables; ++i)
-                    {
-                        WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
-                    }
-                    
-                    /// Call the method to compute the weak flux
-                    WeakDGAdvection(inarray, WeakAdv, true, true);
-                    
-                    /// Operations to compute the RHS
-                    for(i = 0; i < nVariables; ++i)
-                    {
-                        /// Multiply the flux by the inverse of the mass matrix
-                        m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
-                        
-                        /// Store in outarray the physical values of the RHS
-                        m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
-                        
-                        /// Negate the RHS
-                        Vmath::Neg(nQuadraturePts, outarray[i], 1);
-                    }
-                }
-                /// Flux reconstruction approach
-                else if(m_discontinuousApproach == "FR-DG" || m_discontinuousApproach == "FR-SD" || m_discontinuousApproach == "FR-HU")
-                {                    
-                    
-                    /// Call the method to compute the strong divergence of the flux
-                    StrongFRAdvection(inarray, outarray, true);
-                    
-                    /// Array to store the Jacobian and its inverse
-                    Array<OneD, const NekDouble>jac(nElements);
-                    Array<OneD, NekDouble>      jacobian(nElements);
-                    Array<OneD, NekDouble>      tmparray;
-                    
-                    /// Evaluation of the jacobian of each element
-                    for(i = 0; i < nElements; i++)
-                    {
-                        jac         = m_fields[0]->GetExp(i)->GetGeom1D()->GetJac();
-                        jacobian[i] = jac[0];
-                    }
-                    /// Operations to compute the RHS
-                    for(i = 0; i < nVariables; ++i)
-                    {
-                        for(j = 0; j < nElements; j++)
-                        {
-                            Vmath::Smul(nQuadraturePts/nElements, 1/jacobian[j], 
-                                        tmparray = outarray[i] + j*nQuadraturePts/nElements, 1.0, 
-                                        tmparray = outarray[i] + j*nQuadraturePts/nElements, 1.0);
-                        }
-                        
-                        Vmath::Neg(nQuadraturePts, outarray[i], 1);
-                    }
-                }
-                break;
-            }
-                
-            /// Continuous approach
-            case MultiRegions::eGalerkin:
-            {
-                /// Calculate - ( V \cdot Grad(u) );
-                for(i = 0; i < nVariables; ++i)
-                {
-                    AdvectionNonConservativeForm(m_velocity, inarray[i], outarray[i]);
-                    Vmath::Neg(nQuadraturePts, outarray[i], 1);
-                }
-                break;
-            }
+            Vmath::Neg(nSolutionPts, outarray[i], 1);
         }
     }
 
-
-    
+    /**
+     * @brief Compute the projection for the linear advection equation.
+     * 
+     * @param inarray    Given fields.
+     * @param outarray   Calculated solution.
+     * @param time       Time.
+     */
     void UnsteadyAdvection::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                                   Array<OneD,       Array<OneD, NekDouble> >&outarray,
                                             const NekDouble time)
     {
+        /// Counter variable
         int i;
+        
+        /// Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
+        
+        /// Set the boundary conditions
         SetBoundaryConditions(time);
 
+        /// Switch on the projection type (Discontinuous or Continuous)
         switch(m_projectionType)
         {
             /// Discontinuous projection
@@ -230,12 +231,17 @@ namespace Nektar
                 break;
         }
     }
-
     
-
-    void UnsteadyAdvection::v_GetFluxVector(const int i, 
-                                            Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                            Array<OneD, Array<OneD, NekDouble> > &flux)
+    /**
+     * @brief Return the flux vector for the linear advection equation.
+     * 
+     * @param i           Component of the flux vector to calculate.
+     * @param physfield   Fields.
+     * @param flux        Resulting flux.
+     */
+    void UnsteadyAdvection::GetFluxVector(const int i, 
+                                          const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                                Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
@@ -245,52 +251,6 @@ namespace Nektar
         }
     }
 
-    
-    
-    void UnsteadyAdvection::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                            Array<OneD, Array<OneD, NekDouble> > &numflux)
-    {
-        /// Counter variable
-        int i;
-
-        /// Number of trace points
-        int nTracePts   = GetTraceNpoints();
-        
-        /// Number of spatial dimensions
-        int nDimensions = m_spacedim;
-
-        /// Forward state array
-        Array<OneD, NekDouble> Fwd(nTracePts);
-        
-        /// Backward state array
-        Array<OneD, NekDouble> Bwd(nTracePts);
-        
-        /// Normal velocity array
-        Array<OneD, NekDouble> Vn (nTracePts, 0.0);
-        
-        // Extract velocity field along the trace space and multiply by trace normals
-        for(i = 0; i < nDimensions; ++i)
-        {
-            m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
-        }
-
-        /// Compute the numerical fluxes at the trace points
-        for(i = 0; i < numflux.num_elements(); ++i)
-        {
-            /// Extract forwards/backwards trace spaces
-            m_fields[i]->GetFwdBwdTracePhys(physfield[i], Fwd, Bwd);
-
-            /// Upwind between elements
-            m_fields[i]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux[i]);
-
-            /// Calculate the numerical fluxes multipling Fwd or Bwd by the normal advection velocity
-            Vmath::Vmul(nTracePts, numflux[i], 1, Vn, 1, numflux[i], 1);
-        }
-    }
-    
-    
-    
     void UnsteadyAdvection::v_PrintSummary(std::ostream &out)
     {
         UnsteadySystem::v_PrintSummary(out);

@@ -504,11 +504,13 @@
     </PARAMETERS>
     
     <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection" />
-      <I PROPERTY="Projection" VALUE="DisContinuous" />
-        <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-      <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-      <I PROPERTY="GlobalSysSoln" VALUE="IterativeFull" />
+        <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"   />
+        <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+        <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+        <I PROPERTY="FRSchemeRecovered"     VALUE="DG"                  />
+        <I PROPERTY="UpwindType"            VALUE="Upwind"              />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        <I PROPERTY="GlobalSysSoln"         VALUE="IterativeFull"       />
     </SOLVERINFO>
 
     <VARIABLES>

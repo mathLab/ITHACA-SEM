@@ -71,9 +71,7 @@ namespace Nektar
 
         // Create Riemann solver instance, depending on the UPWINDTYPE specified
         // in the session file. Bind gamma, velLoc and the trace normals.
-        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-            CreateInstance(
-                m_session->GetSolverInfo("UPWINDTYPE"));
+        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(m_session->GetSolverInfo("UPWINDTYPE"));
         m_riemannSolver->AddParam ("gamma",  &CompressibleFlowSystem::GetGamma,   this);
         m_riemannSolver->AddScalar("velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
         m_riemannSolver->AddVector("N",      &CompressibleFlowSystem::GetNormals, this);

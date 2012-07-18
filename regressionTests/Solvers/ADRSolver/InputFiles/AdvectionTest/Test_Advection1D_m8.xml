@@ -63,9 +63,12 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-          <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection"/>
-          <I PROPERTY="Projection" VALUE="Continuous"/>    
-          <I PROPERTY="TimeIntegrationMethod"  VALUE="AdamsBashforthOrder2"/>
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"   />
+            <I PROPERTY="Projection"            VALUE="Continuous"          />  
+            <I PROPERTY="AdvectionType"         VALUE="NonConservative"     />
+            <I PROPERTY="FRSchemeRecovered"     VALUE="DG"                  />
+            <I PROPERTY="UpwindType"            VALUE="Upwind"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="AdamsBashforthOrder2"/>
         </SOLVERINFO> 
         
         <!--One of these for each dimension. These are the vector

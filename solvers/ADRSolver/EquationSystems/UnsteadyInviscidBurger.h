@@ -37,6 +37,8 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYINVISCIDBURGER_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Advection.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -57,31 +59,41 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
+        /// Destructor
         virtual ~UnsteadyInviscidBurger();
 
     protected:
-        UnsteadyInviscidBurger(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        std::string                             m_riemannType;
+        std::string                             m_advectionType;
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+        SolverUtils::AdvectionSharedPtr         m_advection;
+        Array<OneD, NekDouble>                  m_traceVn;
+        
+        /// Session reader
+        UnsteadyInviscidBurger(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        void DoOdeRhs(
-                const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                      Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                const NekDouble time);
+        /// Evaluate the flux at each solution point
+        void GetFluxVector(const int i, 
+                           const Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                                 Array<OneD, Array<OneD, NekDouble> > &flux);
+        
+        /// Compute the RHS
+        void DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
+                      const NekDouble time);
 
+        /// Compute the projection
         void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                          Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                          const NekDouble time);
+                                   Array<OneD,         Array<OneD, NekDouble> > &outarray,
+                             const NekDouble time);
+        
+        /// Get the normal velocity
+        Array<OneD, NekDouble> &GetNormalVelocity();
 
+        /// Initialise the object
         virtual void v_InitObject();
 
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-        virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
-
     private:
-        NekDouble m_waveFreq;
-        Array<OneD, Array<OneD, NekDouble> > m_velocity;
     };
 }
 

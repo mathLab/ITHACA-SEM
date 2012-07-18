@@ -125,12 +125,15 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                m_vectors["N"]();
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = m_vectors["N"]();
             const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
             
             switch(normals.num_elements())
             {
+                case 1:
+                    ASSERTL0(false, "1D and 3D not implemented yet.");
+                    break;
+
                 case 2:
                 {
                     int vx = (int)velLoc[0];
@@ -139,10 +142,8 @@ namespace Nektar
                     
                     for (i = 0; i < normals[0].num_elements(); ++i)
                     {
-                        double tmp1 =  inarray[vx][i]*normals[0][i] + 
-                            inarray[vy][i]*normals[1][i];
-                        double tmp2 = -inarray[vx][i]*normals[1][i] + 
-                            inarray[vy][i]*normals[0][i];
+                        double tmp1 =  inarray[vx][i]*normals[0][i] + inarray[vy][i]*normals[1][i];
+                        double tmp2 = -inarray[vx][i]*normals[1][i] + inarray[vy][i]*normals[0][i];
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
                     }
@@ -154,16 +155,15 @@ namespace Nektar
                             continue;
                         }
                         
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
-                                     outarray[i], 1);
+                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, outarray[i], 1);
                     }
                     break;
                 }
                 
-                case 1:
                 case 3:
                     ASSERTL0(false, "1D and 3D not implemented yet.");
                     break;
+                    
                 default:
                     ASSERTL0(false, "Invalid space dimension.");
                     break;
@@ -182,12 +182,15 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                m_vectors["N"]();
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = m_vectors["N"]();
             const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
             
             switch(normals.num_elements())
             {
+                case 1:
+                    ASSERTL0(false, "1D and 3D not implemented yet.");
+                    break;
+                    
                 case 2:
                 {
                     int vx = (int)velLoc[0];
@@ -196,10 +199,8 @@ namespace Nektar
 
                     for (i = 0; i < normals[0].num_elements(); ++i)
                     {
-                        double tmp1 = inarray[vx][i]*normals[0][i] - 
-                            inarray[vy][i]*normals[1][i];
-                        double tmp2 = inarray[vx][i]*normals[1][i] + 
-                            inarray[vy][i]*normals[0][i];
+                        double tmp1 = inarray[vx][i]*normals[0][i] - inarray[vy][i]*normals[1][i];
+                        double tmp2 = inarray[vx][i]*normals[1][i] + inarray[vy][i]*normals[0][i];
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
                     }
@@ -211,16 +212,15 @@ namespace Nektar
                             continue;
                         }
                         
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
-                                     outarray[i], 1);
+                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, outarray[i], 1);
                     }
                     break;
                 }
                 
-                case 1:
                 case 3:
                     ASSERTL0(false, "1D and 3D not implemented yet.");
                     break;
+                    
                 default:
                     ASSERTL0(false, "Invalid space dimension.");
                     break;

@@ -57,6 +57,10 @@ namespace Nektar
         class Advection
         {
         public:
+            SOLVER_UTILS_EXPORT void InitObject(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
             SOLVER_UTILS_EXPORT void Advect(
                 const int                                          nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -74,8 +78,15 @@ namespace Nektar
             {
                 m_riemann = riemann;
             }
-            
+                        
         protected:
+            virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+            {
+                
+            };
+
             virtual void v_Advect(
                 const int                                          nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -89,10 +100,10 @@ namespace Nektar
         
         /// A shared pointer to an EquationSystem object
         typedef boost::shared_ptr<Advection> AdvectionSharedPtr;
+        
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the Advection class.
-        typedef LibUtilities::NekFactory<std::string, Advection> 
-            AdvectionFactory;
+        typedef LibUtilities::NekFactory<std::string, Advection> AdvectionFactory;
         SOLVER_UTILS_EXPORT AdvectionFactory& GetAdvectionFactory();
     }
 }

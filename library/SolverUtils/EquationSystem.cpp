@@ -571,6 +571,7 @@ namespace Nektar
                     m_dGL = BasisFR_Left ->GetBdata();
                     m_dGR = BasisFR_Right->GetBdata();
                 }
+                
             }
 
             // Set Default Parameter
@@ -1515,12 +1516,8 @@ namespace Nektar
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Neg(ncoeffs,OutField[i],1);
-                    //cout << "\nEnter routine for variable "<<i<<endl;
                     m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
-                    //cout << "Done for first var"<<endl;
                     m_fields[i]->SetPhysState(false);
-                    //cout << "state set false for first var\n"<<endl;
-
                 }
             }
             // if the NumericalFlux function does not include the
@@ -1737,9 +1734,6 @@ namespace Nektar
                 }
             }
         }
-
-        
-        
 
         /**
          * Calculate weak DG Diffusion in the LDG form
@@ -2184,13 +2178,13 @@ namespace Nektar
 
             if(m_HomogeneousType == eHomogeneous1D)
             {
-                out << "\tQuasi-3D        : " << "Homogeneous in z-direction" << endl;
-                out << "\tSession Name    : " << m_sessionName << endl;
-                out << "\tExpansion Dim.  : " << m_expdim+1 << endl;
-                out << "\tSpatial   Dim.  : " << m_spacedim << endl;
+                out << "\tQuasi-3D        : " << "Homogeneous in z-direction"       << endl;
+                out << "\tSession Name    : " << m_sessionName                      << endl;
+                out << "\tExpansion Dim.  : " << m_expdim+1                         << endl;
+                out << "\tSpatial   Dim.  : " << m_spacedim                         << endl;
                 out << "\t2D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
-                out << "\tN.Hom. Modes    : " << m_npointsZ << endl;
-                out << "\tHom. length (LZ): " << m_LhomZ << endl;
+                out << "\tN.Hom. Modes    : " << m_npointsZ                         << endl;
+                out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
                 if(m_useFFT)
                 {
                     out << "\tUsing FFTW " << endl;
@@ -2210,15 +2204,15 @@ namespace Nektar
             }
             else if(m_HomogeneousType == eHomogeneous2D)
             {
-                out << "\tQuasi-3D        : " << "Homogeneous in yz-plane" << endl;
-                out << "\tSession Name    : " << m_sessionName << endl;
-                out << "\tExpansion Dim.  : " << m_expdim+2 << endl;
-                out << "\tSpatial   Dim.  : " << m_spacedim << endl;
+                out << "\tQuasi-3D        : " << "Homogeneous in yz-plane"          << endl;
+                out << "\tSession Name    : " << m_sessionName                      << endl;
+                out << "\tExpansion Dim.  : " << m_expdim+2                         << endl;
+                out << "\tSpatial   Dim.  : " << m_spacedim                         << endl;
                 out << "\t1D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
-                out << "\tN.Hom. Modes (y): " << m_npointsY << endl;
-                out << "\tN.Hom. Modes (z): " << m_npointsZ << endl;
-                out << "\tHom. length (LY): " << m_LhomY << endl;
-                out << "\tHom. length (LZ): " << m_LhomZ << endl;
+                out << "\tN.Hom. Modes (y): " << m_npointsY                         << endl;
+                out << "\tN.Hom. Modes (z): " << m_npointsZ                         << endl;
+                out << "\tHom. length (LY): " << m_LhomY                            << endl;
+                out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
                 if(m_useFFT)
                 {
                     out << "\tUsing FFTW " << endl;
@@ -2231,26 +2225,45 @@ namespace Nektar
             }
             else
             {
-                out << "\tSession Name    : " << m_sessionName << endl;
-                out << "\tExpansion Dim.  : " << m_expdim << endl;
-                out << "\tSpatial   Dim.  : " << m_spacedim << endl;
+                out << "\tSession Name    : " << m_sessionName                      << endl;
+                out << "\tExpansion Dim.  : " << m_expdim                           << endl;
+                out << "\tSpatial   Dim.  : " << m_spacedim                         << endl;
                 out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
             }
-            if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+            
+            if(m_session->DefinesSolverInfo("AdvectionType"))
             {
-                if(m_discontinuousApproach == "StandardDG")
-                    out << "\tProjection Type : Standard discontinuous Galerkin"                        <<endl;
-                else if(m_discontinuousApproach == "FR-DG")
-                    out << "\tProjection Type : Flux reconstruction recovering discontinuous Galerkin"  <<endl;
-                else if(m_discontinuousApproach == "FR-SD")
-                    out << "\tProjection Type : Flux reconstruction recovering spectral difference"     <<endl;
-                else if(m_discontinuousApproach == "FR-HU")
-                    out << "\tProjection Type : Flux reconstruction recovering Huynh scheme"            <<endl;
+                std::string AdvectionType;
+                AdvectionType = m_session->GetSolverInfo("AdvectionType");
+                if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+                {
+                    if(AdvectionType == "WeakDG")
+                        out << "\tProjection Type : Weak discontinuous Galerkin"    <<endl;
+                    else if(AdvectionType == "FR")
+                    {
+                        std::string FRSchemeRecovered;
+                        FRSchemeRecovered = m_session->GetSolverInfo("FRSchemeRecovered");
+                        if (FRSchemeRecovered == "DG")
+                            out << "\tProjection Type : Flux reconstruction recovering nodal discontinuous Galerkin"    <<endl;
+                        else if(FRSchemeRecovered == "SD")
+                            out << "\tProjection Type : Flux reconstruction recovering spectral difference"             <<endl;
+                        else if(FRSchemeRecovered == "HU")
+                            out << "\tProjection Type : Flux reconstruction recovering Huynh scheme"                    <<endl;
+                    }
+                }
+                else
+                {
+                    out << "\tProjection Type : Continuous Galerkin" <<endl;
+                }
             }
+            
+            else if(m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+            {
+                out << "\tProjection Type : Weak discontinuous Galerkin"    <<endl;
+            }
+    
             else
-            {
-                out << "\tProjection Type : Continuous Galerkin" <<endl;
-            }
+                out << "\tProjection Type : Continuous Galerkin"            <<endl;
         }
 
         /**
@@ -2259,10 +2272,10 @@ namespace Nektar
          */
         void EquationSystem::TimeParamSummary(std::ostream &out)
         {
-            out << "\tTime Step       : " << m_timestep << endl;
-            out << "\tNo. of Steps    : " << m_steps << endl;
-            out << "\tCheckpoints     : " << m_checksteps << " steps" << endl;
-//        out << "\tInformation     : " << m_infosteps << " steps" << endl;
+            out << "\tTime Step       : " << m_timestep                 << endl;
+            out << "\tNo. of Steps    : " << m_steps                    << endl;
+            out << "\tCheckpoints     : " << m_checksteps << " steps"   << endl;
+            //out << "\tInformation     : " << m_infosteps << " steps" << endl;
         }
 
 

@@ -219,20 +219,106 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-        case eUnsteadyStokes: 
-        case eUnsteadyNavierStokes:
-        case eUnsteadyLinearisedNS:
+			case eUnsteadyStokes: 
+			case eUnsteadyNavierStokes:
+			case eUnsteadyLinearisedNS:
             {  
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
 				break;
             }
-        case eNoEquationType:
-        default:
-            ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
+			case eSteadyNavierStokesBySFD:
+			{
+				//cout << "\nOn test eSteadyNavierStokesBySFD!!!\n" << endl;
+				SelectiveFrequencyDamping();
+				break;
+			}
+			case eNoEquationType:
+			default:
+				ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
         }
     }
-
+	
+	void VelocityCorrectionScheme::SelectiveFrequencyDamping(void)
+	{		
+		Array<OneD, Array<OneD, NekDouble> > q0(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > q1(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > qBar0(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > qBar1(m_velocity.num_elements());
+		
+		//Definition of the SFD parameters:
+		NekDouble Delta;
+		NekDouble X;
+		NekDouble cst1;
+		NekDouble cst2;
+		NekDouble cst3;
+		NekDouble cst4;
+		
+		m_session->LoadParameter("FilterWidth", Delta);
+		m_session->LoadParameter("ControlCoeff", X);
+		
+		//Delta=0.2/(2.0*M_PI);
+		//X=0.3*(1.0/Delta);
+	
+		cst1=X*m_timestep;
+		cst2=1.0/(1.0 + cst1);
+		cst3=m_timestep/Delta;
+		cst4=1.0/(1.0 + cst2);
+		
+		cout << "---------------------------------------------" << endl;
+		cout << "Delta = " << Delta << endl;
+		cout << "X = " << X << endl;
+		//cout << "dt = " << m_timestep << endl;
+		//cout << "cst1 = " << cst1 << endl;
+		//cout << "cst2 = " << cst2 << endl;
+		//cout << "cst3 = " << cst3 << endl;
+		//cout << "cst4 = " << cst4 << endl;
+		cout << "---------------------------------------------" << endl;
+		
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			q0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			qBar0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+		}
+		
+		for (int n=0 ; n < m_steps; ++n)
+		{
+			AdvanceInTime(1);
+						
+			if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
+            {
+                cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+            }
+			
+			for(int i = 0; i < m_velocity.num_elements(); ++i)
+			{					
+				q1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+				qBar1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+				
+				m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), q0[i]);	
+				
+				if (n==0)
+				{
+					qBar0[i] = q0[i];
+				}
+				
+				Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
+				Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
+				Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);				
+				
+				Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
+				Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
+				Vmath::Smul(qBar1[i].num_elements(), cst4, qBar1[i], 1, qBar1[i], 1);
+				
+				qBar0[i] = qBar1[i];
+				
+				Vmath::Vcopy( q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );	
+				m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
+			}
+		}
+	}
+	
+	
 	void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
 	{
 		int nfields = m_fields.num_elements() - 1;

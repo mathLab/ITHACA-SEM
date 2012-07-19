@@ -58,6 +58,7 @@ namespace Nektar
         eUnsteadyLinearisedNS,
         eUnsteadyNavierStokes,
 		eSteadyNavierStokes,
+		eSteadyNavierStokesBySFD,
         eEquationTypeSize
     };
     
@@ -71,7 +72,8 @@ namespace Nektar
         "UnsteadyStokes",
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
-		"SteadyNavierStokes"
+		"SteadyNavierStokes",
+		"SteadyNavierStokesBySFD"
     };
 
 
@@ -151,7 +153,7 @@ namespace Nektar
         }
 
         void AdvanceInTime(int nsteps);
-
+		
         void EvaluateAdvectionTerms(const Array<OneD, 
                                     const Array<OneD, NekDouble> > &inarray, 
                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 

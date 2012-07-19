@@ -36,7 +36,6 @@
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
-
 namespace Nektar
 {
 
@@ -1564,7 +1563,7 @@ namespace Nektar
 		InfNorm(delta_velocity_Phys, Inf_norm);
 		//L2Norm(delta_velocity_Phys, L2_norm);		
 
-		while(max(Inf_norm[0], Inf_norm[1]) > m_tol) //&& m_counter <= m_maxIt)
+		while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
 		//while(max(L2_norm[0], L2_norm[1]) > m_tol && m_counter <= m_maxIt)
 		{
 			if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
@@ -1616,6 +1615,7 @@ namespace Nektar
 				cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
 				ASSERTL0(0, "The Newton method has failed... \n");
 			}
+			 
 			
 			cout << "\n";
 			m_counter++;

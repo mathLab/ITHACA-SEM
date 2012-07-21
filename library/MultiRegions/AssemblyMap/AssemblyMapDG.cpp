@@ -1122,7 +1122,7 @@ namespace Nektar
                     
                     // Construct mapping which will permute global IDs
                     // according to face orientations. 
-                    (*exp3D)[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign2);
+                    (*exp3D)[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
                     (*exp3D)[eid]->GetFaceToElementMap(j,(StdRegions::Orientation)0,elmMap2,elmSign2);
                     
                     std::map<int,int> orientMap;

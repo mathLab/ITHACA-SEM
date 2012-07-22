@@ -200,7 +200,7 @@ namespace Nektar
         {
             int nq = GetTotPoints();
             MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetExpansionType(),*this);
-            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
+            DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -307,7 +307,7 @@ namespace Nektar
             }  
 
             MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
-            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
+            DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -826,9 +826,9 @@ namespace Nektar
                         MatrixKey lap11key(StdRegions::eLaplacian11,
                                            mkey.GetExpansionType(), *this);  
                         
-                        DNekMatSharedPtr& lap00 = GetStdMatrix(lap00key);
-                        DNekMatSharedPtr& lap01 = GetStdMatrix(lap01key);
-                        DNekMatSharedPtr& lap11 = GetStdMatrix(lap11key);
+                        DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
+                        DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
+                        DNekMatSharedPtr lap11 = GetStdMatrix(lap11key);
                         
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
@@ -906,7 +906,7 @@ namespace Nektar
                 }
                 else
                 {
-                    DNekScalMatSharedPtr& mat = GetLocMatrix(mkey);
+                    DNekScalMatSharedPtr mat = GetLocMatrix(mkey);
                     factor = mat->Scale();
                     goto UseStdRegionsMatrix;
                 }

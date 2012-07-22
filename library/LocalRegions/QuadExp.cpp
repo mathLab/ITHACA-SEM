@@ -255,7 +255,7 @@ namespace Nektar
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
                                               DetExpansionType(),*this);
-                DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
+                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
                 NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
@@ -422,7 +422,7 @@ namespace Nektar
         {
             int nq = GetTotPoints();
             MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetExpansionType(),*this);
-            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];
+            DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
 
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -501,7 +501,7 @@ namespace Nektar
             }
 
             MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
-            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];
+            DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
 
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -1577,7 +1577,7 @@ namespace Nektar
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
-                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(mkey);
+                    DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(mkey);
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 
@@ -1652,13 +1652,13 @@ namespace Nektar
         }
 
 
-        DNekScalMatSharedPtr& QuadExp::v_GetLocMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr QuadExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
 
-        DNekScalBlkMatSharedPtr& QuadExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        DNekScalBlkMatSharedPtr QuadExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }

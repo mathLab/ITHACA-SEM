@@ -142,7 +142,7 @@ namespace Nektar
             DNekBlkMatSharedPtr returnval;
             MatrixType mtype = mkey.GetMatrixType();
 
-            DNekMatSharedPtr&  mat = GetStdMatrix(mkey);
+            DNekMatSharedPtr  mat = GetStdMatrix(mkey);
             int nbdry = NumBndryCoeffs(); // also checks to see if this is a boundary interior decomposed expansion
             int nint = m_ncoeffs - nbdry;
             DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
@@ -362,7 +362,7 @@ namespace Nektar
             case eInvMass:
                 {
                     StdMatrixKey masskey(eMass,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
-                    DNekMatSharedPtr& mmat = GetStdMatrix(masskey);
+                    DNekMatSharedPtr mmat = GetStdMatrix(masskey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
                     returnval->Invert();
                 }
@@ -370,7 +370,7 @@ namespace Nektar
             case eInvNBasisTrans:
                 {
                     StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
-                    DNekMatSharedPtr& tmpmat = GetStdMatrix(tmpkey);
+                    DNekMatSharedPtr tmpmat = GetStdMatrix(tmpkey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate  matrix.
                     returnval->Invert();
                 }
@@ -926,7 +926,7 @@ namespace Nektar
         {
             int nq = GetTotPoints();
             StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
-            DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
+            DNekMatSharedPtr  bwdtransmat = GetStdMatrix(bwdtransmatkey);
 
             Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
                         nq, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -1101,7 +1101,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
-            DNekScalBlkMatSharedPtr& StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            DNekScalBlkMatSharedPtr StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return NullDNekScalBlkMatSharedPtr;

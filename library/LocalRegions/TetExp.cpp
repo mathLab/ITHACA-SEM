@@ -1682,12 +1682,12 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey);
         }
 
-        DNekScalMatSharedPtr& TetExp::v_GetLocMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr TetExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
-        DNekScalBlkMatSharedPtr& TetExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        DNekScalBlkMatSharedPtr TetExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }

@@ -358,18 +358,18 @@ namespace Nektar
                 return CreateStdMatrix(mkey);
             }
             
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
+            virtual DNekScalMatSharedPtr v_GetLocMatrix(const MatrixKey &mkey)
             {
                 return m_matrixManager[mkey];
             }
             
-//            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+//            virtual DNekScalMatSharedPtr v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
 //            {
 //                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
 //                return m_matrixManager[mkey];
 //            }
             
-            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const MatrixKey &mkey)
             {
                 return m_staticCondMatrixManager[mkey];
             }

@@ -521,7 +521,7 @@ namespace Nektar
             }  
             
             MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
-            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
+            DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -2264,7 +2264,7 @@ namespace Nektar
                 }
                 else
                 {
-                    DNekScalMatSharedPtr& mat = GetLocMatrix(mkey);
+                    DNekScalMatSharedPtr mat = GetLocMatrix(mkey);
                     factor = mat->Scale();
                     goto UseStdRegionsMatrix;
                 }
@@ -2273,7 +2273,7 @@ namespace Nektar
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
-                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(mkey);
+                    DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(mkey);
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 
@@ -2348,13 +2348,13 @@ namespace Nektar
         }
 
 
-        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr HexExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
 
 
-        DNekScalBlkMatSharedPtr& HexExp::v_GetLocStaticCondMatrix(
+        DNekScalBlkMatSharedPtr HexExp::v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];

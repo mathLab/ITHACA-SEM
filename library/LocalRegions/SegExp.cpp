@@ -387,7 +387,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
-                DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
+                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
                 NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
@@ -1261,13 +1261,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         //-----------------------------
 
 
-        DNekScalBlkMatSharedPtr& SegExp::v_GetLocStaticCondMatrix(
+        DNekScalBlkMatSharedPtr SegExp::v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey)
         {
             return m_staticCondMatrixManager[mkey];
         }
 
-        DNekScalMatSharedPtr& SegExp::v_GetLocMatrix(const MatrixKey &mkey)
+        DNekScalMatSharedPtr SegExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];
         }
@@ -1522,7 +1522,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
-                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(mkey);
+                    DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(mkey);
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 
@@ -1659,7 +1659,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             // get Mass matrix inverse
             MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
-            DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
+            DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
             NekVector<NekDouble> in(m_ncoeffs,inarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);

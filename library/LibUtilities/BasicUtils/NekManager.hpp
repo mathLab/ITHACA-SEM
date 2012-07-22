@@ -92,10 +92,12 @@ namespace Nektar
                         else
                         {
                             m_values = ValueContainerShPtr(new ValueContainer);
-                            m_managementEnabled = BoolSharedPtr(new bool(true));
                             m_ValueContainerPool[whichPool] = m_values;
-                            m_managementEnabledContainerPool[whichPool] = m_managementEnabled;
-
+                            if (m_managementEnabledContainerPool.find(whichPool) == m_managementEnabledContainerPool.end())
+                            {
+                                m_managementEnabledContainerPool[whichPool] = BoolSharedPtr(new bool(true));
+                            }
+                            m_managementEnabled = m_managementEnabledContainerPool[whichPool];
                         }
                     }
                     else
@@ -122,9 +124,12 @@ namespace Nektar
                         else
                         {
                             m_values = ValueContainerShPtr(new ValueContainer);
-                            m_managementEnabled = BoolSharedPtr(new bool(true));
                             m_ValueContainerPool[whichPool] = m_values;
-                            m_managementEnabledContainerPool[whichPool] = m_managementEnabled;
+                            if (m_managementEnabledContainerPool.find(whichPool) == m_managementEnabledContainerPool.end())
+                            {
+                                m_managementEnabledContainerPool[whichPool] = BoolSharedPtr(new bool(true));
+                            }
+                            m_managementEnabled = m_managementEnabledContainerPool[whichPool];
                         }
 
                     }
@@ -170,7 +175,7 @@ namespace Nektar
                     return value;
                 }
 
-                ValueType &operator[](typename boost::call_traits<KeyType>::const_reference key)
+                ValueType operator[](typename boost::call_traits<KeyType>::const_reference key)
                 {
                     typename ValueContainer::iterator found = m_values->find(key);
 
@@ -195,7 +200,7 @@ namespace Nektar
                             {
                                 (*m_values)[key] = v;
                             }
-                            return (*m_values)[key];
+                            return v;
                         }
                         else
                         {
@@ -239,7 +244,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_managementEnabledContainerPool[whichPool] = boost::shared_ptr<bool>(new bool(true));
+                            m_managementEnabledContainerPool[whichPool] = BoolSharedPtr(new bool(true));
                         }
                     }
                 }
@@ -256,7 +261,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_managementEnabledContainerPool[whichPool] = boost::shared_ptr<bool>(false);
+                            m_managementEnabledContainerPool[whichPool] = BoolSharedPtr(new bool(false));
                         }
                     }
                 }

@@ -700,7 +700,7 @@ namespace Nektar
         {
             int nq = GetTotPoints();
             StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+            DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
@@ -858,7 +858,7 @@ namespace Nektar
             }
 
             StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+            DNekMatSharedPtr iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);

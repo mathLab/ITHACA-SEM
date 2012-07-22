@@ -127,7 +127,7 @@ namespace Nektar
 				
                 // get Mass matrix inverse
                 StdMatrixKey      masskey(eInvMass,v_DetExpansionType(),*this);
-                DNekMatSharedPtr& matsys = GetStdMatrix(masskey);
+                DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 				
                 NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);

@@ -244,10 +244,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(
                     const MatrixKey &mkey);
 
-            LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr&
+            LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr
                     v_GetLocMatrix(const MatrixKey &mkey);
 
-            LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr&
+            LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr
                     v_GetLocStaticCondMatrix(const MatrixKey &mkey);
 
 

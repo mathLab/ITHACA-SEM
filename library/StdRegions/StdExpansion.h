@@ -815,12 +815,12 @@ namespace Nektar
                 v_ReadFromFile(in,format,dumpVar);
             }
 
-            inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey)
+            inline DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager[mkey];
             }
 
-            inline DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdMatrixKey &mkey)
+            inline DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdStaticCondMatrixManager[mkey];
             }
@@ -855,7 +855,7 @@ namespace Nektar
                 v_NormVectorIProductWRTBase(Fx,Fy,Fz,outarray);
             }
 
-            DNekScalBlkMatSharedPtr& GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            DNekScalBlkMatSharedPtr GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocStaticCondMatrix(mkey);
             }
@@ -1287,7 +1287,7 @@ namespace Nektar
 
 	    STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetFaceOrient(int face);
 

@@ -136,7 +136,7 @@ namespace Nektar
                     {
                         IsDirEdgeDof[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetEid()] += 1;
                     }
-
+                    
                             
                     // Set number of Dirichlet conditions at vertices
                     // with a clamp on its maximum value being nvel to
@@ -259,9 +259,6 @@ namespace Nektar
             }
         }
         
-        // This routine is not working when we apply a third velocity
-        // component.
-        
         SetUp2DGraphC0ContMap(*fields[0],
                               bndCondExp,
                               bndConditionsVec,
@@ -270,6 +267,22 @@ namespace Nektar
                               firstNonDirGraphVertId, nExtraDirichlet,
                               bottomUpGraph,  false,  4);
         
+#if 0
+        bottomUpGraph->Dump();
+        cout << endl;
+
+        for(i = 0; i < ReorderedGraphVertId[0].size(); ++i)
+        {
+            cout << "Vertex " << i << " Reordered to "<< ReorderedGraphVertId[0][i] << endl;
+            
+        }
+
+        for(i = 0; i < ReorderedGraphVertId[1].size(); ++i)
+        {
+            cout << "Edge " << i << " Reordered to "<< ReorderedGraphVertId[1][i] << endl;
+            
+        }
+#endif
         /**
          * STEP 2a: Set the mean pressure modes to edges depending on
          * type of direct solver technique;
@@ -392,6 +405,9 @@ namespace Nektar
         // Add mean pressure modes; 
         for(i = 0; i < nel; ++i)
         {
+#if 0
+            cout << "Element "<< i << " EdgeId  " << AddMeanPressureToEdgeId[i] << endl;
+#endif
             graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1] += nz_loc;
             //graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc] += nz_loc;
         }
@@ -718,7 +734,7 @@ namespace Nektar
         
                 //bottomUpGraph->Dump();
                 bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                //bottomUpGraph->Dump();
+                // bottomUpGraph->Dump();
 
                 m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                     AllocateSharedPtr(this,bottomUpGraph);
@@ -869,7 +885,7 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<
 									{
 										//June 2012: commenting this condition apparently 
 										//solved the bug caused by the edge reordering procedure
-										
+                                                                            
 										//if(AddMeanPressureToEdgeId[elmtid] == -1)
 										//{
 										AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];

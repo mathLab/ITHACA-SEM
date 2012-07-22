@@ -36,7 +36,8 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
-#include <SolverUtils/EquationSystem.h>
+//#include <SolverUtils/EquationSystem.h>
+#include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
@@ -57,7 +58,7 @@ namespace Nektar
         eUnsteadyStokes,
         eUnsteadyLinearisedNS,
         eUnsteadyNavierStokes,
-		eSteadyNavierStokes,
+        eSteadyNavierStokes,
 		eSteadyNavierStokesBySFD,
         eEquationTypeSize
     };
@@ -72,8 +73,8 @@ namespace Nektar
         "UnsteadyStokes",
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
-		"SteadyNavierStokes",
-		"SteadyNavierStokesBySFD"
+	"SteadyNavierStokes",
+	"SteadyNavierStokesBySFD"
     };
 
 
@@ -84,7 +85,7 @@ namespace Nektar
         eNonConservative,
         eLinearised,
         eAdjoint,
-		eSkewSymmetric,
+        eSkewSymmetric,
         eAdvectionFormSize
     };
     
@@ -96,7 +97,7 @@ namespace Nektar
         "NonConservative",
         "Linearised",
         "Adjoint",
-		"SkewSymmetric"
+        "SkewSymmetric"
     };
 	
     /**
@@ -104,7 +105,8 @@ namespace Nektar
      *
      */
     
-    class IncNavierStokes: public SolverUtils::EquationSystem
+    //    class IncNavierStokes: public SolverUtils::EquationSystem
+    class IncNavierStokes: public SolverUtils::UnsteadySystem
     {
     public:           
         // Destructor
@@ -112,7 +114,27 @@ namespace Nektar
 
         virtual void v_InitObject();
 
+        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                               const NekDouble time);
+
+        virtual void v_GetFluxVector(const int i, 
+                                     Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                     Array<OneD, Array<OneD, NekDouble> > &flux);
+        
+
+        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                                     Array<OneD, Array<OneD, NekDouble> > &numflux);
+
+        void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                               const NekDouble time);
+
     protected: 
+        LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
+
+        bool m_subSteppingScheme; // bool to identify if using a substepping scheme
+        LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
         /// Advection term
         AdvectionTermSharedPtr m_advObject;
@@ -154,6 +176,8 @@ namespace Nektar
 
         void AdvanceInTime(int nsteps);
 		
+        void SubStepAdvance (const int nstep);
+
         void EvaluateAdvectionTerms(const Array<OneD, 
                                     const Array<OneD, NekDouble> > &inarray, 
                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 

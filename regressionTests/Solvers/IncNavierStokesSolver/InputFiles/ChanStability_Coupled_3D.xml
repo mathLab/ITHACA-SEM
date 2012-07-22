@@ -13,7 +13,7 @@
       <I PROPERTY="HOMOGENEOUS"       VALUE="1D"/>
       <I PROPERTY="INTEGRATIONSPACE"  VALUE="WaveSpace"/>
       <I PROPERTY="SingleMode"        VALUE="True"/>
-      <I PROPERTY="Driver"            VALUE="Arpack"/>
+      <I PROPERTY="Driver"            VALUE="ModifiedArnoldi"/>
       <I PROPERTY="ArpackProblemType" VALUE="LargestImag"/>
     </SOLVERINFO>
 

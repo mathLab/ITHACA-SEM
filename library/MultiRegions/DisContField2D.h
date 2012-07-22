@@ -201,6 +201,11 @@ namespace Nektar
             
             virtual ExpListSharedPtr &v_GetTrace()
             {
+                if(m_trace == NullExpListSharedPtr)
+                {
+                    SetUpDG();
+                }
+
                 return m_trace;
             }
 

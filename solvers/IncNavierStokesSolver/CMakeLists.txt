@@ -3,10 +3,10 @@ SET(IncNavierStokesSolverSource
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
-       ./AdvectionTerms/AdvectionTerm.cpp
-       ./AdvectionTerms/NavierStokesAdvection.cpp
-       ./AdvectionTerms/LinearisedAdvection.cpp
        ./AdvectionTerms/AdjointAdvection.cpp
+       ./AdvectionTerms/AdvectionTerm.cpp
+       ./AdvectionTerms/LinearisedAdvection.cpp
+       ./AdvectionTerms/NavierStokesAdvection.cpp
        ./AdvectionTerms/SkewSymmetricAdvection.cpp
        ./IncNavierStokesSolver.cpp 
        )

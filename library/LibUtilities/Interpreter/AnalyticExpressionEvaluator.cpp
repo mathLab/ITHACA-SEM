@@ -343,7 +343,13 @@ namespace Nektar
             }
             else
             {
-                ASSERTL1(m_constant[it->second] == value, "Attempt to add numerically different constants under the same name: " + name);
+	      if(m_constant[it->second] != value)
+		  {
+		    std::string errormsg("Attempt to add numerically different constants under the same name: ");
+		    errormsg += name; 
+		    std::cout << errormsg << std::endl;
+		  }
+	    //ASSERTL1(m_constant[it->second] == value, "Attempt to add numerically different constants under the same name: " + name);
             }
             return it->second;
         }

@@ -195,24 +195,24 @@ namespace Nektar
                 std::vector<unsigned int>					m_elementIDs;
                 std::vector<LibUtilities::BasisType>	m_basis;
                 int										m_numHomogeneousDir;
-                std::vector<NekDouble>					m_homogeneousLengths;
-			    std::vector<unsigned int>					m_homogeneousZIDs;
-			    std::vector<unsigned int>					m_homogeneousYIDs;
-			
-                /// Define the type of points per direction.
-                std::vector<LibUtilities::PointsType> m_points;
-                bool                                  m_pointsDef;
-                /// Define order of the element group.
-                /// * UniOrder: same order for each element
-                /// * MixOrder: definition of a different order for each element.
-                bool                                  m_uniOrder;
-                /// Define number of modes per direction.
-                std::vector<unsigned int>             m_numModes;
-                std::vector<unsigned int>             m_numPoints;
-                bool                                  m_numPointsDef;
-                std::vector<std::string>              m_fields;
+            std::vector<NekDouble>					m_homogeneousLengths;
+            std::vector<unsigned int>					m_homogeneousZIDs;
+            std::vector<unsigned int>					m_homogeneousYIDs;
+            
+            /// Define the type of points per direction.
+            std::vector<LibUtilities::PointsType> m_points;
+            bool                                  m_pointsDef;
+            /// Define order of the element group.
+            /// * UniOrder: same order for each element
+            /// * MixOrder: definition of a different order for each element.
+            bool                                  m_uniOrder;
+            /// Define number of modes per direction.
+            std::vector<unsigned int>             m_numModes;
+            std::vector<unsigned int>             m_numPoints;
+            bool                                  m_numPointsDef;
+            std::vector<std::string>              m_fields;
         };
-
+        
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
         typedef std::map<std::string, std::string> GeomInfoMap;

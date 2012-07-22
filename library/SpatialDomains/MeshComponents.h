@@ -41,6 +41,7 @@
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 namespace Nektar
 {

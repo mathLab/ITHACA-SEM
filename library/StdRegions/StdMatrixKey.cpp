@@ -65,7 +65,7 @@ namespace Nektar
             {
                 m_varcoeff_hashes[i] = boost::hash_range(x->second.begin(), x->second.begin() + stdExpansion.GetTotPoints());
                 boost::hash_combine(m_varcoeff_hashes[i], x->first);
-				i++;
+                i++;
             }
         }
 

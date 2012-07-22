@@ -114,8 +114,8 @@ namespace Nektar
             m_useFFT			= false;
             m_dealiasing		= false;
             m_SingleMode		= false;
-			m_HalfMode			= false;
-			m_MultipleModes		= false;
+            m_HalfMode			= false;
+            m_MultipleModes		= false;
 
             m_HomogeneousType = eNotHomogeneous;
 
@@ -648,7 +648,7 @@ namespace Nektar
                 }
                 EvaluateFunction(fieldStr, m_forces, "BodyForce");
 			
-				if(m_SingleMode || m_HalfMode)
+                if(m_SingleMode || m_HalfMode)
                 {
                     for(int i=0; i< v_GetForceDimension(); ++i)
                     {					
@@ -799,16 +799,15 @@ namespace Nektar
                     cout << "- Field " << pFieldName << ": " 
                          << "from file " << filename << endl;
                 }
-
-				ImportFld(filename,m_fields);
-
-				/*
+#if 0 
+                ImportFld(filename,m_fields);
+#else
                 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
 
                 m_graph->Import(filename,FieldDef,FieldData);
-
+                
                 int idx = -1;
                 // Loop over all the expansions
                 for(int i = 0; i < FieldDef.size(); ++i)
@@ -822,13 +821,25 @@ namespace Nektar
                         }
                     }
                     ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
-                    m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                     FieldDef[i]->m_fields[idx],
-                                                     vCoeffs);
+                    if(FieldDef[i]->m_numHomogeneousDir)
+                    {
+                        m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                         FieldDef[i]->m_fields[idx],
+                                                         vCoeffs);
+                    }
+                    else //Force nonhomgeneous extraction if base flow is not homogeneous
+                    {
+                        m_fields[0]->ExtractElmtDataToCoeffs(FieldDef[i], 
+                                                             FieldData[i],
+                                                               FieldDef[i]->m_fields[idx],
+                                                             vCoeffs);
+                    }
                 }
-                m_fields[0]->BwdTrans(vCoeffs, pArray);*/            }
+                m_fields[0]->BwdTrans(vCoeffs, pArray);
+#endif
+            }
         }
-
+        
 
         /**
          * If boundary conditions are time-dependent, they will be evaluated at the

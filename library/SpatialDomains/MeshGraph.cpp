@@ -394,7 +394,7 @@ namespace Nektar
                         xval *= xscale;
                         yval *= yscale;
                         zval *= zscale;
-
+                        
                         // Need to check it here because we may not be
                         // good after the read indicating that there
                         // was nothing to read.
@@ -1391,46 +1391,46 @@ namespace Nektar
                     elemTag->SetAttribute("HOMOGENEOUSLENGTHS", homoLenString);
                 }
 				
-				// Write homogeneuous planes/lines details
+                // Write homogeneuous planes/lines details
                 if(fielddefs[f]->m_numHomogeneousDir)
                 {
-					if(fielddefs[f]->m_homogeneousYIDs.size() > 0)
-					{
-						std::string homoYIDsString;
-						{
-							std::stringstream homoYIDsStringStream;
-							bool first = true;
-							for(int i = 0; i < fielddefs[f]->m_homogeneousYIDs.size(); i++)
-							{
-								if (!first)
-									homoYIDsStringStream << ",";
-								homoYIDsStringStream << fielddefs[f]->m_homogeneousYIDs[i];
-								first = false;
-							}
-							homoYIDsString = homoYIDsStringStream.str();
-						}
-						elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
-					}
-					
-					if(fielddefs[f]->m_homogeneousZIDs.size() > 0)
-					{
-						std::string homoZIDsString;
-						{
-							std::stringstream homoZIDsStringStream;
-							bool first = true;
-							for(int i = 0; i < fielddefs[f]->m_homogeneousZIDs.size(); i++)
-							{
-								if (!first)
-									homoZIDsStringStream << ",";
-								homoZIDsStringStream << fielddefs[f]->m_homogeneousZIDs[i];
-								first = false;
-							}
-							homoZIDsString = homoZIDsStringStream.str();
-						}
-						elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
-					}
+                    if(fielddefs[f]->m_homogeneousYIDs.size() > 0)
+                    {
+                        std::string homoYIDsString;
+                        {
+                            std::stringstream homoYIDsStringStream;
+                            bool first = true;
+                            for(int i = 0; i < fielddefs[f]->m_homogeneousYIDs.size(); i++)
+                            {
+                                if (!first)
+                                    homoYIDsStringStream << ",";
+                                homoYIDsStringStream << fielddefs[f]->m_homogeneousYIDs[i];
+                                first = false;
+                            }
+                            homoYIDsString = homoYIDsStringStream.str();
+                        }
+                        elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
+                    }
+                    
+                    if(fielddefs[f]->m_homogeneousZIDs.size() > 0)
+                    {
+                        std::string homoZIDsString;
+                        {
+                            std::stringstream homoZIDsStringStream;
+                            bool first = true;
+                            for(int i = 0; i < fielddefs[f]->m_homogeneousZIDs.size(); i++)
+                            {
+                                if (!first)
+                                    homoZIDsStringStream << ",";
+                                homoZIDsStringStream << fielddefs[f]->m_homogeneousZIDs[i];
+                                first = false;
+                            }
+                            homoZIDsString = homoZIDsStringStream.str();
+                        }
+                        elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
+                    }
                 }
-
+                
                 // Write NUMMODESPERDIR
                 std::string numModesString;
                 {
@@ -1442,7 +1442,7 @@ namespace Nektar
                         // Just dump single definition
                         bool first = true;
                         for (std::vector<int>::size_type i = 0; i
-                        < fielddefs[f]->m_basis.size(); i++)
+                                 < fielddefs[f]->m_basis.size(); i++)
                         {
                             if (!first)
                                 numModesStringStream << ",";
@@ -1455,7 +1455,7 @@ namespace Nektar
                         numModesStringStream << "MIXORDER:";
                         bool first = true;
                         for (std::vector<int>::size_type i = 0; i
-                        < fielddefs[f]->m_numModes.size(); i++)
+                                 < fielddefs[f]->m_numModes.size(); i++)
                         {
                             if (!first)
                                 numModesStringStream << ",";
@@ -1463,7 +1463,7 @@ namespace Nektar
                             first = false;
                         }
                     }
-
+                    
                     numModesString = numModesStringStream.str();
                 }
                 elemTag->SetAttribute("NUMMODESPERDIR", numModesString);

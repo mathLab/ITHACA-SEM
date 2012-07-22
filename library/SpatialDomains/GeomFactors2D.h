@@ -50,13 +50,14 @@ namespace Nektar
             /// One dimensional geometric factors based on one-, two- or three-
             /// dimensional coordinate description.
             SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomType gtype,
-                          const int coordim,
-                          const Array<OneD, const StdRegions
-                                            ::StdExpansion2DSharedPtr> &Coords,
-                          const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                            &tbasis,
-                          const bool QuadMetrics = false,
-                          const bool LaplMetrics  = false);
+                                                 const int coordim,
+                                                 const Array<OneD, const StdRegions
+                                                 ::StdExpansion2DSharedPtr> &Coords,
+                                                 const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                 &tbasis,
+                                                 const bool QuadMetrics = false,
+                                                 const bool LaplMetrics  = false,
+                                                 const bool CheckJacPositive = true);
 
             /// Copy constructor.
             SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomFactors2D& S);
@@ -66,7 +67,7 @@ namespace Nektar
 
         private:
             /// Set up 1D Jacobian.
-            void SetUpJacGmat2D();
+            void SetUpJacGmat2D(bool CheckJacPositive = true);
 
             /// Compute vectors in a principle direction.
             void ComputePrincipleDirection(

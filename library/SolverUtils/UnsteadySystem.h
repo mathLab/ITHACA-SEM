@@ -58,8 +58,8 @@ namespace Nektar
                 const Array<OneD,NekDouble> CFL, 
                 NekDouble timeCFL);
             
-			/// Calculate the larger time-step mantaining the problem stable, just for CFLTester equation
-			SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
+            /// Calculate the larger time-step mantaining the problem stable, just for CFLTester equation
+            SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
                 int ExpOrder, 
                 NekDouble CFL, 
                 NekDouble TimeStability);

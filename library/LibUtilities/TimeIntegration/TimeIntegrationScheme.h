@@ -812,6 +812,12 @@ namespace Nektar
                 }
             }
 
+            // sets the soln Vector 
+            inline void SetSolVector(const  int Offset, const DoubleArray& y)
+            {
+                m_solVector[Offset] = y;
+            }
+
             // Rotate the solution vector 
             // (i.e. updating without calculating/inserting new values)
             inline void RotateSolutionVector()

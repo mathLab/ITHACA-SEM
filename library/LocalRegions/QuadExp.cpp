@@ -1241,7 +1241,6 @@ namespace Nektar
         DNekMatSharedPtr QuadExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
-
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eHybridDGHelmholtz:
@@ -1255,7 +1254,6 @@ namespace Nektar
             default:
                 returnval = StdQuadExp::v_GenMatrix(mkey);
             }
-
             return returnval;
         }
 

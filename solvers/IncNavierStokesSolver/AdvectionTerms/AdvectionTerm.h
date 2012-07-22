@@ -74,11 +74,11 @@ namespace Nektar
     class AdvectionTerm
     {
     public:
-		/// Destructor
-		virtual ~AdvectionTerm();
-
+        /// Destructor
+        virtual ~AdvectionTerm();
+        
         inline void InitObject();
-
+        
         /// Compute advection term
         void DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const int nConvectiveFields,
@@ -94,10 +94,10 @@ namespace Nektar
         /// Pointer to mesh graph
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 		
-		bool m_dealiasing;           ///< flag to determine if use dealising or not
-		bool m_UseContCoeff;
-		bool                         m_SingleMode;               ///< Flag to determine if use single mode or not
-		bool                         m_HalfMode;                 ///< Flag to determine if use half mode or not
+        bool m_dealiasing;           ///< flag to determine if use dealising or not
+        bool m_UseContCoeff;
+        bool                         m_SingleMode;               ///< Flag to determine if use single mode or not
+        bool                         m_HalfMode;                 ///< Flag to determine if use half mode or not
         
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
@@ -107,37 +107,37 @@ namespace Nektar
         int nvariables;              ///< Number of variables
         
         int m_nConvectiveFields;     /// Number of fields to be convected;
-		
-		//number of slices
-		int                                             m_slices;
-		//period length
-		NekDouble										m_period;
-		//interpolation vector
-		Array<OneD, Array<OneD, NekDouble> >			m_interp;
-		//auxiliary variables for time depedent base flows
-		LibUtilities::NektarFFTSharedPtr				m_FFT;
-		Array<OneD,NekDouble>							m_tmpIN;
-		Array<OneD,NekDouble>							m_tmpOUT;
-		bool											    m_useFFTW;
-		
+	
+        //number of slices
+        int                                             m_slices;
+        //period length
+        NekDouble										m_period;
+        //interpolation vector
+        Array<OneD, Array<OneD, NekDouble> >			m_interp;
+        //auxiliary variables for time depedent base flows
+        LibUtilities::NektarFFTSharedPtr				m_FFT;
+        Array<OneD,NekDouble>							m_tmpIN;
+        Array<OneD,NekDouble>							m_tmpOUT;
+        bool											    m_useFFTW;
+	
         /// Constructor
         AdvectionTerm(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
-
+                      const LibUtilities::SessionReaderSharedPtr&        pSession,
+                      const SpatialDomains::MeshGraphSharedPtr&          pGraph);
+        
         virtual void v_InitObject();
-
+        
         virtual void v_ComputeAdvectionTerm(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                                             const Array<OneD, Array<OneD, NekDouble> > &pV,
                                             const Array<OneD, const NekDouble> &pU,
                                             Array<OneD, NekDouble> &pOutarray,
                                             int pVelocityComponent,
-											NekDouble m_time,
+                                            NekDouble m_time,
                                             Array<OneD, NekDouble> &pWk)
         {
             ASSERTL0(false,"This function is not defined in parent class");
         };
-		
+	
         int NoCaseStringCompare(const string & s1, const string& s2);
     };
     

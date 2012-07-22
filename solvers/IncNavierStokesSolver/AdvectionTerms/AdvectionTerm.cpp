@@ -118,12 +118,12 @@ namespace Nektar
     }
     
     void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, 
-									const int nConvectiveFields, 
-									const Array<OneD, int> &vel_loc, 
-									const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
-									Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-									NekDouble m_time,
-									Array<OneD, NekDouble> &pWk)
+                                    const int nConvectiveFields, 
+                                    const Array<OneD, int> &vel_loc, 
+                                    const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
+                                    Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+                                    NekDouble m_time,
+                                    Array<OneD, NekDouble> &pWk)
     {
         int i,j;
         int VelDim           = vel_loc.num_elements();        
@@ -132,19 +132,19 @@ namespace Nektar
         Array<OneD, NekDouble > Deriv;
 	
         m_nConvectiveFields = nConvectiveFields;
-
+        
         for(i = 0; i < VelDim; ++i)
         {
-			if(pFields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
-			{
-				j = vel_loc[i];
-				velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
-				pFields[i]->HomogeneousBwdTrans(pInarray[j],velocity[i]);
-			}
-			else 
-			{
-				velocity[i] = pInarray[vel_loc[i]];
-			}
+            if(pFields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            {
+                j = vel_loc[i];
+                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                pFields[i]->HomogeneousBwdTrans(pInarray[j],velocity[i]);
+            }
+            else 
+            {
+                velocity[i] = pInarray[vel_loc[i]];
+            }
         }
         
         // Set up Derivative work space;
@@ -157,8 +157,8 @@ namespace Nektar
         {
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
-		
-		
+	
+	
         for(i=0; i< m_nConvectiveFields; ++i)
         {
             v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,m_time,Deriv);

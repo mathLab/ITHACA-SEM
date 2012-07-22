@@ -128,7 +128,8 @@ namespace Nektar
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
                                             &tbasis,
                         const bool QuadMetrics,
-                        const bool LaplMetrics) :
+                        const bool LaplMetrics,
+                        const bool CheckJacPositive ) :
             GeomFactors(gtype,2,coordim,QuadMetrics,LaplMetrics)
         {
             // Sanity checks.
@@ -225,7 +226,7 @@ namespace Nektar
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation
             // metrics
-            SetUpJacGmat2D();
+            SetUpJacGmat2D(CheckJacPositive);
 
             // 2. the jacobian muliplied with the quadrature weights
             if(QuadMetrics)
@@ -261,7 +262,7 @@ namespace Nektar
         /**
          *
          */
-        void GeomFactors2D::SetUpJacGmat2D()
+        void GeomFactors2D::SetUpJacGmat2D(bool CheckJacPositive)
         {
             // Check the number of derivative dimensions matches the coordinate
             // space.
@@ -304,8 +305,10 @@ namespace Nektar
                     m_jac[0] = m_deriv[0][0][0]*m_deriv[1][1][0]
                                             - m_deriv[1][0][0]*m_deriv[0][1][0];
 
-                    ASSERTL1(m_jac[0] > 0, "2D Regular Jacobian is not positive");
-                    
+                    if(CheckJacPositive)
+                    {
+                        ASSERTL1(m_jac[0] > 0, "2D Regular Jacobian is not positive");
+                    }
                     // Spencer's book page 160
                     // Compute derivatives of standard coordinate with respect
                     // to local coordinates.
@@ -322,7 +325,10 @@ namespace Nektar
                     g[2] = m_deriv[0][0][0]*m_deriv[1][1][0] - m_deriv[0][1][0]*m_deriv[1][0][0];
 
                     m_jac[0] = g[0]*g[0]+g[1]*g[1]+g[2]*g[2];
-                    ASSERTL1(m_jac[0] > 0, "Regular Jacobian is not positive");
+                    if(CheckJacPositive)
+                    {
+                        ASSERTL1(m_jac[0] > 0, "Regular Jacobian is not positive");
+                    }
 
                     // d xi_1/d x_1
                     m_gmat[0][0] =  (m_deriv[1][1][0]*g[2] - m_deriv[1][2][0]*g[1])/m_jac[0];
@@ -353,8 +359,11 @@ namespace Nektar
                     Vmath::Vvtvm(nqtot, &m_deriv[0][0][0], 1, &m_deriv[1][1][0], 1,
                                  &m_jac[0], 1, &m_jac[0], 1);
 
-                    ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0,
-                             "2D Deformed Jacobian is not positive");
+                    if(CheckJacPositive)
+                    {
+                        ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0,
+                                 "2D Deformed Jacobian is not positive");
+                    }
 
                     // d xi_1/d x_1
                     Vmath::Vdiv(nqtot,&m_deriv[1][1][0],1,&m_jac[0],1,&m_gmat[0][0],1);

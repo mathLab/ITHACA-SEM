@@ -399,7 +399,7 @@ namespace Nektar
                         }
                     }
                     
-                    //init = 0;
+                    init = 0;
                 }
                 else // use internal definition of forcing in m_vwiForcing
                 {
@@ -424,6 +424,15 @@ namespace Nektar
             m_solverRoll->DoSolve();
             m_solverRoll->Output();
             m_rollField = m_solverRoll->UpdateFields();
+            for(int g=0; g< m_solverRoll->GetNvariables(); ++g)
+            {
+                NekDouble vL2Error = m_solverRoll->L2Error(g,false);
+                NekDouble vLinfError = m_solverRoll->LinfError(g);
+                cout << "L 2 error (variable " << m_solverRoll->GetVariable(g) << ") : " << vL2Error << endl;
+                cout << "L inf error (variable " << m_solverRoll->GetVariable(g) << ") : " << vLinfError << endl;
+            }  
+
+
         }
         
         // Copy .fld file to .rst and base.fld
@@ -467,7 +476,7 @@ namespace Nektar
 
         m_streakField = solverStreak->UpdateFields();
 
-        if( m_sessionVWI->DefinesSolverInfo("INTERFACE")  )
+        if(m_sessionVWI->DefinesSolverInfo("INTERFACE"))
         {
             for(int g=0; g< solverStreak->GetNvariables(); ++g)
             {
@@ -862,7 +871,11 @@ namespace Nektar
                         val[i] = 0.5*(der1[i] - der1[index[i]]);
                     }
                 }
+#if 1 
+                m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(val,m_vwiForcing[0]);
+#else
                 m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[0]);
+#endif
 
                 m_waveVelocities[0]->GetPlane(0)->BwdTrans_IterPerExp(m_vwiForcing[1],der2);
                 for(i = 0; i < npts; ++i)
@@ -872,7 +885,11 @@ namespace Nektar
                         val[i] = 0.5*(der2[i] - der2[index[i]]);
                     }
                 }        
+#if 1 
+                m_waveVelocities[projectfield]->GetPlane(0)->FwdTrans(val,m_vwiForcing[1]);
+#else
                 m_waveVelocities[0]->GetPlane(0)->FwdTrans_BndConstrained(val, m_vwiForcing[1]);
+#endif
             }
 
 
@@ -1095,7 +1112,9 @@ namespace Nektar
              if(skiprollstreak != true)
              {
 
+                 LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,MultiRegions::GlobalLinSys>::EnableManagement("GlobalLinSys");
                  ExecuteRoll();
+                 LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,MultiRegions::GlobalLinSys>::DisableManagement("GlobalLinSys");
 #ifndef _WIN32
    	         sleep(3);
 #endif
@@ -1476,7 +1495,9 @@ cout<<"cr="<<cr_str<<endl;
 	}
 	else
 	{
+            LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,MultiRegions::GlobalLinSys>::EnableManagement("GlobalLinSys");
             ExecuteRoll();
+            LibUtilities::NekManager<MultiRegions::GlobalLinSysKey,MultiRegions::GlobalLinSys>::DisableManagement("GlobalLinSys");
 
 #ifndef _WIN32
 	    sleep(3);
@@ -1576,7 +1597,6 @@ cout<<"cr="<<cr_str<<endl;
                 CalcNonLinearWaveForce();
             }
 	}
-
     }
 
     bool VortexWaveInteraction::CheckEigIsStationary(bool reset)

@@ -161,7 +161,7 @@ namespace Nektar
         int i;
         
         /// Number of fields (variables of the problem)
-        int nVariables      = inarray.num_elements();
+        int nVariables     = inarray.num_elements();
         
         /// Number of solution points
         int nSolutionPts    = GetNpoints();

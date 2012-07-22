@@ -400,12 +400,12 @@ namespace Nektar
                     m_timeLevelOffset[1] = 0;
                 }
                 break;
-			case eBDFImplicitOrder2:
+            case eBDFImplicitOrder2:
                 {
                     NekDouble third = 1.0/3.0;
-					m_numsteps  = 2;
+                    m_numsteps  = 2;
                     m_numstages = 1;
-					
+                    
                     m_A = Array<OneD, Array<TwoD,NekDouble> >(1);
                     m_B = Array<OneD, Array<TwoD,NekDouble> >(1);
 					
@@ -678,7 +678,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-			case eCNAB:
+            case eCNAB:
                 {
                     NekDouble secondth = 1.0/2.0;
                     m_numsteps  = 4;
@@ -1097,7 +1097,7 @@ namespace Nektar
             // initial value. Initialise all other multi-step values
             // and derivatives to zero
             TimeIntegrationSolutionSharedPtr y_out = 
-                MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(m_schemeKey,y_0,time,timestep);
+                MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(m_schemeKey,y_0,time,timestep); 
 
             // calculate the initial derivative, if is part of the
             // solution vector of the current scheme
@@ -1126,7 +1126,7 @@ namespace Nektar
             }
            
             return y_out;
-        }        
+        }
         
         TimeIntegrationScheme::ConstDoubleArray& 
         TimeIntegrationScheme::TimeIntegrate(const NekDouble    timestep, 
@@ -1217,8 +1217,7 @@ namespace Nektar
 
                 // STEP 2: time-integrate for one step using the
                 // current scheme
-                TimeIntegrationSolutionSharedPtr solvector_out = MemoryManager<TimeIntegrationSolution>::
-                    AllocateSharedPtr(GetIntegrationSchemeKey(),nvar,npoints);  // output solution vector of the current scheme
+                TimeIntegrationSolutionSharedPtr solvector_out = MemoryManager<TimeIntegrationSolution>:: AllocateSharedPtr(GetIntegrationSchemeKey(),nvar,npoints);  // output solution vector of the current scheme
 
                 // integrate
                 TimeIntegrate(timestep, solvector_in->GetSolutionVector(),
@@ -1320,7 +1319,7 @@ namespace Nektar
                     // solution vector of the current scheme
                     //DoubleArray& y_n = solvector_out->GetValue    ( curTimeLevels[n] );
                     //NekDouble    t_n = solvector_out->GetValueTime( curTimeLevels[n] );
-					y_n = solvector_out->GetValue    ( curTimeLevels[n] );
+                    y_n = solvector_out->GetValue    ( curTimeLevels[n] );
                     t_n = solvector_out->GetValueTime( curTimeLevels[n] );
 
                     // Set the calculated value in the master solution vector
@@ -1331,8 +1330,9 @@ namespace Nektar
                 {
                     // Get the calculated derivative out of the output
                     // solution vector of the current scheme
-                    //DoubleArray& dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
-					dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
+                    // DoubleArray& dtFy_n =
+                    // solvector_out->GetDerivative (curTimeLevels[n]);
+                    dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
 
                     // Set the calculated derivative in the master
                     // solution vector
@@ -1462,18 +1462,6 @@ namespace Nektar
                     // The stage values Y are a linear combination of:
                     // 1: the stage derivatives
 					
-/*                    if( i == 0 )
-                    {
-#if 1
-                        // SJS Why is tmp memory being redefined here
-                        // it seems it has been defined above.
-                        for (k=0; k<nvar; k++)
-                        {
-                            tmp[k] = Array<OneD, NekDouble>(npoints,0.0);
-                        }
-#endif
-                    }*/
-					
                     if( i != 0 )
                     {
                         for(k = 0; k < nvar; k++)
@@ -1510,7 +1498,7 @@ namespace Nektar
                     
                     // 2: the imported multi-step solution of the
                     // previous time level
-                    for( j = 0; j < m_numsteps; j++)
+                    for(j = 0; j < m_numsteps; j++)
                     {
                         for(k = 0; k < nvar; k++)
                         {
@@ -1525,20 +1513,20 @@ namespace Nektar
                 if(type == eDiagonallyImplicit)
                 {
                     if(m_numstages==1)
-					{
-						T= t_old[0]+timestep;
-					}
-					else 
-					{
-						T= t_old[0];
-						for(int j=0; j<=i; ++j)
-						{
-						    T += A(i,j)*timestep;
-						}
-					}
-					
+                    {
+                        T= t_old[0]+timestep;
+                    }
+                    else 
+                    {
+                        T= t_old[0];
+                        for(int j=0; j<=i; ++j)
+                        {
+                            T += A(i,j)*timestep;
+                        }
+                    }
+                    
                     op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
-					
+                    
                     for(k = 0; k < nvar; k++)
                     {
                         Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
@@ -1548,17 +1536,17 @@ namespace Nektar
                 else if(type == eIMEX)
                 { 
                     if(m_numstages==1)
-					{
-						T= t_old[0]+timestep;
-					}
-					else 
-					{
-						T= t_old[0];
-						for(int j=0; j<=i; ++j)
-						{
-						    T += A(i,j)*timestep;
-						}
-					}	
+                    {
+                        T= t_old[0]+timestep;
+                    }
+                    else 
+                    {
+                        T= t_old[0];
+                        for(int j=0; j<=i; ++j)
+                        {
+                            T += A(i,j)*timestep;
+                        }
+                    }	
                     
                     if(fabs(A(i,i)) > NekConstants::kNekZeroTol)
                     {
@@ -1602,22 +1590,22 @@ namespace Nektar
                 }
 		
                 if (m_numstages==1 && type == eIMEX)
-				{
-					t_new[0] = t_old[0]+timestep;
+                {
+                    t_new[0] = t_old[0]+timestep;
                 }
-				else 
-				{
-					t_new[0] = B(0,0)*timestep;
-					for(j = 1; j < m_numstages; j++)
-					{
-					    t_new[0] += B(0,j)*timestep;
-					}
-					for(j = 0; j < m_numsteps; j++)
-					{
-					    t_new[0] += V(0,j)*t_old[j];
-					}
-					i_start = 1;
-				}
+                else 
+                {
+                    t_new[0] = B(0,0)*timestep;
+                    for(j = 1; j < m_numstages; j++)
+                    {
+                        t_new[0] += B(0,j)*timestep;
+                    }
+                    for(j = 0; j < m_numsteps; j++)
+                    {
+                        t_new[0] += V(0,j)*t_old[j];
+                    }
+                    i_start = 1;
+                }
             }
             
             for(i = i_start; i < m_numsteps; i++)
@@ -1637,12 +1625,12 @@ namespace Nektar
                                      y_new[i][k],1);
                     }
                 }
-				if(m_numstages != 1 || type != eIMEX)
-				{
-					t_new[i] = B(i,0)*timestep;
-				}
+                if(m_numstages != 1 || type != eIMEX)
+                {
+                    t_new[i] = B(i,0)*timestep;
+                }
                 
-				
+		
                 for(j = 1; j < m_numstages; j++)
                 {
                     for(k = 0; k < nvar; k++)
@@ -1657,10 +1645,10 @@ namespace Nektar
                                          y_new[i][k],1);
                         }
                     }
-				    if(m_numstages != 1 || type != eIMEX)
-				    {
-					  t_new[i] += B(i,j)*timestep; 
-				    }
+                    if(m_numstages != 1 || type != eIMEX)
+                    {
+                        t_new[i] += B(i,j)*timestep; 
+                    }
                 }			
                 
                 // 2: the imported multi-step solution of the previous
@@ -1672,11 +1660,10 @@ namespace Nektar
                         Vmath::Svtvp(npoints,V(i,j),y_old[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
                     }
-					if(m_numstages != 1 || type != eIMEX)
-					{
-					  t_new[i] += V(i,j)*t_old[j];
-					}
-
+                    if(m_numstages != 1 || type != eIMEX)
+                    {
+                        t_new[i] += V(i,j)*t_old[j];
+                    }
                 }
             }
             

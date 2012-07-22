@@ -65,9 +65,9 @@ namespace Nektar
 
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
 
-		m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
-		m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
-	}
+        m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
+        m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+    }
 	
 
     UnsteadyAdvectionDiffusion::~UnsteadyAdvectionDiffusion()
@@ -90,7 +90,7 @@ namespace Nektar
             {
                 int ncoeffs    = GetNcoeffs();
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
-
+                
                 WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
                 for(i = 1; i < nvariables; ++i)
                 {
@@ -134,10 +134,11 @@ namespace Nektar
         int nq = m_fields[0]->GetNpoints();
 		
         StdRegions::ConstFactorMap factors;
-		factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
-		
-		Array<OneD, Array< OneD, NekDouble> > F(nvariables);
-		F[0] = Array<OneD, NekDouble> (nq*nvariables);
+        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
+        
+        Array<OneD, Array< OneD, NekDouble> > F(nvariables);
+        F[0] = Array<OneD, NekDouble> (nq*nvariables);
+
         for(int n = 1; n < nvariables; ++n)
         {
             F[n] = F[n-1] + nq;
@@ -151,13 +152,13 @@ namespace Nektar
         {
             // Multiply 1.0/timestep/lambda
             Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1, F[i], 1);
-		}
-            
-	    //Setting boundary conditions
-		SetBoundaryConditions(time);
-	    
-		for (int i = 0; i < nvariables; ++i)
-		{
+        }
+        
+        //Setting boundary conditions
+        SetBoundaryConditions(time);
+	
+        for (int i = 0; i < nvariables; ++i)
+        {
             // Solve a system of equations with Helmholtz solver
             m_fields[i]->HelmSolve(F[i],m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);

@@ -36,6 +36,9 @@
 #include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/GlobalLinSysKey.h>
+
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 

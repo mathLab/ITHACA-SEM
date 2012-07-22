@@ -1185,7 +1185,6 @@ namespace Nektar
         DNekMatSharedPtr TriExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
-
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eHybridDGHelmholtz:
@@ -1200,6 +1199,7 @@ namespace Nektar
                 returnval = StdTriExp::v_GenMatrix(mkey);
                 break;
             }
+
             return returnval;
         }
 

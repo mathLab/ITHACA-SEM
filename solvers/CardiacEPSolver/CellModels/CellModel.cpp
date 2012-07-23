@@ -83,7 +83,7 @@ namespace Nektar
         }
 
         // Use nodal projection if only triangles
-        if (s.size() == 1 && (s.count(StdRegions::eTriangle) == 1))
+        if (s.size() == 1 && (s.count(StdRegions::eTriangle) == 1 || s.count(StdRegions::eTetrahedron) == 1))
         {
             m_useNodal = true;
         }
@@ -103,9 +103,14 @@ namespace Nektar
             LibUtilities::BasisKey B1(
                 LibUtilities::eModified_B, order,
                 LibUtilities::PointsKey(order, LibUtilities::eGaussRadauMAlpha1Beta0));
+            LibUtilities::BasisKey B2(
+                LibUtilities::eModified_C, order,
+                LibUtilities::PointsKey(order, LibUtilities::eGaussRadauMAlpha2Beta0));
 
             m_nodalTri = MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
                         B0, B1, LibUtilities::eNodalTriEvenlySpaced);
+            m_nodalTet = MemoryManager<StdRegions::StdNodalTetExp>::AllocateSharedPtr(
+                        B0, B1, B2, LibUtilities::eNodalTetEvenlySpaced);
         }
         else
         {
@@ -175,8 +180,16 @@ namespace Nektar
                 {
                     phys_offset = m_field->GetPhys_Offset(i);
                     coef_offset = m_field->GetCoeff_Offset(i);
-                    m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTri->UpdateCoeffs());
-                    m_nodalTri->ModalToNodal(m_nodalTri->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
+                    if (m_field->GetExp(0)->DetExpansionType() == StdRegions::eTriangle)
+                    {
+                        m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTri->UpdateCoeffs());
+                        m_nodalTri->ModalToNodal(m_nodalTri->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
+                    }
+                    else
+                    {
+                        m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTet->UpdateCoeffs());
+                        m_nodalTet->ModalToNodal(m_nodalTet->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
+                    }
                 }
             }
             // Copy new transmembrane potential into cell model
@@ -226,8 +239,16 @@ namespace Nektar
                 {
                     int phys_offset = m_field->GetPhys_Offset(i);
                     int coef_offset = m_field->GetCoeff_Offset(i);
-                    m_nodalTri->NodalToModal(m_wsp[k]+coef_offset, m_nodalTri->UpdateCoeffs());
-                    m_field->GetExp(0)->BwdTrans(m_nodalTri->GetCoeffs(), tmp=outarray[k] + phys_offset);
+                    if (m_field->GetExp(0)->DetExpansionType() == StdRegions::eTriangle)
+                    {
+                        m_nodalTri->NodalToModal(m_wsp[k]+coef_offset, m_nodalTri->UpdateCoeffs());
+                        m_field->GetExp(0)->BwdTrans(m_nodalTri->GetCoeffs(), tmp=outarray[k] + phys_offset);
+                    }
+                    else
+                    {
+                        m_nodalTet->NodalToModal(m_wsp[k]+coef_offset, m_nodalTet->UpdateCoeffs());
+                        m_field->GetExp(0)->BwdTrans(m_nodalTet->GetCoeffs(), tmp=outarray[k] + phys_offset);
+                    }
                 }
             }
         }

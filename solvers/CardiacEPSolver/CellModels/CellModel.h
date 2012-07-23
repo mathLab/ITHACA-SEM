@@ -114,6 +114,7 @@ namespace Nektar
         bool m_useNodal;
         /// StdNodalTri for cell model calculations
         StdRegions::StdNodalTriExpSharedPtr m_nodalTri;
+        StdRegions::StdNodalTetExpSharedPtr m_nodalTet;
         /// Temporary array for nodal projection
         Array<OneD, Array<OneD, NekDouble> > m_nodalTmp;
 

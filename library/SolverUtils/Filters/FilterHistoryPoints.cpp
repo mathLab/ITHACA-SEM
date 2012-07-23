@@ -123,68 +123,87 @@ namespace Nektar
             }
 
 
-            // Determine the element in which each history point resides.
-            // If point is not in mesh (on this process), id is -1.
-            Array<OneD, int>        idList(m_historyPoints.size());
-            SpatialDomains::VertexComponentSharedPtr vtx;
+            // Determine the unique process responsible for each history point
+            // For points on a partition boundary, must select a single process
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+            int vRank = vComm->GetRank();
+            Array<OneD, int>        idList(m_historyPoints.size());
+            Array<OneD, int>        procList(m_historyPoints.size(), -1);
             for (i = 0; i < m_historyPoints.size(); ++i)
             {
-                vtx = m_historyPoints[i];
-                vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                m_historyPoints[i]->GetCoords(  gloCoord[0],
+                                                gloCoord[1],
+                                                gloCoord[2]);
 
                 idList[i] = pFields[0]->GetExpIndex(gloCoord);
+                if (idList[i] != -1) {
+                    procList[i] = vRank;
+                }
+            }
+            vComm->AllReduce(procList, LibUtilities::ReduceMax);
 
+            // Determine the element in which each history point resides.
+            // If point is not in mesh (on this process), id is -1.
+            for (i = 0; i < m_historyPoints.size(); ++i)
+            {
+                // If point lies on partition boundary, only the proc with max
+                // rank retains posession.
+                if (procList[i] != vRank)
+                {
+                    idList[i] = -1;
+                }
                 if (idList[i] != -1)
                 {
                     m_historyLocalPointMap[m_historyList.size()] = i;
                     m_historyList.push_back(
                         std::pair<SpatialDomains::VertexComponentSharedPtr, int>(
-                            vtx, idList[i]));
+                            m_historyPoints[i], idList[i]));
                 }
             }
 
-            // Collate the element ID list across processes
+            // Collate the element ID list across processes and check each
+            // history point is allocated to a process
             vComm->AllReduce(idList, LibUtilities::ReduceMax);
-
-            // Check each history point has been located on one process
             if (vComm->GetRank() == 0)
             {
                 for (i = 0; i < m_historyPoints.size(); ++i)
                 {
-                    vtx = m_historyPoints[i];
-                    vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                    m_historyPoints[i]->GetCoords(  gloCoord[0],
+                                                    gloCoord[1],
+                                                    gloCoord[2]);
                     ASSERTL0(idList[i] != -1, "History point " +
                              boost::lexical_cast<std::string>(gloCoord[0]) + ", " +
                              boost::lexical_cast<std::string>(gloCoord[1]) + ", " +
                              boost::lexical_cast<std::string>(gloCoord[2]) +
                              " cannot be found in the mesh.");
                 }
-            }
 
-            // Open output stream
-            m_outputStream.open(m_outputFile.c_str());
-            m_outputStream << "# History data for variables (:";
+                // Open output stream
+                m_outputStream.open(m_outputFile.c_str());
+                m_outputStream << "# History data for variables (:";
 
-            for (i = 0; i < pFields.num_elements(); ++i)
-            {
-                m_outputStream << m_session->GetVariable(i) <<",";
-            }
+                for (i = 0; i < pFields.num_elements(); ++i)
+                {
+                    m_outputStream << m_session->GetVariable(i) <<",";
+                }
 
-            m_outputStream << ") at points:" << endl;
+                m_outputStream << ") at points:" << endl;
 
-            for (i = 0; i < m_historyPoints.size(); ++i)
-            {
-                m_historyPoints[i]->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                for (i = 0; i < m_historyPoints.size(); ++i)
+                {
+                    m_historyPoints[i]->GetCoords(  gloCoord[0],
+                                                    gloCoord[1],
+                                                    gloCoord[2]);
 
-                m_outputStream << "# \t" << i;
-                m_outputStream.width(8);
-                m_outputStream << gloCoord[0];
-                m_outputStream.width(8);
-                m_outputStream << gloCoord[1];
-                m_outputStream.width(8);
-                m_outputStream << gloCoord[2];
-                m_outputStream << endl;
+                    m_outputStream << "# \t" << i;
+                    m_outputStream.width(8);
+                    m_outputStream << gloCoord[0];
+                    m_outputStream.width(8);
+                    m_outputStream << gloCoord[1];
+                    m_outputStream.width(8);
+                    m_outputStream << gloCoord[2];
+                    m_outputStream << endl;
+                }
             }
             v_Update(pFields, time);
         }
@@ -225,12 +244,13 @@ namespace Nektar
                 }
             }
 
+            // Exchange history data
+            // This could be improved to reduce communication but works for now
+            vComm->AllReduce(data, LibUtilities::ReduceSum);
+
             // Only the root process writes out history data
             if (vComm->GetRank() == 0)
             {
-                // Exchange history data
-                // This could be improved to reduce communication but works for now
-                vComm->AllReduce(data, LibUtilities::ReduceSum);
 
                 // Write data values point by point
                 for (k = 0; k < m_historyPoints.size(); ++k)
@@ -245,13 +265,6 @@ namespace Nektar
                     m_outputStream << endl;
                 }
             }
-            else
-            {
-                // Exchange history data
-                // This could be improved to reduce communication but works for now
-                vComm->AllReduce(data, LibUtilities::ReduceSum);
-            }
-
         }
 
 
@@ -260,7 +273,10 @@ namespace Nektar
          */
         void FilterHistoryPoints::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
-            m_outputStream.close();
+            if (pFields[0]->GetComm()->GetRank() == 0)
+            {
+                m_outputStream.close();
+            }
         }
 
 

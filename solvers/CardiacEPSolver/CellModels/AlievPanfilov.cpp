@@ -88,36 +88,36 @@ namespace Nektar
         // --------------------------------------
         // Compute reaction term f(u,v)
         // --------------------------------------
-        if (m_spatialParameters->Exists("a"))
-        {
-          Vmath::Vmul(m_nq,  &m_spatialParameters->GetData("a")->GetPhys()[0], 1,
-                           &inarray[0][0], 1, &m_tmp1[0], 1);
-
-          Vmath::Vvtvm(m_nq, &m_spatialParameters->GetData("a")->GetPhys()[0], 1,
-                           &m_uu[0], 1, &m_tmp1[0], 1, &m_tmp1[0], 1);
-
-          Vmath::Svtvm(m_nq, -1.0, &m_uu[0], 1, &m_tmp1[0], 1, &m_tmp1[0], 1);
-        }
-        else
-        {
+//        if (m_spatialParameters->Exists("a"))
+//        {
+//          Vmath::Vmul(m_nq,  &m_spatialParameters->GetData("a")->GetPhys()[0], 1,
+//                           &inarray[0][0], 1, &m_tmp1[0], 1);
+//
+//          Vmath::Vvtvm(m_nq, &m_spatialParameters->GetData("a")->GetPhys()[0], 1,
+//                           &m_uu[0], 1, &m_tmp1[0], 1, &m_tmp1[0], 1);
+//
+//          Vmath::Svtvm(m_nq, -1.0, &m_uu[0], 1, &m_tmp1[0], 1, &m_tmp1[0], 1);
+//        }
+//        else
+//        {
           // Ru = au
           Vmath::Smul(m_nq, m_a, &inarray[0][0], 1, &m_tmp1[0], 1);
           // Ru = (-1-a)u*u + au
           Vmath::Svtvp(m_nq, (-1.0-m_a), &m_uu[0], 1, &m_tmp1[0], 1,
                                        &m_tmp1[0], 1);
-        }
+//        }
         // Ru = u*u*u - (1+a)u*u + au
         Vmath::Vadd(m_nq, &m_uuu[0], 1, &m_tmp1[0], 1, &m_tmp1[0], 1);
         // Ru = k(u*u*u - (1+a)u*u + au)
-        if (m_spatialParameters->Exists("k"))
-        {
-          Vmath::Vmul(m_nq, &m_spatialParameters->GetData("k")->GetPhys()[0], 1,
-                          &m_tmp1[0], 1, &m_tmp1[0], 1);
-        }
-        else
-        {
+//        if (m_spatialParameters->Exists("k"))
+//        {
+//          Vmath::Vmul(m_nq, &m_spatialParameters->GetData("k")->GetPhys()[0], 1,
+//                          &m_tmp1[0], 1, &m_tmp1[0], 1);
+//        }
+//        else
+//        {
           Vmath::Smul(m_nq, m_k, &m_tmp1[0], 1, &m_tmp1[0], 1);
-        }
+//        }
 
         // Ru = k(u*u*u - (1+a)u*u + au) + I_stim
         Vmath::Vadd(m_nq, &outarray[0][0], 1, &m_tmp1[0], 1, &outarray[0][0], 1);
@@ -145,29 +145,29 @@ namespace Nektar
         Vmath::Sadd(m_nq, m_eps, &m_tmp2[0], 1, &m_tmp2[0], 1);
 
         // tmp1 = (-a-1) + u
-        if (m_spatialParameters->Exists("a"))
-        {
-          Vmath::Vsub(m_nq, &inarray[0][0], 1,
-                          &m_spatialParameters->GetData("a")->GetPhys()[0], 1,
-                          &m_tmp1[0], 1);
-
-          Vmath::Sadd(m_nq, -1.0, &inarray[0][0], 1, &m_tmp1[0], 1);
-        }
-        else
-        {
+//        if (m_spatialParameters->Exists("a"))
+//        {
+//          Vmath::Vsub(m_nq, &inarray[0][0], 1,
+//                          &m_spatialParameters->GetData("a")->GetPhys()[0], 1,
+//                          &m_tmp1[0], 1);
+//
+//          Vmath::Sadd(m_nq, -1.0, &inarray[0][0], 1, &m_tmp1[0], 1);
+//        }
+//        else
+//        {
           Vmath::Sadd(m_nq, (-m_a-1), &inarray[0][0], 1, &m_tmp1[0], 1);
-        }
+//        }
 
         // tmp1 = k(u-a-1)
-        if (m_spatialParameters->Exists("k"))
-        {
-          Vmath::Vmul(m_nq, &m_spatialParameters->GetData("k")->GetPhys()[0], 1,
-                          &m_tmp1[0], 1, &m_tmp1[0], 1);
-        }
-        else
-        {
+//        if (m_spatialParameters->Exists("k"))
+//        {
+//          Vmath::Vmul(m_nq, &m_spatialParameters->GetData("k")->GetPhys()[0], 1,
+//                          &m_tmp1[0], 1, &m_tmp1[0], 1);
+//        }
+//        else
+//        {
           Vmath::Smul(m_nq, m_k, &m_tmp1[0], 1, &m_tmp1[0], 1);
-        }
+//        }
 
         // tmp1 = ku(u-a-1) + v
         Vmath::Vvtvp(m_nq, &inarray[0][0], 1, &m_tmp1[0], 1, &inarray[1][0], 1,

@@ -37,6 +37,9 @@
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
 
+#include <StdRegions/StdNodalTriExp.h>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
+
 namespace Nektar
 {
     CellModelFactory& GetCellModelFactory()
@@ -69,16 +72,45 @@ namespace Nektar
         m_lastTime = 0.0;
         m_substeps = pSession->GetParameter("Substeps");
         m_nvar = 0;
-        m_nq = pField->GetTotPoints();
-//        m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
-//                                          ::AllocateSharedPtr(nq);
+        m_useNodal = false;
 
+        // Number of points in nodal space is the number of coefficients
+        // in modified basis
+        std::set<enum StdRegions::ExpansionType> s;
+        for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
+        {
+            s.insert(m_field->GetExp(i)->DetExpansionType());
+        }
 
-        //m_spatialParameters->Read(m_filename);
+        // Use nodal projection if only triangles
+        if (s.size() == 1 && (s.count(StdRegions::eTriangle) == 1))
+        {
+            m_useNodal = true;
+        }
 
-        //Array<OneD, NekDouble> x(nq), y(nq), z(nq);
-        //m_fields[0]->GetCoords(x,y,z);
-        //m_spatialParameters->EvaluateParameters(x,y,z);
+        // ---------------------------
+        // Move to nodal points
+        if (m_useNodal)
+        {
+            m_nq = pField->GetNcoeffs();
+            int order = m_field->GetExp(0)->GetBasis(0)->GetNumModes();
+            int nvar = 1;
+
+            // Set up a nodal tri
+            LibUtilities::BasisKey B0(
+                LibUtilities::eModified_A, order,
+                LibUtilities::PointsKey(order, LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::BasisKey B1(
+                LibUtilities::eModified_B, order,
+                LibUtilities::PointsKey(order, LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_nodalTri = MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
+                        B0, B1, LibUtilities::eNodalTriEvenlySpaced);
+        }
+        else
+        {
+            m_nq = pField->GetTotPoints();
+        }
     }
 
 
@@ -89,21 +121,17 @@ namespace Nektar
     {
         ASSERTL1(m_nvar > 0, "Cell model must have at least 1 variable.");
 
-        int nq = m_field->GetNpoints();
-        Array<OneD, NekDouble> xc0(nq), xc1(nq), xc2(nq);
-        m_field->GetCoords(xc0, xc1, xc2);
-
         m_cellSol = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         m_wsp = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         for (unsigned int i = 0; i < m_nvar; ++i)
         {
-            m_cellSol[i] = Array<OneD, NekDouble>(nq);
-            m_wsp[i] = Array<OneD, NekDouble>(nq);
+            m_cellSol[i] = Array<OneD, NekDouble>(m_nq);
+            m_wsp[i] = Array<OneD, NekDouble>(m_nq);
         }
         m_gates_tau = Array<OneD, Array<OneD, NekDouble> >(m_gates.size());
         for (unsigned int i = 0; i < m_gates.size(); ++i)
         {
-            m_gates_tau[i] = Array<OneD, NekDouble>(nq);
+            m_gates_tau[i] = Array<OneD, NekDouble>(m_nq);
         }
 
         v_SetInitialConditions();
@@ -122,10 +150,47 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble time)
     {
+        int phys_offset = 0;
+        int coef_offset = 0;
+        int nvar = inarray.num_elements();
+        Array<OneD, NekDouble> tmp;
+
+        // ---------------------------
+        // Check nodal temp array set up
+        if (m_useNodal)
+        {
+            if (!m_nodalTmp.num_elements())
+            {
+                m_nodalTmp = Array<OneD, Array<OneD, NekDouble> >(nvar);
+                for (unsigned int k = 0; k < nvar; ++k)
+                {
+                    m_nodalTmp[k] = Array<OneD, NekDouble>(m_nq);
+                }
+            }
+
+            // Move to nodal points
+            for (unsigned int k = 0; k < nvar; ++k)
+            {
+                for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
+                {
+                    phys_offset = m_field->GetPhys_Offset(i);
+                    coef_offset = m_field->GetCoeff_Offset(i);
+                    m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTri->UpdateCoeffs());
+                    m_nodalTri->ModalToNodal(m_nodalTri->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
+                }
+            }
+            // Copy new transmembrane potential into cell model
+            Vmath::Vcopy(m_nq, m_nodalTmp[0], 1, m_cellSol[0], 1);
+        }
+        else
+        {
+            // Copy new transmembrane potential into cell model
+            Vmath::Vcopy(m_nq, inarray[0], 1, m_cellSol[0], 1);
+        }
+        // -------------------------
+
         NekDouble delta_t = (time - m_lastTime)/m_substeps;
 
-        // Copy new transmembrane potential into cell model
-        Vmath::Vcopy(m_nq, inarray[0], 1, m_cellSol[0], 1);
 
         // Perform substepping
         for (unsigned int i = 0; i < m_substeps - 1; ++i)
@@ -152,7 +217,24 @@ namespace Nektar
         Update(m_cellSol, m_wsp, time);
 
         // Output dV/dt from last step but integrate remaining cell model vars
-        Vmath::Vcopy(m_nq, m_wsp[0], 1, outarray[0], 1);
+        // Transform cell model I_total from nodal to modal space
+        if (m_useNodal)
+        {
+            for (unsigned int k = 0; k < nvar; ++k)
+            {
+                for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
+                {
+                    int phys_offset = m_field->GetPhys_Offset(i);
+                    int coef_offset = m_field->GetCoeff_Offset(i);
+                    m_nodalTri->NodalToModal(m_wsp[k]+coef_offset, m_nodalTri->UpdateCoeffs());
+                    m_field->GetExp(0)->BwdTrans(m_nodalTri->GetCoeffs(), tmp=outarray[k] + phys_offset);
+                }
+            }
+        }
+        else
+        {
+            Vmath::Vcopy(m_nq, m_wsp[0], 1, outarray[0], 1);
+        }
 
         // Ion concentrations
         for (unsigned int j = 0; j < m_concentrations.size(); ++j)

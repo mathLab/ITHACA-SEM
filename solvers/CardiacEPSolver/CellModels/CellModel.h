@@ -41,6 +41,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <StdRegions/StdNodalTetExp.h>
 
 namespace Nektar
 {
@@ -103,13 +105,17 @@ namespace Nektar
         /// Number of substeps to take
         int m_substeps;
 
-        /// Spatially varying parameters.
-        SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
-
         /// Cell model solution variables
         Array<OneD, Array<OneD, NekDouble> > m_cellSol;
         /// Cell model integration workspace
         Array<OneD, Array<OneD, NekDouble> > m_wsp;
+
+        /// Flag indicating whether nodal projection in use
+        bool m_useNodal;
+        /// StdNodalTri for cell model calculations
+        StdRegions::StdNodalTriExpSharedPtr m_nodalTri;
+        /// Temporary array for nodal projection
+        Array<OneD, Array<OneD, NekDouble> > m_nodalTmp;
 
         /// Indices of cell model variables which are concentrations
         std::vector<int> m_concentrations;

@@ -654,9 +654,10 @@ namespace Nektar
                                         Array<OneD,      NekDouble> &outarray,
                                         bool  UseContCoeffs = false);
 
-            void GeneralMatrixOp_IterPerExp( const GlobalMatrixKey      &gkey,
-                                             const Array<OneD,const NekDouble> &inarray,
-                                             Array<OneD,      NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void GeneralMatrixOp_IterPerExp(
+                    const GlobalMatrixKey      &gkey,
+                    const Array<OneD,const NekDouble> &inarray,
+                          Array<OneD,      NekDouble> &outarray);
 
             inline void SetUpPhysNormals();
 
@@ -752,7 +753,7 @@ namespace Nektar
              * using the basic ExpList Elemental expansions rather
              * than planes in homogeneous case
              */ 
-            void ExtractElmtDataToCoeffs(
+            MULTI_REGIONS_EXPORT void ExtractElmtDataToCoeffs(
                                      SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
                                      std::vector<NekDouble> &fielddata,
                                      std::string &field,

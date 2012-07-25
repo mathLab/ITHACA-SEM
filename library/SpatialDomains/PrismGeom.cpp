@@ -644,9 +644,11 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
-                             NekConstants::kNekZeroTol,
-                             "These vectors should be parallel");
+                    if (fabs(elementAaxis_length*faceBaxis_length
+                            - fabs(dotproduct1)) > NekConstants::kNekZeroTol)
+                    {
+                        cout << "Warning: Prism axes not parallel" << endl;
+                    }
 
                     // if the result is negative, both axis point in reverse
                     // directions
@@ -663,9 +665,11 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
-                             NekConstants::kNekZeroTol,
-                             "These vectors should be parallel");
+                    if (fabs(elementBaxis_length*faceAaxis_length
+                            - fabs(dotproduct2)) > NekConstants::kNekZeroTol)
+                    {
+                        cout << "Warning: Prism axes not parallel" << endl;
+                    }
 
                     if( dotproduct2 < 0.0 )
                     {

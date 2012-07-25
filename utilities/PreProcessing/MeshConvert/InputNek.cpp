@@ -77,7 +77,7 @@ namespace Nektar
             OpenStream();
             
             string      line, word;
-            int         nParam, nModes, nElements, nCurves;
+            int         nParam, nModes, nElements, nCurves, nCurveTypes;
             int         i, j, k, nodeCounter = 0;
             int         nComposite = 0;
             ElementType elType;
@@ -300,8 +300,19 @@ namespace Nektar
             
             // Read number of curves.
             getline(mshFile, line);
-            s.clear(); s.str(line);
-            s >> nCurves;
+            while (line.find("FLUID BOUNDARY CONDITIONS") == string::npos)
+            {
+                s.clear(); s.str(line);
+                if (line.find("Number of curve types") != string::npos)
+                {
+                    s >> nCurveTypes;
+                }
+                if (line.find("Curved sides follow") != string::npos)
+                {
+                    s >> nCurves;
+                }
+                getline(mshFile, line);
+            }
 
             if (nCurves > 0)
             {

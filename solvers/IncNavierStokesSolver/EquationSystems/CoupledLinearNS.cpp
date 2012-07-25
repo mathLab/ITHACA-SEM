@@ -1180,10 +1180,11 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-        case eUnsteadyStokes:
-        case eUnsteadyNavierStokes:
+			case eUnsteadyStokes:
+			case eUnsteadyNavierStokes:
+			case eSteadyNavierStokesBySFD:
             {
-
+				
                 LibUtilities::TimeIntegrationMethod intMethod;
                 std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
                 int i;
@@ -1200,15 +1201,15 @@ namespace Nektar
                 
                 switch(intMethod)
                 {
-                case LibUtilities::eIMEXOrder1: 
+					case LibUtilities::eIMEXOrder1: 
                     {
                         m_intSteps = 1;
                         m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
                         LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
                         m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
                     }
-                    break;
-                case LibUtilities::eIMEXOrder2: 
+						break;
+					case LibUtilities::eIMEXOrder2: 
                     {
                         m_intSteps = 2;
                         m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
@@ -1217,37 +1218,37 @@ namespace Nektar
                         LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
                         m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
                     }
-                    break;
-                default:
-                    ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
-                    break;
+						break;
+					default:
+						ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
+						break;
                 }
                 
                 // Could defind this from IncNavierStokes class? 
                 m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
-
+				
                 m_integrationOps.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
-
+				
                 // Set initial condition using time t=0
 				
                 SetInitialConditions(0.0);
-
+				
             }
-        case eSteadyStokes:
-            SetUpCoupledMatrix(0.0);
-            break;
-        case eSteadyOseen:
+			case eSteadyStokes:
+				SetUpCoupledMatrix(0.0);
+				break;
+			case eSteadyOseen:
             {
                 Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
                 for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
                     AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
                 }
-
+				
                 ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-                            "Advection Velocity section must be defined in "
-                            "session file.");
-
+						 "Advection Velocity section must be defined in "
+						 "session file.");
+				
                 std::vector<std::string> fieldStr;
                 for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
@@ -1257,8 +1258,8 @@ namespace Nektar
                 
                 SetUpCoupledMatrix(0.0,AdvField,false);
             }
-            break;
-		case eSteadyNavierStokes:
+				break;
+			case eSteadyNavierStokes:
 			{				
 				m_session->LoadParameter("KinvisMin", m_kinvisMin);
 				m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
@@ -1303,11 +1304,11 @@ namespace Nektar
 					cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
 				}
 			}
-			break;
-        case eSteadyLinearisedNS:
+				break;
+			case eSteadyLinearisedNS:
             {                
 				SetInitialConditions(0.0);
-
+				
                 Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
                 for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
@@ -1315,25 +1316,25 @@ namespace Nektar
                 }
                 
                 ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-                            "Advection Velocity section must be defined in "
-                            "session file.");
-
+						 "Advection Velocity section must be defined in "
+						 "session file.");
+				
                 std::vector<std::string> fieldStr;
                 for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
                     fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
                 }
                 EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
-
+				
                 SetUpCoupledMatrix(m_lambda,AdvField,true);
             }
-            break;
-        case eNoEquationType:
-        default:
-            ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
+				break;
+			case eNoEquationType:
+			default:
+				ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
-
+	
     void CoupledLinearNS::EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                             Array<OneD, Array<OneD, NekDouble> > &outarray,
                                             const NekDouble time)
@@ -1418,18 +1419,23 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-        case eUnsteadyStokes:
-        case eUnsteadyNavierStokes:
-            AdvanceInTime(m_steps);
-            break;
-        case eSteadyStokes:
-        case eSteadyOseen:
-        case eSteadyLinearisedNS:
+			case eUnsteadyStokes:
+			case eUnsteadyNavierStokes:
+				AdvanceInTime(m_steps);
+				break;
+			case eSteadyStokes:
+			case eSteadyOseen:
+			case eSteadyLinearisedNS:
 			{
 				Solve();				
 				break;
 			}
-		case eSteadyNavierStokes:
+			case eSteadyNavierStokesBySFD:
+			{
+				SelectiveFrequencyDamping();
+				break;
+			}
+			case eSteadyNavierStokes:
 			{	
 				Timer Generaltimer;
 				Generaltimer.Start();
@@ -1472,12 +1478,116 @@ namespace Nektar
 				
 				break;
 			}
-        case eNoEquationType:
-        default:
-            ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
+			case eNoEquationType:
+			default:
+				ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
 
+	
+	void CoupledLinearNS::SelectiveFrequencyDamping(void)
+	{		
+		Array<OneD, Array<OneD, NekDouble> > q0(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > q1(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > qBar0(m_velocity.num_elements());
+		Array<OneD, Array<OneD, NekDouble> > qBar1(m_velocity.num_elements());
+		
+		//Definition of the SFD parameters:
+		NekDouble Delta;
+		NekDouble X;
+		NekDouble cst1;
+		NekDouble cst2;
+		NekDouble cst3;
+		NekDouble cst4;
+		NekDouble StartSFDatStep(0);
+		int Check(0);
+		
+		m_session->LoadParameter("FilterWidth", Delta);
+		m_session->LoadParameter("ControlCoeff", X);
+		m_session->LoadParameter("StartSFDatStep", StartSFDatStep);
+		
+		cst1=X*m_timestep;
+		cst2=1.0/(1.0 + cst1);
+		cst3=m_timestep/Delta;
+		cst4=1.0/(1.0 + cst2);
+		
+		cout << "------------------ SFD Parameters ------------------" << endl;
+		cout << "Delta = " << Delta << endl;
+		cout << "X = " << X << endl;
+		cout << "SFD will start at step " << StartSFDatStep << endl;
+		cout << "----------------------------------------------------" << endl;
+
+		Timer SFDtimer;
+        	SFDtimer.Start();
+		
+		for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			q0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+			qBar0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+		}
+		
+		for (int n=0 ; n < m_steps; ++n)
+		{
+			
+			if (n<StartSFDatStep)
+			{
+				AdvanceInTime(1);
+				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
+				{
+					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+				}
+				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+				{
+					Check++;
+					Checkpoint_Output(Check);
+				}
+			}
+			else
+			{
+				AdvanceInTime(1);
+				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
+				{
+					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+				}
+				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+				{
+					Check++;
+					Checkpoint_Output(Check);
+				}
+				
+				for(int i = 0; i < m_velocity.num_elements(); ++i)
+				{					
+					q1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+					qBar1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+					
+					m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), q0[i]);	
+					
+					if (n==0)
+					{
+						qBar0[i] = q0[i];
+					}
+					
+					Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
+					Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
+					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);				
+					
+					Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
+					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
+					Vmath::Smul(qBar1[i].num_elements(), cst4, qBar1[i], 1, qBar1[i], 1);
+					
+					qBar0[i] = qBar1[i];
+					
+					Vmath::Vcopy( q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );
+					//m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
+				}
+			}
+		}
+		SFDtimer.Stop();
+        	cout << "\n -- SFD time -- " << SFDtimer.TimePerTest(1)/60 << " minutes" << endl << endl;
+		
+	}
+	
+	
     void CoupledLinearNS::Solve(void)
     {
         Array <OneD, Array<OneD, NekDouble> > forcing(m_velocity.num_elements());

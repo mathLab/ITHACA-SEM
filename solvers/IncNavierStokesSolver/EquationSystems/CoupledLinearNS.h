@@ -156,6 +156,8 @@ namespace Nektar
 		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
 		
 		void TmpOutput(int &Check);
+		
+		void SelectiveFrequencyDamping(void);
 
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         

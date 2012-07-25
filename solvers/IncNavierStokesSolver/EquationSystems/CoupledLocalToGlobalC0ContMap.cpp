@@ -888,7 +888,10 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<
                                                                             
 										//if(AddMeanPressureToEdgeId[elmtid] == -1)
 										//{
-										AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
+										
+										//AddMeanPressureToEdgeId[elmtid] = HomGraphEdgeIdToEdgeId[GlobIdOffset1+l];
+										AddMeanPressureToEdgeId[elmtid] = defedge;
+										
 										//}
 										SetEdge = true;
 										break;

@@ -274,4 +274,34 @@ namespace Nektar
 
         m_lastTime = time;
     }
+
+    Array<OneD, NekDouble> CellModel::GetCellSolutionCoeffs(unsigned int idx)
+    {
+        ASSERTL0(idx < m_nvar, "Index out of range for cell model.");
+
+        Array<OneD, NekDouble> outarray(m_field->GetNcoeffs());
+        Array<OneD, NekDouble> tmp;
+
+        if (m_useNodal)
+        {
+            for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
+            {
+                int coef_offset = m_field->GetCoeff_Offset(i);
+                if (m_field->GetExp(0)->DetExpansionType() == StdRegions::eTriangle)
+                {
+                    m_nodalTri->NodalToModal(m_cellSol[idx]+coef_offset, tmp=outarray+coef_offset);
+                }
+                else
+                {
+                    m_nodalTet->NodalToModal(m_cellSol[idx]+coef_offset, tmp=outarray+coef_offset);
+                }
+            }
+        }
+        else
+        {
+            m_field->FwdTrans_IterPerExp(m_cellSol[idx], outarray);
+        }
+
+        return outarray;
+    }
 }

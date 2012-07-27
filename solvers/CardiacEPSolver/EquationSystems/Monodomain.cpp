@@ -36,6 +36,7 @@
 #include <iostream>
 
 #include <CardiacEPSolver/EquationSystems/Monodomain.h>
+#include <CardiacEPSolver/Filters/FilterCheckpointCellModel.h>
 
 namespace Nektar
 {
@@ -177,6 +178,22 @@ namespace Nektar
         else
         {
             m_stimDuration = 0;
+        }
+
+        // Search through the loaded filters and pass the cell model to any
+        // CheckpointCellModel filters loaded.
+        int k = 0;
+        const LibUtilities::FilterMap& f = m_session->GetFilters();
+        LibUtilities::FilterMap::const_iterator x;
+        for (x = f.begin(); x != f.end(); ++x, ++k)
+        {
+            if (x->first == "CheckpointCellModel")
+            {
+                boost::shared_ptr<FilterCheckpointCellModel> c
+                    = boost::shared_dynamic_cast<FilterCheckpointCellModel>(
+                                                                m_filters[k]);
+                c->SetCellModel(m_cell);
+            }
         }
 
         if (!m_explicitDiffusion)

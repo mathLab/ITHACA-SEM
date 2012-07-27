@@ -1695,7 +1695,7 @@ namespace Nektar
                     param = param->NextSiblingElement("PARAM");
                 }
 
-                m_filters.insert(std::pair<std::string, std::map<std::string, std::string> >(typeStr, vParams));
+                m_filters.push_back(std::pair<std::string, std::map<std::string, std::string> >(typeStr, vParams));
 
                 filter = filter->NextSiblingElement("FILTER");
             }

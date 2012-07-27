@@ -62,7 +62,7 @@ namespace Nektar
         typedef std::map<std::string, std::string>  ExpressionMap;
         typedef std::vector<std::string>            VariableList;
         typedef std::map<std::string, std::string>  TagMap;
-        typedef std::multimap<std::string, std::map<std::string, std::string> > FilterMap;
+        typedef std::vector<std::pair<std::string, std::map<std::string, std::string> > > FilterMap;
 
         struct CmdLineArg
         {

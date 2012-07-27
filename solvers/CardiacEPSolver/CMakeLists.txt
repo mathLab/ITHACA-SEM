@@ -12,6 +12,7 @@ SET(CardiacEPSolverSource
        ./CellModels/TenTusscher06Epi.cpp
        ./CellModels/TenTusscher06M.cpp
        ./CellModels/TenTusscher06Endo.cpp
+       ./Filters/FilterCheckpointCellModel.cpp
 )
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 

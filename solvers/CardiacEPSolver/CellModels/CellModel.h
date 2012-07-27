@@ -91,6 +91,13 @@ namespace Nektar
             v_PrintSummary(out);
         }
 
+        const unsigned int GetNumCellVariables()
+        {
+            return m_nvar;
+        }
+
+        Array<OneD, NekDouble> GetCellSolutionCoeffs(unsigned int idx);
+
     protected:
         /// Session
         LibUtilities::SessionReaderSharedPtr m_session;

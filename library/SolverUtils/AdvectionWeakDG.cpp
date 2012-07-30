@@ -48,7 +48,7 @@ namespace Nektar
         }
         
         void AdvectionWeakDG::v_Advect(
-            const int                                          nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -63,7 +63,8 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
             Array<OneD, Array<OneD, NekDouble> > tmp       (nConvectiveFields);
 
-            ASSERTL1(m_riemann, "Riemann solver must be provided for AdvectionWeakDG.");
+            ASSERTL1(m_riemann, 
+                     "Riemann solver must be provided for AdvectionWeakDG.");
 
             for(i = 0; i < nVelDim; ++i)
             {
@@ -80,7 +81,8 @@ namespace Nektar
                 
                 for (j = 0; j < nVelDim; ++j)
                 {
-                    fields[i]->IProductWRTDerivBase(j, fluxvector[j], outarray[i]);
+                    fields[i]->IProductWRTDerivBase(j, fluxvector[j], 
+                                                       outarray[i]);
                     Vmath::Vadd(nCoeffs, outarray[i], 1, tmp[i], 1, tmp[i], 1);
                 }
             }

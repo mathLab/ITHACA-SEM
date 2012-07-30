@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-
 #include <ADRSolver/EquationSystems/UnsteadyAdvection.h>
 
 namespace Nektar
@@ -52,40 +51,41 @@ namespace Nektar
      */
     void UnsteadyAdvection::v_InitObject()
     {
-        /// Call to the initialisation object of UnsteadySystem
+        // Call to the initialisation object of UnsteadySystem
         UnsteadySystem::v_InitObject();
         
-        /// Check the AdvectionType to be used
+        // Check the AdvectionType to be used
         m_advectionType = m_session->GetSolverInfo("AdvectionType");
             
-        /// Check if the AdvectionType is set up properly
-        if((m_advectionType!="NonConservative")&&(m_advectionType!="WeakDG")&&(m_advectionType!="FR"))
+        // Check if the AdvectionType is set up properly
+        if((m_advectionType!="NonConservative") && (m_advectionType!="WeakDG") 
+           && (m_advectionType!="FR"))
         {
-            fprintf(stderr,"\n ERROR: You need to specify the AdvectionType in SOLVERINFO\n");  
-            fprintf(stderr," Three valid choices: NonConservative', WeakDG, FR. \n");
+            cerr << "\n ERROR: You must specify AdvectionType in SOLVERINFO\n";  
+            cerr << " Three valid choices: NonConservative', WeakDG, FR.\n";
             exit(1);
         }
                 
-        /// Define the normal velocity fields
+        // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
         {
             m_traceVn  = Array<OneD, NekDouble>(GetTraceNpoints());
         }
         
-        /// Read the advection velocities from session file 
+        // Read the advection velocities from session file 
         std::vector<std::string> vel;
         vel.push_back("Vx");
         vel.push_back("Vy");
         vel.push_back("Vz");
         
-        /// Resize the advection velocitites vector to the dimension of the problem
+        // Resize the advection velocities vector to dimension of the problem
         vel.resize(m_spacedim);
 
-        /// Store in the global variable m_velocity the advection velocities
+        // Store in the global variable m_velocity the advection velocities
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
 
-        /// Create Riemann solver instance, depending on the UPWINDTYPE specified in the session file 
+        // Create Riemann solver instance, depending on UPWINDTYPE tag 
         if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
         {
             m_riemannType   = m_session->GetSolverInfo("UpwindType");
@@ -93,7 +93,7 @@ namespace Nektar
             m_riemannSolver->AddScalar("Vn", &UnsteadyAdvection::GetNormalVelocity, this);
         }
         
-        /// Create an advection object 
+        // Create an advection object 
         m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(m_advectionType);
         m_advection->SetFluxVector   (&UnsteadyAdvection::GetFluxVector, this);
         if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
@@ -102,13 +102,13 @@ namespace Nektar
             m_advection->InitObject      (m_session, m_fields);
         }
         
-        /// If explicit it computes the RHS and the PROJECTION for the time integration
+        // If explicit it computes RHS and PROJECTION for the time integration
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs     (&UnsteadyAdvection::DoOdeRhs,        this);
             m_ode.DefineProjection (&UnsteadyAdvection::DoOdeProjection, this);
         }
-        /// Otherwise it gives an error because there is no implicit integration at the moment
+        // Otherwise it gives an error (no implicit integration)
         else
         {
             ASSERTL0(false, "Implicit unsteady Advection not set up.");
@@ -127,20 +127,25 @@ namespace Nektar
      */
     Array<OneD, NekDouble> &UnsteadyAdvection::GetNormalVelocity()
     {
-        /// Number of trace (interface) points
+        // Number of trace (interface) points
         int nTracePts = GetTraceNpoints();
         
-        /// Auxiliary variable to compute the normal velocity
+        // Auxiliary variable to compute the normal velocity
         Array<OneD, NekDouble> tmp(nTracePts);
         
-        /// Reset the normal velocity
+        // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
         
-        /// Compute the normal velocity
+        // Compute the normal velocity
         for (int i = 0; i < m_velocity.num_elements(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, m_traceVn, 1, m_traceVn, 1);
+            
+            Vmath::Vvtvp(nTracePts, 
+                         m_traceNormals[i], 1, 
+                         tmp, 1, 
+                         m_traceVn, 1, 
+                         m_traceVn, 1);
         }
         
         return m_traceVn;
@@ -153,23 +158,28 @@ namespace Nektar
      * @param outarray   Calculated solution.
      * @param time       Time.
      */
-    void UnsteadyAdvection::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                                     const NekDouble time)
+    void UnsteadyAdvection::DoOdeRhs(
+        const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+              Array<OneD,        Array<OneD, NekDouble> >&outarray,
+        const NekDouble time)
     {
-        /// Counter variable
+        // Counter variable
         int i;
         
-        /// Number of fields (variables of the problem)
+        // Number of fields (variables of the problem)
         int nVariables     = inarray.num_elements();
         
-        /// Number of solution points
+        // Number of solution points
         int nSolutionPts    = GetNpoints();
         
-        /// RHS computation using the new advection base class
-        m_advection->Advect(nVariables, m_fields, m_velocity, inarray, outarray);
+        // RHS computation using the new advection base class
+        m_advection->Advect(nVariables, 
+                            m_fields, 
+                            m_velocity, 
+                            inarray, 
+                            outarray);
         
-        /// Negate the RHS
+        // Negate the RHS
         for (i = 0; i < nVariables; ++i)
         {
             Vmath::Neg(nSolutionPts, outarray[i], 1);
@@ -183,29 +193,30 @@ namespace Nektar
      * @param outarray   Calculated solution.
      * @param time       Time.
      */
-    void UnsteadyAdvection::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                                  Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                                            const NekDouble time)
+    void UnsteadyAdvection::DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+              Array<OneD,       Array<OneD, NekDouble> >&outarray,
+        const NekDouble time)
     {
-        /// Counter variable
+        // Counter variable
         int i;
         
-        /// Number of fields (variables of the problem)
+        // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
         
-        /// Set the boundary conditions
+        // Set the boundary conditions
         SetBoundaryConditions(time);
 
-        /// Switch on the projection type (Discontinuous or Continuous)
+        // Switch on the projection type (Discontinuous or Continuous)
         switch(m_projectionType)
         {
-            /// Discontinuous projection
+            // Discontinuous projection
             case MultiRegions::eDiscontinuousGalerkin:
             {
-                /// Number of quadrature points
+                // Number of quadrature points
                 int nQuadraturePts = GetNpoints();
 
-                /// Just copy over array
+                // Just copy over array
                 for(i = 0; i < nVariables; ++i)
                 {
                     Vmath::Vcopy(nQuadraturePts,inarray[i],1,outarray[i],1);
@@ -213,7 +224,7 @@ namespace Nektar
                 break;
             }
                 
-            /// Continuous projection
+            // Continuous projection
             case MultiRegions::eGalerkin:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
@@ -239,15 +250,20 @@ namespace Nektar
      * @param physfield   Fields.
      * @param flux        Resulting flux.
      */
-    void UnsteadyAdvection::GetFluxVector(const int i, 
-                                          const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                                Array<OneD, Array<OneD, NekDouble> > &flux)
+    void UnsteadyAdvection::GetFluxVector(
+        const int i, 
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> > &flux)
     {
-        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
+        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),
+                 "Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
         {
-            Vmath::Vmul(GetNpoints(), physfield[i], 1, m_velocity[j], 1, flux[j], 1);
+            Vmath::Vmul(GetNpoints(), 
+                        physfield[i], 1, 
+                        m_velocity[j], 1, 
+                        flux[j], 1);
         }
     }
 

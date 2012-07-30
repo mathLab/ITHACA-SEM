@@ -40,7 +40,8 @@ namespace Nektar
     namespace SolverUtils
     {
         std::string AdvectionNonConservative::type = GetAdvectionFactory().
-            RegisterCreatorFunction("NonConservative", AdvectionNonConservative::create);
+            RegisterCreatorFunction("NonConservative", 
+                                    AdvectionNonConservative::create);
 
         AdvectionNonConservative::AdvectionNonConservative()
         {
@@ -48,7 +49,7 @@ namespace Nektar
         }
         
         void AdvectionNonConservative::v_Advect(
-            const int                                          nConvectiveFields,
+            const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -72,23 +73,45 @@ namespace Nektar
 
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                // Evaluate V\cdot Grad(u)
+                // Evaluate V \cdot Grad(u)
                 switch(nDim)
                 {
                     case 1:
                         fields[0]->PhysDeriv(inarray[i], grad0);
-                        Vmath::Vmul(nPointsTot,grad0,1,advVel[0],1,outarray[i],1);
+                        
+                        Vmath::Vmul(nPointsTot, 
+                                    grad0,          1, 
+                                    advVel[0],      1, 
+                                    outarray[i],    1);
                         break;
                     case 2:
-                        fields[0]->PhysDeriv(inarray[i],grad0,grad1);
-                        Vmath::Vmul (nPointsTot,grad0,1,advVel[0],1,outarray[i],1);
-                        Vmath::Vvtvp(nPointsTot,grad1,1,advVel[1],1,outarray[i],1,outarray[i],1);
+                        fields[0]->PhysDeriv(inarray[i], grad0, grad1);
+                        
+                        Vmath::Vmul (nPointsTot, 
+                                     grad0, 1, 
+                                     advVel[0], 1, 
+                                     outarray[i], 1);
+                        
+                        Vmath::Vvtvp(nPointsTot, 
+                                     grad1, 1, 
+                                     advVel[1], 1, 
+                                     outarray[i], 1, 
+                                     outarray[i], 1);
                         break;
                     case 3:
-                        fields[0]->PhysDeriv(inarray[i],grad0,grad1,grad2);
-                        Vmath::Vmul   (nPointsTot,grad0,1,advVel[0],1,outarray[i],1);
-                        Vmath::Vvtvvtp(nPointsTot,grad1,1,advVel[1],1,grad2,1,advVel[2],1,
-                                       outarray[i],1);
+                        fields[0]->PhysDeriv(inarray[i], grad0, grad1, grad2);
+                        
+                        Vmath::Vmul   (nPointsTot, 
+                                       grad0, 1, 
+                                       advVel[0], 1, 
+                                       outarray[i], 1);
+                        
+                        Vmath::Vvtvvtp(nPointsTot, 
+                                       grad1, 1, 
+                                       advVel[1], 1, 
+                                       grad2, 1, 
+                                       advVel[2], 1,
+                                       outarray[i], 1);
                         break;
                     default:
                         ASSERTL0(false,"dimension unknown");

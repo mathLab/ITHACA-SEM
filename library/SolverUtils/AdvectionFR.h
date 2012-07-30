@@ -58,9 +58,9 @@ namespace Nektar
             
             static std::string                              type;
             
-            std::string                                     m_FRSchemeRecovered;    ///< FR scheme recovered (DG, SD, HU)
-            Array<OneD, NekDouble>                          m_dGL;                  ///< Left derivatives of the correction functions
-            Array<OneD, NekDouble>                          m_dGR;                  ///< Right derivatives of the correction functions
+            std::string                                     m_FRSchemeRecovered;    
+            Array<OneD, NekDouble>                          m_dGL;                  
+            Array<OneD, NekDouble>                          m_dGR;                  
             
         protected:
             AdvectionFR();

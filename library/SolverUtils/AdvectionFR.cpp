@@ -50,18 +50,18 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr              pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
         {
-            /// Definition of the FR scheme recovered
+            // Definition of the FR scheme recovered
             if(pSession->DefinesSolverInfo("FRSchemeRecovered"))
             {
-                /// Check the FR scheme to be used
+                // Check the FR scheme to be used
                 m_FRSchemeRecovered = pSession->GetSolverInfo("FRSchemeRecovered");
                 
-                /// Check if the FR scheme recovered is set up properly
+                // Check if the FR scheme recovered is set up properly
                 if((m_FRSchemeRecovered!="DG") && (m_FRSchemeRecovered!="SD") 
                    && (m_FRSchemeRecovered!="HU"))
                 {
-                    fprintf(stderr,"\n ERROR: You need to specify the FRSchemeRecovered in SOLVERINFO\n");  
-                    fprintf(stderr," 3 valid choices: 'DG', 'SD', 'HU'. \n");
+                    cerr << "\n ERROR: You must specify FRSchemeRecovered in\n";  
+                    cerr << "SOLVERINFO. 3 valid choices: 'DG', 'SD', 'HU'.\n";
                     exit(1);
                 }
             }
@@ -70,37 +70,42 @@ namespace Nektar
                 m_FRSchemeRecovered = "DG";
             }
             
-            /// Computation of the derivatives of the correction functions in case of FR
+            // Computation of the derivatives of the correction functions (DG)
             if(m_FRSchemeRecovered == "DG")
             {
-                /// Bases initialisation
+                // Bases initialisation
                 LibUtilities::BasisSharedPtr Basis;
                 LibUtilities::BasisSharedPtr BasisFR_Left;
                 LibUtilities::BasisSharedPtr BasisFR_Right;
                 Basis = pFields[0]->GetExp(0)->GetBasis(0);
                 
-                /// Number of modes
+                // Number of modes
                 int nModes  = Basis->GetNumModes();
                 
-                /// Total number of quadrature points
+                // Total number of quadrature points
                 int nSolutionPts = Basis->GetNumPoints();
                 
-                /// Type of points
+                // Type of points
                 const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
                 
-                /// Construction of the derivatives
-                const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_DG_Left,  nSolutionPts, FRpoints);
-                const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_DG_Right, nSolutionPts, FRpoints);
+                // Construction of the derivatives
+                const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_DG_Left,  
+                                                           nSolutionPts, 
+                                                           FRpoints);
+                
+                const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_DG_Right, 
+                                                           nSolutionPts, 
+                                                           FRpoints);
                 
                 BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
                 BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
                 
-                /// Storing the derivatives into two global variables 
+                // Storing the derivatives into two global variables 
                 m_dGL = BasisFR_Left ->GetBdata();
                 m_dGR = BasisFR_Right->GetBdata();
             }
             
-            /// Computation of the derivatives of the correction functions in case of FR
+            // Computation of the derivatives of the correction functions (SD)
             else if(m_FRSchemeRecovered == "SD")
             {
                 /// Bases initialisation
@@ -119,8 +124,13 @@ namespace Nektar
                 const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
                 
                 /// Construction of the derivatives
-                const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_SD_Left,  nSolutionPts, FRpoints);
-                const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_SD_Right, nSolutionPts, FRpoints);
+                const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_SD_Left,  
+                                                           nSolutionPts, 
+                                                           FRpoints);
+                
+                const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_SD_Right, 
+                                                           nSolutionPts, 
+                                                           FRpoints);
                 
                 BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
                 BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
@@ -130,32 +140,37 @@ namespace Nektar
                 m_dGR = BasisFR_Right->GetBdata();
             }
             
-            /// Computation of the derivatives of the correction functions in case of FR
+            // Computation of the derivatives of the correction functions (HU)
             else if(m_FRSchemeRecovered == "HU")
             {
-                /// Bases initialisation
+                // Bases initialisation
                 LibUtilities::BasisSharedPtr Basis;
                 LibUtilities::BasisSharedPtr BasisFR_Left;
                 LibUtilities::BasisSharedPtr BasisFR_Right;
                 Basis = pFields[0]->GetExp(0)->GetBasis(0);
                 
-                /// Number of modes
+                // Number of modes
                 int nModes  = Basis->GetNumModes();
                 
-                /// Total number of quadrature points
+                // Total number of quadrature points
                 int nSolutionPts = Basis->GetNumPoints();
                 
-                /// Type of points
+                // Type of points
                 const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
                 
-                /// Construction of the derivatives
-                const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_HU_Left,  nSolutionPts, FRpoints);
-                const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_HU_Right, nSolutionPts, FRpoints);
+                // Construction of the derivatives
+                const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_HU_Left,  
+                                                           nSolutionPts, 
+                                                           FRpoints);
+                
+                const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_HU_Right, 
+                                                           nSolutionPts, 
+                                                           FRpoints);
                 
                 BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
                 BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
                 
-                /// Storing the derivatives into two global variables 
+                // Storing the derivatives into two global variables 
                 m_dGL = BasisFR_Left ->GetBdata();
                 m_dGR = BasisFR_Right->GetBdata();
             }
@@ -168,34 +183,35 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            /// Counter variables
+            // Counter variables
             int i, j;
             
-            /// Number of elements
+            // Number of elements
             int nElements       = fields[0]->GetExpSize();
             
-            /// Number of spatial dimensions
+            // Number of spatial dimensions
             int nDimensions     = fields[0]->GetCoordim(0);
                         
-            /// Number of solution points
+            // Number of solution points
             int nSolutionPts    = fields[0]->GetTotPoints();
             
-            /// Number of coefficients
+            // Number of coefficients
             int nCoeffs         = fields[0]->GetNcoeffs();
             
-            /// Number of trace points
+            // Number of trace points
             int nTracePts       = fields[0]->GetTrace()->GetTotPoints();
                         
-            /// Vector to store the discontinuos flux
+            // Vector to store the discontinuos flux
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDimensions);
             
-            /// Vector to store the derivative of the discontinuous flux
+            // Vector to store the derivative of the discontinuous flux
             Array<OneD, Array<OneD, NekDouble> > divfluxvector(nDimensions);
             
-            /// Vector to store the solution in physical space
+            // Vector to store the solution in physical space
             Array<OneD, Array<OneD, NekDouble> > physfield (nConvectiveFields);
                         
-            /// Resize each column of the flux vector to the number of quadrature points
+            // Resize each column of the flux vector to the number of 
+            // solution points
             for(i = 0; i < nDimensions; ++i)
             {
                 fluxvector[i]       = Array<OneD, NekDouble>(nSolutionPts);
@@ -207,22 +223,17 @@ namespace Nektar
                 physfield[i] = inarray[i];
             }
             
-            //for(i = 0; i < nConvectiveFields; ++i)
-                //{
-                //physfield[i] = Array<OneD, NekDouble>(nSolutionPts);
-                //fields[i]->BwdTrans(inarray[i], physfield[i]);
-                //}
-
-            /// Get the discontinuous flux FD
+            // Get the discontinuous flux FD
             for(i = 0; i < nConvectiveFields; ++i)
             {                
-                /// Get the ith component of the flux vector in physical space
+                // Get the ith component of the flux vector in physical space
                 m_fluxVector(i, physfield, fluxvector);
             }
                         
             Array<OneD,NekDouble> tmpFD, tmpDFD;
             
-            /// Computation of the divergence of the discontinuous flux at each quadrature point
+            // Computation of the divergence of the discontinuous flux at each 
+            // solution point
             LibUtilities::BasisSharedPtr Basis;
             Basis = fields[0]->GetExp(0)->GetBasis(0);
             
@@ -249,34 +260,37 @@ namespace Nektar
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
             
-            /// Computing the Riemann flux at each flux (interface) point
+            // Computing the Riemann flux at each flux (interface) point
             m_riemann->Solve(Fwd, Bwd, numflux);
                         
-            /// Arrays to store the intercell numerical flux jumps
+            // Arrays to store the intercell numerical flux jumps
             Array<OneD, Array<OneD, NekDouble> > numfluxjumpsLeft(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > numfluxjumpsRight(nConvectiveFields);
             
             int offsetStart, offsetEnd;
             
-            /// Dimension of each column of the jumps array has to be equal to the number of flux points
+            // Dimension of each column of the jumps array has to be equal to 
+            // the number of flux points
             switch(nDimensions)
             {
                 case 1:
                 {
-                    /// Temporay array for computing the jumps multiply by the derivatives of the correction functions
+                    // Temporay array for computing the jumps multiply by the 
+                    // derivatives of the correction functions
                     Array<OneD,NekDouble> dercorrfluxLeft(nSolutionPts/nElements,  0.0); 
                     Array<OneD,NekDouble> dercorrfluxRight(nSolutionPts/nElements, 0.0);
                     
                     Array<OneD,NekDouble> tmp, tmparray;
                     
-                    /// The dimension of each column of the jumps arrays is equal to number of trace points minus one
+                    // The dimension of each column of the jumps arrays is equal
+                    // to number of trace points minus one
                     for(i = 0; i < nConvectiveFields; ++i)
                     {
                         numfluxjumpsLeft[i]  = Array<OneD, NekDouble>(nTracePts - 1);
                         numfluxjumpsRight[i] = Array<OneD, NekDouble>(nTracePts - 1);
                     }
                     
-                    /// Loop to compute the left and the right jump of the flux
+                    // Loop to compute the left and the right jump of the flux
                     for(i = 0; i < nElements; i++)
                     {
                         offsetStart              = fields[0]->GetPhys_Offset(i);
@@ -311,31 +325,31 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    // HOW TO GET THE CORRECT DIMENSION OF THE FLUXJUMPS ARRAY IN 2D
+                    // HOW TO GET CORRECT DIMENSION OF FLUXJUMPS ARRAY IN 2D
                     ASSERTL0(false,"2D FR case not implemented yet");
                     break;
                 }
                 case 3:
                 {
-                    // HOW TO GET THE CORRECT DIMENSION OF THE FLUXJUMPS ARRAY IN 3D
+                    // HOW TO GET CORRECT DIMENSION OF FLUXJUMPS ARRAY IN 3D
                     ASSERTL0(false,"3D FR case not implemented yet");
                     break;
                 }
             }
             
-            /// Array to store the Jacobian and its inverse
+            // Array to store the Jacobian and its inverse
             Array<OneD, const NekDouble>jac(nElements);
             Array<OneD, NekDouble>      jacobian(nElements);
             Array<OneD, NekDouble>      tmparray;
             
-            /// Evaluation of the jacobian of each element
+            // Evaluation of the jacobian of each element
             for(i = 0; i < nElements; i++)
             {
                 jac         = fields[0]->GetExp(i)->GetGeom1D()->GetJac();
                 jacobian[i] = jac[0];
             }
             
-            /// Operations to compute the RHS
+            // Operations to compute the RHS
             for(i = 0; i < nConvectiveFields; ++i)
             {
                 for(j = 0; j < nElements; j++)

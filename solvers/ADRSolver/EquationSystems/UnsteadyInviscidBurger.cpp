@@ -52,49 +52,50 @@ namespace Nektar
      */
     void UnsteadyInviscidBurger::v_InitObject()
     {
-        /// Call to the initialisation object of UnsteadySystem
+        // Call to the initialisation object of UnsteadySystem
         UnsteadySystem::v_InitObject();
         
-        /// Check the AdvectionType to be used
+        // Check the AdvectionType to be used
         m_advectionType = m_session->GetSolverInfo("AdvectionType");
         
-        /// Check if the AdvectionType is set up properly
-        if((m_advectionType!="NonConservative")&&(m_advectionType!="WeakDG")&&(m_advectionType!="FR"))
+        // Check if the AdvectionType is set up properly
+        if((m_advectionType!="NonConservative") && (m_advectionType!="WeakDG") 
+           && (m_advectionType!="FR"))
         {
-            fprintf(stderr,"\n ERROR: You need to specify the AdvectionType in SOLVERINFO\n");  
-            fprintf(stderr," Three valid choices: NonConservative', WeakDG, FR. \n");
+            cerr << "\n ERROR: You must specify AdvectionType in SOLVERINFO\n";  
+            cerr << " Three valid choices: NonConservative', WeakDG, FR.\n";
             exit(1);
         }
         
-        /// Check if the RiemannType solver is set properly
+        // Check if the RiemannType solver is set properly
         if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
         {
             m_riemannType = m_session->GetSolverInfo("UpwindType");
         }
         
-        /// Define the normal velocity fields
+        // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
         {
             m_traceVn  = Array<OneD, NekDouble>(GetTraceNpoints());
         }
         
-        /// Create Riemann solver instance, depending on the UPWINDTYPE specified in the session file 
+        // Create Riemann solver instance, depending on UPWINDTYPE tag 
         m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(m_riemannType);
         m_riemannSolver->AddScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
         
-        /// Create an advection object 
+        // Create an advection object 
         m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(m_advectionType);
         m_advection->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
         m_advection->SetRiemannSolver(m_riemannSolver);
         m_advection->InitObject      (m_session, m_fields);
         
-        /// If explicit it computes the RHS and the PROJECTION for the time integration
+        // If explicit it computes RHS and PROJECTION for the time integration
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs     (&UnsteadyInviscidBurger::DoOdeRhs,        this);
             m_ode.DefineProjection (&UnsteadyInviscidBurger::DoOdeProjection, this);
         }
-        /// Otherwise it gives an error because there is no implicit integration at the moment
+        // Otherwise it gives an error because (no implicit integration)
         else
         {
             ASSERTL0(false, "Implicit unsteady Advection not set up.");
@@ -113,33 +114,34 @@ namespace Nektar
      */
     Array<OneD, NekDouble> &UnsteadyInviscidBurger::GetNormalVelocity()
     {
-        /// Counter variable
+        // Counter variable
         int i;
         
-        /// Number of trace (interface) points
+        // Number of trace (interface) points
         int nTracePts       = GetTraceNpoints();
         
-        /// Number of solution points
+        // Number of solution points
         int nSolutionPts    = GetNpoints();
         
-        /// Number of fields (variables of the problem)
+        // Number of fields (variables of the problem)
         int nVariables      = m_fields.num_elements();
         
-        /// Auxiliary variables to compute the normal velocity
+        // Auxiliary variables to compute the normal velocity
         Array<OneD, NekDouble>               Fwd        (nTracePts);
         Array<OneD, Array<OneD, NekDouble> > physfield  (nVariables);
         
-        /// Reset the normal velocity
+        // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        /// !The TimeIntegration Class does not update the physical values of the 
-        /// solution. It is thus necessary to transform back the coefficient into
-        /// the physical space and save them in physfield to compute the normal 
-        /// advection velocity properly. However remains a critical point! 
+        // The TimeIntegration Class does not update the physical values of the 
+        // solution. It is thus necessary to transform back the coefficient into
+        // the physical space and save them in physfield to compute the normal 
+        // advection velocity properly. However it remains a critical point. 
         for(i = 0; i < nVariables; ++i)
         {
             physfield[i]    = Array<OneD, NekDouble>(nSolutionPts);
-            m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), physfield[i]);
+            m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), 
+                                             physfield[i]);
         }
 
         /// Extract the physical values at the trace space
@@ -148,10 +150,14 @@ namespace Nektar
         /// Compute the normal velocity
         for (i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, m_traceVn, 1, m_traceVn, 1);
+            Vmath::Vvtvp(nTracePts, 
+                         m_traceNormals[i], 1, 
+                         Fwd, 1, 
+                         m_traceVn, 1, 
+                         m_traceVn, 1);
+            
             Vmath::Smul(nTracePts, 0.5, m_traceVn, 1, m_traceVn, 1);
         }
-        
         return m_traceVn;
     }
     
@@ -162,26 +168,27 @@ namespace Nektar
      * @param outarray   Calculated solution.
      * @param time       Time.
      */
-    void UnsteadyInviscidBurger::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                                                Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                                          const NekDouble time)
+    void UnsteadyInviscidBurger::DoOdeRhs(
+        const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+              Array<OneD,        Array<OneD, NekDouble> >&outarray,
+        const NekDouble time)
     {
-        /// Counter variable
+        // Counter variable
         int i;
         
-        /// Number of fields (variables of the problem)
+        // Number of fields (variables of the problem)
         int nVariables      = inarray.num_elements();
         
-        /// Number of solution points
+        // Number of solution points
         int nSolutionPts    = GetNpoints();
         
-        /// !Useless variable for WeakDG and FR!
+        // !Useless variable for WeakDG and FR!
         Array<OneD, Array<OneD, NekDouble> >    advVel;    
         
-        /// RHS computation using the new advection base class
+        // RHS computation using the new advection base class
         m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray);
         
-        /// Negate the RHS
+        // Negate the RHS
         for (i = 0; i < nVariables; ++i)
         {
             Vmath::Neg(nSolutionPts, outarray[i], 1);
@@ -195,29 +202,30 @@ namespace Nektar
      * @param outarray   Calculated solution.
      * @param time       Time.
      */
-    void UnsteadyInviscidBurger::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                                       Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                                                 const NekDouble time)
+    void UnsteadyInviscidBurger::DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+              Array<OneD,       Array<OneD, NekDouble> >&outarray,
+        const NekDouble time)
     {
-        /// Counter variable
+        // Counter variable
         int i;
         
-        /// Number of variables of the problem
+        // Number of variables of the problem
         int nVariables = inarray.num_elements();
         
-        /// Set the boundary conditions
+        // Set the boundary conditions
         SetBoundaryConditions(time);
         
-        /// Switch on the projection type (Discontinuous or Continuous)
+        // Switch on the projection type (Discontinuous or Continuous)
         switch(m_projectionType)
         {
-            /// Discontinuous projection
+            // Discontinuous projection
             case MultiRegions::eDiscontinuousGalerkin:
             {
-                /// Number of quadrature points
+                // Number of quadrature points
                 int nQuadraturePts = GetNpoints();
                 
-                /// Just copy over array                
+                // Just copy over array                
                 for(i = 0; i < nVariables; ++i)
                 {
                     Vmath::Vcopy(nQuadraturePts, inarray[i], 1, outarray[i], 1);
@@ -225,7 +233,7 @@ namespace Nektar
                 break;
             }
                 
-            /// Continuous projection
+            // Continuous projection
             case MultiRegions::eGalerkin:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
@@ -250,13 +258,18 @@ namespace Nektar
      * @param physfield   Fields.
      * @param flux        Resulting flux.
      */
-    void UnsteadyInviscidBurger::GetFluxVector(const int i, 
-                                               const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                                     Array<OneD, Array<OneD, NekDouble> > &flux)
+    void UnsteadyInviscidBurger::GetFluxVector(
+        const int i, 
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         for(int j = 0; j < flux.num_elements(); ++j)
         {
-            Vmath::Vmul(GetNpoints(), physfield[i], 1, physfield[i], 1, flux[j], 1);
+            Vmath::Vmul(GetNpoints(), 
+                        physfield[i], 1, 
+                        physfield[i], 1, 
+                        flux[j], 1);
+            
             Vmath::Smul(GetNpoints(), 0.5, flux[j], 1, flux[j], 1);
         }
     }

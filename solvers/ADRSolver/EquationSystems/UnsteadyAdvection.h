@@ -76,19 +76,22 @@ namespace Nektar
         UnsteadyAdvection(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         /// Evaluate the flux at each solution point
-        void GetFluxVector(const int i, 
-                           const Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                 Array<OneD, Array<OneD, NekDouble> > &flux);
+        void GetFluxVector(
+            const int i, 
+            const Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                  Array<OneD, Array<OneD, NekDouble> > &flux);
         
         /// Compute the RHS
-        void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                            Array<OneD,         Array<OneD, NekDouble> > &outarray,
-                      const NekDouble time);
+        void DoOdeRhs(
+            const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,         Array<OneD, NekDouble> > &outarray,
+            const NekDouble time);
 
         /// Compute the projection
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                                   Array<OneD,         Array<OneD, NekDouble> > &outarray,
-                             const NekDouble time);
+        void DoOdeProjection(
+            const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,         Array<OneD, NekDouble> > &outarray,
+            const NekDouble time);
 
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();

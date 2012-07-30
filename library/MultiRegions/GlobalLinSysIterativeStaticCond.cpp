@@ -184,36 +184,32 @@ namespace Nektar
 
             if(nGlobHomBndDofs)
             {
-                if(nIntDofs || ((nDirBndDofs) && (!dirForcCalculated)
-                                              && (atLastLevel)) )
+                // construct boundary forcing
+                if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)
+                                                && (atLastLevel)) )
                 {
-                    // construct boundary forcing
-                    if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)
-                                                    && (atLastLevel)) )
-                    {
-                        //include dirichlet boundary forcing
-                        DNekScalBlkMat &BinvD      = *m_BinvD;
-                        DNekScalBlkMat &SchurCompl = *m_schurCompl;
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                        V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
-                    }
-                    else if((nDirBndDofs) && (!dirForcCalculated)
-                                          && (atLastLevel))
-                    {
-                        //include dirichlet boundary forcing
-                        DNekScalBlkMat &SchurCompl = *m_schurCompl;
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                        V_LocBnd = SchurCompl*V_LocBnd;
-                    }
-                    else
-                    {
-                        DNekScalBlkMat &BinvD      = *m_BinvD;
-                        V_LocBnd = BinvD*F_Int;
-                    }
-                    pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
-                                             nDirBndDofs);
-                    F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+                    //include dirichlet boundary forcing
+                    DNekScalBlkMat &BinvD      = *m_BinvD;
+                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+                    pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
+                    V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
                 }
+                else if((nDirBndDofs) && (!dirForcCalculated)
+                                      && (atLastLevel))
+                {
+                    //include dirichlet boundary forcing
+                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+                    pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
+                    V_LocBnd = SchurCompl*V_LocBnd;
+                }
+                else
+                {
+                    DNekScalBlkMat &BinvD      = *m_BinvD;
+                    V_LocBnd = BinvD*F_Int;
+                }
+                pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
+                                         nDirBndDofs);
+                F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
 
                 // solve boundary system
                 if(atLastLevel)

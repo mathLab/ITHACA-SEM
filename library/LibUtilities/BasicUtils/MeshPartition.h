@@ -39,6 +39,7 @@
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
 
 namespace Nektar
 {
@@ -51,8 +52,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT ~MeshPartition();
 
-            LIB_UTILITIES_EXPORT void PartitionMesh(unsigned int pNumPartitions);
-            LIB_UTILITIES_EXPORT void WritePartitions(
+            LIB_UTILITIES_EXPORT void PartitionMesh();
+            LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     LibUtilities::SessionReaderSharedPtr& pSession);
 
         private:
@@ -166,12 +167,14 @@ namespace Nektar
             std::vector<unsigned int>  m_domain;
 
             BoostSubGraph              m_mesh;
-            std::vector<BoostSubGraph> m_partitions;
+            BoostSubGraph              m_localPartition;
+
+            CommSharedPtr              m_comm;
 
             void ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession);
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
-                                std::vector<BoostSubGraph>& pPartitions);
+                                BoostSubGraph& pLocalPartition);
             void OutputPartition(LibUtilities::SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
         };
 

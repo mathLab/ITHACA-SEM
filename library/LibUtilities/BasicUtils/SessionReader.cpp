@@ -1081,16 +1081,15 @@ namespace Nektar
             // Partition mesh into length of row comms
             if (vCommMesh->GetSize() > 1)
             {
-                // Only do partitioning on the rank-0 proc in MPI_COMM_WORLD
-                if (m_comm->GetRank() == 0)
-                {
-                    SessionReaderSharedPtr vSession = GetSharedThisPtr();
-                    MeshPartitionSharedPtr vPartitioner = MemoryManager<MeshPartition>::AllocateSharedPtr(vSession);
-                    vPartitioner->PartitionMesh(vCommMesh->GetSize());
-                    vPartitioner->WritePartitions(vSession);
-                }
+                // Partitioner now operates in parallel
+                // Each process receives partitioning over interconnect
+                // and writes its own session file to the working directory.
+                SessionReaderSharedPtr vSession = GetSharedThisPtr();
+                MeshPartitionSharedPtr vPartitioner = MemoryManager<MeshPartition>::AllocateSharedPtr(vSession);
+                vPartitioner->PartitionMesh();
+                vPartitioner->WriteLocalPartition(vSession);
 
-                m_comm->Block();
+                vCommMesh->Block();
 
                 m_filename = GetSessionNameRank() + ".xml";
 

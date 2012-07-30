@@ -59,7 +59,8 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession)
+        MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
+                m_comm(pSession->GetComm()->GetRowComm())
         {
             ReadMesh(pSession);
         }
@@ -69,46 +70,32 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(unsigned int pNumPartitions)
+        void MeshPartition::PartitionMesh()
         {
-            ASSERTL0(pNumPartitions > 0, "Invalid number of partitions.");
-
-            CreateGraph(m_mesh);
-
-            ASSERTL0(m_meshElements.size() >= pNumPartitions,
+            ASSERTL0(m_comm->GetSize() > 1,
+                     "Partitioning only necessary in parallel case.");
+            ASSERTL0(m_meshElements.size() >= m_comm->GetSize(),
                      "Too few elements for this many processes.");
 
-            m_partitions.clear();
-            m_partitions.resize(pNumPartitions);
-
-            if (pNumPartitions > 1)
-            {
-                PartitionGraph(m_mesh, m_partitions);
-            }
-            else
-            {
-                m_partitions[0] = m_mesh;
-            }
+            CreateGraph(m_mesh);
+            PartitionGraph(m_mesh, m_localPartition);
         }
 
-        void MeshPartition::WritePartitions(LibUtilities::SessionReaderSharedPtr& pSession)
+        void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            for (unsigned int i = 0; i < m_partitions.size(); ++i)
-            {
-                TiXmlDocument vNew;
-                TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
-                vNew.LinkEndChild(decl);
+            TiXmlDocument vNew;
+            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
+            vNew.LinkEndChild(decl);
 
-                TiXmlElement* vElmtNektar;
-                vElmtNektar = new TiXmlElement("NEKTAR");
+            TiXmlElement* vElmtNektar;
+            vElmtNektar = new TiXmlElement("NEKTAR");
 
-                OutputPartition(pSession, m_partitions[i], vElmtNektar);
+            OutputPartition(pSession, m_localPartition, vElmtNektar);
 
-                vNew.LinkEndChild(vElmtNektar);
+            vNew.LinkEndChild(vElmtNektar);
 
-                std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
-                vNew.SaveFile(vFilename.c_str());
-            }
+            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(m_comm->GetRank()) + ".xml";
+            vNew.SaveFile(vFilename.c_str());
         }
 
         void MeshPartition::ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -314,66 +301,77 @@ namespace Nektar
         }
 
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
-                                           std::vector<BoostSubGraph>& pPartitions)
+                                           BoostSubGraph& pLocalPartition)
         {
+            int i;
             int nGraphVerts = boost::num_vertices(pGraph);
             int nGraphEdges = boost::num_edges(pGraph);
 
             // Convert boost graph into CSR format
-            int acnt = 0;
-            int vcnt = 0;
             BoostVertexIterator    vertit, vertit_end;
-            BoostEdgeIterator      edgeit, edgeit_end;
-            BoostAdjacencyIterator adjvertit, adjvertit_end;
-            Array<OneD, int> xadj(nGraphVerts+1,0);
-            Array<OneD, int> adjncy(2*nGraphEdges);
-            Array<OneD, int> vwgt(nGraphVerts, 1);
-            Array<OneD, int> vsize(nGraphVerts, 1);
-
-            for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
-                  vertit != vertit_end;
-                  ++vertit)
-            {
-                for ( boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
-                      adjvertit != adjvertit_end;
-                      ++adjvertit)
-                {
-                    adjncy[acnt++] = *adjvertit;
-
-                }
-                xadj[++vcnt] = acnt;
-            }
-
-            // Call Metis and partition graph
-            int npart = pPartitions.size();
-            int vol = 0;
             Array<OneD, int> part(nGraphVerts,0);
-            try
+
+            if (m_comm->GetRank() == 0)
             {
-                Metis::PartGraphVKway(nGraphVerts, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                int acnt = 0;
+                int vcnt = 0;
+                BoostAdjacencyIterator adjvertit, adjvertit_end;
+                Array<OneD, int> xadj(nGraphVerts+1,0);
+                Array<OneD, int> adjncy(2*nGraphEdges);
+                Array<OneD, int> vwgt(nGraphVerts, 1);
+                Array<OneD, int> vsize(nGraphVerts, 1);
+                for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
+                      vertit != vertit_end;
+                      ++vertit)
+                {
+                    for ( boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,pGraph);
+                          adjvertit != adjvertit_end;
+                          ++adjvertit)
+                    {
+                        adjncy[acnt++] = *adjvertit;
+
+                    }
+                    xadj[++vcnt] = acnt;
+                }
+
+                // Call Metis and partition graph
+                int npart = m_comm->GetSize();
+                int vol = 0;
+
+                try
+                {
+                    Metis::PartGraphVKway(nGraphVerts, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                    for (i = 1; i < m_comm->GetSize(); ++i)
+                    {
+                        m_comm->Send(i, part);
+                    }
+                }
+                catch (...)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                             "Error in calling metis to partition graph.");
+                }
             }
-            catch (...)
+            else
             {
-                NEKERROR(ErrorUtil::efatal,
-                         "Error in calling metis to partition graph.");
+                m_comm->Recv(0, part);
             }
 
-            // Create boost subgraphs for partitions
-            int i;
-            for (i = 0; i < npart; ++i)
-            {
-                pPartitions[i] = pGraph.create_subgraph();
-            }
+            // Create boost subgraph for this process's partitions
+            pLocalPartition = pGraph.create_subgraph();
 
-            // Populate subgraphs
+            // Populate subgraph
             i = 0;
             for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                   vertit != vertit_end;
                   ++vertit, ++i)
             {
-                pGraph[*vertit].partition = part[i];
-                pGraph[*vertit].partid = boost::num_vertices(pPartitions[i]);
-                BoostVertex v = boost::add_vertex(i, pPartitions[part[i]]);
+                if (part[i] == m_comm->GetRank())
+                {
+                    pGraph[*vertit].partition = part[i];
+                    pGraph[*vertit].partid = boost::num_vertices(pLocalPartition);
+                    BoostVertex v = boost::add_vertex(i, pLocalPartition);
+                }
             }
         }
 

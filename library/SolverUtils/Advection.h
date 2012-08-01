@@ -103,7 +103,7 @@ namespace Nektar
         
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the Advection class.
-        typedef LibUtilities::NekFactory<std::string, Advection> AdvectionFactory;
+        typedef LibUtilities::NekFactory<std::string, Advection, std::string> AdvectionFactory;
         SOLVER_UTILS_EXPORT AdvectionFactory& GetAdvectionFactory();
     }
 }

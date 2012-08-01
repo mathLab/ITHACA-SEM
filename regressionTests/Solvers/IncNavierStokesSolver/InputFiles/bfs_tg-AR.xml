@@ -1683,26 +1683,26 @@
     <CONDITIONS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-            <I PROPERTY="EvolutionOperator" VALUE="TransientGrowth" />
-            <I PROPERTY="Projection" VALUE="Galerkin" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
-            <I PROPERTY="SOLVERTYPE" VALUE="VelocityCorrectionScheme" />
-            <I PROPERTY="Driver" VALUE="Arpack" />
-            <I PROPERTY="ArpackProblemType" VALUE="LargestMag" />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"    />
+            <I PROPERTY="EvolutionOperator"     VALUE="TransientGrowth"         />
+            <I PROPERTY="Projection"            VALUE="Galerkin"                />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"              />
+            <I PROPERTY="SOLVERTYPE"            VALUE="VelocityCorrectionScheme"/>
+            <I PROPERTY="Driver"                VALUE="Arpack"                  />
+            <I PROPERTY="ArpackProblemType"     VALUE="LargestMag"              />
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> FinalTime   = 0.1 </P>
-            <P> TimeStep      = 0.005     </P>
-            <P> NumSteps      = FinalTime/TimeStep       </P>
-            <P> IO_CheckSteps = 1/TimeStep       </P>
-            <P> IO_InfoSteps  = 1       </P>
-            <P> Re            = 500        </P>
-            <P> Kinvis        = 1.0/Re         </P>
-            <P> kdim          = 4 </P>
-            <P> nvec          = 1 </P>
-            <P> evtol   = 1e-4 </P>
+            <P> FinalTime       = 0.1                   </P>
+            <P> TimeStep        = 0.005                 </P>
+            <P> NumSteps        = FinalTime/TimeStep    </P>
+            <P> IO_CheckSteps   = 1/TimeStep            </P>
+            <P> IO_InfoSteps    = 1                     </P>
+            <P> Re              = 500                   </P>
+            <P> Kinvis          = 1.0/Re                </P>
+            <P> kdim            = 4                     </P>
+            <P> nvec            = 1                     </P>
+            <P> evtol           = 1e-4                  </P>
 
         </PARAMETERS>
 

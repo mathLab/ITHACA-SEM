@@ -755,31 +755,31 @@
   <CONDITIONS>
 
      <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="APE"/> <!-- Acoustic perturbation equations -->
-      <I PROPERTY="Projection" VALUE="DisContinuous"/>
-      <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-      <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
-      <I PROPERTY="UpwindType"  VALUE="Upwind"/> <!-- Ignored for Continuous Galerkin projection -->
+        <I PROPERTY="EQType"                VALUE="APE"                 /> <!-- Acoustic perturbation equations -->
+        <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+        <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        <I PROPERTY="UpwindType"            VALUE="Upwind"              /> <!-- Ignored for Continuous Galerkin projection -->
     </SOLVERINFO> 
 
 
     <PARAMETERS>
-      <P> TimeStep       = 0.00002             </P> 
-      <P> NumSteps       = 5                </P>
-      <P> FinTime        = TimeStep*NumSteps   </P>
-      <P> IO_CheckSteps  = 2500                </P>
-      <P> IO_InfoSteps   = 100                 </P>
-      <P> Gravity        = 1.0                 </P> <!-- Not used for APE -->
-      <P> Rho0	         = 1.204               </P> <!-- Incompressible density -->
-      <P> Gamma	         = 1.4                 </P> <!-- Ratio of specific heats -->
-      <P> Omega   	= 1000                 </P> <!-- Angular frequency -->
-      <P> Pinfinity   	= 100000               </P> <!-- Ambient pressure -->
+      <P> TimeStep      = 0.00002           </P> 
+      <P> NumSteps      = 5                 </P>
+      <P> FinTime       = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps = 2500              </P>
+      <P> IO_InfoSteps  = 100               </P>
+      <P> Gravity       = 1.0               </P> <!-- Not used for APE -->
+      <P> Rho0	        = 1.204             </P> <!-- Incompressible density -->
+      <P> Gamma	        = 1.4               </P> <!-- Ratio of specific heats -->
+      <P> Omega         = 1000              </P> <!-- Angular frequency -->
+      <P> Pinfinity   	= 100000            </P> <!-- Ambient pressure -->
     </PARAMETERS>
  
     <VARIABLES>
       <V ID="0"> p  </V> 
-      <V ID="1"> u </V>
-      <V ID="2"> v </V>
+      <V ID="1"> u  </V>
+      <V ID="2"> v  </V>
     </VARIABLES>
   
     

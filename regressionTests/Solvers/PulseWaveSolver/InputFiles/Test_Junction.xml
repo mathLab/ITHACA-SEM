@@ -50,8 +50,8 @@
 
     <CONDITIONS>
         <PARAMETERS>
-			<P> TimeStep       = 10e-4             </P> 
-            <P> FinTime        = 0.2             </P>
+			<P> TimeStep       = 10e-4              </P> 
+            <P> FinTime        = 0.2                </P>
             <P> NumSteps       = FinTime/TimeStep   </P>
             <P> IO_CheckSteps  = NumSteps*50        </P>
             <P> IO_InfoSteps   = 100                </P>
@@ -65,11 +65,11 @@
         </PARAMETERS>
         
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE"     VALUE="PulseWavePropagation" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler" />
-            <I PROPERTY="UpwindTypePulse"  VALUE="UpwindPulse"/> 
+            <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation"/>
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"        />
+            <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse"         /> 
         </SOLVERINFO>
 
         <VARIABLES>

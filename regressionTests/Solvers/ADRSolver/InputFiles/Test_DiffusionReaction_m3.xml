@@ -61,18 +61,18 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> TimeStep   = 0.0001             </P>
-            <P> NumSteps      = 5000            </P>
-            <P> FinTime    = TimeStep*NumSteps  </P>
-            <P> IO_CheckSteps = 1000            </P>
-            <P> IO_InfoSteps  = 1000            </P>
+            <P> TimeStep        = 0.0001                </P>
+            <P> NumSteps        = 5000                  </P>
+            <P> FinTime         = TimeStep*NumSteps     </P>
+            <P> IO_CheckSteps   = 1000                  </P>
+            <P> IO_InfoSteps    = 1000                  </P>
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusionReaction" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-            <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyDiffusionReaction"   />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"               />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"                      />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                    />
         </SOLVERINFO>
 
         <VARIABLES>

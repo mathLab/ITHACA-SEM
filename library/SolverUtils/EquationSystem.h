@@ -209,12 +209,6 @@ namespace Nektar
                 bool NumericalFluxIncludesNormal = true,
                 bool InFieldIsInPhysSpace = false,
                 int nvariables = 0);
-            
-            /// Calculate the strong FR advection term.
-            SOLVER_UTILS_EXPORT void StrongFRAdvection(
-                const Array<OneD, Array<OneD, NekDouble> >& InField,
-                      Array<OneD, Array<OneD, NekDouble> >& OutField,
-                bool InFieldIsInPhysSpace = false);
 
             /// Calculate weak DG Diffusion in the LDG form.
             SOLVER_UTILS_EXPORT void WeakDGDiffusion(
@@ -412,9 +406,6 @@ namespace Nektar
 			bool                                 m_SingleMode;               ///< Flag to determine if use single mode or not
 			bool                                 m_HalfMode;                 ///< Flag to determine if use half mode or not
 			bool                                 m_MultipleModes;            ///< Flag to determine if use multiple mode or not
-            std::string                          m_discontinuousApproach;    ///< Type of discontinuous approach used (StandardDG or FR-DG, FR-SD, FR-HU)
-            Array<OneD, NekDouble>               m_dGL;                      ///< Left derivatives of the correction functions
-            Array<OneD, NekDouble>               m_dGR;                      ///< Right derivatives of the correction functions
             enum MultiRegions::ProjectionType    m_projectionType;           ///< Type of projection, i.e. Continuous or Discontinuous
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;             ///< Array holding the forward normals
             

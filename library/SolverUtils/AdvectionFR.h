@@ -51,21 +51,22 @@ namespace Nektar
         class AdvectionFR : public Advection
         {
         public:
-            static AdvectionSharedPtr create()
+            static AdvectionSharedPtr create(std::string advType)
             {
-                return AdvectionSharedPtr(new AdvectionFR());
+                return AdvectionSharedPtr(new AdvectionFR(advType));
             }
             
-            static std::string                              type;
+            static std::string                              type[];
             
-            std::string                                     m_FRSchemeRecovered;    
             Array<OneD, NekDouble>                          m_dGL;                  
             Array<OneD, NekDouble>                          m_dGR;                  
             
         protected:
-            AdvectionFR();
+            AdvectionFR(std::string advType);
             
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            
+            std::string m_advType;
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,

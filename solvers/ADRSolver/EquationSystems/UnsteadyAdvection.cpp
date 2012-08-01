@@ -53,18 +53,6 @@ namespace Nektar
     {
         // Call to the initialisation object of UnsteadySystem
         UnsteadySystem::v_InitObject();
-        
-        // Check the AdvectionType to be used
-        m_advectionType = m_session->GetSolverInfo("AdvectionType");
-            
-        // Check if the AdvectionType is set up properly
-        if((m_advectionType!="NonConservative") && (m_advectionType!="WeakDG") 
-           && (m_advectionType!="FR"))
-        {
-            cerr << "\n ERROR: You must specify AdvectionType in SOLVERINFO\n";  
-            cerr << " Three valid choices: NonConservative', WeakDG, FR.\n";
-            exit(1);
-        }
                 
         // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
@@ -85,21 +73,36 @@ namespace Nektar
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
 
-        // Create Riemann solver instance, depending on UPWINDTYPE tag 
-        if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
+        // Type of advection class to be used
+        switch(m_projectionType)
         {
-            m_riemannType   = m_session->GetSolverInfo("UpwindType");
-            m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(m_riemannType);
-            m_riemannSolver->AddScalar("Vn", &UnsteadyAdvection::GetNormalVelocity, this);
-        }
-        
-        // Create an advection object 
-        m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(m_advectionType);
-        m_advection->SetFluxVector   (&UnsteadyAdvection::GetFluxVector, this);
-        if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
-        {
-            m_advection->SetRiemannSolver(m_riemannSolver);
-            m_advection->InitObject      (m_session, m_fields);
+            // Continuous field 
+            case MultiRegions::eGalerkin:
+            {
+                string advName;
+                m_session->LoadSolverInfo("AdvectionType", advName, "NonConservative");
+                m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advection->SetFluxVector   (&UnsteadyAdvection::GetFluxVector, this);
+                break;
+            }
+            // Discontinuous field 
+            case MultiRegions::eDiscontinuousGalerkin:
+            {
+                string advName;
+                string riemName;
+                
+                m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+                m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advection->SetFluxVector   (&UnsteadyAdvection::GetFluxVector, this);
+                
+                m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
+                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
+                m_riemannSolver->AddScalar("Vn", &UnsteadyAdvection::GetNormalVelocity, this);
+                
+                m_advection->SetRiemannSolver(m_riemannSolver);
+                m_advection->InitObject      (m_session, m_fields);
+                break;
+            }
         }
         
         // If explicit it computes RHS and PROJECTION for the time integration
@@ -219,7 +222,7 @@ namespace Nektar
                 // Just copy over array
                 for(i = 0; i < nVariables; ++i)
                 {
-                    Vmath::Vcopy(nQuadraturePts,inarray[i],1,outarray[i],1);
+                    Vmath::Vcopy(nQuadraturePts, inarray[i], 1, outarray[i], 1);
                 }
                 break;
             }
@@ -231,8 +234,8 @@ namespace Nektar
 
                 for(i = 0; i < nVariables; ++i)
                 {
-                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
-                    m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
+                    m_fields[i]->FwdTrans(inarray[i], coeffs, false);
+                    m_fields[i]->BwdTrans_IterPerExp(coeffs, outarray[i]);
                 }
                 break;
             }

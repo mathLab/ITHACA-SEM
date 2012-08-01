@@ -114,20 +114,20 @@
     <CONDITIONS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQType" VALUE="LinearSWE" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-            <I PROPERTY="UpwindType" VALUE="HLL" />
+            <I PROPERTY="EQType"                VALUE="LinearSWE"           />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+            <I PROPERTY="UpwindType"            VALUE="HLL"                 />
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep      = 9.030472819714618/200           </P>
-            <P> NumSteps       = 200*1           </P>
-            <P> FinTime        = TimeStep*NumSteps </P>
-            <P> IO_CheckSteps  = 100000               </P>
-            <P> IO_InfoSteps   = 100000               </P>
-            <P> Gravity        = 9.81              </P>
+            <P> TimeStep        = 9.030472819714618/200 </P>
+            <P> NumSteps        = 200*1                 </P>
+            <P> FinTime         = TimeStep*NumSteps     </P>
+            <P> IO_CheckSteps   = 100000                </P>
+            <P> IO_InfoSteps    = 100000                </P>
+            <P> Gravity         = 9.81                  </P>
         </PARAMETERS>
 
         <FUNCTION NAME="WaterDepth">

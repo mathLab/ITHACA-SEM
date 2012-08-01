@@ -39,7 +39,7 @@
 
         <PARAMETERS>
             <P> FinTime         = 1                     </P>
-            <P> TimeStep        = 0.0005                 </P>
+            <P> TimeStep        = 0.0005                </P>
             <P> NumSteps        = FinTime/TimeStep      </P>
             <P> IO_CheckSteps   = 100000                </P>
             <P> IO_InfoSteps    = 100000                </P>
@@ -49,7 +49,6 @@
             <I PROPERTY="EQTYPE"                VALUE="UnsteadyInviscidBurger"  />
             <I PROPERTY="Projection"            VALUE="DisContinuous"           />
             <I PROPERTY="AdvectionType"         VALUE="WeakDG"                  />
-            <I PROPERTY="FRSchemeRecovered"     VALUE="DG"                      />
             <I PROPERTY="UpwindType"            VALUE="Upwind"                  />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"    />
         </SOLVERINFO>

@@ -1119,23 +1119,23 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> TimeStep       = 0.0       </P>
+            <P> TimeStep       = 0.0        </P>
             <P> NumSteps       = 10         </P>
-            <P> FinTime        = 0      </P>
-            <P> IO_CheckSteps  = 10000     </P>
-            <P> IO_InfoSteps   = 100       </P>
-            <P> Gamma          = 1.4       </P>
-            <P> CFLParameter   = 1.0       </P>
-            <P> IO_CheckTime   = 100       </P>
+            <P> FinTime        = 0          </P>
+            <P> IO_CheckSteps  = 10000      </P>
+            <P> IO_InfoSteps   = 100        </P>
+            <P> Gamma          = 1.4        </P>
+            <P> CFLParameter   = 1.0        </P>
+            <P> IO_CheckTime   = 100        </P>
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQType" VALUE="EulerCFE" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-            <I PROPERTY="UpwindType" VALUE="Exact" />
-            <I PROPERTY="ProblemType" VALUE="IsentropicVortex" />
+            <I PROPERTY="EQType"                VALUE="EulerCFE"            />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+            <I PROPERTY="UpwindType"            VALUE="Exact"               />
+            <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"    />
         </SOLVERINFO>
 
         <VARIABLES>

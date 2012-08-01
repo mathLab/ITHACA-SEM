@@ -63,8 +63,6 @@ namespace Nektar
         virtual ~UnsteadyAdvection();
 
     protected:
-        std::string                             m_riemannType;
-        std::string                             m_advectionType;
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
         SolverUtils::AdvectionSharedPtr         m_advection;
 

@@ -61,19 +61,19 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> TimeStep   = 0.000001           </P>
-            <P> NumSteps      = 500             </P>
-            <P> FinTime    = TimeStep*NumSteps  </P>
-            <P> IO_CheckSteps = 100             </P>
-            <P> IO_InfoSteps  = 100             </P>
+            <P> TimeStep        = 0.000001          </P>
+            <P> NumSteps        = 500               </P>
+            <P> FinTime         = TimeStep*NumSteps </P>
+            <P> IO_CheckSteps   = 100               </P>
+            <P> IO_InfoSteps    = 100               </P>
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
-            <I PROPERTY="DiffusionAdvancement" VALUE="Explicit" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyDiffusion"   />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Explicit"            />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
         </SOLVERINFO>
 
         <VARIABLES>

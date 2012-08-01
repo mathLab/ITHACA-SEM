@@ -45,7 +45,7 @@ namespace Nektar
         class AdvectionWeakDG : public Advection
         {
         public:
-            static AdvectionSharedPtr create()
+            static AdvectionSharedPtr create(std::string advType)
             {
                 return AdvectionSharedPtr(new AdvectionWeakDG());
             }

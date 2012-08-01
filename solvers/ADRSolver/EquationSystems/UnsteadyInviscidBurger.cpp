@@ -54,41 +54,45 @@ namespace Nektar
     {
         // Call to the initialisation object of UnsteadySystem
         UnsteadySystem::v_InitObject();
-        
-        // Check the AdvectionType to be used
-        m_advectionType = m_session->GetSolverInfo("AdvectionType");
-        
-        // Check if the AdvectionType is set up properly
-        if((m_advectionType!="NonConservative") && (m_advectionType!="WeakDG") 
-           && (m_advectionType!="FR"))
-        {
-            cerr << "\n ERROR: You must specify AdvectionType in SOLVERINFO\n";  
-            cerr << " Three valid choices: NonConservative', WeakDG, FR.\n";
-            exit(1);
-        }
-        
-        // Check if the RiemannType solver is set properly
-        if((m_advectionType=="WeakDG")||(m_advectionType=="FR"))
-        {
-            m_riemannType = m_session->GetSolverInfo("UpwindType");
-        }
-        
+                
         // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
         {
             m_traceVn  = Array<OneD, NekDouble>(GetTraceNpoints());
         }
         
-        // Create Riemann solver instance, depending on UPWINDTYPE tag 
-        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(m_riemannType);
-        m_riemannSolver->AddScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
-        
-        // Create an advection object 
-        m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(m_advectionType);
-        m_advection->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
-        m_advection->SetRiemannSolver(m_riemannSolver);
-        m_advection->InitObject      (m_session, m_fields);
-        
+        // Type of advection class to be used
+        switch(m_projectionType)
+        {
+            // Continuous field 
+            case MultiRegions::eGalerkin:
+            {
+                string advName;
+                m_session->LoadSolverInfo("AdvectionType", advName, "NonConservative");
+                m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advection->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
+                break;
+            }
+            // Discontinuous field 
+            case MultiRegions::eDiscontinuousGalerkin:
+            {
+                string advName;
+                string riemName;
+                
+                m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+                m_advection = SolverUtils::GetAdvectionFactory().CreateInstance(advName, advName);
+                m_advection->SetFluxVector   (&UnsteadyInviscidBurger::GetFluxVector, this);
+                
+                m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
+                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
+                m_riemannSolver->AddScalar("Vn", &UnsteadyInviscidBurger::GetNormalVelocity, this);
+                
+                m_advection->SetRiemannSolver(m_riemannSolver);
+                m_advection->InitObject      (m_session, m_fields);
+                break;
+            }
+        }
+                
         // If explicit it computes RHS and PROJECTION for the time integration
         if (m_explicitAdvection)
         {

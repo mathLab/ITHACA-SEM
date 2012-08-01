@@ -79,7 +79,7 @@ namespace Nektar
         // Create an advection object. For now, weak DG is hard-coded but
         // eventually this choice will be defined by the user, with a default
         // being set in UnsteadySystem. Bind flux vector and the Riemann solver.
-        m_advection = SolverUtils::GetAdvectionFactory().CreateInstance("WeakDG");
+        m_advection = SolverUtils::GetAdvectionFactory().CreateInstance("WeakDG","WeakDG");
         m_advection->SetFluxVector   (&CompressibleFlowSystem::GetFluxVector, this);
         m_advection->SetRiemannSolver(m_riemannSolver);
     }

@@ -63,8 +63,6 @@ namespace Nektar
         virtual ~UnsteadyInviscidBurger();
 
     protected:
-        std::string                             m_riemannType;
-        std::string                             m_advectionType;
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
         SolverUtils::AdvectionSharedPtr         m_advection;
         Array<OneD, NekDouble>                  m_traceVn;

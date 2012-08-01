@@ -38,11 +38,16 @@
 namespace Nektar
 {
     namespace SolverUtils
-    {
-        std::string AdvectionFR::type = GetAdvectionFactory().
-            RegisterCreatorFunction("FR", AdvectionFR::create);
+    {        
+        std::string AdvectionFR::type[] = {
+            GetAdvectionFactory().RegisterCreatorFunction(
+                "FRDG", AdvectionFR::create), 
+            GetAdvectionFactory().RegisterCreatorFunction(
+                "FRSD", AdvectionFR::create), 
+            GetAdvectionFactory().RegisterCreatorFunction(
+                "FRHU", AdvectionFR::create)};
 
-        AdvectionFR::AdvectionFR()
+        AdvectionFR::AdvectionFR(std::string advType):m_advType(advType)
         {
         }
         
@@ -50,49 +55,27 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr              pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
         {
-            // Definition of the FR scheme recovered
-            if(pSession->DefinesSolverInfo("FRSchemeRecovered"))
-            {
-                // Check the FR scheme to be used
-                m_FRSchemeRecovered = pSession->GetSolverInfo("FRSchemeRecovered");
-                
-                // Check if the FR scheme recovered is set up properly
-                if((m_FRSchemeRecovered!="DG") && (m_FRSchemeRecovered!="SD") 
-                   && (m_FRSchemeRecovered!="HU"))
-                {
-                    cerr << "\n ERROR: You must specify FRSchemeRecovered in\n";  
-                    cerr << "SOLVERINFO. 3 valid choices: 'DG', 'SD', 'HU'.\n";
-                    exit(1);
-                }
-            }
-            else 
-            {
-                m_FRSchemeRecovered = "DG";
-            }
+            LibUtilities::BasisSharedPtr Basis;
+            LibUtilities::BasisSharedPtr BasisFR_Left;
+            LibUtilities::BasisSharedPtr BasisFR_Right;
+            Basis = pFields[0]->GetExp(0)->GetBasis(0);
             
-            // Computation of the derivatives of the correction functions (DG)
-            if(m_FRSchemeRecovered == "DG")
+            // Number of modes
+            int nModes  = Basis->GetNumModes();
+            
+            // Total number of quadrature points
+            int nSolutionPts = Basis->GetNumPoints();
+            
+            // Type of points
+            const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
+            
+            if (m_advType == "FRDG")
             {
-                // Bases initialisation
-                LibUtilities::BasisSharedPtr Basis;
-                LibUtilities::BasisSharedPtr BasisFR_Left;
-                LibUtilities::BasisSharedPtr BasisFR_Right;
-                Basis = pFields[0]->GetExp(0)->GetBasis(0);
-                
-                // Number of modes
-                int nModes  = Basis->GetNumModes();
-                
-                // Total number of quadrature points
-                int nSolutionPts = Basis->GetNumPoints();
-                
-                // Type of points
-                const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
-                
-                // Construction of the derivatives
+                // Computation of the derivatives of the correction functions (DG)
                 const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_DG_Left,  
                                                            nSolutionPts, 
                                                            FRpoints);
-                
+                    
                 const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_DG_Right, 
                                                            nSolutionPts, 
                                                            FRpoints);
@@ -104,30 +87,15 @@ namespace Nektar
                 m_dGL = BasisFR_Left ->GetBdata();
                 m_dGR = BasisFR_Right->GetBdata();
             }
-            
-            // Computation of the derivatives of the correction functions (SD)
-            else if(m_FRSchemeRecovered == "SD")
+        
+                    
+            else if(m_advType == "FRSD")
             {
-                /// Bases initialisation
-                LibUtilities::BasisSharedPtr Basis;
-                LibUtilities::BasisSharedPtr BasisFR_Left;
-                LibUtilities::BasisSharedPtr BasisFR_Right;
-                Basis = pFields[0]->GetExp(0)->GetBasis(0);
-                
-                /// Number of modes
-                int nModes  = Basis->GetNumModes();
-                
-                /// Total number of quadrature points
-                int nSolutionPts = Basis->GetNumPoints();
-                
-                /// Type of points
-                const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
-                
-                /// Construction of the derivatives
+                // Computation of the derivatives of the correction functions (SD)
                 const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_SD_Left,  
                                                            nSolutionPts, 
                                                            FRpoints);
-                
+                    
                 const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_SD_Right, 
                                                            nSolutionPts, 
                                                            FRpoints);
@@ -135,34 +103,19 @@ namespace Nektar
                 BasisFR_Left  = LibUtilities::BasisManager()[FRBase_Left];
                 BasisFR_Right = LibUtilities::BasisManager()[FRBase_Right];
                 
-                /// Storing the derivatives into two global variables 
+                // Storing the derivatives into two global variables 
                 m_dGL = BasisFR_Left ->GetBdata();
                 m_dGR = BasisFR_Right->GetBdata();
+                    
             }
-            
-            // Computation of the derivatives of the correction functions (HU)
-            else if(m_FRSchemeRecovered == "HU")
+                    
+            else if (m_advType == "FRHU")
             {
-                // Bases initialisation
-                LibUtilities::BasisSharedPtr Basis;
-                LibUtilities::BasisSharedPtr BasisFR_Left;
-                LibUtilities::BasisSharedPtr BasisFR_Right;
-                Basis = pFields[0]->GetExp(0)->GetBasis(0);
-                
-                // Number of modes
-                int nModes  = Basis->GetNumModes();
-                
-                // Total number of quadrature points
-                int nSolutionPts = Basis->GetNumPoints();
-                
-                // Type of points
-                const LibUtilities::PointsKey FRpoints = Basis->GetPointsKey();
-                
-                // Construction of the derivatives
+                // Computation of the derivatives of the correction functions (HU)
                 const LibUtilities::BasisKey  FRBase_Left (LibUtilities::eDG_HU_Left,  
                                                            nSolutionPts, 
                                                            FRpoints);
-                
+                    
                 const LibUtilities::BasisKey  FRBase_Right(LibUtilities::eDG_HU_Right, 
                                                            nSolutionPts, 
                                                            FRpoints);
@@ -325,14 +278,12 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    // HOW TO GET CORRECT DIMENSION OF FLUXJUMPS ARRAY IN 2D
-                    ASSERTL0(false,"2D FR case not implemented yet");
+                    ASSERTL0(false,"2D FRDG case not implemented yet");
                     break;
                 }
                 case 3:
                 {
-                    // HOW TO GET CORRECT DIMENSION OF FLUXJUMPS ARRAY IN 3D
-                    ASSERTL0(false,"3D FR case not implemented yet");
+                    ASSERTL0(false,"3D FRDG case not implemented yet");
                     break;
                 }
             }

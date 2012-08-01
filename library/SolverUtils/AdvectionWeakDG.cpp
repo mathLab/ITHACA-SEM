@@ -41,10 +41,9 @@ namespace Nektar
     {
         std::string AdvectionWeakDG::type = GetAdvectionFactory().
             RegisterCreatorFunction("WeakDG", AdvectionWeakDG::create);
-
+        
         AdvectionWeakDG::AdvectionWeakDG()
         {
-            
         }
         
         void AdvectionWeakDG::v_Advect(

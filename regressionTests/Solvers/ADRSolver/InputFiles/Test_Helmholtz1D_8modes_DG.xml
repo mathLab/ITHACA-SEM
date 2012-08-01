@@ -44,9 +44,9 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
-            <I PROPERTY="DiscontinuousApproach" VALUE="StandardDG"          />
+            <I PROPERTY="EQTYPE"                VALUE="Helmholtz"       />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"   />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"          />
         </SOLVERINFO>
 
         <VARIABLES>

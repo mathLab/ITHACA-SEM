@@ -331,7 +331,7 @@
             <P> IO_CheckSteps = 10    </P>
             <P> IO_InfoSteps  = 10    </P>
             <P> Kinvis        = 1   </P>
-            <P> IterativeSolverTolerance = 5e-07 </P>
+            <P> IterativeSolverTolerance = 1e-10 </P>
         </PARAMETERS>
 
         <VARIABLES>

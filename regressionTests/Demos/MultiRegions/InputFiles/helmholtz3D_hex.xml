@@ -160,7 +160,6 @@
     <CONDITIONS>
         <PARAMETERS>
             <P> Lambda = 1 </P>
-            <P> IterativeSolverTolerance = 5e-08 </P>
         </PARAMETERS>
 
         <VARIABLES>

@@ -25,7 +25,6 @@
       <P> HomModesZ     = 4          </P>
       <P> LZ            = 1.0        </P>
       <P> PROC_Z        = 2          </P>
-      <P> IterativeSolverTolerance = 5e-08 </P>
     </PARAMETERS>
 
     <VARIABLES>

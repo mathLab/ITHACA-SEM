@@ -10,6 +10,7 @@ SET(MeshConvertHeaders
     OutputNekpp.h
     ProcessBL.h
     ProcessJac.h
+    ProcessSpherigon.h
     MeshElements.h
 )
 
@@ -24,6 +25,7 @@ SET(MeshConvertSources
     OutputNekpp.cpp
     ProcessBL.cpp
     ProcessJac.cpp
+    ProcessSpherigon.cpp
     MeshConvert.cpp
     MeshElements.cpp)
 

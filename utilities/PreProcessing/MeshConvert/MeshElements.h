@@ -96,6 +96,7 @@ namespace Nektar
             Node(const Node& pSrc)
                 : id(pSrc.id), x(pSrc.x), y(pSrc.y), 
                   z(pSrc.z), m_geom() {}
+            Node()  {}
             ~Node() {}
 
             /// Define node ordering based on ID.
@@ -155,7 +156,11 @@ namespace Nektar
                 return x*x+y*y+z*z;
             }
 
-            
+            double dot(const Node &pSrc) const
+            {
+                return x*pSrc.x + y*pSrc.y + z*pSrc.z;
+            }
+
             /// Generate a %SpatialDomains::VertexComponent for this node.
             SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {

@@ -101,14 +101,16 @@ namespace Nektar
                 "AnisotropicConductivityY",
                 "AnisotropicConductivityZ"
         };
-
+        int nq = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> vTemp;
+
         if (m_session->DefinesFunction("IsotropicConductivity"))
         {
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
             for (int i = 0; i < m_spacedim; ++i)
             {
-                m_vardiff[varCoeffEnum[i]] = vTemp;
+                m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
+                Vmath::Vcopy(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1);
             }
         }
         else if (m_session->DefinesFunction(varCoeffs[0]))
@@ -118,7 +120,8 @@ namespace Nektar
                 ASSERTL0(m_session->DefinesFunction(varCoeffs[i], varName),
                     "Function '" + varCoeffs[i] + "' not correctly defined.");
                 EvaluateFunction(varName, vTemp, varCoeffs[i]);
-                m_vardiff[varCoeffEnum[i]] = vTemp;
+                m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
+                Vmath::Vcopy(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1);
             }
         }
 
@@ -131,7 +134,6 @@ namespace Nektar
                 if (m_session->DefinesParameter("d_min"))
                 {
                     // Normalise and invert
-                    int nq = m_fields[0]->GetNpoints();
                     NekDouble f_min = m_session->GetParameter("d_min");
                     NekDouble f_max = m_session->GetParameter("d_max");
                     NekDouble f_range = f_max - f_min;

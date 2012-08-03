@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     vFilenames.push_back(std::string(argv[1]));
 
     LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(argc, argv, vFilenames);
+            = LibUtilities::SessionReader::CreateInstance(2, argv, vFilenames);
 
     try
     {

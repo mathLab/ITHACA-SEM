@@ -265,7 +265,6 @@ namespace Nektar
                 {
                     vVarCoeffMap[x->first] = x->second + cnt;
                 }
-                cnt += vExp->GetTotPoints();
             }
 
             LocalRegions::MatrixKey matkey( m_linSysKey.GetMatrixType(),
@@ -307,7 +306,7 @@ namespace Nektar
         const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const
         {
             NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-	    return NullDNekMatSharedPtr;
+            return NullDNekMatSharedPtr;
         }
 
     } //end of namespace

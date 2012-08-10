@@ -104,21 +104,21 @@ namespace Nektar
                 Polylib::zwgrjm(m_points[0].data(),m_weights.data(),numpoints,2.0,0.0);
                 break;
 
-	    case eGaussKronrodLegendre:
-	      Polylib::zwgk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
-	      break;
+            case eGaussKronrodLegendre:
+                Polylib::zwgk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
+                break;
 	      
             case eGaussRadauKronrodMLegendre:
-	      Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
-	      break;
+                Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
+                break;
 	      
             case eGaussRadauKronrodMAlpha1Beta0:
-	      Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,1.0,0.0);
-	      break;
+                Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,1.0,0.0);
+                break;
 	      
             case eGaussLobattoKronrodLegendre:
-	      Polylib::zwlk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
-	      break;
+                Polylib::zwlk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
+                break;
 		
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
@@ -127,12 +127,12 @@ namespace Nektar
 
         void GaussPoints::CalculateWeights()
         {
-            //For Gauss Quadrature, this is done as part of the points computation
+            // For Gauss Quadrature, this is done as part of the points computation
         }
 
         void GaussPoints::CalculateDerivMatrix()
         {
-            // Allocate the derivative matrix.
+            // Allocate the derivative matrix
             PointsBaseType::CalculateDerivMatrix();
 
             int numpoints = m_pointsKey.GetNumPoints();
@@ -190,25 +190,24 @@ namespace Nektar
                 Polylib::Dgrjm(dmtemp,m_points[0].data(),numpoints,2.0,0.0);
                 break;
 		
-	    case eGaussKronrodLegendre:
-	    case eGaussRadauKronrodMLegendre:
-	    case eGaussRadauKronrodMAlpha1Beta0:
-	    case eGaussLobattoKronrodLegendre:
-	      {
-		for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
-		  {
-		    for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
-		      {
-			(*m_derivmatrix[0])(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
-		      }
-		  }
-		
-		return;
-	      }
-	      break;
+            case eGaussKronrodLegendre:
+            case eGaussRadauKronrodMLegendre:
+            case eGaussRadauKronrodMAlpha1Beta0:
+            case eGaussLobattoKronrodLegendre:
+                {
+                for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
+                {
+                    for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
+                    {
+                        (*m_derivmatrix[0])(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                    }
+                }
+                return;
+                }
+                break;
 	      
             default:
-	      ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
+                ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
 	    
             std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix[0]->begin());
@@ -218,68 +217,68 @@ namespace Nektar
         {
             switch(m_pointsKey.GetPointsType())
             {
-            case eGaussGaussLegendre:
-                Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                break;
+                case eGaussGaussLegendre:
+                    Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                    break;
 
-            case eGaussRadauMLegendre:
-                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                break;
+                case eGaussRadauMLegendre:
+                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                    break;
 
-            case eGaussRadauPLegendre:
-                Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                break;
+                case eGaussRadauPLegendre:
+                    Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                    break;
 
-            case eGaussLobattoLegendre:
-                Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
-                break;
+                case eGaussLobattoLegendre:
+                    Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,0.0);
+                    break;
 
-            case eGaussGaussChebyshev:
-                Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                break;
+                case eGaussGaussChebyshev:
+                    Polylib::Imgj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                    break;
 
-            case eGaussRadauMChebyshev:
-                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                break;
+                case eGaussRadauMChebyshev:
+                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                    break;
 
-            case eGaussRadauPChebyshev:
-                Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                break;
+                case eGaussRadauPChebyshev:
+                    Polylib::Imgrjp(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                    break;
 
-            case eGaussLobattoChebyshev:
-                Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
-                break;
+                case eGaussLobattoChebyshev:
+                    Polylib::Imglj(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,-0.5,-0.5);
+                    break;
 
-            case eGaussRadauMAlpha0Beta1:
-                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,1.0);
-                break;
+                case eGaussRadauMAlpha0Beta1:
+                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,1.0);
+                    break;
 
-            case eGaussRadauMAlpha0Beta2:
-                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,2.0);
-                break;
+                case eGaussRadauMAlpha0Beta2:
+                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,0.0,2.0);
+                    break;
 
-            case eGaussRadauMAlpha1Beta0:
-                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,1.0,0.0);
-                break;
+                case eGaussRadauMAlpha1Beta0:
+                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,1.0,0.0);
+                    break;
 
-            case eGaussRadauMAlpha2Beta0:
-                Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,2.0,0.0);
-                break;
+                case eGaussRadauMAlpha2Beta0:
+                    Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,2.0,0.0);
+                    break;
 		
-	    case eGaussKronrodLegendre:
-	    case eGaussRadauKronrodMLegendre:
-	    case eGaussRadauKronrodMAlpha1Beta0:
-	    case eGaussLobattoKronrodLegendre:
-	      {
-		for(unsigned int i=0;i<npts;++i)
-		  {
-		    for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
-		      {
-			interp[i + j*npts] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
-		      }
-		  }
-	      }
-	      break;
+                case eGaussKronrodLegendre:
+                case eGaussRadauKronrodMLegendre:
+                case eGaussRadauKronrodMAlpha1Beta0:
+                case eGaussLobattoKronrodLegendre:
+                {
+                    for(unsigned int i=0;i<npts;++i)
+                    {
+                        for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
+                        {
+                            interp[i + j*npts] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                        }
+                    }
+                }
+                break;
 
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
@@ -302,7 +301,7 @@ namespace Nektar
 
             PointsManager()[pkey]->GetPoints(xpoints);
 
-            /// Delegate to function below.
+            // Delegate to function below
             return GetI(numpoints, xpoints);
         }
 
@@ -317,7 +316,7 @@ namespace Nektar
         {
             int numpoints = 1;
 
-            /// Delegate to function below.
+            // Delegate to function below
             return GetI(numpoints, x);
         }
 

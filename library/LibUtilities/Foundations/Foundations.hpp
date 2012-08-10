@@ -59,7 +59,7 @@ namespace Nektar
             eFourierSingleMode, //!< Fourier ModifiedExpansion with just the first mode   \f$ \exp(i \pi  z_i)\f$
 			eFourierHalfModeRe, //!< Fourier Modified expansions with just the real part of the first mode  \f$ Re[\exp(i \pi  z_i)]\f$    
 			eFourierHalfModeIm, //!< Fourier Modified expansions with just the imaginary part of the first mode  \f$ Im[\exp(i \pi  z_i)]\f$    
-            eG_Lagrange,		//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
+            eGauss_Lagrange,	//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
             eDG_DG_Left,		//!< Derivative of the left correction function for DG FR  \f$ dGL_{p}(z_i) \f$
             eDG_DG_Right,		//!< Derivative of the Right correction function for DG FR \f$ dGR_{p}(z_i) \f$
             eDG_SD_Left,		//!< Derivative of the left correction function for SD FR  \f$ dGL_{p}(z_i) \f$
@@ -86,7 +86,7 @@ namespace Nektar
             "FourierSingleMode",
 			"FourierHalfModeRe",
 			"FourierHalfModeIm",
-            "G_Lagrange",
+            "Gauss_Lagrange",
             "DG_DG_Left",
             "DG_DG_Right",
             "DG_SD_Left",

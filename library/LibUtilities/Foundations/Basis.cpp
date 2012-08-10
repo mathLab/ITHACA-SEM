@@ -524,14 +524,14 @@ namespace Nektar
                     }
 
                     // define derivative basis
-                    Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
-                                numPoints, m_bdata.data(),numPoints,0.0,
-                                m_dbdata.data(),numPoints);
+                    Blas::Dgemm('n', 'n', numPoints, numModes, numPoints, 1.0,
+                                D, numPoints, m_bdata.data(), numPoints, 0.0,
+                                m_dbdata.data(), numPoints);
 
                 }//end scope
                 break;
                     
-			case eG_Lagrange:
+			case eGauss_Lagrange:
                 {
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
@@ -546,9 +546,9 @@ namespace Nektar
                     }
 					
                     // define derivative basis
-                    Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
-								numPoints, m_bdata.data(),numPoints,0.0,
-								m_dbdata.data(),numPoints);
+                    Blas::Dgemm('n', 'n', numPoints, numModes, numPoints, 1.0,
+                                D, numPoints, m_bdata.data(), numPoints, 0.0,
+								m_dbdata.data(), numPoints);
 					
                 }//end scope
 				break;
@@ -622,43 +622,45 @@ namespace Nektar
 					
 					
             case eChebyshev:
-
-                mode = m_bdata.data();
-
-                for (p=0,scal = 1; p<numModes; ++p,mode += numPoints)
                 {
-                    Polylib::jacobfd(numPoints, z.data(), mode, NULL, p, -0.5, -0.5);
+                    mode = m_bdata.data();
 
-                    for(i = 0; i < numPoints; ++i)
+                    for (p=0,scal = 1; p<numModes; ++p,mode += numPoints)
                     {
-                        mode[i] *= scal;
+                        Polylib::jacobfd(numPoints, z.data(), mode, NULL, p, -0.5, -0.5);
+
+                        for(i = 0; i < numPoints; ++i)
+                        {
+                            mode[i] *= scal;
+                        }
+
+                        scal *= 4*(p+1)*(p+1)/(2*p+2)/(2*p+1);
                     }
 
-                    scal *= 4*(p+1)*(p+1)/(2*p+2)/(2*p+1);
+                    // Define derivative basis
+                    Blas::Dgemm('n', 'n', numPoints, numModes, numPoints, 1.0,
+                                D, numPoints, m_bdata.data(), numPoints, 0.0,
+                                m_dbdata.data(), numPoints);
                 }
-
-                // define derivative basis
-                Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
-                            numPoints, m_bdata.data(),numPoints,0.0,m_dbdata.data(),
-                            numPoints);
                 break;
 
             case eMonomial:
                 {
-                 int P = numModes - 1;
-                 NekDouble *mode = m_bdata.data();
+                    int P = numModes - 1;
+                    NekDouble *mode = m_bdata.data();
 
-                 for( int p = 0; p <= P; ++p, mode += numPoints )
-                 {
+                    for( int p = 0; p <= P; ++p, mode += numPoints )
+                    {
                         for( int i = 0; i < numPoints; ++i )
                         {
                             mode[i] = pow(z[i], p);
                         }
-                 }
+                    }
 
                     // define derivative basis
-                    Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
-                                m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
+                    Blas::Dgemm('n', 'n', numPoints, numModes, numPoints, 1.0,
+                                D, numPoints, m_bdata.data(), numPoints, 0.0, 
+                                m_dbdata.data(),numPoints);
                 }//end scope
                 break;
                     
@@ -968,7 +970,8 @@ namespace Nektar
         {
             return ( m_basistype == eGLL_Lagrange &&
                 GetPointsType() == eGaussLobattoLegendre &&
-                GetNumModes() == GetNumPoints() || m_basistype == eG_Lagrange);
+                GetNumModes() == GetNumPoints() || 
+                m_basistype == eGauss_Lagrange);
         }
 
         // BasisKey compared to BasisKey

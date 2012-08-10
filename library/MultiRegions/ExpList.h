@@ -1798,7 +1798,7 @@ namespace Nektar
 
         /**
          * If one wants to get hold of the underlying data without modifying
-         * them, rather use the function #GetCoeffs insead.
+         * them, rather use the function #GetCoeffs instead.
          *
          * @return  (A reference to) the array #m_coeffs.
          */

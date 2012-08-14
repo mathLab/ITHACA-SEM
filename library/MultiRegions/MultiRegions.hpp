@@ -103,7 +103,8 @@ namespace Nektar
         enum ProjectionType
         {
             eGalerkin,
-            eDiscontinuousGalerkin
+            eDiscontinuous,
+            eMixed_CG_Discontinuous
         };
 
         enum PreconditionerType

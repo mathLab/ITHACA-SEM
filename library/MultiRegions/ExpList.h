@@ -614,7 +614,7 @@ namespace Nektar
                                          const Array<OneD, const NekDouble> &Fn,
                                          Array<OneD, NekDouble> &outarray);
 
-            inline void AddTraceBiIntegral(
+            inline void AddFwdBwdTraceIntegral(
                                            const Array<OneD, const NekDouble> &Fwd,
                                            const Array<OneD, const NekDouble> &Bwd,
                                            Array<OneD, NekDouble> &outarray);
@@ -1005,11 +1005,11 @@ namespace Nektar
             virtual void v_AddTraceIntegral(
                                             const Array<OneD, const NekDouble> &Fn,
                                             Array<OneD, NekDouble> &outarray);
-
-            virtual void v_AddTraceBiIntegral(
-                                              const Array<OneD, const NekDouble> &Fwd,
-                                              const Array<OneD, const NekDouble> &Bwd,
-                                              Array<OneD, NekDouble> &outarray);
+            
+            virtual void v_AddFwdBwdTraceIntegral(
+                                                  const Array<OneD, const NekDouble> &Fwd, 
+                                                  const Array<OneD, const NekDouble> &Bwd, 
+                                                  Array<OneD, NekDouble> &outarray);
 
             virtual void v_GetFwdBwdTracePhys(
                                               Array<OneD,NekDouble> &Fwd,
@@ -1885,12 +1885,12 @@ namespace Nektar
             v_AddTraceIntegral(Fn,outarray);
         }
 
-        inline void ExpList::AddTraceBiIntegral(
-                                    const Array<OneD, const NekDouble> &Fwd,
-                                    const Array<OneD, const NekDouble> &Bwd,
-                                          Array<OneD, NekDouble> &outarray)
+        inline void ExpList::AddFwdBwdTraceIntegral(
+                                              const Array<OneD, const NekDouble> &Fwd, 
+                                              const Array<OneD, const NekDouble> &Bwd, 
+                                              Array<OneD, NekDouble> &outarray)
         {
-            v_AddTraceBiIntegral(Fwd,Bwd,outarray);
+            v_AddFwdBwdTraceIntegral(Fwd,Bwd,outarray);
         }
 
         inline void ExpList::GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,

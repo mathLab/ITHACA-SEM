@@ -238,6 +238,7 @@ namespace Nektar
                 }
                 break;
             case eBackwardEuler:
+            case eBDFImplicitOrder1:
             case eAdamsMoultonOrder1:
                 {
                     m_numsteps = 1;
@@ -415,14 +416,14 @@ namespace Nektar
                     m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 0.0);
 					
                     m_B[0][0][0] = 2*third;
-                    m_B[0][1][0] = 1.0;
+                    m_B[0][1][0] = 0.0;
 					
                     m_U[0][0] = 4*third;
                     m_U[0][1] = -third;
 					
                     m_V[0][0] = 4*third;
                     m_V[0][1] = -third;
-					
+                    m_V[1][0] = 1.0;
 					
                     m_schemeType = eDiagonallyImplicit;
                     m_numMultiStepValues = 2;
@@ -431,7 +432,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                     m_timeLevelOffset[1] = 1;
                 }
-				break;
+                break;
             case eMidpoint:
                 {
                     m_numsteps = 1;
@@ -1370,74 +1371,74 @@ namespace Nektar
 
             // Check if storage has already been initialised.
             // If so, we just zero the temporary storage.
-            if (m_initialised && nvar == GetFirstDim(y_old)
-                              && npoints == GetSecondDim(y_old))
+            if (m_initialised && m_nvar == GetFirstDim(y_old)
+                              && m_npoints == GetSecondDim(y_old))
             {
-                for(j = 0; j < nvar; j++)
+                for(j = 0; j < m_nvar; j++)
                 {
-                    Vmath::Zero(npoints, tmp[j], 1);
+                    Vmath::Zero(m_npoints, m_tmp[j], 1);
                 }
             }
             else
             {
-                nvar = GetFirstDim(y_old);
-                npoints = GetSecondDim(y_old);
+                m_nvar = GetFirstDim(y_old);
+                m_npoints = GetSecondDim(y_old);
        
                 // First, we are going to calculate the various stage
                 // values and stage derivatives (this is the multi-stage
                 // part of the method)
-                // - Y   corresponds to the stage values
-                // - F   corresponds to the stage derivatives
-                // - T   corresponds to the time at the different stages
-                // - tmp corresponds to the explicit right hand side of
+                // - m_Y   corresponds to the stage values
+                // - m_F   corresponds to the stage derivatives
+                // - m_T   corresponds to the time at the different stages
+                // - m_tmp corresponds to the explicit right hand side of
                 //   each stage equation
-                //   (for explicit schemes, this correspond to Y)
+                //   (for explicit schemes, this correspond to m_Y)
 
-                // Allocate memory for the arrays Y and F and tmp The same
-                // storage will be used for every stage -> Y is a
+                // Allocate memory for the arrays m_Y and m_F and m_tmp The same
+                // storage will be used for every stage -> m_Y is a
                 // DoubleArray
-                tmp = DoubleArray(nvar);
-                for(j = 0; j < nvar; j++)
+                m_tmp = DoubleArray(m_nvar);
+                for(j = 0; j < m_nvar; j++)
                 {
-                    tmp[j]   = Array<OneD, NekDouble>(npoints,0.0);
+                    m_tmp[j]   = Array<OneD, NekDouble>(m_npoints,0.0);
                 }
 
-                // The same storage will be used for every stage -> tmp is
+                // The same storage will be used for every stage -> m_tmp is
                 // a DoubleArray
                 if(type == eExplicit)
                 {
-                    Y = tmp;
+                    m_Y = m_tmp;
                 }
                 else
                 {
-                    Y = DoubleArray(nvar);
-                    for(j = 0; j < nvar; j++)
+                    m_Y = DoubleArray(m_nvar);
+                    for(j = 0; j < m_nvar; j++)
                     {
-                        Y[j] =  Array<OneD, NekDouble>(npoints,0.0);
+                        m_Y[j] =  Array<OneD, NekDouble>(m_npoints,0.0);
                     }
                 }
 
                 // Different storage for every stage derivative as the data
-                // will be re-used to update the solution -> F is a TripleArray
-                F = TripleArray(m_numstages);
+                // will be re-used to update the solution -> m_F is a TripleArray
+                m_F = TripleArray(m_numstages);
                 for(i = 0; i < m_numstages; ++i)
                 {
-                    F[i]   = DoubleArray(nvar);
-                    for(j = 0; j < nvar; j++)
+                    m_F[i]   = DoubleArray(m_nvar);
+                    for(j = 0; j < m_nvar; j++)
                     {
-                        F[i][j] = Array<OneD, NekDouble>(npoints,0.0);
+                        m_F[i][j] = Array<OneD, NekDouble>(m_npoints,0.0);
                     }
                 }
 
                 if(type == eIMEX)
                 {
-                    F_IMEX = TripleArray(m_numstages);
+                    m_F_IMEX = TripleArray(m_numstages);
                     for(i = 0; i < m_numstages; ++i)
                     {
-                        F_IMEX[i]   = DoubleArray(nvar);
-                        for(j = 0; j < nvar; j++)
+                        m_F_IMEX[i]   = DoubleArray(m_nvar);
+                        for(j = 0; j < m_nvar; j++)
                         {
-                            F_IMEX[i][j] =  Array<OneD, NekDouble>(npoints,0.0);
+                            m_F_IMEX[i][j] =  Array<OneD, NekDouble>(m_npoints,0.0);
                         }
                     }
                 }
@@ -1451,61 +1452,61 @@ namespace Nektar
             {
                 if( (i==0) && m_firstStageEqualsOldSolution )
                 {
-                    for(k = 0; k < nvar; k++)
+                    for(k = 0; k < m_nvar; k++)
                     {
-                        Vmath::Vcopy(npoints,y_old[0][k],1,Y[k],1);
+                        Vmath::Vcopy(m_npoints,y_old[0][k],1,m_Y[k],1);
                     }
-                    T = t_old[0];
+                    m_T = t_old[0];
                 }
                 else
                 {
-                    // The stage values Y are a linear combination of:
+                    // The stage values m_Y are a linear combination of:
                     // 1: the stage derivatives
 					
                     if( i != 0 )
                     {
-                        for(k = 0; k < nvar; k++)
+                        for(k = 0; k < m_nvar; k++)
                         {
-                            Vmath::Smul(npoints,timestep*A(i,0),F[0][k],1,
-                                        tmp[k],1);
+                            Vmath::Smul(m_npoints,timestep*A(i,0),m_F[0][k],1,
+                                        m_tmp[k],1);
                             
                             if(type == eIMEX)       
                             {
-                                Vmath::Svtvp(npoints,timestep*A_IMEX(i,0),
-                                             F_IMEX[0][k],1,
-                                             tmp[k],1,tmp[k],1);
+                                Vmath::Svtvp(m_npoints,timestep*A_IMEX(i,0),
+                                             m_F_IMEX[0][k],1,
+                                             m_tmp[k],1,m_tmp[k],1);
                             }
                         }
                     }          
-                    T = A(i,0)*timestep;
+                    m_T = A(i,0)*timestep;
                         
                     for( j = 1; j < i; j++ )
                     {
-                        for(k = 0; k < nvar; k++)
+                        for(k = 0; k < m_nvar; k++)
                         {
-                            Vmath::Svtvp(npoints,timestep*A(i,j),F[j][k],1,
-                                         tmp[k],1,tmp[k],1);
+                            Vmath::Svtvp(m_npoints,timestep*A(i,j),m_F[j][k],1,
+                                         m_tmp[k],1,m_tmp[k],1);
                             if(type == eIMEX)       
                             {
-                                Vmath::Svtvp(npoints,timestep*A_IMEX(i,j),
-                                             F_IMEX[j][k],1,
-                                             tmp[k],1,tmp[k],1);
+                                Vmath::Svtvp(m_npoints,timestep*A_IMEX(i,j),
+                                             m_F_IMEX[j][k],1,
+                                             m_tmp[k],1,m_tmp[k],1);
                             }
                         }          
                         
-                        T += A(i,j)*timestep;
+                        m_T += A(i,j)*timestep;
                     }
                     
                     // 2: the imported multi-step solution of the
                     // previous time level
                     for(j = 0; j < m_numsteps; j++)
                     {
-                        for(k = 0; k < nvar; k++)
+                        for(k = 0; k < m_nvar; k++)
                         {
-                            Vmath::Svtvp(npoints,U(i,j),y_old[j][k],1,
-                                         tmp[k],1,tmp[k],1);
+                            Vmath::Svtvp(m_npoints,U(i,j),y_old[j][k],1,
+                                         m_tmp[k],1,m_tmp[k],1);
                         }
-                        T += U(i,j)*t_old[j];
+                        m_T += U(i,j)*t_old[j];
                     } 
                 }
       
@@ -1514,58 +1515,58 @@ namespace Nektar
                 {
                     if(m_numstages==1)
                     {
-                        T= t_old[0]+timestep;
+                        m_T= t_old[0]+timestep;
                     }
                     else 
                     {
-                        T= t_old[0];
+                        m_T= t_old[0];
                         for(int j=0; j<=i; ++j)
                         {
-                            T += A(i,j)*timestep;
+                            m_T += A(i,j)*timestep;
                         }
                     }
                     
-                    op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+                    op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
                     
-                    for(k = 0; k < nvar; k++)
+                    for(k = 0; k < m_nvar; k++)
                     {
-                        Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
-                        Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
+                        Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
+                        Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),m_F[i][k],1,m_F[i][k],1);
                     }
                 }
                 else if(type == eIMEX)
                 { 
                     if(m_numstages==1)
                     {
-                        T= t_old[0]+timestep;
+                        m_T= t_old[0]+timestep;
                     }
                     else 
                     {
-                        T= t_old[0];
+                        m_T= t_old[0];
                         for(int j=0; j<=i; ++j)
                         {
-                            T += A(i,j)*timestep;
+                            m_T += A(i,j)*timestep;
                         }
                     }	
                     
                     if(fabs(A(i,i)) > NekConstants::kNekZeroTol)
                     {
-                        op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+                        op.DoImplicitSolve(m_tmp, m_Y, m_T, A(i,i)*timestep);
                         
-                        for(k = 0; k < nvar; k++)
+                        for(k = 0; k < m_nvar; k++)
                         {
-                            Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
-                            Vmath::Smul(npoints,1.0/(A(i,i)*timestep),
-                                        F[i][k],1,F[i][k],1);
+                            Vmath::Vsub(m_npoints,m_Y[k],1,m_tmp[k],1,m_F[i][k],1);
+                            Vmath::Smul(m_npoints,1.0/(A(i,i)*timestep),
+                                        m_F[i][k],1,m_F[i][k],1);
                         }
                     }
-                    op.DoOdeRhs(Y, F_IMEX[i], T);
+                    op.DoOdeRhs(m_Y, m_F_IMEX[i], m_T);
                 }
                 else if( type == eExplicit)
                 {
                     // ensure solution is in correct space
-                    op.DoProjection(Y,Y,T); 
-                    op.DoOdeRhs(Y, F[i], T);                   
+                    op.DoProjection(m_Y,m_Y,m_T); 
+                    op.DoOdeRhs(m_Y, m_F[i], m_T);                   
                 }
             }
             
@@ -1584,9 +1585,9 @@ namespace Nektar
             int i_start = 0;
             if( (m_lastStageEqualsNewSolution) ) 
             {
-                for(k = 0; k < nvar; k++)
+                for(k = 0; k < m_nvar; k++)
                 {
-                    Vmath::Vcopy(npoints,Y[k],1,y_new[0][k],1);
+                    Vmath::Vcopy(m_npoints,m_Y[k],1,y_new[0][k],1);
                 }
 		
                 if (m_numstages==1 && type == eIMEX)
@@ -1613,15 +1614,15 @@ namespace Nektar
                 // The solution at the new time level is a linear
                 // combination of: 
                 // 1: the stage derivatives
-                for(k = 0; k < nvar; k++)
+                for(k = 0; k < m_nvar; k++)
                 {
-                    Vmath::Smul(npoints,timestep*B(i,0),F[0][k],1,
+                    Vmath::Smul(m_npoints,timestep*B(i,0),m_F[0][k],1,
                                 y_new[i][k],1);
                     
                     if(type == eIMEX)
                     {
-                        Vmath::Svtvp(npoints,timestep*B_IMEX(i,0),
-                                     F_IMEX[0][k],1,y_new[i][k],1,
+                        Vmath::Svtvp(m_npoints,timestep*B_IMEX(i,0),
+                                     m_F_IMEX[0][k],1,y_new[i][k],1,
                                      y_new[i][k],1);
                     }
                 }
@@ -1633,15 +1634,15 @@ namespace Nektar
 		
                 for(j = 1; j < m_numstages; j++)
                 {
-                    for(k = 0; k < nvar; k++)
+                    for(k = 0; k < m_nvar; k++)
                     {					
-                        Vmath::Svtvp(npoints,timestep*B(i,j),F[j][k],1,
+                        Vmath::Svtvp(m_npoints,timestep*B(i,j),m_F[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
                         
                         if(type == eIMEX)
                         {
-                            Vmath::Svtvp(npoints,timestep*B_IMEX(i,j),
-                                         F_IMEX[j][k],1,y_new[i][k],1,
+                            Vmath::Svtvp(m_npoints,timestep*B_IMEX(i,j),
+                                         m_F_IMEX[j][k],1,y_new[i][k],1,
                                          y_new[i][k],1);
                         }
                     }
@@ -1655,9 +1656,9 @@ namespace Nektar
                 // time level
                 for(j = 0; j < m_numsteps; j++)
                 {
-                    for(k = 0; k < nvar; k++)
+                    for(k = 0; k < m_nvar; k++)
                     {
-                        Vmath::Svtvp(npoints,V(i,j),y_old[j][k],1,
+                        Vmath::Svtvp(m_npoints,V(i,j),y_old[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
                     }
                     if(m_numstages != 1 || type != eIMEX)

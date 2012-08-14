@@ -65,7 +65,9 @@ namespace Nektar
          */
         UnsteadySystem::UnsteadySystem(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-            : EquationSystem(pSession)
+            : EquationSystem(pSession),
+              m_infosteps(10)
+
         {
         }
 
@@ -110,9 +112,11 @@ namespace Nektar
             {
                 m_filters.push_back(GetFilterFactory().CreateInstance(x->first, m_session, x->second));
             }
+
+
         }
-
-
+        
+        
         /**
          *
          */
@@ -939,7 +943,7 @@ namespace Nektar
             NekDouble CFLCG[2]  = {1.0,1.0};
             NekDouble CFL;
 		
-            if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+            if (m_projectionType == MultiRegions::eDiscontinuous)
             {
                 CFL = CFLDG[n];
             }

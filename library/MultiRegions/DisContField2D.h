@@ -148,6 +148,8 @@ namespace Nektar
                 const SpatialDomains::BoundaryConditions &bcs,
                 const std::string                        &variable);
             
+            bool IsLeftAdjacentEdge(const int n, const int e);
+
             virtual void v_GetFwdBwdTracePhys(
                 const Array<OneD, const NekDouble> &field,
                       Array<OneD,       NekDouble> &Fwd,
@@ -162,10 +164,10 @@ namespace Nektar
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD,       NekDouble> &outarray);
-            virtual void v_AddTraceBiIntegral(
-                const Array<OneD, const NekDouble> &Fwd,
-                const Array<OneD, const NekDouble> &Bwd,
-                      Array<OneD,       NekDouble> &outarray);
+            virtual void v_AddFwdBwdTraceIntegral(
+                const Array<OneD, const NekDouble> &Fwd, 
+                const Array<OneD, const NekDouble> &Bwd, 
+                Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                 const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD,       NekDouble> &outarray);

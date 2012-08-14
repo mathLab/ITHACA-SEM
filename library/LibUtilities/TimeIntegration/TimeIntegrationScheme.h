@@ -74,6 +74,7 @@ namespace Nektar
             eAdamsBashforthOrder3,            //!< Adams-Bashforth Forward multi-step scheme of order 3
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
             eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
+            eBDFImplicitOrder1,               //!< BDF multi-step scheme of order 1 (implicit)
             eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme 4th order explicit
             eRungeKutta2_ModifiedEuler,       //!< Runge-Kutta multi-stage scheme 2nd order explicit
@@ -108,6 +109,7 @@ namespace Nektar
             "AdamsBashforthOrder3",                    
             "AdamsMoultonOrder1",           
             "AdamsMoultonOrder2",
+            "BDFImplicitOrder1",
             "BDFImplicitOrder2",
             "ClassicalRungeKutta4",
             "RungeKutta2_ModifiedEuler",
@@ -529,21 +531,22 @@ namespace Nektar
                                                         //   | dt f(u^{n-2})|             | 2 | 
                                                         //    -            -               - -
 
-            Array<OneD, Array<TwoD,NekDouble> >   m_A;
-            Array<OneD, Array<TwoD,NekDouble> >   m_B;
-            Array<TwoD,NekDouble>    m_U;
-            Array<TwoD,NekDouble>    m_V;
+            Array<OneD, Array<TwoD,NekDouble> > m_A;
+            Array<OneD, Array<TwoD,NekDouble> > m_B;
+            Array<TwoD,NekDouble>               m_U;
+            Array<TwoD,NekDouble>               m_V;
 
         private: 
-            bool m_initialised;
-            int  nvar;
-            int  npoints;
-            DoubleArray Y;
-            DoubleArray tmp;
-            TripleArray F;
-            TripleArray F_IMEX;  // Used to store the Explicit stage derivative of IMEX schemes
-                                        // The implicit part will be stored in F
-            NekDouble   T;
+            bool m_initialised;   /// bool to identify if array has been initialised 
+            int  m_nvar;          /// The number of variables in integration scheme. 
+            int  m_npoints;       /// The size of inner data which is stored for reuse. 
+            DoubleArray m_Y;      /// Array containing the stage values 
+            DoubleArray m_tmp;    /// explicit right hand side of each stage equation
+
+            TripleArray m_F;      /// Array corresponding to the stage Derivatives 
+            TripleArray m_F_IMEX; /// Used to store the Explicit stage derivative of IMEX schemes
+
+            NekDouble   m_T;     ///  Time at the different stages
 
             template <typename> friend class Nektar::MemoryManager;
             LIB_UTILITIES_EXPORT friend TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);

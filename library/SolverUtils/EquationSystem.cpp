@@ -213,9 +213,13 @@ namespace Nektar
                 {
                     m_projectionType = MultiRegions::eGalerkin;
                 }
+                else if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+                {
+                    m_projectionType = MultiRegions::eMixed_CG_Discontinuous;
+                }                        
                 else if(ProjectStr == "DisContinuous")
                 {
-                    m_projectionType = MultiRegions::eDiscontinuousGalerkin;
+                    m_projectionType = MultiRegions::eDiscontinuous;
                 }
                 else
                 {
@@ -241,8 +245,8 @@ namespace Nektar
             m_spacedim = m_graph->GetSpaceDimension()+m_HomoDirec;
             m_expdim   = m_graph->GetMeshDimension();
 
-            // Continuous field
-            if(m_projectionType == MultiRegions::eGalerkin)
+            /// Continuous field
+            if(m_projectionType == MultiRegions::eGalerkin||m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 switch(m_expdim)
                 {
@@ -356,6 +360,19 @@ namespace Nektar
                                     ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
                                                         DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
                             }
+
+                            if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
+                            {
+                                /// Setting up the normals
+                                m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                                for(i = 0; i < m_spacedim; ++i)
+                                {
+                                    m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
+                                }
+                                
+                                m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+                            }
+
                         }
 
                         break;
@@ -1035,7 +1052,7 @@ namespace Nektar
             // The number of variables can be different from the dimension 
             // of the base flow
             m_base =Array<OneD, MultiRegions::ExpListSharedPtr> (m_spacedim);
-            if (m_projectionType == MultiRegions::eGalerkin)
+            if (m_projectionType == MultiRegions::eGalerkin||m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 switch (m_expdim)
                 {
@@ -2006,7 +2023,7 @@ namespace Nektar
                     }
                         break;
                         
-                    case MultiRegions::eDiscontinuousGalerkin:
+                    case MultiRegions::eDiscontinuous:
                     {
                         if (AdvectionType == "WeakDG")
                         {
@@ -2035,9 +2052,13 @@ namespace Nektar
             {
                 out << "\tProjection Type : Continuous Galerkin" <<endl;
             }
-            else if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+            else if (m_projectionType == MultiRegions::eDiscontinuous)
             {
                 out << "\tProjection Type : Weak Discontinuous Galerkin" <<endl;
+            }
+            else if (m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
+            {
+                out << "\tProjection Type : Mixed Continuous Galerkin and Discontinuous" <<endl;
             }
         }
 

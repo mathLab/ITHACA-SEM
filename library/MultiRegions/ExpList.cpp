@@ -2208,7 +2208,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_AddTraceBiIntegral(
+        void ExpList::v_AddFwdBwdTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fwd,
                                 const Array<OneD, const NekDouble> &Bwd,
                                       Array<OneD, NekDouble> &outarray)

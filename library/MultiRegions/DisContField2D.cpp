@@ -126,7 +126,22 @@ namespace Nektar
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
                 
-                SetUpPhysNormals();
+                if(m_session->DefinesSolverInfo("PROJECTION"))
+                {
+                    std::string ProjectStr = m_session->GetSolverInfo("PROJECTION");
+                    if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+                    {
+                        SetUpDG();
+                    }
+                    else
+                    {
+                        SetUpPhysNormals();
+                    }
+                }
+                else
+                {
+                    SetUpPhysNormals();
+                }
             }
         }
 
@@ -195,7 +210,23 @@ namespace Nektar
                         cnt += m_bndCondExpansions[i]->GetExpSize();
                     }
                     
-                    SetUpPhysNormals();
+
+                    if(m_session->DefinesSolverInfo("PROJECTION"))
+                    {
+                        std::string ProjectStr = m_session->GetSolverInfo("PROJECTION");
+                        if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+                        {
+                            SetUpDG();
+                        }
+                        else
+                        {
+                            SetUpPhysNormals();
+                        }
+                    }
+                    else
+                    {
+                        SetUpPhysNormals();
+                    }
                 }
             }
             else
@@ -669,6 +700,48 @@ namespace Nektar
             return glo_matrix;
         }
 
+
+        bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
+        {
+            set<int>::iterator     it;
+            LocalRegions::Expansion1DSharedPtr traceEl = 
+                boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((m_traceMap->GetElmtToTrace())[n][e]);
+            
+            int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
+            
+            bool fwd = true;
+            if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
+                traceEl->GetRightAdjacentElementEdge() == -1)
+            {
+                // Boundary edge (1 connected element). Do nothing in
+                // serial.
+                //it = m_boundaryEdges.find(elmtToTrace[n][e]->GetElmtId());
+                it = m_boundaryEdges.find(traceEl->GetElmtId());
+                
+                // If the edge does not have a boundary condition set on
+                // it, then assume it is a partition edge.
+                if (it == m_boundaryEdges.end())
+                {
+                    fwd = m_traceMap->
+                        GetTraceToUniversalMapUnique(offset) > 0;
+                }
+            }
+            else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
+                     traceEl->GetRightAdjacentElementEdge() != -1)
+            {
+                // Non-boundary edge (2 connected elements).
+                fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
+                    (traceEl->GetLeftAdjacentElementExp().get()) ==
+                    (*m_exp)[n].get();
+            }
+            else
+            {
+                ASSERTL2(false, "Unconnected trace element!");
+            }
+
+            return fwd;
+        }
+            
         // Construct the two trace vectors of the inner and outer
         // trace solution from the field contained in m_phys, where
         // the Weak dirichlet boundary conditions are listed in the
@@ -715,10 +788,9 @@ namespace Nektar
             StdRegions::Orientation edgedir;
             int nquad_e,cnt,n,e,npts,offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            set<int>::iterator     it;
             map<int,int>::iterator it2;
             boost::unordered_map<int,pair<int,int> >::iterator it3;
-            
+
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
             
@@ -726,48 +798,18 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
+            bool fwd = true;
             for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
 
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    LocalRegions::Expansion1DSharedPtr traceEl = 
-                        boost::dynamic_pointer_cast<
-                            LocalRegions::Expansion1D>(elmtToTrace[n][e]);
+
+                    int offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     
-                    offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
-                    
-                    bool fwd = true;
-                    if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
-                        traceEl->GetRightAdjacentElementEdge() == -1)
-                    {
-                        // Boundary edge (1 connected element). Do nothing in
-                        // serial.
-                        it = m_boundaryEdges.find(
-                            elmtToTrace[n][e]->GetElmtId());
-                        
-                        // If the edge does not have a boundary condition set on
-                        // it, then assume it is a partition edge.
-                        if (it == m_boundaryEdges.end())
-                        {
-                            fwd = m_traceMap->
-                                GetTraceToUniversalMapUnique(offset) > 0;
-                        }
-                    }
-                    else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
-                             traceEl->GetRightAdjacentElementEdge() != -1)
-                    {
-                        // Non-boundary edge (2 connected elements).
-                        fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                            (traceEl->GetLeftAdjacentElementExp().get()) ==
-                            (*m_exp)[n].get();
-                    }
-                    else
-                    {
-                        ASSERTL2(false, "Unconnected trace element!");
-                    }
-                    
+                    fwd = IsLeftAdjacentEdge(n,e);
+
                     if (fwd)
                     {
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
@@ -951,15 +993,14 @@ namespace Nektar
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
          * 
-         * Given some quantity \f$ \vec{q} \cdot \vec{n} \f$, where \f$ \vec{n}
-         * \f$ denotes the elemental normals, this routine calculates the
-         * integral 
+         * Given some quantity \f$ \vec{Fn} \f$, which conatins this
+         * routine calculates the integral
          * 
          * \f[ 
-         * \int_{\Omega^e} \vec{q}\cdot\vec{n}\, \mathrm{d}S
+         * \int_{\Omega^e} \vec{Fn}, \mathrm{d}S
          * \f] 
          * 
-         * and adds this to each element's coefficient space.
+         * and adds this to the coefficient space provided by outarray.
          * 
          * @see Expansion2D::AddEdgeNormBoundaryInt
          * 
@@ -985,6 +1026,63 @@ namespace Nektar
                     (*m_exp)[n]->AddEdgeNormBoundaryInt(
                         e, elmtToTrace[n][e], Fn+t_offset,
                         e_outarray = outarray+offset);
+                }
+            }
+        }
+
+
+        /**
+         * @brief Add trace contributions into elemental coefficient spaces.
+         * 
+         * Given some quantity \f$ \vec{q} \f$, calculate the elemental integral
+         * 
+         * \f[ 
+         * \int_{\Omega^e} \vec{q}, \mathrm{d}S
+         * \f] 
+         * 
+         * and adds this to the coefficient space provided by
+         * outarray. The value of q is determined from the routine
+         * IsLeftAdjacentEdge() which if true we use Fwd else we use
+         * Bwd
+         * 
+         * @see Expansion2D::AddEdgeNormBoundaryInt
+         * 
+         * 
+         * @param Fwd       The trace quantities associated with left (fwd) adjancent elmt. 
+         * @param Bwd       The trace quantities associated with right (bwd) adjacent elet.
+         * @param outarray  Resulting 2D coefficient space.
+         */
+        void DisContField2D::v_AddFwdBwdTraceIntegral(
+            const Array<OneD, const NekDouble> &Fwd, 
+            const Array<OneD, const NekDouble> &Bwd, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    
+                    // Evaluate upwind flux less local edge 
+                    if(IsLeftAdjacentEdge(n,e))
+                    {
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                        e, elmtToTrace[n][e], Fwd+t_offset,
+                        e_outarray = outarray+offset);
+                    }
+                    else
+                    {
+                        (*m_exp)[n]->AddEdgeNormBoundaryInt(
+                        e, elmtToTrace[n][e], Bwd+t_offset,
+                        e_outarray = outarray+offset);
+                    }
+
                 }
             }
         }
@@ -1046,32 +1144,6 @@ namespace Nektar
             }
         }
 
-        void DisContField2D::v_AddTraceBiIntegral(
-            const Array<OneD, const NekDouble> &Fwd,
-            const Array<OneD, const NekDouble> &Bwd,
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            int e,n,offset, t_offset;
-            Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            for(n = 0; n < GetExpSize(); ++n)
-            {
-                offset = GetCoeff_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
-                {
-                    t_offset = GetTrace()->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
-
-                    (*m_exp)[n]->AddEdgeNormBoundaryBiInt(
-                        e, elmtToTrace[n][e],
-                        Fwd + t_offset,
-                        Bwd + t_offset,
-                        e_outarray = outarray+offset);
-                }
-            }
-        }
 
         /** 
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$

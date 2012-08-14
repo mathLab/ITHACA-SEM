@@ -167,12 +167,12 @@ namespace Nektar
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
             void SetCoeffPhysOffsets(void);
-
+            
             virtual void v_ReadGlobalOptimizationParameters();
-
+            
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals();
-//                                const StdRegions::StdExpansionVector &locexp);
+            /// const StdRegions::StdExpansionVector &locexp);
 
             /// Set up the tangents on each expansion.
             virtual void v_SetUpPhysTangents(

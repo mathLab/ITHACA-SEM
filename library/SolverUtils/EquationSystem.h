@@ -75,6 +75,9 @@ namespace Nektar
             /// Destructor
             SOLVER_UTILS_EXPORT virtual ~EquationSystem();
 
+            // Set up trace normals if required
+            SOLVER_UTILS_EXPORT void SetUpTraceNormals(void);
+
             /// Initialises the members of this object.
             SOLVER_UTILS_EXPORT inline void InitObject();
 
@@ -403,9 +406,9 @@ namespace Nektar
             int                                  m_checksteps;               ///< Number of steps between checkpoints
             int                                  m_spacedim;                 ///< Spatial dimension (> expansion dim)
             int                                  m_expdim;                   ///< Dimension of the expansion
-			bool                                 m_SingleMode;               ///< Flag to determine if use single mode or not
-			bool                                 m_HalfMode;                 ///< Flag to determine if use half mode or not
-			bool                                 m_MultipleModes;            ///< Flag to determine if use multiple mode or not
+            bool                                 m_SingleMode;               ///< Flag to determine if use single mode or not.
+            bool                                 m_HalfMode;                 ///< Flag to determine if use half mode or not
+            bool                                 m_MultipleModes;            ///< Flag to determine if use multiple mode or not
             enum MultiRegions::ProjectionType    m_projectionType;           ///< Type of projection, i.e. Continuous or Discontinuous
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;             ///< Array holding the forward normals
             
@@ -419,7 +422,7 @@ namespace Nektar
             Array<OneD, bool> m_checkIfSystemSingular;
 
             /// Number of Quadrature points used to work out the error
-            int m_NumQuadPointsError;
+            int  m_NumQuadPointsError;
             bool m_UseContCoeff;
 
             /// Parameter for homogeneous expansions

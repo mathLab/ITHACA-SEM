@@ -121,7 +121,7 @@ namespace Nektar
                                  const std::string &variable,
                                  const bool DeclareCoeffPhysArrays,
                                  const bool CheckIfSingularSystem):
-            DisContField2D(pSession,graph2D,variable,false),
+            DisContField2D(pSession,graph2D,variable,false,DeclareCoeffPhysArrays),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),

@@ -2943,7 +2943,7 @@ namespace Nektar
                 }
             }
             break;
-
+            
             case eGLL_Lagrange:
             {
                 switch(shape)

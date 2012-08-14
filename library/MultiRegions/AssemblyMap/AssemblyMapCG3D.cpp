@@ -1042,8 +1042,8 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if (m_solnType == eDirectMultiLevelStaticCond || 
-                m_solnType == eIterativeMultiLevelStaticCond && nGraphVerts )
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {

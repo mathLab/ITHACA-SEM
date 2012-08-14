@@ -85,9 +85,13 @@ namespace Nektar
             {
                 m_projectionType = MultiRegions::eGalerkin;
             }
+            else if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+            {
+                m_projectionType = MultiRegions::eMixed_CG_Discontinuous;
+            }                        
             else if(ProjectStr == "DisContinuous")
             {
-                m_projectionType = MultiRegions::eDiscontinuousGalerkin;
+                m_projectionType = MultiRegions::eDiscontinuous;
             }
             else
             {
@@ -122,7 +126,7 @@ namespace Nektar
                                     const Array<OneD, int> &vel_loc, 
                                     const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
                                     Array<OneD, Array<OneD, NekDouble> > &pOutarray,
-                                    NekDouble m_time,
+                                    NekDouble time,
                                     Array<OneD, NekDouble> &pWk)
     {
         int i,j;
@@ -131,7 +135,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
         Array<OneD, NekDouble > Deriv;
 	
-        m_nConvectiveFields = nConvectiveFields;
+        ASSERTL1(nConvectiveFields == pInarray.num_elements(),"Number of convective fields and Inarray are not compatible");
         
         for(i = 0; i < VelDim; ++i)
         {
@@ -147,6 +151,25 @@ namespace Nektar
             }
         }
         
+
+        DoAdvection(pFields,velocity,pInarray,pOutarray,time,pWk);
+    }
+
+    void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, 
+                                    const Array<OneD, const Array<OneD, NekDouble> > &velocity, 
+                                    const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
+                                    Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+                                    NekDouble time,
+                                    Array<OneD, NekDouble> &pWk)
+    {
+        int i;
+        int nqtot  = pFields[0]->GetTotPoints();
+        int VelDim = velocity.num_elements();
+        Array<OneD, NekDouble > Deriv;
+	
+
+        m_nConvectiveFields = pInarray.num_elements();
+
         // Set up Derivative work space;
         if(pWk.num_elements())
         {
@@ -161,7 +184,7 @@ namespace Nektar
 	
         for(i=0; i< m_nConvectiveFields; ++i)
         {
-            v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,m_time,Deriv);
+            v_ComputeAdvectionTerm(pFields,velocity,pInarray[i],pOutarray[i],i,time,Deriv);
             Vmath::Neg(nqtot,pOutarray[i],1);
         }
     }

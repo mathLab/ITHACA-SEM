@@ -87,7 +87,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-	  case MultiRegions::eDiscontinuousGalerkin:
+	  case MultiRegions::eDiscontinuous:
 	{
 	  //-------------------------------------------------------
 	  //inarray in physical space
@@ -138,7 +138,8 @@ namespace Nektar
 	    }
 	}
 	break;
-	case MultiRegions::eGalerkin:
+      case MultiRegions::eGalerkin:
+      case MultiRegions::eMixed_CG_Discontinuous:
 	{
 	  Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
 	  Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
@@ -196,14 +197,15 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-		  case MultiRegions::eDiscontinuousGalerkin:
+		  case MultiRegions::eDiscontinuous:
 	{
 	  ConservativeToPrimitive(inarray,outarray);
 	  SetBoundaryConditions(outarray,time);
 	  PrimitiveToConservative(outarray,outarray);
 	}
 	break;
-		  case MultiRegions::eGalerkin:
+      case MultiRegions::eGalerkin:
+      case MultiRegions::eMixed_CG_Discontinuous:
 	{
 	  ConservativeToPrimitive(inarray,outarray);
 	  EquationSystem::SetBoundaryConditions(time);
@@ -693,27 +695,27 @@ namespace Nektar
     
         switch(m_projectionType)
         {
-            case MultiRegions::eDiscontinuousGalerkin:
-                 {                   
-		   GetSource(source,m_time);
-
-		   //Source term solely for the p' equation (outarray[0])
-		   m_fields[0]->IProductWRTBase(source,source); 
-		   Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
-		   
-                 }
+        case MultiRegions::eDiscontinuous:
+            {                   
+                GetSource(source,m_time);
+                
+                //Source term solely for the p' equation (outarray[0])
+                m_fields[0]->IProductWRTBase(source,source); 
+                Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
+                
+            }
             break;
-
-            case MultiRegions::eGalerkin:
-                 {
-                   GetSource(source,m_time);
-
-		   //Source term solely for the p' equation (outarray[0])
-		   Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);	               }
+        case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
+            {
+                GetSource(source,m_time);
+                
+                //Source term solely for the p' equation (outarray[0])
+                Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);	               }
             break;
-
-            default:
-                ASSERTL0(false,"Unknown projection scheme for the APE");
+            
+        default:
+            ASSERTL0(false,"Unknown projection scheme for the APE");
             break;
         }
     }

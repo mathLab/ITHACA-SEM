@@ -109,7 +109,7 @@ namespace Nektar
         // Load parameter alpha.
         m_session->LoadParameter("Alpha", m_alpha);
         
-        ASSERTL0(m_projectionType == MultiRegions::eDiscontinuousGalerkin,
+        ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
                  "CG not implemented yet.");
 
         // Set up storage arrays.
@@ -193,7 +193,7 @@ namespace Nektar
         
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();

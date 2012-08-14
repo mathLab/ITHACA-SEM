@@ -74,7 +74,7 @@ namespace Nektar
                 break;
             }
             // Discontinuous field 
-            case MultiRegions::eDiscontinuousGalerkin:
+            case MultiRegions::eDiscontinuous:
             {
                 string advName;
                 string riemName;
@@ -224,7 +224,7 @@ namespace Nektar
         switch(m_projectionType)
         {
             // Discontinuous projection
-            case MultiRegions::eDiscontinuousGalerkin:
+            case MultiRegions::eDiscontinuous:
             {
                 // Number of quadrature points
                 int nQuadraturePts = GetNpoints();
@@ -239,6 +239,7 @@ namespace Nektar
                 
             // Continuous projection
             case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
                 

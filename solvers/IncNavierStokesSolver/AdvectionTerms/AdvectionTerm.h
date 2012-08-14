@@ -87,6 +87,13 @@ namespace Nektar
                          Array<OneD, Array<OneD, NekDouble> > &pOutarray,
 						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
+
+        void DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                         const Array<OneD, const Array<OneD, NekDouble> > &Velocity,
+                         const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
+                         Array<OneD, Array<OneD, NekDouble> > &pOutarray,
+						 NekDouble m_time,
+                         Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
 	protected:
         LibUtilities::SessionReaderSharedPtr        m_session;
         /// Name of the session

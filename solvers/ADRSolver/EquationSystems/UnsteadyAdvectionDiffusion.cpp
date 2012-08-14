@@ -86,7 +86,7 @@ namespace Nektar
 
         switch (m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
             {
                 int ncoeffs    = GetNcoeffs();
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
@@ -109,7 +109,8 @@ namespace Nektar
 
                 break;
             }
-            case MultiRegions::eGalerkin:
+        case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
                 // Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)

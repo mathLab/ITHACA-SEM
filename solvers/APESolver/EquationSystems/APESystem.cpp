@@ -93,8 +93,8 @@ namespace Nektar
                                         "Invalid time integration type.");
 
 	
-	// if discontinuous Galerkin determine numerical flux to use
-	if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+	// if discontinuous  determine numerical flux to use
+	if (m_projectionType == MultiRegions::eDiscontinuous)
 	  {
 	    ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
 		     "No UPWINDTYPE defined in session.");

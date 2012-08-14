@@ -80,37 +80,37 @@ namespace Nektar
 	 */
     void PulseWaveSystem::v_InitObject()
     {       
-		m_filename = m_session->GetFilename();
-		
+        m_filename = m_session->GetFilename();
+	
         // Save the basename of input file name for output details.
         m_sessionName = m_filename;
         m_sessionName = m_sessionName.substr(0, m_sessionName.find_last_of("."));
         
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_session);
-		m_domainsize = m_graph->GetDomain().size();
+        m_domainsize = m_graph->GetDomain().size();
         m_UseContCoeff = false;
 		
         // Also read and store the boundary conditions
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-								::AllocateSharedPtr(m_session, m_graph);
-		
+            ::AllocateSharedPtr(m_session, m_graph);
+	
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
         
         // Setting parameteres for homogenous problems
         m_HomoDirec       = 0;
         m_useFFT          = false;
-		m_dealiasing      = false;
+        m_dealiasing      = false;
         m_HomogeneousType = eNotHomogeneous;
-		
+	
         		
         // Determine projectiontype
         if(m_session->DefinesSolverInfo("PROJECTION"))
         {
             std::string ProjectStr
-			= m_session->GetSolverInfo("PROJECTION");
-			
+                = m_session->GetSolverInfo("PROJECTION");
+            
             if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
                (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
             {
@@ -118,46 +118,47 @@ namespace Nektar
             }
             else if(ProjectStr == "DisContinuous")
             {
-                m_projectionType = MultiRegions::eDiscontinuousGalerkin;
+                m_projectionType = MultiRegions::eDiscontinuous;
             }
             else
             {
                 ASSERTL0(false,"PROJECTION value not recognised");
             }
         }
-		
+	
         int i;
         int nvariables = m_session->GetVariables().size();
         bool DeclareCoeffPhysArrays = true;
-		
+	
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         m_spacedim = m_graph->GetSpaceDimension()+m_HomoDirec;
         m_expdim   = m_graph->GetMeshDimension();
-		
+	
         // Continuous Galerkin projection
-        if(m_projectionType == MultiRegions::eGalerkin)
+        if((m_projectionType == MultiRegions::eGalerkin)
+           ||(m_projectionType == MultiRegions::eMixed_CG_Discontinuous))
         {
             switch(m_expdim)
             {
-                case 1:
+            case 1:
                 {
-					for(i = 0 ; i < m_fields.num_elements(); i++)
-					{
-						m_fields[i] = MemoryManager<MultiRegions::ContField1D>
-						::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i));
-					}
-				break;
+                    for(i = 0 ; i < m_fields.num_elements(); i++)
+                    {
+                        m_fields[i] = MemoryManager<MultiRegions::ContField1D>
+                            ::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i));
+                    }
+                    break;
                 }
-				case 2:
+            case 2:
                 {
                     ASSERTL0(false,"1D Solver; Expansion dimension 2 not allowed");					
                     break;
                 }
-                case 3:
-				{
-					ASSERTL0(false,"1D Solver; Expansion dimension 3 not allowed");
-					break;
-				}
+            case 3:
+                {
+                    ASSERTL0(false,"1D Solver; Expansion dimension 3 not allowed");
+                    break;
+                }
 				default:
 					ASSERTL0(false,"Expansion dimension not recognised");
 					break;
@@ -169,93 +170,93 @@ namespace Nektar
             {
                 case 1:
                 {
-					/* In case of a PulseWavePropagation Problem with multiple subdomains use this specialized constructor 
-					 * to set up m_vessels and m_traces. i is the variable for the currently processed subdomain*/
-					if(m_graph->GetDomain().size() > 1)
-					{
-						//cout << "\n-- setting up m_vessels --";
-						m_vessels = Array<OneD, MultiRegions::ExpListSharedPtr> (nvariables*m_domainsize);
-						const SpatialDomains::CompositeMap domain = (m_graph->GetDomain());
-						
-						for(i = 0 ; i < m_vessels.num_elements(); i++)
-						{
-							m_vessels[i] = MemoryManager<MultiRegions::DisContField1D>
-								::AllocateSharedPtr(m_session,domain,m_graph,m_session->GetVariable(i%nvariables),(i/nvariables));
-						}
-						//cout << "-- m_vessels are set up --\n"<<endl;
-				
-						// Only needed for output: whole field
-						m_outfields = Array<OneD, MultiRegions::ExpListSharedPtr> (nvariables);
-						for(i = 0 ; i < m_outfields.num_elements(); i++)
-						{
-							m_outfields[i] = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(m_session,m_graph,
-											m_session->GetVariable(i));
-						}
-					}
-					else // If only one domain
-					{
-						for(i = 0 ; i < m_fields.num_elements(); i++)
-						{
-							m_fields[i] = MemoryManager<MultiRegions
-                               ::DisContField1D>::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i));
-						}
-					}					
-                    break;
-                }
-				case 2:
-				case 3:
-                {
-					ASSERTL0(false,"1D Solver; Expansion dimension 2 or 3 not allowed");										
-                    break;
-                }
-				default:
-					ASSERTL0(false,"Expansion dimension not recognised");
-					break;
-            }
+                    /* In case of a PulseWavePropagation Problem with multiple subdomains use this specialized constructor 
+                     * to set up m_vessels and m_traces. i is the variable for the currently processed subdomain*/
+                    if(m_graph->GetDomain().size() > 1)
+                    {
+                        //cout << "\n-- setting up m_vessels --";
+                        m_vessels = Array<OneD, MultiRegions::ExpListSharedPtr> (nvariables*m_domainsize);
+                        const SpatialDomains::CompositeMap domain = (m_graph->GetDomain());
 			
+                        for(i = 0 ; i < m_vessels.num_elements(); i++)
+                        {
+                            m_vessels[i] = MemoryManager<MultiRegions::DisContField1D>
+                                ::AllocateSharedPtr(m_session,domain,m_graph,m_session->GetVariable(i%nvariables),(i/nvariables));
+                        }
+                        //cout << "-- m_vessels are set up --\n"<<endl;
+			
+                        // Only needed for output: whole field
+                        m_outfields = Array<OneD, MultiRegions::ExpListSharedPtr> (nvariables);
+                        for(i = 0 ; i < m_outfields.num_elements(); i++)
+                        {
+                            m_outfields[i] = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(m_session,m_graph,
+                                                                                                            m_session->GetVariable(i));
+                        }
+                    }
+                    else // If only one domain
+                    {
+                        for(i = 0 ; i < m_fields.num_elements(); i++)
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions
+                                ::DisContField1D>::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(i));
+                        }
+                    }					
+                    break;
+                }
+            case 2:
+            case 3:
+                {
+                    ASSERTL0(false,"1D Solver; Expansion dimension 2 or 3 not allowed");										
+                    break;
+                }
+            default:
+                ASSERTL0(false,"Expansion dimension not recognised");
+                break;
+            }
+            
             // Set up Normals.
             switch(m_expdim)
             {
-				case 1:
-				{
-					if (m_graph->GetDomain().size() > 1)
-					{
-						m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim*m_domainsize);
-						
-						for(int j = 0; j < m_domainsize; ++j)
-						{
-							for(i = 0; i < m_spacedim; ++i)
-							{						
-								m_traceNormals[j*m_spacedim+i] = Array<OneD, NekDouble> (m_vessels[j*nvariables]->GetTrace(j)->GetExpSize());
-							}
-							//m_vessels[j*nvariables]->GetTrace(j)->GetNormals(m_traceNormals);
-						}
-					}
-					else
-					{
-						m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-						
-						for(i = 0; i < m_spacedim; ++i)
-						{
-							m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
-						}
-						m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
-					}
-
-					break;
-				}
-				case 2:
-				case 3:
+            case 1:
                 {
-					ASSERTL0(false,"1D Solver; Expansion dimension 2 or 3 not allowed");					
+                    if (m_graph->GetDomain().size() > 1)
+                    {
+                        m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim*m_domainsize);
+			
+                        for(int j = 0; j < m_domainsize; ++j)
+                        {
+                            for(i = 0; i < m_spacedim; ++i)
+                            {						
+                                m_traceNormals[j*m_spacedim+i] = Array<OneD, NekDouble> (m_vessels[j*nvariables]->GetTrace(j)->GetExpSize());
+                            }
+                            //m_vessels[j*nvariables]->GetTrace(j)->GetNormals(m_traceNormals);
+                        }
+                    }
+                    else
+                    {
+                        m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+			
+                        for(i = 0; i < m_spacedim; ++i)
+                        {
+                            m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
+                        }
+                        m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+                    }
+                    
                     break;
                 }
-				default:
-                    ASSERTL0(false,"Expansion dimension not recognised");
+            case 2:
+            case 3:
+                {
+                    ASSERTL0(false,"1D Solver; Expansion dimension 2 or 3 not allowed");					
                     break;
+                }
+            default:
+                ASSERTL0(false,"Expansion dimension not recognised");
+                break;
             }
         }
-		
+	
         // Set Default Parameter
         m_session->LoadParameter("Time", m_time, 0.0);
         m_session->LoadParameter("TimeStep", m_timestep, 0.01);
@@ -264,12 +265,12 @@ namespace Nektar
         m_session->LoadParameter("FinTime", m_fintime, 0);
         m_session->LoadParameter("NumQuadPointsError", m_NumQuadPointsError, 0);
 		
-		if (m_graph->GetDomain().size() > 1)
-		{
-			m_fields[0] = m_vessels[0];
-			m_fields[1] = m_vessels[1];
-		}
-		
+        if (m_graph->GetDomain().size() > 1)
+        {
+            m_fields[0] = m_vessels[0];
+            m_fields[1] = m_vessels[1];
+        }
+	
         // Read in spatial data
         int nq = m_fields[0]->GetNpoints();
         m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>::AllocateSharedPtr(m_session, nq);
@@ -301,7 +302,7 @@ namespace Nektar
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
 		
 		// If Discontinuous Galerkin determine upwinding method to use
-		if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+		if (m_projectionType == MultiRegions::eDiscontinuous)
 		{		 
 			for (int i = 0; i < (int)SIZE_UpwindTypePulse; ++i)
 			{
@@ -413,36 +414,36 @@ namespace Nektar
 			 * at t = 0.0 with the Initial Conditions*/
 			for (int omega=0; omega<m_domainsize; omega++)
 			{
-				for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
-				{
-					if ((m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
-						|| (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction)
-						|| (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eMerging))
-					{
-						m_vessels[2*omega]->UpdateBndCondExpansion(l)->SetCoeff(m_vessels[2*omega]
-																				->GetPhys()[m_vessels[2*omega]->GetPhys().num_elements()-1]);
-						m_vessels[2*omega+1]->UpdateBndCondExpansion(l)->SetCoeff(m_vessels[2*omega+1]
-																				->GetPhys()[m_vessels[2*omega+1]->GetPhys().num_elements()-1]);
-					}
-				}
+                            for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
+                            {
+                                if ((m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
+                                    || (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eJunction)
+                                    || (m_vessels[2*omega]->GetBndConditions()[l]->GetBoundaryConditionType() == SpatialDomains::eMerging))
+                                {
+                                    m_vessels[2*omega]->UpdateBndCondExpansion(l)->SetCoeff(m_vessels[2*omega]
+                                                                                            ->GetPhys()[m_vessels[2*omega]->GetPhys().num_elements()-1]);
+                                    m_vessels[2*omega+1]->UpdateBndCondExpansion(l)->SetCoeff(m_vessels[2*omega+1]
+                                                                                              ->GetPhys()[m_vessels[2*omega+1]->GetPhys().num_elements()-1]);
+                                }
+                            }
 			}
 			
 			/* Check all boundary condition values for all subdomains
 			for (int omega=0; omega<m_domainsize; omega++)
 			{
-				for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
-				{
-					cout << "BC [domain: "<<omega<<"][point: "<<l<<"][A] = "<< m_vessels[2*omega]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
-					cout << "BC [domain: "<<omega<<"][point: "<<l<<"][u] = "<< m_vessels[2*omega+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
-				}
-				cout << endl;
+                        for (int l=0; l<m_vessels[2*omega]->GetBndConditions().num_elements(); l++)
+                        {
+                        cout << "BC [domain: "<<omega<<"][point: "<<l<<"][A] = "<< m_vessels[2*omega]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
+                        cout << "BC [domain: "<<omega<<"][point: "<<l<<"][u] = "<< m_vessels[2*omega+1]->UpdateBndCondExpansion(l)->GetCoeff(0)<<endl;
+                        }
+                        cout << endl;
 			}*/
 		}
 		
 		// In single domain case
 		else
 		{
-			SetInitialConditions();
+                    SetInitialConditions();
 		}
 		
 		/* Also initialise the StaticArea from the inputfile
@@ -452,7 +453,7 @@ namespace Nektar
 		MaterialProperties();
 		m_beta = m_betaglobal[0];
 		
-    }
+        }
 	
 	
 	/**

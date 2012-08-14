@@ -120,7 +120,7 @@ namespace Nektar
 
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
         {
             //-------------------------------------------------------
             //inarray in physical space
@@ -154,6 +154,7 @@ namespace Nektar
         }
         break;
         case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             ASSERTL0(false,"Continouos scheme not implemented for NavierStokesCFE");
             break;
         default:
@@ -172,7 +173,7 @@ namespace Nektar
 
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
         {
             // Just copy over array
             int npoints = GetNpoints();
@@ -185,6 +186,7 @@ namespace Nektar
         }
         break;
         case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
         {
             ASSERTL0(false,"No Continuous Galerkin for NavierStokes equations");
             break;

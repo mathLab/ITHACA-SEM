@@ -51,7 +51,6 @@ namespace Nektar
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         //EquationSystem(pSession),
         UnsteadySystem(pSession),
-        m_infosteps(10),
         m_steadyStateSteps(0),
         m_subSteppingScheme(false)
     {
@@ -59,7 +58,6 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        EquationSystem::v_InitObject();
         
         int i,j;
         int numfields = m_fields.num_elements();
@@ -106,12 +104,12 @@ namespace Nektar
         {
         case eSteadyStokes: 
         case eSteadyOseen: 
-		case eSteadyNavierStokes:
+        case eSteadyNavierStokes:
         case eSteadyLinearisedNS: 
             break;
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:
-		case eSteadyNavierStokesBySFD:
+        case eSteadyNavierStokesBySFD:
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
             m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
             m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
@@ -165,6 +163,7 @@ namespace Nektar
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
 	
+#if 0 // Not required if building on an UnsteadySystem rather than an EquationSystem
         // Set up filters
         LibUtilities::FilterMap::const_iterator x;
         LibUtilities::FilterMap f = m_session->GetFilters();
@@ -172,6 +171,7 @@ namespace Nektar
         {
             m_filters.push_back(SolverUtils::GetFilterFactory().CreateInstance(x->first, m_session, x->second));
         }
+#endif
     }
 
     IncNavierStokes::~IncNavierStokes(void)
@@ -259,6 +259,7 @@ namespace Nektar
 
             if(m_subSteppingScheme)
             {
+                SubStepSaveFields(n);
                 SubStepAdvance(n);
             }
 
@@ -434,34 +435,82 @@ namespace Nektar
         }
     }
     
-    
+
+    void IncNavierStokes::SubStepSaveFields(const int nstep)
+    {
+        int i,n;
+        int nvel = m_velocity.num_elements();
+        int npts = m_fields[0]->GetTotPoints();
+
+        // rotate fields 
+        int nblocks = m_previousVelFields.num_elements()/nvel; 
+        Array<OneD, NekDouble> save; 
+        
+        for(n = 0; n < nvel; ++n)
+        {
+            save = m_previousVelFields[(nblocks-1)*nvel+n];
+            
+            for(i = nblocks-1; i > 0; --i)
+            {
+                m_previousVelFields[i*nvel+n] = m_previousVelFields[(i-1)*nvel+n];
+            }
+            
+            m_previousVelFields[n] = save; 
+        }
+        
+        // Put previous field 
+        for(i = 0; i < nvel; ++i)
+        {
+            m_fields[m_velocity[i]]->BwdTrans(m_fields[m_velocity[i]]->GetCoeffs(),
+                                              m_fields[m_velocity[i]]->UpdatePhys());
+            Vmath::Vcopy(npts,m_fields[m_velocity[i]]->GetPhys(),1,
+                         m_previousVelFields[i],1);   
+        }
+
+        if(nstep == 0)// initialise all levels with first field 
+        {
+            for(n = 0; n < nvel; ++n)
+            {
+                for(i = 1; i < nblocks; ++i)
+                {
+                    Vmath::Vcopy(npts,m_fields[m_velocity[n]]->GetPhys(),1,
+                                 m_previousVelFields[i*nvel+n],1);   
+                    
+                }
+            }
+        }
+    }
+
+
     void IncNavierStokes::SubStepAdvance(const int nstep)
     {
         int n;
         NekDouble dt; 
-        int nsubsteps;
+        int nsubsteps,minsubsteps;
         NekDouble time = m_time;
         Array<OneD, Array<OneD, NekDouble> > fields,velfields;
         static int ncalls = 1;
         int  nint    = min(ncalls++,m_intSteps);
+        Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(),m_cfl);
+        dt = GetTimeStep(m_fields[0]->EvalBasisNumModesMaxPerExp(),CFL,0.0);
 
-        dt = m_timestep/1.0; // put in CFL checker here but can add later 
-        
-        nsubsteps = (m_timestep > dt)? (int)(m_timestep/dt):1; 
+        nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
+        m_session->LoadParameter("MinSubSteps",minsubsteps,0);
+        nsubsteps = max(minsubsteps,nsubsteps);
+
         dt = m_timestep/nsubsteps;
         
         if(m_infosteps && !((nstep+1)%m_infosteps) && m_comm->GetRank() == 0)
         {
             cout << "Sub-integrating using "<< nsubsteps << " steps over Dt = " 
-                 << m_timestep << endl;
+                 << m_timestep << " (SubStep CFL=" << m_cfl << ")"<< endl;
         }
 
         for(int m = 0; m < nint; ++m)
         {
-            
             // We need to update the fields held by the m_integrationSoln
             fields = m_integrationSoln->UpdateSolutionVector()[m];
-        
+            
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
@@ -470,8 +519,7 @@ namespace Nektar
             
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->TimeIntegrate(dt, SubIntegrationSoln,
-                                                                   m_subStepIntegrationOps);
+                fields = m_subStepIntegrationScheme->TimeIntegrate(dt, SubIntegrationSoln, m_subStepIntegrationOps);
             }
             
             // Reset time integrated solution in m_integrationSoln 
@@ -485,7 +533,6 @@ namespace Nektar
      */
     void IncNavierStokes::SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD, NekDouble> > &outarray, const NekDouble time)
     {
-#if 1 
         int i;
         int nVariables     = inarray.num_elements();
         int nQuadraturePts = inarray[0].num_elements();
@@ -495,30 +542,47 @@ namespace Nektar
         
         /// Define an auxiliary variable to compute the RHS 
         Array<OneD, Array<OneD, NekDouble> > WeakAdv(nVariables);
-        WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nVariables);
+        WeakAdv[0] = Array<OneD, NekDouble> (ncoeffs*nVariables);
         for(i = 1; i < nVariables; ++i)
         {
             WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
         }
+
+        //cout << "Time: " << time << endl;
+        Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.num_elements());
+        Array<OneD, int> VelIds(m_velocity.num_elements());
+
+        Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.num_elements());
         
-        WeakDGAdvection(inarray,WeakAdv,true,true);
+        for(i = 1; i < m_velocity.num_elements(); ++i)
+        {
+            Velfields[i] = Velfields[i-1] + nQuadraturePts; 
+        }
+        SubStepExtrapoloteField(fmod(time,m_timestep), Velfields);
+
+        m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        
+        for(i = 0; i < nVariables; ++i)
+        {
+            m_fields[i]->IProductWRTBase(outarray[i],WeakAdv[i]); 
+            // negation requried due to sign of DoAdvection term to be consistent
+           Vmath::Neg(ncoeffs, WeakAdv[i], 1);
+        }
+        
+        AddAdvectionPenaltyFlux(Velfields, inarray, WeakAdv);
         
         /// Operations to compute the RHS
         for(i = 0; i < nVariables; ++i)
         {
+            // Negate the RHS
+            Vmath::Neg(ncoeffs, WeakAdv[i], 1);
+
             /// Multiply the flux by the inverse of the mass matrix
             m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
             
             /// Store in outarray the physical values of the RHS
             m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
-            
-            /// Negate the RHS
-            Vmath::Neg(nQuadraturePts, outarray[i], 1);
         }
-#else
-        // evaluate convection terms
-        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,time);
-#endif        
         
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
@@ -527,13 +591,13 @@ namespace Nektar
             {
                 for(int i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_forces[i]->SetWaveSpace(true);					
+                    m_forces[i]->SetWaveSpace(true);	
                     m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
                                           m_forces[i]->UpdatePhys());
                 }
             }
-			
-            int nqtot      = m_fields[0]->GetTotPoints();
+ 
+            int nqtot = m_fields[0]->GetTotPoints();
             for(int i = 0; i < m_nConvectiveFields; ++i)
             {
                 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
@@ -570,10 +634,10 @@ namespace Nektar
         int nDimensions = m_spacedim;
 
         /// Forward state array
-        Array<OneD, NekDouble> Fwd(nTracePts);
+        Array<OneD, NekDouble> Fwd(2*nTracePts);
         
         /// Backward state array
-        Array<OneD, NekDouble> Bwd(nTracePts);
+        Array<OneD, NekDouble> Bwd = Fwd + nTracePts;
         
         /// Normal velocity array
         Array<OneD, NekDouble> Vn (nTracePts, 0.0);
@@ -594,34 +658,120 @@ namespace Nektar
             /// Upwind between elements
             m_fields[i]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux[i]);
 
-            /// Calculate the numerical fluxes multipling Fwd or Bwd by the normal advection velocity
+            /// Calculate the numerical fluxes multipling Fwd or Bwd
+            /// by the normal advection velocity
             Vmath::Vmul(nTracePts, numflux[i], 1, Vn, 1, numflux[i], 1);
         }
     }
+
+
+    void IncNavierStokes::AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
+                                                  const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
+                                                  Array<OneD, Array<OneD, NekDouble> > &Outarray)
+    {
+        ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
+
+        int i;
+
+        /// Number of trace points
+        int nTracePts   = GetTraceNpoints();
+        
+        /// Number of spatial dimensions
+        int nDimensions = m_spacedim;
+
+        /// Forward state array
+        Array<OneD, NekDouble> Fwd(3*nTracePts);
+        
+        /// Backward state array
+        Array<OneD, NekDouble> Bwd = Fwd + nTracePts;
+
+        /// upwind numerical flux state array
+        Array<OneD, NekDouble> numflux = Bwd + nTracePts;
+        
+        /// Normal velocity array
+        Array<OneD, NekDouble> Vn (nTracePts, 0.0);
+        
+        // Extract velocity field along the trace space and multiply by trace normals
+        for(i = 0; i < nDimensions; ++i)
+        {
+            m_fields[0]->ExtractTracePhys(m_fields[m_velocity[i]]->GetPhys(), Fwd);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
+        }
+        
+        for(i = 0; i < physfield.num_elements(); ++i)
+        {
+            /// Extract forwards/backwards trace spaces
+            /// Note: Needs to have correct i value to get boundary conditions
+            m_fields[i]->GetFwdBwdTracePhys(physfield[i], Fwd, Bwd);
+            
+            /// Upwind between elements
+            m_fields[0]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux);
+
+            /// Construct difference between numflux and Fwd,Bwd
+            Vmath::Vsub(nTracePts, numflux, 1, Fwd, 1, Fwd, 1);
+            Vmath::Vsub(nTracePts, numflux, 1, Bwd, 1, Bwd, 1);
+
+            /// Calculate the numerical fluxes multipling Fwd, Bwd and
+            /// numflux by the normal advection velocity
+            Vmath::Vmul(nTracePts, Fwd, 1, Vn, 1, Fwd, 1);
+            Vmath::Vmul(nTracePts, Bwd, 1, Vn, 1, Bwd, 1);
+
+            m_fields[0]->AddFwdBwdTraceIntegral(Fwd,Bwd,Outarray[i]);
+        }
+    }
+
     
     /** 
      * Projection used by SubStepAdvance time integration
      */
     void IncNavierStokes::SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD, NekDouble> > &outarray, const NekDouble time)
     {
+        ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
 
-#if 0         
-        ASSERTL1(inarray.num_elements() == m_nConvectiveFields,"Array size is larger than
- convected fields");
-        
-        Array<OneD, NekDouble> tmp(m_fields[0]->GetNcoeffs());
-
-        // This is for a CG integration. For 3D and possibly greater
-        // efficiency we shoudl use a DG of FR scheme here
-        for(int i = 0; i < m_nConvectiveFields; ++i)
+        for(int i = 0; i < inarray.num_elements(); ++i)
         {
-            //m_fields[i]->FwdTrans(inarray[i],tmp);
-            // ideally to use this approach we should average element boudnaries accross elements 
-            m_fields[i]->FwdTrans_BndConstrained(inarray[i],tmp);
-            m_fields[i]->BwdTrans(tmp,outarray[i]);
+            Vmath::Vcopy(inarray[i].num_elements(),inarray[i],1,outarray[i],1);
         }
-#endif
     }
+    
+    /* extrapolate field using equally time spaced field un,un-1,un-2, (at
+       dt intervals) to time n+t at order Ord */
+    void IncNavierStokes::SubStepExtrapoloteField(NekDouble toff, Array< OneD, Array<OneD, NekDouble> > &ExtVel)
+    {
+        int npts = m_fields[0]->GetTotPoints();
+        int nvel = m_velocity.num_elements();
+        int i,j;
+        Array<OneD, NekDouble> l(4);
+
+        int ord = m_intSteps;
+            
+        // calculate Lagrange interpolants
+        Vmath::Fill(4,1.0,l,1);
+        
+        for(i = 0; i <= ord; ++i)
+        {
+            for(j = 0; j <= ord; ++j)
+            {
+                if(i != j)
+                {
+                    l[i] *= (j*m_timestep+toff);
+                    l[i] /= (j*m_timestep-i*m_timestep);
+                }
+            }
+        }
+
+        for(i = 0; i < nvel; ++i)
+        {
+            Vmath::Smul(npts,l[0],m_previousVelFields[i],1,ExtVel[i],1);
+            
+            for(j = 1; j <= ord; ++j)
+            {
+                Blas::Daxpy(npts,l[j],m_previousVelFields[j*nvel+i],1,
+                            ExtVel[i],1);
+            }
+        }
+    }
+    
 
     // Evaluation -N(V) for all fields except pressure using m_velocity
     void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -648,6 +798,7 @@ namespace Nektar
         {
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
+
         m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
                                  m_velocity,inarray,outarray,m_time,Deriv);
     }

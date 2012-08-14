@@ -133,9 +133,9 @@ namespace Nektar
                 Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
             }
             else 
-			{
-				ASSERTL0(false,"Dealiasing can't be used in combination with Wave-Space time-integration ");	
-			}
+            {
+                ASSERTL0(false,"Dealiasing can't be used in combination with Wave-Space time-integration ");	
+            }
             break;
         default:
             ASSERTL0(false,"dimension unknown");

@@ -94,7 +94,7 @@ namespace Nektar
 
 	
 	// if discontinuous Galerkin determine numerical flux to use
-	if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+	if (m_projectionType == MultiRegions::eDiscontinuous)
 	  {
 	    ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
 		     "No UPWINDTYPE defined in session.");

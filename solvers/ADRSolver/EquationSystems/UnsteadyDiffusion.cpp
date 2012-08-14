@@ -98,7 +98,7 @@ namespace Nektar
 
         switch (m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
             {
                 int ncoeffs    = inarray[0].num_elements();
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
@@ -121,6 +121,7 @@ namespace Nektar
                 break;
             }
         case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
                 ASSERTL0(false, "Explicit Galerkin diffusion not set up.");
             }
@@ -174,7 +175,7 @@ namespace Nektar
 
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
@@ -186,6 +187,7 @@ namespace Nektar
             }
             break;
         case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 

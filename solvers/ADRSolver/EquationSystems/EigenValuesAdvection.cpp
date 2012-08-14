@@ -89,17 +89,18 @@ namespace Nektar
 		
 		switch (m_projectionType)
 		{
-			case MultiRegions::eDiscontinuousGalerkin:
-            {
-                dofs = ncoeffs;
-				break;
-            }
-			case MultiRegions::eGalerkin:
-            {
-                dofs = GetContNcoeffs();
-				UseContCoeffs = true;
-				break;
-            }
+                case MultiRegions::eDiscontinuous:
+                    {
+                        dofs = ncoeffs;
+                        break;
+                    }
+                case MultiRegions::eGalerkin:
+                case MultiRegions::eMixed_CG_Discontinuous:
+                    {
+                        dofs = GetContNcoeffs();
+                        UseContCoeffs = true;
+                        break;
+                    }
 		}
 		
 		cout << endl;
@@ -127,50 +128,51 @@ namespace Nektar
 
         switch (m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
             {
-				WeakDGAdvection(inarray, WeakAdv,true,true,1);
-
-				m_fields[0]->MultiplyByElmtInvMass(WeakAdv[0],WeakAdv[0]);
-					
-				m_fields[0]->BwdTrans(WeakAdv[0],outarray[0]);
-                    
-				Vmath::Neg(npoints,outarray[0],1);
-			break;
+                WeakDGAdvection(inarray, WeakAdv,true,true,1);
+                
+                m_fields[0]->MultiplyByElmtInvMass(WeakAdv[0],WeakAdv[0]);
+		
+                m_fields[0]->BwdTrans(WeakAdv[0],outarray[0]);
+                
+                Vmath::Neg(npoints,outarray[0],1);
+                break;
             }
-		case MultiRegions::eGalerkin:
+        case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
-				// Calculate -V\cdot Grad(u);
+                // Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
                 {
                     //Projection
-					m_fields[i]->FwdTrans(inarray[i],WeakAdv[i]);
-
-					m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],tmp[i]);
-					
-					//Advection operator
-					AdvectionNonConservativeForm(m_velocity,tmp[i],outarray[i]);
-					
-					Vmath::Neg(npoints,outarray[i],1);
-					
-					//m_fields[i]->MultiplyByInvMassMatrix(WeakAdv[i],WeakAdv[i]);
-					//Projection
-					m_fields[i]->FwdTrans(outarray[i],WeakAdv[i]);
-					
-					m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],outarray[i]);
+                    m_fields[i]->FwdTrans(inarray[i],WeakAdv[i]);
+                    
+                    m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],tmp[i]);
+                    
+                    //Advection operator
+                    AdvectionNonConservativeForm(m_velocity,tmp[i],outarray[i]);
+                    
+                    Vmath::Neg(npoints,outarray[i],1);
+                    
+                    //m_fields[i]->MultiplyByInvMassMatrix(WeakAdv[i],WeakAdv[i]);
+                    //Projection
+                    m_fields[i]->FwdTrans(outarray[i],WeakAdv[i]);
+                    
+                    m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],outarray[i]);
                 }
-			break;
+                break;
             }
         }
-			
-		/// The result is stored in outarray (is the j-th columns of the weak advection operator).
-		/// We now store it in MATRIX(j)
-		Vmath::Vcopy(npoints,&(outarray[0][0]),1,&(MATRIX[j]),npoints);
-		
-		/// Set the j-th entry of inarray back to zero
-		inarray[0][j] = 0.0;
+	
+        /// The result is stored in outarray (is the j-th columns of the weak advection operator).
+        /// We now store it in MATRIX(j)
+        Vmath::Vcopy(npoints,&(outarray[0][0]),1,&(MATRIX[j]),npoints);
+	
+        /// Set the j-th entry of inarray back to zero
+        inarray[0][j] = 0.0;
 		}
-		
+                
 		////////////////////////////////////////////////////////////////////////////////
 		/// Calulating the eigenvalues of the weak advection operator stored in (MATRIX)
 		/// using Lapack routines

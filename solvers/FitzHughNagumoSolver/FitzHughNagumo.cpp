@@ -830,7 +830,8 @@ namespace Nektar
 	fields[i]  = m_fields[i]->UpdateCoeffs();
       }
   
-    if(m_projectionType==MultiRegions::eGalerkin)
+    if((m_projectionType==MultiRegions::eGalerkin)||
+       (m_projectionType==MultiRegions::eMixed_CG_Discontinuous))
       {
 	// calculate the variable u* = Mu
 	// we are going to TimeIntegrate this new variable u*
@@ -960,7 +961,8 @@ namespace Nektar
 
             m_time += m_timestep;
 
-            if(m_projectionType==MultiRegions::eGalerkin)
+            if((m_projectionType==MultiRegions::eGalerkin)||
+               (m_projectionType==MultiRegions::eMixed_CG_Discontinuous))
             {
                 // Project the solution u* onto the boundary conditions to
                 // obtain the actual solution

@@ -96,7 +96,7 @@ namespace Nektar
 
         switch (m_projectionType)
         {
-			case MultiRegions::eDiscontinuousGalerkin:
+			case MultiRegions::eDiscontinuous:
             {
 				Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
 				Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
@@ -123,7 +123,8 @@ namespace Nektar
 				}
 			}
 			break;
-            case MultiRegions::eGalerkin:
+        case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
 				Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
                 for(i = 0; i < nvariables; ++i)
@@ -222,7 +223,7 @@ namespace Nektar
 		// Do actual projection
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
             {
                 // Just copy over array
                 int npoints = GetNpoints();
@@ -233,6 +234,7 @@ namespace Nektar
             }
             break;
         case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 				

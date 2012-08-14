@@ -165,7 +165,7 @@ namespace Nektar
             }
             else if(ProjectStr == "DisContinuous")
             {
-                m_projectionType = MultiRegions::eDiscontinuousGalerkin;
+                m_projectionType = MultiRegions::eDiscontinuous;
             }
             else
             {

@@ -114,8 +114,6 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                               const NekDouble time);
 
         virtual void v_GetFluxVector(const int i, 
                                      Array<OneD, Array<OneD, NekDouble> > &physfield,
@@ -125,16 +123,36 @@ namespace Nektar
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
+        virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
+                                        const Array<OneD,NekDouble> CFL, 
+                                        NekDouble timeCFL);
+        
+        virtual NekDouble v_GetTimeStep(int ExpOrder, NekDouble CFL,
+                                        NekDouble TimeStability);
+
+
+        // Sub-stepping related methods
+        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                               const NekDouble time);
+
         void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                                Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                const NekDouble time);
+        
+        void SubStepExtrapoloteField(NekDouble toff, Array< OneD, Array<OneD, NekDouble> > &ExtVel);
 
+        void AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
+                                     const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
+                                     Array<OneD, Array<OneD, NekDouble> > &outarray);
+        
     protected: 
         LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         bool m_subSteppingScheme; // bool to identify if using a substepping scheme
         LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
+
+        Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 
         /// Advection term
         AdvectionTermSharedPtr m_advObject;
@@ -149,7 +167,8 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr m_pressure;  
         
         NekDouble   m_kinvis;        ///< Kinematic viscosity
-        int         m_infosteps;     ///< dump info to stdout at steps time
+        // Not required when inheriting from UnsteadySytem
+        //int         m_infosteps;     ///< dump info to stdout at steps time
         int         m_energysteps;   ///< dump energy to file at steps time
         int         m_steadyStateSteps; ///< Check for steady state at step interval
         NekDouble   m_steadyStateTol; ///< Tolerance to which steady state should be evaluated at
@@ -162,7 +181,8 @@ namespace Nektar
         Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
         int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
 
-        std::vector<SolverUtils::FilterSharedPtr>                    m_filters;
+        // not required if building from an UnsteadySystem
+        //  std::vector<SolverUtils::FilterSharedPtr>                    m_filters;
 
         /**
          * Constructor.
@@ -176,7 +196,8 @@ namespace Nektar
 
         void AdvanceInTime(int nsteps);
 		
-        void SubStepAdvance (const int nstep);
+        void SubStepAdvance   (const int nstep);
+        void SubStepSaveFields(const int nstep);
 
         void EvaluateAdvectionTerms(const Array<OneD, 
                                     const Array<OneD, NekDouble> > &inarray, 

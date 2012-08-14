@@ -55,11 +55,12 @@ namespace Nektar
         IncNavierStokes(pSession)
     {
     }
-
+    
     void CoupledLinearNS::v_InitObject()
     {
+        EquationSystem::v_InitObject();
         IncNavierStokes::v_InitObject();
-
+        
         int  i;
         int  expdim = m_graph->GetMeshDimension();
         int  n_exp  = m_fields[m_velocity[0]]->GetNumElmts();
@@ -1180,11 +1181,11 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-			case eUnsteadyStokes:
-			case eUnsteadyNavierStokes:
-			case eSteadyNavierStokesBySFD:
+        case eUnsteadyStokes:
+        case eUnsteadyNavierStokes:
+        case eSteadyNavierStokesBySFD:
             {
-				
+                
                 LibUtilities::TimeIntegrationMethod intMethod;
                 std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
                 int i;
@@ -1208,8 +1209,8 @@ namespace Nektar
                         LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
                         m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
                     }
-						break;
-					case LibUtilities::eIMEXOrder2: 
+                    break;
+                case LibUtilities::eIMEXOrder2: 
                     {
                         m_intSteps = 2;
                         m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);

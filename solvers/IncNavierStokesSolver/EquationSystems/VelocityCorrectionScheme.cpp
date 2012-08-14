@@ -55,6 +55,7 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_InitObject()
     {
+        UnsteadySystem::v_InitObject();
         IncNavierStokes::v_InitObject();
         // Set m_pressure to point to last field of m_fields; 
         if(NoCaseStringCompare(m_session->GetVariable(m_fields.num_elements()-1),"p") == 0)
@@ -82,25 +83,22 @@ namespace Nektar
         
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
-        
 
-        if(m_session->DefinesSolverInfo("SubSteppingScheme"))
-        {
-            m_subSteppingScheme = true;
-        }
-        else
-        {
-            m_subSteppingScheme = false;
-        }
+        m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
 
         if(m_subSteppingScheme)
         {
+
+            ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
+
+            m_session->LoadParameter("SubStepCFL", m_cfl,0.5);
+
             // Set to 1 for first step and it will then be increased in
             // time advance routines
             switch(intMethod)
             {
             case LibUtilities::eBackwardEuler:
-              //case BDFImplicitOrder1: // Should add this case to timeintegrationscheme
+            case LibUtilities::eBDFImplicitOrder1: 
                 {
                     m_intSteps = 1;
                     m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
@@ -109,6 +107,15 @@ namespace Nektar
 
                     LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eForwardEuler);
                     m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+                    
+                    // Fields for linear interpolation
+                    m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
+                    int ntotpts  = m_fields[0]->GetTotPoints();
+                    m_previousVelFields[0] = Array<OneD, NekDouble>(2*m_fields.num_elements()*ntotpts);
+                    for(i = 1; i < 2*m_fields.num_elements(); ++i)
+                    {
+                        m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
+                    }
                     
                 }
                 break;
@@ -124,8 +131,21 @@ namespace Nektar
                     m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
 
                     LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
+
                     m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
                     
+                    int nvel = m_velocity.num_elements();
+
+                    // Fields for quadratic interpolation
+                    m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
+
+                    int ntotpts  = m_fields[0]->GetTotPoints();
+                    m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
+                    for(i = 1; i < 3*nvel; ++i)
+                    {
+                        m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
+                    }
+
                 }
                 break;
             default:
@@ -231,28 +251,40 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
     {
-        cout <<  "\tSolver Type        : Velocity Correction" <<endl;
+        if(m_subSteppingScheme)
+        {
+            cout <<  "\tSolver Type     : Velocity Correction with Substepping" <<endl;
+        }
+        else
+        {
+            cout <<  "\tSolver Type     : Velocity Correction" <<endl;
+        }
 	
         if(m_session->DefinesSolverInfo("EvolutionOperator"))
         {
-            cout << "\tEvolutionOperator  : " << m_session->GetSolverInfo("EvolutionOperator")<< endl;
+            cout << "\tEvolutionOp     : " << m_session->GetSolverInfo("EvolutionOperator")<< endl;
             
         }
         else
         {
-            cout << "\tEvolutionOperator  : " << endl;
+            cout << "\tEvolutionOp     : " << endl;
         }
         if(m_session->DefinesSolverInfo("Driver"))
         {
-            cout << "\tDriver             : " << m_session->GetSolverInfo("Driver")<< endl;
+            cout << "\tDriver          : " << m_session->GetSolverInfo("Driver")<< endl;
             
         }
         else{
-            cout << "\tDriver             : "<< endl;
+            cout << "\tDriver          : "<< endl;
         }
 		
         TimeParamSummary(out);
-        cout << "\tTime integ.        : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+
+        if(m_subSteppingScheme)
+        {
+            cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
+        }
     }
     
     void VelocityCorrectionScheme::v_DoInitialise(void)
@@ -1084,8 +1116,8 @@ namespace Nektar
                 maxpts = max(maxpts, PBndExp[n]->GetExp(i)->GetTotPoints());
             }
         }
-		
-        Array<OneD, NekDouble> N1(maxpts),N2(maxpts);
+	
+        Array<OneD, NekDouble> N1(maxpts), N2(maxpts);
         Array<OneD, NekDouble> ubc(maxpts),vbc(maxpts);
         Array<OneD, NekDouble> Pvals(maxpts);
         Array<OneD, NekDouble> Nu,Nv,Ptmp;
@@ -1107,8 +1139,8 @@ namespace Nektar
                     Nv = N[1] + offset; 
                     
                     Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
-                    nq     = Pbc->GetTotPoints();
-                    ncoeffs = Pbc->GetNcoeffs();
+                    nq       = Pbc->GetTotPoints();
+                    ncoeffs  = Pbc->GetNcoeffs();
                     boundary = m_pressureBCtoTraceID[cnt];
                     
                     // Get velocity bc
@@ -1120,10 +1152,14 @@ namespace Nektar
                     elmt->GetEdgePhysVals(boundary,Pbc,Nu,N1);
                     elmt->GetEdgePhysVals(boundary,Pbc,Nv,N2);
                     
-           
-                    // Needs updating for 2nd order scheme. 
-                    Vmath::Vsub(nq,ubc,1,N1,1,N1,1);
-                    Vmath::Vsub(nq,vbc,1,N2,1,N2,1);
+
+                    // Take different as Forward Euler but N1,N2
+                    // actually contain the integration of the
+                    // previous steps from the time integration
+                    // scheme.
+                    Vmath::Vsub(nq,ubc,1,N1,1,ubc,1);
+                    Vmath::Vsub(nq,vbc,1,N2,1,vbc,1);
+
                     
                     // Divide by aii_Dt to get correct Du/Dt.  This is
                     // because all coefficients in the integration
@@ -1131,11 +1167,11 @@ namespace Nektar
                     // coefficient and N is already multiplied by
                     // local coefficient when taken from integration
                     // scheme
-                    Blas::Dscal(nq,1.0/Aii_Dt,&N1[0],1);
-                    Blas::Dscal(nq,1.0/Aii_Dt,&N2[0],1);
+                    Blas::Dscal(nq,1.0/Aii_Dt,&ubc[0],1);
+                    Blas::Dscal(nq,1.0/Aii_Dt,&vbc[0],1);
 
                     // subtrace off du/dt derivative  (can ignore aii_dt for moment)
-                    Pbc->NormVectorIProductWRTBase(N1,N2,Pvals); 
+                    Pbc->NormVectorIProductWRTBase(ubc,vbc,Pvals); 
 
                     Vmath::Vsub(ncoeffs,Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1, Pvals,1, Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
                 }

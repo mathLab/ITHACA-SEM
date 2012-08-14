@@ -159,7 +159,7 @@ namespace Nektar
 
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuousGalerkin:
+        case MultiRegions::eDiscontinuous:
         {
             // Just copy over array
             int npoints = GetNpoints();
@@ -172,6 +172,7 @@ namespace Nektar
         }
         break;
         case MultiRegions::eGalerkin:
+        case MultiRegions::eMixed_CG_Discontinuous:
         {
             ASSERTL0(false,"No Continuous Galerkin for Euler equations");
             break;

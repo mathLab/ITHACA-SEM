@@ -94,7 +94,7 @@ namespace Nektar
     
     
     // if discontinuous Galerkin determine numerical flux to use
-    if (m_projectionType == MultiRegions::eDiscontinuousGalerkin)
+    if (m_projectionType == MultiRegions::eDiscontinuous)
       {
 	ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
 		 "No UPWINDTYPE defined in session.");
@@ -118,7 +118,7 @@ namespace Nektar
       {
 	ASSERTL0(false,"No Continuous Galerkin implemented for compressible flow solver.");
       }
-
+    
     m_session->LoadParameter("Gamma",m_gamma,1.4);
     m_session->LoadParameter("GasConstant",m_GasConstant,287.058);
     m_session->LoadParameter("CFLParameter",m_cfl,0.0);

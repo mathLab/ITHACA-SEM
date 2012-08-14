@@ -84,7 +84,7 @@ namespace Nektar
 	
     switch(m_projectionType)
       {
-      case MultiRegions::eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuous:
 	{
 	  
 	  // conservative formulation compute h
@@ -106,6 +106,7 @@ namespace Nektar
 	}
 	break;
       case MultiRegions::eGalerkin:
+      case MultiRegions::eMixed_CG_Discontinuous:
 	{
 	    // conservative formulation compute h
 	  // h = \eta + d
@@ -141,7 +142,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case MultiRegions::eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuous:
 	{
 	  //-------------------------------------------------------
 	  //inarray in physical space
@@ -198,6 +199,7 @@ namespace Nektar
 	}
 	break;
       case MultiRegions::eGalerkin:
+      case MultiRegions::eMixed_CG_Discontinuous:
 	{
 	  Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
 	  Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
@@ -262,7 +264,7 @@ namespace Nektar
     
     switch(m_projectionType)
       {
-      case MultiRegions::eDiscontinuousGalerkin:
+      case MultiRegions::eDiscontinuous:
 	{
 	  ConservativeToPrimitive(inarray,outarray);
 	  SetBoundaryConditions(outarray,time);
@@ -270,6 +272,7 @@ namespace Nektar
 	}
 	break;
       case MultiRegions::eGalerkin:
+      case MultiRegions::eMixed_CG_Discontinuous:
 	{
 	  ConservativeToPrimitive(inarray,outarray);
 	  EquationSystem::SetBoundaryConditions(time);

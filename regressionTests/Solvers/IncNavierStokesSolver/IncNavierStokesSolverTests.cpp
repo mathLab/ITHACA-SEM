@@ -107,6 +107,9 @@ int main(int argc, char* argv[])
     
     //Test Modified Arnoldi direct stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability.xml","Linear stability (Mod. Arnoldi): Channel");
+
+    //Test Substepping scheme on Kovasnay solution
+    Execute("IncNavierStokesSolver","Test_KovaFlow_SubStep_2order.xml","Kovasnay solution using sub-stepping");
 	
     //Test Modified Arnoldi adjoint stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability_adj.xml","Adjoint stability (Mod. Arnoldi): Channel");

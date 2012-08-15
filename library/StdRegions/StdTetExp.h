@@ -114,15 +114,6 @@ namespace Nektar
             STD_REGIONS_EXPORT NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords,  const Array<OneD, const NekDouble> & physvals);
 
 
-            //----------------------------------
-            // Generate Matrix Routine
-            //----------------------------------
-
-            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
-            {
-                return StdExpansion::CreateGeneralMatrix(mkey);
-            }
-
         protected:
             //-------------------------------
             // Integration Methods

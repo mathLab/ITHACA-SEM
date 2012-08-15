@@ -1932,12 +1932,12 @@ namespace Nektar
         
         DNekMatSharedPtr StdTetExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
-            return GenMatrix(mkey);
+			return StdExpansion::CreateGeneralMatrix(mkey);
         }
 
         DNekMatSharedPtr StdTetExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
-            return GenMatrix(mkey);
+			return StdExpansion::CreateGeneralMatrix(mkey);
         }
 
 

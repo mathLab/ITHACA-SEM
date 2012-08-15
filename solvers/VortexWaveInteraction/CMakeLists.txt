@@ -1,6 +1,7 @@
 SET(VortexWaveInteractionSolverSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
         ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+       ../IncNavierStokesSolver/EquationSystems/CFLtester.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
@@ -16,6 +17,7 @@ SET(VortexWaveInteractionSolverSource
 SET(CalcL2ToLinfPressureSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+       ../IncNavierStokesSolver/EquationSystems/CFLtester.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp
@@ -32,6 +34,7 @@ SET(CalcL2ToLinfPressureSource
 SET(CalcVWIplusPressureSource
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusion.cpp
        ../ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+       ../IncNavierStokesSolver/EquationSystems/CFLtester.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLinearNS.cpp
        ../IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ../IncNavierStokesSolver/EquationSystems/IncNavierStokes.cpp

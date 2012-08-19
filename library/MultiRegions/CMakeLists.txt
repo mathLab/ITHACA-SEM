@@ -75,14 +75,6 @@ GlobalLinSysIterativeFull.h
 GlobalLinSysIterativeStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
-
-./AssemblyMap/AssemblyMap.h
-./AssemblyMap/AssemblyMapCG.h
-./AssemblyMap/AssemblyMapDG.h
-./AssemblyMap/AssemblyMapCG1D.h
-./AssemblyMap/AssemblyMapCG2D.h
-./AssemblyMap/AssemblyMapCG3D.h
-
 MultiRegions.hpp
 MultiRegionsDeclspec.h
 GlobalOptimizationParameters.h
@@ -90,9 +82,17 @@ SubStructuredGraph.h
 Preconditioner.h
 )
 
+SET(ASSEMBLY_MAP_HEADERS
+./AssemblyMap/AssemblyMap.h
+./AssemblyMap/AssemblyMapCG.h
+./AssemblyMap/AssemblyMapDG.h
+./AssemblyMap/AssemblyMapCG1D.h
+./AssemblyMap/AssemblyMapCG2D.h
+./AssemblyMap/AssemblyMapCG3D.h
+)
 ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
-ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS})
+ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS} ${ASSEMBLY_MAP_HEADERS})
 TARGET_LINK_LIBRARIES(MultiRegions
         optimized LibUtilities   debug LibUtilities-g
         optimized SpatialDomains debug SpatialDomains-g
@@ -105,6 +105,7 @@ TARGET_LINK_LIBRARIES(MultiRegions
 SET_LAPACK_LINK_LIBRARIES(MultiRegions)
 
 INSTALL(FILES ${MULTI_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev)
+INSTALL(FILES ${ASSEMBLY_MAP_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions/AssemblyMap COMPONENT dev)
 
 
 

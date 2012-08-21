@@ -1,12 +1,12 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
-#include <vtk-5.4/vtkPolyDataReader.h>
-#include <vtk-5.4/vtkPolyDataWriter.h>
-#include <vtk-5.4/vtkPolyData.h>
-#include <vtk-5.4/vtkPointData.h>
-#include <vtk-5.4/vtkPoints.h>
-#include <vtk-5.4/vtkCellArray.h>
-#include <vtk-5.4/vtkTriangle.h>
+#include <vtkPolyDataReader.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkPolyData.h>
+#include <vtkPointData.h>
+#include <vtkPoints.h>
+#include <vtkCellArray.h>
+#include <vtkTriangle.h>
 
 int main(int argc, char* argv[])
 {

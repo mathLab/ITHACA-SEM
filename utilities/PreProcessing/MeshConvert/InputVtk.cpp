@@ -38,10 +38,10 @@
 #include <iostream>
 using namespace std;
 
-#include <vtk-5.4/vtkPolyDataReader.h>
-#include <vtk-5.4/vtkPolyData.h>
-#include <vtk-5.4/vtkPoints.h>
-#include <vtk-5.4/vtkCellArray.h>
+#include <vtkPolyDataReader.h>
+#include <vtkPolyData.h>
+#include <vtkPoints.h>
+#include <vtkCellArray.h>
 
 #include "MeshElements.h"
 #include "InputVtk.h"

@@ -2,13 +2,13 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList2D.h>
 
-#include <vtk-5.4/vtkPolyDataReader.h>
-#include <vtk-5.4/vtkPolyData.h>
-#include <vtk-5.4/vtkPointData.h>
-#include <vtk-5.4/vtkPoints.h>
-#include <vtk-5.4/vtkCellArray.h>
-#include <vtk-5.4/vtkCellDataToPointData.h>
-#include <vtk-5.4/vtkContourFilter.h>
+#include <vtkPolyDataReader.h>
+#include <vtkPolyData.h>
+#include <vtkPointData.h>
+#include <vtkPoints.h>
+#include <vtkCellArray.h>
+#include <vtkCellDataToPointData.h>
+#include <vtkContourFilter.h>
 // Usage: VtkToFld session.xml input.vtk output.fld
 
 #include <boost/unordered_set.hpp>

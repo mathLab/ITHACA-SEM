@@ -37,10 +37,10 @@
 #include <string>
 using namespace std;
 
-#include <vtk-5.4/vtkPolyDataWriter.h>
-#include <vtk-5.4/vtkPolyData.h>
-#include <vtk-5.4/vtkPoints.h>
-#include <vtk-5.4/vtkCellArray.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkPolyData.h>
+#include <vtkPoints.h>
+#include <vtkCellArray.h>
 
 #include "MeshElements.h"
 #include "OutputVtk.h"

@@ -91,7 +91,8 @@ namespace Nektar
             
             for (int j = 0; j < traceVel.num_elements(); ++j)
             {
-                const Array<OneD, const Array<OneD, NekDouble> > &tmp = traceVel[j] >= 0 ? Fwd : Bwd;
+                const Array<OneD, const Array<OneD, NekDouble> > &tmp = 
+                    traceVel[j] >= 0 ? Fwd : Bwd;
                 for (int i = 0; i < Fwd.num_elements(); ++i)
                 {
                     flux[i][j] = traceVel[j]*tmp[i][j];

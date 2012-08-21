@@ -58,7 +58,7 @@ namespace Nektar
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
-            
+
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
             Array<OneD, Array<OneD, NekDouble> > tmp       (nConvectiveFields);
 

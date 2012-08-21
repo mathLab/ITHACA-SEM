@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
     // Create instance of module to solve the equation specified in the session.
     try
     {
-        equ = GetEquationSystemFactory().CreateInstance(session->GetSolverInfo("EQTYPE"), session);
+        equ = GetEquationSystemFactory().CreateInstance(
+            session->GetSolverInfo("EQTYPE"), session);
     }
     catch (int e)
     {
@@ -85,17 +86,29 @@ int main(int argc, char *argv[])
     // Evaluate and output computation time and solution accuracy.
     // The specific format of the error output is essential for the
     // regression tests to work.
-    cout << "-------------------------------------------" << endl;
-    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+    if (session->GetComm()->GetRank() == 0)
+    {
+        cout << "-------------------------------------------" << endl;
+        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+    }
+    
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
         // Get Exact solution
         Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
         equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
-
-        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
-        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
+        
+        NekDouble l2 = equ->L2Error  (i, exactsoln);
+        NekDouble li = equ->LinfError(i, exactsoln);
+        
+        if (session->GetComm()->GetRank() == 0)
+        {
+            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " 
+                 << l2 << endl;
+            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " 
+                 << li << endl;
+        }
     }
-
+    
     session->Finalise();
 }

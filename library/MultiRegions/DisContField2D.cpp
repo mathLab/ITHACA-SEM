@@ -302,102 +302,107 @@ namespace Nektar
          */
         void DisContField2D::SetUpDG()
         {
-            if(m_trace == NullExpListSharedPtr) // check for multiple calls
+            // Check for multiple calls
+            if (m_trace != NullExpListSharedPtr)
             {
-                ExpList1DSharedPtr trace;
-                SpatialDomains::MeshGraph2DSharedPtr graph2D = 
-                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
-                                                                             m_graph);
-                
-                // Set up matrix map
-                m_globalBndMat = MemoryManager<GlobalLinSysMap>::
-                    AllocateSharedPtr();
-                
-                // Set up Trace space
-                trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions, *m_exp, graph2D, m_periodicEdges);
+                return;
+            }
             
-                m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
-                m_traceMap = MemoryManager<AssemblyMapDG>::
-                    AllocateSharedPtr(m_session, graph2D, trace, *this,
-                                      m_bndCondExpansions, m_bndConditions,
-                                      m_periodicEdges);
+            ExpList1DSharedPtr trace;
+            SpatialDomains::MeshGraph2DSharedPtr graph2D = 
+                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(
+                    m_graph);
                 
-                Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
-                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+            // Set up matrix map
+            m_globalBndMat = MemoryManager<GlobalLinSysMap>::
+                AllocateSharedPtr();
+            
+            // Set up trace space
+            trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
+                m_bndCondExpansions, m_bndConditions, *m_exp, 
+                graph2D, m_periodicEdges);
+            
+            m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
+            m_traceMap = MemoryManager<AssemblyMapDG>::
+                AllocateSharedPtr(m_session, graph2D, trace, *this,
+                                  m_bndCondExpansions, m_bndConditions,
+                                  m_periodicEdges);
                 
-                // Scatter trace segments to 2D elements. For each element, we find
-                // the trace segment associated to each edge. The element then
-                // retains a pointer to the trace space segments, to ensure
-                // uniqueness of normals when retrieving from two adjoining elements
-                // which do not lie in a plane.
-                SpatialDomains::Geometry1DSharedPtr ElmtSegGeom;
-                SpatialDomains::Geometry1DSharedPtr TraceSegGeom;
-                for (int i = 0; i < m_exp->size(); ++i)
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+                
+            // Scatter trace segments to 2D elements. For each element, we find
+            // the trace segment associated to each edge. The element then
+            // retains a pointer to the trace space segments, to ensure
+            // uniqueness of normals when retrieving from two adjoining elements
+            // which do not lie in a plane.
+            SpatialDomains::Geometry1DSharedPtr ElmtSegGeom;
+            SpatialDomains::Geometry1DSharedPtr TraceSegGeom;
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
                 {
-                    for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
-                    {
-                        LocalRegions::Expansion2DSharedPtr exp2d =
-                            boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>((*m_exp)[i]);
-                        LocalRegions::Expansion1DSharedPtr exp1d =
-                            boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>(elmtToTrace[i][j]);
-                        LocalRegions::ExpansionSharedPtr exp =
-                            boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion>  (elmtToTrace[i][j]);
-                        exp2d->SetEdgeExp           (j, exp  );
-                        exp1d->SetAdjacentElementExp(j, exp2d);
-                    }
-                }
-                
-                // Set up physical normals
-                SetUpPhysNormals();
-                
-                // Set up information for parallel jobs.
-                for (int i = 0; i < m_trace->GetExpSize(); ++i)
-                {
-                    LocalRegions::Expansion1DSharedPtr traceEl = 
+                    LocalRegions::Expansion2DSharedPtr exp2d =
                         boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion1D>(m_trace->GetExp(i));
+                            LocalRegions::Expansion2D>((*m_exp)[i]);
+                    LocalRegions::Expansion1DSharedPtr exp1d =
+                        boost::dynamic_pointer_cast<
+                            LocalRegions::Expansion1D>(elmtToTrace[i][j]);
+                    LocalRegions::ExpansionSharedPtr exp =
+                        boost::dynamic_pointer_cast<
+                            LocalRegions::Expansion>  (elmtToTrace[i][j]);
+                    exp2d->SetEdgeExp           (j, exp  );
+                    exp1d->SetAdjacentElementExp(j, exp2d);
+                }
+            }
+                
+            // Set up physical normals
+            SetUpPhysNormals();
+                
+            // Set up information for parallel jobs.
+            for (int i = 0; i < m_trace->GetExpSize(); ++i)
+            {
+                LocalRegions::Expansion1DSharedPtr traceEl = 
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion1D>(m_trace->GetExp(i));
                     
-                    int offset = m_trace->GetPhys_Offset(i);
+                int offset = m_trace->GetPhys_Offset(i);
                     
-                    if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+                if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+                {
+                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
+                        traceEl->GetLeftAdjacentElementEdge());
+                }
+            }
+                
+            int cnt, n, e;
+                
+            // Identify boundary edges
+            for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                if (m_bndConditions[n]->GetBoundaryConditionType() != 
+                    SpatialDomains::ePeriodic)
+                {
+                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                                                                               traceEl->GetLeftAdjacentElementEdge());
+                        m_boundaryEdges.insert(m_trace->GetOffset_Elmt_Id(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e)));
                     }
                 }
+                cnt += m_bndCondExpansions[n]->GetExpSize();
+            }
                 
-                int cnt, n, e;
-                
-                // Identify boundary edges
-                for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            // Set up information for periodic boundary conditions.
+            for (n = 0; n < m_exp->size(); ++n)
+            {
+                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    if (m_bndConditions[n]->GetBoundaryConditionType() != 
-                        SpatialDomains::ePeriodic)
-                    {
-                        for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
-                        {
-                            m_boundaryEdges.insert(m_trace->GetOffset_Elmt_Id(
-                                                                              m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e)));
-                        }
-                    }
-                    cnt += m_bndCondExpansions[n]->GetExpSize();
-                }
-                
-                // Set up information for periodic boundary conditions.
-                for (n = 0; n < m_exp->size(); ++n)
-                {
-                    for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
-                    {
-                        map<int,int>::iterator it = m_periodicEdges.find(
-                                                                         (*m_exp)[n]->GetGeom2D()->GetEid(e));
+                    map<int,int>::iterator it = m_periodicEdges.find(
+                        (*m_exp)[n]->GetGeom2D()->GetEid(e));
                         
-                        if (it != m_periodicEdges.end())
-                        {
-                            m_perEdgeToExpMap[it->first] = make_pair(n, e);
-                        }
+                    if (it != m_periodicEdges.end())
+                    {
+                        m_perEdgeToExpMap[it->first] = make_pair(n, e);
                     }
                 }
             }
@@ -1426,10 +1431,10 @@ namespace Nektar
          * solving the system:
          * 
          * \f[
-         * \begin{align*}
+         * \begin{aligned}
          *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
-         *   \langle \nabla u^*, 1 \rangle &= \langle \grad u, 1 \rangle
-         * \end{align*}
+         *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
+         * \end{aligned}
          * \f]
          * 
          * where \f$ u \f$ corresponds with the current solution as stored

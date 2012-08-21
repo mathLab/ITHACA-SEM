@@ -141,21 +141,13 @@ namespace Nektar
             Vmath::Neg(npoints,outarray[i],1);
         }
     }
-
-    /*
-    Array<OneD, NekDouble> &EulerCFE::GetNormals()
-    {
-        return m_traceNormals;
-    }
-    */
-
+    
     void EulerCFE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             Array<OneD,       Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
     {
         int i;
         int nvariables = inarray.num_elements();
-
 
         switch(m_projectionType)
         {

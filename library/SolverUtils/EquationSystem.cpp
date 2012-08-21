@@ -574,7 +574,14 @@ namespace Nektar
                         }
                         break;
                     case 3:
-                        ASSERTL0(false, "Force function not implemented for 3D.");
+                        for (int i = 0; i < m_forces.num_elements(); i++)
+                        {
+                            m_forces[i] = MemoryManager<MultiRegions::ExpList3D>
+                                ::AllocateSharedPtr(*boost::static_pointer_cast<
+                                    MultiRegions::ExpList3D>(m_fields[i]));
+                            Vmath::Zero(nq, m_forces[i]->UpdatePhys(), 1);
+                        }
+                        break;
                 }
                
                 // Check for file

@@ -37,6 +37,8 @@
 
 #include <CompressibleFlowSolver/RiemannSolvers/AverageSolver.h>
 
+using namespace std;
+
 namespace Nektar
 {
     std::string AverageSolver::solverName =
@@ -59,13 +61,13 @@ namespace Nektar
         
         int expDim = Fwd.num_elements()-2;
         int i, j;
-
+        
         for (j = 0; j < Fwd[0].num_elements(); ++j)
         {
             NekDouble tmp1 = 0.0, tmp2 = 0.0;
             Array<OneD, NekDouble> Ufwd(expDim);
             Array<OneD, NekDouble> Ubwd(expDim);
-
+            
             for (int i = 0; i < expDim; ++i)
             {
                 Ufwd[i] = Fwd[i+1][j]/Fwd[0][j];
@@ -74,16 +76,18 @@ namespace Nektar
                 tmp2   += Ubwd[i]*Bwd[i+1][j];
             }
             
-            NekDouble pL = (gamma - 1.0) * (Fwd[3][j] - 0.5 * tmp1);
-            NekDouble pR = (gamma - 1.0) * (Bwd[3][j] - 0.5 * tmp2);
+            NekDouble pL = (gamma - 1.0) * (Fwd[expDim+1][j] - 0.5 * tmp1);
+            NekDouble pR = (gamma - 1.0) * (Bwd[expDim+1][j] - 0.5 * tmp2);
             
-            // compute the Average flux
+            // Compute the average flux.
             flux[0][j] = 0.5*(Fwd[1][j]+Bwd[1][j]);
-            flux[expDim+1][j] = 0.5*(Ufwd[0]*(Fwd[expDim+1][j]+pL)+Ubwd[0]*(Bwd[expDim+1][j]+pR));
-        
+            flux[expDim+1][j] = 0.5*(Ufwd[0]*(Fwd[expDim+1][j]+pL)+Ubwd[0]*
+                                     (Bwd[expDim+1][j]+pR));
+            
             for (int i = 0; i < expDim; ++i)
             {
-                flux[i+1][j] = 0.5*(Fwd[0][j]*Ufwd[0]*Ufwd[i] + Bwd[0][j]*Ubwd[0]*Ubwd[i]);
+                flux[i+1][j] = 0.5*(Fwd[0][j]*Ufwd[0]*Ufwd[i] + 
+                                    Bwd[0][j]*Ubwd[0]*Ubwd[i]);
             }
 
             // Add in pressure contribution to u field.

@@ -44,10 +44,11 @@ namespace Nektar
   /**
    * @class UnsteadySystem
    *
-   * Provides the underlying timestepping framework for unsteady compressible flow solvers
-   * including the general timestepping routines. This class is not intended
-   * to be directly instantiated, but rather is a base class on which to
-   * define compressible flow solvers, e.g. Euler, Euler with artificial diffusion, Navier-Stokes.
+   * Provides the underlying timestepping framework for unsteady compressible
+   * flow solvers including the general timestepping routines. This class is not
+   * intended to be directly instantiated, but rather is a base class on which
+   * to define compressible flow solvers, e.g. Euler, Euler with artificial
+   * diffusion, Navier-Stokes.
    *
    * For details on implementing unsteady solvers see
    * \ref sectionADRSolverModuleImplementation 
@@ -277,10 +278,10 @@ namespace Nektar
 	m_time += m_timestep;
 
 	// Write out status information.
-	if(!((n+1)%m_infosteps) || n==m_steps || m_time==m_fintime)
-	  {
+	if((!((n+1)%m_infosteps) || n==m_steps || m_time==m_fintime) && m_comm->GetRank() == 0)
+        {
 	    cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t TimeStep: " << m_timestep << endl;
-	  }
+        }
 	
 	// Write out checkpoint files.
 	if(n&&(!((n+1)%m_checksteps)) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))

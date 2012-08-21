@@ -37,6 +37,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <boost/math/constants/constants.hpp>
+
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
@@ -71,16 +73,22 @@ namespace Nektar
 
         // Create Riemann solver instance, depending on the UPWINDTYPE specified
         // in the session file. Bind gamma, velLoc and the trace normals.
-        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(m_session->GetSolverInfo("UPWINDTYPE"));
-        m_riemannSolver->AddParam ("gamma",  &CompressibleFlowSystem::GetGamma,   this);
-        m_riemannSolver->AddScalar("velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
-        m_riemannSolver->AddVector("N",      &CompressibleFlowSystem::GetNormals, this);
+        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
+            CreateInstance(m_session->GetSolverInfo("UPWINDTYPE"));
+        m_riemannSolver->AddParam ("gamma",  
+                                   &CompressibleFlowSystem::GetGamma,   this);
+        m_riemannSolver->AddScalar("velLoc", 
+                                   &CompressibleFlowSystem::GetVelLoc,  this);
+        m_riemannSolver->AddVector("N",
+                                   &CompressibleFlowSystem::GetNormals, this);
         
         // Create an advection object. For now, weak DG is hard-coded but
         // eventually this choice will be defined by the user, with a default
         // being set in UnsteadySystem. Bind flux vector and the Riemann solver.
-        m_advection = SolverUtils::GetAdvectionFactory().CreateInstance("WeakDG","WeakDG");
-        m_advection->SetFluxVector   (&CompressibleFlowSystem::GetFluxVector, this);
+        m_advection = SolverUtils::GetAdvectionFactory().
+            CreateInstance("WeakDG", "WeakDG");
+        m_advection->SetFluxVector(
+            &CompressibleFlowSystem::GetFluxVector, this);
         m_advection->SetRiemannSolver(m_riemannSolver);
     }
     
@@ -97,7 +105,7 @@ namespace Nektar
     //----------------------------------------------------
     
     void CompressibleFlowSystem::WallBoundary(
-        int                                   bcRegion,
+        int                                   b,
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     { 
@@ -117,11 +125,11 @@ namespace Nektar
         // user defined boundaries into account
         int e, id1, id2, npts;
         
-        for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+        for(e = 0; e < m_fields[0]->GetBndCondExpansions()[b]->GetExpSize();++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            npts = m_fields[0]->GetBndCondExpansions()[b]->
                 GetExp(e)->GetNumPoints(0);
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            id1  = m_fields[0]->GetBndCondExpansions()[b]->
                 GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                 m_fields[0]->GetTraceMap()->
@@ -191,7 +199,7 @@ namespace Nektar
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vcopy(npts,&Fwd[i][id2],1,&(m_fields[i]->
-                    GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+                    GetBndCondExpansions()[b]->UpdatePhys())[id1],1);
             }
         }
     }
@@ -315,7 +323,7 @@ namespace Nektar
     
     /**
      * @brief Calculate the pressure field \f$ p =
-     * (\gamma-1)\rho(E-\frac{1}{2}\| \vec{v} \|^2) \f$ assuming an ideal gas
+     * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal gas
      * law.
      * 
      * @param physfield  Input momentum.
@@ -326,8 +334,8 @@ namespace Nektar
               Array<OneD,                   NekDouble>   &pressure)
     {
         NekDouble gamma = m_gamma;
-        int npts = m_fields[0]->GetTotPoints();
-        double alpha = -0.5;
+        int       npts  = m_fields[0]->GetTotPoints();
+        double    alpha = -0.5;
         
         // Calculate ||rho v||^2.
         Vmath::Zero(npts, pressure, 1);
@@ -336,17 +344,18 @@ namespace Nektar
             Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
                                pressure,       1, pressure,       1);
         }
-        // Divide by rho.
+        // Divide by rho to get rho*||v||^2.
         Vmath::Vdiv (npts, pressure, 1, physfield[0], 1, pressure, 1);
         // pressure <- E - 0.5*pressure
-        Vmath::Svtvp(npts, alpha, pressure, 1, physfield[m_expdim+1], 1, pressure, 1);
+        Vmath::Svtvp(npts,     alpha, 
+                     pressure, 1, physfield[m_expdim+1], 1, pressure, 1);
         // Multiply by (gamma-1).
         Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
     }
     
     /**
-     * @brief Compute the velocity field \f$ \mathbb{v} \f$ given the momentum
-     * \f$ \rho\mathbb{v} \f$.
+     * @brief Compute the velocity field \f$ \mathbf{v} \f$ given the momentum
+     * \f$ \rho\mathbf{v} \f$.
      * 
      * @param physfield  Momentum field.
      * @param velocity   Velocity field.
@@ -355,12 +364,12 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> > &velocity)
     {
-        NekDouble invRho;
         const int npts = m_fields[0]->GetTotPoints();
         
         for (int i = 0; i < m_expdim; ++i)
         {
-            Vmath::Vdiv(npts, physfield[1+i], 1, physfield[0], 1, velocity[i], 1);
+            Vmath::Vdiv(npts, physfield[1+i], 1, physfield[0], 1, 
+                              velocity[i],    1);
         }
     }
   
@@ -376,8 +385,6 @@ namespace Nektar
         Array<OneD,             NekDouble  > &pressure,
         Array<OneD,             NekDouble  > &temperature)
     {
-        NekDouble gamma = m_gamma;
-        
         for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
         {
             temperature[i] = pressure[i]/(physfield[0][i]*m_GasConstant);
@@ -403,7 +410,7 @@ namespace Nektar
     }
     
     /**
-     * @brief Compute the mach number \f$ M = \| \mathbb{v} \|^2 / c \f$.
+     * @brief Compute the mach number \f$ M = \| \mathbf{v} \|^2 / c \f$.
      * 
      * @param physfield    Input physical field.
      * @param soundfield   The speed of sound corresponding to physfield.
@@ -420,7 +427,8 @@ namespace Nektar
         
         for (int i = 0; i < m_expdim; ++i)
         {
-            Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, mach, 1, mach, 1);
+            Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
+                               mach,           1, mach,           1);
         }
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
@@ -441,52 +449,41 @@ namespace Nektar
         const Array<OneD, NekDouble>              CFL,
         NekDouble                                 timeCFL)
     { 
-        int             nvariables       = m_fields.num_elements();
-        int             nTotQuadPoints   = GetTotPoints();
-        int             n_element        = m_fields[0]->GetExpSize(); 
-        const NekDouble minLengthStdTri  = 0.7072*0.5;
-        const NekDouble minLengthStdQuad = 0.5;
-        const NekDouble cLambda          = 0.2; // Spencer book pag. 317
-
-        Array<OneD, NekDouble> tstep(n_element,0.0);
-        Array<OneD, NekDouble> stdVelocity(n_element,0.0);
-        stdVelocity = GetStdVelocity(physarray);
+        int nvariables     = m_fields.num_elements();
+        int nTotQuadPoints = GetTotPoints();
+        int n_element      = m_fields[0]->GetExpSize(); 
+        
+        Array<OneD, NekDouble> tstep      (n_element,0.0);
+        Array<OneD, NekDouble> stdVelocity(n_element);
+        GetStdVelocity(physarray, stdVelocity);
         
         // TODO: This should be implemented as a virtual function inside
         // StdExpansion.
         map<StdRegions::ExpansionType,double> minLengths;
         
-        minLengths[StdRegions::eTriangle     ] = 0.5 / sqrt(2.0);
+        minLengths[StdRegions::eTriangle     ] = 0.5 / sqrt(2);
         minLengths[StdRegions::eQuadrilateral] = 0.5;
         minLengths[StdRegions::eHexahedron   ] = 0.25;
         
         for(int el = 0; el < n_element; ++el)
         {
-            int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
-            Array<OneD, NekDouble> one2D(npoints, 1.0);
-            NekDouble Area = m_fields[0]->GetExp(el)->Integral(one2D);
-            
-            if (boost::dynamic_pointer_cast<LocalRegions::TriExp>(
-                   m_fields[0]->GetExp(el)))
-            {
-                tstep[el] = CFL[el]*minLengthStdTri/(stdVelocity[el]);
-            }
-            else if (boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
-                m_fields[0]->GetExp(el)))
-            { 
-                tstep[el] = CFL[el]*minLengthStdQuad/(stdVelocity[el]);
-            }
+            //tstep[el] = CFL[el]/stdVelocity[el];
+            tstep[el] = CFL[el]*minLengths[
+                m_fields[0]->GetExp(el)->DetExpansionType()]/stdVelocity[el];
         }
         
-        return Vmath::Vmin(n_element, tstep, 1);
+        double minDt = Vmath::Vmin(n_element, tstep, 1);
+        m_comm->AllReduce(minDt, LibUtilities::ReduceMin);
+        return minDt;
     }
     
-    Array<OneD,NekDouble> CompressibleFlowSystem::GetStdVelocity(
-        const Array<OneD, Array<OneD,NekDouble> > inarray)
+    void CompressibleFlowSystem::GetStdVelocity(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,                   NekDouble>   &stdV)
     {
-        int nTotQuadPoints  = GetTotPoints();
-        int n_element       = m_fields[0]->GetExpSize();
-        int npts             = 0;
+        int nTotQuadPoints = GetTotPoints();
+        int n_element      = m_fields[0]->GetExpSize();
+        int npts           = 0;
 
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_expdim);
@@ -494,7 +491,9 @@ namespace Nektar
         Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         
-        Array<OneD, NekDouble> stdV(n_element,0.0);
+        // Zero output array.
+        Vmath::Zero(stdV.num_elements(), stdV, 1);
+        
         for (int i = 0; i < m_expdim; ++i)
         {
             velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
@@ -506,9 +505,9 @@ namespace Nektar
         
         for(int el = 0; el < n_element; ++el)
         { 
-            Array<OneD, const NekDouble> jac  = 
+            const Array<OneD, const NekDouble> &jac  = 
                 m_fields[0]->GetExp(el)->GetGeom()->GetJac();
-            Array<TwoD, const NekDouble> gmat = 
+            const Array<TwoD, const NekDouble> &gmat = 
                 m_fields[0]->GetExp(el)->GetGeom()->GetGmat();
             
             int nqtot = m_fields[0]->GetExp(el)->GetTotPoints();
@@ -522,8 +521,8 @@ namespace Nektar
                     Vmath::Zero(nqtot, stdVelocity[i], 1);
                     for (int j = 0; j < m_expdim; ++j)
                     {
-                        Vmath::Vvtvp(nqtot, gmat[m_expdim*j+i], 1, velocity[j], 1, 
-                                     stdVelocity[i], 1, stdVelocity[i], 1);
+                        Vmath::Vvtvp(nqtot, gmat[m_expdim*j+i], 1, velocity[j], 
+                                     1, stdVelocity[i], 1, stdVelocity[i], 1);
                     }
                 }
             }
@@ -534,26 +533,26 @@ namespace Nektar
                     Vmath::Zero(nqtot, stdVelocity[i], 1);
                     for (int j = 0; j < m_expdim; ++j)
                     {
-                        Vmath::Svtvp(nqtot, gmat[m_expdim*j+i][0], velocity[j], 1, 
-                                     stdVelocity[i], 1, stdVelocity[i], 1);
+                        Vmath::Svtvp(nqtot, gmat[m_expdim*j+i][0], velocity[j], 
+                                     1, stdVelocity[i], 1, stdVelocity[i], 1);
                     }
                 }
             }
-            NekDouble pntVelocity;
+            
             for(int i = 0; i < nqtot; ++i)
             {
-                pntVelocity = 0.0;
+                NekDouble pntVelocity = 0.0;
                 for (int j = 0; j < m_expdim; ++j)
                 {
                     pntVelocity += stdVelocity[j][i]*stdVelocity[j][i];
                 }
                 pntVelocity = sqrt(pntVelocity) + soundspeed[npts];
-                if(pntVelocity>stdV[el])
+                if (pntVelocity > stdV[el])
+                {
                     stdV[el] = pntVelocity;
+                }
                 npts++;
             }
         }
-        
-        return stdV;
     }
 }

@@ -40,6 +40,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 #include <boost/function.hpp>
@@ -99,6 +100,10 @@ namespace Nektar
             std::map<std::string, RSVecFuncType>    m_vectors;
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
+            /// Rotation matrices for each trace quadrature point.
+            std::vector<DNekMatSharedPtr> m_rotMatrices;
+            /// Inverse rotation matrices for each trace quadrature point.
+            std::vector<DNekMatSharedPtr> m_invRotMatrices;
 
             SOLVER_UTILS_EXPORT RiemannSolver();
 
@@ -107,6 +112,11 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
 
+            void GenerateRotationMatrices();
+            void FromToRotation(
+                Array<OneD, const NekDouble> &from,
+                Array<OneD, const NekDouble> &to,
+                DNekMatSharedPtr              mat);
             void rotateToNormal  (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);

@@ -144,47 +144,12 @@ namespace Nektar
       }
       
   private:
-      void GetPressure(const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                       Array<OneD, NekDouble> &pressure); 
-      Array<OneD,NekDouble> GetStdVelocity(
-          const Array<OneD, Array<OneD,NekDouble> > inarray);
-
-      /*
-      void RiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                         NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                         NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      void HLLRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                            NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                            NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      void HLLCRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                             NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                             NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      void LFRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                           NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                           NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      void AverageRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                                NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                                NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      void ExactRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                              NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                              NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      void AUSMRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
-                             NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
-                             NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-      
-      
-      NekDouble M1Function(int A, NekDouble M);
-      NekDouble M2Function(int A, NekDouble M);
-      NekDouble M4Function(int A, NekDouble beta, NekDouble M);
-      NekDouble P5Function(int A, NekDouble alpha, NekDouble M);
-      */
-      
+      void GetPressure(
+          const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                Array<OneD,                   NekDouble>   &pressure); 
+      void GetStdVelocity(
+          const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,                   NekDouble>   &stdV);
   };
 }
 #endif

@@ -186,38 +186,38 @@ namespace Nektar
         int n_fields = m_fields.num_elements();
         static int nchk = 0;
 		
-        bool integrate_in_wave_space = false;
+        //bool integrate_in_wave_space = false;
         
         //SingleMode and HalfMode integration must be in wave space
-        if(m_SingleMode || m_HalfMode)
-        {
-            integrate_in_wave_space = true;
-        }
-	else if(m_session->DefinesSolverInfo("INTEGRATIONSPACE"))
-        {
-            if(m_HomogeneousType == eNotHomogeneous)
-            {
-                ASSERTL0(false,"INTEGRATIONSPACE type is meant to be for homogeneous cases");
-            }
+        //if(m_SingleMode || m_HalfMode)
+        //{
+        //    integrate_in_wave_space = true;
+        //}
+	    //else if(m_session->DefinesSolverInfo("INTEGRATIONSPACE"))
+        //{
+        //    if(m_HomogeneousType == eNotHomogeneous)
+        //    {
+        //        ASSERTL0(false,"INTEGRATIONSPACE type is meant to be for homogeneous cases");
+        //    }
             
-            std::string IntegrationSpaceStr = m_session->GetSolverInfo("INTEGRATIONSPACE");
+        //    std::string IntegrationSpaceStr = m_session->GetSolverInfo("INTEGRATIONSPACE");
             
-            if((IntegrationSpaceStr == "WaveSpace") || (IntegrationSpaceStr == "WAVESPACE"))
-            {
-                integrate_in_wave_space = true;
-            }
-            else if((IntegrationSpaceStr == "RealSpace") || (IntegrationSpaceStr == "REALSPACE"))
-            {
-                integrate_in_wave_space = false;
-            }
-            else 
-            {
-                ASSERTL0(false,"INTEGRATIONSPACE type not allowed, try WaveSpace or RealSpace");
-            }
-        }
+        //    if((IntegrationSpaceStr == "WaveSpace") || (IntegrationSpaceStr == "WAVESPACE"))
+        //    {
+        //        integrate_in_wave_space = true;
+        //    }
+        //    else if((IntegrationSpaceStr == "RealSpace") || (IntegrationSpaceStr == "REALSPACE"))
+        //    {
+        //        integrate_in_wave_space = false;
+        //    }
+        //    else 
+        //    {
+        //        ASSERTL0(false,"INTEGRATIONSPACE type not allowed, try WaveSpace or RealSpace");
+        //    }
+        //}
         
         
-        if(integrate_in_wave_space)
+        if(m_HomogeneousType == eHomogeneous1D)
         {
             for(i = 0; i < n_fields; ++i)
             {
@@ -348,7 +348,7 @@ namespace Nektar
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
             {
-                if(integrate_in_wave_space)
+                if(m_HomogeneousType == eHomogeneous1D)
                 {
                     for(i = 0; i< n_fields; i++)
                     {
@@ -405,7 +405,7 @@ namespace Nektar
             }
         }
 	
-        if(integrate_in_wave_space)
+        if(m_HomogeneousType == eHomogeneous1D)
         {
             for(i = 0; i< n_fields; i++)
             {

@@ -813,38 +813,38 @@ namespace Nektar
 		
                 StdRegions::StdExpansion1DSharedPtr Pbc;
 		
-                Array<OneD, Array< OneD, NekDouble> > velocity(m_nConvectiveFields);
-                Array<OneD, Array< OneD, NekDouble> > advection(m_nConvectiveFields);
+                //Array<OneD, Array< OneD, NekDouble> > velocity(m_nConvectiveFields);
+                //Array<OneD, Array< OneD, NekDouble> > advection(m_nConvectiveFields);
 		
-                int phystot = m_fields[0]->GetTotPoints();
+                //int phystot = m_fields[0]->GetTotPoints();
 		
-                for(int n = 0; n < m_nConvectiveFields; ++n)
-                {
-                    velocity[n] = Array<OneD, NekDouble> (phystot);
-                    advection[n] = Array<OneD, NekDouble> (phystot);
-                }
+                //for(int n = 0; n < m_nConvectiveFields; ++n)
+                //{
+                //    velocity[n] = Array<OneD, NekDouble> (phystot);
+                //    advection[n] = Array<OneD, NekDouble> (phystot);
+                //}
 		
-                for(int i = 0; i < fields.num_elements(); i++)
-                {
+                //for(int i = 0; i < fields.num_elements(); i++)
+                //{
                     
-                    if(m_pressure->GetWaveSpace())
-                    {
-                        velocity[i] = fields[i];
-                        advection[i] = N[i];
-                    }
-                    else 
-                    {
-                        m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
-                        m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
-                    }
-                }
+                //    if(m_pressure->GetWaveSpace())
+                //    {
+                //        velocity[i] = fields[i];
+                //        advection[i] = N[i];
+                //    }
+                //    else 
+                //    {
+                //        m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
+                //        m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
+                //    }
+                //}
 		
                 for(int j = 0 ; j < m_HBCnumber ; j++)
                 {
                     m_elmt = m_fields[0]->GetExp(m_HBC[0][j]);
-                    U = velocity[m_velocity[0]] + m_HBC[2][j];
-                    V = velocity[m_velocity[1]] + m_HBC[2][j];
-                    W = velocity[m_velocity[2]] + m_HBC[7][j];
+                    U = fields[m_velocity[0]] + m_HBC[2][j];
+                    V = fields[m_velocity[1]] + m_HBC[2][j];
+                    W = fields[m_velocity[2]] + m_HBC[7][j];
                     
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
@@ -857,7 +857,7 @@ namespace Nektar
                     //x-component coming from the other plane
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Wxz);
                     
-				// y-components of vorticity curl
+				    // y-components of vorticity curl
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Vxx);
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Uxy);
                     Vmath::Smul(m_HBC[1][j],m_beta[j],V,1,Vzz,1);
@@ -874,8 +874,8 @@ namespace Nektar
                     Vmath::Vadd(m_HBC[1][j],Qy,1,Uxy,1,Qy,1);
                     
                     // getting the advective term
-                    Nu = advection[0] + m_HBC[2][j];
-                    Nv = advection[1] + m_HBC[2][j];
+                    Nu = N[0] + m_HBC[2][j];
+                    Nv = N[1] + m_HBC[2][j];
                     
                     if(m_subSteppingScheme)
                     {
@@ -899,7 +899,7 @@ namespace Nektar
                     }
                     Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
                     
-				// Get edge values and put into Uy, Vx
+				    // Get edge values and put into Uy, Vx
                     m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qy,Uy);
                     m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qx,Vx);
                     

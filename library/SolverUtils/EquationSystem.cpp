@@ -297,7 +297,7 @@ namespace Nektar
 								
                                     // necessary to perform to HomoBwdTrans for the fields 
                                     // (are complex differently from the base flow)
-                                    m_fields[i]->SetWaveSpace(false);
+                                    //m_fields[i]->SetWaveSpace(false);
 
                                 }
 							}
@@ -324,7 +324,7 @@ namespace Nektar
 										
                                     // necessary to perform to HomoBwdTrans for the fields 
                                     // (are complex differently from the base flow)
-                                    m_fields[i]->SetWaveSpace(false);
+                                    //m_fields[i]->SetWaveSpace(false);
                                 }
                             }
                             // Normal homogeneous 1D
@@ -339,10 +339,10 @@ namespace Nektar
                                         ::AllocateSharedPtr(m_session, BkeyZ, m_LhomZ, m_useFFT, m_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
 
-									if(m_MultipleModes)
-                                    {
-                                        m_fields[i]->SetWaveSpace(false);
-                                    }
+									//if(m_MultipleModes)
+                                    //{
+                                    //    m_fields[i]->SetWaveSpace(false);
+                                    //}
                                 }
                             }
                         }

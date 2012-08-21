@@ -374,27 +374,6 @@ L inf error (variable w) : 8.32667e-16
 L 2 error (variable p) : 1.20662e-14
 L inf error (variable p) : 4.69775e-14
 ----------------------------------------
-
-Test_WaveSpace_CON.xml
-L 2 error (variable u) : 6.24255e-13
-L inf error (variable u) : 3.5823e-12
-L 2 error (variable v) : 3.21431e-13
-L inf error (variable v) : 1.09954e-12
-L 2 error (variable w) : 0
-L inf error (variable w) : 8.68163e-18
-L 2 error (variable p) : 1.52111e-11
-L inf error (variable p) : 3.19814e-11
-----------------------------------------
-Test_WaveSpace_SKS.xml
-L 2 error (variable u) : 6.22491e-13
-L inf error (variable u) : 3.59224e-12
-L 2 error (variable v) : 3.2548e-13
-L inf error (variable v) : 1.11653e-12
-L 2 error (variable w) : 0
-L inf error (variable w) : 8.69919e-18
-L 2 error (variable p) : 1.51638e-11
-L inf error (variable p) : 3.21408e-11
-----------------------------------------
 Test_KovaFlow_SubStep_2order.xml
 L 2 error (variable u) : 0.00528173
 L inf error (variable u) : 0.0099941

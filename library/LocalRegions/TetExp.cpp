@@ -1212,8 +1212,8 @@ namespace Nektar
                 int nmodes1 = m_base[1]->GetNumModes();
                 int nmodes2 = m_base[2]->GetNumModes();
                 int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                  nquad0*nquad1*(nquad2+nmodes0)+
-                                  nmodes0*nmodes1*nquad2);
+                                  nquad2*nmodes0*nmodes1*(nmodes1+1)/2+
+                                  nquad2*nquad1*nmodes0);
                 
                 NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
@@ -1298,8 +1298,8 @@ namespace Nektar
                     int nmodes1 = m_base[1]->GetNumModes();
                     int nmodes2 = m_base[2]->GetNumModes();
                     int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                      nquad0*nquad1*(nquad2+nmodes0)+
-                                      nmodes0*nmodes1*nquad2);
+                                      nquad2*nmodes0*nmodes1*(nmodes1+1)/2+
+                                      nquad2*nquad1*nmodes0);
                     
                     const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
                     const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();

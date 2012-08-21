@@ -148,7 +148,7 @@ namespace Nektar
             // If input vector is zero, set zero output and skip solve.
             if (vExchange[0] < NekConstants::kNekZeroTol)
             {
-                Vmath::Zero(nGlobal, pOutput, 1);
+                Vmath::Zero(nNonDir, tmp = pOutput+nDir, 1);
                 return;
             }
 

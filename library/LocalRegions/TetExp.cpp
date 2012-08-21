@@ -1345,10 +1345,10 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
-                returnval = Expansion3D::GenMatrix(mkey);
+                returnval = Expansion3D::v_GenMatrix(mkey);
                 break;
             default:
-                returnval = StdTetExp::GenMatrix(mkey);
+                returnval = StdTetExp::v_GenMatrix(mkey);
             }
 
             return returnval;
@@ -1537,8 +1537,31 @@ namespace Nektar
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
                 }
-                break;
-            default:
+				break;
+			case StdRegions::eHybridDGHelmholtz:
+			case StdRegions::eHybridDGLamToU:
+			case StdRegions::eHybridDGLamToQ0:
+			case StdRegions::eHybridDGLamToQ1:
+			case StdRegions::eHybridDGHelmBndLam:
+				{
+					NekDouble one    = 1.0;
+
+					DNekMatSharedPtr mat = GenMatrix(mkey);
+					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+				}
+				break;
+			case StdRegions::eInvHybridDGHelmholtz:
+				{
+					NekDouble one = 1.0;
+
+					MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+					DNekMatSharedPtr mat = GenMatrix(hkey);
+
+					mat->Invert();
+					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+				}
+				break;
+			default:
 				{
 					//ASSERTL0(false, "Missing definition for " + (*StdRegions::MatrixTypeMap[mkey.GetMatrixType()]));
 					NekDouble        one = 1.0;
@@ -1547,7 +1570,7 @@ namespace Nektar
 					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
 				}
 				break;
-            }
+			}
 
             return returnval;
         }
